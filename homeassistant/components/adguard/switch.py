@@ -26,6 +26,7 @@ PARALLEL_UPDATES = 1
 class AdGuardHomeSwitchEntityDescription(SwitchEntityDescription):
     """Describes AdGuard Home switch entity."""
 
+    data_key: str
     is_on_fn: Callable[[AdGuardHomeState], bool]
     turn_on_fn: Callable[[AdGuardHome], Callable[[], Coroutine[Any, Any, None]]]
     turn_off_fn: Callable[[AdGuardHome], Callable[[], Coroutine[Any, Any, None]]]
@@ -35,6 +36,7 @@ SWITCHES: tuple[AdGuardHomeSwitchEntityDescription, ...] = (
     AdGuardHomeSwitchEntityDescription(
         key="protection",
         translation_key="protection",
+        data_key="status",
         is_on_fn=lambda data: data.status.protection_enabled,
         turn_on_fn=lambda adguard: adguard.enable_protection,
         turn_off_fn=lambda adguard: adguard.disable_protection,
@@ -42,6 +44,7 @@ SWITCHES: tuple[AdGuardHomeSwitchEntityDescription, ...] = (
     AdGuardHomeSwitchEntityDescription(
         key="parental",
         translation_key="parental",
+        data_key="parental",
         is_on_fn=lambda data: data.parental,
         turn_on_fn=lambda adguard: adguard.parental.enable,
         turn_off_fn=lambda adguard: adguard.parental.disable,
@@ -49,6 +52,7 @@ SWITCHES: tuple[AdGuardHomeSwitchEntityDescription, ...] = (
     AdGuardHomeSwitchEntityDescription(
         key="safesearch",
         translation_key="safe_search",
+        data_key="safe_search",
         is_on_fn=lambda data: data.safe_search.enabled,
         turn_on_fn=lambda adguard: adguard.safesearch.enable,
         turn_off_fn=lambda adguard: adguard.safesearch.disable,
@@ -56,6 +60,7 @@ SWITCHES: tuple[AdGuardHomeSwitchEntityDescription, ...] = (
     AdGuardHomeSwitchEntityDescription(
         key="safebrowsing",
         translation_key="safe_browsing",
+        data_key="safe_browsing",
         is_on_fn=lambda data: data.safe_browsing,
         turn_on_fn=lambda adguard: adguard.safebrowsing.enable,
         turn_off_fn=lambda adguard: adguard.safebrowsing.disable,
@@ -63,6 +68,7 @@ SWITCHES: tuple[AdGuardHomeSwitchEntityDescription, ...] = (
     AdGuardHomeSwitchEntityDescription(
         key="filtering",
         translation_key="filtering",
+        data_key="filtering",
         is_on_fn=lambda data: data.filtering.enabled,
         turn_on_fn=lambda adguard: adguard.filtering.enable,
         turn_off_fn=lambda adguard: adguard.filtering.disable,
@@ -70,6 +76,7 @@ SWITCHES: tuple[AdGuardHomeSwitchEntityDescription, ...] = (
     AdGuardHomeSwitchEntityDescription(
         key="querylog",
         translation_key="query_log",
+        data_key="query_log",
         is_on_fn=lambda data: data.query_log.enabled,
         turn_on_fn=lambda adguard: adguard.querylog.enable,
         turn_off_fn=lambda adguard: adguard.querylog.disable,
@@ -101,7 +108,7 @@ class AdGuardHomeSwitch(AdGuardHomeEntity[AdGuardHomeStateCoordinator], SwitchEn
         description: AdGuardHomeSwitchEntityDescription,
     ) -> None:
         """Initialize AdGuard Home switch."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, context=description.data_key)
         entry = coordinator.config_entry
         self.entity_description = description
         self._attr_unique_id = f"{entry.entry_id}_{description.key}"

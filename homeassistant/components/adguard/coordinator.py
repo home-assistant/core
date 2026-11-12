@@ -2,9 +2,9 @@
 
 from abc import abstractmethod
 import asyncio
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import timedelta
-from typing import override
+from typing import Any, override
 
 from adguardhome import (
     AdGuardHome,
@@ -23,6 +23,7 @@ from adguardhome import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER
@@ -115,30 +116,27 @@ class AdGuardHomeStateCoordinator(AdGuardHomeCoordinator[AdGuardHomeState]):
     @override
     async def _async_fetch(self) -> AdGuardHomeState:
         """Fetch the status and settings of AdGuard Home."""
-        (
-            status,
-            filtering,
-            parental,
-            query_log,
-            safe_browsing,
-            safe_search,
-        ) = await asyncio.gather(
-            self.client.status(),
-            self.client.filtering.config(),
-            self.client.parental.enabled(),
-            self.client.querylog.config(),
-            self.client.safebrowsing.enabled(),
-            self.client.safesearch.config(),
-        )
+        requests = {
+            "status": self.client.status,
+            "filtering": self.client.filtering.config,
+            "parental": self.client.parental.enabled,
+            "query_log": self.client.querylog.config,
+            "safe_browsing": self.client.safebrowsing.enabled,
+            "safe_search": self.client.safesearch.config,
+        }
+        # The first refresh precedes entity listeners and supplies device info
+        # and diagnostics. Later refreshes retain cached data for inactive fields.
+        if self.data:
+            contexts = set(self.async_contexts())
+            requests = {
+                key: request for key, request in requests.items() if key in contexts
+            }
 
-        return AdGuardHomeState(
-            status=status,
-            filtering=filtering,
-            parental=parental,
-            query_log=query_log,
-            safe_browsing=safe_browsing,
-            safe_search=safe_search,
-        )
+        results = await asyncio.gather(*(request() for request in requests.values()))
+        data: dict[str, Any] = dict(zip(requests, results, strict=True))
+        if not self.data:
+            return AdGuardHomeState(**data)
+        return replace(self.data, **data)
 
 
 class AdGuardHomeStatisticsCoordinator(AdGuardHomeCoordinator[AdGuardHomeStatistics]):
@@ -165,14 +163,35 @@ class AdGuardHomeUpdateCoordinator(AdGuardHomeCoordinator[AvailableUpdate]):
     """Keep track of updates for AdGuard Home."""
 
     def __init__(
-        self, hass: HomeAssistant, entry: AdGuardConfigEntry, client: AdGuardHome
+        self,
+        hass: HomeAssistant,
+        entry: AdGuardConfigEntry,
+        client: AdGuardHome,
+        state: AdGuardHomeStateCoordinator,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(hass, entry, client, "update", timedelta(minutes=5))
+        self._state = state
+        self._first_refresh = True
 
     @override
     async def _async_fetch(self) -> AvailableUpdate:
-        """Fetch the available update of AdGuard Home."""
+        """Fetch the installed version and available update of AdGuard Home."""
+        if self._first_refresh:
+            # Entry setup has already fetched status.
+            self._first_refresh = False
+        else:
+            status = await self.client.status()
+            # Do not reschedule switch polling or clear unrelated switch errors.
+            self._state.data = replace(self._state.data, status=status)
+            device_registry = dr.async_get(self.hass)
+            if device := device_registry.async_get_device_by_identifier(
+                (DOMAIN, self.config_entry.entry_id), self.config_entry.entry_id
+            ):
+                device_registry.async_update_device(
+                    device.id, sw_version=str(status.version)
+                )
+
         return await self.client.update.get()
 
 
