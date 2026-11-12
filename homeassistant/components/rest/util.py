@@ -153,7 +153,9 @@ def create_rest_data_from_config(hass: HomeAssistant, config: ConfigType) -> Res
         payload = payload_template.async_render(parse_result=False)
 
     if not resource:
-        raise HomeAssistantError("Resource not set for RestData")
+        raise HomeAssistantError(
+            translation_domain=DOMAIN, translation_key="resource_not_set"
+        )
 
     auth: aiohttp.DigestAuthMiddleware | tuple[str, str] | None = None
     if username and password:

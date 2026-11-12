@@ -14,7 +14,7 @@ failure modes or corner cases like how out of order packets are handled.
 """
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 import fractions
 import io
 import logging
@@ -317,7 +317,7 @@ def run_worker(
         stream_settings or hass.data[DOMAIN][ATTR_SETTINGS],
         stream_state,
         KeyFrameConverter(hass, stream_settings, dynamic_stream_settings()),
-        threading.Event(),
+        stream._thread_quit,
     )
 
 
@@ -553,6 +553,42 @@ async def test_segment_video_dts_shift(hass: HomeAssistant) -> None:
     assert [segment.video_dts_shift for segment in decoded_stream.segments] == [0] + [
         1000
     ] * (len(decoded_stream.segments) - 1)
+
+
+@pytest.mark.parametrize(
+    "stop_index",
+    [
+        pytest.param(0, id="before_first_keyframe"),
+        pytest.param(OUT_OF_ORDER_PACKET_INDEX, id="while_discarding_old_packets"),
+    ],
+)
+async def test_stop_while_reading_packets(hass: HomeAssistant, stop_index: int) -> None:
+    """Test the worker stops reading packets when it is asked to stop."""
+    packets = list(PacketSequence(TEST_SEQUENCE_LENGTH))
+    # Packets after this one are considered out of order
+    packets[OUT_OF_ORDER_PACKET_INDEX - 1].dts = round(
+        TEST_SEQUENCE_LENGTH / VIDEO_FRAME_RATE / VIDEO_TIME_BASE
+    )
+    stream = Stream(
+        hass,
+        STREAM_SOURCE,
+        {},
+        hass.data[DOMAIN][ATTR_SETTINGS],
+        dynamic_stream_settings(),
+    )
+
+    def packet_source() -> Iterator:
+        yield from packets[:stop_index]
+        stream._thread_quit.set()
+        yield from packets[stop_index:]
+
+    source = packet_source()
+    py_av = MockPyAv()
+    py_av.container.packets = source
+    with patch("av.open", new=py_av.open):
+        run_worker(hass, stream, STREAM_SOURCE)
+    # Only one packet was read after the stop request
+    assert next(source, None) is packets[stop_index + 1]
 
 
 async def test_packet_overflow(hass: HomeAssistant) -> None:

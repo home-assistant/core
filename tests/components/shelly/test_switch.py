@@ -41,17 +41,18 @@ from . import (
     inject_rpc_device_event,
     mutate_rpc_device_status,
     patch_platforms,
+    register_child_device,
     register_device,
     register_entity,
-    register_sub_device,
 )
-from .conftest import MOCK_LEDSTRIP_STATUS
+from .conftest import MOCK_LEDSTRIP_STATUS_RAINBOW, MOCK_LEDSTRIP_STATUS_SOLID
 
 DEVICE_BLOCK_ID = 4
 LIGHT_BLOCK_ID = 2
 RELAY_BLOCK_ID = 0
 GAS_VALVE_BLOCK_ID = 6
 MOTION_BLOCK_ID = 3
+LEDSTRIP_ENTITY_ID = f"{SWITCH_DOMAIN}.test_name_reverse_effect"
 
 
 @pytest.fixture(autouse=True)
@@ -737,7 +738,7 @@ async def test_rpc_remove_virtual_switch_when_orphaned(
     )
 
     # create orphaned entity on sub device
-    sub_device_entry = register_sub_device(
+    sub_device_entry = register_child_device(
         device_registry,
         config_entry,
         "boolean:201-boolean_generic",
@@ -967,6 +968,60 @@ async def test_cury_switch_availability(
     assert state.state == STATE_ON
 
 
+async def test_rpc_fan_boost_switch(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC fan boost switch."""
+    monkeypatch.setattr(mock_rpc_device, "config", {"fan:0": {"id": 0}})
+    monkeypatch.setattr(
+        mock_rpc_device,
+        "status",
+        {"fan:0": {"id": 0, "mode": "auto", "boost": {"active": False}}},
+    )
+    entity_id = f"{SWITCH_DOMAIN}.test_name_boost"
+    await init_integration(hass, 4)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_OFF
+
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry.unique_id == "123456789ABC-fan:0-fan_boost"
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    mock_rpc_device.fan_boost.assert_called_once_with(0)
+
+    mutate_rpc_device_status(
+        monkeypatch, mock_rpc_device, "fan:0", "boost", {"active": True}
+    )
+    mock_rpc_device.mock_update()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    mock_rpc_device.fan_stop_boost.assert_called_once_with(0)
+
+    # Boost is only possible in auto mode
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "fan:0", "mode", "manual")
+    mock_rpc_device.mock_update()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE
+
+
 async def test_rpc_ev_charging_switch(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
@@ -1148,17 +1203,6 @@ async def test_rpc_camera_privacy_switch(
     assert state.state == STATE_ON
 
 
-LEDSTRIP_ENTITY_ID = f"{SWITCH_DOMAIN}.test_name_ledstrip_0_reverse_effect"
-LEDSTRIP_STATUS_RAINBOW = MOCK_LEDSTRIP_STATUS["ledstrip:0"]
-LEDSTRIP_STATUS_SOLID = {
-    "id": 0,
-    "on": True,
-    "brightness": 36,
-    "effect": "solid",
-    "rgb": [100, 150, 200],
-}
-
-
 async def test_rpc_ledstrip_reverse_switch(
     hass: HomeAssistant,
     mock_ledstrip_rpc_device: Mock,
@@ -1204,9 +1248,12 @@ async def test_rpc_ledstrip_reverse_switch(
 @pytest.mark.parametrize(
     ("ledstrip_status", "expected_state"),
     [
-        (LEDSTRIP_STATUS_RAINBOW, STATE_ON),
-        (LEDSTRIP_STATUS_SOLID, STATE_UNAVAILABLE),
-        (LEDSTRIP_STATUS_SOLID | {"speed": 33, "reverse": True}, STATE_UNAVAILABLE),
+        (MOCK_LEDSTRIP_STATUS_RAINBOW, STATE_ON),
+        (MOCK_LEDSTRIP_STATUS_SOLID, STATE_UNAVAILABLE),
+        (
+            MOCK_LEDSTRIP_STATUS_SOLID | {"speed": 33, "reverse": True},
+            STATE_UNAVAILABLE,
+        ),
         (
             {
                 "id": 0,
@@ -1233,7 +1280,9 @@ async def test_rpc_ledstrip_reverse_switch_availability(
 ) -> None:
     """Test RPC LED strip reverse switch availability depends on the effect."""
     monkeypatch.setitem(
-        mock_ledstrip_rpc_device.status, "ledstrip:0", deepcopy(LEDSTRIP_STATUS_SOLID)
+        mock_ledstrip_rpc_device.status,
+        "ledstrip:0",
+        deepcopy(MOCK_LEDSTRIP_STATUS_SOLID),
     )
 
     await init_integration(hass, 4)

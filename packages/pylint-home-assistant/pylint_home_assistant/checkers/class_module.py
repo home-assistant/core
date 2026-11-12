@@ -68,6 +68,8 @@ _MODULES: dict[str, set[str]] = {
     Platform.NOTIFY: {"NotifyEntity", "NotifyEntityDescription"},
     Platform.NUMBER: {"NumberEntity", "NumberEntityDescription", "RestoreNumber"},
     Platform.RADIO_FREQUENCY: {
+        "RadioFrequencyReceiverEntity",
+        "RadioFrequencyReceiverEntityDescription",
         "RadioFrequencyTransmitterEntity",
         "RadioFrequencyTransmitterEntityDescription",
     },

@@ -8,7 +8,7 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant.components.aussie_broadband.const import CONF_SERVICES, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
+from homeassistant.helpers.typing import Undefined
 
 FAKE_SERVICES = [
     {
@@ -39,9 +39,9 @@ FAKE_DATA = {
 
 async def setup_platform(
     hass: HomeAssistant,
-    platforms: list[Platform] | UndefinedType = UNDEFINED,
+    platforms: list[Platform] | Undefined = Undefined,
     side_effect=None,
-    usage: dict[str, Any] | UndefinedType = UNDEFINED,
+    usage: dict[str, Any] | Undefined = Undefined,
     usage_effect=None,
 ):
     """Set up the Aussie Broadband platform."""
@@ -57,7 +57,7 @@ async def setup_platform(
     with (
         patch(
             "homeassistant.components.aussie_broadband.PLATFORMS",
-            [] if platforms is UNDEFINED else platforms,
+            [] if platforms is Undefined else platforms,
         ),
         patch("aussiebb.asyncio.AussieBB.__init__", return_value=None),
         patch(
@@ -72,7 +72,7 @@ async def setup_platform(
         ),
         patch(
             "aussiebb.asyncio.AussieBB.get_usage",
-            return_value={} if usage is UNDEFINED else usage,
+            return_value={} if usage is Undefined else usage,
             side_effect=usage_effect,
         ),
     ):

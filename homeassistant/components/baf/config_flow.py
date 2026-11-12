@@ -75,7 +75,6 @@ class BAFFlowHandler(ConfigFlow, domain=DOMAIN):
             "ip_address": discovery.ip_address,
         }
         self.context["title_placeholders"] = placeholders
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="discovery_confirm", description_placeholders=placeholders
         )

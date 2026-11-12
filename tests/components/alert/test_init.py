@@ -1,9 +1,15 @@
 """The tests for the Alert component."""
 
 from copy import deepcopy
+from datetime import UTC, datetime, timedelta
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockEntityPlatform, async_mock_service
+from pytest_homeassistant.common import (
+    MockEntityPlatform,
+    async_fire_time_changed,
+    async_mock_service,
+)
 
 from homeassistant.components import alert, notify
 from homeassistant.components.alert.const import (
@@ -14,6 +20,7 @@ from homeassistant.components.alert.const import (
     CONF_SKIP_FIRST,
     CONF_TITLE,
     DOMAIN,
+    AlertService,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -21,9 +28,6 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_REPEAT,
     CONF_STATE,
-    SERVICE_TOGGLE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_IDLE,
     STATE_OFF,
     STATE_ON,
@@ -127,7 +131,7 @@ async def test_silence(hass: HomeAssistant, mock_notifier: list[ServiceCall]) ->
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_TURN_OFF,
+        AlertService.TURN_OFF,
         {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
@@ -164,7 +168,7 @@ async def test_silence_can_acknowledge_false(hass: HomeAssistant) -> None:
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_TURN_OFF,
+            AlertService.TURN_OFF,
             {ATTR_ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
@@ -182,7 +186,7 @@ async def test_reset(hass: HomeAssistant, mock_notifier: list[ServiceCall]) -> N
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_TURN_OFF,
+        AlertService.TURN_OFF,
         {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
@@ -191,7 +195,7 @@ async def test_reset(hass: HomeAssistant, mock_notifier: list[ServiceCall]) -> N
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_TURN_ON,
+        AlertService.TURN_ON,
         {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
@@ -207,7 +211,7 @@ async def test_toggle(hass: HomeAssistant, mock_notifier: list[ServiceCall]) -> 
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_TOGGLE,
+        AlertService.TOGGLE,
         {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
@@ -215,7 +219,7 @@ async def test_toggle(hass: HomeAssistant, mock_notifier: list[ServiceCall]) -> 
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_TOGGLE,
+        AlertService.TOGGLE,
         {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
@@ -391,6 +395,43 @@ async def test_skipfirst(hass: HomeAssistant, mock_notifier: list[ServiceCall]) 
     hass.states.async_set("sensor.test", STATE_ON)
     await hass.async_block_till_done()
     assert len(mock_notifier) == 0
+
+
+# Clocks in Europe/Rome go back from 03:00 CEST to 02:00 CET at 01:00 UTC
+@pytest.mark.parametrize(
+    "start",
+    [
+        pytest.param(datetime(2026, 10, 25, 0, 58, tzinfo=UTC), id="end_of_dst"),
+        pytest.param(datetime(2026, 10, 25, 1, 4, 22, tzinfo=UTC), id="repeated_hour"),
+    ],
+)
+async def test_repeat_across_dst_fall_back(
+    hass: HomeAssistant,
+    mock_notifier: list[ServiceCall],
+    freezer: FrozenDateTimeFactory,
+    start: datetime,
+) -> None:
+    """Test the repeat delay is kept when clocks go back at the end of DST."""
+    await hass.config.async_set_time_zone("Europe/Rome")
+    freezer.move_to(start)
+    config = deepcopy(TEST_CONFIG)
+    config[DOMAIN][NAME][CONF_REPEAT] = 3
+    config[DOMAIN][NAME][CONF_SKIP_FIRST] = True
+    assert await async_setup_component(hass, DOMAIN, config)
+
+    hass.states.async_set(TEST_ENTITY, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(mock_notifier) == 0
+
+    freezer.tick(timedelta(minutes=2, seconds=59))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(mock_notifier) == 0
+
+    freezer.tick(timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(mock_notifier) == 1
 
 
 async def test_done_message_state_tracker_reset_on_cancel(hass: HomeAssistant) -> None:

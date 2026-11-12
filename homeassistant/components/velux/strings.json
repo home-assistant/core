@@ -51,8 +51,9 @@
           "speed": {
             "state": {
               "default": "Default",
-              "fast": "Fast",
-              "silent": "Silent"
+              "fast": "[%key:component::cover::entity_component::_::state_attributes::speed::state::fast%]",
+              "silent": "Silent",
+              "slow": "[%key:component::cover::entity_component::_::state_attributes::speed::state::slow%]"
             }
           }
         }
@@ -63,8 +64,9 @@
           "speed": {
             "state": {
               "default": "[%key:component::velux::entity::cover::cover::state_attributes::speed::state::default%]",
-              "fast": "[%key:component::velux::entity::cover::cover::state_attributes::speed::state::fast%]",
-              "silent": "[%key:component::velux::entity::cover::cover::state_attributes::speed::state::silent%]"
+              "fast": "[%key:component::cover::entity_component::_::state_attributes::speed::state::fast%]",
+              "silent": "[%key:component::velux::entity::cover::cover::state_attributes::speed::state::silent%]",
+              "slow": "[%key:component::cover::entity_component::_::state_attributes::speed::state::slow%]"
             }
           }
         }
@@ -75,8 +77,9 @@
           "speed": {
             "state": {
               "default": "[%key:component::velux::entity::cover::cover::state_attributes::speed::state::default%]",
-              "fast": "[%key:component::velux::entity::cover::cover::state_attributes::speed::state::fast%]",
-              "silent": "[%key:component::velux::entity::cover::cover::state_attributes::speed::state::silent%]"
+              "fast": "[%key:component::cover::entity_component::_::state_attributes::speed::state::fast%]",
+              "silent": "[%key:component::velux::entity::cover::cover::state_attributes::speed::state::silent%]",
+              "slow": "[%key:component::cover::entity_component::_::state_attributes::speed::state::slow%]"
             }
           }
         }
@@ -97,6 +100,16 @@
     },
     "reboot_failed": {
       "message": "Failed to reboot gateway. Try again in a few moments or power cycle the device manually"
+    }
+  },
+  "issues": {
+    "deprecated_speed_default": {
+      "description": "The `default` speed of Velux covers is deprecated and will be removed. It was last used with `{entity_id}`.\n\nRemove the `speed` option from the open, close and set position actions in your automations and scripts to move the cover at its default speed.",
+      "title": "Velux cover speed `default` is deprecated"
+    },
+    "deprecated_speed_silent": {
+      "description": "The `silent` speed of Velux covers is deprecated and will be removed. It was last used with `{entity_id}`.\n\nUse `speed: slow` in the open, close and set position actions in your automations and scripts instead.",
+      "title": "Velux cover speed `silent` is deprecated"
     }
   }
 }

@@ -6,11 +6,10 @@ from typing import Any, override
 from aioesphomeapi import APIVersion, CoverInfo, CoverOperation, CoverState, EntityInfo
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
-    ATTR_TILT_POSITION,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
+    CoverServiceArgument,
 )
 from homeassistant.core import callback
 from homeassistant.util.enum import try_parse_enum
@@ -121,7 +120,7 @@ class EsphomeCover(EsphomeEntity[CoverInfo, CoverState], CoverEntity):
         """Move the cover to a specific position."""
         self._client.cover_command(
             key=self._key,
-            position=kwargs[ATTR_POSITION] / 100,
+            position=kwargs[CoverServiceArgument.POSITION] / 100,
             device_id=self._static_info.device_id,
         )
 
@@ -145,7 +144,7 @@ class EsphomeCover(EsphomeEntity[CoverInfo, CoverState], CoverEntity):
     @override
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
-        tilt_position: int = kwargs[ATTR_TILT_POSITION]
+        tilt_position: int = kwargs[CoverServiceArgument.TILT_POSITION]
         self._client.cover_command(
             key=self._key,
             tilt=tilt_position / 100,

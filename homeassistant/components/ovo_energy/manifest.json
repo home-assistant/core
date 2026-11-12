@@ -4,6 +4,7 @@
   "categories": ["energy.meters_monitoring"],
   "codeowners": ["@timmo001"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/ovo_energy",
   "integration_type": "service",
   "iot_class": "cloud_polling",

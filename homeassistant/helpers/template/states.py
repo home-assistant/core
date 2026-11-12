@@ -8,6 +8,7 @@ from typing import Any, override
 
 from lru import LRU
 from propcache.api import under_cached_property
+from typing_extensions import Sentinel as sentinel
 
 from homeassistant.const import STATE_UNKNOWN, EntityStateAttribute
 from homeassistant.core import (
@@ -27,7 +28,7 @@ from homeassistant.util.read_only_dict import ReadOnlyDict
 
 from .render_info import render_info_cv
 
-_SENTINEL = object()
+_SENTINEL = sentinel("_SENTINEL")
 
 _RESERVED_NAMES = {
     "contextfunction",
@@ -147,7 +148,7 @@ class AllStates:
     def __call__(
         self,
         entity_id: str,
-        rounded: bool | object = _SENTINEL,
+        rounded: bool | _SENTINEL = _SENTINEL,
         with_unit: bool = False,
     ) -> str:
         """Return the states."""
@@ -157,7 +158,7 @@ class AllStates:
         if rounded is _SENTINEL:
             rounded = with_unit
         if rounded or with_unit:
-            return state.format_state(rounded, with_unit)  # type: ignore[arg-type]
+            return state.format_state(rounded, with_unit)
         return state.state
 
     @override

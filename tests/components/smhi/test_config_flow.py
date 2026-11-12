@@ -298,3 +298,50 @@ async def test_reconfigure_flow_unique_id_taken(
     other_sensor = entity_registry.async_get(other_sensor.entity_id)
     assert other_sensor
     assert other_sensor.unique_id == "58.2898, 14.6304-wind_gust"
+
+
+async def test_reconfigure_flow_already_configured(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_fire_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test reconfigure aborts when the new location belongs to another entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Home",
+        unique_id="57.2898-13.6304",
+        data={"location": {"latitude": 57.2898, "longitude": 13.6304}},
+        version=3,
+    )
+    entry.add_to_hass(hass)
+    MockConfigEntry(
+        domain=DOMAIN,
+        title="Away",
+        unique_id="58.2898-14.6304",
+        data={"location": {"latitude": 58.2898, "longitude": 14.6304}},
+        version=3,
+    ).add_to_hass(hass)
+
+    sensor = entity_registry.async_get_or_create(
+        SENSOR_DOMAIN, DOMAIN, "57.2898, 13.6304-thunder", config_entry=entry
+    )
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_LOCATION: {
+                CONF_LATITUDE: 58.2898,
+                CONF_LONGITUDE: 14.6304,
+            }
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.unique_id == "57.2898-13.6304"
+    assert entry.data == {"location": {"latitude": 57.2898, "longitude": 13.6304}}
+    sensor = entity_registry.async_get(sensor.entity_id)
+    assert sensor
+    assert sensor.unique_id == "57.2898, 13.6304-thunder"

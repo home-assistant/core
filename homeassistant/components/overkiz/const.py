@@ -1,6 +1,7 @@
 """Constants for the Overkiz (by Somfy) integration."""
 
 from datetime import timedelta
+from enum import StrEnum
 import logging
 from typing import Final
 
@@ -37,12 +38,18 @@ LOGGER: logging.Logger = logging.getLogger(__package__)
 CONF_API_TYPE: Final = "api_type"
 CONF_HUB: Final = "hub"
 CONF_GATEWAY_ID: Final = "gateway_id"
-DEFAULT_SERVER: Final = Server.SOMFY_EUROPE
+CONF_REFRESH_TOKEN: Final = "refresh_token"
+CONF_SITE_OID: Final = "site_oid"
+DEFAULT_SERVER: Final = Server.SOMFY
 DEFAULT_HOST: Final = "gateway-xxxx-xxxx-xxxx.local:8443"
 
 UPDATE_INTERVAL: Final = timedelta(seconds=30)
 UPDATE_INTERVAL_LOCAL: Final = timedelta(seconds=5)
 UPDATE_INTERVAL_ALL_ASSUMED_STATE: Final = timedelta(minutes=60)
+UPDATE_INTERVAL_SAUTER_SMART_CONTROL: Final = timedelta(seconds=25)
+# fetch_events allows 1 call per second, and refresh timing jitters, so leave margin.
+UPDATE_INTERVAL_EXECUTION: Final = timedelta(seconds=2)
+RATE_LIMIT_RETRY_AFTER: Final = timedelta(minutes=1)
 
 PLATFORMS: list[Platform] = [
     Platform.ALARM_CONTROL_PANEL,
@@ -187,3 +194,16 @@ OVERKIZ_UNIT_TO_HA: dict[str, str] = {
     MeasuredValueType.VOLUME_IN_GALLON: UnitOfVolume.GALLONS,
     MeasuredValueType.VOLUME_IN_LITER: UnitOfVolume.LITERS,
 }
+
+
+class OverkizService(StrEnum):
+    """Store keys for Overkiz services."""
+
+    SET_COVER_POSITION_AND_TILT = "set_cover_position_and_tilt"
+
+
+class OverkizServiceArgument(StrEnum):
+    """Store keys for Overkiz service arguments."""
+
+    POSITION = "position"
+    TILT_POSITION = "tilt_position"

@@ -13,7 +13,8 @@ fi
 echo "Installing development dependencies..."
 uv pip install \
   -e . \
-  -e packages/pytest-home-assistant \
+  -e packages/hassfest \
+  -e packages/pytest-homeassistant \
   -r requirements_all.txt \
   -r requirements_test.txt \
   colorlog \

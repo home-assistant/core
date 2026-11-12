@@ -14,15 +14,16 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
+from .const import ATTR_BUCKET, ATTR_KEY, DATA_MINIO, DOMAIN
 from .minio_helper import MinioEventThread, create_minio_client
+from .services import setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "minio"
 CONF_ACCESS_KEY = "access_key"
 CONF_SECRET_KEY = "secret_key"
 CONF_SECURE = "secure"
@@ -31,10 +32,6 @@ CONF_LISTEN_BUCKET = "bucket"
 CONF_LISTEN_PREFIX = "prefix"
 CONF_LISTEN_SUFFIX = "suffix"
 CONF_LISTEN_EVENTS = "events"
-
-ATTR_BUCKET = "bucket"
-ATTR_KEY = "key"
-ATTR_FILE_PATH = "file_path"
 
 DEFAULT_LISTEN_PREFIX = ""
 DEFAULT_LISTEN_SUFFIX = ".*"
@@ -72,14 +69,6 @@ CONFIG_SCHEMA = probatio.Schema(
         )
     },
     extra=probatio.ALLOW_EXTRA,
-)
-
-BUCKET_KEY_SCHEMA = probatio.Schema(
-    {probatio.Required(ATTR_BUCKET): cv.string, probatio.Required(ATTR_KEY): cv.string}
-)
-
-BUCKET_KEY_FILE_SCHEMA = BUCKET_KEY_SCHEMA.extend(
-    {probatio.Required(ATTR_FILE_PATH): cv.string}
 )
 
 
@@ -123,46 +112,11 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     for listen_conf in conf[CONF_LISTEN]:
         _setup_listener(listen_conf)
 
-    minio_client = create_minio_client(
+    hass.data[DATA_MINIO] = create_minio_client(
         get_minio_endpoint(host, port), access_key, secret_key, secure
     )
 
-    def put_file(service: ServiceCall) -> None:
-        """Upload file service."""
-        bucket = service.data[ATTR_BUCKET]
-        key = service.data[ATTR_KEY]
-        file_path = service.data[ATTR_FILE_PATH]
-
-        if not hass.config.is_allowed_path(file_path):
-            raise ValueError(f"Invalid file_path {file_path}")
-
-        minio_client.fput_object(bucket, key, file_path)
-
-    def get_file(service: ServiceCall) -> None:
-        """Download file service."""
-        bucket = service.data[ATTR_BUCKET]
-        key = service.data[ATTR_KEY]
-        file_path = service.data[ATTR_FILE_PATH]
-
-        if not hass.config.is_allowed_path(file_path):
-            raise ValueError(f"Invalid file_path {file_path}")
-
-        minio_client.fget_object(bucket, key, file_path)
-
-    def remove_file(service: ServiceCall) -> None:
-        """Delete file service."""
-        bucket = service.data[ATTR_BUCKET]
-        key = service.data[ATTR_KEY]
-
-        minio_client.remove_object(bucket, key)
-
-    # Should be adjusted to register actions in setup_services in services.py
-    # pylint: disable-next=home-assistant-action-registered-outside-services-module
-    hass.services.register(DOMAIN, "put", put_file, schema=BUCKET_KEY_FILE_SCHEMA)
-    # pylint: disable-next=home-assistant-action-registered-outside-services-module
-    hass.services.register(DOMAIN, "get", get_file, schema=BUCKET_KEY_FILE_SCHEMA)
-    # pylint: disable-next=home-assistant-action-registered-outside-services-module
-    hass.services.register(DOMAIN, "remove", remove_file, schema=BUCKET_KEY_SCHEMA)
+    setup_services(hass)
 
     return True
 

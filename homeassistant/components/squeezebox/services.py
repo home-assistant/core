@@ -1,18 +1,28 @@
 """Support for interfacing to the SqueezeBox API."""
 
+from enum import StrEnum
+
 import probatio
 
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
-from homeassistant.const import ATTR_COMMAND
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, service
 
 from .const import DOMAIN
 
-SERVICE_CALL_METHOD = "call_method"
-SERVICE_CALL_QUERY = "call_query"
 
-ATTR_PARAMETERS = "parameters"
+class SqueezeboxService(StrEnum):
+    """Store keys for Squeezebox services."""
+
+    CALL_METHOD = "call_method"
+    CALL_QUERY = "call_query"
+
+
+class SqueezeboxServiceArgument(StrEnum):
+    """Store keys for Squeezebox service arguments."""
+
+    COMMAND = "command"
+    PARAMETERS = "parameters"
 
 
 @callback
@@ -21,11 +31,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_CALL_METHOD,
+        SqueezeboxService.CALL_METHOD,
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema={
-            probatio.Required(ATTR_COMMAND): cv.string,
-            probatio.Optional(ATTR_PARAMETERS): probatio.All(
+            probatio.Required(SqueezeboxServiceArgument.COMMAND): cv.string,
+            probatio.Optional(SqueezeboxServiceArgument.PARAMETERS): probatio.All(
                 probatio.EnsureList(), probatio.NonEmpty(), [cv.string]
             ),
         },
@@ -34,11 +44,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_CALL_QUERY,
+        SqueezeboxService.CALL_QUERY,
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema={
-            probatio.Required(ATTR_COMMAND): cv.string,
-            probatio.Optional(ATTR_PARAMETERS): probatio.All(
+            probatio.Required(SqueezeboxServiceArgument.COMMAND): cv.string,
+            probatio.Optional(SqueezeboxServiceArgument.PARAMETERS): probatio.All(
                 probatio.EnsureList(), probatio.NonEmpty(), [cv.string]
             ),
         },

@@ -7,8 +7,7 @@ from plugwise.exceptions import PlugwiseException
 
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.script import scripts_with_entity
-from homeassistant.const import EVENT_COMPONENT_LOADED, EVENT_HOMEASSISTANT_STARTED
-from homeassistant.core import CoreState, Event, HomeAssistant, callback
+from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.issue_registry import (
@@ -16,15 +15,13 @@ from homeassistant.helpers.issue_registry import (
     async_create_issue,
     async_delete_issue,
 )
-from homeassistant.helpers.typing import NoEventData
-from homeassistant.setup import ATTR_COMPONENT, EventComponentLoaded
+from homeassistant.helpers.start import async_at_started
 
 from .const import DOMAIN
 from .entity import PlugwiseEntity
 
 # Version in which deprecated entities will be removed.
 DEPRECATED_REMOVAL_VERSION = "2027.5.0"
-_REFERENCE_COMPONENTS = {"automation", "script"}
 
 
 def deprecate_entity(
@@ -161,15 +158,10 @@ def _async_defer_deprecation_check(
     issue_id: str,
     translation_key: str,
 ) -> None:
-    """Recheck entity references after automation and script setup."""
-    unsubscribers: list[Callable[[], None]] = []
-    loaded_components: set[str] = set()
+    """Recheck entity references once Home Assistant has started."""
 
     @callback
-    def _async_recheck() -> None:
-        for unsubscribe in unsubscribers:
-            unsubscribe()
-
+    def _async_recheck(_: HomeAssistant) -> None:
         if entity_id := entity_registry.async_get_entity_id(
             platform_domain, DOMAIN, entity_unique_id
         ):
@@ -183,39 +175,7 @@ def _async_defer_deprecation_check(
         else:
             async_delete_issue(hass, DOMAIN, issue_id)
 
-    @callback
-    def _async_component_loaded(event: Event[EventComponentLoaded]) -> None:
-        if (component := event.data[ATTR_COMPONENT]) in _REFERENCE_COMPONENTS:
-            loaded_components.add(component)
-            if _REFERENCE_COMPONENTS.issubset(loaded_components):
-                _async_recheck()
-
-    @callback
-    def _async_homeassistant_started(_: Event[NoEventData]) -> None:
-        _async_recheck()
-
-    @callback
-    def _async_register_unsubscriber(unsubscribe: Callable[[], None]) -> None:
-        is_subscribed = True
-
-        @callback
-        def _async_unsubscribe() -> None:
-            nonlocal is_subscribed
-            if is_subscribed:
-                is_subscribed = False
-                unsubscribe()
-
-        unsubscribers.append(_async_unsubscribe)
-        async_on_unload(_async_unsubscribe)
-
-    _async_register_unsubscriber(
-        hass.bus.async_listen(EVENT_COMPONENT_LOADED, _async_component_loaded)
-    )
-    _async_register_unsubscriber(
-        hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STARTED, _async_homeassistant_started
-        )
-    )
+    async_on_unload(async_at_started(hass, _async_recheck))
 
 
 def plugwise_command[_PlugwiseEntityT: PlugwiseEntity, **_P, _R](

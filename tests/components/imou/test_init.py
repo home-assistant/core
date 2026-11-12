@@ -55,6 +55,11 @@ async def test_setup_and_unload_entry(
             ConfigEntryState.SETUP_RETRY,
             "fetch_devices_failed",
         ),
+        (
+            ImouException("OP1013:monthly quota exceeded"),
+            ConfigEntryState.SETUP_RETRY,
+            "quota_exceeded",
+        ),
         (TimeoutError("timeout"), ConfigEntryState.SETUP_RETRY, "update_timeout"),
     ],
 )

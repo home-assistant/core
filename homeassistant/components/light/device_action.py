@@ -14,7 +14,6 @@ from homeassistant.const import (
     CONF_DOMAIN,
     CONF_ENTITY_ID,
     CONF_TYPE,
-    SERVICE_TURN_ON,
 )
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -24,7 +23,6 @@ from homeassistant.helpers.typing import ConfigType, TemplateVarsType, VolDictTy
 
 from . import (
     ATTR_BRIGHTNESS_PCT,
-    ATTR_BRIGHTNESS_STEP_PCT,
     ATTR_FLASH,
     FLASH_SHORT,
     VALID_BRIGHTNESS_PCT,
@@ -32,7 +30,7 @@ from . import (
     brightness_supported,
     get_supported_color_modes,
 )
-from .const import DOMAIN, LightEntityFeature
+from .const import DOMAIN, LightEntityFeature, LightService, LightServiceArgument
 
 # mypy: disallow-any-generics
 
@@ -84,17 +82,17 @@ async def async_call_action_from_config(
     data = {ATTR_ENTITY_ID: config[ATTR_ENTITY_ID]}
 
     if config[CONF_TYPE] == TYPE_BRIGHTNESS_INCREASE:
-        data[ATTR_BRIGHTNESS_STEP_PCT] = 10
+        data[LightServiceArgument.BRIGHTNESS_STEP_PCT] = 10
     elif config[CONF_TYPE] == TYPE_BRIGHTNESS_DECREASE:
-        data[ATTR_BRIGHTNESS_STEP_PCT] = -10
+        data[LightServiceArgument.BRIGHTNESS_STEP_PCT] = -10
     elif ATTR_BRIGHTNESS_PCT in config:
-        data[ATTR_BRIGHTNESS_PCT] = config[ATTR_BRIGHTNESS_PCT]
+        data[LightServiceArgument.BRIGHTNESS_PCT] = config[ATTR_BRIGHTNESS_PCT]
 
     if config[CONF_TYPE] == TYPE_FLASH:
-        data[ATTR_FLASH] = config.get(ATTR_FLASH, FLASH_SHORT)
+        data[LightServiceArgument.FLASH] = config.get(ATTR_FLASH, FLASH_SHORT)
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_ON, data, blocking=True, context=context
+        DOMAIN, LightService.TURN_ON, data, blocking=True, context=context
     )
 
 

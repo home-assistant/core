@@ -7,7 +7,7 @@ from pyfibaro.fibaro_device import SceneEvent
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.fibaro import CONF_IMPORT_PLUGINS, DOMAIN
+from homeassistant.components.fibaro.const import CONF_IMPORT_PLUGINS, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
