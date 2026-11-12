@@ -17,7 +17,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import WeatherFlowConfigEntry
-from .const import DOMAIN, LOGGER, format_dispatch_call
+from .const import DOMAIN, LOGGER
+from .util import format_dispatch_call
 
 
 @dataclass(frozen=True, kw_only=True)
