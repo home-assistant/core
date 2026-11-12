@@ -4,9 +4,6 @@ from collections.abc import Generator
 from unittest.mock import Mock, patch
 
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
-from switchbot import SwitchbotAccountConnectionError, SwitchbotAuthenticationError
-
 from homeassistant.components.bluetooth import (
     BluetoothScanningMode,
     BluetoothServiceInfoBleak,
@@ -30,9 +27,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from pytest_homeassistant.common import MockConfigEntry
+
+from switchbot import SwitchbotAccountConnectionError, SwitchbotAuthenticationError
 
 from . import (
     CIRCULATOR_FAN_PRO_SERVICE_INFO,
+    HUB4_SERVICE_INFO,
     LOCK_ULTRA_MAX_SERVICE_INFO,
     NOT_SWITCHBOT_INFO,
     USER_INPUT,
@@ -87,6 +88,34 @@ async def test_bluetooth_discovery(hass: HomeAssistant) -> None:
     assert result["data"] == {
         CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
         CONF_SENSOR_TYPE: "bot",
+    }
+    assert result["result"].unique_id == "aabbccddeeff"
+
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_bluetooth_discovery_hub4(hass: HomeAssistant) -> None:
+    """Test discovery via bluetooth with a valid device."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_BLUETOOTH},
+        data=HUB4_SERVICE_INFO,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm"
+
+    with patch_async_setup_entry() as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Hub4 EEFF"
+    assert result["data"] == {
+        CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
+        CONF_SENSOR_TYPE: "hub4",
     }
     assert result["result"].unique_id == "aabbccddeeff"
 
@@ -699,6 +728,7 @@ async def test_user_setup_wocurtain_or_bot(hass: HomeAssistant) -> None:
         "homeassistant.components.switchbot.config_flow.async_discovered_service_info",
         return_value=[
             NOT_SWITCHBOT_INFO,
+            HUB4_SERVICE_INFO,
             WOCURTAIN_SERVICE_INFO,
             WOHAND_SERVICE_ALT_ADDRESS_INFO,
             WOHAND_SERVICE_INFO_NOT_CONNECTABLE,

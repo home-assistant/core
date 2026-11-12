@@ -52,6 +52,7 @@ class SupportedModels(StrEnum):
     K10_PRO_VACUUM = "k10_pro_vacuum"
     K10_PRO_COMBO_VACUUM = "k10_pro_combo_vacumm"
     HUB3 = "hub3"
+    HUB4 = "hub4"
     LOCK_LITE = "lock_lite"
     LOCK_ULTRA = "lock_ultra"
     LOCK_ULTRA_MAX = "lock_ultra_max"
@@ -164,6 +165,7 @@ NON_CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.REMOTE: SupportedModels.REMOTE,
     SwitchbotModel.HUBMINI_MATTER: SupportedModels.HUBMINI_MATTER,
     SwitchbotModel.HUB3: SupportedModels.HUB3,
+    SwitchbotModel.HUB4: SupportedModels.HUB4,
     SwitchbotModel.CLIMATE_PANEL: SupportedModels.CLIMATE_PANEL,
     SwitchbotModel.WEATHER_STATION: SupportedModels.WEATHER_STATION,
 }

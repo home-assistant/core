@@ -2,15 +2,14 @@
 
 from unittest.mock import patch
 
+from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
+from homeassistant.const import CONF_ADDRESS
+from homeassistant.core import HomeAssistant
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.components.bluetooth import (
     generate_advertisement_data,
     generate_ble_device,
 )
-
-from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
-from homeassistant.const import CONF_ADDRESS
-from homeassistant.core import HomeAssistant
 
 DOMAIN = "switchbot"
 
@@ -833,6 +832,32 @@ HUB3_SERVICE_INFO = BluetoothServiceInfoBleak(
         service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
     ),
     device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Hub3"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+HUB4_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="Hub4",
+    manufacturer_data={
+        2409: b"\xb0\xe9\xfen^)\x00\xffh&\xd6d\x94\x03\x994\x80",
+    },
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00d\x00\x12\x82\x48"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="Hub4",
+        manufacturer_data={
+            2409: b"\xb0\xe9\xfen^)\x00\xffh&\xd6d\x94\x03\x994\x80",
+        },
+        service_data={
+            "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00d\x00\x12\x82\x48"
+        },
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Hub4"),
     time=0,
     connectable=True,
     tx_power=-127,
