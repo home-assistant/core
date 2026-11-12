@@ -77,9 +77,12 @@ class MeteoAlertBinarySensor(BinarySensorEntity):
         self._attr_is_on = False
 
         if alert := self._api.get_alert():
-            expiration_date = dt_util.parse_datetime(alert["expires"])
-
-            if expiration_date is not None and expiration_date > dt_util.utcnow():
+            # An alert without an expiration time stays active until the feed
+            # stops returning it.
+            if (expires := alert.get("expires")) is None or (
+                (expiration_date := dt_util.parse_datetime(expires)) is not None
+                and expiration_date > dt_util.utcnow()
+            ):
                 self._attr_extra_state_attributes = {
                     key: (
                         value.encode("utf-8", errors="replace").decode("utf-8")

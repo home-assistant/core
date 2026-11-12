@@ -4,7 +4,16 @@ from unittest import mock
 from unittest.mock import Mock
 
 import pytest
-from whirlpool import aircon, appliancesmanager, auth, dryer, oven, refrigerator, washer
+from whirlpool import (
+    aircon,
+    appliance,
+    appliancesmanager,
+    auth,
+    dryer,
+    oven,
+    refrigerator,
+    washer,
+)
 from whirlpool.backendselector import Brand, Region
 
 from .const import MOCK_SAID1, MOCK_SAID2
@@ -56,6 +65,7 @@ def fixture_mock_appliances_manager_api(
     mock_oven_single_cavity_api,
     mock_oven_dual_cavity_api,
     mock_refrigerator_api,
+    mock_unsupported_appliance_api,
 ):
     """Set up AppliancesManager fixture."""
     with (
@@ -79,6 +89,9 @@ def fixture_mock_appliances_manager_api(
             mock_oven_dual_cavity_api,
         ]
         mock_appliances_manager.return_value.refrigerators = [mock_refrigerator_api]
+        mock_appliances_manager.return_value.unsupported_appliances = [
+            mock_unsupported_appliance_api
+        ]
         yield mock_appliances_manager
 
 
@@ -101,7 +114,9 @@ def get_aircon_mock(said):
     """Get a mock of an air conditioner."""
     mock_aircon = Mock(spec=aircon.Aircon, said=said)
     mock_aircon.name = f"Aircon {said}"
-    mock_aircon.appliance_info = Mock(category="aircon", model_number="12345")
+    mock_aircon.appliance_info = Mock(
+        category="aircon", model_number="12345", raw_info={}
+    )
     mock_aircon.get_online.return_value = True
     mock_aircon.get_power_on.return_value = True
     mock_aircon.get_mode.return_value = aircon.Mode.Cool
@@ -138,7 +153,24 @@ def mock_washer_api():
     """Get a mock of a washer."""
     mock_washer = Mock(spec=washer.Washer, said="said_washer")
     mock_washer.name = "Washer"
-    mock_washer.appliance_info = Mock(category="washer_dryer", model_number="12345")
+    mock_washer.appliance_info = Mock(
+        category="washer_dryer",
+        model_number="12345",
+        raw_info={
+            "APPLIANCE_ID": 1033050,
+            "APPLIANCE_NAME": "Washer",
+            "CATEGORY_NAME": "FabricCare",
+            "DATA_MODEL_KEY": "DDM_LAUNDRY_VMAX20_WHIRLPOOL_WASHER8_V2",
+            "DEVICE_ID": "550e8400-e29b-41d4-a716-446655441234",
+            "LOCATION_ID": 15862310,
+            "MACHINE_ID": None,
+            "MODEL_NO": "12345",
+            "NEST_THERMOSTAT_ID": 0,
+            "SAID": "said_washer",
+            "SERIAL": "CC26012420",
+            "STATUS": "CLAIMED",
+        },
+    )
     mock_washer.get_online.return_value = True
     mock_washer.get_machine_state.return_value = washer.MachineState.RunningMainCycle
     mock_washer.get_door_open.return_value = False
@@ -165,7 +197,9 @@ def mock_dryer_api():
     """Get a mock of a dryer."""
     mock_dryer = mock.Mock(spec=dryer.Dryer, said="said_dryer")
     mock_dryer.name = "Dryer"
-    mock_dryer.appliance_info = Mock(category="washer_dryer", model_number="12345")
+    mock_dryer.appliance_info = Mock(
+        category="washer_dryer", model_number="12345", raw_info={}
+    )
     mock_dryer.get_online.return_value = True
     mock_dryer.get_machine_state.return_value = dryer.MachineState.RunningMainCycle
     mock_dryer.get_door_open.return_value = False
@@ -185,7 +219,7 @@ def mock_oven_single_cavity_api():
     """Get a mock of a single cavity oven."""
     mock_oven = Mock(spec=oven.Oven, said="said_oven_single")
     mock_oven.name = "Single Cavity Oven"
-    mock_oven.appliance_info = Mock(category="oven", model_number="12345")
+    mock_oven.appliance_info = Mock(category="oven", model_number="12345", raw_info={})
     mock_oven.get_cavity_state.return_value = oven.CavityState.Standby
     mock_oven.get_cook_mode.return_value = oven.CookMode.Bake
     mock_oven.get_online.return_value = True
@@ -209,7 +243,7 @@ def mock_oven_dual_cavity_api():
     """Get a mock of a dual cavity oven."""
     mock_oven = Mock(spec=oven.Oven, said="said_oven_dual")
     mock_oven.name = "Dual Cavity Oven"
-    mock_oven.appliance_info = Mock(category="oven", model_number="12345")
+    mock_oven.appliance_info = Mock(category="oven", model_number="12345", raw_info={})
     mock_oven.get_cavity_state.return_value = oven.CavityState.Standby
     mock_oven.get_cook_mode.return_value = oven.CookMode.Bake
     mock_oven.get_online.return_value = True
@@ -238,7 +272,7 @@ def mock_refrigerator_api():
     mock_refrigerator = Mock(spec=refrigerator.Refrigerator, said="said_refrigerator")
     mock_refrigerator.name = "Beer fridge"
     mock_refrigerator.appliance_info = Mock(
-        category="refrigerator", model_number="12345"
+        category="refrigerator", model_number="12345", raw_info={}
     )
     mock_refrigerator.get_offset_temp.return_value = 0
     mock_refrigerator.get_raw_data.return_value = {
@@ -248,3 +282,33 @@ def mock_refrigerator_api():
         },
     }
     return mock_refrigerator
+
+
+@pytest.fixture
+def mock_unsupported_appliance_api():
+    """Get a mock of an appliance not supported by the library."""
+    mock_appliance = Mock(spec=appliance.Appliance, said="said_unsupported")
+    mock_appliance.name = "Unsupported appliance"
+    mock_appliance.appliance_info = Mock(
+        category="cooking",
+        model_number="12345",
+        raw_info={
+            "attributes": {
+                "CapabilityPartNumber": "W11788386",
+                "Category": "Cooking",
+                "Name": "556e737570706f72746564206170706c69616e6365",
+                "Serial": "D1",
+            },
+            "defaultClientId": "said_unsupported",
+            "thingArn": "arn:aws:iot:eu-central-1:123456789012:thing/said_unsupported",
+            "thingId": "6d3b1a2c-4f5e-4d7a-9b8c-0e1f2a3b4c5d",
+            "thingName": "said_unsupported",
+            "thingTypeName": "12345",
+            "version": 1,
+        },
+    )
+    mock_appliance.get_raw_data.return_value = {
+        "primaryCavity": {"cavityState": "idle", "doorStatus": "closed"},
+        "temperatureUnit": "C",
+    }
+    return mock_appliance
