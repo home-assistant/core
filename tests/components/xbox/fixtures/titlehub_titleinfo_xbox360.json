@@ -1,0 +1,150 @@
+{
+  "xuid": "271958441785640",
+  "titles": [
+    {
+      "titleId": "1480659550",
+      "pfn": null,
+      "bingId": "66acd000-77fe-1000-9115-d8025841125e",
+      "serviceConfigId": "04300100-6fc8-4aa4-abbf-74c309f1c28c",
+      "windowsPhoneProductId": null,
+      "name": "Joy Ride Turbo",
+      "type": "Game",
+      "devices": ["Xbox360", "XboxOne", "XboxSeries"],
+      "displayImage": "http://store-images.s-microsoft.com/image/apps.55462.65697580773346286.de1a7dea-d35c-459d-a15c-a737811ee00f.6e8da1e2-791b-4bc8-aaf6-a2665f7cdc90",
+      "mediaItemType": "XboxArcadeGame",
+      "modernTitleId": "166838924",
+      "isBundle": false,
+      "achievement": {
+        "currentAchievements": 3,
+        "totalAchievements": 12,
+        "currentGamerscore": 30,
+        "totalGamerscore": 200,
+        "progressPercentage": 15.0,
+        "sourceVersion": 1
+      },
+      "stats": null,
+      "gamePass": null,
+      "images": [
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.31529.65697580773346286.de1a7dea-d35c-459d-a15c-a737811ee00f.6ecef09f-6b09-4393-94e0-9f3f9c655882",
+          "type": "Screenshot"
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.10788.65697580773346286.de1a7dea-d35c-459d-a15c-a737811ee00f.c5ab5001-d597-43d0-b434-5892ede33deb",
+          "type": "BrandedKeyArt"
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.59674.65697580773346286.de1a7dea-d35c-459d-a15c-a737811ee00f.39d1596a-d677-44a9-a70a-f9b3d4dae615",
+          "type": "TitledHeroArt"
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.46148.65697580773346286.de1a7dea-d35c-459d-a15c-a737811ee00f.81763cd8-510b-439f-8393-ef687850226c",
+          "type": "Poster"
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.59674.65697580773346286.de1a7dea-d35c-459d-a15c-a737811ee00f.39d1596a-d677-44a9-a70a-f9b3d4dae615",
+          "type": "SuperHeroArt"
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.55462.65697580773346286.de1a7dea-d35c-459d-a15c-a737811ee00f.6e8da1e2-791b-4bc8-aaf6-a2665f7cdc90",
+          "type": "BoxArt"
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.55462.65697580773346286.de1a7dea-d35c-459d-a15c-a737811ee00f.6e8da1e2-791b-4bc8-aaf6-a2665f7cdc90",
+          "type": "FeaturePromotionalSquareArt"
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.55065.65697580773346286.de1a7dea-d35c-459d-a15c-a737811ee00f.65e2c1e0-b81f-42dc-81fe-425535260882",
+          "type": "Screenshot"
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.53856.65697580773346286.de1a7dea-d35c-459d-a15c-a737811ee00f.241b7462-f137-45f6-96eb-84a9a4758ece",
+          "type": "Screenshot"
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.40084.65697580773346286.de1a7dea-d35c-459d-a15c-a737811ee00f.42e9c21d-e136-4703-aa6d-034a76e3fb42",
+          "type": "Screenshot"
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.18356.65697580773346286.de1a7dea-d35c-459d-a15c-a737811ee00f.bbb2bd61-9262-4340-bff5-0aef41f22fd9",
+          "type": "Screenshot"
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.40286.65697580773346286.de1a7dea-d35c-459d-a15c-a737811ee00f.8694b604-5d33-4908-8555-dacfed75098a",
+          "type": "Screenshot"
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.40138.65697580773346286.de1a7dea-d35c-459d-a15c-a737811ee00f.10a48c7b-643d-49e4-8407-bbae2b17a895",
+          "type": "Screenshot"
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.47959.65697580773346286.de1a7dea-d35c-459d-a15c-a737811ee00f.33cda227-5172-4555-b854-e17de2ff2360",
+          "type": "Screenshot"
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.38401.65697580773346286.de1a7dea-d35c-459d-a15c-a737811ee00f.6c258135-6f68-467f-ab7f-b8359a811cea",
+          "type": "Screenshot"
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.7985.65697580773346286.de1a7dea-d35c-459d-a15c-a737811ee00f.2d6ca43f-279d-4f29-baa7-3d251405aade",
+          "type": "Screenshot"
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.49384.65697580773346286.de1a7dea-d35c-459d-a15c-a737811ee00f.ea04f51b-6bb8-40d1-a706-1944251c602d",
+          "type": "Screenshot"
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.33741.65697580773346286.de1a7dea-d35c-459d-a15c-a737811ee00f.e94121de-d1f2-47e0-86e4-322523f53662",
+          "type": "Screenshot"
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.26151.65697580773346286.de1a7dea-d35c-459d-a15c-a737811ee00f.245d0f1f-6ef9-4367-9832-e8d450420b56",
+          "type": "Screenshot"
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.10556.65697580773346286.de1a7dea-d35c-459d-a15c-a737811ee00f.f650b4e0-7bff-41c8-b777-11bbdb703be5",
+          "type": "Screenshot"
+        }
+      ],
+      "titleHistory": null,
+      "detail": {
+        "attributes": [],
+        "availabilities": [
+          {
+            "Actions": [
+              "Details",
+              "Fulfill",
+              "Purchase",
+              "Browse",
+              "Curate",
+              "Redeem"
+            ],
+            "AvailabilityId": "B178GX41Q522",
+            "Platforms": ["Xbox"],
+            "SkuId": "0001"
+          }
+        ],
+        "capabilities": [],
+        "description": "From the Kinect Joy Ride creators comes Joy Ride Turbo, a controller-based arcade racer delivering precision handling and crazy stunts with more thrills, speed, & mayhem! In the new Stunt Park, you’re free to show off! There’s no limit to the whacky tour de force you achieve with friends. It’s a vibrant playground for your car - jump off cliffs, shoot from a cannon, & more. Plus, explore and find collectibles that unlock cars – giving you an edge for faster races and death-defying tricks. Race new tracks, old favorites and 3 modes of play: Battle Race, Pro Race & Time Trial. Challenge family & friends to local 4-player split-screen or race up to 8 on Xbox LIVE. With Joy Ride Turbo, everyone’s in the driver’s seat in this madcap kart racer.",
+        "developerName": "BigPark",
+        "genres": [
+          "Sports & Recreation",
+          "Racing & Flying",
+          "Avatar",
+          "Family"
+        ],
+        "publisherName": "Microsoft Studios",
+        "minAge": 6,
+        "releaseDate": "2012-05-23T09:00:00Z",
+        "shortDescription": "Introducing Joy Ride Turbo, a controller-based arcade racer delivering precision handling, speed and crazy stunt mayhem! In the new Stunt Park, show off your skills or explore and find collectibles that unlock cars, giving you an edge for faster races and death-defying stunts. Plus, race new tracks and old favorites in Battle Race, Pro Race & Time Trial. Supports 4-player split-screen or race up to 8 on Xbox LIVE. With Joy Ride Turbo, everyone’s in the driver’s seat in this madcap kart racer.",
+        "vuiDisplayName": "Joy Ride Turbo",
+        "xboxLiveGoldRequired": false
+      },
+      "friendsWhoPlayed": null,
+      "alternateTitleIds": [],
+      "contentBoards": null,
+      "xboxLiveTier": "Full",
+      "isStreamable": true
+    }
+  ]
+}
