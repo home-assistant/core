@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
+import logging
 from typing import Any
 from unittest.mock import MagicMock
 
@@ -555,6 +556,77 @@ async def test_websocket_refresh_failure(
     await hass.async_block_till_done()
 
     assert hass.states.get(ENTITY_ID).state == MediaPlayerState.PAUSED
+
+
+async def stop_playback(connection: MagicMock) -> None:
+    """Let Kodi report that the playback stopped."""
+    connection.server.Player.OnStop(
+        "xbmc", {"end": False, "item": {"id": 1, "type": "movie"}}
+    )
+
+
+async def quit_kodi(connection: MagicMock) -> None:
+    """Let Kodi report that it quits."""
+    await connection.server.System.OnQuit("xbmc", None)
+
+
+REFRESH_REQUESTS = [
+    "get_players",
+    "get_application_properties",
+    "get_player_properties",
+    "get_playing_item_properties",
+]
+
+
+@websocket
+@pytest.mark.parametrize("request_name", REFRESH_REQUESTS)
+@pytest.mark.parametrize(
+    ("notification", "expected_state"),
+    [
+        pytest.param(stop_playback, MediaPlayerState.IDLE, id="stop"),
+        pytest.param(quit_kodi, MediaPlayerState.OFF, id="quit"),
+    ],
+)
+async def test_websocket_reset_during_refresh(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_connection: MagicMock,
+    mock_kodi: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+    request_name: str,
+    notification: Callable[[MagicMock], Awaitable[None]],
+    expected_state: MediaPlayerState,
+) -> None:
+    """Test a stop or quit ends a refresh that waits for a reply."""
+    await set_playing(hass, mock_kodi)
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get(ENTITY_ID).state == MediaPlayerState.PLAYING
+    request = getattr(mock_kodi, request_name)
+    reply = request.side_effect
+    requested = asyncio.Event()
+    replied = asyncio.Event()
+
+    async def pending_request(*args: Any) -> Any:
+        requested.set()
+        await replied.wait()
+        return reply(*args) if reply else request.return_value
+
+    request.side_effect = pending_request
+    mock_kodi.reset_mock()
+
+    async with asyncio.timeout(5):
+        mock_connection.server.Player.OnPause("xbmc", player_notification(0))
+        await requested.wait()
+        await notification(mock_connection)
+        replied.set()
+        await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == expected_state
+    assert ATTR_MEDIA_TITLE not in state.attributes
+    assert not [record for record in caplog.records if record.levelno >= logging.ERROR]
+    for later_request in REFRESH_REQUESTS[REFRESH_REQUESTS.index(request_name) + 1 :]:
+        getattr(mock_kodi, later_request).assert_not_awaited()
 
 
 @websocket
