@@ -144,9 +144,18 @@ class EnergyIDDirectiveCoordinator(DataUpdateCoordinator[EnergyIDDirectivesData]
 
         # The client re-authenticates on its own, which can reveal a lost claim.
         self._raise_if_unclaimed()
-        schedules = await asyncio.gather(
-            *(self._async_get_schedule(resource) for resource in resources)
+        results = await asyncio.gather(
+            *(self._async_get_schedule(resource) for resource in resources),
+            return_exceptions=True,
         )
+        # Every request has finished before a failure ends the refresh.
+        if errors := [
+            result for result in results if isinstance(result, BaseException)
+        ]:
+            raise errors[0]
+        schedules = [
+            result for result in results if not isinstance(result, BaseException)
+        ]
         self._raise_if_unclaimed()
         return EnergyIDDirectivesData(
             resources={resource.id: resource for resource in resources},
