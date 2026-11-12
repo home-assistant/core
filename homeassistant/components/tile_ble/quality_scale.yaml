@@ -1,0 +1,100 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: This integration does not register actions.
+  appropriate-polling:
+    status: exempt
+    comment: This integration listens to Bluetooth advertisements and does not poll.
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: This integration does not register actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup:
+    status: exempt
+    comment: A Tile that is out of range at startup is expected and is reported as away.
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: This integration does not have an options flow.
+  docs-installation-parameters: todo
+  entity-unavailable:
+    status: done
+    comment: |
+      The ring button is unavailable while the Tile is out of range; the device
+      tracker reports it as away instead.
+  integration-owner: done
+  log-when-unavailable:
+    status: exempt
+    comment: A Tile going out of range is expected and is reported as away.
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: The Tile account is only used during setup to get the Tile's key, which does not change. The credentials are not stored.
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery:
+    status: exempt
+    comment: Tiles owned by other people are common, so Tiles are added through the user flow instead of discovery.
+  discovery-update-info:
+    status: exempt
+    comment: This integration does not use discovery.
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices:
+    status: exempt
+    comment: Each config entry represents a single Tile.
+  entity-category: done
+  entity-device-class:
+    status: exempt
+    comment: Neither the device tracker nor the ring button has a fitting device class.
+  entity-disabled-by-default:
+    status: exempt
+    comment: All entities are useful for every Tile.
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow:
+    status: exempt
+    comment: There is nothing to reconfigure.
+  repair-issues:
+    status: exempt
+    comment: This integration does not have any repair issues.
+  stale-devices:
+    status: exempt
+    comment: Each config entry represents a single Tile.
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: todo

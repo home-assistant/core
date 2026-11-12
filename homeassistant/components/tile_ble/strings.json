@@ -1,0 +1,52 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "no_tiles": "No Tiles were found in this Tile account."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown_tile": "This Tile is not in your Tile account. Pick another Tile.",
+      "wrong_tile": "The Tile did not accept the key from your Tile account. Pick another Tile."
+    },
+    "step": {
+      "device": {
+        "data": {
+          "address": "[%key:common::config_flow::data::device%]"
+        },
+        "data_description": {
+          "address": "Your Tiles are listed by name. A Tile listed by its address could not be matched to your account; Home Assistant connects to it to find out which Tile it is."
+        },
+        "description": "Pick the Tile you want to set up."
+      },
+      "user": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::email%]"
+        },
+        "data_description": {
+          "password": "The password of your Tile account.",
+          "username": "The email address of your Tile account."
+        },
+        "description": "Log in to your Tile account to get the names of your Tiles and the keys needed to ring them. Only the key of the Tile you set up is stored, not your credentials."
+      }
+    }
+  },
+  "entity": {
+    "button": {
+      "ring": {
+        "name": "Ring"
+      }
+    }
+  },
+  "exceptions": {
+    "device_not_found": {
+      "message": "The Tile cannot be reached over Bluetooth: {reason}"
+    },
+    "ring_failed": {
+      "message": "Could not ring the Tile: {error}"
+    }
+  }
+}
