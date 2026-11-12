@@ -14,6 +14,8 @@ from homeassistant.components.tasmota.const import (
 )
 from homeassistant.core import HomeAssistant
 
+from .test_common import NEWER_VERSION
+
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
 
@@ -44,9 +46,9 @@ def mock_github_api():
     mock_response = AsyncMock(
         data=GitHubReleaseModel(
             {
-                "tag_name": "v14.6.0",
-                "name": "Tasmota 14.6.0",
-                "html_url": "https://github.com/arendst/Tasmota/releases/tag/v14.6.0",
+                "tag_name": f"v{NEWER_VERSION}",
+                "name": f"Tasmota {NEWER_VERSION}",
+                "html_url": f"https://github.com/arendst/Tasmota/releases/tag/v{NEWER_VERSION}",
                 "body": "",
             }
         )

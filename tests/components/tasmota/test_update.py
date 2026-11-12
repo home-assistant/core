@@ -36,7 +36,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import setup_tasmota_helper
-from .test_common import DEFAULT_CONFIG
+from .test_common import DEFAULT_CONFIG, DEFAULT_VERSION, NEWER_VERSION, OLDER_VERSION
 
 
 @pytest.fixture
@@ -73,12 +73,9 @@ def mock_github_latest_release(request: pytest.FixtureRequest):
 @pytest.mark.parametrize(
     ("mock_github_latest_release", "expected_update_state"),
     [
-        ("v0.0.0", STATE_OFF),
-        ("v" + DEFAULT_CONFIG["sw"], STATE_OFF),
-        (
-            "v" + ".".join(str(int(x) + 1) for x in DEFAULT_CONFIG["sw"].split(".")),
-            STATE_ON,
-        ),
+        ("v" + OLDER_VERSION, STATE_OFF),
+        ("v" + DEFAULT_VERSION, STATE_OFF),
+        ("v" + NEWER_VERSION, STATE_ON),
     ],
     indirect=["mock_github_latest_release"],
 )
@@ -108,7 +105,7 @@ async def test_device_update_entity(
         hass.config_entries.async_entries("tasmota")[0].entry_id,
     )
     assert device_entry is not None
-    assert device_entry.sw_version == DEFAULT_CONFIG["sw"]
+    assert device_entry.sw_version == DEFAULT_VERSION
 
     entity_id = entity_registry.async_get_entity_id(
         Platform.UPDATE, DOMAIN, dr.format_mac(mac)
@@ -117,7 +114,7 @@ async def test_device_update_entity(
 
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.attributes[ATTR_INSTALLED_VERSION] == DEFAULT_CONFIG["sw"]
+    assert state.attributes[ATTR_INSTALLED_VERSION] == DEFAULT_VERSION
     assert state.attributes[
         ATTR_LATEST_VERSION
     ] == mock_github_latest_release.removeprefix("v")
@@ -172,8 +169,8 @@ async def test_device_update_entity_rediscovered(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_INSTALLED_VERSION] == DEFAULT_CONFIG["sw"]
-    assert state.attributes[ATTR_LATEST_VERSION] == "14.6.0"
+    assert state.attributes[ATTR_INSTALLED_VERSION] == DEFAULT_VERSION
+    assert state.attributes[ATTR_LATEST_VERSION] == NEWER_VERSION
 
 
 @pytest.fixture
@@ -237,9 +234,9 @@ async def test_device_update_entity_github_failure(
     mock_github_latest_release_failure.return_value = AsyncMock(
         data=GitHubReleaseModel(
             {
-                "tag_name": "v14.6.0",
-                "name": "Tasmota 14.6.0",
-                "html_url": "https://github.com/arendst/Tasmota/releases/tag/v14.6.0",
+                "tag_name": f"v{NEWER_VERSION}",
+                "name": f"Tasmota {NEWER_VERSION}",
+                "html_url": f"https://github.com/arendst/Tasmota/releases/tag/v{NEWER_VERSION}",
                 "body": "",
             }
         )
@@ -251,10 +248,10 @@ async def test_device_update_entity_github_failure(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_INSTALLED_VERSION] == DEFAULT_CONFIG["sw"]
-    assert state.attributes[ATTR_LATEST_VERSION] == "14.6.0"
+    assert state.attributes[ATTR_INSTALLED_VERSION] == DEFAULT_VERSION
+    assert state.attributes[ATTR_LATEST_VERSION] == NEWER_VERSION
     assert state.attributes[ATTR_RELEASE_URL] == (
-        "https://github.com/arendst/Tasmota/releases/tag/v14.6.0"
+        f"https://github.com/arendst/Tasmota/releases/tag/v{NEWER_VERSION}"
     )
 
 
@@ -281,17 +278,17 @@ async def test_device_update_entity_refreshes_on_firmware_change(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_INSTALLED_VERSION] == DEFAULT_CONFIG["sw"]
+    assert state.attributes[ATTR_INSTALLED_VERSION] == DEFAULT_VERSION
 
     # Device reports a newer firmware version over MQTT
     updated_config = copy.deepcopy(config)
-    updated_config["sw"] = "14.6.0"
+    updated_config["sw"] = NEWER_VERSION
     async_fire_mqtt_message(hass, config_topic, json.dumps(updated_config))
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.attributes[ATTR_INSTALLED_VERSION] == "14.6.0"
+    assert state.attributes[ATTR_INSTALLED_VERSION] == NEWER_VERSION
     assert state.state == STATE_OFF
 
 
@@ -311,9 +308,9 @@ async def test_setup_not_blocked_by_slow_github_refresh(
         return AsyncMock(
             data=GitHubReleaseModel(
                 {
-                    "tag_name": "v14.6.0",
-                    "name": "Tasmota 14.6.0",
-                    "html_url": "https://github.com/arendst/Tasmota/releases/tag/v14.6.0",
+                    "tag_name": f"v{NEWER_VERSION}",
+                    "name": f"Tasmota {NEWER_VERSION}",
+                    "html_url": f"https://github.com/arendst/Tasmota/releases/tag/v{NEWER_VERSION}",
                     "body": "",
                 }
             )
@@ -354,5 +351,5 @@ async def test_setup_not_blocked_by_slow_github_refresh(
 
         state = hass.states.get(entity_id)
         assert state is not None
-        assert state.attributes[ATTR_INSTALLED_VERSION] == DEFAULT_CONFIG["sw"]
-        assert state.attributes[ATTR_LATEST_VERSION] == "14.6.0"
+        assert state.attributes[ATTR_INSTALLED_VERSION] == DEFAULT_VERSION
+        assert state.attributes[ATTR_LATEST_VERSION] == NEWER_VERSION
