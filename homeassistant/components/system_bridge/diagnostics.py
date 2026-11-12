@@ -67,6 +67,11 @@ async def async_get_config_entry_diagnostics(
     if data["audio"] is not None:
         # Bluetooth device IDs hold the MAC, and app names can fall back to the title
         data["audio"] = async_redact_data(data["audio"], {"id", "name", "output"})
+    if data["commands"] is not None:
+        # Command lines can hold paths, hostnames or secrets
+        data["commands"] = async_redact_data(
+            data["commands"], {"arguments", "command", "workingDir"}
+        )
     if data["system"] is not None and data["system"]["failed_units"] is not None:
         # Unit names and descriptions can hold paths, such as for mount units
         data["system"]["failed_units"] = async_redact_data(

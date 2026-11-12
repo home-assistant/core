@@ -14,12 +14,12 @@ from pytest_homeassistant.common import (
 )
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.imou.button import PARAM_MUTE, PARAM_PTZ_UP
 from homeassistant.components.imou.const import PTZ_MOVE_DURATION_MS
 from homeassistant.components.imou.coordinator import SCAN_INTERVAL
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -83,8 +83,8 @@ async def test_press_button_via_service(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: entity_id},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -110,8 +110,8 @@ async def test_press_ptz_button_passes_move_duration(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: ptz_entry.entity_id},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: ptz_entry.entity_id},
         blocking=True,
     )
 
@@ -137,8 +137,8 @@ async def test_press_button_service_propagates_api_error(
     with pytest.raises(HomeAssistantError, match="Imou rejected the button press"):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: entity_id},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -161,8 +161,8 @@ async def test_press_button_invalid_auth_starts_reauth(
     ):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: entity_id},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
     await hass.async_block_till_done()
@@ -216,8 +216,8 @@ async def test_press_unavailable_offline_device_via_service(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: mute_entry.entity_id},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: mute_entry.entity_id},
         blocking=True,
     )
 

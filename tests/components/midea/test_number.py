@@ -18,11 +18,11 @@ from homeassistant.components.number import (
     ATTR_MAX,
     ATTR_MIN,
     ATTR_STEP,
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -84,8 +84,11 @@ async def _assert_service_call(
     device.calls.clear()
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: value},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            NumberServiceArgument.VALUE: value,
+        },
         blocking=True,
     )
     assert device.calls == expected_calls
@@ -315,7 +318,10 @@ async def test_number_set_value_raises_on_device_communication_error(
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: entity_entry.entity_id, ATTR_VALUE: 3},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: entity_entry.entity_id,
+                NumberServiceArgument.VALUE: 3,
+            },
             blocking=True,
         )

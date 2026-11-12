@@ -22,7 +22,10 @@ from pytest_homeassistant.components.common import (
 )
 
 from homeassistant.components.button.trigger import TRIGGERS
-from homeassistant.components.event import ATTR_EVENT_TYPE, ATTR_EVENT_TYPES
+from homeassistant.components.event import (
+    EventEntityCapabilityAttribute,
+    EventEntityStateAttribute,
+)
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
@@ -73,8 +76,8 @@ def _button_event_state(
         "state": state,
         "attributes": {
             ATTR_DEVICE_CLASS: device_class,
-            ATTR_EVENT_TYPES: event_types,
-            ATTR_EVENT_TYPE: event_type,
+            EventEntityCapabilityAttribute.EVENT_TYPES: event_types,
+            EventEntityStateAttribute.EVENT_TYPE: event_type,
         },
     }
 
@@ -928,7 +931,7 @@ def _make_set_state_step(state: str | None) -> _TimelineStep:
                 "state": state,
                 "attributes": {
                     ATTR_DEVICE_CLASS: "button",
-                    ATTR_EVENT_TYPES: _PHYSICAL_BUTTON_EVENT_TYPES,
+                    EventEntityCapabilityAttribute.EVENT_TYPES: _PHYSICAL_BUTTON_EVENT_TYPES,
                 },
             },
         )

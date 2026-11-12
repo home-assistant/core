@@ -41,17 +41,17 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.home_connect.const import DOMAIN
 from homeassistant.components.select import (
-    ATTR_OPTION,
     ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
+    SelectService,
+    SelectServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_RESTORED,
-    SERVICE_SELECT_OPTION,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -388,8 +388,11 @@ async def test_select_program_functionality(
     assert hass.states.is_state(entity_id, expected_initial_state)
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: program_to_set},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            SelectServiceArgument.OPTION: program_to_set,
+        },
     )
     await hass.async_block_till_done()
     getattr(client, mock_method).assert_awaited_once_with(
@@ -476,8 +479,11 @@ async def test_select_exception_handling(
     with pytest.raises(HomeAssistantError, match=exception_match):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: program_to_set},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: entity_id,
+                SelectServiceArgument.OPTION: program_to_set,
+            },
             blocking=True,
         )
     assert getattr(client_with_exception, mock_attr).call_count == 2
@@ -589,8 +595,11 @@ async def test_select_functionality(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: value_to_set},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            SelectServiceArgument.OPTION: value_to_set,
+        },
     )
     await hass.async_block_till_done()
 
@@ -842,8 +851,11 @@ async def test_select_entity_error(
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: value_to_set},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: entity_id,
+                SelectServiceArgument.OPTION: value_to_set,
+            },
             blocking=True,
         )
     assert getattr(client_with_exception, mock_attr).call_count == 2
@@ -969,10 +981,10 @@ async def test_options_functionality(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_OPTION: "laundry_care_washer_enum_type_temperature_ul_warm",
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            SelectServiceArgument.OPTION: "laundry_care_washer_enum_type_temperature_ul_warm",
         },
     )
     await hass.async_block_till_done()

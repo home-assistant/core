@@ -31,7 +31,11 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from .const import AUDIO_MIN_VERSION, DATA_WAIT_TIMEOUT, DOMAIN, MODULES
@@ -108,12 +112,13 @@ async def async_setup_entry(
             },
         ) from exception
 
+    unsupported_issue_id = f"system_bridge_{entry.entry_id}_unsupported_version"
     # If not supported, create an issue and raise ConfigEntryNotReady
     if not supported:
         async_create_issue(
             hass=hass,
             domain=DOMAIN,
-            issue_id=f"system_bridge_{entry.entry_id}_unsupported_version",
+            issue_id=unsupported_issue_id,
             config_entry_id=entry.entry_id,
             translation_key="unsupported_version",
             translation_placeholders={"host": entry.data[CONF_HOST]},
@@ -128,6 +133,8 @@ async def async_setup_entry(
                 "host": entry.data[CONF_HOST],
             },
         )
+    # The host has been updated since the issue was raised
+    async_delete_issue(hass, DOMAIN, unsupported_issue_id)
 
     coordinator = SystemBridgeDataUpdateCoordinator(
         hass,

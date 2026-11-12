@@ -10,9 +10,9 @@ from pyvesync.const import DeviceStatus, ProductTypes
 from pyvesync.utils.errors import ResponseInfo
 
 from homeassistant.components.select import (
-    ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
 from homeassistant.components.vesync.const import (
     HUMIDIFIER_NIGHT_LIGHT_LEVEL_BRIGHT,
@@ -27,7 +27,7 @@ from homeassistant.components.vesync.select import (
     HA_TO_VS_HUMIDIFIER_NIGHT_LIGHT_LEVEL_MAP,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -87,10 +87,10 @@ async def test_humidifier_set_nightlight_level(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: ENTITY_HUMIDIFIER_300S_NIGHT_LIGHT_SELECT,
-            ATTR_OPTION: HUMIDIFIER_NIGHT_LIGHT_LEVEL_DIM,
+            CommonServiceArgument.ENTITY_ID: ENTITY_HUMIDIFIER_300S_NIGHT_LIGHT_SELECT,
+            SelectServiceArgument.OPTION: HUMIDIFIER_NIGHT_LIGHT_LEVEL_DIM,
         },
         blocking=True,
     )
@@ -188,8 +188,11 @@ async def test_nightlight_select_option(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: option},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            SelectServiceArgument.OPTION: option,
+        },
         blocking=True,
     )
 
@@ -276,8 +279,11 @@ async def test_nightlight_select_option_unsupported(
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: option},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: entity_id,
+                SelectServiceArgument.OPTION: option,
+            },
             blocking=True,
         )
 
@@ -316,10 +322,10 @@ async def test_select_option_device_failure(
     with pytest.raises(HomeAssistantError, match=message):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: ENTITY_HUMIDIFIER_300S_NIGHT_LIGHT_SELECT,
-                ATTR_OPTION: HUMIDIFIER_NIGHT_LIGHT_LEVEL_DIM,
+                CommonServiceArgument.ENTITY_ID: ENTITY_HUMIDIFIER_300S_NIGHT_LIGHT_SELECT,
+                SelectServiceArgument.OPTION: HUMIDIFIER_NIGHT_LIGHT_LEVEL_DIM,
             },
             blocking=True,
         )

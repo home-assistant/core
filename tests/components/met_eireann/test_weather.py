@@ -10,10 +10,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.met_eireann.const import DOMAIN
 from homeassistant.components.met_eireann.coordinator import UPDATE_INTERVAL
-from homeassistant.components.weather import (
-    DOMAIN as WEATHER_DOMAIN,
-    SERVICE_GET_FORECASTS,
-)
+from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN, WeatherService
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LOCATION
 from homeassistant.core import HomeAssistant
@@ -69,7 +66,7 @@ async def test_weather(hass: HomeAssistant, mock_weather) -> None:
 
 @pytest.mark.parametrize(
     ("service"),
-    [SERVICE_GET_FORECASTS],
+    [WeatherService.GET_FORECASTS],
 )
 async def test_forecast_service(
     hass: HomeAssistant,
