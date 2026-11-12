@@ -110,3 +110,11 @@ def is_helper_integration(integration: str, module: nodes.Module) -> bool:
     if manifest is None:
         return False
     return manifest.get("integration_type") == IntegrationType.HELPER
+
+
+def is_internal_integration(module: nodes.Module) -> bool:
+    """Return True if the integration has ``quality_scale: internal``."""
+    manifest = read_manifest(module)
+    if manifest is None:
+        return False
+    return manifest.get("quality_scale") == "internal"

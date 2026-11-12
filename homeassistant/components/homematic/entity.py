@@ -204,7 +204,7 @@ class HMHub(Entity):
     def __init__(self, hass: HomeAssistant, homematic: HMConnection, name: str) -> None:
         """Initialize HomeMatic hub."""
         self.hass = hass
-        self.entity_id = f"{DOMAIN}.{name.lower()}"
+        self.entity_id = f"{DOMAIN}.{name.lower()}"  # pylint: disable=home-assistant-entity-sets-entity-id
         self._homematic = homematic
         self._variables: dict[str, Any] = {}
         self._name = name
