@@ -1,5 +1,6 @@
 """Test the recorder database usage report."""
 
+import asyncio
 from contextlib import closing
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -23,7 +24,7 @@ from pytest_homeassistant.typing import (
     WebSocketGenerator,
 )
 from sqlalchemy import create_engine, delete, select, text, update
-from sqlalchemy.exc import OperationalError, SQLAlchemyError
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 from syrupy.assertion import SnapshotAssertion
 from syrupy.matchers import path_type
@@ -32,8 +33,6 @@ from homeassistant.components import recorder
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.database_usage import (
     CACHE_TIME,
-    INNODB_TABLES_QUERY,
-    MARIADB_INNODB_TABLES_QUERY,
     REFRESH_INTERVAL,
     DatabaseUsage,
     _attribute_lengths,
@@ -237,6 +236,13 @@ def _delete_states(instance: Recorder) -> None:
         session.query(StateAttributes).delete()
 
 
+def _add_view_and_myisam_table(instance: Recorder) -> None:
+    """Add a view and a MyISAM table to the recorder database."""
+    with session_scope(session=instance.get_session()) as session:
+        session.execute(text("CREATE TABLE usage_myisam (id INT) ENGINE=MyISAM"))
+        session.execute(text("CREATE VIEW usage_view AS SELECT * FROM states"))
+
+
 @pytest.mark.skip_on_db_engine(["sqlite", "postgresql"])
 @pytest.mark.usefixtures("skip_by_db_engine")
 async def test_database_usage_mysql_size(
@@ -244,12 +250,17 @@ async def test_database_usage_mysql_size(
 ) -> None:
     """Test MySQL reports the tables and their free space as the size on disk."""
     await _record_data(hass)
+    await recorder_mock.async_add_executor_job(
+        _add_view_and_myisam_table, recorder_mock
+    )
 
     usage = await recorder_mock.async_add_executor_job(
         get_database_usage, recorder_mock
     )
 
     assert usage["tables"] is not None
+    assert {"states", "usage_myisam"} <= {table["table"] for table in usage["tables"]}
+    assert "usage_view" not in {table["table"] for table in usage["tables"]}
     assert usage["free_bytes"] is not None
     assert usage["wal_bytes"] is None
     assert usage["total_bytes"] == (
@@ -501,83 +512,80 @@ async def test_database_usage_snapshot(
 
 
 def _mysql_session(
-    is_mariadb: bool, innodb_tables: Mock, file_per_table: int
-) -> MagicMock:
-    """Return a session that answers the MySQL size queries."""
-    tables = [("states", 1000, 100), ("events", 500, 100), ("statistics", 200, 30)]
+    is_mariadb: bool, file_per_table: int
+) -> tuple[MagicMock, list[tuple[Any, ...]]]:
+    """Return a session that answers the MySQL size queries, and its statements."""
+    tables = [
+        ("states", "InnoDB", 1000, 100),
+        ("events", "InnoDB", 500, 100),
+        ("statistics", "InnoDB", 200, 30),
+        ("legacy", "Aria", 50, 1000),
+    ]
     results = {
         "@@SESSION.information_schema_stats_expiry": Mock(
-            return_value=Mock(scalar_one=Mock(return_value=86400))
+            scalar_one=Mock(return_value=86400)
         ),
-        "SET SESSION": Mock(),
-        "information_schema.tables": Mock(
-            return_value=Mock(all=Mock(return_value=tables))
-        ),
-        INNODB_TABLES_QUERY: innodb_tables,
-        MARIADB_INNODB_TABLES_QUERY: innodb_tables,
-        "@@innodb_file_per_table": Mock(
-            return_value=Mock(scalar_one=Mock(return_value=file_per_table))
-        ),
+        "information_schema_stats_expiry = 0": Mock(),
+        "information_schema_stats_expiry = :expiry": Mock(),
+        "information_schema.tables": Mock(all=Mock(return_value=tables)),
+        "@@innodb_file_per_table": Mock(scalar_one=Mock(return_value=file_per_table)),
     }
+    executed: list[tuple[Any, ...]] = []
+
+    def execute(statement: Any, *args: Any) -> Mock:
+        key = next(key for key in results if key in str(statement))
+        executed.append((key, *args))
+        return results[key]
+
     session = MagicMock()
     session.get_bind.return_value.dialect.is_mariadb = is_mariadb
-    session.execute.side_effect = lambda statement, *args: next(
-        result for key, result in results.items() if key in str(statement)
-    )()
-    return session
+    session.execute.side_effect = execute
+    return session, executed
 
 
-@pytest.mark.parametrize("is_mariadb", [False, True])
 @pytest.mark.parametrize(
-    ("innodb_tables", "file_per_table", "free_bytes"),
+    ("file_per_table", "free_bytes"),
+    [
+        pytest.param(1, 1230, id="file_per_table"),
+        pytest.param(0, 1100, id="shared_tablespace"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("is_mariadb", "statements"),
     [
         pytest.param(
-            Mock(
-                return_value=Mock(
-                    all=Mock(
-                        return_value=[
-                            ("db/states", 0),
-                            ("db/events", 0),
-                            ("db/statistics", 7),
-                        ]
-                    )
-                )
-            ),
-            1,
-            130,
-            id="mixed_tablespaces",
+            False,
+            [
+                ("@@SESSION.information_schema_stats_expiry",),
+                ("information_schema_stats_expiry = 0",),
+                ("information_schema.tables",),
+                ("information_schema_stats_expiry = :expiry", {"expiry": 86400}),
+                ("@@innodb_file_per_table",),
+            ],
+            id="mysql",
         ),
         pytest.param(
-            Mock(side_effect=OperationalError("", None, Exception())),
-            1,
-            230,
-            id="file_per_table_without_privilege",
-        ),
-        pytest.param(
-            Mock(side_effect=OperationalError("", None, Exception())),
-            0,
-            100,
-            id="shared_tablespace_without_privilege",
-        ),
-        pytest.param(
-            Mock(return_value=Mock(all=Mock(return_value=[("db/states", 0)]))),
-            0,
-            100,
-            id="tables_missing_from_innodb",
+            True,
+            [("information_schema.tables",), ("@@innodb_file_per_table",)],
+            id="mariadb",
         ),
     ],
 )
 def test_mysql_free_bytes(
-    is_mariadb: bool, innodb_tables: Mock, file_per_table: int, free_bytes: int
+    is_mariadb: bool,
+    statements: list[tuple[Any, ...]],
+    file_per_table: int,
+    free_bytes: int,
 ) -> None:
-    """Test MySQL counts the free space of each tablespace once."""
-    session = _mysql_session(is_mariadb, innodb_tables, file_per_table)
+    """Test MySQL counts a shared InnoDB tablespace once and reads fresh sizes."""
+    session, executed = _mysql_session(is_mariadb, file_per_table)
 
     assert _mysql_table_bytes(session) == (
-        {"states": 1000, "events": 500, "statistics": 200},
-        1700 + free_bytes,
+        {"states": 1000, "events": 500, "statistics": 200, "legacy": 50},
+        1750 + free_bytes,
         free_bytes,
     )
+    assert executed == statements
 
 
 @pytest.mark.parametrize(
@@ -773,6 +781,50 @@ async def test_database_usage_single_flight(hass_ws_client: WebSocketGenerator) 
     assert mock_usage.call_count == 1
     assert all(response["success"] for response in responses)
     assert responses[0]["result"] == responses[1]["result"]
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_database_usage_cancelled_request(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test a cancelled request does not cancel the run another request waits for."""
+    client = await hass_ws_client()
+    release = threading.Event()
+
+    def blocked_usage(instance: Recorder) -> DatabaseUsage:
+        release.wait()
+        return get_database_usage(instance)
+
+    with patch(
+        "homeassistant.components.recorder.database_usage.get_database_usage",
+        side_effect=blocked_usage,
+    ) as mock_usage:
+        for _ in range(2):
+            await client.send_json_auto_id(
+                {"type": "recorder/database_usage", "refresh": True}
+            )
+        # Messages are handled in order, so both requests wait once the pong is back
+        await client.send_json_auto_id({"type": "ping"})
+        assert (await client.receive_json())["type"] == "pong"
+        cancelled, waiting = (
+            task
+            for task in asyncio.all_tasks()
+            if task.get_name() == "websocket_api.async:ws_database_usage"
+        )
+        cancelled.cancel()
+        release.set()
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert cancelled.cancelled()
+    assert not waiting.cancelled()
+    # The ping is answered after the result of the request still waiting
+    await client.send_json_auto_id({"type": "ping"})
+    response = await client.receive_json()
+    assert response["type"] == "result"
+    assert response["success"]
+    assert (await client.receive_json())["type"] == "pong"
+    assert mock_usage.call_count == 1
+    assert await _async_usage(client) == response["result"]
 
 
 @pytest.mark.usefixtures("recorder_mock")

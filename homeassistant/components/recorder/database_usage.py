@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Any, Final, TypedDict
 
 import probatio
 from sqlalchemy import LargeBinary, cast, func, literal_column, select, text
-from sqlalchemy.exc import OperationalError, ProgrammingError
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm.session import Session
 
 from homeassistant.components import websocket_api
@@ -48,14 +48,6 @@ SQLITE_DBSTAT_QUERY: Final = (
     "SELECT m.tbl_name, SUM(d.pgsize) FROM dbstat AS d "
     "JOIN sqlite_master AS m ON m.name = d.name "
     "WHERE d.aggregate = TRUE GROUP BY m.tbl_name"
-)
-INNODB_TABLES_QUERY: Final = (
-    "SELECT name, space FROM information_schema.INNODB_TABLES "
-    "WHERE SUBSTRING_INDEX(name, '/', 1) = DATABASE()"
-)
-MARIADB_INNODB_TABLES_QUERY: Final = (
-    "SELECT name, space FROM information_schema.INNODB_SYS_TABLES "
-    "WHERE SUBSTRING_INDEX(name, '/', 1) = DATABASE()"
 )
 
 
@@ -96,8 +88,10 @@ class DatabaseUsage(TypedDict):
     """Space used in the recorder database.
 
     total_bytes is the size of the database, free_bytes included, without the
-    SQLite write-ahead log, whose files wal_bytes holds. Byte figures per table
-    and row are None when the engine cannot report table sizes.
+    SQLite write-ahead log, whose files wal_bytes holds. On MySQL and MariaDB
+    the byte figures are approximate, as they come from InnoDB statistics.
+    Byte figures per table and row are None when the engine cannot report
+    table sizes.
     """
 
     generated_at: datetime
@@ -143,20 +137,6 @@ def _sqlite_wal_bytes(session: Session) -> int | None:
     return size
 
 
-def _mysql_tablespaces(session: Session, is_mariadb: bool) -> dict[str, int] | None:
-    """Return the InnoDB tablespace per table, None when it cannot be read.
-
-    Reading InnoDB metadata needs the PROCESS privilege.
-    """
-    try:
-        rows = session.execute(
-            text(MARIADB_INNODB_TABLES_QUERY if is_mariadb else INNODB_TABLES_QUERY)
-        ).all()
-    except OperationalError, ProgrammingError:
-        return None
-    return {name.partition("/")[2]: int(space) for name, space in rows}
-
-
 def _mysql_table_bytes(session: Session) -> tuple[dict[str, int], int, int]:
     """Return bytes per table, the database size and its free space."""
     dialect = session.get_bind().dialect
@@ -172,8 +152,9 @@ def _mysql_table_bytes(session: Session) -> tuple[dict[str, int], int, int]:
     try:
         rows = session.execute(
             text(
-                "SELECT table_name, data_length + index_length, data_free "
-                "FROM information_schema.tables WHERE table_schema = DATABASE()"
+                "SELECT table_name, engine, data_length + index_length, data_free "
+                "FROM information_schema.tables WHERE table_schema = DATABASE() "
+                "AND table_type = 'BASE TABLE'"
             )
         ).all()
     finally:
@@ -183,19 +164,18 @@ def _mysql_table_bytes(session: Session) -> tuple[dict[str, int], int, int]:
                 text("SET SESSION information_schema_stats_expiry = :expiry"),
                 {"expiry": stats_expiry},
             )
-    table_bytes = {table: int(size or 0) for table, size, _ in rows}
-    table_free = {table: int(free or 0) for table, _, free in rows}
-    # Tables in a shared tablespace each report the free space of that tablespace,
-    # so it is counted once per tablespace
-    spaces = _mysql_tablespaces(session, dialect.is_mariadb)
-    if spaces is not None and table_free.keys() <= spaces.keys():
-        free_bytes = sum(
-            {spaces[table]: free for table, free in table_free.items()}.values()
-        )
-    elif session.execute(text("SELECT @@innodb_file_per_table")).scalar_one():
-        free_bytes = sum(table_free.values())
+    table_bytes = {table: int(size or 0) for table, _, size, _ in rows}
+    innodb_free = [int(free or 0) for _, engine, _, free in rows if engine == "InnoDB"]
+    free_bytes = sum(
+        int(free or 0) for _, engine, _, free in rows if engine != "InnoDB"
+    )
+    # InnoDB tables in the shared tablespace each report its free space. This
+    # assumes all tables were created under the current innodb_file_per_table:
+    # it overcounts tables left in ibdata1 when on, and undercounts when off
+    if session.execute(text("SELECT @@innodb_file_per_table")).scalar_one():
+        free_bytes += sum(innodb_free)
     else:
-        free_bytes = max(table_free.values(), default=0)
+        free_bytes += max(innodb_free, default=0)
     return table_bytes, sum(table_bytes.values()) + free_bytes, free_bytes
 
 
@@ -316,7 +296,7 @@ def get_database_usage(instance: Recorder) -> DatabaseUsage:
 
     Table sizes come from the database engine; a table's bytes are spread over
     its rows evenly, except for attributes, which are spread by the length of
-    the JSON each entity owns. All queries read one snapshot of the database.
+    the JSON each entity owns. Row counts read one snapshot of the database.
     """
     started = dt_util.utcnow()
     dialect = instance.dialect_name
@@ -430,7 +410,7 @@ class DatabaseUsageCache:
                 get_database_usage, instance
             )
             self._pending.add_done_callback(self._async_finished)
-        # A closed connection must not cancel the run other requests wait for
+        # A cancelled request must not cancel the run other requests wait for
         return await asyncio.shield(self._pending)
 
     @callback
