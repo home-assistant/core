@@ -13,7 +13,12 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .bot import TelegramBotConfigEntry
-from .const import CONF_CHAT_ID, DOMAIN, TelegramBotServiceArgument
+from .const import (
+    CONF_CHAT_ID,
+    CONF_MESSAGE_THREAD_ID,
+    DOMAIN,
+    TelegramBotServiceArgument,
+)
 from .entity import TelegramBotEntity
 
 
@@ -44,13 +49,16 @@ class TelegramBotNotifyEntity(TelegramBotEntity, NotifyEntity):
     ) -> None:
         """Initialize a notification entity."""
         super().__init__(
-            config_entry, NotifyEntityDescription(key=subentry.data[CONF_CHAT_ID])
+            config_entry,
+            NotifyEntityDescription(key=subentry.subentry_id),
         )
         self.chat_id = subentry.data[CONF_CHAT_ID]
-        # Each chat gets its own device (keyed per chat) linked to the shared bot device.
+        self.message_thread_id = subentry.data.get(CONF_MESSAGE_THREAD_ID)
+
+        # Subentries may share a chat ID when they target distinct message threads.
         device_info = self._attr_device_info
         assert device_info is not None
-        device_info.identifiers = {(DOMAIN, f"{self.bot_id}_{self.chat_id}")}
+        device_info.identifiers = {(DOMAIN, f"{self.bot_id}_{subentry.subentry_id}")}
         device_info.name = subentry.title
         device_info.via_device_id = dr.async_get_device_id_by_identifier(
             config_entry.runtime_data.hass,
@@ -61,5 +69,8 @@ class TelegramBotNotifyEntity(TelegramBotEntity, NotifyEntity):
     @override
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message."""
-        kwargs: dict[str, Any] = {TelegramBotServiceArgument.TITLE: title}
+        kwargs: dict[str, Any] = {
+            TelegramBotServiceArgument.MESSAGE_THREAD_ID: self.message_thread_id,
+            TelegramBotServiceArgument.TITLE: title,
+        }
         await self.service.send_message(message, self.chat_id, self._context, **kwargs)
