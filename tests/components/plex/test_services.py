@@ -19,9 +19,8 @@ from homeassistant.components.plex.const import (
     DOMAIN,
     PLEX_SERVER_CONFIG,
     PLEX_URI_SCHEME,
-    SERVICE_REFRESH_LIBRARY,
 )
-from homeassistant.components.plex.services import process_plex_payload
+from homeassistant.components.plex.services import PlexService, process_plex_payload
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -48,7 +47,7 @@ async def test_refresh_library(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_REFRESH_LIBRARY,
+            PlexService.REFRESH_LIBRARY,
             {"server_name": "Not a Server", "library_name": "Movies"},
             True,
         )
@@ -57,7 +56,7 @@ async def test_refresh_library(
     # Test with non-existent library
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_REFRESH_LIBRARY,
+        PlexService.REFRESH_LIBRARY,
         {"library_name": "Not a Library"},
         True,
     )
@@ -66,7 +65,7 @@ async def test_refresh_library(
     # Test with valid library
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_REFRESH_LIBRARY,
+        PlexService.REFRESH_LIBRARY,
         {"library_name": "Movies"},
         True,
     )
@@ -99,7 +98,7 @@ async def test_refresh_library(
     with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_REFRESH_LIBRARY,
+            PlexService.REFRESH_LIBRARY,
             {"library_name": "Movies"},
             True,
         )

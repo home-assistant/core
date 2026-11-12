@@ -10,5 +10,15 @@
   "iot_class": "local_polling",
   "loggers": ["aiohpprinter"],
   "quality_scale": "bronze",
-  "requirements": ["aiohpprinter==3.7.0"]
+  "requirements": ["aiohpprinter==3.7.0"],
+  "zeroconf": [
+    {
+      "name": "hp*",
+      "type": "_ipp._tcp.local."
+    },
+    {
+      "name": "hp*",
+      "type": "_ipps._tcp.local."
+    }
+  ]
 }

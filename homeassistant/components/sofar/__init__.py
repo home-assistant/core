@@ -40,7 +40,7 @@ from .const import (
     TYPE_TCP,
 )
 from .coordinator import SofarConfigEntry, SofarDataUpdateCoordinator, SofarRuntimeData
-from .entity import battery_pack_identifier
+from .entity import battery_pack_identifier, entity_unique_id
 from .helpers import create_modbus_params
 from .sensor import TOTAL_SENSOR_DESCRIPTIONS
 from .services import async_setup_services
@@ -67,7 +67,7 @@ def _async_remove_stale_sensors(hass: HomeAssistant, serial: str) -> None:
     registry = er.async_get(hass)
     for key in _REMOVED_SENSOR_KEYS:
         entity_id = registry.async_get_entity_id(
-            SENSOR_DOMAIN, DOMAIN, f"{serial}_{key}"
+            SENSOR_DOMAIN, DOMAIN, entity_unique_id(serial, key)
         )
         if entity_id is not None:
             registry.async_remove(entity_id)
@@ -81,7 +81,7 @@ def _async_seed_high_water_marks(
     restore_state_data = restore_state.async_get(hass)
     for description in TOTAL_SENSOR_DESCRIPTIONS:
         entity_id = registry.async_get_entity_id(
-            SENSOR_DOMAIN, DOMAIN, f"{serial}_{description.key}"
+            SENSOR_DOMAIN, DOMAIN, entity_unique_id(serial, description.key)
         )
         if (
             entity_id is None
@@ -101,18 +101,17 @@ def _async_store_served(
     hass: HomeAssistant, entry: SofarConfigEntry, served: frozenset[str]
 ) -> None:
     """Remember what the inverter serves for a setup it sleeps through."""
-    if (stored := sorted(served)) != entry.data.get(SERVED_COMPONENTS):
-        hass.config_entries.async_update_entry(
-            entry, data={**entry.data, SERVED_COMPONENTS: stored}
-        )
+    hass.config_entries.async_update_entry(
+        entry, data={**entry.data, SERVED_COMPONENTS: sorted(served)}
+    )
 
 
 async def _async_refresh_versions(hass: HomeAssistant, entry: SofarConfigEntry) -> None:
     """Read the firmware versions a setup without the inverter missed."""
-    readings = entry.runtime_data.readings
-    await readings.device.async_read_identity()
+    await entry.runtime_data.readings.device.async_read_identity()
     dr.async_get(hass).async_get_or_create_from_info(
-        config_entry_id=entry.entry_id, device_info=readings.device_info
+        config_entry_id=entry.entry_id,
+        device_info=entry.runtime_data.readings.device_info,
     )
 
 
@@ -171,11 +170,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> Non
     try:
         await readings.async_config_entry_first_refresh()
     except ConfigEntryNotReady as err:
-        failure = readings.last_exception
         if not (
             device.connected
-            and isinstance(failure, UpdateFailed)
-            and isinstance(failure.__cause__, ModbusTimeoutError)
+            and isinstance(readings.last_exception, UpdateFailed)
+            and isinstance(readings.last_exception.__cause__, ModbusTimeoutError)
         ):
             raise
         _LOGGER.info(

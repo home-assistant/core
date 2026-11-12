@@ -69,7 +69,7 @@ from homeassistant.components.bluetooth import (
     BluetoothScanningMode,
     async_register_scanner,
 )
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.teslemetry.const import (
     AUTHORIZE_URL,
     CLIENT_ID,
@@ -89,7 +89,12 @@ from homeassistant.config_entries import (
     ConfigSubentryData,
     SubentryFlowResult,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CONF_ADDRESS, CONF_HOST, CONF_PASSWORD
+from homeassistant.const import (
+    CONF_ADDRESS,
+    CONF_HOST,
+    CONF_PASSWORD,
+    CommonServiceArgument,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, UnknownFlow
 from homeassistant.helpers import (
@@ -2153,8 +2158,8 @@ async def test_subentry_reconfigure_reloads_onto_new_address(
         # first checks whether the vehicle is in Bluetooth range.
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.test_flash_lights"},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: "button.test_flash_lights"},
             blocking=True,
         )
 
