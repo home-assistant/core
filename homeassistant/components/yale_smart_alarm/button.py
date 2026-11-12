@@ -1,6 +1,6 @@
 """Support for Yale Smart Alarm button."""
 
-from typing import TYPE_CHECKING, override
+from typing import override
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
@@ -52,9 +52,6 @@ class YalePanicButton(YaleAlarmEntity, ButtonEntity):
     @override
     async def async_press(self) -> None:
         """Press the button."""
-        if TYPE_CHECKING:
-            assert self.coordinator.yale, "Connection to API is missing"
-
         try:
             await self.hass.async_add_executor_job(
                 self.coordinator.yale.trigger_panic_button
