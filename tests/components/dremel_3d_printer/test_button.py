@@ -7,7 +7,7 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.dremel_3d_printer.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
@@ -37,7 +37,7 @@ async def test_buttons(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {ATTR_ENTITY_ID: [f"button.dremel_3d45_{button}_job"]},
+            {CommonServiceArgument.ENTITY_ID: [f"button.dremel_3d45_{button}_job"]},
             blocking=True,
         )
     assert mock.call_count == 1
@@ -52,7 +52,7 @@ async def test_buttons(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {ATTR_ENTITY_ID: [f"button.dremel_3d45_{button}_job"]},
+            {CommonServiceArgument.ENTITY_ID: [f"button.dremel_3d45_{button}_job"]},
             blocking=True,
         )
     assert mock.call_count == 1

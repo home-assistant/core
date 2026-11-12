@@ -13,9 +13,9 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -58,7 +58,7 @@ async def test_button_presses(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
             {
-                ATTR_ENTITY_ID: f"button.kitchen_lunar_ddeeff_{button}",
+                CommonServiceArgument.ENTITY_ID: f"button.kitchen_lunar_ddeeff_{button}",
             },
             blocking=True,
         )

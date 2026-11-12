@@ -14,12 +14,7 @@ from pytest_homeassistant.test_util.aiohttp import (
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CommonServiceArgument,
-    EntityCategory,
-    Platform,
-)
+from homeassistant.const import CommonServiceArgument, EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -110,7 +105,9 @@ async def test_press(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {ATTR_ENTITY_ID: f"button.rain_bird_controller_run_pgm_{program}"},
+        {
+            CommonServiceArgument.ENTITY_ID: f"button.rain_bird_controller_run_pgm_{program}"
+        },
         blocking=True,
     )
 

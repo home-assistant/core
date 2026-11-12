@@ -10,7 +10,7 @@ from volvocarsapi.api import VolvoCarsApi
 from volvocarsapi.models import VolvoApiException, VolvoCarsCommandResult
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
-from homeassistant.const import ATTR_ENTITY_ID, CommonServiceArgument, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -104,7 +104,7 @@ async def test_button_press_error(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {ATTR_ENTITY_ID: f"button.volvo_xc40_{command}"},
+            {CommonServiceArgument.ENTITY_ID: f"button.volvo_xc40_{command}"},
             blocking=True,
         )
 
@@ -143,6 +143,6 @@ async def test_button_press_failure(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {ATTR_ENTITY_ID: f"button.volvo_xc40_{command}"},
+            {CommonServiceArgument.ENTITY_ID: f"button.volvo_xc40_{command}"},
             blocking=True,
         )

@@ -7,7 +7,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -41,7 +41,7 @@ async def test_start_backflush(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
             {
-                ATTR_ENTITY_ID: f"button.{serial_number}_start_backflush",
+                CommonServiceArgument.ENTITY_ID: f"button.{serial_number}_start_backflush",
             },
             blocking=True,
         )
@@ -75,7 +75,7 @@ async def test_button_error(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
             {
-                ATTR_ENTITY_ID: f"button.{serial_number}_start_backflush",
+                CommonServiceArgument.ENTITY_ID: f"button.{serial_number}_start_backflush",
             },
             blocking=True,
         )

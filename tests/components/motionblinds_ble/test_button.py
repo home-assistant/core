@@ -11,7 +11,7 @@ from homeassistant.components.motionblinds_ble.const import (
     ATTR_DISCONNECT,
     ATTR_FAVORITE,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
@@ -40,7 +40,7 @@ async def test_button(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {ATTR_ENTITY_ID: f"button.{name}_{button}"},
+        {CommonServiceArgument.ENTITY_ID: f"button.{name}_{button}"},
         blocking=True,
     )
     getattr(mock_motion_device, button).assert_called_once()
