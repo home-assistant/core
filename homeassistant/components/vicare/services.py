@@ -18,7 +18,9 @@ from .const import DOMAIN
 class ViCareService(StrEnum):
     """Store keys for ViCare services."""
 
+    CANCEL_HOLIDAY = "cancel_holiday"
     GET_CIRCULATION_SCHEDULE = "get_circulation_schedule"
+    SCHEDULE_HOLIDAY = "schedule_holiday"
     SET_CIRCULATION_SCHEDULE = "set_circulation_schedule"
     SET_VICARE_MODE = "set_vicare_mode"
 
@@ -26,14 +28,12 @@ class ViCareService(StrEnum):
 class ViCareServiceArgument(StrEnum):
     """Store keys for ViCare service arguments."""
 
+    END_DATE = "end_date"
+    PROGRAM = "program"
+    START_DATE = "start_date"
     VICARE_MODE = "vicare_mode"
 
 
-SERVICE_SCHEDULE_HOLIDAY = "schedule_holiday"
-SERVICE_CANCEL_HOLIDAY = "cancel_holiday"
-ATTR_PROGRAM = "program"
-ATTR_START_DATE = "start_date"
-ATTR_END_DATE = "end_date"
 HOLIDAY_PROGRAM_HOLIDAY = "holiday"
 HOLIDAY_PROGRAM_AT_HOME = "holiday_at_home"
 HOLIDAY_PROGRAM_SCHEMA = probatio.In([HOLIDAY_PROGRAM_HOLIDAY, HOLIDAY_PROGRAM_AT_HOME])
@@ -106,25 +106,25 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_SCHEDULE_HOLIDAY,
+        ViCareService.SCHEDULE_HOLIDAY,
         entity_domain=CLIMATE_DOMAIN,
         schema={
             probatio.Optional(
-                ATTR_PROGRAM, default=HOLIDAY_PROGRAM_HOLIDAY
+                ViCareServiceArgument.PROGRAM, default=HOLIDAY_PROGRAM_HOLIDAY
             ): HOLIDAY_PROGRAM_SCHEMA,
-            probatio.Required(ATTR_START_DATE): cv.date,
-            probatio.Required(ATTR_END_DATE): cv.date,
+            probatio.Required(ViCareServiceArgument.START_DATE): cv.date,
+            probatio.Required(ViCareServiceArgument.END_DATE): cv.date,
         },
         func="schedule_holiday",
     )
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_CANCEL_HOLIDAY,
+        ViCareService.CANCEL_HOLIDAY,
         entity_domain=CLIMATE_DOMAIN,
         schema={
             probatio.Optional(
-                ATTR_PROGRAM, default=HOLIDAY_PROGRAM_HOLIDAY
+                ViCareServiceArgument.PROGRAM, default=HOLIDAY_PROGRAM_HOLIDAY
             ): HOLIDAY_PROGRAM_SCHEMA,
         },
         func="cancel_holiday",
