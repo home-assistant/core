@@ -2,6 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
       "no_ip_control": "IP Control is disabled on your TV or the TV is not supported.",
       "not_bravia_device": "The device is not a Bravia TV."
     },
@@ -77,6 +78,9 @@
     },
     "invalid_media_type": {
       "message": "Invalid media type {media_type} for {device}. Only app and channel are supported"
+    },
+    "media_not_found": {
+      "message": "Media {media_content_type} / {media_content_id} was not found on {device}"
     },
     "source_not_found": {
       "message": "The {source_type} \"{query}\" was not found on {device}"

@@ -9,8 +9,6 @@ DOMAIN: Final = "amberelectric"
 CONF_SITE_NAME = "site_name"
 CONF_SITE_ID = "site_id"
 
-ATTR_CHANNEL_TYPE = "channel_type"
-
 ATTRIBUTION = "Data provided by Amber Electric"
 
 LOGGER = logging.getLogger(__package__)

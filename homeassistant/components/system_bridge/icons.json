@@ -4,12 +4,6 @@
       "camera_in_use": {
         "default": "mdi:webcam"
       },
-      "locked": {
-        "default": "mdi:lock-open-variant",
-        "state": {
-          "on": "mdi:lock"
-        }
-      },
       "pending_reboot": {
         "default": "mdi:restart"
       }
@@ -29,6 +23,11 @@
       },
       "power_sleep": {
         "default": "mdi:power-sleep"
+      }
+    },
+    "event": {
+      "notification": {
+        "default": "mdi:message-badge"
       }
     },
     "media_player": {
@@ -53,6 +52,14 @@
     "select": {
       "audio_input": {
         "default": "mdi:microphone-settings"
+      },
+      "power_profile": {
+        "default": "mdi:speedometer",
+        "state": {
+          "balanced": "mdi:scale-balance",
+          "performance": "mdi:rocket-launch",
+          "power-saver": "mdi:leaf"
+        }
       }
     },
     "sensor": {
@@ -201,6 +208,12 @@
         "state": {
           "off": "mdi:monitor-off"
         }
+      },
+      "keep_awake": {
+        "default": "mdi:coffee",
+        "state": {
+          "off": "mdi:coffee-off"
+        }
       }
     }
   },
@@ -222,6 +235,9 @@
     },
     "send_keypress": {
       "service": "mdi:keyboard"
+    },
+    "send_message": {
+      "service": "mdi:message-badge"
     },
     "send_text": {
       "service": "mdi:keyboard"

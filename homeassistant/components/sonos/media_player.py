@@ -505,6 +505,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         Playlist name.  Otherwise, media_id should be a URI.
         """
         is_radio = False
+        mime_type: str | None = None
 
         if media_source.is_media_source_id(media_id):
             is_radio = media_id.startswith("media-source://radio_browser/")
@@ -513,6 +514,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 self.hass, media_id, self.entity_id
             )
             media_id = async_process_play_media_url(self.hass, media.url)
+            mime_type = media.mime_type
 
         if kwargs.get(ATTR_MEDIA_ANNOUNCE):
             volume = kwargs.get("extra", {}).get("volume")
@@ -569,16 +571,31 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 media_id = spotify.spotify_uri_from_media_browser_url(media_id)
 
         await self.hass.async_add_executor_job(
-            partial(self._play_media, media_type, media_id, is_radio, **kwargs)
+            partial(
+                self._play_media,
+                media_type,
+                media_id,
+                is_radio,
+                mime_type,
+                **kwargs,
+            )
         )
 
     @soco_error()
     def _play_media(
-        self, media_type: MediaType | str, media_id: str, is_radio: bool, **kwargs: Any
+        self,
+        media_type: MediaType | str,
+        media_id: str,
+        is_radio: bool,
+        mime_type: str | None,
+        **kwargs: Any,
     ) -> None:
         """Wrap sync calls to async_play_media."""
         _LOGGER.debug("_play_media media_type %s media_id %s", media_type, media_id)
         enqueue = kwargs.get(ATTR_MEDIA_ENQUEUE, MediaPlayerEnqueue.REPLACE)
+        mime_type_kwargs = (
+            {} if mime_type is None or is_radio else {"mime_type": mime_type}
+        )
 
         if media_type == "favorite_item_id":
             favorite = self.speaker.favorites.lookup_by_item_id(media_id)
@@ -635,19 +652,24 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             media_id = async_process_play_media_url(self.hass, media_id)
 
             if enqueue == MediaPlayerEnqueue.ADD:
-                soco.add_uri_to_queue(media_id, timeout=LONG_SERVICE_TIMEOUT)
+                soco.add_uri_to_queue(
+                    media_id, timeout=LONG_SERVICE_TIMEOUT, **mime_type_kwargs
+                )
             elif enqueue in (
                 MediaPlayerEnqueue.NEXT,
                 MediaPlayerEnqueue.PLAY,
             ):
                 pos = (self.media.queue_position or 0) + 1
                 new_pos = soco.add_uri_to_queue(
-                    media_id, position=pos, timeout=LONG_SERVICE_TIMEOUT
+                    media_id,
+                    position=pos,
+                    timeout=LONG_SERVICE_TIMEOUT,
+                    **mime_type_kwargs,
                 )
                 if enqueue == MediaPlayerEnqueue.PLAY:
                     soco.play_from_queue(new_pos - 1)
             elif enqueue == MediaPlayerEnqueue.REPLACE:
-                soco.play_uri(media_id, force_radio=is_radio)
+                soco.play_uri(media_id, force_radio=is_radio, **mime_type_kwargs)
         elif media_type == MediaType.PLAYLIST:
             if media_id.startswith("S:"):
                 playlist = media_browser.get_media(

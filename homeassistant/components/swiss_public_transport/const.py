@@ -28,7 +28,3 @@ PLACEHOLDERS = {
     "stationboard_url": "http://transport.opendata.ch/examples/stationboard.html",
     "opendata_url": "http://transport.opendata.ch",
 }
-
-ATTR_LIMIT: Final = "limit"
-
-SERVICE_FETCH_CONNECTIONS = "fetch_connections"

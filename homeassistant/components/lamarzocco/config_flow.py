@@ -173,7 +173,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
         placeholders: dict[str, str] | None = None
         if self._discovered:
             self.context["title_placeholders"] = placeholders = {
-                CONF_NAME: self._discovered[CONF_MACHINE]
+                "name": self._discovered[CONF_MACHINE]
             }
 
         return self.async_show_form(

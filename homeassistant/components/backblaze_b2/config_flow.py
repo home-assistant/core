@@ -7,7 +7,7 @@ from typing import Any, override
 from b2sdk.v2 import exception
 import probatio
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PREFIX
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
@@ -47,8 +47,6 @@ class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Backblaze B2."""
 
     VERSION = 1
-
-    reauth_entry: ConfigEntry[Any] | None
 
     def _abort_if_duplicate_credentials(self, user_input: dict[str, Any]) -> None:
         """Abort if credentials already exist in another entry."""
@@ -211,17 +209,13 @@ class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reauthentication flow."""
-        self.reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
-        assert self.reauth_entry is not None
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm reauthentication."""
-        assert self.reauth_entry is not None
+        reauth_entry = self._get_reauth_entry()
         errors: dict[str, str] = {}
         placeholders: dict[str, str] = {}
 
@@ -231,8 +225,8 @@ class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
             validation_input = {
                 CONF_KEY_ID: user_input[CONF_KEY_ID],
                 CONF_APPLICATION_KEY: user_input[CONF_APPLICATION_KEY],
-                CONF_BUCKET: self.reauth_entry.data[CONF_BUCKET],
-                CONF_PREFIX: self.reauth_entry.data[CONF_PREFIX],
+                CONF_BUCKET: reauth_entry.data[CONF_BUCKET],
+                CONF_PREFIX: reauth_entry.data[CONF_PREFIX],
             }
 
             errors, placeholders = await self._async_validate_backblaze_connection(
@@ -241,7 +235,7 @@ class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
 
             if not errors:
                 return self.async_update_reload_and_abort(
-                    self.reauth_entry,
+                    reauth_entry,
                     data_updates={
                         CONF_KEY_ID: user_input[CONF_KEY_ID],
                         CONF_APPLICATION_KEY: user_input[CONF_APPLICATION_KEY],
@@ -263,7 +257,7 @@ class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
             description_placeholders={
                 "brand_name": "Backblaze B2",
-                "bucket": self.reauth_entry.data[CONF_BUCKET],
+                "bucket": reauth_entry.data[CONF_BUCKET],
                 **placeholders,
             },
         )
@@ -272,8 +266,7 @@ class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle reconfiguration flow."""
-        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        assert entry is not None
+        entry = self._get_reconfigure_entry()
 
         if user_input is not None:
             self._abort_if_duplicate_credentials(user_input)

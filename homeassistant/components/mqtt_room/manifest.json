@@ -3,6 +3,7 @@
   "name": "MQTT room presence",
   "categories": ["presence_location", "diy_makers"],
   "codeowners": [],
+  "connectivity": ["mqtt"],
   "dependencies": ["mqtt"],
   "documentation": "https://www.home-assistant.io/integrations/mqtt_room",
   "iot_class": "local_push",

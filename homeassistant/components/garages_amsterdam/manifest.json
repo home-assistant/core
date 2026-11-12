@@ -4,6 +4,7 @@
   "categories": ["local_services"],
   "codeowners": ["@klaasnicolaas"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/garages_amsterdam",
   "integration_type": "service",
   "iot_class": "cloud_polling",

@@ -750,3 +750,32 @@ async def test_assistant_settings_migrated_at_startup(
 
     assert prefs.alexa_settings_version == ALEXA_SETTINGS_VERSION
     assert prefs.google_settings_version == GOOGLE_SETTINGS_VERSION
+
+
+@pytest.mark.parametrize(
+    ("title", "expected_title"),
+    [
+        pytest.param("Home Assistant Cloud", "Home Assistant Link", id="legacy"),
+        pytest.param("Custom title", "Custom title", id="custom"),
+    ],
+)
+async def test_setup_entry_renames_legacy_title(
+    hass: HomeAssistant,
+    cloud: MagicMock,
+    title: str,
+    expected_title: str,
+) -> None:
+    """Test a config entry with the legacy default title is renamed on setup."""
+    assert await async_setup_component(hass, DOMAIN, {"cloud": {}})
+    await hass.async_block_till_done()
+    await cloud.login("test-user", "test-pass")
+    await hass.async_block_till_done()
+
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    hass.config_entries.async_update_entry(entry, title=title)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.title == expected_title
