@@ -7,7 +7,7 @@ from tuya_device_handlers.device_wrapper.service_feeder_schedule import FeederSc
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.tuya.const import DOMAIN
-from homeassistant.components.tuya.services import Service
+from homeassistant.components.tuya.services import TuyaService
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
@@ -65,7 +65,7 @@ async def test_get_feeder_meal_plan(
 
     result = await hass.services.async_call(
         DOMAIN,
-        Service.GET_FEEDER_MEAL_PLAN,
+        TuyaService.GET_FEEDER_MEAL_PLAN,
         {"device_id": device_id},
         blocking=True,
         return_response=True,
@@ -96,7 +96,7 @@ async def test_get_feeder_meal_plan_invalid_meal_plan(
     ):
         await hass.services.async_call(
             DOMAIN,
-            Service.GET_FEEDER_MEAL_PLAN,
+            TuyaService.GET_FEEDER_MEAL_PLAN,
             {"device_id": device_id},
             blocking=True,
             return_response=True,
@@ -121,7 +121,7 @@ async def test_set_feeder_meal_plan(
 
     await hass.services.async_call(
         DOMAIN,
-        Service.SET_FEEDER_MEAL_PLAN,
+        TuyaService.SET_FEEDER_MEAL_PLAN,
         {
             "device_id": device_id,
             "meal_plan": DECODED_MEAL_PLAN,
@@ -159,7 +159,7 @@ async def test_set_feeder_meal_plan_unsupported_device(
     ):
         await hass.services.async_call(
             DOMAIN,
-            Service.SET_FEEDER_MEAL_PLAN,
+            TuyaService.SET_FEEDER_MEAL_PLAN,
             {
                 "device_id": device_id,
                 "meal_plan": DECODED_MEAL_PLAN,
@@ -184,7 +184,7 @@ async def test_get_tuya_device_error_device_not_found(
     ):
         await hass.services.async_call(
             DOMAIN,
-            Service.GET_FEEDER_MEAL_PLAN,
+            TuyaService.GET_FEEDER_MEAL_PLAN,
             {"device_id": "invalid_device_id"},
             blocking=True,
             return_response=True,
@@ -213,7 +213,7 @@ async def test_get_tuya_device_error_non_tuya_device(
     ):
         await hass.services.async_call(
             DOMAIN,
-            Service.GET_FEEDER_MEAL_PLAN,
+            TuyaService.GET_FEEDER_MEAL_PLAN,
             {"device_id": non_tuya_device.id},
             blocking=True,
             return_response=True,
@@ -242,7 +242,7 @@ async def test_get_tuya_device_error_unknown_tuya_device(
     ):
         await hass.services.async_call(
             DOMAIN,
-            Service.GET_FEEDER_MEAL_PLAN,
+            TuyaService.GET_FEEDER_MEAL_PLAN,
             {"device_id": tuya_device.id},
             blocking=True,
             return_response=True,

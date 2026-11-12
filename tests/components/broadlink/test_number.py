@@ -6,11 +6,11 @@ from typing import Any
 import pytest
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, EntityCategory
+from homeassistant.const import CommonServiceArgument, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -66,8 +66,11 @@ async def test_setpoint_limits(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: new_value},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            NumberServiceArgument.VALUE: new_value,
+        },
         blocking=True,
     )
 
@@ -105,8 +108,11 @@ async def test_setpoint_limits_inverted(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: value},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: entity_id,
+                NumberServiceArgument.VALUE: value,
+            },
             blocking=True,
         )
 
@@ -125,8 +131,11 @@ async def test_setpoint_limits_fahrenheit(hass: HomeAssistant) -> None:
     # 73 °F is 22.78 °C.
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: "number.guest_room_maximum_setpoint", ATTR_VALUE: 73},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: "number.guest_room_maximum_setpoint",
+            NumberServiceArgument.VALUE: 73,
+        },
         blocking=True,
     )
 
@@ -157,8 +166,11 @@ async def test_setpoint_limits_concurrent(hass: HomeAssistant) -> None:
         *(
             hass.services.async_call(
                 NUMBER_DOMAIN,
-                SERVICE_SET_VALUE,
-                {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: value},
+                NumberService.SET_VALUE,
+                {
+                    CommonServiceArgument.ENTITY_ID: entity_id,
+                    NumberServiceArgument.VALUE: value,
+                },
                 blocking=True,
             )
             for entity_id, value in (

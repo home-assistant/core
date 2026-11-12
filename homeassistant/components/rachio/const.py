@@ -1,5 +1,7 @@
 """Constants for rachio."""
 
+from enum import StrEnum
+
 DEFAULT_NAME = "Rachio"
 
 DOMAIN = "rachio"
@@ -83,12 +85,6 @@ STATUS_ONLINE = "ONLINE"
 MODEL_GENERATION_1 = "GENERATION1"
 SCHEDULE_TYPE_FIXED = "FIXED"
 SCHEDULE_TYPE_FLEX = "FLEX"
-SERVICE_PAUSE_WATERING = "pause_watering"
-SERVICE_RESUME_WATERING = "resume_watering"
-SERVICE_STOP_WATERING = "stop_watering"
-SERVICE_SET_ZONE_MOISTURE = "set_zone_moisture_percent"
-SERVICE_START_WATERING = "start_watering"
-SERVICE_START_MULTIPLE_ZONES = "start_multiple_zone_schedule"
 
 SIGNAL_RACHIO_UPDATE = f"{DOMAIN}_update"
 SIGNAL_RACHIO_CONTROLLER_UPDATE = f"{SIGNAL_RACHIO_UPDATE}_controller"
@@ -108,3 +104,22 @@ LISTEN_EVENT_TYPES = [
     "SCHEDULE_STATUS_EVENT",
 ]
 WEBHOOK_CONST_ID = "homeassistant.rachio:"
+
+
+class RachioService(StrEnum):
+    """Store keys for Rachio services."""
+
+    SET_ZONE_MOISTURE_PERCENT = "set_zone_moisture_percent"
+    START_WATERING = "start_watering"
+    START_MULTIPLE_ZONE_SCHEDULE = "start_multiple_zone_schedule"
+    PAUSE_WATERING = "pause_watering"
+    RESUME_WATERING = "resume_watering"
+    STOP_WATERING = "stop_watering"
+
+
+class RachioServiceArgument(StrEnum):
+    """Store keys for Rachio service arguments."""
+
+    PERCENT = "percent"
+    DURATION = "duration"
+    DEVICES = "devices"

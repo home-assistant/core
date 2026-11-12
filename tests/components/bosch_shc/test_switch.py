@@ -16,13 +16,8 @@ from boschshcpy import (
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    Platform,
-)
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -74,16 +69,16 @@ async def test_thermostat_child_lock(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.thermostat_child_lock"},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: "switch.thermostat_child_lock"},
         blocking=True,
     )
     assert device.child_lock is True
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.thermostat_child_lock"},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: "switch.thermostat_child_lock"},
         blocking=True,
     )
     assert device.child_lock is False
@@ -119,16 +114,16 @@ async def test_thermostat_silent_mode(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.thermostat_whisper_mode"},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: "switch.thermostat_whisper_mode"},
         blocking=True,
     )
     assert device.silentmode is True
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.thermostat_whisper_mode"},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: "switch.thermostat_whisper_mode"},
         blocking=True,
     )
     assert device.silentmode is False
@@ -171,8 +166,8 @@ async def test_micromodule_relay_child_lock(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.relay_child_lock"},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: "switch.relay_child_lock"},
         blocking=True,
     )
     assert device.child_lock is True
@@ -243,16 +238,16 @@ async def test_presence_simulation_system(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.presence_simulation"},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: "switch.presence_simulation"},
         blocking=True,
     )
     assert device.enabled is True
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.presence_simulation"},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: "switch.presence_simulation"},
         blocking=True,
     )
     assert device.enabled is False
@@ -346,16 +341,16 @@ async def test_shutter_contact2_bypass(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.shutter_contact_break_function"},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: "switch.shutter_contact_break_function"},
         blocking=True,
     )
     assert device.bypass is True
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.shutter_contact_break_function"},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: "switch.shutter_contact_break_function"},
         blocking=True,
     )
     assert device.bypass is False
@@ -382,16 +377,20 @@ async def test_shutter_contact2_bypass_infinite(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.shutter_contact_break_function_never_expires"},
+        SwitchService.TURN_ON,
+        {
+            CommonServiceArgument.ENTITY_ID: "switch.shutter_contact_break_function_never_expires"
+        },
         blocking=True,
     )
     device.set_bypass_configuration.assert_called_once_with(infinite=True)
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.shutter_contact_break_function_never_expires"},
+        SwitchService.TURN_OFF,
+        {
+            CommonServiceArgument.ENTITY_ID: "switch.shutter_contact_break_function_never_expires"
+        },
         blocking=True,
     )
     device.set_bypass_configuration.assert_called_with(infinite=False)
@@ -441,16 +440,16 @@ async def test_shutter_contact2_plus_vibration_enabled(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.shutter_contact_vibration_detection"},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: "switch.shutter_contact_vibration_detection"},
         blocking=True,
     )
     assert device.enabled is True
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.shutter_contact_vibration_detection"},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: "switch.shutter_contact_vibration_detection"},
         blocking=True,
     )
     assert device.enabled is False
@@ -493,16 +492,16 @@ async def test_motion_detector2_pet_immunity(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.motion_detector_pet_immunity"},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: "switch.motion_detector_pet_immunity"},
         blocking=True,
     )
     assert device.pet_immunity_enabled is True
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.motion_detector_pet_immunity"},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: "switch.motion_detector_pet_immunity"},
         blocking=True,
     )
     assert device.pet_immunity_enabled is False
@@ -529,16 +528,16 @@ async def test_motion_detector2_tamper_protection(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.motion_detector_sabotage_detection"},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: "switch.motion_detector_sabotage_detection"},
         blocking=True,
     )
     assert device.tamper_protection_enabled is True
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.motion_detector_sabotage_detection"},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: "switch.motion_detector_sabotage_detection"},
         blocking=True,
     )
     assert device.tamper_protection_enabled is False
@@ -565,16 +564,16 @@ async def test_smoke_detector_intrusion_alarm(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.smoke_detector_intrusion_alarm"},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: "switch.smoke_detector_intrusion_alarm"},
         blocking=True,
     )
     assert device.intrusion_alarm is True
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.smoke_detector_intrusion_alarm"},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: "switch.smoke_detector_intrusion_alarm"},
         blocking=True,
     )
     assert device.intrusion_alarm is False
@@ -625,16 +624,16 @@ async def test_twinguard_nightly_promise(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.twinguard_heartbeat"},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: "switch.twinguard_heartbeat"},
         blocking=True,
     )
     assert device.nightly_promise_enabled is True
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.twinguard_heartbeat"},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: "switch.twinguard_heartbeat"},
         blocking=True,
     )
     assert device.nightly_promise_enabled is False
@@ -686,16 +685,16 @@ async def test_thermostat_gen2_humidity_warning(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.thermostat_gen2_humidity_warning"},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: "switch.thermostat_gen2_humidity_warning"},
         blocking=True,
     )
     assert device.humidity_warning_enabled is True
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.thermostat_gen2_humidity_warning"},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: "switch.thermostat_gen2_humidity_warning"},
         blocking=True,
     )
     assert device.humidity_warning_enabled is False
@@ -749,16 +748,16 @@ async def test_roomthermostat_gen2_humidity_warning(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.room_thermostat_2_humidity_warning"},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: "switch.room_thermostat_2_humidity_warning"},
         blocking=True,
     )
     assert device.humidity_warning_enabled is True
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.room_thermostat_2_humidity_warning"},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: "switch.room_thermostat_2_humidity_warning"},
         blocking=True,
     )
     assert device.humidity_warning_enabled is False
@@ -793,16 +792,16 @@ async def test_smart_plug_energy_saving_mode(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.smart_plug_energy_saving_mode"},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: "switch.smart_plug_energy_saving_mode"},
         blocking=True,
     )
     assert device.energy_saving_mode_enabled is True
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.smart_plug_energy_saving_mode"},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: "switch.smart_plug_energy_saving_mode"},
         blocking=True,
     )
     assert device.energy_saving_mode_enabled is False
@@ -853,8 +852,10 @@ async def test_smart_plug_compact_energy_saving_mode(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.smart_plug_compact_energy_saving_mode"},
+        SwitchService.TURN_ON,
+        {
+            CommonServiceArgument.ENTITY_ID: "switch.smart_plug_compact_energy_saving_mode"
+        },
         blocking=True,
     )
     assert device.energy_saving_mode_enabled is True
@@ -889,16 +890,20 @@ async def test_motion_detector2_smart_sensitivity(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.motion_detector_automatic_sensitivity"},
+        SwitchService.TURN_ON,
+        {
+            CommonServiceArgument.ENTITY_ID: "switch.motion_detector_automatic_sensitivity"
+        },
         blocking=True,
     )
     assert device.smart_sensitivity_enabled is True
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.motion_detector_automatic_sensitivity"},
+        SwitchService.TURN_OFF,
+        {
+            CommonServiceArgument.ENTITY_ID: "switch.motion_detector_automatic_sensitivity"
+        },
         blocking=True,
     )
     assert device.smart_sensitivity_enabled is False
@@ -955,16 +960,16 @@ async def test_micromodule_relay_swap_inputs(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.relay_swap_inputs"},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: "switch.relay_swap_inputs"},
         blocking=True,
     )
     assert device.swap_inputs is True
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.relay_swap_inputs"},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: "switch.relay_swap_inputs"},
         blocking=True,
     )
     assert device.swap_inputs is False
@@ -999,16 +1004,16 @@ async def test_micromodule_relay_swap_outputs(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.relay_swap_outputs"},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: "switch.relay_swap_outputs"},
         blocking=True,
     )
     assert device.swap_outputs is True
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.relay_swap_outputs"},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: "switch.relay_swap_outputs"},
         blocking=True,
     )
     assert device.swap_outputs is False
@@ -1058,16 +1063,16 @@ async def test_camera_eyes_cameralight(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.camera_eyes_camera_light"},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: "switch.camera_eyes_camera_light"},
         blocking=True,
     )
     assert device.cameralight is True
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.camera_eyes_camera_light"},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: "switch.camera_eyes_camera_light"},
         blocking=True,
     )
     assert device.cameralight is False
@@ -1102,16 +1107,16 @@ async def test_camera_360_notification(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.camera_360_notifications"},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: "switch.camera_360_notifications"},
         blocking=True,
     )
     assert device.cameranotification is False
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.camera_360_notifications"},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: "switch.camera_360_notifications"},
         blocking=True,
     )
     assert device.cameranotification is True
@@ -1146,16 +1151,16 @@ async def test_camera_eyes_notification(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.camera_eyes_notifications"},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: "switch.camera_eyes_notifications"},
         blocking=True,
     )
     assert device.cameranotification is False
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.camera_eyes_notifications"},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: "switch.camera_eyes_notifications"},
         blocking=True,
     )
     assert device.cameranotification is True
@@ -1188,16 +1193,16 @@ async def test_camera_outdoor_gen2_privacy_mode(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.outdoor_camera"},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: "switch.outdoor_camera"},
         blocking=True,
     )
     assert device.privacymode is True
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.outdoor_camera"},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: "switch.outdoor_camera"},
         blocking=True,
     )
     assert device.privacymode is False
@@ -1232,16 +1237,16 @@ async def test_camera_outdoor_gen2_ambient_light(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.outdoor_camera_ambient_light"},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: "switch.outdoor_camera_ambient_light"},
         blocking=True,
     )
     assert device.cameraambientlight is True
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.outdoor_camera_ambient_light"},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: "switch.outdoor_camera_ambient_light"},
         blocking=True,
     )
     assert device.cameraambientlight is False
@@ -1276,16 +1281,16 @@ async def test_camera_outdoor_gen2_front_light(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.outdoor_camera_front_light"},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: "switch.outdoor_camera_front_light"},
         blocking=True,
     )
     assert device.camerafrontlight is True
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.outdoor_camera_front_light"},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: "switch.outdoor_camera_front_light"},
         blocking=True,
     )
     assert device.camerafrontlight is False

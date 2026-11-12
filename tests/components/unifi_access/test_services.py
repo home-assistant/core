@@ -11,13 +11,12 @@ from unifi_access_api import (
     UnifiAccessError,
 )
 
-from homeassistant.components.unifi_access.const import (
-    ATTR_INTERVAL,
-    ATTR_RULE,
-    DOMAIN,
-    SERVICE_SET_LOCK_RULE,
+from homeassistant.components.unifi_access.const import DOMAIN
+from homeassistant.components.unifi_access.services import (
+    UnifiAccessService,
+    UnifiAccessServiceArgument,
 )
-from homeassistant.const import ATTR_DEVICE_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
@@ -49,13 +48,13 @@ async def test_set_lock_rule_service_calls_api(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_LOCK_RULE,
+        UnifiAccessService.SET_LOCK_RULE,
         {
-            ATTR_DEVICE_ID: _device_id(
+            CommonServiceArgument.DEVICE_ID: _device_id(
                 device_registry, "door-001", mock_config_entry.entry_id
             ),
-            ATTR_RULE: "keep_lock",
-            ATTR_INTERVAL: {"minutes": 30},
+            UnifiAccessServiceArgument.RULE: "keep_lock",
+            UnifiAccessServiceArgument.INTERVAL: {"minutes": 30},
         },
         blocking=True,
     )
@@ -76,12 +75,12 @@ async def test_set_lock_rule_service_defaults_interval(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_LOCK_RULE,
+        UnifiAccessService.SET_LOCK_RULE,
         {
-            ATTR_DEVICE_ID: _device_id(
+            CommonServiceArgument.DEVICE_ID: _device_id(
                 device_registry, "door-001", mock_config_entry.entry_id
             ),
-            ATTR_RULE: "keep_unlock",
+            UnifiAccessServiceArgument.RULE: "keep_unlock",
         },
         blocking=True,
     )
@@ -103,12 +102,12 @@ async def test_set_lock_rule_service_updates_sensor_state(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_LOCK_RULE,
+        UnifiAccessService.SET_LOCK_RULE,
         {
-            ATTR_DEVICE_ID: _device_id(
+            CommonServiceArgument.DEVICE_ID: _device_id(
                 device_registry, "door-001", mock_config_entry.entry_id
             ),
-            ATTR_RULE: "keep_lock",
+            UnifiAccessServiceArgument.RULE: "keep_lock",
         },
         blocking=True,
     )
@@ -133,12 +132,12 @@ async def test_set_lock_rule_service_raises_on_api_error(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_LOCK_RULE,
+            UnifiAccessService.SET_LOCK_RULE,
             {
-                ATTR_DEVICE_ID: _device_id(
+                CommonServiceArgument.DEVICE_ID: _device_id(
                     device_registry, "door-001", mock_config_entry.entry_id
                 ),
-                ATTR_RULE: "keep_lock",
+                UnifiAccessServiceArgument.RULE: "keep_lock",
             },
             blocking=True,
         )
@@ -159,14 +158,14 @@ async def test_set_lock_rule_service_rejects_hub_device(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_LOCK_RULE,
+            UnifiAccessService.SET_LOCK_RULE,
             {
-                ATTR_DEVICE_ID: _device_id(
+                CommonServiceArgument.DEVICE_ID: _device_id(
                     device_registry,
                     mock_config_entry.entry_id,
                     mock_config_entry.entry_id,
                 ),
-                ATTR_RULE: "keep_lock",
+                UnifiAccessServiceArgument.RULE: "keep_lock",
             },
             blocking=True,
         )
