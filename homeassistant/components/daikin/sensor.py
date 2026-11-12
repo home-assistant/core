@@ -75,7 +75,7 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
-        value_func=lambda device: device.humidity,
+        value_func=lambda device: device.target_humidity,
     ),
     DaikinSensorEntityDescription(
         key=ATTR_TOTAL_POWER,
@@ -148,7 +148,8 @@ async def async_setup_entry(
         sensors.append(ATTR_TOTAL_ENERGY_TODAY)
     if daikin_api.device.support_humidity:
         sensors.append(ATTR_HUMIDITY)
-        sensors.append(ATTR_TARGET_HUMIDITY)
+        if daikin_api.device.support_target_humidity:
+            sensors.append(ATTR_TARGET_HUMIDITY)
     if daikin_api.device.support_compressor_frequency:
         sensors.append(ATTR_COMPRESSOR_FREQUENCY)
 
