@@ -4126,7 +4126,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[sensor.wall_connector_power-entry]
+# name: test_sensors[sensor.wall_connector_123_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -4142,7 +4142,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.wall_connector_power',
+    'entity_id': 'sensor.wall_connector_123_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4171,23 +4171,149 @@
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
-# name: test_sensors[sensor.wall_connector_power-state]
+# name: test_sensors[sensor.wall_connector_123_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wall Connector Power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wall Connector 123 Power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.wall_connector_power',
+    'entity_id': 'sensor.wall_connector_123_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_sensors[sensor.wall_connector_power_2-entry]
+# name: test_sensors[sensor.wall_connector_123_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'booting',
+        'charging',
+        'disconnected',
+        'connected',
+        'scheduled',
+        'negotiating',
+        'error',
+        'charging_finished',
+        'waiting_car',
+        'charging_reduced',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('tessie', 'abd-123')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.wall_connector_123_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'State',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'State',
+    'platform': 'tessie',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wall_connector_state',
+    'unique_id': '123456-abd-123-wall_connector_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.wall_connector_123_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wall Connector 123 State',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'booting',
+        'charging',
+        'disconnected',
+        'connected',
+        'scheduled',
+        'negotiating',
+        'error',
+        'charging_finished',
+        'waiting_car',
+        'charging_reduced',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wall_connector_123_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'disconnected',
+  })
+# ---
+# name: test_sensors[sensor.wall_connector_123_vehicle_vin-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('tessie', 'abd-123')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.wall_connector_123_vehicle_vin',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Vehicle VIN',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Vehicle VIN',
+    'platform': 'tessie',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'vin',
+    'unique_id': '123456-abd-123-vin',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.wall_connector_123_vehicle_vin-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wall Connector 123 Vehicle VIN',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wall_connector_123_vehicle_vin',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.wall_connector_234_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -4203,7 +4329,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.wall_connector_power_2',
+    'entity_id': 'sensor.wall_connector_234_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4232,99 +4358,23 @@
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
-# name: test_sensors[sensor.wall_connector_power_2-state]
+# name: test_sensors[sensor.wall_connector_234_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wall Connector Power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wall Connector 234 Power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.wall_connector_power_2',
+    'entity_id': 'sensor.wall_connector_234_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_sensors[sensor.wall_connector_state-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'booting',
-        'charging',
-        'disconnected',
-        'connected',
-        'scheduled',
-        'negotiating',
-        'error',
-        'charging_finished',
-        'waiting_car',
-        'charging_reduced',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('tessie', 'abd-123')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.wall_connector_state',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'State',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': 'State',
-    'platform': 'tessie',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'wall_connector_state',
-    'unique_id': '123456-abd-123-wall_connector_state',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[sensor.wall_connector_state-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wall Connector State',
-      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'booting',
-        'charging',
-        'disconnected',
-        'connected',
-        'scheduled',
-        'negotiating',
-        'error',
-        'charging_finished',
-        'waiting_car',
-        'charging_reduced',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.wall_connector_state',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'disconnected',
-  })
-# ---
-# name: test_sensors[sensor.wall_connector_state_2-entry]
+# name: test_sensors[sensor.wall_connector_234_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -4351,7 +4401,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.wall_connector_state_2',
+    'entity_id': 'sensor.wall_connector_234_state',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4374,11 +4424,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.wall_connector_state_2-state]
+# name: test_sensors[sensor.wall_connector_234_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wall Connector State',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wall Connector 234 State',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'booting',
         'charging',
@@ -4393,64 +4443,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.wall_connector_state_2',
+    'entity_id': 'sensor.wall_connector_234_state',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'disconnected',
   })
 # ---
-# name: test_sensors[sensor.wall_connector_vehicle-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('tessie', 'abd-123')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.wall_connector_vehicle',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Vehicle',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Vehicle',
-    'platform': 'tessie',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'vin',
-    'unique_id': '123456-abd-123-vin',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[sensor.wall_connector_vehicle-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wall Connector Vehicle',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.wall_connector_vehicle',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_sensors[sensor.wall_connector_vehicle_2-entry]
+# name: test_sensors[sensor.wall_connector_234_vehicle_vin-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -4464,7 +4464,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.wall_connector_vehicle_2',
+    'entity_id': 'sensor.wall_connector_234_vehicle_vin',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4472,12 +4472,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Vehicle',
+    'object_id_base': 'Vehicle VIN',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Vehicle',
+    'original_name': 'Vehicle VIN',
     'platform': 'tessie',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -4487,13 +4487,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.wall_connector_vehicle_2-state]
+# name: test_sensors[sensor.wall_connector_234_vehicle_vin-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wall Connector Vehicle',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wall Connector 234 Vehicle VIN',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.wall_connector_vehicle_2',
+    'entity_id': 'sensor.wall_connector_234_vehicle_vin',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
