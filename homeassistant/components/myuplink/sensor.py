@@ -190,6 +190,14 @@ CATEGORY_BASED_DESCRIPTIONS: dict[str, dict[str, SensorEntityDescription]] = {
         ),
     },
     "NIBE": {},
+    "SMO": {
+        "40941": SensorEntityDescription(
+            key="degree_minutes",
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement="DM",
+            suggested_display_precision=0,
+        ),
+    },
 }
 
 
