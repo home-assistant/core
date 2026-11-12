@@ -4,7 +4,7 @@ import asyncio
 from collections import defaultdict
 from collections.abc import Collection, Iterable, Iterator, Mapping, Set as AbstractSet
 import copy
-from dataclasses import KW_ONLY, MISSING, Field, dataclass, fields as dataclass_fields
+from dataclasses import KW_ONLY, Field, dataclass, fields as dataclass_fields
 from datetime import datetime
 from enum import StrEnum
 from functools import lru_cache
@@ -144,136 +144,53 @@ _DEPRECATED_DEVICE_INFO_PARAMETERS: dict[str, tuple[str, str | None]] = {
 }
 
 
-type _DeviceInfoLike = _DeviceInfoMapping | Mapping[str, Any]
-
-
 class _DeviceInfoMapping:
-    """Dict-style access for the device info dataclasses, which were TypedDicts.
-
-    A field left at Undefined is not part of the mapping. Each method covers a usage
-    found in integrations, as this compatibility layer is meant to be deprecated.
-    """
+    """Probe: the device info dataclasses without their dict-style access."""
 
     __slots__ = ()
 
-    # The mapping keys, in field declaration order and as a set for lookups, and a
-    # getter returning all the field values at once, for comparisons
     _field_names: ClassVar[tuple[str, ...]]
     _field_set: ClassVar[frozenset[str]]
     _field_values: ClassVar[attrgetter[tuple[Any, ...]]]
-    __required_keys__: ClassVar[frozenset[str]]
-    __optional_keys__: ClassVar[frozenset[str]]
 
     if TYPE_CHECKING:
-        # Set by the @dataclass decorator, declared for _device_info_fields
         __dataclass_fields__: ClassVar[dict[str, Field[Any]]]
-
-    def __getitem__(self, key: str) -> Any:
-        """Return the value of a set field."""
-        # Also backs `.get()`, `dict()` and `**device_info` unpacking
-        if key in self._field_set:
-            value = getattr(self, key)
-            if value is not Undefined:
-                return value
-        raise KeyError(key)
-
-    def __setitem__(self, key: str, value: Any) -> None:
-        """Set the value of a field."""
-        # Integrations fill a device info in after building it
-        if key not in self._field_set:
-            raise KeyError(f"'{key}' is not a valid {type(self).__name__} field")
-        setattr(self, key, value)
-
-    # Not iterable, so that a loop fails rather than calling __getitem__ with indexes
-    __iter__ = None
-
-    def __contains__(self, key: object) -> bool:
-        """Return if a field is set."""
-        # Integrations test for a field: `"name" in device_info`
-        return (
-            isinstance(key, str)
-            and key in self._field_set
-            and getattr(self, key) is not Undefined
-        )
 
     @override
     def __eq__(self, other: object) -> bool:
-        """Return if the set fields match those of another device info or mapping."""
-        # Integrations compare a device info to a plain mapping, so this can't be
-        # left to the dataclass
+        """Return if the set fields match those of another device info."""
         if other is self:
             return True
         if isinstance(other, _DeviceInfoMapping):
-            # A subclass, such as a read-only cached device info, shares the fields
             return other._field_names is self._field_names and self._field_values(
                 self
             ) == other._field_values(other)
-        if isinstance(other, Mapping):
-            return dict(self) == other
         return NotImplemented
 
     @override
     def __repr__(self) -> str:
         """Return the representation, listing the set fields only."""
-        # The generated repr would spell out Undefined for every unset field
-        set_fields = ", ".join(f"{key}={value!r}" for key, value in self.items())
+        set_fields = ", ".join(
+            f"{key}={value!r}" for key, value in self.as_dict().items()
+        )
         return f"{type(self).__name__}({set_fields})"
 
-    def keys(self) -> tuple[str, ...]:
-        """Return the names of the set fields."""
-        # Required, together with __getitem__, for `**device_info` unpacking
-        return tuple(
-            key for key in self._field_names if getattr(self, key) is not Undefined
-        )
-
-    def items(self) -> tuple[tuple[str, Any], ...]:
-        """Return the set fields as key-value pairs."""
-        return tuple(self.as_dict().items())
-
     def as_dict(self) -> dict[str, Any]:
-        """Return the set fields.
-
-        Serialize a device info through this method: orjson also writes unset fields.
-        """
+        """Return the set fields."""
         return {
             name: value
             for name in self._field_names
             if (value := getattr(self, name)) is not Undefined
         }
 
-    def get(self, key: str, default: Any = None) -> Any:
-        """Return the value of a field, or default if the field is not set."""
-        if key in self._field_set and (value := getattr(self, key)) is not Undefined:
-            return value
-        return default
-
-    def update(self, other: _DeviceInfoLike) -> None:
-        """Set the fields another device info or mapping has set."""
-        # Integrations merge fields in with `device_info.update(...)`
-        for key, value in other.items():
-            self[key] = value
-
 
 def _device_info_fields[_DeviceInfoT: _DeviceInfoMapping](
     cls: type[_DeviceInfoT],
 ) -> type[_DeviceInfoT]:
-    """Cache the field names a device info dataclass exposes as mapping keys."""
-    fields = dataclass_fields(cls)
-    cls._field_names = tuple(field.name for field in fields)
+    """Cache the field names of a device info dataclass."""
+    cls._field_names = tuple(field.name for field in dataclass_fields(cls))
     cls._field_set = frozenset(cls._field_names)
     cls._field_values = attrgetter(*cls._field_names)
-    # Integrations read these TypedDict attributes to check for a field
-    cls.__required_keys__ = frozenset(
-        field.name
-        for field in fields
-        if field.default is MISSING and field.default_factory is MISSING
-    )
-    # The deprecated fields were not keys of the TypedDict
-    cls.__optional_keys__ = (
-        frozenset(cls._field_names)
-        - cls.__required_keys__
-        - _DEPRECATED_DEVICE_INFO_PARAMETERS.keys()
-    )
     return cls
 
 

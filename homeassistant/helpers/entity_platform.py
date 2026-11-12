@@ -864,28 +864,7 @@ class EntityPlatform:
                 config_subentry_id=config_subentry_id,
                 device_info=device_info,
             )
-        # An integration can still describe its device with a plain mapping, which
-        # its type does not allow. To be deprecated.
-        device_info_fields = dict(device_info)  # type: ignore[unreachable]
-        # A device info without any field means no device
-        if not device_info_fields:
-            return entity.device_entry
-        # An explicit parent_device_id of None, as a dynamically built device info
-        # may carry, means a main device
-        if (
-            parent_device_id := device_info_fields.pop("parent_device_id", None)
-        ) is not None:
-            return dev_reg.async_get_or_create_child(
-                config_entry_id=config_entry_id,
-                config_subentry_id=config_subentry_id,
-                parent_device_id=parent_device_id,
-                **device_info_fields,
-            )
-        return dev_reg.async_get_or_create(
-            config_entry_id=config_entry_id,
-            config_subentry_id=config_subentry_id,
-            **device_info_fields,
-        )
+        raise TypeError(f"Probe: plain mapping device info {device_info!r}")
 
     def _check_device_attach(self, entity: Entity, reason: str) -> None:
         """Check the entity does not attach a device and report it if it does.
