@@ -17,6 +17,8 @@ from async_upnp_client.exceptions import (
 from async_upnp_client.profiles.dlna import PlayMode, TransportState
 from didl_lite import didl_lite
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant import const as ha_const
 from homeassistant.components import media_player as mp, ssdp
@@ -35,6 +37,9 @@ from homeassistant.components.media_player import (
     MediaType,
     RepeatMode,
 )
+
+# pylint: disable-next=home-assistant-component-root-import
+from homeassistant.components.media_player.entity import PROP_TO_ATTR
 from homeassistant.components.media_source import DOMAIN as MS_DOMAIN, PlayMedia
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -60,9 +65,6 @@ from .conftest import (
     MOCK_MAC_ADDRESS,
     NEW_DEVICE_LOCATION,
 )
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 # Auto-use the domain_data_mock fixture for every test in this module
 pytestmark = pytest.mark.usefixtures("domain_data_mock")
@@ -1322,7 +1324,7 @@ async def test_unavailable_device(
 
     # Check attributes are unavailable
     attrs = mock_state.attributes
-    for attr in mp.PROP_TO_ATTR.values():
+    for attr in PROP_TO_ATTR.values():
         assert attr not in attrs
 
     assert attrs[ha_const.ATTR_FRIENDLY_NAME] == MOCK_DEVICE_NAME
@@ -2135,7 +2137,7 @@ async def test_disappearing_device(
     entity: DlnaDmrEntity = hass.data[mp.DOMAIN].get_entity(mock_disconnected_entity_id)
 
     # Test attribute access
-    for prop in mp.PROP_TO_ATTR:
+    for prop in PROP_TO_ATTR:
         value = getattr(entity, prop)
         assert value is None
 

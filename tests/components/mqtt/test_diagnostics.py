@@ -4,19 +4,21 @@ import json
 from unittest.mock import ANY
 
 import pytest
+from pytest_homeassistant.common import async_fire_mqtt_message
+from pytest_homeassistant.components.diagnostics import (
+    get_diagnostics_for_config_entry,
+    get_diagnostics_for_device,
+)
+from pytest_homeassistant.typing import (
+    ClientSessionGenerator,
+    MqttMockHAClientGenerator,
+)
 
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import async_fire_mqtt_message
-from tests.components.diagnostics import (
-    get_diagnostics_for_config_entry,
-    get_diagnostics_for_device,
-)
-from tests.typing import ClientSessionGenerator, MqttMockHAClientGenerator
 
 default_entry_data = {"broker": "mock-broker", "protocol": "5"}
 default_entry_options = {"birth_message": {}}

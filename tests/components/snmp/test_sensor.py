@@ -3,14 +3,13 @@
 from unittest.mock import AsyncMock, patch
 
 from pysnmp.proto.rfc1902 import Integer32
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.snmp.sensor import SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import async_fire_time_changed
 
 CONFIG = {
     SENSOR_DOMAIN: {

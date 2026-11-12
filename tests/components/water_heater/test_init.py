@@ -8,6 +8,15 @@ from unittest.mock import AsyncMock, MagicMock, call
 import probatio
 from propcache.api import cached_property
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    MockPlatform,
+    async_mock_service,
+    mock_integration,
+    mock_platform,
+    setup_test_component_platform,
+)
 
 from homeassistant.components.water_heater import (
     DOMAIN,
@@ -23,25 +32,20 @@ from homeassistant.components.water_heater.services import (
     _async_service_temperature_set,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    STATE_UNAVAILABLE,
+    Platform,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.unit_system import (
     METRIC_SYSTEM,
     US_CUSTOMARY_SYSTEM,
     UnitSystem,
-)
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    MockPlatform,
-    async_mock_service,
-    mock_integration,
-    mock_platform,
-    setup_test_component_platform,
 )
 
 
@@ -146,12 +150,11 @@ async def test_operation_mode_validation(
 
     async def async_setup_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
             config_entry, [Platform.WATER_HEATER]
         )
-        return True
 
     async def async_setup_entry_water_heater_platform(
         hass: HomeAssistant,
@@ -488,7 +491,10 @@ async def test_native_temperature_unit_conversion(
         == expected_temperature
     )
     # The published unit is the one the published temperatures are converted to
-    assert state.attributes[WaterHeaterStateAttribute.TEMPERATURE_UNIT] == expected_unit
+    assert (
+        state.attributes[WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT]
+        == expected_unit
+    )
 
 
 async def test_native_temperature_unit_property(hass: HomeAssistant) -> None:
@@ -1007,6 +1013,48 @@ async def test_deprecated_temperature_member_read_reports_the_reader(
     assert f"{__name__}::MigratedWaterHeaterEntity" not in caplog.text
 
 
+@pytest.mark.parametrize(("member", "native_value"), DEPRECATED_MEMBER_VALUES)
+@pytest.mark.parametrize("prefix", ["", "_attr_"], ids=["property", "attribute"])
+async def test_deprecated_temperature_member_core_declaration_raises(
+    prefix: str, member: str, native_value: Any
+) -> None:
+    """Test a core integration still declaring a deprecated member raises."""
+    with pytest.raises(
+        RuntimeError,
+        match=(
+            "homeassistant.components.test.water_heater::CoreWaterHeaterEntity provides the "
+            f"deprecated {prefix}{member},"
+        ),
+    ):
+        type(
+            "CoreWaterHeaterEntity",
+            (MockShimWaterHeaterEntity,),
+            {
+                "__module__": "homeassistant.components.test.water_heater",
+                f"{prefix}{member}": native_value,
+            },
+        )
+
+
+@pytest.mark.parametrize("integration_frame_path", ["homeassistant/components/hue"])
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_deprecated_temperature_member_core_read_raises(
+    hass: HomeAssistant,
+) -> None:
+    """Test a core integration reading a deprecated member raises."""
+    entity = _migrated_entity("MigratedWaterHeaterEntity")
+    entity.hass = hass
+
+    with pytest.raises(
+        RuntimeError,
+        match=(
+            "Detected that integration 'hue' reads the deprecated "
+            "MigratedWaterHeaterEntity.current_temperature"
+        ),
+    ):
+        _ = entity.current_temperature
+
+
 @pytest.mark.parametrize(
     "integration_frame_path",
     [
@@ -1380,3 +1428,35 @@ async def test_migrated_grandparent_property_wins_over_descendant_attributes(
 
     assert getattr(entity, f"native_{member}") is grandparent_value
     assert getattr(entity, member) is grandparent_value
+
+
+async def test_temperature_unit_when_unavailable(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    register_test_integration: MockConfigEntry,
+) -> None:
+    """Test the temperature unit is kept when the entity is unavailable."""
+    entity = MockWaterHeaterEntity()
+    entity._attr_name = "Test"
+    entity._attr_unique_id = "unique_water_heater_test"
+    entity._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+    entity._attr_available = False
+
+    setup_test_component_platform(
+        hass, DOMAIN, entities=[entity], from_config_entry=True
+    )
+    await hass.config_entries.async_setup(register_test_integration.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("water_heater.test")
+    assert state.state == STATE_UNAVAILABLE
+    assert (
+        state.attributes[WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT]
+        == UnitOfTemperature.CELSIUS
+    )
+    # The entity registry restores the capabilities before the entity is added
+    entry = entity_registry.async_get("water_heater.test")
+    assert (
+        entry.capabilities[WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT]
+        == UnitOfTemperature.CELSIUS
+    )

@@ -173,7 +173,7 @@ type KeyboardRemoteConfigEntry = ConfigEntry[DeviceHandler]
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: KeyboardRemoteConfigEntry
-) -> bool:
+) -> None:
     """Set up a single keyboard remote device from a config entry."""
     if (manager := hass.data.get(DATA_MANAGER)) is None:
         manager = KeyboardRemoteManager(hass)
@@ -197,12 +197,11 @@ async def async_setup_entry(
         await manager.async_start()
 
     entry.async_on_unload(async_at_start(hass, _async_start))
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: KeyboardRemoteConfigEntry
-) -> bool:
+) -> None:
     """Unload a keyboard remote config entry."""
     manager = hass.data[DATA_MANAGER]
     await manager.unregister_handler(entry.runtime_data)
@@ -212,8 +211,6 @@ async def async_unload_entry(
         # a new manager instead of registering with this stopping one.
         hass.data.pop(DATA_MANAGER, None)
         await manager.async_stop()
-
-    return True
 
 
 class KeyboardRemoteManager:

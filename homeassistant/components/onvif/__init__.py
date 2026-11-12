@@ -45,7 +45,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ONVIFConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ONVIFConfigEntry) -> None:
     """Set up ONVIF from a config entry."""
     if not entry.options:
         await async_populate_options(hass, entry)
@@ -116,8 +116,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ONVIFConfigEntry) -> boo
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, device.async_stop)
     )
 
-    return True
-
 
 async def _async_stop_device(hass: HomeAssistant, device: ONVIFDevice) -> None:
     """Stop the ONVIF device."""
@@ -129,11 +127,11 @@ async def _async_stop_device(hass: HomeAssistant, device: ONVIFDevice) -> None:
     await device.device.close()
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ONVIFConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ONVIFConfigEntry) -> None:
     """Unload a config entry."""
     device = entry.runtime_data
     await _async_stop_device(hass, device)
-    return await hass.config_entries.async_unload_platforms(entry, device.platforms)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, device.platforms)
 
 
 async def _get_snapshot_auth(device: ONVIFDevice) -> str | None:

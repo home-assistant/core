@@ -2,13 +2,13 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant import config_entries
 from homeassistant.components.progettihwsw.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 mock_value_step_user = {
     "title": "1R & 1IN Board",
@@ -47,7 +47,7 @@ async def test_form(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.progettihwsw.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
@@ -96,7 +96,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.progettihwsw.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result4 = await hass.config_entries.flow.async_configure(
             result3["flow_id"],
@@ -167,7 +167,7 @@ async def test_form_user_exception(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.progettihwsw.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result4 = await hass.config_entries.flow.async_configure(
             result3["flow_id"],

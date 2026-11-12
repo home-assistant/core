@@ -227,6 +227,51 @@ async def _transform_stream(
         if not chunk.choices:
             continue
         choice = chunk.choices[0]
+        # The chunk that carries finish_reason can still carry a delta: some
+        # servers send the last words or the last piece of tool call arguments
+        # with it, so the delta is handled before the stream ends.
+        delta = choice.delta
+
+        if current_tool_call is None and not delta.tool_calls:
+            yield_dict: conversation.AssistantContentDeltaDict = {}
+            if not yielded_role and delta.role == "assistant":
+                yield_dict["role"] = "assistant"
+                yielded_role = True
+            if delta.content is not None:
+                yield_dict["content"] = delta.content
+            if yield_dict:
+                yield yield_dict
+        elif (
+            delta.tool_calls
+            and (delta_tool_call := delta.tool_calls[0])
+            and delta_tool_call.function
+        ):
+            if (
+                current_tool_call
+                and delta_tool_call.index == current_tool_call["index"]
+            ):
+                current_tool_call["tool_args"] += (
+                    delta_tool_call.function.arguments or ""
+                )
+            else:
+                if current_tool_call:
+                    yield {
+                        "tool_calls": [
+                            llm.ToolInput(
+                                id=current_tool_call["id"],
+                                tool_name=current_tool_call["tool_name"],
+                                tool_args=_decode_tool_arguments(
+                                    current_tool_call["tool_args"]
+                                ),
+                            )
+                        ]
+                    }
+                current_tool_call = {
+                    "index": delta_tool_call.index,
+                    "id": delta_tool_call.id,
+                    "tool_name": delta_tool_call.function.name,
+                    "tool_args": delta_tool_call.function.arguments or "",
+                }
 
         if choice.finish_reason:
             if current_tool_call:
@@ -244,50 +289,6 @@ async def _transform_stream(
                     ]
                 }
             break
-
-        delta = choice.delta
-
-        if current_tool_call is None and not delta.tool_calls:
-            yield_dict: conversation.AssistantContentDeltaDict = {}
-            if not yielded_role and delta.role == "assistant":
-                yield_dict["role"] = "assistant"
-                yielded_role = True
-            if delta.content is not None:
-                yield_dict["content"] = delta.content
-            if yield_dict:
-                yield yield_dict
-            continue
-
-        if (
-            not delta.tool_calls
-            or not (delta_tool_call := delta.tool_calls[0])
-            or not delta_tool_call.function
-        ):
-            continue
-
-        if current_tool_call and delta_tool_call.index == current_tool_call["index"]:
-            current_tool_call["tool_args"] += delta_tool_call.function.arguments or ""
-            continue
-
-        if current_tool_call:
-            yield {
-                "tool_calls": [
-                    llm.ToolInput(
-                        id=current_tool_call["id"],
-                        tool_name=current_tool_call["tool_name"],
-                        tool_args=_decode_tool_arguments(
-                            current_tool_call["tool_args"]
-                        ),
-                    )
-                ]
-            }
-
-        current_tool_call = {
-            "index": delta_tool_call.index,
-            "id": delta_tool_call.id,
-            "tool_name": delta_tool_call.function.name,
-            "tool_args": delta_tool_call.function.arguments or "",
-        }
 
 
 class LlamaCppBaseLLMEntity(Entity):

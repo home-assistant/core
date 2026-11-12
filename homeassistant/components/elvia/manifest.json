@@ -1,8 +1,10 @@
 {
   "domain": "elvia",
   "name": "Elvia",
+  "categories": ["energy.meters_monitoring"],
   "codeowners": ["@ludeeus"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["recorder"],
   "documentation": "https://www.home-assistant.io/integrations/elvia",
   "integration_type": "service",

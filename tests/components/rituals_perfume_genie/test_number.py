@@ -1,6 +1,7 @@
 """Tests for the Rituals Perfume Genie number platform."""
 
 import pytest
+from ritualsgenie import RitualsGenieConnectionError
 
 from homeassistant.components.homeassistant import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
@@ -15,7 +16,7 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -146,13 +147,14 @@ async def test_set_number_value_to_float(hass: HomeAssistant) -> None:
     assert state
     assert state.state == "3"
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
             {ATTR_ENTITY_ID: "number.genie_perfume_amount", ATTR_VALUE: 1.5},
             blocking=True,
         )
+    assert exc_info.value.translation_key == "perfume_amount_not_whole"
     await hass.services.async_call(
         HOMEASSISTANT_DOMAIN,
         SERVICE_UPDATE_ENTITY,
@@ -164,3 +166,23 @@ async def test_set_number_value_to_float(hass: HomeAssistant) -> None:
     state = hass.states.get("number.genie_perfume_amount")
     assert state
     assert state.state == "3"
+
+
+async def test_number_action_error(hass: HomeAssistant) -> None:
+    """Test a failing change of the perfume amount raises a translated error."""
+    config_entry = mock_config_entry(unique_id="id_123_number_action_error")
+    client = await init_integration(hass, config_entry, [mock_diffuser("lot123")])
+    client.set_perfume_amount.side_effect = RitualsGenieConnectionError
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {ATTR_ENTITY_ID: "number.genie_perfume_amount", ATTR_VALUE: 1},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "communication_error"
+    state = hass.states.get("number.genie_perfume_amount")
+    assert state
+    assert state.state == "2"

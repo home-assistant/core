@@ -23,7 +23,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: WiLightConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: WiLightConfigEntry) -> None:
     """Set up a wilight config entry."""
 
     parent = WiLightParent(hass, entry)
@@ -36,16 +36,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: WiLightConfigEntry) -> b
     # Set up all platforms for this device/entry.
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: WiLightConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: WiLightConfigEntry) -> None:
     """Unload WiLight config entry."""
 
     # Unload entities for this entry/device.
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    # Cleanup
-    await entry.runtime_data.async_reset()
-
-    return unload_ok
+    try:
+        await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    finally:
+        # Cleanup
+        await entry.runtime_data.async_reset()

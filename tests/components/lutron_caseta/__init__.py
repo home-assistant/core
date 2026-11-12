@@ -8,6 +8,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from pylutron_caseta.color_value import ColorMode as LutronColorMode, WarmCoolColorValue
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.lutron_caseta import DOMAIN
 from homeassistant.components.lutron_caseta.const import (
@@ -17,8 +18,6 @@ from homeassistant.components.lutron_caseta.const import (
 )
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -69,6 +69,10 @@
       "start_otbr_addon": {
         "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::start_otbr_addon::title%]"
       },
+      "thread_not_supported": {
+        "description": "[%key:component::homeassistant_hardware::firmware_picker::options::step::thread_not_supported::description%]",
+        "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::thread_not_supported::title%]"
+      },
       "zigbee_installation_type": {
         "description": "[%key:component::homeassistant_hardware::firmware_picker::options::step::zigbee_installation_type::description%]",
         "menu_option_descriptions": {
@@ -104,6 +108,9 @@
   "exceptions": {
     "device_disconnected": {
       "message": "The device is not plugged in"
+    },
+    "device_missing_migration": {
+      "message": "USB device {device} is missing, cannot migrate"
     },
     "duplicate_entry": {
       "message": "Another configuration entry exists for the adapter with serial number {serial_number}"
@@ -253,6 +260,10 @@
       },
       "start_otbr_addon": {
         "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::start_otbr_addon::title%]"
+      },
+      "thread_not_supported": {
+        "description": "[%key:component::homeassistant_hardware::firmware_picker::options::step::thread_not_supported::description%]",
+        "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::thread_not_supported::title%]"
       },
       "uninstall_addon": {
         "data": {

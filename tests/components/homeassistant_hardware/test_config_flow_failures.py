@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 from aiohttp import ClientError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.hassio import AddonError
 from homeassistant.components.homeassistant_hardware.firmware_config_flow import (
@@ -27,8 +28,6 @@ from .test_config_flow import (
     mock_firmware_info,
     mock_test_firmware_platform,  # noqa: F401
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
@@ -338,6 +337,15 @@ async def test_config_flow_firmware_index_download_fails_and_required(
             user_input={"next_step_id": "zigbee_intent_recommended"},
         )
 
+        assert pick_result["type"] is FlowResultType.SHOW_PROGRESS
+        assert pick_result["step_id"] == "install_zigbee_firmware"
+
+        pick_result = await consume_progress_flow(
+            hass,
+            flow_id=pick_result["flow_id"],
+            valid_step_ids=("install_zigbee_firmware",),
+        )
+
         assert pick_result["type"] is FlowResultType.ABORT
         assert pick_result["reason"] == "fw_download_failed"
         assert pick_result["description_placeholders"] == {
@@ -379,6 +387,15 @@ async def test_config_flow_firmware_download_fails_and_required(
         pick_result = await hass.config_entries.flow.async_configure(
             pick_result["flow_id"],
             user_input={"next_step_id": "zigbee_intent_recommended"},
+        )
+
+        assert pick_result["type"] is FlowResultType.SHOW_PROGRESS
+        assert pick_result["step_id"] == "install_zigbee_firmware"
+
+        pick_result = await consume_progress_flow(
+            hass,
+            flow_id=pick_result["flow_id"],
+            valid_step_ids=("install_zigbee_firmware",),
         )
 
         assert pick_result["type"] is FlowResultType.ABORT

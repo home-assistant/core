@@ -10,7 +10,7 @@ from .coordinator import InverterConfigEntry, InverterCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: InverterConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: InverterConfigEntry) -> None:
     """Handle the creation of a new config entry for the integration (asynchronous)."""
 
     # Create the corresponding HUB
@@ -21,9 +21,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: InverterConfigEntry) -> 
     # Call for HUB creation then each entity as a List
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: InverterConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: InverterConfigEntry) -> None:
     """Handle entry unloading."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

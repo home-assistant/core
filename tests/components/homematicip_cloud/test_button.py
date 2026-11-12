@@ -4,10 +4,13 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import snapshot_platform
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from .helper import HomeFactory, get_and_check_entity_basics
@@ -175,3 +178,53 @@ async def test_hmip_full_flush_door_controller_button(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == now.isoformat()
+
+
+async def test_hmip_identify_button(
+    hass: HomeAssistant,
+    default_mock_hap_factory: HomeFactory,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the identify button of a device that supports identify."""
+    entity_id = "button.bsl2_identify"
+    with patch(
+        "homeassistant.components.homematicip_cloud.hap.PLATFORMS",
+        [Platform.BUTTON],
+    ):
+        mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+            test_devices=["BSL2"], test_groups=[]
+        )
+
+    await snapshot_platform(
+        hass, entity_registry, snapshot, mock_hap.config_entry.entry_id
+    )
+
+    base_channel = mock_hap.hmip_device_by_entity_id[entity_id].functionalChannels[0]
+    with patch.object(
+        base_channel, "async_set_identify", new_callable=AsyncMock
+    ) as mock_set_identify:
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+    mock_set_identify.assert_awaited_once_with()
+
+
+async def test_hmip_identify_button_not_supported(
+    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
+) -> None:
+    """Test that a device without identify support gets no identify button."""
+    with patch(
+        "homeassistant.components.homematicip_cloud.hap.PLATFORMS",
+        [Platform.BUTTON],
+    ):
+        await default_mock_hap_factory.async_get_mock_hap(
+            test_devices=["Garagentor"], test_groups=[]
+        )
+
+    assert hass.states.get("button.garagentor_identify") is None
+    assert hass.states.get("button.garagentor")

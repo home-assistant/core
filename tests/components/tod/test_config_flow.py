@@ -3,13 +3,13 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
 
 from homeassistant import config_entries
+from homeassistant.components.tod.binary_sensor import TodEntityStateAttribute
 from homeassistant.components.tod.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry, get_schema_suggested_value
 
 
 @pytest.mark.parametrize("platform", ["sensor"])
@@ -23,7 +23,7 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
 
     with patch(
         "homeassistant.components.tod.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -110,5 +110,9 @@ async def test_options(hass: HomeAssistant) -> None:
     # Check the state of the entity has changed as expected
     state = hass.states.get("binary_sensor.my_tod")
     assert state.state == "off"
-    assert state.attributes["after"] == "2022-03-16T10:00:00-07:00"
-    assert state.attributes["before"] == "2022-03-16T17:05:00-07:00"
+    assert (
+        state.attributes[TodEntityStateAttribute.AFTER] == "2022-03-16T10:00:00-07:00"
+    )
+    assert (
+        state.attributes[TodEntityStateAttribute.BEFORE] == "2022-03-16T17:05:00-07:00"
+    )

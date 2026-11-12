@@ -1,8 +1,10 @@
 {
   "domain": "azure_event_hub",
   "name": "Azure Event Hub",
+  "categories": ["computers_network.cloud_developer_tools"],
   "codeowners": ["@eavanvalkenburg"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/azure_event_hub",
   "integration_type": "service",
   "iot_class": "cloud_push",

@@ -161,7 +161,7 @@ class MideaNumber(MideaEntity, NumberEntity):
         return float(value)
 
     @override
-    def set_native_value(self, value: float) -> None:
+    async def async_set_native_value(self, value: float) -> None:
         """Set the value."""
         step = self.step
         value = round(value / step) * step

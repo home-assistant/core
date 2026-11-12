@@ -13,6 +13,7 @@ from cookidoo_api.exceptions import (
     CookidooRequestException,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.cookidoo.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -28,8 +29,6 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import AUTH_DATA, COUNTRY, EMAIL, LANGUAGE, PASSWORD, TEST_UUID
 from .test_init import setup_integration
-
-from tests.common import MockConfigEntry
 
 MOCK_DATA_USER_STEP = {
     CONF_EMAIL: EMAIL,
@@ -146,6 +145,7 @@ async def test_flow_reauth_drops_tokens_of_a_failed_attempt(
     )
 
     assert result["reason"] == "reauth_successful"
+    await hass.async_block_till_done()
     assert cookidoo_config_entry.data[CONF_TOKEN] == {}
 
 
@@ -317,6 +317,7 @@ async def test_flow_reconfigure_success(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
+    await hass.async_block_till_done()
     assert cookidoo_config_entry.data == {
         **MOCK_DATA_USER_STEP,
         CONF_EMAIL: "new-email",
@@ -381,6 +382,7 @@ async def test_flow_reconfigure_init_data_unknown_error_and_recover_on_step_1(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
+    await hass.async_block_till_done()
     assert cookidoo_config_entry.data == {
         **MOCK_DATA_USER_STEP,
         CONF_COUNTRY: "DE",
@@ -443,6 +445,7 @@ async def test_flow_reconfigure_init_data_unknown_error_and_recover_on_step_2(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
+    await hass.async_block_till_done()
     assert cookidoo_config_entry.data == {
         **MOCK_DATA_USER_STEP,
         CONF_COUNTRY: "DE",
@@ -501,6 +504,7 @@ async def test_flow_reauth(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
+    await hass.async_block_till_done()
     assert cookidoo_config_entry.data == {
         CONF_EMAIL: "new-email",
         CONF_PASSWORD: "new-password",
@@ -554,6 +558,7 @@ async def test_flow_reauth_error_and_recover(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
+    await hass.async_block_till_done()
     assert cookidoo_config_entry.data == {
         CONF_EMAIL: "new-email",
         CONF_PASSWORD: "new-password",

@@ -4,6 +4,7 @@ import asyncio
 from datetime import timedelta
 from unittest.mock import create_autospec, patch
 
+from pytest_homeassistant.common import async_fire_time_changed
 import pywemo
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -27,8 +28,6 @@ from .conftest import (
     MOCK_PORT,
     MOCK_SERIAL_NUMBER,
 )
-
-from tests.common import async_fire_time_changed
 
 
 async def test_config_no_config(hass: HomeAssistant) -> None:

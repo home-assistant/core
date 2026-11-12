@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.remote import (
@@ -27,8 +28,6 @@ from homeassistant.util import slugify
 
 from .conftest import setup_integration
 from .const import NAME
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 REMOTE_ENTITY_ID = f"{REMOTE_DOMAIN}.{slugify(NAME)}"
 

@@ -1,8 +1,8 @@
 """Common helpers for select entity component tests."""
 
-from homeassistant.components.select import SelectEntity
+from pytest_homeassistant.common import MockEntity
 
-from tests.common import MockEntity
+from homeassistant.components.select import SelectEntity
 
 
 class MockSelectEntity(MockEntity, SelectEntity):

@@ -2,7 +2,7 @@
 
 from typing import Any
 
-import pysaj
+import aiosaj
 
 from homeassistant.const import (
     CONF_HOST,
@@ -19,7 +19,7 @@ from .coordinator import SAJConfigEntry, SAJDataUpdateCoordinator
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SAJConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SAJConfigEntry) -> None:
     """Set up SAJ from a config entry."""
     host = entry.data[CONF_HOST]
     connection_type = entry.data[CONF_TYPE]
@@ -35,8 +35,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SAJConfigEntry) -> bool:
         if password:
             kwargs["password"] = password
 
-    saj = pysaj.SAJ(host, **kwargs)
-    sensor_def = pysaj.Sensors(wifi)
+    saj = aiosaj.SAJ(host, **kwargs)
+    sensor_def = aiosaj.Sensors(wifi)
 
     coordinator = SAJDataUpdateCoordinator(hass, entry, saj, sensor_def, wifi=wifi)
     await coordinator.async_config_entry_first_refresh()
@@ -45,9 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SAJConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: SAJConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SAJConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

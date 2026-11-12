@@ -61,7 +61,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: SharkIqConfigEntry
-) -> bool:
+) -> None:
     """Initialize the sharkiq platform via config entry."""
     if CONF_REGION not in config_entry.data:
         hass.config_entries.async_update_entry(
@@ -101,8 +101,6 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    return True
-
 
 async def async_disconnect_or_timeout(coordinator: SharkIqUpdateCoordinator):
     """Disconnect to vacuum."""
@@ -121,13 +119,8 @@ async def async_update_options(hass: HomeAssistant, config_entry):
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: SharkIqConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
-    if unload_ok:
-        with suppress(SharkIqAuthError):
-            await async_disconnect_or_timeout(coordinator=config_entry.runtime_data)
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)
+    with suppress(SharkIqAuthError):
+        await async_disconnect_or_timeout(coordinator=config_entry.runtime_data)

@@ -1,6 +1,7 @@
 """Define services for the Radarr integration."""
 
 from collections.abc import Awaitable, Callable
+from enum import StrEnum
 from typing import Any, Final, cast
 
 from aiopyarr import exceptions
@@ -15,23 +16,30 @@ from .const import DOMAIN
 from .coordinator import RadarrConfigEntry
 from .helpers import format_movies, format_queue
 
-# Service names
-SERVICE_GET_MOVIES: Final = "get_movies"
-SERVICE_GET_QUEUE: Final = "get_queue"
+
+class RadarrService(StrEnum):
+    """Store keys for Radarr services."""
+
+    GET_MOVIES = "get_movies"
+    GET_QUEUE = "get_queue"
+
+
+class RadarrServiceArgument(StrEnum):
+    """Store keys for Radarr service arguments."""
+
+    ENTRY_ID = "entry_id"
+    MAX_ITEMS = "max_items"
+
 
 # Service attributes
 ATTR_MOVIES: Final = "movies"
-ATTR_ENTRY_ID: Final = "entry_id"
-
-# Service parameter constants
-CONF_MAX_ITEMS = "max_items"
 
 # Default values - 0 means no limit
 DEFAULT_MAX_ITEMS = 0
 
 SERVICE_BASE_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_ENTRY_ID): selector.ConfigEntrySelector(
+        probatio.Required(RadarrServiceArgument.ENTRY_ID): selector.ConfigEntrySelector(
             {"integration": DOMAIN}
         ),
     }
@@ -41,9 +49,9 @@ SERVICE_GET_MOVIES_SCHEMA = SERVICE_BASE_SCHEMA
 
 SERVICE_GET_QUEUE_SCHEMA = SERVICE_BASE_SCHEMA.extend(
     {
-        probatio.Optional(CONF_MAX_ITEMS, default=DEFAULT_MAX_ITEMS): probatio.All(
-            probatio.Coerce(int), probatio.Range(min=0, max=500)
-        ),
+        probatio.Optional(
+            RadarrServiceArgument.MAX_ITEMS, default=DEFAULT_MAX_ITEMS
+        ): probatio.All(probatio.Coerce(int), probatio.Range(min=0, max=500)),
     }
 )
 
@@ -63,7 +71,7 @@ async def _handle_api_errors[_T](func: Callable[[], Awaitable[_T]]) -> _T:
 async def _async_get_movies(call: ServiceCall) -> dict[str, Any]:
     """Get all Radarr movies."""
     entry: RadarrConfigEntry = service.async_get_config_entry(
-        call.hass, DOMAIN, call.data[ATTR_ENTRY_ID]
+        call.hass, DOMAIN, call.data[RadarrServiceArgument.ENTRY_ID]
     )
 
     api_client = entry.runtime_data.status.api_client
@@ -81,9 +89,9 @@ async def _async_get_movies(call: ServiceCall) -> dict[str, Any]:
 async def _async_get_queue(call: ServiceCall) -> dict[str, Any]:
     """Get Radarr queue."""
     entry: RadarrConfigEntry = service.async_get_config_entry(
-        call.hass, DOMAIN, call.data[ATTR_ENTRY_ID]
+        call.hass, DOMAIN, call.data[RadarrServiceArgument.ENTRY_ID]
     )
-    max_items: int = call.data[CONF_MAX_ITEMS]
+    max_items: int = call.data[RadarrServiceArgument.MAX_ITEMS]
 
     api_client = entry.runtime_data.status.api_client
 
@@ -115,7 +123,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_GET_MOVIES,
+        RadarrService.GET_MOVIES,
         _async_get_movies,
         schema=SERVICE_GET_MOVIES_SCHEMA,
         supports_response=SupportsResponse.ONLY,
@@ -123,7 +131,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_GET_QUEUE,
+        RadarrService.GET_QUEUE,
         _async_get_queue,
         schema=SERVICE_GET_QUEUE_SCHEMA,
         supports_response=SupportsResponse.ONLY,

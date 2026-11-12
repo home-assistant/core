@@ -7,6 +7,12 @@ from opendata_transport.exceptions import (
     OpendataTransportError,
 )
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_array_fixture,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -21,12 +27,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_json_array_fixture,
-    snapshot_platform,
-)
 from tests.test_config_entries import FrozenDateTimeFactory
 
 

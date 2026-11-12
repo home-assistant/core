@@ -40,9 +40,17 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': None,
     'connections': set({
+      tuple(
+        'mac',
+        'aa:bb:cc:dd:ee:01',
+      ),
+      tuple(
+        'mac',
+        'aa:bb:cc:dd:ee:02',
+      ),
     }),
     'disabled_by': None,
     'entry_type': None,

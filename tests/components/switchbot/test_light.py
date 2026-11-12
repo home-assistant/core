@@ -5,6 +5,8 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, mock_restore_cache
+from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
 from switchbot import SwitchbotOperationError
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
@@ -41,9 +43,6 @@ from . import (
     STRIP_LIGHT_3_SERVICE_INFO,
     WOSTRIP_SERVICE_INFO,
 )
-
-from tests.common import MockConfigEntry, mock_restore_cache
-from tests.components.bluetooth import inject_bluetooth_service_info
 
 COMMON_PARAMETERS = (
     "service",
@@ -208,7 +207,7 @@ async def test_bulb_services(
         update=AsyncMock(return_value=None),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         await hass.services.async_call(
             LIGHT_DOMAIN,
@@ -245,7 +244,7 @@ async def test_bulb_services_exception(
         update=AsyncMock(return_value=None),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         with pytest.raises(HomeAssistantError, match=error_message):
             await hass.services.async_call(
@@ -280,7 +279,7 @@ async def test_ceiling_light_services(
         update=AsyncMock(return_value=None),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         await hass.services.async_call(
             LIGHT_DOMAIN,
@@ -317,7 +316,7 @@ async def test_ceiling_light_services_exception(
         update=AsyncMock(return_value=None),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         with pytest.raises(HomeAssistantError, match=error_message):
             await hass.services.async_call(
@@ -352,7 +351,7 @@ async def test_strip_light_services(
         update=AsyncMock(return_value=None),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         await hass.services.async_call(
             LIGHT_DOMAIN,
@@ -389,7 +388,7 @@ async def test_strip_light_services_exception(
         update=AsyncMock(return_value=None),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         with pytest.raises(HomeAssistantError, match=error_message):
             await hass.services.async_call(
@@ -446,7 +445,7 @@ async def test_floor_lamp_services(
         update=AsyncMock(return_value=None),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         await hass.services.async_call(
             LIGHT_DOMAIN,
@@ -490,7 +489,7 @@ async def test_floor_lamp_services_exception(
         update=AsyncMock(return_value=None),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         with pytest.raises(HomeAssistantError, match=error_message):
             await hass.services.async_call(
@@ -525,7 +524,7 @@ async def test_candle_warmer_lamp_services(
         update=AsyncMock(return_value=None),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         await hass.services.async_call(
             LIGHT_DOMAIN,
@@ -560,7 +559,7 @@ async def test_candle_warmer_lamp_services_exception(
         update=AsyncMock(return_value=None),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         with pytest.raises(HomeAssistantError, match=error_message):
             await hass.services.async_call(
@@ -600,7 +599,7 @@ async def test_rgbic_neon_light_services(
         update=AsyncMock(return_value=None),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         await hass.services.async_call(
             LIGHT_DOMAIN,
@@ -635,7 +634,7 @@ async def test_rgbic_neon_light_services_exception(
         update=AsyncMock(return_value=None),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         with pytest.raises(HomeAssistantError, match=error_message):
             await hass.services.async_call(
@@ -683,7 +682,7 @@ async def test_air_purifier_light_services(
         update=mocked_none_instance,
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         await hass.services.async_call(
             LIGHT_DOMAIN,
@@ -722,7 +721,7 @@ async def test_air_purifier_light_restore_state(
         _get_basic_info_by_multi_commands=mocked_info,
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         state = hass.states.get(entity_id)
         assert state.state == STATE_ON
@@ -766,7 +765,7 @@ async def test_circulator_fan_pro_light_services(
         update=mocked_none_instance,
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         await hass.services.async_call(
             LIGHT_DOMAIN,
@@ -810,7 +809,7 @@ async def test_circulator_fan_pro_light_state(
         update=AsyncMock(return_value=None),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         state = hass.states.get(entity_id)
         assert state is not None

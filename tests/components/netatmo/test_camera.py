@@ -1,24 +1,24 @@
 """The tests for Netatmo camera."""
+
 # Webhook push_types MUST follow exactly Netatmo's naming on products!
 # See https://dev.netatmo.com/apidocumentation
 # e.g. cameras: NACamera, NOC, etc.
-
 from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pyatmo
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_fire_time_changed,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import camera
 from homeassistant.components.camera import CameraState
-from homeassistant.components.netatmo.const import (
-    NETATMO_EVENT,
-    SERVICE_SET_CAMERA_LIGHT,
-    SERVICE_SET_PERSON_AWAY,
-    SERVICE_SET_PERSONS_HOME,
-)
+from homeassistant.components.netatmo.const import NETATMO_EVENT, NetatmoService
 from homeassistant.const import CONF_WEBHOOK_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -31,8 +31,6 @@ from .common import (
     simulate_webhook,
     snapshot_platform_entities,
 )
-
-from tests.common import MockConfigEntry, async_capture_events, async_fire_time_changed
 
 
 async def test_entity(
@@ -215,7 +213,7 @@ async def test_service_set_person_away(
 
     with patch("pyatmo.home.Home.async_set_persons_away") as mock_set_persons_away:
         await hass.services.async_call(
-            "netatmo", SERVICE_SET_PERSON_AWAY, service_data=data
+            "netatmo", NetatmoService.SET_PERSON_AWAY, service_data=data
         )
         await hass.async_block_till_done()
         mock_set_persons_away.assert_called_once_with(
@@ -228,7 +226,7 @@ async def test_service_set_person_away(
 
     with patch("pyatmo.home.Home.async_set_persons_away") as mock_set_persons_away:
         await hass.services.async_call(
-            "netatmo", SERVICE_SET_PERSON_AWAY, service_data=data
+            "netatmo", NetatmoService.SET_PERSON_AWAY, service_data=data
         )
         await hass.async_block_till_done()
         mock_set_persons_away.assert_called_once_with(
@@ -255,13 +253,13 @@ async def test_service_set_person_away_invalid_person(
     with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             "netatmo",
-            SERVICE_SET_PERSON_AWAY,
+            NetatmoService.SET_PERSON_AWAY,
             service_data=data,
             blocking=True,
         )
     await hass.async_block_till_done()
 
-    assert excinfo.value.args == ("Person(s) not registered ['Batman']",)
+    assert str(excinfo.value) == "Person(s) not registered: Batman"
 
 
 async def test_service_set_persons_home_invalid_person(
@@ -283,13 +281,13 @@ async def test_service_set_persons_home_invalid_person(
     with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             "netatmo",
-            SERVICE_SET_PERSONS_HOME,
+            NetatmoService.SET_PERSONS_HOME,
             service_data=data,
             blocking=True,
         )
     await hass.async_block_till_done()
 
-    assert excinfo.value.args == ("Person(s) not registered ['Batman']",)
+    assert str(excinfo.value) == "Person(s) not registered: Batman"
 
 
 async def test_service_set_persons_home(
@@ -310,7 +308,7 @@ async def test_service_set_persons_home(
 
     with patch("pyatmo.home.Home.async_set_persons_home") as mock_set_persons_home:
         await hass.services.async_call(
-            "netatmo", SERVICE_SET_PERSONS_HOME, service_data=data
+            "netatmo", NetatmoService.SET_PERSONS_HOME, service_data=data
         )
         await hass.async_block_till_done()
         mock_set_persons_home.assert_called_once_with(
@@ -407,7 +405,7 @@ async def test_service_set_camera_light(
     }
     with patch("pyatmo.home.Home.async_set_state") as mock_set_state:
         await hass.services.async_call(
-            "netatmo", SERVICE_SET_CAMERA_LIGHT, service_data=data
+            "netatmo", NetatmoService.SET_CAMERA_LIGHT, service_data=data
         )
         await hass.async_block_till_done()
         mock_set_state.assert_called_once_with(expected_data)
@@ -435,14 +433,14 @@ async def test_service_set_camera_light_invalid_type(
     ):
         await hass.services.async_call(
             "netatmo",
-            SERVICE_SET_CAMERA_LIGHT,
+            NetatmoService.SET_CAMERA_LIGHT,
             service_data=data,
             blocking=True,
         )
     await hass.async_block_till_done()
 
     mock_set_state.assert_not_called()
-    assert "NACamera <Hall> does not have a floodlight" in excinfo.value.args[0]
+    assert str(excinfo.value) == "NACamera <Hall> does not have a floodlight"
 
 
 @pytest.mark.parametrize(

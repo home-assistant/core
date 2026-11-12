@@ -17,8 +17,9 @@ from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from . import Camera, _async_get_image, async_stream_endpoint_url
+from . import Camera, _async_get_image
 from .const import DATA_COMPONENT, DOMAIN, StreamType
+from .helper import async_stream_endpoint_url
 
 
 async def async_get_media_source(hass: HomeAssistant) -> CameraMediaSource:

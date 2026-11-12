@@ -5,6 +5,11 @@ from unittest.mock import AsyncMock, MagicMock
 from freezegun.api import FrozenDateTimeFactory
 from pyipp import Counters, Printer
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.ipp.coordinator import SCAN_INTERVAL
@@ -12,8 +17,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.freeze_time("2019-11-11 09:10:32+00:00")

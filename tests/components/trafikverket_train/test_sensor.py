@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from pytrafikverket.exceptions import InvalidAuthentication, NoTrainAnnouncementFound
 from pytrafikverket.models import TrainStopModel
 from syrupy.assertion import SnapshotAssertion
@@ -12,8 +13,6 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-
-from tests.common import async_fire_time_changed
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

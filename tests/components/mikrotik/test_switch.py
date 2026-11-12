@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import (
@@ -17,8 +18,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_mikrotik_entry
 from .const import BRIDGE1_INTERFACE, ETHER1_INTERFACE, INTERFACE_DATA, WLAN1_INTERFACE
-
-from tests.common import snapshot_platform
 
 WIFI1_INTERFACE = {
     ".id": "*4",

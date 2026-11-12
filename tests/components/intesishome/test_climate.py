@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from pyintesishome import IHConnectionError
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN, SCAN_INTERVAL
 from homeassistant.const import (
@@ -19,8 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import PLATFORM_NOT_READY_BASE_WAIT_TIME
 from homeassistant.setup import async_setup_component
-
-from tests.common import async_fire_time_changed
 
 ENTITY_ID = "climate.office"
 

@@ -7,13 +7,12 @@ from typing import Any
 import urllib
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.remote_calendar.const import CONF_CALENDAR_NAME, DOMAIN
 from homeassistant.const import CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
-from tests.typing import ClientSessionGenerator
 
 CALENDAR_NAME = "Home Assistant Events"
 TEST_ENTITY = "calendar.home_assistant_events"

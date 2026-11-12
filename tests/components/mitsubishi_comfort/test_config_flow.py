@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 from mitsubishi_comfort import DeviceInfo
 from mitsubishi_comfort.exceptions import AuthenticationError, DeviceConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.mitsubishi_comfort.const import (
@@ -21,8 +22,6 @@ from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .conftest import MOCK_MAC, MOCK_PASSWORD, MOCK_SERIAL, MOCK_USERNAME
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture(autouse=True)
 def mock_setup_entry() -> Generator[AsyncMock]:
@@ -30,11 +29,11 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     with (
         patch(
             "homeassistant.components.mitsubishi_comfort.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock,
         patch(
             "homeassistant.components.mitsubishi_comfort.async_unload_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         yield mock

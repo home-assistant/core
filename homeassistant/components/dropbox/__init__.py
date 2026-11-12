@@ -21,7 +21,7 @@ from .const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN, OAUTH2_SCOPES
 type DropboxConfigEntry = ConfigEntry[DropboxAPIClient]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: DropboxConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: DropboxConfigEntry) -> None:
     """Set up Dropbox from a config entry."""
     oauth2_implementation = await async_get_config_entry_implementation(hass, entry)
 
@@ -66,9 +66,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: DropboxConfigEntry) -> b
 
     entry.async_on_unload(entry.async_on_state_change(async_notify_backup_listeners))
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: DropboxConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: DropboxConfigEntry) -> None:
     """Unload a config entry."""
-    return True

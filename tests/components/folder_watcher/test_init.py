@@ -5,14 +5,13 @@ from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import folder_watcher
 from homeassistant.components.folder_watcher.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
-
-from tests.common import MockConfigEntry
 
 
 async def test_invalid_path_setup(
@@ -40,6 +39,13 @@ async def test_invalid_path_setup(
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
     assert config_entry.reason == f"Folder {path} is not valid or allowed"
     assert len(issue_registry.issues) == 1
+    issue = issue_registry.async_get_issue(DOMAIN, f"setup_not_allowed_path_{path}")
+    assert issue is not None
+    assert issue.config_entry_id == config_entry.entry_id
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert len(issue_registry.issues) == 0
 
 
 async def test_valid_path_setup(

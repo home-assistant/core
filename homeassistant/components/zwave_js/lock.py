@@ -27,7 +27,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import const, lock_helpers
 from .const import DOMAIN, LOGGER
-from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
 from .lock_helpers import (
     CREDENTIAL_RULE_REVERSE_MAP,
@@ -38,7 +37,7 @@ from .lock_helpers import (
     SetUserReturn,
     UsersResult,
 )
-from .models import ZwaveJSConfigEntry
+from .models import ZwaveDiscoveryInfo, ZwaveJSConfigEntry
 
 PARALLEL_UPDATES = 0
 

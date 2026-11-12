@@ -6,14 +6,22 @@ from unittest.mock import patch
 
 from infrared_protocols.codes.generic.led import (
     BaseGenericLEDCode,
+    Generic10KeyB708Code,
     Generic10KeyCode,
     Generic13KeyCode,
+    Generic21KeyCode,
     Generic24KeyCode,
     Generic40KeyCode,
     Generic44KeyCode,
 )
 from infrared_protocols.commands.nec import NECCommand
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.components.infrared import (
+    EMITTER_ENTITY_ID,
+    RECEIVER_ENTITY_ID,
+)
+from pytest_homeassistant.components.infrared.common import MockInfraredReceiverEntity
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.event import EventEntityStateAttribute
@@ -34,10 +42,6 @@ from homeassistant.util import dt as dt_util
 
 from . import EVENT_ENTITY_ID, LIGHT_ENTITY_ID
 
-from tests.common import MockConfigEntry, snapshot_platform
-from tests.components.infrared import EMITTER_ENTITY_ID, RECEIVER_ENTITY_ID
-from tests.components.infrared.common import MockInfraredReceiverEntity
-
 
 @pytest.fixture
 def event_only() -> Generator[None]:
@@ -53,6 +57,7 @@ def event_only() -> Generator[None]:
     "config_entry",
     [
         LEDIrDeviceType.GENERIC_10_KEY,
+        LEDIrDeviceType.GENERIC_10_KEY_B708,
         LEDIrDeviceType.GENERIC_13_KEY,
         LEDIrDeviceType.GENERIC_24_KEY,
         LEDIrDeviceType.GENERIC_40_KEY,
@@ -93,6 +98,11 @@ _RECEIVED_COMMANDS: dict[
         (Generic10KeyCode.OFF, "off", None),
         (Generic10KeyCode.CANDLE, "on", "candle"),
         (Generic10KeyCode.LIGHT, "on", "light"),
+    ],
+    LEDIrDeviceType.GENERIC_10_KEY_B708: [
+        (Generic10KeyB708Code.ON, "on", None),
+        (Generic10KeyB708Code.OFF, "off", None),
+        (Generic10KeyB708Code.CANDLE, "on", "candle"),
     ],
     LEDIrDeviceType.GENERIC_13_KEY: [
         (Generic13KeyCode.TIMER, STATE_UNKNOWN, None),
@@ -222,6 +232,29 @@ _RECEIVED_COMMANDS: dict[
         (Generic44KeyCode.AQUA, "on", "aqua"),
         (Generic44KeyCode.PINK, "on", "pink"),
         (Generic44KeyCode.LIGHT_CYAN, "on", "light_cyan"),
+    ],
+    LEDIrDeviceType.GENERIC_21_KEY: [
+        (Generic21KeyCode.BRIGHTNESS_DOWN, STATE_UNKNOWN, None),
+        (Generic21KeyCode.BRIGHTNESS_UP, STATE_UNKNOWN, None),
+        (Generic21KeyCode.MODE_UP, STATE_UNKNOWN, None),
+        (Generic21KeyCode.MODE_DOWN, STATE_UNKNOWN, None),
+        (Generic21KeyCode.SPEED_UP, STATE_UNKNOWN, None),
+        (Generic21KeyCode.SPEED_DOWN, STATE_UNKNOWN, None),
+        (Generic21KeyCode.ON, "on", None),
+        (Generic21KeyCode.OFF, "off", None),
+        (Generic21KeyCode.AUTO, "on", "auto"),
+        (Generic21KeyCode.RED, "on", "red"),
+        (Generic21KeyCode.GREEN, "on", "green"),
+        (Generic21KeyCode.BLUE, "on", "blue"),
+        (Generic21KeyCode.LIGHT_YELLOW, "on", "light_yellow"),
+        (Generic21KeyCode.MOCCASIN, "on", "moccasin"),
+        (Generic21KeyCode.YELLOW, "on", "yellow"),
+        (Generic21KeyCode.ORANGE, "on", "orange"),
+        (Generic21KeyCode.GHOST_WHITE, "on", "ghost_white"),
+        (Generic21KeyCode.SKY_BLUE, "on", "sky_blue"),
+        (Generic21KeyCode.PINK, "on", "pink"),
+        (Generic21KeyCode.LIGHT_GREEN, "on", "light_green"),
+        (Generic21KeyCode.FLORAL_WHITE, "on", "floral_white"),
     ],
 }
 

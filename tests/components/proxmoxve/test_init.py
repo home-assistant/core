@@ -6,6 +6,11 @@ from freezegun.api import FrozenDateTimeFactory
 from proxmoxer import AuthenticationError
 from proxmoxer.core import ResourceException
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_array_fixture,
+)
 import requests
 from requests.exceptions import ConnectTimeout, SSLError
 
@@ -36,12 +41,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_json_array_fixture,
-)
 
 
 @pytest.mark.parametrize(

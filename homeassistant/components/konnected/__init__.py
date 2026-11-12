@@ -2,7 +2,7 @@
 
 import probatio
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
@@ -19,22 +19,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up Konnected.io from a config entry."""
     _create_issue(hass)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
-    if all(
-        config_entry.state is ConfigEntryState.NOT_LOADED
-        for config_entry in hass.config_entries.async_entries(DOMAIN)
-        if config_entry.entry_id != entry.entry_id
-    ):
-        ir.async_delete_issue(hass, DOMAIN, DOMAIN)
 
-    return True
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Remove a config entry."""
+    if not hass.config_entries.async_loaded_entries(DOMAIN):
+        ir.async_delete_issue(hass, DOMAIN, DOMAIN)
 
 
 def _create_issue(hass: HomeAssistant) -> None:

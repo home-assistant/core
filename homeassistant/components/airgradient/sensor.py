@@ -31,9 +31,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import AirGradientConfigEntry
 from .const import PM_STANDARD, PM_STANDARD_REVERSE, supports_config
-from .coordinator import AirGradientCoordinator
+from .coordinator import AirGradientConfigEntry, AirGradientCoordinator
 from .entity import AirGradientEntity
 
 PARALLEL_UPDATES = 0

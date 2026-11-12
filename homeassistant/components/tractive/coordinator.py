@@ -11,6 +11,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from .const import DOMAIN
+
 _LOGGER = logging.getLogger(__name__)
 
 type TractiveConfigEntry = ConfigEntry[TractiveCoordinator]
@@ -44,9 +46,16 @@ class TractiveCoordinator(DataUpdateCoordinator[TractiveStatus]):
         try:
             self.trackables = await self.client.async_fetch_trackables()
         except UnauthorizedError as error:
-            raise ConfigEntryAuthFailed from error
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="authentication_error",
+            ) from error
         except TractiveError as error:
-            raise UpdateFailed(error) from error
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+                translation_placeholders={"error": str(error)},
+            ) from error
         self.client.subscribe_updates(self._async_handle_update)
 
     @override
@@ -55,14 +64,23 @@ class TractiveCoordinator(DataUpdateCoordinator[TractiveStatus]):
         try:
             return await self.client.async_fetch_status()
         except UnauthorizedError as error:
-            raise ConfigEntryAuthFailed from error
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="authentication_error",
+            ) from error
         except TractiveError as error:
-            raise UpdateFailed(error) from error
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+                translation_placeholders={"error": str(error)},
+            ) from error
 
     @callback
     def _async_handle_update(self, error: Exception | None) -> None:
         """Handle a push update or a channel error from the Tractive API."""
         if error is None:
+            if not self.last_update_success:
+                _LOGGER.info("Fetching %s data recovered", self.name)
             self.async_set_updated_data(self.client.status)
             return
         if isinstance(error, UnauthorizedError):

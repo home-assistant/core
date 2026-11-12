@@ -62,7 +62,11 @@ class DwdWeatherWarningsCoordinator(DataUpdateCoordinator[None]):
             try:
                 position = get_position_data(self.hass, self._device_tracker)
             except (EntityNotFoundError, CoordinatesNotFoundError) as err:
-                raise UpdateFailed(f"Error fetching position: {err!r}") from err
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="position_error",
+                    translation_placeholders={"entity_id": self._device_tracker},
+                ) from err
 
             distance = None
             if self._previous_position is not None:

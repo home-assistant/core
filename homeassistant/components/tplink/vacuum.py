@@ -13,11 +13,10 @@ from homeassistant.components.vacuum import (
     VacuumActivity,
     VacuumEntityFeature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import TPLinkConfigEntry
-from .coordinator import TPLinkDataUpdateCoordinator
+from .coordinator import TPLinkConfigEntry, TPLinkDataUpdateCoordinator
 from .entity import (
     CoordinatedTPLinkModuleEntity,
     TPLinkModuleEntityDescription,
@@ -151,6 +150,7 @@ class TPLinkVacuumEntity(CoordinatedTPLinkModuleEntity, StateVacuumEntity):
         """Locate the device."""
         await self._speaker_module.locate()
 
+    @callback
     @override
     def _async_update_attrs(self) -> bool:
         """Update the entity's attributes."""

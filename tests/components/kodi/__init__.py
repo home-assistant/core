@@ -3,6 +3,8 @@
 from typing import Any
 from unittest.mock import MagicMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
+
 from homeassistant.components.kodi.const import CONF_WS_PORT, DOMAIN
 from homeassistant.const import (
     CONF_HOST,
@@ -15,8 +17,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from .util import MockConnection
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 VIDEO_PLAYER = {"playerid": 1, "type": "video"}
 AUDIO_PLAYER = {"playerid": 0, "type": "audio"}

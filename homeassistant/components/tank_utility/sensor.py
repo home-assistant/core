@@ -1,6 +1,6 @@
 """Support for the Tank Utility propane monitor."""
 
-import datetime
+import datetime as dt
 import logging
 
 import probatio
@@ -19,7 +19,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = datetime.timedelta(hours=1)
+SCAN_INTERVAL = dt.timedelta(hours=1)
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {

@@ -2,12 +2,13 @@
 
 import ast
 from dataclasses import asdict
+from enum import StrEnum
 from typing import Any, Literal, cast
 
 import probatio
 from python_overseerr import OverseerrClient, OverseerrConnectionError
 
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -19,50 +20,61 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import service
 from homeassistant.util.json import JsonValueType
 
-from .const import (
-    ATTR_MEDIA_ID,
-    ATTR_MEDIA_TYPE,
-    ATTR_QUERY,
-    ATTR_REQUESTED_BY,
-    ATTR_SEASONS,
-    ATTR_SORT_ORDER,
-    ATTR_STATUS,
-    DOMAIN,
-    LOGGER,
-)
+from .const import DOMAIN, LOGGER
 from .coordinator import OverseerrConfigEntry
 
-SERVICE_GET_REQUESTS = "get_requests"
-SERVICE_SEARCH_MEDIA = "search_media"
-SERVICE_REQUEST_MEDIA = "request_media"
+
+class OverseerrService(StrEnum):
+    """Store keys for Overseerr services."""
+
+    GET_REQUESTS = "get_requests"
+    REQUEST_MEDIA = "request_media"
+    SEARCH_MEDIA = "search_media"
+
+
+class OverseerrServiceArgument(StrEnum):
+    """Store keys for Overseerr service arguments."""
+
+    MEDIA_ID = "media_id"
+    MEDIA_TYPE = "media_type"
+    QUERY = "query"
+    REQUESTED_BY = "requested_by"
+    SEASONS = "seasons"
+    SORT_ORDER = "sort_order"
+    STATUS = "status"
+
 
 SERVICE_GET_REQUESTS_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
-        probatio.Optional(ATTR_STATUS): probatio.In(
+        probatio.Required(CommonServiceArgument.CONFIG_ENTRY_ID): str,
+        probatio.Optional(OverseerrServiceArgument.STATUS): probatio.In(
             ["approved", "pending", "available", "processing", "unavailable", "failed"]
         ),
-        probatio.Optional(ATTR_SORT_ORDER): probatio.In(["added", "modified"]),
-        probatio.Optional(ATTR_REQUESTED_BY): int,
+        probatio.Optional(OverseerrServiceArgument.SORT_ORDER): probatio.In(
+            ["added", "modified"]
+        ),
+        probatio.Optional(OverseerrServiceArgument.REQUESTED_BY): int,
     }
 )
 
 SERVICE_SEARCH_MEDIA_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
-        probatio.Required(ATTR_QUERY): str,
+        probatio.Required(CommonServiceArgument.CONFIG_ENTRY_ID): str,
+        probatio.Required(OverseerrServiceArgument.QUERY): str,
     }
 )
 
 SERVICE_REQUEST_MEDIA_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
-        probatio.Required(ATTR_MEDIA_TYPE): probatio.In(["movie", "tv"]),
-        probatio.Required(ATTR_MEDIA_ID): probatio.All(
+        probatio.Required(CommonServiceArgument.CONFIG_ENTRY_ID): str,
+        probatio.Required(OverseerrServiceArgument.MEDIA_TYPE): probatio.In(
+            ["movie", "tv"]
+        ),
+        probatio.Required(OverseerrServiceArgument.MEDIA_ID): probatio.All(
             probatio.Coerce(int),
             probatio.Range(min=1),
         ),
-        probatio.Optional(ATTR_SEASONS): probatio.Any(
+        probatio.Optional(OverseerrServiceArgument.SEASONS): probatio.Any(
             probatio.Coerce(int),
             [probatio.Coerce(int)],
             str,
@@ -91,15 +103,15 @@ async def _get_media(
 async def _async_get_requests(call: ServiceCall) -> ServiceResponse:
     """Get requests made to Seerr."""
     entry: OverseerrConfigEntry = service.async_get_config_entry(
-        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+        call.hass, DOMAIN, call.data[CommonServiceArgument.CONFIG_ENTRY_ID]
     )
     client = entry.runtime_data.client
     kwargs: dict[str, Any] = {}
-    if status := call.data.get(ATTR_STATUS):
+    if status := call.data.get(OverseerrServiceArgument.STATUS):
         kwargs["status"] = status
-    if sort_order := call.data.get(ATTR_SORT_ORDER):
+    if sort_order := call.data.get(OverseerrServiceArgument.SORT_ORDER):
         kwargs["sort"] = sort_order
-    if requested_by := call.data.get(ATTR_REQUESTED_BY):
+    if requested_by := call.data.get(OverseerrServiceArgument.REQUESTED_BY):
         kwargs["requested_by"] = requested_by
     try:
         requests = await client.get_requests(**kwargs)
@@ -132,10 +144,10 @@ async def _async_get_requests(call: ServiceCall) -> ServiceResponse:
 async def _async_search_media(call: ServiceCall) -> ServiceResponse:
     """Search for media in Seerr."""
     entry: OverseerrConfigEntry = service.async_get_config_entry(
-        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+        call.hass, DOMAIN, call.data[CommonServiceArgument.CONFIG_ENTRY_ID]
     )
     client = entry.runtime_data.client
-    query = call.data[ATTR_QUERY]
+    query = call.data[OverseerrServiceArgument.QUERY]
 
     LOGGER.debug("Searching for '%s'", query)
     try:
@@ -157,12 +169,12 @@ async def _async_search_media(call: ServiceCall) -> ServiceResponse:
 async def _async_request_media(call: ServiceCall) -> ServiceResponse:
     """Request media in Seerr."""
     entry: OverseerrConfigEntry = service.async_get_config_entry(
-        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+        call.hass, DOMAIN, call.data[CommonServiceArgument.CONFIG_ENTRY_ID]
     )
     client = entry.runtime_data.client
-    media_type = call.data[ATTR_MEDIA_TYPE]
-    media_id = call.data[ATTR_MEDIA_ID]
-    seasons = parse_seasons_input(call.data.get(ATTR_SEASONS))
+    media_type = call.data[OverseerrServiceArgument.MEDIA_TYPE]
+    media_id = call.data[OverseerrServiceArgument.MEDIA_ID]
+    seasons = parse_seasons_input(call.data.get(OverseerrServiceArgument.SEASONS))
 
     LOGGER.debug(
         "Requesting %s with media ID %s (seasons: %s)",
@@ -205,7 +217,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_GET_REQUESTS,
+        OverseerrService.GET_REQUESTS,
         _async_get_requests,
         schema=SERVICE_GET_REQUESTS_SCHEMA,
         supports_response=SupportsResponse.ONLY,
@@ -213,7 +225,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_SEARCH_MEDIA,
+        OverseerrService.SEARCH_MEDIA,
         _async_search_media,
         schema=SERVICE_SEARCH_MEDIA_SCHEMA,
         supports_response=SupportsResponse.ONLY,
@@ -221,7 +233,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_REQUEST_MEDIA,
+        OverseerrService.REQUEST_MEDIA,
         _async_request_media,
         schema=SERVICE_REQUEST_MEDIA_SCHEMA,
         supports_response=SupportsResponse.ONLY,

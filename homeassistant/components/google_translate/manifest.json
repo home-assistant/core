@@ -1,8 +1,10 @@
 {
   "domain": "google_translate",
   "name": "Google Translate text-to-speech",
+  "categories": ["ai_voice.speech"],
   "codeowners": [],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/google_translate",
   "integration_type": "service",
   "iot_class": "cloud_push",

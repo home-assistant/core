@@ -1,6 +1,7 @@
 {
   "domain": "time_date",
   "name": "Time & Date",
+  "categories": ["helpers.calculate_value"],
   "codeowners": ["@fabaff"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/time_date",

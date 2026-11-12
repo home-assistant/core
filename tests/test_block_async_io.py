@@ -11,11 +11,10 @@ from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
+from pytest_homeassistant.common import extract_stack_to_frame
 
 from homeassistant import block_async_io
 from homeassistant.core import HomeAssistant
-
-from .common import extract_stack_to_frame
 
 
 @pytest.fixture(autouse=True)

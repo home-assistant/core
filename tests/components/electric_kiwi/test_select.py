@@ -6,6 +6,7 @@ from aiohttp import ClientError
 from electrickiwi_api.exceptions import ApiException, AuthException
 from electrickiwi_api.model import Hop
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_value_fixture
 
 from homeassistant.components.electric_kiwi.const import DOMAIN
 from homeassistant.components.select import (
@@ -19,8 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from . import init_integration
-
-from tests.common import MockConfigEntry, load_json_value_fixture
 
 ENTITY_ID = "select.hour_of_free_power"
 OPTION = "12:00 AM - 1:00 AM"

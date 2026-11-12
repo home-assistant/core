@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 
 from nice_go import Barrier, BarrierState, ConnectionState
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_array_fixture
 
 from homeassistant.components.nice_go.const import (
     CONF_REFRESH_TOKEN,
@@ -14,15 +15,13 @@ from homeassistant.components.nice_go.const import (
 )
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 
-from tests.common import MockConfigEntry, load_json_array_fixture
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.nice_go.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 

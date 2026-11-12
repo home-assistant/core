@@ -2,21 +2,17 @@
 
 import probatio
 
-from homeassistant.const import CONF_ID, SERVICE_RELOAD
+from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_register_admin_service
 
 from .const import (
-    ATTR_DURATION,
     DATA_TIMER,
     DEFAULT_DURATION,
     DOMAIN,
-    SERVICE_CANCEL,
-    SERVICE_CHANGE,
-    SERVICE_FINISH,
-    SERVICE_PAUSE,
-    SERVICE_START,
+    TimerService,
+    TimerServiceArgument,
 )
 
 RELOAD_SERVICE_SCHEMA = probatio.Schema({})
@@ -38,22 +34,30 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_RELOAD,
+        TimerService.RELOAD,
         _async_reload_service,
         schema=RELOAD_SERVICE_SCHEMA,
     )
 
     component = hass.data[DATA_TIMER].component
     component.async_register_entity_service(
-        SERVICE_START,
-        {probatio.Optional(ATTR_DURATION, default=DEFAULT_DURATION): cv.time_period},
+        TimerService.START,
+        {
+            probatio.Optional(
+                TimerServiceArgument.DURATION, default=DEFAULT_DURATION
+            ): cv.time_period
+        },
         "async_start",
     )
-    component.async_register_entity_service(SERVICE_PAUSE, None, "async_pause")
-    component.async_register_entity_service(SERVICE_CANCEL, None, "async_cancel")
-    component.async_register_entity_service(SERVICE_FINISH, None, "async_finish")
+    component.async_register_entity_service(TimerService.PAUSE, None, "async_pause")
+    component.async_register_entity_service(TimerService.CANCEL, None, "async_cancel")
+    component.async_register_entity_service(TimerService.FINISH, None, "async_finish")
     component.async_register_entity_service(
-        SERVICE_CHANGE,
-        {probatio.Optional(ATTR_DURATION, default=DEFAULT_DURATION): cv.time_period},
+        TimerService.CHANGE,
+        {
+            probatio.Optional(
+                TimerServiceArgument.DURATION, default=DEFAULT_DURATION
+            ): cv.time_period
+        },
         "async_change",
     )

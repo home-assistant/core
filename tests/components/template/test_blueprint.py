@@ -7,6 +7,7 @@ import pathlib
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components import template
 from homeassistant.components.blueprint import (
@@ -31,13 +32,12 @@ from homeassistant.components.template.config import (
     VACUUM_DOMAIN,
     WEATHER_DOMAIN,
 )
-from homeassistant.const import SERVICE_RELOAD, STATE_ON
+from homeassistant.components.template.const import TemplateService
+from homeassistant.const import STATE_ON
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, yaml as yaml_util
-
-from tests.common import async_mock_service
 
 BUILTIN_BLUEPRINT_FOLDER = pathlib.Path(template.__file__).parent / "blueprints"
 
@@ -240,7 +240,7 @@ async def test_reload_template_when_blueprint_changes(hass: HomeAssistant) -> No
             return_value=blueprint_config,
         ),
     ):
-        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+        await hass.services.async_call(DOMAIN, TemplateService.RELOAD, blocking=True)
 
     hass.states.async_set("binary_sensor.foo", "off", {"friendly_name": "Foo"})
     await hass.async_block_till_done()
@@ -321,7 +321,7 @@ async def test_init_attribute_variables_from_blueprint(hass: HomeAssistant) -> N
             return_value=blueprint_config,
         ),
     ):
-        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+        await hass.services.async_call(DOMAIN, TemplateService.RELOAD, blocking=True)
 
     sensor = hass.states.get(entity_id)
     assert sensor
@@ -543,7 +543,7 @@ async def test_blueprint_template_override(
 
 async def test_domain_blueprint(hass: HomeAssistant) -> None:
     """Test DomainBlueprint services."""
-    reload_handler_calls = async_mock_service(hass, DOMAIN, SERVICE_RELOAD)
+    reload_handler_calls = async_mock_service(hass, DOMAIN, TemplateService.RELOAD)
     mock_create_file = MagicMock()
     mock_create_file.return_value = True
 

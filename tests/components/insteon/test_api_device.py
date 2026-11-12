@@ -6,6 +6,8 @@ from pyinsteon.constants import DeviceAction
 from pyinsteon.topics import DEVICE_LIST_CHANGED
 from pyinsteon.utils import publish_topic
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components import insteon
 from homeassistant.components.insteon.api import async_load_api
@@ -29,9 +31,6 @@ from homeassistant.helpers import device_registry as dr
 from .const import MOCK_USER_INPUT_PLM
 from .mock_devices import MockDevices
 from .mock_setup import async_mock_setup
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 
 async def test_get_config(

@@ -4,6 +4,7 @@ from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.apcupsd import PLATFORMS
 from homeassistant.components.apcupsd.const import DOMAIN
@@ -14,14 +15,12 @@ from homeassistant.core import HomeAssistant
 
 from . import CONF_DATA, MOCK_STATUS
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.apcupsd.async_setup_entry", return_value=True
+        "homeassistant.components.apcupsd.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

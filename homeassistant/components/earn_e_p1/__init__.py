@@ -16,7 +16,7 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 type EarnEP1ConfigEntry = ConfigEntry[EarnEP1Coordinator]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: EarnEP1ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: EarnEP1ConfigEntry) -> None:
     """Set up EARN-E P1 Meter from a config entry."""
     host = entry.data[CONF_HOST]
     serial = entry.data[CONF_SERIAL]
@@ -54,9 +54,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: EarnEP1ConfigEntry) -> b
 
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: EarnEP1ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: EarnEP1ConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

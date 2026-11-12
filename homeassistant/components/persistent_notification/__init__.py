@@ -13,18 +13,17 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (  # noqa: F401
+from .const import (
     ATTR_CREATED_AT,
     ATTR_MESSAGE,
     ATTR_NOTIFICATION_ID,
-    ATTR_STATUS,
     ATTR_TITLE,
     DOMAIN,
     SIGNAL_PERSISTENT_NOTIFICATIONS_UPDATED,
     Notification,
     UpdateType,
 )
-from .helpers import (  # noqa: F401
+from .helpers import (
     _async_get_or_create_notifications,
     async_create,
     async_dismiss,
@@ -38,6 +37,23 @@ from .services import async_setup_services
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
+__all__ = [
+    "ATTR_CREATED_AT",
+    "ATTR_MESSAGE",
+    "ATTR_NOTIFICATION_ID",
+    "ATTR_TITLE",
+    "DOMAIN",
+    "SIGNAL_PERSISTENT_NOTIFICATIONS_UPDATED",
+    "Notification",
+    "UpdateType",
+    "async_create",
+    "async_dismiss",
+    "async_dismiss_all",
+    "async_register_callback",
+    "create",
+    "dismiss",
+]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

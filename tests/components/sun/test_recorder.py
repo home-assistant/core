@@ -2,27 +2,17 @@
 
 from datetime import timedelta
 
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
+
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.history import get_significant_states
 from homeassistant.components.sun import DOMAIN
-from homeassistant.components.sun.entity import (
-    STATE_ATTR_AZIMUTH,
-    STATE_ATTR_ELEVATION,
-    STATE_ATTR_NEXT_DAWN,
-    STATE_ATTR_NEXT_DUSK,
-    STATE_ATTR_NEXT_MIDNIGHT,
-    STATE_ATTR_NEXT_NOON,
-    STATE_ATTR_NEXT_RISING,
-    STATE_ATTR_NEXT_SETTING,
-    STATE_ATTR_RISING,
-)
+from homeassistant.components.sun.const import SunEntityStateAttribute
 from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import async_fire_time_changed
-from tests.components.recorder.common import async_wait_recording_done
 
 
 async def test_exclude_attributes(recorder_mock: Recorder, hass: HomeAssistant) -> None:
@@ -40,13 +30,13 @@ async def test_exclude_attributes(recorder_mock: Recorder, hass: HomeAssistant) 
     assert len(states) >= 1
     for entity_states in states.values():
         for state in entity_states:
-            assert STATE_ATTR_AZIMUTH not in state.attributes
-            assert STATE_ATTR_ELEVATION not in state.attributes
-            assert STATE_ATTR_NEXT_DAWN not in state.attributes
-            assert STATE_ATTR_NEXT_DUSK not in state.attributes
-            assert STATE_ATTR_NEXT_MIDNIGHT not in state.attributes
-            assert STATE_ATTR_NEXT_NOON not in state.attributes
-            assert STATE_ATTR_NEXT_RISING not in state.attributes
-            assert STATE_ATTR_NEXT_SETTING not in state.attributes
-            assert STATE_ATTR_RISING not in state.attributes
+            assert SunEntityStateAttribute.AZIMUTH not in state.attributes
+            assert SunEntityStateAttribute.ELEVATION not in state.attributes
+            assert SunEntityStateAttribute.NEXT_DAWN not in state.attributes
+            assert SunEntityStateAttribute.NEXT_DUSK not in state.attributes
+            assert SunEntityStateAttribute.NEXT_MIDNIGHT not in state.attributes
+            assert SunEntityStateAttribute.NEXT_NOON not in state.attributes
+            assert SunEntityStateAttribute.NEXT_RISING not in state.attributes
+            assert SunEntityStateAttribute.NEXT_SETTING not in state.attributes
+            assert SunEntityStateAttribute.RISING not in state.attributes
             assert ATTR_FRIENDLY_NAME in state.attributes

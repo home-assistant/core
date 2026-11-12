@@ -4,6 +4,7 @@ from collections.abc import AsyncGenerator, Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.roon.const import CONF_ROON_ID, DOMAIN
 from homeassistant.components.roon.event import RoonEventEntity
@@ -11,8 +12,6 @@ from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-
-from tests.common import MockConfigEntry
 
 ROON_ID = "roon_core"
 ENTITY_ID = "event.kitchen_roon_volume"

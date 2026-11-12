@@ -12,6 +12,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from aioaquarite import AquariteError, AuthenticationError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.vistapool.const import DOMAIN
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
@@ -21,8 +22,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .conftest import MOCK_PASSWORD, MOCK_POOLS, MOCK_USER_ID, MOCK_USERNAME
-
-from tests.common import MockConfigEntry
 
 _DHCP_INFO = DhcpServiceInfo(
     ip="1.2.3.4",
@@ -35,7 +34,7 @@ _DHCP_INFO = DhcpServiceInfo(
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Prevent actual setup during config flow tests."""
     with patch(
-        "homeassistant.components.vistapool.async_setup_entry", return_value=True
+        "homeassistant.components.vistapool.async_setup_entry", return_value=None
     ) as mock:
         yield mock
 
