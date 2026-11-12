@@ -425,38 +425,6 @@ async def test_update_access_denied(
 
 
 @pytest.mark.usefixtures("rest_api")
-async def test_update_ws_connection_failure(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    remote_websocket: Mock,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Testing update tv connection failure exception."""
-    await setup_samsungtv_entry(hass, MOCK_CONFIGWS)
-
-    with (
-        patch.object(
-            remote_websocket,
-            "start_listening",
-            side_effect=ConnectionFailure({"event": "ms.voiceApp.hide"}),
-        ),
-        patch.object(remote_websocket, "is_alive", return_value=False),
-    ):
-        freezer.tick(timedelta(minutes=5))
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert (
-        "Unexpected ConnectionFailure trying to get remote for fake_host, please "
-        "report this issue: ConnectionFailure({'event': 'ms.voiceApp.hide'})"
-        in caplog.text
-    )
-
-    state = hass.states.get(ENTITY_ID)
-    assert state.state == STATE_OFF
-
-
-@pytest.mark.usefixtures("rest_api")
 async def test_update_ws_connection_failure_channel_timeout(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -487,27 +455,56 @@ async def test_update_ws_connection_failure_channel_timeout(
     assert state.state == STATE_OFF
 
 
+@pytest.mark.parametrize(
+    ("error", "message"),
+    [
+        pytest.param(
+            ConnectionFailure({"event": "ms.voiceApp.hide"}),
+            "Unexpected ConnectionFailure trying to get remote for fake_host, please "
+            "report this issue: ConnectionFailure({'event': 'ms.voiceApp.hide'})",
+            id="connection_failure",
+        ),
+        pytest.param(
+            ConnectionClosedError(None, None),
+            "Failed to get remote for fake_host: ConnectionClosedError(None, None)",
+            id="connection_closed",
+        ),
+    ],
+)
 @pytest.mark.usefixtures("rest_api")
-async def test_update_ws_connection_closed(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, remote_websocket: Mock
+async def test_update_ws_connection_failure(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    remote_websocket: Mock,
+    caplog: pytest.LogCaptureFixture,
+    error: Exception,
+    message: str,
 ) -> None:
-    """Testing update tv connection failure exception."""
+    """Test connection failures are logged once until the connection is restored."""
     await setup_samsungtv_entry(hass, MOCK_CONFIGWS)
 
     with (
-        patch.object(
-            remote_websocket,
-            "start_listening",
-            side_effect=ConnectionClosedError(None, None),
-        ),
+        patch.object(remote_websocket, "start_listening", side_effect=error),
         patch.object(remote_websocket, "is_alive", return_value=False),
     ):
-        freezer.tick(timedelta(minutes=5))
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done(wait_background_tasks=True)
+        for _ in range(2):
+            freezer.tick(timedelta(minutes=5))
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done(wait_background_tasks=True)
 
+    assert [
+        record.levelname for record in caplog.records if record.message == message
+    ] == ["WARNING", "DEBUG"]
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_OFF
+
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "Connection to fake_host restored" in caplog.text
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_ON
 
 
 @pytest.mark.usefixtures("rest_api")
@@ -596,9 +593,12 @@ async def test_send_key_connection_failure(
     """Testing connection failure exception."""
     await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
     remote_legacy.control.side_effect = ConnectionFailure("Boom")
-    await hass.services.async_call(
-        MP_DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
-    )
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            MP_DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        )
+    assert err.value.translation_key == "send_command_failed"
+    assert remote_legacy.control.call_count == 2
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_ON
 
@@ -648,60 +648,56 @@ async def test_send_key_error_response(
     assert state.state == STATE_ON
 
 
+@pytest.mark.parametrize(
+    ("error", "call_count"),
+    [
+        pytest.param(WebSocketException("Boom"), 2, id="websocket_exception"),
+        pytest.param(OSError("Boom"), 1, id="os_error"),
+    ],
+)
 @pytest.mark.usefixtures("rest_api")
-async def test_send_key_websocketexception(
-    hass: HomeAssistant, remote_websocket: Mock
+async def test_send_key_failure_ws(
+    hass: HomeAssistant,
+    remote_websocket: Mock,
+    error: Exception,
+    call_count: int,
 ) -> None:
-    """Testing unhandled response exception."""
+    """Testing send key failure on websocket."""
     await setup_samsungtv_entry(hass, MOCK_CONFIGWS)
-    remote_websocket.send_commands = Mock(side_effect=WebSocketException("Boom"))
-    await hass.services.async_call(
-        MP_DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
-    )
+    remote_websocket.send_commands = Mock(side_effect=error)
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            MP_DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        )
+    assert err.value.translation_key == "send_command_failed"
+    assert remote_websocket.send_commands.call_count == call_count
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_ON
 
 
+@pytest.mark.parametrize(
+    ("error", "call_count"),
+    [
+        pytest.param(WebSocketException("Boom"), 2, id="websocket_exception"),
+        pytest.param(OSError("Boom"), 1, id="os_error"),
+    ],
+)
 @pytest.mark.usefixtures("rest_api")
-async def test_send_key_websocketexception_encrypted(
-    hass: HomeAssistant, remote_encrypted_websocket: Mock
+async def test_send_key_failure_ws_encrypted(
+    hass: HomeAssistant,
+    remote_encrypted_websocket: Mock,
+    error: Exception,
+    call_count: int,
 ) -> None:
-    """Testing unhandled response exception."""
+    """Testing send key failure on encrypted websocket."""
     await setup_samsungtv_entry(hass, ENTRYDATA_ENCRYPTED_WEBSOCKET)
-    remote_encrypted_websocket.send_commands = Mock(
-        side_effect=WebSocketException("Boom")
-    )
-    await hass.services.async_call(
-        MP_DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
-    )
-    state = hass.states.get(ENTITY_ID)
-    assert state.state == STATE_ON
-
-
-@pytest.mark.usefixtures("rest_api")
-async def test_send_key_os_error_ws(
-    hass: HomeAssistant, remote_websocket: Mock
-) -> None:
-    """Testing unhandled response exception."""
-    await setup_samsungtv_entry(hass, MOCK_CONFIGWS)
-    remote_websocket.send_commands = Mock(side_effect=OSError("Boom"))
-    await hass.services.async_call(
-        MP_DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
-    )
-    state = hass.states.get(ENTITY_ID)
-    assert state.state == STATE_ON
-
-
-@pytest.mark.usefixtures("rest_api")
-async def test_send_key_os_error_ws_encrypted(
-    hass: HomeAssistant, remote_encrypted_websocket: Mock
-) -> None:
-    """Testing unhandled response exception."""
-    await setup_samsungtv_entry(hass, ENTRYDATA_ENCRYPTED_WEBSOCKET)
-    remote_encrypted_websocket.send_commands = Mock(side_effect=OSError("Boom"))
-    await hass.services.async_call(
-        MP_DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
-    )
+    remote_encrypted_websocket.send_commands = Mock(side_effect=error)
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            MP_DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        )
+    assert err.value.translation_key == "send_command_failed"
+    assert remote_encrypted_websocket.send_commands.call_count == call_count
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_ON
 
@@ -1331,31 +1327,30 @@ async def test_upnp_not_available(
     assert "Unable to create Upnp DMR device" in caplog.text
 
     # Upnp action fails
-    await hass.services.async_call(
-        MP_DOMAIN,
-        SERVICE_VOLUME_SET,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_LEVEL: 0.6},
-        True,
-    )
-    assert "Upnp services are not available" in caplog.text
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_VOLUME_SET,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_LEVEL: 0.6},
+            True,
+        )
+    assert err.value.translation_key == "upnp_not_available"
 
 
 @pytest.mark.usefixtures("remote_websocket", "rest_api")
-async def test_upnp_missing_service(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test for volume control when Upnp is not available."""
-    await setup_samsungtv_entry(hass, MOCK_ENTRY_WS)
-    assert "Unable to create Upnp DMR device" in caplog.text
+async def test_upnp_missing_service(hass: HomeAssistant) -> None:
+    """Test for volume control when the TV has no Upnp rendering control."""
+    await setup_samsungtv_entry(hass, MOCK_CONFIGWS)
 
     # Upnp action fails
-    await hass.services.async_call(
-        MP_DOMAIN,
-        SERVICE_VOLUME_SET,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_LEVEL: 0.6},
-        True,
-    )
-    assert "Upnp services are not available" in caplog.text
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_VOLUME_SET,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_LEVEL: 0.6},
+            True,
+        )
+    assert err.value.translation_key == "upnp_not_available"
 
 
 @pytest.mark.usefixtures("remote_websocket", "rest_api")
@@ -1431,6 +1426,24 @@ async def test_upnp_subscribe_events_upnpresponseerror(
 
     upnp_notify_server.async_stop_server.assert_not_called()
     assert "Device rejected subscription" in caplog.text
+
+
+@pytest.mark.usefixtures("remote_websocket", "rest_api", "upnp_notify_server")
+async def test_upnp_keeps_existing_subscription(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    dmr_device: Mock,
+) -> None:
+    """Test an active Upnp subscription is not renewed on update."""
+    await setup_samsungtv_entry(hass, MOCK_ENTRY_WS)
+    assert dmr_device.async_subscribe_services.call_count == 1
+
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
+    assert dmr_device.async_subscribe_services.call_count == 1
 
 
 @pytest.mark.usefixtures("rest_api", "upnp_notify_server")

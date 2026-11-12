@@ -7,11 +7,10 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.typing import VolDictType
 
-from .const import DOMAIN
+from .const import DOMAIN, YardianService, YardianServiceArgument
 
-SERVICE_START_IRRIGATION = "start_irrigation"
 SERVICE_SCHEMA_START_IRRIGATION: VolDictType = {
-    probatio.Required("duration"): cv.positive_int,
+    probatio.Required(YardianServiceArgument.DURATION): cv.positive_int,
 }
 
 
@@ -22,7 +21,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_START_IRRIGATION,
+        YardianService.START_IRRIGATION,
         entity_domain=SWITCH_DOMAIN,
         schema=SERVICE_SCHEMA_START_IRRIGATION,
         func="async_turn_on",

@@ -6,10 +6,12 @@
       "reauth_successful": "Authentication updated"
     },
     "error": {
-      "cannot_connect": "Cannot connect or access this scope",
+      "cannot_connect": "Unable to connect to ChirpStack or access the selected applications. Check the server address, availability, and API key permissions.",
+      "http2_error": "Unable to connect using HTTP/2. Check that the server and reverse proxy support gRPC.",
       "invalid_auth": "API key rejected or unable to access this tenant",
       "invalid_endpoint": "Use an HTTP or HTTPS endpoint without a path",
       "select_application": "Select at least one application.",
+      "tls_certificate_error": "Unable to verify the server's TLS certificate. Check that it is trusted and matches the server address.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {

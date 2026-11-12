@@ -138,11 +138,10 @@ class SofarFaultEvent(SofarEntity, EventEntity):
     def _remember(self, handled: EntryKey | None) -> None:
         """Take the log as handled up to an entry, across restarts too."""
         self._handled = handled
-        entry = self.coordinator.config_entry
         self.hass.config_entries.async_update_entry(
-            entry,
+            self.coordinator.config_entry,
             data={
-                **entry.data,
+                **self.coordinator.config_entry.data,
                 LAST_HANDLED_FAULT: None
                 if handled is None
                 else [handled[0], handled[1].isoformat()],

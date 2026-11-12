@@ -3,6 +3,12 @@
 from dataclasses import asdict
 from typing import Any
 
+from systembridgeconnector.exceptions import (
+    BadRequestException,
+    ConnectionClosedException,
+    ConnectionErrorException,
+)
+
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_TOKEN
 from homeassistant.core import HomeAssistant
@@ -29,6 +35,7 @@ TO_REDACT = {
     "microphone_usage",
     "mount_point",
     "ptp",
+    "serial",
     "ssid",
     "subtitle",
     "thumbnail",
@@ -60,6 +67,11 @@ async def async_get_config_entry_diagnostics(
     if data["audio"] is not None:
         # Bluetooth device IDs hold the MAC, and app names can fall back to the title
         data["audio"] = async_redact_data(data["audio"], {"id", "name", "output"})
+    if data["commands"] is not None:
+        # Command lines can hold paths, hostnames or secrets
+        data["commands"] = async_redact_data(
+            data["commands"], {"arguments", "command", "workingDir"}
+        )
     if data["system"] is not None and data["system"]["failed_units"] is not None:
         # Unit names and descriptions can hold paths, such as for mount units
         data["system"]["failed_units"] = async_redact_data(
@@ -67,8 +79,42 @@ async def async_get_config_entry_diagnostics(
         )
 
     listen_task = coordinator.listen_task
-    last_exception = coordinator.last_exception
 
+    bundle: dict[str, Any] | None = None
+    missing_reason: str | None = None
+    # Responses only arrive through the listener, so without it the request
+    # would wait for the connector's timeout
+    if (
+        not coordinator.websocket_client.connected
+        or listen_task is None
+        or listen_task.done()
+    ):
+        missing_reason = "not_connected"
+    else:
+        try:
+            app_diagnostics = await coordinator.websocket_client.get_diagnostics()
+        except ConnectionClosedException, ConnectionResetError:
+            missing_reason = "not_connected"
+        except ConnectionErrorException:
+            # A response lost to a disconnect also ends in the connector's timeout
+            listen_task = coordinator.listen_task
+            missing_reason = (
+                "timeout"
+                if coordinator.websocket_client.connected
+                and listen_task is not None
+                and not listen_task.done()
+                else "not_connected"
+            )
+        except BadRequestException:
+            # Backends from before the request answer it with an error
+            missing_reason = "not_supported"
+        else:
+            # Error text can hold addresses or device names the app doesn't mask
+            bundle = async_redact_data(asdict(app_diagnostics), {"error", "last_error"})
+
+    # The connection can drop during the request, so read its state afterwards
+    listen_task = coordinator.listen_task
+    last_exception = coordinator.last_exception
     return {
         "entry": async_redact_data(entry.as_dict(), TO_REDACT),
         "last_update_success": coordinator.last_update_success,
@@ -81,4 +127,5 @@ async def async_get_config_entry_diagnostics(
             ),
         },
         "data": async_redact_data(data, TO_REDACT),
+        "app": {"bundle": bundle, "missing_reason": missing_reason},
     }
