@@ -397,6 +397,12 @@ class ZWaveMultilevelSwitchCover(CoverPositionMixin):
             and self.info.platform_hint.startswith("gate")
         ):
             self._attr_device_class = CoverDeviceClass.GATE
+        elif (
+            isinstance(self.info, ZwaveDiscoveryInfo)
+            and self.info.platform_hint
+            and self.info.platform_hint.startswith("shade")
+        ):
+            self._attr_device_class = CoverDeviceClass.SHADE
 
 
 class ZWaveTiltCover(ZWaveMultilevelSwitchCover, CoverTiltMixin):

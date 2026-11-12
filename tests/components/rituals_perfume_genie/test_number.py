@@ -10,11 +10,11 @@ from homeassistant.components.homeassistant import (
 from homeassistant.components.number import (
     ATTR_MAX,
     ATTR_MIN,
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -60,8 +60,11 @@ async def test_set_number_value(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: "number.genie_perfume_amount", ATTR_VALUE: 1},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: "number.genie_perfume_amount",
+            NumberServiceArgument.VALUE: 1,
+        },
         blocking=True,
     )
 
@@ -100,8 +103,11 @@ async def test_set_number_value_out_of_range(hass: HomeAssistant) -> None:
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: "number.genie_perfume_amount", ATTR_VALUE: 4},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: "number.genie_perfume_amount",
+                NumberServiceArgument.VALUE: 4,
+            },
             blocking=True,
         )
     await hass.services.async_call(
@@ -119,8 +125,11 @@ async def test_set_number_value_out_of_range(hass: HomeAssistant) -> None:
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: "number.genie_perfume_amount", ATTR_VALUE: 0},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: "number.genie_perfume_amount",
+                NumberServiceArgument.VALUE: 0,
+            },
             blocking=True,
         )
     await hass.services.async_call(
@@ -150,8 +159,11 @@ async def test_set_number_value_to_float(hass: HomeAssistant) -> None:
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: "number.genie_perfume_amount", ATTR_VALUE: 1.5},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: "number.genie_perfume_amount",
+                NumberServiceArgument.VALUE: 1.5,
+            },
             blocking=True,
         )
     assert exc_info.value.translation_key == "perfume_amount_not_whole"
@@ -177,8 +189,11 @@ async def test_number_action_error(hass: HomeAssistant) -> None:
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: "number.genie_perfume_amount", ATTR_VALUE: 1},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: "number.genie_perfume_amount",
+                NumberServiceArgument.VALUE: 1,
+            },
             blocking=True,
         )
 
