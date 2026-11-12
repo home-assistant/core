@@ -15,12 +15,12 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.cover import CoverDeviceClass
 from homeassistant.components.light import ATTR_SUPPORTED_COLOR_MODES, ColorMode
-from homeassistant.components.number import (
-    ATTR_VALUE,
-    DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
-)
+from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
+from homeassistant.components.zwave_js.const import (
+    ZWaveJSService,
+    ZWaveJSServiceArgument,
+)
 from homeassistant.components.zwave_js.discovery import (
     FirmwareVersionRange,
     ZWaveDiscoverySchema,
@@ -34,7 +34,6 @@ from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY, ConfigEntryState
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
-    ATTR_ENTITY_ID,
     STATE_OFF,
     STATE_UNKNOWN,
     CommonServiceArgument,
@@ -339,10 +338,10 @@ async def test_zooz_zen72(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        ZWaveJSService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_VALUE: 5,
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            ZWaveJSServiceArgument.VALUE: 5,
         },
         blocking=True,
     )
