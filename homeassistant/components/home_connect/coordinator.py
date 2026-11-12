@@ -846,6 +846,7 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                 self.data.info.ha_id,
                 error,
             )
+            self.last_fetched_program = None
             return {}
 
     async def update_options(
@@ -888,16 +889,17 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
         except TooManyRequestsError:
             raise
         except HomeConnectError as error:
+            self.last_fetched_program = None
             _LOGGER.debug(
                 "Error fetching active/selected program options for %s: %s",
                 self.data.info.ha_id,
                 error,
             )
             _options = []
+        else:
+            self.last_fetched_program = (program_type, program_key)
 
         options.update({option.key: option for option in _options})
-
-        self.last_fetched_program = (program_type, program_key)
 
         for option in _options:
             option_event_key = EventKey(option.key)

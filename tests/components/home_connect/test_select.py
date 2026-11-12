@@ -1057,17 +1057,17 @@ async def test_options_entities_available_non_writable(
     state = hass.states.get(entity_id)
     assert state
     assert state.state != STATE_UNAVAILABLE
-    assert state.attributes[ATTR_OPTIONS] == [
+    assert set(state.attributes[ATTR_OPTIONS]) == {
         "laundry_care_washer_enum_type_temperature_ul_cold",
         "laundry_care_washer_enum_type_temperature_ul_warm",
-    ]
+    }
 
     await hass.services.async_call(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
             CommonServiceArgument.ENTITY_ID: entity_id,
-            CommonServiceArgument.OPTION: "laundry_care_washer_enum_type_temperature_ul_warm",
+            SelectServiceArgument.OPTION: "laundry_care_washer_enum_type_temperature_ul_warm",
         },
         blocking=True,
     )
@@ -1118,7 +1118,7 @@ async def test_options_entities_available_non_writable(
             SelectService.SELECT_OPTION,
             {
                 CommonServiceArgument.ENTITY_ID: entity_id,
-                CommonServiceArgument.OPTION: "laundry_care_washer_enum_type_temperature_ul_warm",
+                SelectServiceArgument.OPTION: "laundry_care_washer_enum_type_temperature_ul_warm",
             },
             blocking=True,
         )

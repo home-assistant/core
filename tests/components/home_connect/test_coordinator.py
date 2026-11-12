@@ -12,6 +12,7 @@ from aiohomeconnect.model import (
     ApplianceType,
     ArrayOfEvents,
     ArrayOfHomeAppliances,
+    ArrayOfOptions,
     ArrayOfPrograms,
     ArrayOfSettings,
     ArrayOfStatus,
@@ -1441,6 +1442,147 @@ async def test_fetch_options_for_selected_program_when_active_program_finishes(
     selected_program_option_state = hass.states.get(selected_program_option_entity_id)
     assert selected_program_option_state
     assert selected_program_option_state.state != STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
+@pytest.mark.parametrize(
+    "error",
+    [HomeConnectError("home-connect-error")],
+)
+async def test_fetch_selected_program_options_after_api_error(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+    error: HomeConnectError,
+) -> None:
+    """Test selected program options are refreshed after an API error.
+
+    When there is a select event, and all the options could not be fetched due
+    to an API error, once the integration detects that the program is finished
+    and the selected program is still the same, it should fetch the options again.
+    """
+    appliance_ha_id = appliance.ha_id
+    selected_program = ProgramKey.DISHCARE_DISHWASHER_ECO_50
+    option_key = OptionKey.DISHCARE_DISHWASHER_HALF_LOAD
+
+    client.get_all_programs = AsyncMock(
+        return_value=ArrayOfPrograms(
+            [
+                EnumerateProgram(selected_program, selected_program.value),
+            ],
+            None,
+            None,
+        )
+    )
+    client.get_available_program.return_value = ProgramDefinition(
+        selected_program,
+        options=[
+            ProgramDefinitionOption(
+                option_key,
+                "Boolean",
+                constraints=ProgramDefinitionConstraints(default=False),
+            )
+        ],
+    )
+    client.get_selected_program_options.return_value = ArrayOfOptions(
+        [Option(option_key, True)]
+    )
+
+    assert await integration_setup(client)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    client.get_available_program.reset_mock()
+    client.get_selected_program_options.reset_mock()
+    client.get_available_program.side_effect = error
+    client.get_selected_program_options.side_effect = error
+
+    await client.add_events(
+        [
+            EventMessage(
+                appliance_ha_id,
+                EventType.NOTIFY,
+                data=ArrayOfEvents(
+                    [
+                        Event(
+                            key=EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
+                            raw_key=EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM.value,
+                            timestamp=0,
+                            level="",
+                            handling="",
+                            value=selected_program.value,
+                        )
+                    ]
+                ),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    client.get_available_program.assert_awaited_once()
+    client.get_selected_program_options.assert_awaited_once()
+
+    # Finish program
+    client.get_available_program.reset_mock()
+    client.get_selected_program_options.reset_mock()
+    await client.add_events(
+        [
+            EventMessage(
+                appliance_ha_id,
+                EventType.STATUS,
+                data=ArrayOfEvents(
+                    [
+                        Event(
+                            key=StatusKey.BSH_COMMON_OPERATION_STATE,
+                            raw_key=StatusKey.BSH_COMMON_OPERATION_STATE.value,
+                            timestamp=0,
+                            level="",
+                            handling="",
+                            value=BSH_OPERATION_STATE_FINISHED,
+                        )
+                    ]
+                ),
+            ),
+            EventMessage(
+                appliance_ha_id,
+                EventType.NOTIFY,
+                data=ArrayOfEvents(
+                    [
+                        Event(
+                            key=EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
+                            raw_key=EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM.value,
+                            timestamp=0,
+                            level="",
+                            handling="",
+                            value=None,
+                        )
+                    ]
+                ),
+            ),
+            EventMessage(
+                appliance_ha_id,
+                EventType.STATUS,
+                data=ArrayOfEvents(
+                    [
+                        Event(
+                            key=StatusKey.BSH_COMMON_OPERATION_STATE,
+                            raw_key=StatusKey.BSH_COMMON_OPERATION_STATE.value,
+                            timestamp=0,
+                            level="",
+                            handling="",
+                            value=BSH_OPERATION_STATE_READY,
+                        )
+                    ]
+                ),
+            ),
+        ]
+    )
+    await hass.async_block_till_done()
+
+    client.get_available_program.assert_awaited_once()
+    client.get_selected_program_options.assert_awaited_once()
 
 
 @pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)

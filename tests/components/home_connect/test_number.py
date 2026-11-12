@@ -694,7 +694,7 @@ async def test_options_entities_available_non_writable(
     await hass.services.async_call(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
-        {CommonServiceArgument.ENTITY_ID: entity_id, CommonServiceArgument.VALUE: 80},
+        {CommonServiceArgument.ENTITY_ID: entity_id, SERVICE_ATTR_VALUE: 80},
         blocking=True,
     )
 
@@ -744,7 +744,7 @@ async def test_options_entities_available_non_writable(
             NumberService.SET_VALUE,
             {
                 CommonServiceArgument.ENTITY_ID: entity_id,
-                CommonServiceArgument.VALUE: 80,
+                SERVICE_ATTR_VALUE: 80,
             },
             blocking=True,
         )
