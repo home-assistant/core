@@ -470,6 +470,17 @@ class CommonServiceArgument(StrEnum):
     ENTITY_ID = "entity_id"
 
 
+class ServiceTarget(StrEnum):
+    """Keys of an action target, also used inside its exclude block."""
+
+    ENTITY_ID = "entity_id"
+    DEVICE_ID = "device_id"
+    AREA_ID = "area_id"
+    FLOOR_ID = "floor_id"
+    LABEL_ID = "label_id"
+    EXCLUDE = "exclude"
+
+
 class EntityCapabilityAttribute(StrEnum):
     """Capability attributes shared by all entities."""
 
