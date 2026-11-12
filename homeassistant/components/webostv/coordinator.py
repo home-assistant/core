@@ -63,7 +63,7 @@ class WebOsTvDataUpdateCoordinator(DataUpdateCoordinator[None]):
             ):
                 raise UpdateFailedUnreachable(
                     translation_domain=DOMAIN,
-                    translation_key="device_unavailable",
+                    translation_key="device_unreachable",
                 ) from error
         except WebOsTvPairError as error:
             raise ConfigEntryAuthFailed(
