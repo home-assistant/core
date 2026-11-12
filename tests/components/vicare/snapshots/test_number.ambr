@@ -212,7 +212,7 @@
     'object_id_base': 'Heating curve shift',
     'options': dict({
     }),
-    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_device_class': <NumberDeviceClass.TEMPERATURE_DELTA: 'temperature_delta'>,
     'original_icon': None,
     'original_name': 'Heating curve shift',
     'platform': 'vicare',
@@ -221,19 +221,19 @@
     'supported_features': 0,
     'translation_key': 'heating_curve_shift',
     'unique_id': 'gateway0_deviceSerialVitodens300W-heating curve shift-0',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    'unit_of_measurement': <UnitOfTemperature.KELVIN: 'K'>,
   })
 # ---
 # name: test_all_entities[number.model0_heating_curve_shift-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature_delta',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'model0 Heating curve shift',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 40,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: -13,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.KELVIN: 'K'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.model0_heating_curve_shift',
@@ -273,7 +273,7 @@
     'object_id_base': 'Heating curve shift',
     'options': dict({
     }),
-    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_device_class': <NumberDeviceClass.TEMPERATURE_DELTA: 'temperature_delta'>,
     'original_icon': None,
     'original_name': 'Heating curve shift',
     'platform': 'vicare',
@@ -282,19 +282,19 @@
     'supported_features': 0,
     'translation_key': 'heating_curve_shift',
     'unique_id': 'gateway0_deviceSerialVitodens300W-heating curve shift-1',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    'unit_of_measurement': <UnitOfTemperature.KELVIN: 'K'>,
   })
 # ---
 # name: test_all_entities[number.model0_heating_curve_shift_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature_delta',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'model0 Heating curve shift',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 40,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: -13,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.KELVIN: 'K'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.model0_heating_curve_shift_2',
