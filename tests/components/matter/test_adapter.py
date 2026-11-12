@@ -536,6 +536,29 @@ async def test_get_suggested_area_composed_device_partial_room() -> None:
     assert get_suggested_area(node.endpoints[2]) == "Office"
 
 
+@pytest.mark.parametrize(
+    ("endpoint_id", "area_name"),
+    [
+        (2, "Staircase"),
+        (3, "Staircase"),
+        (6, "Living Room"),
+    ],
+    ids=["composed_device_parent", "composed_device_part", "simple_device"],
+)
+async def test_get_suggested_area_real_bridge_room_list_shape(
+    endpoint_id: int, area_name: str
+) -> None:
+    """Test get_suggested_area against a Room list shaped like a real Hue Bridge's.
+
+    Anonymized from a real Hue Bridge diagnostics download: unlike the hand-written
+    fixtures above, its "Staircase" Room lists a composed motion sensor's parent
+    endpoint (2) *and* its part endpoints (3, 4, 5) together, not just one or the
+    other.
+    """
+    node = create_node_from_fixture("mock_bridge_rooms_diagnostics")
+    assert get_suggested_area(node.endpoints[endpoint_id]) == area_name
+
+
 @pytest.mark.parametrize("node_fixture", ["mock_bridge_rooms"])
 @pytest.mark.parametrize(
     ("endpoint_id", "area_name"),
