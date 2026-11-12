@@ -7,15 +7,9 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from pyuptimerobot import UptimeRobotAuthenticationException, UptimeRobotException
 from pyuptimerobot.const import API_PATH_MONITOR_DETAIL
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.components.uptimerobot.const import COORDINATOR_UPDATE_INTERVAL
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import STATE_OFF, STATE_ON, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import dt as dt_util
@@ -65,8 +59,8 @@ async def test_switch_off(hass: HomeAssistant) -> None:
 
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: UPTIMEROBOT_SWITCH_TEST_ENTITY},
+            SwitchService.TURN_OFF,
+            {CommonServiceArgument.ENTITY_ID: UPTIMEROBOT_SWITCH_TEST_ENTITY},
             blocking=True,
         )
 
@@ -98,8 +92,8 @@ async def test_switch_on(hass: HomeAssistant) -> None:
 
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: UPTIMEROBOT_SWITCH_TEST_ENTITY},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: UPTIMEROBOT_SWITCH_TEST_ENTITY},
             blocking=True,
         )
 
@@ -127,8 +121,8 @@ async def test_authentication_error(
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: UPTIMEROBOT_SWITCH_TEST_ENTITY},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: UPTIMEROBOT_SWITCH_TEST_ENTITY},
             blocking=True,
         )
 
@@ -151,8 +145,8 @@ async def test_action_execution_failure(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: UPTIMEROBOT_SWITCH_TEST_ENTITY},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: UPTIMEROBOT_SWITCH_TEST_ENTITY},
             blocking=True,
         )
 
@@ -179,8 +173,8 @@ async def test_switch_api_failure(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: UPTIMEROBOT_SWITCH_TEST_ENTITY},
+            SwitchService.TURN_OFF,
+            {CommonServiceArgument.ENTITY_ID: UPTIMEROBOT_SWITCH_TEST_ENTITY},
             blocking=True,
         )
 

@@ -5,8 +5,10 @@ from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
 from aiohpprinter import (
+    HpAdapter,
     HpConsumable,
     HpCopyUsage,
+    HpEPrint,
     HpFaxUsage,
     HpJob,
     HpPrinterData,
@@ -57,7 +59,10 @@ def _ink(
     marker_color: str,
     station: str,
     level: float,
+    installed_at: datetime,
+    manufactured_at: datetime,
     pages_remaining: int | None = None,
+    pages_printed: int | None = None,
 ) -> HpConsumable:
     """Return an ink cartridge as reported by an HP OfficeJet Pro 9022e."""
     return HpConsumable(
@@ -69,6 +74,12 @@ def _ink(
         station=station,
         percentage_level_remaining=level,
         estimated_pages_remaining=pages_remaining,
+        manufactured_at=manufactured_at,
+        installed_at=installed_at,
+        warranty_expires_at=manufactured_at.replace(year=manufactured_at.year + 2),
+        counterfeit_refilled_count=0,
+        genuine_refilled_count=0,
+        total_impressions=pages_printed,
     )
 
 
@@ -76,8 +87,9 @@ def _ink(
 def mock_data(mock_device: HpPrinterDevice) -> HpPrinterData:
     """Return data captured from a real HP OfficeJet Pro 9022e.
 
-    That printer reports no pages-remaining estimates, so the black cartridge
-    gets the one an HP Color LaserJet M255dw reports for its black toner.
+    That printer reports no pages-remaining estimates or per-cartridge page
+    counts, so the black cartridge gets the ones an HP Color LaserJet M255dw
+    reports for its black toner.
     """
     return HpPrinterData(
         online=True,
@@ -86,7 +98,9 @@ def mock_data(mock_device: HpPrinterDevice) -> HpPrinterData:
         consumables={
             consumable.consumable_id: consumable
             for consumable in (
-                _ink("C", "Cyan", "1", 40.0),
+                _ink(
+                    "C", "Cyan", "1", 40.0, datetime(2024, 3, 18), datetime(2023, 2, 26)
+                ),
                 HpConsumable(
                     consumable_id="CMYK",
                     consumable_type="printhead",
@@ -94,9 +108,32 @@ def mock_data(mock_device: HpPrinterDevice) -> HpPrinterData:
                     brand="HP",
                     station="0",
                 ),
-                _ink("K", "Black", "4", 80.0, pages_remaining=550),
-                _ink("M", "Magenta", "2", 40.0),
-                _ink("Y", "Yellow", "3", 40.0),
+                _ink(
+                    "K",
+                    "Black",
+                    "4",
+                    80.0,
+                    datetime(2024, 11, 11),
+                    datetime(2023, 4, 30),
+                    pages_remaining=550,
+                    pages_printed=2220,
+                ),
+                _ink(
+                    "M",
+                    "Magenta",
+                    "2",
+                    40.0,
+                    datetime(2024, 3, 18),
+                    datetime(2023, 3, 5),
+                ),
+                _ink(
+                    "Y",
+                    "Yellow",
+                    "3",
+                    40.0,
+                    datetime(2024, 3, 18),
+                    datetime(2023, 3, 5),
+                ),
             )
         },
         printer_usage=HpPrinterUsage(
@@ -123,7 +160,25 @@ def mock_data(mock_device: HpPrinterDevice) -> HpPrinterData:
             monochrome_impressions=2,
             color_impressions=18,
         ),
-        fax_usage=HpFaxUsage(total_impressions=0),
+        fax_usage=HpFaxUsage(
+            total_impressions=0,
+            adf_images=0,
+            flatbed_images=0,
+            images_received_from_pc=0,
+        ),
+        adapters=[
+            HpAdapter(
+                name="Eth0", connectivity_port_type="ethernet", is_connected=False
+            ),
+            HpAdapter(
+                name="Wifi0", connectivity_port_type="wifiEmbedded", is_connected=True
+            ),
+            HpAdapter(
+                name="Wifi1", connectivity_port_type="wifiEmbedded", is_connected=False
+            ),
+            HpAdapter(name="Usb0", connectivity_port_type="usb", is_connected=False),
+        ],
+        eprint=HpEPrint(is_registered=True, cloud_services_enabled=True),
         logs=HpProductLogs(
             jobs=[
                 HpJob(
