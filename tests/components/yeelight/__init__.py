@@ -4,6 +4,7 @@ from datetime import timedelta
 from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from async_upnp_client.advertisement import SsdpAdvertisementListener
 from async_upnp_client.search import SsdpSearchListener
 from async_upnp_client.utils import CaseInsensitiveDict
 from yeelight import BulbException, BulbType
@@ -160,6 +161,7 @@ def _mocked_bulb(cannot_connect=False):
     bulb.async_set_scene = AsyncMock()
     bulb.async_set_default = AsyncMock()
     bulb.async_start_music = AsyncMock()
+    bulb.async_stop_music = AsyncMock()
     return bulb
 
 
@@ -181,6 +183,17 @@ def _patched_ssdp_listener(info: CaseInsensitiveDict, *args, **kwargs):
     return listener
 
 
+def _patched_advertisement_listener(*args, **kwargs):
+    listener = SsdpAdvertisementListener(*args, **kwargs)
+
+    async def _async_start(*_):
+        if kwargs["source"][0] == FAIL_TO_BIND_IP:
+            raise OSError
+
+    listener.async_start = _async_start
+    return listener
+
+
 def _patch_discovery(no_device=False, capabilities=None):
     YeelightScanner._scanner = None  # Clear class scanner to reset hass
 
@@ -190,10 +203,29 @@ def _patch_discovery(no_device=False, capabilities=None):
             info = capabilities or CAPABILITIES
         return _patched_ssdp_listener(info, *args, **kwargs)
 
-    return patch(
-        "homeassistant.components.yeelight.scanner.SsdpSearchListener",
-        new=_generate_fake_ssdp_listener,
+    return patch.multiple(
+        "homeassistant.components.yeelight.scanner",
+        SsdpSearchListener=_generate_fake_ssdp_listener,
+        SsdpAdvertisementListener=_patched_advertisement_listener,
     )
+
+
+@callback
+def _async_announce(headers: dict[str, str]) -> None:
+    """Receive an alive advertisement, as a bulb sends it."""
+    for listener in YeelightScanner._scanner._advertisement_listeners:
+        listener._on_data(
+            "NOTIFY * HTTP/1.1",
+            CaseInsensitiveDict(
+                {
+                    "Host": "239.255.255.250:1982",
+                    "Cache-Control": "max-age=3600",
+                    "NTS": "ssdp:alive",
+                    "Server": "POSIX, UPnP/1.0 YGLC/1",
+                    **headers,
+                }
+            ),
+        )
 
 
 def _patch_discovery_interval():
