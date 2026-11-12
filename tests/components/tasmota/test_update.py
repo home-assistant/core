@@ -1,5 +1,6 @@
 """Tests for the Tasmota update platform."""
 
+import asyncio
 import copy
 from datetime import timedelta
 import json
@@ -12,10 +13,18 @@ from aiogithubapi import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import async_fire_mqtt_message, async_fire_time_changed
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_mqtt_message,
+    async_fire_time_changed,
+)
 from pytest_homeassistant.typing import MqttMockHAClient
 
-from homeassistant.components.tasmota.const import DEFAULT_PREFIX, DOMAIN
+from homeassistant.components.tasmota.const import (
+    CONF_DISCOVERY_PREFIX,
+    DEFAULT_PREFIX,
+    DOMAIN,
+)
 from homeassistant.components.update import (
     ATTR_INSTALLED_VERSION,
     ATTR_LATEST_VERSION,
@@ -284,3 +293,66 @@ async def test_device_update_entity_refreshes_on_firmware_change(
     assert state is not None
     assert state.attributes[ATTR_INSTALLED_VERSION] == "14.6.0"
     assert state.state == STATE_OFF
+
+
+async def test_setup_not_blocked_by_slow_github_refresh(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test integration setup is not delayed by a slow GitHub refresh."""
+
+    refresh_started = asyncio.Event()
+    refresh_proceed = asyncio.Event()
+
+    async def slow_latest(*_args: object, **_kwargs: object) -> AsyncMock:
+        refresh_started.set()
+        await refresh_proceed.wait()
+        return AsyncMock(
+            data=GitHubReleaseModel(
+                {
+                    "tag_name": "v14.6.0",
+                    "name": "Tasmota 14.6.0",
+                    "html_url": "https://github.com/arendst/Tasmota/releases/tag/v14.6.0",
+                    "body": "",
+                }
+            )
+        )
+
+    with patch(
+        "aiogithubapi.namespaces.releases.GitHubReleasesNamespace.latest",
+        new=AsyncMock(side_effect=slow_latest),
+    ):
+        hass.config.components.add("tasmota")
+
+        entry = MockConfigEntry(
+            data={CONF_DISCOVERY_PREFIX: DEFAULT_PREFIX},
+            domain=DOMAIN,
+            title="Tasmota",
+        )
+        entry.add_to_hass(hass)
+
+        assert await hass.config_entries.async_setup(entry.entry_id)
+
+        assert not refresh_proceed.is_set()
+        await asyncio.wait_for(refresh_started.wait(), timeout=10)
+
+        refresh_proceed.set()
+        await hass.async_block_till_done()
+
+        config = copy.deepcopy(DEFAULT_CONFIG)
+        mac = config["mac"]
+        async_fire_mqtt_message(
+            hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config)
+        )
+        await hass.async_block_till_done()
+
+        entity_id = entity_registry.async_get_entity_id(
+            Platform.UPDATE, DOMAIN, dr.format_mac(mac)
+        )
+        assert entity_id is not None
+
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.attributes[ATTR_INSTALLED_VERSION] == DEFAULT_CONFIG["sw"]
+        assert state.attributes[ATTR_LATEST_VERSION] == "14.6.0"
