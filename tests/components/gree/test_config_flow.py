@@ -42,6 +42,12 @@ async def test_offline_setup(
     assert result["data"] == {CONF_KNOWN_HOSTS: expected_hosts}
     assert result["result"].unique_id == DOMAIN
 
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "single_instance_allowed"
+
 
 @pytest.mark.parametrize(
     "invalid_host",
