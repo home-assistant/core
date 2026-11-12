@@ -1,6 +1,6 @@
 """Common entity definitions."""
 
-from typing import override
+from typing import Any
 
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
@@ -8,44 +8,20 @@ from homeassistant.helpers.device_registry import (
     format_mac,
 )
 from homeassistant.helpers.entity import EntityDescription
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from . import WatercrystConfigEntry
 from .const import DOMAIN
-from .coordinator import (
-    WatercrystMeasurementsCoordinator,
-    WatercrystStateCoordinator,
-    WatercrystUpdateCoordinator,
-)
+from .coordinator import WatercrystUpdateCoordinator
 
 
-def _build_device_info(
-    config_entry: WatercrystConfigEntry, coordinator: WatercrystUpdateCoordinator
-) -> DeviceInfo:
-    """Creates device info from the config entry and device meta data."""
-    info = coordinator.data
-
-    connections: set[tuple[str, str]] = set()
-
-    if mac := info.system_mac_address:
-        connections.add((CONNECTION_NETWORK_MAC, format_mac(mac)))
-
-    return DeviceInfo(
-        identifiers={(DOMAIN, config_entry.entry_id)},
-        connections=connections,
-        manufacturer="WATERCryst",
-        model=" ".join(p for p in (info.line, info.series) if p),
-        model_id=info.device_type_number,
-        name=info.name or config_entry.title,
-        serial_number=info.biocat_serial,
-        sw_version=info.current_firmware_version,
-        hw_version=info.current_hardware_version,
-        configuration_url=f"https://app.watercryst.com/devices/{info.biocat_serial}",
-    )
-
-
-class WatercrystStateEntity(CoordinatorEntity[WatercrystStateCoordinator]):
-    """WATERCryst state entity."""
+class WatercrystEntity[CoordinatorT: DataUpdateCoordinator[Any]](
+    CoordinatorEntity[CoordinatorT]
+):
+    """WATERCryst coordinator entity."""
 
     _attr_has_entity_name = True
 
@@ -53,44 +29,30 @@ class WatercrystStateEntity(CoordinatorEntity[WatercrystStateCoordinator]):
         self,
         config_entry: WatercrystConfigEntry,
         coordinator: WatercrystUpdateCoordinator,
+        sub_coordinator: CoordinatorT,
         entity_description: EntityDescription,
     ) -> None:
         """Initialize a WatercrystStateEntity instance."""
-        super().__init__(coordinator.state)
-        self._attr_device_info = _build_device_info(config_entry, coordinator)
-        self._attr_unique_id = (
-            f"{coordinator.data.biocat_serial}_{entity_description.key}"
+        super().__init__(sub_coordinator)
+
+        info = coordinator.data
+
+        connections: set[tuple[str, str]] = set()
+
+        if mac := info.system_mac_address:
+            connections.add((CONNECTION_NETWORK_MAC, format_mac(mac)))
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, info.biocat_serial)},
+            connections=connections,
+            manufacturer="WATERCryst",
+            model=info.model,
+            model_id=info.device_type_number,
+            name=info.name or config_entry.title,
+            serial_number=info.biocat_serial,
+            sw_version=info.current_firmware_version,
+            hw_version=info.current_hardware_version,
+            configuration_url=f"https://app.watercryst.com/devices/{info.biocat_serial}",
         )
-        self.entity_description = entity_description
-
-    @override
-    @property
-    def available(self) -> bool:
-        """Return whether the device is online and state data is available."""
-        return (
-            super().available
-            and self.coordinator.data is not None
-            and self.coordinator.data.online is True
-        )
-
-
-class WatercrystMeasurementsEntity(
-    CoordinatorEntity[WatercrystMeasurementsCoordinator]
-):
-    """WATERCryst measurements entity."""
-
-    _attr_has_entity_name = True
-
-    def __init__(
-        self,
-        config_entry: WatercrystConfigEntry,
-        coordinator: WatercrystUpdateCoordinator,
-        entity_description: EntityDescription,
-    ) -> None:
-        """Initialize a WatercrystMeasurementsEntity instance."""
-        super().__init__(coordinator.measurements)
-        self._attr_device_info = _build_device_info(config_entry, coordinator)
-        self._attr_unique_id = (
-            f"{coordinator.data.biocat_serial}_{entity_description.key}"
-        )
+        self._attr_unique_id = f"{info.biocat_serial}_{entity_description.key}"
         self.entity_description = entity_description

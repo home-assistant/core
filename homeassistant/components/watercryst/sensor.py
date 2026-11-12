@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import override
+from typing import Any, override
 
 from pyocat.models import (
     DeviceResponse,
@@ -33,7 +33,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import WatercrystConfigEntry
-from .entity import WatercrystMeasurementsEntity, WatercrystStateEntity
+from .coordinator import WatercrystBaseCoordinator
+from .entity import WatercrystEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -168,12 +169,14 @@ async def async_setup_entry(
     async_add_entities(
         [
             *(
-                WatercrystStateSensor(entry, coordinator, description)
+                WatercrystSensor(entry, coordinator, coordinator.state, description)
                 for description in STATE_SENSORS
                 if description.supported_fn(coordinator.data)
             ),
             *(
-                WatercrystMeasurementsSensor(entry, coordinator, description)
+                WatercrystSensor(
+                    entry, coordinator, coordinator.measurements, description
+                )
                 for description in MEASUREMENT_SENSORS
                 if description.supported_fn(coordinator.data)
             ),
@@ -181,21 +184,12 @@ async def async_setup_entry(
     )
 
 
-class WatercrystStateSensor(SensorEntity, WatercrystStateEntity):
-    """BIOCAT device state sensor."""
+class WatercrystSensor[CoordinatorT: WatercrystBaseCoordinator[Any]](
+    SensorEntity, WatercrystEntity[CoordinatorT]
+):
+    """WATERCryst device sensor."""
 
-    entity_description: WatercrystSensorEntityDescription[StateResponse]
-
-    @override
-    @property
-    def native_value(self) -> StateType | datetime:
-        return self.entity_description.value_fn(self.coordinator.data)
-
-
-class WatercrystMeasurementsSensor(SensorEntity, WatercrystMeasurementsEntity):
-    """BIOCAT device measurements sensor."""
-
-    entity_description: WatercrystSensorEntityDescription[MeasurementResponse]
+    entity_description: WatercrystSensorEntityDescription[Any]
 
     @override
     @property

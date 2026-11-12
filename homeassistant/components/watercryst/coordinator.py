@@ -169,7 +169,7 @@ class WatercrystUpdateCoordinator(WatercrystBaseCoordinator[DeviceResponse]):
                     device.id,
                     sw_version=self.data.current_firmware_version,
                     hw_version=self.data.current_hardware_version,
-                    model=" ".join(p for p in (self.data.line, self.data.series) if p),
+                    model=self.data.model,
                     model_id=self.data.device_type_number,
                     name=self.data.name or config_entry.title,
                 )
