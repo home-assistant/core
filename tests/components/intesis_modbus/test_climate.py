@@ -1,6 +1,5 @@
 """Tests for the Intesis Modbus climate platform."""
 
-from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -54,7 +53,7 @@ ENTITY_ID = "climate.inmbsmhi001r000"
 
 
 async def _poll(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
-    freezer.tick(SCAN_INTERVAL + timedelta(seconds=1))
+    freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -104,13 +103,15 @@ async def test_set_unsupported_fan_mode_raises(
     await hass.async_block_till_done()
     writes: list[WriteEvent] = []
     unit.on_write(writes.append)
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_FAN_MODE,
             {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_MODE: "powerful"},
             blocking=True,
         )
+    assert err.value.translation_domain == CLIMATE_DOMAIN
+    assert err.value.translation_key == "not_valid_fan_mode"
     assert writes == []
 
 
@@ -258,6 +259,7 @@ async def test_set_temperature_with_unsupported_hvac_mode_raises(
             },
             blocking=True,
         )
+    assert err.value.translation_domain == CLIMATE_DOMAIN
     assert err.value.translation_key == "not_valid_hvac_mode"
     assert writes == []
 
@@ -284,13 +286,15 @@ async def test_set_temperature_out_of_range_raises(
     hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
     """A setpoint above the unit's maximum is refused."""
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
             {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 31},
             blocking=True,
         )
+    assert err.value.translation_domain == CLIMATE_DOMAIN
+    assert err.value.translation_key == "temp_out_of_range"
 
 
 async def test_write_failure_raises_home_assistant_error(
@@ -308,6 +312,7 @@ async def test_write_failure_raises_home_assistant_error(
             blocking=True,
         )
     assert not isinstance(err.value, ServiceValidationError)
+    assert err.value.translation_domain == DOMAIN
     assert err.value.translation_key == "write_failed"
     assert err.value.translation_placeholders is None
 
