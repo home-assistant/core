@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from datetime import datetime, timedelta
-from functools import lru_cache, partial
+from functools import partial
 import json
 import logging
 from typing import Any, cast
@@ -10,6 +10,7 @@ from typing import Any, cast
 import probatio
 
 from homeassistant.auth.models import User
+from homeassistant.auth.permissions import entity_permission_filter
 from homeassistant.auth.permissions.const import POLICY_READ
 from homeassistant.auth.permissions.events import SUBSCRIBE_ALLOWLIST
 from homeassistant.const import (
@@ -795,12 +796,6 @@ def handle_slugify(
     connection.send_result(msg["id"], {"slug": slugify(msg["text"])})
 
 
-@lru_cache
-def _cached_template(template_str: str, hass: HomeAssistant) -> template.Template:
-    """Return a cached template."""
-    return template.Template(template_str, hass)
-
-
 @decorators.websocket_command(
     {
         probatio.Required("type"): "render_template",
@@ -819,10 +814,14 @@ async def handle_render_template(
     """Handle render_template command."""
     template_str = msg["template"]
     report_errors: bool = msg["report_errors"]
-    if report_errors:
-        template_obj = template.Template(template_str, hass)
-    else:
-        template_obj = _cached_template(template_str, hass)
+    template_obj = template.Template(
+        template_str,
+        hass,
+        # Resolved per render as permissions can change while subscribed
+        entity_filter_factory=partial(
+            entity_permission_filter, connection.user, POLICY_READ
+        ),
+    )
     variables = msg.get("variables")
     timeout = msg.get("timeout")
 

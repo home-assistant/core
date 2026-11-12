@@ -17,14 +17,15 @@ from typing import TYPE_CHECKING, Any, Literal, Self, overload, override
 import weakref
 
 import jinja2
-from jinja2.runtime import AsyncLoopContext, LoopContext
+from jinja2.environment import TemplateModule
+from jinja2.runtime import AsyncLoopContext, Context as JinjaContext, LoopContext
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace
 from lru import LRU
 from typing_extensions import Sentinel as sentinel
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.trace import (
@@ -41,6 +42,7 @@ from homeassistant.util.thread import ThreadWithException
 
 from .context import (
     TemplateContextManager as TemplateContextManager,
+    entity_filter_cv,
     render_with_context,
     template_context_manager,
     template_cv,
@@ -353,6 +355,20 @@ def _finalize_output(value: Any, _nested: bool = False) -> Any:
     return value
 
 
+def _readable_only(
+    entity_filter: Callable[[str], bool],
+    entity_filter_factory: Callable[[], Callable[[str], bool] | None],
+) -> Callable[[str], bool]:
+    """Return a filter that also rejects entities the template cannot read."""
+
+    def _filter(entity_id: str) -> bool:
+        return entity_filter(entity_id) and (
+            (readable := entity_filter_factory()) is None or readable(entity_id)
+        )
+
+    return _filter
+
+
 class Template:
     """Class to hold a template and manage caching and rendering."""
 
@@ -360,6 +376,7 @@ class Template:
         "__weakref__",
         "_compiled",
         "_compiled_code",
+        "_entity_filter_factory",
         "_exc_info",
         "_hash_cache",
         "_limited",
@@ -371,8 +388,19 @@ class Template:
         "template",
     )
 
-    def __init__(self, template: str, hass: HomeAssistant) -> None:
-        """Instantiate a template."""
+    def __init__(
+        self,
+        template: str,
+        hass: HomeAssistant,
+        *,
+        entity_filter_factory: Callable[[], Callable[[str], bool] | None] | None = None,
+    ) -> None:
+        """Instantiate a template.
+
+        entity_filter_factory is called on every render and every state change
+        that would trigger one. It returns a check for the entities whose state
+        the template may read, or None to read all.
+        """
         if not isinstance(template, str):
             raise TypeError("Expected template to be a string")
 
@@ -387,6 +415,12 @@ class Template:
         self._log_fn: Callable[[int, str], None] | None = None
         self._hash_cache: int = hash(self.template)
         self._renders: int = 0
+        self._entity_filter_factory = entity_filter_factory
+
+    def _entity_filter(self) -> Callable[[str], bool] | None:
+        if self._entity_filter_factory is None:
+            return None
+        return self._entity_filter_factory()
 
     @property
     def _env(self) -> TemplateEnvironment:
@@ -481,7 +515,9 @@ class Template:
             kwargs.update(variables)
 
         try:
-            render_result = render_with_context(self.template, compiled, **kwargs)
+            render_result = render_with_context(
+                self.template, compiled, self._entity_filter(), **kwargs
+            )
         except Exception as err:
             raise TemplateError(err) from err
 
@@ -531,11 +567,12 @@ class Template:
 
         self._exc_info = None
         finish_event = asyncio.Event()
+        entity_filter = self._entity_filter()
 
         def _render_template() -> None:
             assert self.hass is not None, "hass variable not set on template"
             try:
-                render_with_context(self.template, compiled, **kwargs)
+                render_with_context(self.template, compiled, entity_filter, **kwargs)
             except TimeoutError:
                 pass
             except Exception:  # noqa: BLE001
@@ -601,6 +638,13 @@ class Template:
             render_info_cv.reset(token)
 
         render_info._freeze()  # noqa: SLF001
+        if (entity_filter_factory := self._entity_filter_factory) is not None:
+            render_info.filter = _readable_only(
+                render_info.filter, entity_filter_factory
+            )
+            render_info.filter_lifecycle = _readable_only(
+                render_info.filter_lifecycle, entity_filter_factory
+            )
         return render_info
 
     def render_with_possible_json_value(self, value, error_value=_SENTINEL):
@@ -655,7 +699,7 @@ class Template:
 
         try:
             render_result = render_with_context(
-                self.template, compiled, **variables
+                self.template, compiled, self._entity_filter(), **variables
             ).strip()
         # A cyclic value makes the finalize hook recurse until RecursionError.
         except (jinja2.TemplateError, RecursionError) as ex:
@@ -713,6 +757,7 @@ class Template:
             self.__class__ == other.__class__
             and self.template == other.template
             and self.hass == other.hass
+            and self._entity_filter_factory == other._entity_filter_factory
         )
 
     @override
@@ -845,8 +890,21 @@ class HassLoader(jinja2.BaseLoader):
         return self._sources[template], template, lambda: cur_reload == self._reload
 
 
+class _ImportedTemplate(jinja2.Template):
+    """Jinja template that gives filtered renders their own module on import."""
+
+    @override
+    def _get_default_module(self, ctx: JinjaContext | None = None) -> TemplateModule:
+        if entity_filter_cv.get() is None:
+            return super()._get_default_module(ctx)
+        # Jinja renders the cached module once and shares it with every importer
+        return self.make_module()
+
+
 class TemplateEnvironment(ImmutableSandboxedEnvironment):
     """The Home Assistant template environment."""
+
+    template_class = _ImportedTemplate
 
     def __init__(
         self,
@@ -919,6 +977,14 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
         if isinstance(obj, Namespace):
             return True
+
+        # The event that started a context carries the full states it changed
+        if (
+            attr == "origin_event"
+            and isinstance(obj, Context)
+            and entity_filter_cv.get() is not None
+        ):
+            return False
 
         return super().is_safe_attribute(obj, attr, value)
 

@@ -1,5 +1,6 @@
 """Template context management for Home Assistant."""
 
+from collections.abc import Callable
 from contextlib import AbstractContextManager
 from contextvars import ContextVar
 from types import TracebackType
@@ -10,6 +11,10 @@ import jinja2
 # Context variable for template string tracking
 template_cv: ContextVar[tuple[str, str] | None] = ContextVar(
     "template_cv", default=None
+)
+
+entity_filter_cv: ContextVar[Callable[[str], bool] | None] = ContextVar(
+    "entity_filter_cv", default=None
 )
 
 
@@ -36,9 +41,20 @@ template_context_manager = TemplateContextManager()
 
 
 def render_with_context(
-    template_str: str, template: jinja2.Template, **kwargs: Any
+    template_str: str,
+    template: jinja2.Template,
+    entity_filter: Callable[[str], bool] | None = None,
+    /,
+    **kwargs: Any,
 ) -> str:
-    """Store template being rendered in a ContextVar to aid error handling."""
+    """Render the template with its string and entity filter in ContextVars."""
     with template_context_manager as cm:
         cm.set_template(template_str, "rendering")
-        return template.render(**kwargs)
+        # Work scheduled during a filtered render inherits a copy of its context
+        if entity_filter is None and entity_filter_cv.get() is None:
+            return template.render(**kwargs)
+        token = entity_filter_cv.set(entity_filter)
+        try:
+            return template.render(**kwargs)
+        finally:
+            entity_filter_cv.reset(token)
