@@ -4,7 +4,6 @@ import logging
 
 from aioabrp import AbrpClient, TelemetryStream
 
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -135,22 +134,3 @@ async def async_setup_entry(hass: HomeAssistant, entry: AbrpConfigEntry) -> None
 async def async_unload_entry(hass: HomeAssistant, entry: AbrpConfigEntry) -> None:
     """Unload a config entry."""
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
-
-
-async def async_remove_config_entry_device(
-    hass: HomeAssistant, entry: AbrpConfigEntry, device_entry: dr.AnyDeviceEntry
-) -> bool:
-    """Allow deleting a device only once its vehicle has left the garage."""
-    # Without a loaded garage, a still-present vehicle is re-created on setup.
-    if entry.state is not ConfigEntryState.LOADED:
-        return True
-    if any(
-        (DOMAIN, f"{entry.unique_id}_{raw.vehicle_id}") in device_entry.identifiers
-        for raw in entry.runtime_data.garage_coordinator.data
-    ):
-        return False
-    # Removed before the reload, whose garage sync would otherwise remove it again.
-    dr.async_get(hass).async_remove_device(device_entry.id)
-    # Reload so the vehicle gets its entities again if it comes back.
-    hass.config_entries.async_schedule_reload(entry.entry_id)
-    return True
