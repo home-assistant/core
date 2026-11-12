@@ -15,6 +15,7 @@ from homeassistant.components.climate import (
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
+    FAN_TOP,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_SWING_MODE,
@@ -22,7 +23,7 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.components.coolmaster.climate import FAN_MODES
+from homeassistant.components.coolmaster.climate import FAN_MODES, FAN_VERY_LOW
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -46,6 +47,7 @@ async def test_climate_state(
     assert hass.states.get("climate.l1_102").state == HVACMode.COOL
     assert hass.states.get("climate.l1_103").state == HVACMode.COOL
     assert hass.states.get("climate.l1_104").state == HVACMode.COOL
+    assert hass.states.get("climate.l1_105").state == HVACMode.COOL
 
 
 async def test_climate_friendly_name(
@@ -58,6 +60,7 @@ async def test_climate_friendly_name(
     assert hass.states.get("climate.l1_102").attributes[ATTR_FRIENDLY_NAME] == "L1.102"
     assert hass.states.get("climate.l1_103").attributes[ATTR_FRIENDLY_NAME] == "L1.103"
     assert hass.states.get("climate.l1_104").attributes[ATTR_FRIENDLY_NAME] == "L1.104"
+    assert hass.states.get("climate.l1_105").attributes[ATTR_FRIENDLY_NAME] == "L1.105"
 
 
 async def test_climate_supported_features(
@@ -90,6 +93,7 @@ async def test_climate_temperature(
     assert hass.states.get("climate.l1_102").attributes[ATTR_CURRENT_TEMPERATURE] == 25
     assert hass.states.get("climate.l1_103").attributes[ATTR_CURRENT_TEMPERATURE] == 25
     assert hass.states.get("climate.l1_104").attributes[ATTR_CURRENT_TEMPERATURE] == 25
+    assert hass.states.get("climate.l1_105").attributes[ATTR_CURRENT_TEMPERATURE] == 25
 
 
 async def test_climate_thermostat(
@@ -102,6 +106,7 @@ async def test_climate_thermostat(
     assert hass.states.get("climate.l1_102").attributes[ATTR_TEMPERATURE] == 20
     assert hass.states.get("climate.l1_103").attributes[ATTR_TEMPERATURE] == 25
     assert hass.states.get("climate.l1_104").attributes[ATTR_TEMPERATURE] == 25
+    assert hass.states.get("climate.l1_105").attributes[ATTR_TEMPERATURE] == 25
 
 
 async def test_climate_hvac_modes(
@@ -119,6 +124,7 @@ async def test_climate_hvac_modes(
         "climate.l1_102",
         "climate.l1_103",
         "climate.l1_104",
+        "climate.l1_105",
     ):
         assert (
             hass.states.get(unit).attributes[ATTR_HVAC_MODES]
@@ -133,9 +139,10 @@ async def test_climate_fan_mode(
     """Test the Coolmaster climate fan mode."""
     assert hass.states.get("climate.l1_100").attributes[ATTR_FAN_MODE] == FAN_LOW
     assert hass.states.get("climate.l1_101").attributes[ATTR_FAN_MODE] == FAN_HIGH
-    assert hass.states.get("climate.l1_102").attributes[ATTR_FAN_MODE] == "vlow"
+    assert hass.states.get("climate.l1_102").attributes[ATTR_FAN_MODE] == FAN_VERY_LOW
     assert hass.states.get("climate.l1_103").attributes[ATTR_FAN_MODE] == FAN_MEDIUM
     assert hass.states.get("climate.l1_104").attributes[ATTR_FAN_MODE] == "ultra"
+    assert hass.states.get("climate.l1_105").attributes[ATTR_FAN_MODE] == FAN_TOP
 
 
 async def test_climate_unknown_fan_mode_warning(
@@ -147,7 +154,7 @@ async def test_climate_unknown_fan_mode_warning(
     # TODO(2026.7.0): When support for unknown fan speeds is removed, delete this test.
     setup_logs = caplog.get_records(when="setup")
 
-    # Assert that both unknown fan speeds logged a warning.
+    # Assert that the unknown fan speed logged a warning.
     assert any(
         "Detected unknown fan speed value from HVAC unit: ultra. "
         "Support for unknown fan speeds will be removed in 2026.7.0"
@@ -155,11 +162,9 @@ async def test_climate_unknown_fan_mode_warning(
         and rec.levelname == "WARNING"
         for rec in setup_logs
     )
-    assert any(
-        "Detected unknown fan speed value from HVAC unit: vlow. "
-        "Support for unknown fan speeds will be removed in 2026.7.0"
-        in rec.getMessage()
-        and rec.levelname == "WARNING"
+    # "vlow" is a documented CoolMasterNet speed, so it must not warn.
+    assert not any(
+        "Detected unknown fan speed value from HVAC unit: vlow" in rec.getMessage()
         for rec in setup_logs
     )
 
@@ -192,6 +197,7 @@ async def test_climate_fan_modes(
         "climate.l1_102",
         "climate.l1_103",
         "climate.l1_104",
+        "climate.l1_105",
     ):
         assert (
             hass.states.get(unit).attributes[ATTR_FAN_MODES]
