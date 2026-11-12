@@ -8,6 +8,7 @@ from modbus_connection import ModbusTimeoutError
 from sofar_modbus.modern.device import (
     BATTERY_PACKS,
     BATTERY_STRING_COMPONENTS,
+    PV_STRING_COMPONENTS,
     SofarInverter,
 )
 
@@ -40,9 +41,14 @@ from .const import (
     TYPE_TCP,
 )
 from .coordinator import SofarConfigEntry, SofarDataUpdateCoordinator, SofarRuntimeData
-from .entity import battery_pack_identifier, entity_unique_id
+from .entity import (
+    SofarPart,
+    battery_pack_identifier,
+    entity_unique_id,
+    part_identifier,
+)
 from .helpers import create_modbus_params
-from .sensor import TOTAL_SENSOR_DESCRIPTIONS
+from .sensor import TOTAL_SENSOR_DESCRIPTIONS, restored_total
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -86,14 +92,16 @@ def _async_seed_high_water_marks(
         if (
             entity_id is None
             or (stored := restore_state_data.async_get_stored_state(entity_id)) is None
+            or stored.extra_data is None
+            or (
+                total := restored_total(
+                    SensorExtraStoredData.from_dict(stored.extra_data.as_dict())
+                )
+            )
+            is None
         ):
             continue
-        if stored.extra_data is None:
-            continue
-        extra = SensorExtraStoredData.from_dict(stored.extra_data.as_dict())
-        if extra is None or not isinstance(extra.native_value, (int, float)):
-            continue
-        description.total_fn(device).seed(float(extra.native_value))
+        description.total_fn(device).seed(total)
 
 
 @callback
@@ -219,16 +227,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> Non
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
 
-def _battery_string_number(serial: str, identifier: str) -> int | None:
-    """The battery string a device identifier names, if it names one."""
-    prefix = f"{serial}_battery_"
-    if not identifier.startswith(prefix):
-        return None
-    suffix = identifier.removeprefix(prefix)
-    number = int(suffix) if suffix.isdecimal() else None
-    return number if number in BATTERY_STRING_COMPONENTS else None
-
-
 async def async_remove_config_entry_device(
     hass: HomeAssistant,
     config_entry: SofarConfigEntry,
@@ -238,39 +236,31 @@ async def async_remove_config_entry_device(
     serial = config_entry.unique_id
     if TYPE_CHECKING:
         assert serial is not None
-    runtime_data = (
-        config_entry.runtime_data
-        if config_entry.state is ConfigEntryState.LOADED
-        else None
-    )
-    strings: set[int] = set()
-    for domain, identifier in device_entry.identifiers:
-        if domain != DOMAIN:
-            continue
-        if identifier == serial or identifier.startswith(f"{serial}_pv_string_"):
-            return False
-        if runtime_data is not None and any(
-            pack.answered and identifier == battery_pack_identifier(serial, pack)
-            for pack in runtime_data.readings.device.battery_packs.values()
-        ):
-            return False
-        if (number := _battery_string_number(serial, identifier)) is None:
-            continue
-        if (
-            runtime_data is not None
-            and number in runtime_data.readings.device.wired_battery_strings
-        ):
-            return False
-        strings.add(number)
-
-    if runtime_data is not None:
-        runtime_data.added_battery_strings -= strings
-        runtime_data.added_battery_packs -= {
-            place
-            for place, pack in runtime_data.readings.device.battery_packs.items()
-            if (DOMAIN, battery_pack_identifier(serial, pack))
-            in device_entry.identifiers
-        }
+    if (DOMAIN, serial) in device_entry.identifiers or any(
+        (DOMAIN, part_identifier(serial, SofarPart("pv_string", number)))
+        in device_entry.identifiers
+        for number in PV_STRING_COMPONENTS
+    ):
+        return False
+    strings = {
+        number
+        for number in BATTERY_STRING_COMPONENTS
+        if (DOMAIN, part_identifier(serial, SofarPart("battery", number)))
+        in device_entry.identifiers
+    }
+    if config_entry.state is not ConfigEntryState.LOADED:
+        return True
+    packs = {
+        place: pack
+        for place, pack in config_entry.runtime_data.readings.device.battery_packs.items()
+        if (DOMAIN, battery_pack_identifier(serial, pack)) in device_entry.identifiers
+    }
+    if strings & config_entry.runtime_data.readings.device.wired_battery_strings or any(
+        pack.answered for pack in packs.values()
+    ):
+        return False
+    config_entry.runtime_data.added_battery_strings -= strings
+    config_entry.runtime_data.added_battery_packs -= packs.keys()
     return True
 
 
