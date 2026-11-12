@@ -54,11 +54,7 @@ class WatercrystConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "api_disabled"
             except WTCApiUnauthorizedError:
                 errors["base"] = "invalid_auth"
-            except WTCApiTemporaryError:
-                errors["base"] = "cannot_connect"
-            except HTTPStatusError:
-                errors["base"] = "cannot_connect"
-            except RequestError:
+            except WTCApiTemporaryError, HTTPStatusError, RequestError:
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
