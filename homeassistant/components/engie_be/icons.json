@@ -5,6 +5,11 @@
         "default": "mdi:calendar-clock"
       }
     },
+    "datetime": {
+      "departure_time": {
+        "default": "mdi:calendar-clock"
+      }
+    },
     "sensor": {
       "capacity_tariff_daily_power_peak": {
         "default": "mdi:flash"
