@@ -20,11 +20,7 @@ from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.components.switch import (
-    DOMAIN as SWITCH_DOMAIN,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-)
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.components.zwave_js.discovery import (
     FirmwareVersionRange,
     ZWaveDiscoverySchema,
@@ -41,6 +37,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     STATE_OFF,
     STATE_UNKNOWN,
+    CommonServiceArgument,
     EntityCategory,
     Platform,
 )
@@ -448,8 +445,8 @@ async def test_indicator_test(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert client.async_send_command.call_count == 1
@@ -468,8 +465,8 @@ async def test_indicator_test(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert client.async_send_command.call_count == 1
