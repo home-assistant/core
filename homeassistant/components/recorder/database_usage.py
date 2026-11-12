@@ -9,7 +9,7 @@ import os
 from typing import TYPE_CHECKING, Any, Final, TypedDict
 
 import probatio
-from sqlalchemy import LargeBinary, cast, func, literal_column, make_url, select, text
+from sqlalchemy import LargeBinary, cast, func, literal_column, select, text
 from sqlalchemy.exc import OperationalError, ProgrammingError
 from sqlalchemy.orm.session import Session
 
@@ -33,7 +33,6 @@ from .db_schema import (
     StatisticsMeta,
     StatisticsShortTerm,
 )
-from .util import is_file_sqlite_url
 
 if TYPE_CHECKING:
     from sqlalchemy.dialects.mysql.base import MySQLDialect
@@ -52,11 +51,11 @@ SQLITE_DBSTAT_QUERY: Final = (
 )
 INNODB_TABLES_QUERY: Final = (
     "SELECT name, space FROM information_schema.INNODB_TABLES "
-    "WHERE name LIKE CONCAT(DATABASE(), '/%')"
+    "WHERE SUBSTRING_INDEX(name, '/', 1) = DATABASE()"
 )
 MARIADB_INNODB_TABLES_QUERY: Final = (
     "SELECT name, space FROM information_schema.INNODB_SYS_TABLES "
-    "WHERE name LIKE CONCAT(DATABASE(), '/%')"
+    "WHERE SUBSTRING_INDEX(name, '/', 1) = DATABASE()"
 )
 
 
@@ -128,15 +127,19 @@ def _sqlite_table_bytes(session: Session) -> tuple[dict[str, int] | None, int, i
     return table_bytes, page_count * page_size, free_pages * page_size
 
 
-def _sqlite_wal_bytes(db_url: str) -> int | None:
+def _sqlite_wal_bytes(session: Session) -> int | None:
     """Return the size of the write-ahead log and its index, None in memory."""
-    url = make_url(db_url)
-    if not is_file_sqlite_url(url):
+    database = next(
+        file
+        for _, name, file in session.execute(text("PRAGMA database_list")).all()
+        if name == "main"
+    )
+    if not database:
         return None
     size = 0
     for postfix in ("-wal", "-shm"):
         with suppress(FileNotFoundError):
-            size += os.path.getsize(f"{url.database}{postfix}")
+            size += os.path.getsize(f"{database}{postfix}")
     return size
 
 
@@ -333,7 +336,7 @@ def get_database_usage(instance: Recorder) -> DatabaseUsage:
                 table_bytes, total_bytes, free_bytes = _postgresql_table_bytes(session)
             case _:
                 table_bytes, total_bytes, free_bytes = _sqlite_table_bytes(session)
-                wal_bytes = _sqlite_wal_bytes(instance.db_url)
+                wal_bytes = _sqlite_wal_bytes(session)
         entity_ids: dict[int | None, str | None] = dict(
             session.execute(select(StatesMeta.metadata_id, StatesMeta.entity_id)).all()
         )

@@ -2,6 +2,7 @@
 
 from contextlib import closing
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 import sqlite3
 import threading
 from typing import Any
@@ -23,6 +24,7 @@ from pytest_homeassistant.typing import (
 )
 from sqlalchemy import create_engine, delete, select, text, update
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
+from sqlalchemy.orm import Session
 from syrupy.assertion import SnapshotAssertion
 from syrupy.matchers import path_type
 
@@ -36,6 +38,7 @@ from homeassistant.components.recorder.database_usage import (
     DatabaseUsage,
     _attribute_lengths,
     _mysql_table_bytes,
+    _sqlite_wal_bytes,
     get_database_usage,
 )
 from homeassistant.components.recorder.db_schema import (
@@ -575,6 +578,39 @@ def test_mysql_free_bytes(
         1700 + free_bytes,
         free_bytes,
     )
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        pytest.param("sqlite:///{}", id="path"),
+        pytest.param("sqlite:///file:{}?uri=true", id="uri"),
+    ],
+)
+def test_sqlite_wal_bytes(tmp_path: Path, url: str) -> None:
+    """Test the WAL is measured next to the file SQLite opened."""
+    engine = create_engine(url.format(tmp_path / "test.db"))
+    with Session(engine) as session:
+        session.execute(text("PRAGMA journal_mode=WAL"))
+        session.execute(text("CREATE TABLE test (value TEXT)"))
+        session.commit()
+        wal_bytes = _sqlite_wal_bytes(session)
+        # Closing the last connection checkpoints and removes the WAL files
+        files_bytes = sum(
+            path.stat().st_size
+            for path in (tmp_path / "test.db-wal", tmp_path / "test.db-shm")
+        )
+    engine.dispose()
+
+    assert wal_bytes == files_bytes > 0
+
+
+def test_sqlite_wal_bytes_in_memory() -> None:
+    """Test an in-memory database has no WAL to measure."""
+    engine = create_engine("sqlite://")
+    with Session(engine) as session:
+        assert _sqlite_wal_bytes(session) is None
+    engine.dispose()
 
 
 @pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
