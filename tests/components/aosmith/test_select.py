@@ -10,9 +10,10 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -61,10 +62,10 @@ async def test_set_hot_water_plus_level(
     """Test setting the Hot Water+ level."""
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: "select.basement_my_water_heater_hot_water_plus_level",
-            ATTR_OPTION: hass_level,
+            CommonServiceArgument.ENTITY_ID: "select.basement_my_water_heater_hot_water_plus_level",
+            SelectServiceArgument.OPTION: hass_level,
         },
     )
     await hass.async_block_till_done()

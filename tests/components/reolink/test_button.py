@@ -7,11 +7,11 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from reolink_aio.exceptions import ReolinkError
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.reolink.const import DOMAIN
 from homeassistant.components.reolink.services import ATTR_SPEED, SERVICE_PTZ_MOVE
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -63,8 +63,8 @@ async def test_button(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: entity_id},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
     reolink_host.set_ptz_command.assert_called_once()
@@ -73,8 +73,8 @@ async def test_button(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: entity_id},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -138,8 +138,8 @@ async def test_host_button(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: entity_id},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
     reolink_host.reboot.assert_called_once()
@@ -148,7 +148,7 @@ async def test_host_button(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: entity_id},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )

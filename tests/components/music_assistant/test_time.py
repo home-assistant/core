@@ -8,8 +8,12 @@ from music_assistant_models.enums import EventType
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.time import DOMAIN as TIME_DOMAIN, SERVICE_SET_VALUE
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TIME, Platform
+from homeassistant.components.time import (
+    DOMAIN as TIME_DOMAIN,
+    TimeService,
+    TimeServiceArgument,
+)
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
@@ -78,10 +82,10 @@ async def test_set_value_action(
 
     await hass.services.async_call(
         TIME_DOMAIN,
-        SERVICE_SET_VALUE,
+        TimeService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_TIME: value,
+            CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+            TimeServiceArgument.TIME: value,
         },
         blocking=True,
     )

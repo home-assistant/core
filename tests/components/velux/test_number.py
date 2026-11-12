@@ -13,9 +13,9 @@ from pyvlx import Intensity, PyVLXException
 from pyvlx.opening_device import Position
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
 from homeassistant.components.velux.const import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
@@ -104,8 +104,8 @@ async def test_set_value_sets_intensity(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_VALUE: 30, "entity_id": entity_id},
+        NumberService.SET_VALUE,
+        {NumberServiceArgument.VALUE: 30, "entity_id": entity_id},
         blocking=True,
     )
 
@@ -127,8 +127,8 @@ async def test_set_invalid_value_fails(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_VALUE: 101, "entity_id": entity_id},
+            NumberService.SET_VALUE,
+            {NumberServiceArgument.VALUE: 101, "entity_id": entity_id},
             blocking=True,
         )
 
@@ -243,8 +243,8 @@ async def test_set_min_limitation(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_VALUE: 40, "entity_id": entity_id},
+        NumberService.SET_VALUE,
+        {NumberServiceArgument.VALUE: 40, "entity_id": entity_id},
         blocking=True,
     )
 
@@ -268,8 +268,11 @@ async def test_set_limitation_updates_state_optimistically(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_VALUE: 40, "entity_id": closed_limit_entity_id(mock_window)},
+        NumberService.SET_VALUE,
+        {
+            NumberServiceArgument.VALUE: 40,
+            "entity_id": closed_limit_entity_id(mock_window),
+        },
         blocking=True,
     )
 
@@ -287,8 +290,8 @@ async def test_set_max_limitation(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_VALUE: 70, "entity_id": entity_id},
+        NumberService.SET_VALUE,
+        {NumberServiceArgument.VALUE: 70, "entity_id": entity_id},
         blocking=True,
     )
 

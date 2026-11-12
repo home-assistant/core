@@ -4,7 +4,6 @@ import asyncio
 from collections.abc import AsyncGenerator
 from datetime import datetime
 from http import HTTPStatus
-import logging
 from typing import Any, cast
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
@@ -91,7 +90,6 @@ async def test_playback_proxy(
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    caplog.set_level(logging.DEBUG)
 
     proxy_url = async_generate_playback_proxy_url(
         config_entry.entry_id,

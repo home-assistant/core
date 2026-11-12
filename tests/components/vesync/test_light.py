@@ -19,7 +19,8 @@ from homeassistant.components.light import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.components.vesync.const import DOMAIN, SERVICE_UPDATE_DEVS
+from homeassistant.components.vesync.const import DOMAIN
+from homeassistant.components.vesync.services import VeSyncService
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
@@ -495,7 +496,9 @@ async def test_rgb_nightlight_discovery(
     manager.get_devices = AsyncMock(
         side_effect=lambda: manager.devices.humidifiers.append(rgb_humidifier)
     )
-    await hass.services.async_call(DOMAIN, SERVICE_UPDATE_DEVS, {}, blocking=True)
+    await hass.services.async_call(
+        DOMAIN, VeSyncService.UPDATE_DEVICES, {}, blocking=True
+    )
     await hass.async_block_till_done()
     assert (
         entity_registry.async_get_entity_id(

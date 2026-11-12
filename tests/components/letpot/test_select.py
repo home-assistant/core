@@ -10,9 +10,10 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -50,10 +51,10 @@ async def test_set_select(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: "select.garden_light_brightness",
-            ATTR_OPTION: "high",
+            CommonServiceArgument.ENTITY_ID: "select.garden_light_brightness",
+            SelectServiceArgument.OPTION: "high",
         },
         blocking=True,
     )
@@ -94,10 +95,10 @@ async def test_select_error(
     with pytest.raises(HomeAssistantError, match=user_error):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: "select.garden_light_mode",
-                ATTR_OPTION: LightMode.FLOWER.name.lower(),
+                CommonServiceArgument.ENTITY_ID: "select.garden_light_mode",
+                SelectServiceArgument.OPTION: LightMode.FLOWER.name.lower(),
             },
             blocking=True,
         )
