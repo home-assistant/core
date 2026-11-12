@@ -23,8 +23,8 @@ from homeassistant.components.smhi.weather import (
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_FORECAST_CONDITION,
+    ATTR_WEATHER_WIND_SPEED_UNIT,
     DOMAIN as WEATHER_DOMAIN,
-    WeatherEntityCapabilityAttribute,
     WeatherEntityStateAttribute,
     WeatherService,
 )
@@ -360,9 +360,7 @@ async def test_custom_speed_unit(
     entity_registry.async_update_entity_options(
         state.entity_id,
         WEATHER_DOMAIN,
-        {
-            WeatherEntityCapabilityAttribute.WIND_SPEED_UNIT: UnitOfSpeed.METERS_PER_SECOND
-        },
+        {ATTR_WEATHER_WIND_SPEED_UNIT: UnitOfSpeed.METERS_PER_SECOND},
     )
 
     await hass.async_block_till_done()
