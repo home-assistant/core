@@ -3,13 +3,14 @@
 from unittest.mock import MagicMock
 
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.aquostv.const import CONF_POWER_ON_ENABLED, DOMAIN
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_MEDIA_VOLUME_LEVEL,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
+    SCAN_INTERVAL,
     SERVICE_SELECT_SOURCE,
     SERVICE_VOLUME_SET,
     MediaPlayerEntityFeature,
@@ -26,10 +27,17 @@ from homeassistant.const import (
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from .conftest import HOST
 
 ENTITY_ID = "media_player.sharp_aquos_tv"
+
+
+async def _async_first_poll(hass: HomeAssistant) -> None:
+    """Wait for the first scheduled poll of the entity."""
+    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
 
 async def test_state_and_actions(
@@ -42,6 +50,7 @@ async def test_state_and_actions(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
+    await _async_first_poll(hass)
 
     state = hass.states.get(ENTITY_ID)
     assert state is not None
@@ -96,6 +105,7 @@ async def test_power_on_option(
     hass.config_entries.async_update_entry(mock_config_entry, options=options)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
+    await _async_first_poll(hass)
 
     features = hass.states.get(ENTITY_ID).attributes["supported_features"]
     assert bool(features & MediaPlayerEntityFeature.TURN_ON) is can_turn_on
@@ -144,5 +154,6 @@ async def test_yaml_import_tv_off(hass: HomeAssistant, mock_tv: MagicMock) -> No
         {MEDIA_PLAYER_DOMAIN: {CONF_PLATFORM: DOMAIN, CONF_HOST: HOST}},
     )
     await hass.async_block_till_done()
+    await _async_first_poll(hass)
 
     assert hass.states.get(ENTITY_ID).state == MediaPlayerState.OFF

@@ -114,8 +114,7 @@ async def async_setup_entry(
                 entry.runtime_data,
                 entry.options.get(CONF_POWER_ON_ENABLED, True),
             )
-        ],
-        update_before_add=True,
+        ]
     )
 
 
