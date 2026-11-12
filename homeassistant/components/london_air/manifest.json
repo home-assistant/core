@@ -3,6 +3,7 @@
   "name": "London Air",
   "categories": ["weather_alerts.air_quality_pollen"],
   "codeowners": [],
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/london_air",
   "iot_class": "cloud_polling",
   "quality_scale": "legacy",

@@ -38,7 +38,7 @@ from .models import (
     PublishPayloadType,
     ReceiveMessage,
 )
-from .util import valid_subscribe_topic, valid_subscribe_topic_template
+from .util import valid_encoding, valid_subscribe_topic, valid_subscribe_topic_template
 
 TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
@@ -46,7 +46,7 @@ TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
         probatio.Required(CONF_TOPIC): valid_subscribe_topic_template,
         probatio.Optional(CONF_PAYLOAD): cv.template,
         probatio.Optional(CONF_VALUE_TEMPLATE): cv.template,
-        probatio.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): cv.string,
+        probatio.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): valid_encoding,
         probatio.Optional(CONF_QOS, default=DEFAULT_QOS): probatio.All(
             probatio.Coerce(int), probatio.In([0, 1, 2])
         ),

@@ -17,6 +17,7 @@ from bsblan import (
     HotWaterState,
     Sensor,
     State,
+    StaticState,
 )
 
 from homeassistant.const import CONF_HOST
@@ -34,6 +35,7 @@ if TYPE_CHECKING:
 STATE_INCLUDE = [
     "current_temperature",
     "target_temperature",
+    "current_setpoint",
     "hvac_mode",
     "hvac_action",
 ]
@@ -41,9 +43,11 @@ SENSOR_INCLUDE = ["outside_temperature", "total_energy"]
 DHW_STATE_INCLUDE = [
     "operating_mode",
     "nominal_setpoint",
+    "dhw_current_setpoint",
     "dhw_actual_value_top_temperature",
 ]
 DHW_CONFIG_INCLUDE = ["reduced_setpoint", "nominal_setpoint_max"]
+HEATING_CONFIG_INCLUDE = ["temp_reduced_setpoint"]
 
 
 @dataclass
@@ -61,6 +65,7 @@ class BSBLanSlowData:
 
     dhw_config: HotWaterConfig | None = None
     dhw_schedule: HotWaterSchedule | None = None
+    heating_config: dict[int, StaticState] = field(default_factory=dict)
     heating_schedule: dict[int, HeatingTimeSwitchPrograms] = field(default_factory=dict)
 
 
@@ -254,10 +259,10 @@ class BSBLanSlowCoordinator(BSBLanCoordinator[BSBLanSlowData]):
     async def _async_update_data(self) -> BSBLanSlowData:
         """Fetch slow-changing data from the BSB-LAN device.
 
-        Only the DHW config is polled here. Schedules change rarely and are
-        refreshed separately (on startup and after a write) to avoid extra
-        serial-bus traffic on every interval, so they are carried over from
-        the previous update.
+        Only the DHW and heating circuit config are polled here. Schedules
+        change rarely and are refreshed separately (on startup and after a
+        write) to avoid extra serial-bus traffic on every interval, so they
+        are carried over from the previous update.
         """
         previous = self.data or BSBLanSlowData()
         dhw_config: HotWaterConfig | None
@@ -276,6 +281,20 @@ class BSBLanSlowCoordinator(BSBLanCoordinator[BSBLanSlowData]):
                 self.config_entry.data[CONF_HOST],
             )
             dhw_config = previous.dhw_config
+
+        heating_config = dict(previous.heating_config)
+        for circuit in self.circuits:
+            try:
+                heating_config[circuit] = await self.client.static_values(
+                    include=HEATING_CONFIG_INCLUDE, circuit=circuit
+                )
+            except (BSBLANError, TimeoutError) as err:
+                LOGGER.debug(
+                    "Failed to fetch heating config for circuit %d from %s: %s",
+                    circuit,
+                    self.config_entry.data[CONF_HOST],
+                    err,
+                )
 
         dhw_schedule = previous.dhw_schedule
         if self._dhw_schedule_refresh_pending:
@@ -315,6 +334,7 @@ class BSBLanSlowCoordinator(BSBLanCoordinator[BSBLanSlowData]):
         return BSBLanSlowData(
             dhw_config=dhw_config,
             dhw_schedule=dhw_schedule,
+            heating_config=heating_config,
             heating_schedule=heating_schedule,
         )
 

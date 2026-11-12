@@ -40,6 +40,11 @@ from homeassistant.helpers import (
 from homeassistant.helpers.typing import Undefined
 from homeassistant.util.dt import utcnow
 
+VIA_DEVICE_DEPRECATION = (
+    "calls `device_registry.async_get_or_create` with a deprecated `via_device` "
+    "parameter"
+)
+
 
 @pytest.fixture(autouse=True)
 def _downgrade_device_registry_deprecation_reports(
@@ -4134,11 +4139,8 @@ async def test_specifying_via_device_create(
         model="light",
         via_device=("hue", "non_existing_123"),
     )
-    assert {
-        "calls `device_registry.async_get_or_create` "
-        "referencing a non existing `via_device` "
-        '("hue","non_existing_123")' in caplog.text
-    }
+    assert caplog.text.count(VIA_DEVICE_DEPRECATION) == 2
+    assert caplog.text.count("`via_device`") == 2
     assert light_via_nonexisting_parent_device is not None
     assert light_via_nonexisting_parent_device.via_device_id is None
     nonexisting_parent_device = device_registry.async_get_device(
@@ -4200,11 +4202,8 @@ async def test_specifying_via_device_update(
         name="New light",
         via_device=("hue", "non_existing_abc"),
     )
-    assert {
-        "calls `device_registry.async_get_or_create` "
-        "referencing a non existing `via_device` "
-        '("hue","non_existing_123")' in caplog.text
-    }
+    assert caplog.text.count(VIA_DEVICE_DEPRECATION) == 3
+    assert caplog.text.count("`via_device`") == 3
     # Assert the name was updated correctly
     assert light.via_device_id == via.id
     assert light.name == "New light"
@@ -4489,6 +4488,31 @@ async def test_devices_membership_by_entry_supported_by_id_deprecated(
     with patch.object(frame, "_REPORTED_INTEGRATIONS", set()):
         assert entry.id in device_registry.devices
     assert caplog.text.count(what) == 1
+
+
+@pytest.mark.parametrize(
+    "integration_frame_path", ["custom_components/test_integration"]
+)
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_get_or_create_reports_each_deprecation_once(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a call with several deprecated arguments reports each of them once."""
+    invalid_type = "passes a non-string value of type int as default_manufacturer"
+    deprecated = "with a deprecated `default_manufacturer` parameter"
+
+    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()):
+        for _ in range(2):
+            device_registry.async_get_or_create(
+                config_entry_id=mock_config_entry.entry_id,
+                identifiers={("bridgeid", "0123")},
+                default_manufacturer=123,
+            )
+
+    assert caplog.text.count(invalid_type) == 1
+    assert caplog.text.count(deprecated) == 1
 
 
 @pytest.mark.parametrize(
@@ -4892,7 +4916,7 @@ async def test_get_or_create_via_device_self_reference_ignored(
     device_registry: dr.DeviceRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """A device referencing itself via the deprecated via_device is ignored and logged."""
+    """A device referencing itself via the deprecated via_device is ignored."""
     config_entry = MockConfigEntry()
     config_entry.add_to_hass(hass)
     device = device_registry.async_get_or_create(
@@ -4907,10 +4931,9 @@ async def test_get_or_create_via_device_self_reference_ignored(
 
     assert updated.id == device.id
     assert updated.via_device_id is None
-    assert (
-        "calls `device_registry.async_get_or_create` with a `via_device` "
-        "referencing the device itself" in caplog.text
-    )
+    # Only the deprecation of via_device itself is reported
+    assert caplog.text.count(VIA_DEVICE_DEPRECATION) == 1
+    assert caplog.text.count("`via_device`") == 1
 
 
 async def test_get_or_create_via_device_id_self_reference_raises(

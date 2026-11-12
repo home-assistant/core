@@ -4,11 +4,12 @@ from collections.abc import AsyncIterable
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx2
-from openai import RateLimitError
+from openai import Omit, RateLimitError, omit
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import stt
+from homeassistant.components.openai_conversation.const import CONF_CHAT_MODEL
 from homeassistant.core import HomeAssistant
 
 
@@ -96,7 +97,7 @@ async def test_stt_process_audio_stream_success_wav(
 
     mock_create_transcription.assert_called_once()
     call_args = mock_create_transcription.call_args
-    assert call_args.kwargs["model"] == "gpt-4o-mini-transcribe"
+    assert call_args.kwargs["model"] == "gpt-transcribe"
 
     contents = call_args.kwargs["file"]
     assert contents[0].endswith(".wav")
@@ -104,10 +105,33 @@ async def test_stt_process_audio_stream_success_wav(
 
 
 @pytest.mark.usefixtures("mock_init_component")
+@pytest.mark.parametrize(
+    ("mock_stt_subentry_data", "model", "language", "languages"),
+    [
+        pytest.param(
+            {},
+            "gpt-transcribe",
+            omit,
+            ["en"],
+            id="recommended",
+        ),
+        pytest.param(
+            {CONF_CHAT_MODEL: "gpt-4o-mini-transcribe"},
+            "gpt-4o-mini-transcribe",
+            "en",
+            omit,
+            id="legacy",
+        ),
+    ],
+    indirect=["mock_stt_subentry_data"],
+)
 async def test_stt_process_audio_stream_success_ogg(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_create_transcription: AsyncMock,
+    model: str,
+    language: str | Omit,
+    languages: list[str] | Omit,
 ) -> None:
     """Test STT processing audio stream successfully."""
     entity = hass.data[stt.DOMAIN].get_entity("stt.openai_stt")
@@ -149,7 +173,9 @@ async def test_stt_process_audio_stream_success_ogg(
 
     mock_create_transcription.assert_called_once()
     call_args = mock_create_transcription.call_args
-    assert call_args.kwargs["model"] == "gpt-4o-mini-transcribe"
+    assert call_args.kwargs["model"] == model
+    assert call_args.kwargs["language"] == language
+    assert call_args.kwargs["languages"] == languages
 
     contents = call_args.kwargs["file"]
     assert contents[0].endswith(".ogg")

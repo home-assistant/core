@@ -1,9 +1,8 @@
 """Axis network device abstraction."""
 
 from dataclasses import dataclass
-from typing import Self
+from typing import TYPE_CHECKING, Self
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_MODEL,
@@ -23,12 +22,15 @@ from ..const import (
     DEFAULT_VIDEO_SOURCE,
 )
 
+if TYPE_CHECKING:
+    from .. import AxisConfigEntry
+
 
 @dataclass
 class AxisConfig:
     """Represent a Axis config entry."""
 
-    entry: ConfigEntry
+    entry: AxisConfigEntry
 
     protocol: str
     host: str
@@ -48,7 +50,7 @@ class AxisConfig:
     """Option defining what video source camera platform should use."""
 
     @classmethod
-    def from_config_entry(cls, config_entry: ConfigEntry) -> Self:
+    def from_config_entry(cls, config_entry: AxisConfigEntry) -> Self:
         """Create object from config entry."""
         config = config_entry.data
         options = config_entry.options

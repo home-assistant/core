@@ -6,7 +6,7 @@ import probatio
 
 from homeassistant.components.homeassistant import async_should_expose
 from homeassistant.components.llm import LLMTools
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES
+from homeassistant.const import ATTR_ENTITY_ID, EntityStateAttribute
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, intent
 from homeassistant.helpers.llm import (
@@ -302,7 +302,8 @@ def async_get_tools(
         if handler.intent_type in LLM_INTENTS
     ]
     if any(
-        state.attributes.get(ATTR_SUPPORTED_FEATURES, 0) & SEARCH_PLAY_FEATURES
+        state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
+        & SEARCH_PLAY_FEATURES
         == SEARCH_PLAY_FEATURES
         for state in exposed
     ):

@@ -177,6 +177,7 @@ class TradfriSensor(TradfriBaseEntity, SensorEntity):
 
         self._refresh()  # Set initial state
 
+    @callback
     @override
     def _refresh(self) -> None:
         """Refresh the device."""

@@ -77,6 +77,8 @@
         }),
         'sound_output': 'speaker',
         'volume': 37,
+        'volume_status': dict({
+        }),
       }),
     }),
     'entry': dict({

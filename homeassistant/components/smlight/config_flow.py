@@ -15,7 +15,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlowWithReload,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
@@ -88,6 +88,7 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._device_name = str(info.hostname)
 
                     if info.model not in Devices:
+                        # pylint: disable-next=home-assistant-flow-call-in-try
                         return self.async_abort(reason="unsupported_device")
 
                     return await self._async_complete_entry(user_input)
@@ -113,11 +114,15 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._device_name = str(info.hostname)
 
                     if info.model not in Devices:
+                        # pylint: disable-next=home-assistant-flow-call-in-try
                         return self.async_abort(reason="unsupported_device")
 
                     if self.source == SOURCE_RECONFIGURE:
+                        # pylint: disable-next=home-assistant-flow-call-in-try
                         await self.async_set_unique_id(format_mac(info.MAC))
+                        # pylint: disable-next=home-assistant-flow-call-in-try
                         self._abort_if_unique_id_mismatch()
+                        # pylint: disable-next=home-assistant-flow-call-in-try
                         return self.async_update_reload_and_abort(
                             self._get_reconfigure_entry(),
                             data_updates={
@@ -145,7 +150,7 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
         self._device_name = discovery_info.hostname.removesuffix(".local.")
         self._host = discovery_info.host
 
-        self.context["title_placeholders"] = {CONF_NAME: self._device_name}
+        self.context["title_placeholders"] = {"name": self._device_name}
         self.client = Api2(self._host, session=async_get_clientsession(self.hass))
 
         # fallback for legacy firmware older than v2.3.x
@@ -174,6 +179,7 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
                     info = await self.client.get_info()
 
                     if info.model not in Devices:
+                        # pylint: disable-next=home-assistant-flow-call-in-try
                         return self.async_abort(reason="unsupported_device")
 
                 return await self._async_complete_entry(user_input)

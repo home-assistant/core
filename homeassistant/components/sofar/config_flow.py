@@ -29,8 +29,8 @@ from .const import (
     DEFAULT_PORT,
     DEFAULT_UNIT_ID,
     DOMAIN,
-    HAS_FAULT_LOG,
     LAST_HANDLED_FAULT,
+    SERVED_COMPONENTS,
     TYPE_SERIAL,
     TYPE_TCP,
 )
@@ -77,8 +77,9 @@ class _InverterSilentError(Exception):
 
 async def _async_probe(hass: HomeAssistant, data: Mapping[str, Any]) -> SofarInverter:
     """Connect to the inverter and identify it, or raise."""
-    params = create_modbus_params(data)
-    async with async_get_temporary_unit(hass, params, data[CONF_UNIT_ID]) as unit:
+    async with async_get_temporary_unit(
+        hass, create_modbus_params(data), data[CONF_UNIT_ID]
+    ) as unit:
         try:
             return await SofarInverter.async_detect(unit)
         except ModbusTimeoutError as err:
@@ -205,21 +206,23 @@ class SofarConfigFlow(ConfigFlow, domain=DOMAIN):
                         **data,
                         **{
                             key: entry.data[key]
-                            for key in (HAS_FAULT_LOG, LAST_HANDLED_FAULT)
+                            for key in (LAST_HANDLED_FAULT, SERVED_COMPONENTS)
                             if key in entry.data
                         },
                     },
                 )
 
-        suggested = user_input or (
-            entry.data
-            if entry.data.get(CONF_TYPE, TYPE_TCP) == connection_type
-            else {CONF_UNIT_ID: entry.data[CONF_UNIT_ID]}
-        )
-
         return self.async_show_form(
             step_id=step_id,
-            data_schema=self.add_suggested_values_to_schema(schema, suggested),
+            data_schema=self.add_suggested_values_to_schema(
+                schema,
+                user_input
+                or (
+                    entry.data
+                    if entry.data.get(CONF_TYPE, TYPE_TCP) == connection_type
+                    else {CONF_UNIT_ID: entry.data[CONF_UNIT_ID]}
+                ),
+            ),
             errors=errors,
             description_placeholders=description_placeholders,
         )

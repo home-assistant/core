@@ -62,7 +62,7 @@ class SleepIQDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
 
 class SleepIQPauseUpdateCoordinator(DataUpdateCoordinator[None]):
-    """SleepIQ pause update coordinator."""
+    """SleepIQ pause mode and favorite firmness update coordinator."""
 
     config_entry: SleepIQConfigEntry
 
@@ -86,14 +86,23 @@ class SleepIQPauseUpdateCoordinator(DataUpdateCoordinator[None]):
     async def _async_update_data(self) -> None:
         try:
             await asyncio.gather(
-                *[bed.fetch_pause_mode() for bed in self.client.beds.values()]
+                *[bed.fetch_pause_mode() for bed in self.client.beds.values()],
+                *[
+                    sleeper.fetch_favsleepnumber()
+                    for bed in self.client.beds.values()
+                    for sleeper in bed.sleepers
+                ],
             )
         except SleepIQTimeoutException as err:
-            raise UpdateFailed(f"Timed out fetching SleepIQ pause data: {err}") from err
+            raise UpdateFailed(
+                f"Timed out fetching SleepIQ pause and favorite data: {err}"
+            ) from err
         except SleepIQAPIException as err:
             if err.code == HTTPStatus.UNAUTHORIZED:
                 raise ConfigEntryAuthFailed from err
-            raise UpdateFailed(f"Failed to fetch SleepIQ pause data: {err}") from err
+            raise UpdateFailed(
+                f"Failed to fetch SleepIQ pause and favorite data: {err}"
+            ) from err
 
 
 class SleepIQSleepDataCoordinator(DataUpdateCoordinator[None]):

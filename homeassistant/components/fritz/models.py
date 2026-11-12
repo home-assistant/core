@@ -173,3 +173,4 @@ class ConnectionInfo:
     mesh_role: MeshRoles
     wan_enabled: bool
     ipv6_active: bool
+    addon_infos_supported: bool
