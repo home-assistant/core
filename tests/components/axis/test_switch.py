@@ -7,14 +7,8 @@ import pytest
 from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_ON,
-    Platform,
-)
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
+from homeassistant.const import STATE_ON, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -96,8 +90,8 @@ async def test_switches_with_port_cgi(
     with patch("axis.interfaces.vapix.Ports.close") as mock_turn_on:
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_id},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
         mock_turn_on.assert_called_once_with("0")
@@ -105,8 +99,8 @@ async def test_switches_with_port_cgi(
     with patch("axis.interfaces.vapix.Ports.open") as mock_turn_off:
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: entity_id},
+            SwitchService.TURN_OFF,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
         mock_turn_off.assert_called_once_with("0")
@@ -148,8 +142,8 @@ async def test_switches_with_port_management(
     with patch("axis.interfaces.vapix.IoPortManagement.close") as mock_turn_on:
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_id},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
         mock_turn_on.assert_called_once_with("0")
@@ -157,8 +151,8 @@ async def test_switches_with_port_management(
     with patch("axis.interfaces.vapix.IoPortManagement.open") as mock_turn_off:
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: entity_id},
+            SwitchService.TURN_OFF,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
         mock_turn_off.assert_called_once_with("0")

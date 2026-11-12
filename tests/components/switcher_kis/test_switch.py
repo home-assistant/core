@@ -7,14 +7,8 @@ from aioswitcher.api.messages import SwitcherBaseResponse
 from aioswitcher.device import DeviceState, ShutterChildLock
 import pytest
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
+from homeassistant.const import STATE_OFF, STATE_ON, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import slugify
@@ -65,7 +59,10 @@ async def test_switch(
         "homeassistant.components.switcher_kis.entity.SwitcherApi.control_device",
     ) as mock_control_device:
         await hass.services.async_call(
-            SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+            SWITCH_DOMAIN,
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
+            blocking=True,
         )
 
         assert mock_api.call_count == 2
@@ -78,7 +75,10 @@ async def test_switch(
         "homeassistant.components.switcher_kis.entity.SwitcherApi.control_device"
     ) as mock_control_device:
         await hass.services.async_call(
-            SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+            SWITCH_DOMAIN,
+            SwitchService.TURN_OFF,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
+            blocking=True,
         )
 
         assert mock_api.call_count == 4
@@ -115,7 +115,10 @@ async def test_switch_token_needed(
         "homeassistant.components.switcher_kis.entity.SwitcherApi.control_device",
     ) as mock_control_device:
         await hass.services.async_call(
-            SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+            SWITCH_DOMAIN,
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
+            blocking=True,
         )
 
     assert mock_api.call_count == 2
@@ -128,7 +131,10 @@ async def test_switch_token_needed(
         "homeassistant.components.switcher_kis.entity.SwitcherApi.control_device"
     ) as mock_control_device:
         await hass.services.async_call(
-            SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+            SWITCH_DOMAIN,
+            SwitchService.TURN_OFF,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
+            blocking=True,
         )
 
     assert mock_api.call_count == 4
@@ -157,7 +163,10 @@ async def test_switch_ignore_previous_async_state(
         "homeassistant.components.switcher_kis.entity.SwitcherApi.control_device"
     ) as mock_control_device:
         await hass.services.async_call(
-            SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+            SWITCH_DOMAIN,
+            SwitchService.TURN_OFF,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
+            blocking=True,
         )
 
     # Push old state and makge sure it is ignored
@@ -216,8 +225,8 @@ async def test_switch_control_fail(
         with pytest.raises(HomeAssistantError) as exc_info:
             await hass.services.async_call(
                 SWITCH_DOMAIN,
-                SERVICE_TURN_ON,
-                {ATTR_ENTITY_ID: entity_id},
+                SwitchService.TURN_ON,
+                {CommonServiceArgument.ENTITY_ID: entity_id},
                 blocking=True,
             )
         assert exc_info.value.translation_key == translation_key
@@ -235,8 +244,8 @@ async def test_switch_control_fail(
         with pytest.raises(HomeAssistantError) as exc_info:
             await hass.services.async_call(
                 SWITCH_DOMAIN,
-                SERVICE_TURN_ON,
-                {ATTR_ENTITY_ID: entity_id},
+                SwitchService.TURN_ON,
+                {CommonServiceArgument.ENTITY_ID: entity_id},
                 blocking=True,
             )
         assert exc_info.value.translation_key == "command_failed"
@@ -313,7 +322,10 @@ async def test_child_lock_switch(
         "homeassistant.components.switcher_kis.entity.SwitcherApi.set_shutter_child_lock",
     ) as mock_control_device:
         await hass.services.async_call(
-            SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+            SWITCH_DOMAIN,
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
+            blocking=True,
         )
 
         assert mock_api.call_count == 2
@@ -326,7 +338,10 @@ async def test_child_lock_switch(
         "homeassistant.components.switcher_kis.entity.SwitcherApi.set_shutter_child_lock"
     ) as mock_control_device:
         await hass.services.async_call(
-            SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+            SWITCH_DOMAIN,
+            SwitchService.TURN_OFF,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
+            blocking=True,
         )
 
         assert mock_api.call_count == 4
@@ -354,7 +369,10 @@ async def test_child_lock_switch_ignore_previous_async_state(
         "homeassistant.components.switcher_kis.entity.SwitcherApi.set_shutter_child_lock"
     ) as mock_control_device:
         await hass.services.async_call(
-            SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+            SWITCH_DOMAIN,
+            SwitchService.TURN_OFF,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
+            blocking=True,
         )
 
     # Push old state and makge sure it is ignored
@@ -438,8 +456,8 @@ async def test_child_lock_control_fail(
         with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 SWITCH_DOMAIN,
-                SERVICE_TURN_ON,
-                {ATTR_ENTITY_ID: entity_id},
+                SwitchService.TURN_ON,
+                {CommonServiceArgument.ENTITY_ID: entity_id},
                 blocking=True,
             )
 
@@ -456,8 +474,8 @@ async def test_child_lock_control_fail(
         with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 SWITCH_DOMAIN,
-                SERVICE_TURN_ON,
-                {ATTR_ENTITY_ID: entity_id},
+                SwitchService.TURN_ON,
+                {CommonServiceArgument.ENTITY_ID: entity_id},
                 blocking=True,
             )
 

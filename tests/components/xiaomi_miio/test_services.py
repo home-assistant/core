@@ -11,24 +11,8 @@ import probatio
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
-from homeassistant.components.xiaomi_miio.const import (
-    CONF_FLOW_TYPE,
-    DOMAIN,
-    SERVICE_EYECARE_MODE_OFF,
-    SERVICE_EYECARE_MODE_ON,
-    SERVICE_NIGHT_LIGHT_MODE_OFF,
-    SERVICE_NIGHT_LIGHT_MODE_ON,
-    SERVICE_REMINDER_OFF,
-    SERVICE_REMINDER_ON,
-    SERVICE_RESET_FILTER,
-    SERVICE_SET_DELAYED_TURN_OFF,
-    SERVICE_SET_EXTRA_FEATURES,
-    SERVICE_SET_POWER_MODE,
-    SERVICE_SET_POWER_PRICE,
-    SERVICE_SET_SCENE,
-    SERVICE_SET_WIFI_LED_OFF,
-    SERVICE_SET_WIFI_LED_ON,
-)
+from homeassistant.components.xiaomi_miio.const import CONF_FLOW_TYPE, DOMAIN
+from homeassistant.components.xiaomi_miio.services import XiaomiMiioService
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
@@ -149,33 +133,57 @@ def mock_fan_fixture() -> Generator[MagicMock]:
     ("service", "service_data", "device_method", "device_args"),
     [
         pytest.param(
-            SERVICE_SET_SCENE, {"scene": 2}, "set_scene", (2,), id="set_scene"
+            XiaomiMiioService.LIGHT_SET_SCENE,
+            {"scene": 2},
+            "set_scene",
+            (2,),
+            id="set_scene",
         ),
         pytest.param(
-            SERVICE_SET_DELAYED_TURN_OFF,
+            XiaomiMiioService.LIGHT_SET_DELAYED_TURN_OFF,
             {"time_period": 300},
             "delay_off",
             (5,),
             id="set_delayed_turn_off",
         ),
-        pytest.param(SERVICE_REMINDER_ON, {}, "reminder_on", (), id="reminder_on"),
-        pytest.param(SERVICE_REMINDER_OFF, {}, "reminder_off", (), id="reminder_off"),
         pytest.param(
-            SERVICE_NIGHT_LIGHT_MODE_ON,
+            XiaomiMiioService.LIGHT_REMINDER_ON, {}, "reminder_on", (), id="reminder_on"
+        ),
+        pytest.param(
+            XiaomiMiioService.LIGHT_REMINDER_OFF,
+            {},
+            "reminder_off",
+            (),
+            id="reminder_off",
+        ),
+        pytest.param(
+            XiaomiMiioService.LIGHT_NIGHT_LIGHT_MODE_ON,
             {},
             "smart_night_light_on",
             (),
             id="night_light_mode_on",
         ),
         pytest.param(
-            SERVICE_NIGHT_LIGHT_MODE_OFF,
+            XiaomiMiioService.LIGHT_NIGHT_LIGHT_MODE_OFF,
             {},
             "smart_night_light_off",
             (),
             id="night_light_mode_off",
         ),
-        pytest.param(SERVICE_EYECARE_MODE_ON, {}, "eyecare_on", (), id="eyecare_on"),
-        pytest.param(SERVICE_EYECARE_MODE_OFF, {}, "eyecare_off", (), id="eyecare_off"),
+        pytest.param(
+            XiaomiMiioService.LIGHT_EYECARE_MODE_ON,
+            {},
+            "eyecare_on",
+            (),
+            id="eyecare_on",
+        ),
+        pytest.param(
+            XiaomiMiioService.LIGHT_EYECARE_MODE_OFF,
+            {},
+            "eyecare_off",
+            (),
+            id="eyecare_off",
+        ),
     ],
 )
 @pytest.mark.usefixtures("mock_light")
@@ -204,24 +212,28 @@ async def test_light_services(
     ("service", "service_data", "device_method", "device_args"),
     [
         pytest.param(
-            SERVICE_SET_WIFI_LED_ON, {}, "set_wifi_led", (True,), id="set_wifi_led_on"
+            XiaomiMiioService.SWITCH_SET_WIFI_LED_ON,
+            {},
+            "set_wifi_led",
+            (True,),
+            id="set_wifi_led_on",
         ),
         pytest.param(
-            SERVICE_SET_WIFI_LED_OFF,
+            XiaomiMiioService.SWITCH_SET_WIFI_LED_OFF,
             {},
             "set_wifi_led",
             (False,),
             id="set_wifi_led_off",
         ),
         pytest.param(
-            SERVICE_SET_POWER_MODE,
+            XiaomiMiioService.SWITCH_SET_POWER_MODE,
             {ATTR_MODE: "green"},
             "set_power_mode",
             (PowerMode.Eco,),
             id="set_power_mode",
         ),
         pytest.param(
-            SERVICE_SET_POWER_PRICE,
+            XiaomiMiioService.SWITCH_SET_POWER_PRICE,
             {"price": 3},
             "set_power_price",
             (3.0,),
@@ -261,7 +273,7 @@ async def test_service_skips_entities_without_the_method(
     # The ambient light is on the same platform but has no async_set_scene
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_SCENE,
+        XiaomiMiioService.LIGHT_SET_SCENE,
         {ATTR_ENTITY_ID: AMBIENT_ENTITY_ID, "scene": 2},
         blocking=True,
     )
@@ -270,7 +282,7 @@ async def test_service_skips_entities_without_the_method(
     # Targeting every entity reaches the eyecare lamp and skips the rest
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_SCENE,
+        XiaomiMiioService.LIGHT_SET_SCENE,
         {ATTR_ENTITY_ID: ENTITY_MATCH_ALL, "scene": 2},
         blocking=True,
     )
@@ -280,9 +292,15 @@ async def test_service_skips_entities_without_the_method(
 @pytest.mark.parametrize(
     ("service", "service_data", "device_method", "device_args"),
     [
-        pytest.param(SERVICE_RESET_FILTER, {}, "reset_filter", (), id="reset_filter"),
         pytest.param(
-            SERVICE_SET_EXTRA_FEATURES,
+            XiaomiMiioService.FAN_RESET_FILTER,
+            {},
+            "reset_filter",
+            (),
+            id="reset_filter",
+        ),
+        pytest.param(
+            XiaomiMiioService.FAN_SET_EXTRA_FEATURES,
             {"features": 1},
             "set_extra_features",
             (1,),
@@ -333,7 +351,7 @@ async def test_service_forwards_context(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_SCENE,
+        XiaomiMiioService.LIGHT_SET_SCENE,
         {ATTR_ENTITY_ID: EYECARE_ENTITY_ID, "scene": 2},
         blocking=True,
         context=context,
@@ -350,4 +368,6 @@ async def test_service_requires_target(hass: HomeAssistant) -> None:
     await setup_device(hass, EYECARE_MODEL, Platform.LIGHT)
 
     with pytest.raises(probatio.Invalid):
-        await hass.services.async_call(DOMAIN, SERVICE_REMINDER_ON, {}, blocking=True)
+        await hass.services.async_call(
+            DOMAIN, XiaomiMiioService.LIGHT_REMINDER_ON, {}, blocking=True
+        )

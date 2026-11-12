@@ -15,11 +15,11 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.seafile.coordinator import UPDATE_INTERVAL
 from homeassistant.components.select import (
-    ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -89,8 +89,11 @@ async def test_select_option(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: HISTORY, ATTR_OPTION: option},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: HISTORY,
+            SelectServiceArgument.OPTION: option,
+        },
         blocking=True,
     )
 
@@ -112,8 +115,11 @@ async def test_select_limited_keeps_days(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: HISTORY, ATTR_OPTION: "limited"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: HISTORY,
+            SelectServiceArgument.OPTION: "limited",
+        },
         blocking=True,
     )
 
@@ -134,8 +140,11 @@ async def test_select_option_error(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: HISTORY, ATTR_OPTION: "keep_none"},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: HISTORY,
+                SelectServiceArgument.OPTION: "keep_none",
+            },
             blocking=True,
         )
     assert exc_info.value.translation_key == "api_error"

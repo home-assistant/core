@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING, Any, override
 
-from boschshcpy import SHCMicromoduleDimmer
+from boschshcpy import SHCMicromoduleDimmer, SHCMotionDetector2
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.core import HomeAssistant
@@ -29,7 +29,7 @@ async def async_setup_entry(
     if TYPE_CHECKING:
         assert shc_info is not None and shc_info.unique_id is not None
 
-    async_add_entities(
+    entities: list[LightEntity] = [
         SHCDimmerLight(
             hass=hass,
             device=device,
@@ -37,7 +37,17 @@ async def async_setup_entry(
             entry_id=config_entry.entry_id,
         )
         for device in session.device_helper.micromodule_dimmers
+    ]
+    entities.extend(
+        SHCMotionDetectorLight(
+            hass=hass,
+            device=device,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+        )
+        for device in session.device_helper.motion_detectors2
     )
+    async_add_entities(entities)
 
 
 class SHCDimmerLight(SHCEntity, LightEntity):
@@ -74,3 +84,53 @@ class SHCDimmerLight(SHCEntity, LightEntity):
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the dimmer off."""
         self._device.binarystate = False
+
+
+class SHCMotionDetectorLight(SHCEntity, LightEntity):
+    """Representation of the orientation light of a Motion Detector II."""
+
+    _attr_translation_key = "motion_light"
+    _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+    _device: SHCMotionDetector2
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        device: SHCMotionDetector2,
+        parent_id: str,
+        entry_id: str,
+    ) -> None:
+        """Initialize the orientation light."""
+        super().__init__(
+            hass=hass, device=device, parent_id=parent_id, entry_id=entry_id
+        )
+        self._attr_unique_id = f"{device.serial}_motion"
+
+    @property
+    @override
+    def is_on(self) -> bool:
+        """Return true if the light is on."""
+        return self._device.binaryswitch
+
+    @property
+    @override
+    def brightness(self) -> int:
+        """Return the brightness between 1 and 255."""
+        return value_to_brightness(BRIGHTNESS_SCALE, self._device.multi_level_switch)
+
+    @override
+    def turn_on(self, **kwargs: Any) -> None:
+        """Turn the light on, optionally setting the brightness."""
+        if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is not None:
+            self._device.multi_level_switch = max(
+                round(brightness_to_value(BRIGHTNESS_SCALE, brightness)),
+                BRIGHTNESS_SCALE[0],
+            )
+        if not self.is_on:
+            self._device.binaryswitch = True
+
+    @override
+    def turn_off(self, **kwargs: Any) -> None:
+        """Turn the light off."""
+        self._device.binaryswitch = False
