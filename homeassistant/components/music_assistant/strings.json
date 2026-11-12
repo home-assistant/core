@@ -329,8 +329,17 @@
     "invalid_username": {
       "message": "The username {username} does not exist on the Music Assistant server."
     },
+    "no_active_queue": {
+      "message": "The player is not playing from a Music Assistant queue."
+    },
+    "server_too_old": {
+      "message": "This action requires a newer Music Assistant server version."
+    },
     "tts_entity_not_available": {
       "message": "The text-to-speech entity {entity_id} is not available."
+    },
+    "username_not_supported": {
+      "message": "Running this action as a given user requires a newer Music Assistant server version."
     }
   },
   "issues": {
@@ -446,7 +455,21 @@
       }
     },
     "get_queue": {
-      "description": "Retrieves the details of the currently active queue of a Music Assistant player.",
+      "description": "Retrieves the details and the items of the currently active queue of a Music Assistant player.",
+      "fields": {
+        "limit": {
+          "description": "Maximum number of queue items to return. Leave at 0 to only return the queue details.",
+          "name": "[%key:component::music_assistant::services::get_library::fields::limit::name%]"
+        },
+        "offset": {
+          "description": "Number of queue items to skip.",
+          "name": "[%key:component::music_assistant::services::get_library::fields::offset::name%]"
+        },
+        "username": {
+          "description": "Music Assistant username used to request the queue items. The request fails when this user may not access the player. Defaults to the Music Assistant user linked to the Home Assistant user making the request.",
+          "name": "[%key:component::music_assistant::services::get_library::fields::username::name%]"
+        }
+      },
       "name": "Get playerQueue details"
     },
     "play_announcement": {
