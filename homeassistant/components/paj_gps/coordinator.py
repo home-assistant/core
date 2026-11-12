@@ -1,7 +1,7 @@
 """DataUpdateCoordinator for the PAJ GPS integration."""
 
 import asyncio
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import timedelta
 import logging
 from typing import override
@@ -61,6 +61,8 @@ class PajGpsCoordinator(DataUpdateCoordinator[PajGpsData]):
         self._email: str = config_entry.data[CONF_EMAIL]
         self._user_id: int | None = None
         self._voltage_data_failures: set[int] = set()
+        # A refresh must not publish a snapshot taken before a write.
+        self._data_lock = asyncio.Lock()
         self.api = PajGpsApi(
             email=self._email,
             password=config_entry.data[CONF_PASSWORD],
@@ -90,7 +92,12 @@ class PajGpsCoordinator(DataUpdateCoordinator[PajGpsData]):
 
     @override
     async def _async_update_data(self) -> PajGpsData:
-        """Fetch device list and positions."""
+        """Fetch the full data snapshot, serialized with alert writes."""
+        async with self._data_lock:
+            return await self._async_fetch_all()
+
+    async def _async_fetch_all(self) -> PajGpsData:
+        """Fetch device list, positions and sensor data."""
         devices: dict[int, Device] = {}
         try:
             device_list = await self.api.get_devices()
@@ -147,3 +154,11 @@ class PajGpsCoordinator(DataUpdateCoordinator[PajGpsData]):
                 sensor_data[device_id] = result
 
         return PajGpsData(devices=devices, positions=positions, sensor_data=sensor_data)
+
+    async def async_set_alert(self, device_id: int, key: str, value: int) -> None:
+        """Send one alert change and publish the device state the API returns."""
+        async with self._data_lock:
+            updated = await self.api.update_device(device_id, **{key: value})
+            devices = {**self.data.devices, device_id: updated}
+            self.data = replace(self.data, devices=devices)
+        self.async_update_listeners()
