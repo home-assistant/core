@@ -54,7 +54,8 @@
         "state_attributes": {
           "source": {
             "state": {
-              "aux": "Aux",
+              "aux_1": "Aux",
+              "aux_pm8006": "Aux",
               "cd": "CD",
               "coax": "Coax",
               "laserdisc": "LaserDisc",
