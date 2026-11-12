@@ -70,7 +70,7 @@ class IntesisCoordinator(DataUpdateCoordinator[UpdateReport]):
         for name, cause in report.failed.items():
             if name not in self._failing:
                 self._failing.add(name)
-                _LOGGER.warning(
+                _LOGGER.info(
                     "%s: %s failed to refresh, its entities are unavailable: %s",
                     self.name,
                     name,

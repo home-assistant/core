@@ -7,7 +7,8 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "device_in_use": "The serial port is already in use with other settings. Use the same baud rate as the other devices on this line."
+      "device_in_use": "The serial port is already in use with other settings. Use the same baud rate as the other devices on this line.",
+      "gateway_starting": "The gateway is still starting up and does not report its values yet. Wait a few minutes and try again."
     },
     "step": {
       "features": {
@@ -18,15 +19,6 @@
           "has_vane": "The gateway cannot tell whether the indoor unit has a motorised vane, so this is pre-filled from what it last reported. Turn it off for a unit without one and the climate entity will not offer swing modes."
         },
         "description": "Confirm what the indoor unit behind the gateway can do."
-      },
-      "temperature_format": {
-        "data": {
-          "temperature_format": "Temperature format"
-        },
-        "data_description": {
-          "temperature_format": "How the gateway's SW4 DIP switches scale temperatures. It could not be detected, usually because the gateway is still starting up."
-        },
-        "description": "Pick the temperature format set on the gateway's SW4 DIP switches."
       },
       "user": {
         "data": {
@@ -77,15 +69,6 @@
     },
     "wrong_model": {
       "message": "The gateway on this port reports another device ID than the model this entry was set up as. Remove the entry and set the gateway up again."
-    }
-  },
-  "selector": {
-    "temperature_format": {
-      "options": {
-        "celsius": "Degrees Celsius (x1)",
-        "decicelsius": "Tenths of a degree Celsius (x10)",
-        "fahrenheit": "Degrees Fahrenheit"
-      }
     }
   }
 }

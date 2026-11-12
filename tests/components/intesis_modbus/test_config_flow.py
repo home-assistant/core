@@ -16,7 +16,6 @@ from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_va
 
 from homeassistant.components.intesis_modbus.const import (
     CONF_HAS_VANE,
-    CONF_TEMPERATURE_FORMAT,
     CONF_UNIT_ID,
     DOMAIN,
 )
@@ -114,20 +113,21 @@ async def test_full_flow(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_initialising_gateway_asks_temperature_format(
-    hass: HomeAssistant,
-) -> None:
-    """With every register at the init value the format cannot be detected."""
-    with _patch_temporary_unit(_seeded(seed_initialising_single_unit)):
+async def test_initialising_gateway_can_be_retried(hass: HomeAssistant) -> None:
+    """A gateway that is still starting up is set up once it reports values."""
+    connection = _seeded(seed_initialising_single_unit)
+    with _patch_temporary_unit(connection):
         result = await _submit_link(hass)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "temperature_format"
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_TEMPERATURE_FORMAT: "celsius"}
-    )
-    result = await _finish_features(hass, result, expected_default=False)
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {"base": "gateway_starting"}
+        seed_single_unit(connection.for_unit(1))
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], MOCK_USER_INPUT
+        )
+    result = await _finish_features(hass, result)
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == {**MOCK_ENTRY_DATA, CONF_TEMPERATURE_FORMAT: "celsius"}
+    assert result["data"] == MOCK_ENTRY_DATA
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

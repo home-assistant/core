@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING, Any, override
 
-from intesis_gw_modbus import GatewayModel, TemperatureFormat, async_probe_gateway
+from intesis_gw_modbus import GatewayModel, async_probe_gateway
 from modbus_connection import ModbusError
 import probatio
 
@@ -15,9 +15,6 @@ from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
-    SelectSelector,
-    SelectSelectorConfig,
-    SelectSelectorMode,
     SerialPortSelector,
 )
 
@@ -46,20 +43,6 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
                 NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=1, max=247)
             ),
             probatio.Coerce(int),
-        ),
-    }
-)
-
-STEP_TEMPERATURE_FORMAT_DATA_SCHEMA = probatio.Schema(
-    {
-        probatio.Required(
-            CONF_TEMPERATURE_FORMAT, default=TemperatureFormat.DECICELSIUS.value
-        ): SelectSelector(
-            SelectSelectorConfig(
-                options=[fmt.value for fmt in TemperatureFormat],
-                translation_key="temperature_format",
-                mode=SelectSelectorMode.LIST,
-            )
         ),
     }
 )
@@ -112,13 +95,17 @@ class IntesisModbusConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
                 if probe.model is None:
                     return self.async_abort(reason="unsupported_device")
-                self._model = probe.model
-                self._vane_reported = probe.vane_reported
-                self._data = {**user_input, CONF_MODEL: probe.model.name}
                 if probe.temperature_format is None:
-                    return await self.async_step_temperature_format()
-                self._data[CONF_TEMPERATURE_FORMAT] = probe.temperature_format.value
-                return await self.async_step_features()
+                    errors["base"] = "gateway_starting"
+                else:
+                    self._model = probe.model
+                    self._vane_reported = probe.vane_reported
+                    self._data = {
+                        **user_input,
+                        CONF_MODEL: probe.model.name,
+                        CONF_TEMPERATURE_FORMAT: probe.temperature_format.value,
+                    }
+                    return await self.async_step_features()
 
         return self.async_show_form(
             step_id="user",
@@ -126,18 +113,6 @@ class IntesisModbusConfigFlow(ConfigFlow, domain=DOMAIN):
                 STEP_USER_DATA_SCHEMA, user_input
             ),
             errors=errors,
-        )
-
-    async def async_step_temperature_format(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Ask for the DIP-switch temperature format when it cannot be detected."""
-        if user_input is not None:
-            self._data[CONF_TEMPERATURE_FORMAT] = user_input[CONF_TEMPERATURE_FORMAT]
-            return await self.async_step_features()
-        return self.async_show_form(
-            step_id="temperature_format",
-            data_schema=STEP_TEMPERATURE_FORMAT_DATA_SCHEMA,
         )
 
     async def async_step_features(
