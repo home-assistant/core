@@ -12,7 +12,7 @@ from homeassistant.components.saunum.services import (
     LeilSaunaService,
     LeilSaunaServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
@@ -33,7 +33,7 @@ async def test_start_session_success(
         DOMAIN,
         LeilSaunaService.START_SESSION,
         {
-            ATTR_ENTITY_ID: "climate.saunum_leil",
+            CommonServiceArgument.ENTITY_ID: "climate.saunum_leil",
             LeilSaunaServiceArgument.DURATION: {"hours": 2, "minutes": 0, "seconds": 0},
             LeilSaunaServiceArgument.TARGET_TEMPERATURE: 80,
             LeilSaunaServiceArgument.FAN_DURATION: {"minutes": 10},
@@ -56,7 +56,7 @@ async def test_start_session_with_defaults(
     await hass.services.async_call(
         DOMAIN,
         LeilSaunaService.START_SESSION,
-        {ATTR_ENTITY_ID: "climate.saunum_leil"},
+        {CommonServiceArgument.ENTITY_ID: "climate.saunum_leil"},
         blocking=True,
     )
 
@@ -84,7 +84,7 @@ async def test_start_session_door_open(
         await hass.services.async_call(
             DOMAIN,
             LeilSaunaService.START_SESSION,
-            {ATTR_ENTITY_ID: "climate.saunum_leil"},
+            {CommonServiceArgument.ENTITY_ID: "climate.saunum_leil"},
             blocking=True,
         )
 
@@ -105,7 +105,7 @@ async def test_start_session_communication_error(
         await hass.services.async_call(
             DOMAIN,
             LeilSaunaService.START_SESSION,
-            {ATTR_ENTITY_ID: "climate.saunum_leil"},
+            {CommonServiceArgument.ENTITY_ID: "climate.saunum_leil"},
             blocking=True,
         )
 
