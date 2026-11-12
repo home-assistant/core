@@ -3,9 +3,6 @@
     "sensor": {
       "travel_count": {
         "default": "mdi:counter"
-      },
-      "uptime": {
-        "default": "mdi:timer"
       }
     },
     "switch": {
