@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from systembridgeconnector.models.modules import (
     CPU,
     GPU,
+    Audio,
     Battery,
     Disks,
     Display,
@@ -14,13 +15,17 @@ from systembridgeconnector.models.modules import (
     Process,
     System,
 )
+from systembridgeconnector.models.settings import SettingsCommandDefinition
 
 
 @dataclass
 class SystemBridgeData:
     """System Bridge Data."""
 
-    battery: Battery = field(default_factory=Battery)
+    audio: Audio | None = None
+    battery: Battery | None = None
+    # The saved commands from the host's allowlist by ID, None until first fetched
+    commands: dict[str, SettingsCommandDefinition] | None = None
     cpu: CPU = field(default_factory=CPU)
     disks: Disks | None = None
     displays: list[Display] = field(default_factory=list[Display])

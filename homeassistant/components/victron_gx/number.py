@@ -106,6 +106,4 @@ class VictronNumber(VictronBaseEntity, NumberEntity):
     @override
     async def async_set_native_value(self, value: float) -> None:
         """Set a new value."""
-        if TYPE_CHECKING:
-            assert isinstance(self._metric, VictronVenusWritableMetric)
-        self._metric.set(value)
+        self._set_metric_value(value)

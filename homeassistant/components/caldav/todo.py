@@ -155,7 +155,11 @@ class WebDavTodoListEntity(TodoListEntity):
         self._writes_seen = 0
 
     async def async_update(self) -> None:
-        """Update To-do list entity state."""
+        """Update To-do list entity state.
+
+        A write during the full read had its refresh dropped while this update
+        ran, so another refresh follows once it is done.
+        """
         changed, sync_token = await self.hass.async_add_executor_job(
             _get_changes, self._calendar, self._sync_token
         )
@@ -173,6 +177,10 @@ class WebDavTodoListEntity(TodoListEntity):
         self._sync_token = sync_token
         self._skips_left = MAX_SKIPPED_UPDATES
         self._writes_seen = writes
+        if self._writes != writes:
+            self.hass.async_create_task(
+                self.async_update_ha_state(force_refresh=True), eager_start=False
+            )
 
     @override
     async def async_create_todo_item(self, item: TodoItem) -> None:

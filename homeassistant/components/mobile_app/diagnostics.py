@@ -5,7 +5,7 @@ from collections import Counter
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_MANUFACTURER, ATTR_MODEL, CONF_WEBHOOK_ID
+from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -14,6 +14,8 @@ from .const import (
     ATTR_APP_ID,
     ATTR_APP_NAME,
     ATTR_APP_VERSION,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
     ATTR_NO_LEGACY_ENCRYPTION,
     ATTR_OS_NAME,
     ATTR_OS_VERSION,

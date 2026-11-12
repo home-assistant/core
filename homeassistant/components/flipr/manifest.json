@@ -3,6 +3,7 @@
   "name": "Flipr",
   "categories": ["water.pools_spas"],
   "codeowners": [],
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/flipr",
   "integration_type": "hub",
   "iot_class": "cloud_polling",

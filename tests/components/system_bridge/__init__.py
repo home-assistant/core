@@ -5,6 +5,7 @@ from ipaddress import ip_address
 from typing import Any
 
 from pytest_homeassistant.common import MockConfigEntry
+from systembridgeconnector.models.fixtures.modules.audio import FIXTURE_AUDIO
 from systembridgeconnector.models.fixtures.modules.battery import FIXTURE_BATTERY
 from systembridgeconnector.models.fixtures.modules.cpu import FIXTURE_CPU
 from systembridgeconnector.models.fixtures.modules.disks import FIXTURE_DISKS
@@ -16,6 +17,7 @@ from systembridgeconnector.models.fixtures.modules.networks import FIXTURE_NETWO
 from systembridgeconnector.models.fixtures.modules.processes import FIXTURE_PROCESSES
 from systembridgeconnector.models.fixtures.modules.system import FIXTURE_SYSTEM
 from systembridgeconnector.models.modules import Module, ModulesData
+from systembridgeconnector.models.settings import SettingsCommandDefinition
 
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
 from homeassistant.core import HomeAssistant
@@ -78,6 +80,14 @@ FIXTURE_DATA_RESPONSE = ModulesData(
     system=FIXTURE_SYSTEM,
 )
 
+FIXTURE_COMMAND = SettingsCommandDefinition(
+    id="backup",
+    name="Back up",
+    command="/usr/local/bin/backup",
+    workingDir="/home/user",
+    arguments=["--token", "secret"],
+)
+
 
 async def setup_integration(
     hass: HomeAssistant,
@@ -95,10 +105,14 @@ async def setup_integration(
 async def mock_data_listener(
     callback: Callable[[str, Any], Awaitable[None]] | None = None,
     _: bool = False,
+    notification_event_callback: Callable[[Any], Awaitable[None]] | None = None,
+    power_state_callback: Callable[[Any], Awaitable[None]] | None = None,
+    settings_callback: Callable[[Any], Awaitable[None]] | None = None,
 ):
     """Mock websocket data listener."""
     if callback is not None:
         # Simulate data received from the websocket
+        await callback(Module.AUDIO, FIXTURE_AUDIO)
         await callback(Module.BATTERY, FIXTURE_BATTERY)
         await callback(Module.CPU, FIXTURE_CPU)
         await callback(Module.DISKS, FIXTURE_DISKS)

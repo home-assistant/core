@@ -20,7 +20,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import StateType
 
-from . import TeslemetryConfigEntry
 from .const import CHARGE_ON_SOLAR_SWITCH_KEY
 from .entity import (
     TeslemetryChargeOnSolarEntity,
@@ -30,7 +29,7 @@ from .entity import (
     TeslemetryVehicleStreamEntity,
 )
 from .helpers import async_set_charge_on_solar, handle_command, handle_vehicle_command
-from .models import TeslemetryEnergyData, TeslemetryVehicleData
+from .models import TeslemetryConfigEntry, TeslemetryEnergyData, TeslemetryVehicleData
 
 PARALLEL_UPDATES = 0
 

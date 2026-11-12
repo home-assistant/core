@@ -6,12 +6,7 @@ from typing import Any, override
 import probatio
 
 from homeassistant import data_entry_flow
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import llm
@@ -24,6 +19,7 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import CONF_ALL_LLM_APIS, CONF_READ_ONLY, CONF_REQUIRE_ADMIN, DOMAIN
+from .types import MCPServerConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,7 +41,9 @@ def _llm_api_title(
     return ", ".join(llm_apis[api_id] for api_id in api_ids if api_id in llm_apis)
 
 
-def _selected_llm_apis(entry: ConfigEntry, llm_apis: dict[str, str]) -> list[str]:
+def _selected_llm_apis(
+    entry: MCPServerConfigEntry, llm_apis: dict[str, str]
+) -> list[str]:
     """Return the still registered LLM APIs selected by the config entry."""
     api_ids = entry.data.get(CONF_LLM_HASS_API) or []
     if isinstance(api_ids, str):  # Old config entries stored a single API
@@ -98,7 +96,7 @@ class ModelContextServerProtocolConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: MCPServerConfigEntry,
     ) -> ModelContextServerProtocolOptionsFlow:
         """Create the options flow."""
         return ModelContextServerProtocolOptionsFlow()

@@ -2110,7 +2110,7 @@ async def test_blueprint_script(hass: HomeAssistant, calls: list[ServiceCall]) -
                 "a_number": 5,
             },
             "Blueprint 'Call service' generated invalid script",
-            "value should be a string at 'sequence[0].action'",
+            "value should be a string at 'sequence.action'",
         ),
     ],
 )

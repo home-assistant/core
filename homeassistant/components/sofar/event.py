@@ -17,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import Undefined
 from homeassistant.util import dt as dt_util
 
-from .const import LAST_HANDLED_FAULT
+from .const import FAULT_LOG, LAST_HANDLED_FAULT
 from .coordinator import SofarConfigEntry
 from .entity import SofarEntity, SofarEntityDescription
 
@@ -41,7 +41,7 @@ class SofarEventEntityDescription(EventEntityDescription, SofarEntityDescription
 EVENT_DESCRIPTIONS: tuple[SofarEventEntityDescription, ...] = (
     SofarEventEntityDescription(
         key="fault",
-        component="fault_log",
+        component=FAULT_LOG,
         translation_key="fault",
         entity_category=EntityCategory.DIAGNOSTIC,
         event_types=[fault.key for fault in FAULTS],
@@ -138,11 +138,10 @@ class SofarFaultEvent(SofarEntity, EventEntity):
     def _remember(self, handled: EntryKey | None) -> None:
         """Take the log as handled up to an entry, across restarts too."""
         self._handled = handled
-        entry = self.coordinator.config_entry
         self.hass.config_entries.async_update_entry(
-            entry,
+            self.coordinator.config_entry,
             data={
-                **entry.data,
+                **self.coordinator.config_entry.data,
                 LAST_HANDLED_FAULT: None
                 if handled is None
                 else [handled[0], handled[1].isoformat()],

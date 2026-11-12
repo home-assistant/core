@@ -30,13 +30,12 @@ from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_HOST,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -609,8 +608,8 @@ async def _turn_on_limit(
     )
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: switch},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: switch},
         blocking=True,
     )
 
@@ -800,8 +799,8 @@ async def test_heartbeat_stops_with_the_limit(
     await _turn_on_power_limit(hass, 60)
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: POWER_LIMITING},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: POWER_LIMITING},
         blocking=True,
     )
 
@@ -1069,8 +1068,8 @@ async def test_heartbeat_does_not_undo_a_write_it_overlaps(
         switched_off = hass.async_create_task(
             hass.services.async_call(
                 SWITCH_DOMAIN,
-                SERVICE_TURN_OFF,
-                {ATTR_ENTITY_ID: POWER_LIMITING},
+                SwitchService.TURN_OFF,
+                {CommonServiceArgument.ENTITY_ID: POWER_LIMITING},
                 blocking=True,
             )
         )
