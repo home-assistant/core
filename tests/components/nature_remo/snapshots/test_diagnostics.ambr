@@ -1,0 +1,976 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'appliances': list([
+      dict({
+        'aircon': dict({
+          'extras': list([
+            dict({
+              'availability': 'available',
+              'default_time': None,
+              'description': 'Dries the inside after cool/dry operation.',
+              'id': 'autoclean',
+              'options': list([
+                dict({
+                  'default': True,
+                  'text': 'Off',
+                  'value': 'off',
+                }),
+                dict({
+                  'default': False,
+                  'text': 'On',
+                  'value': 'on',
+                }),
+              ]),
+              'text': 'Mold Proof',
+              'type': 'choice',
+            }),
+          ]),
+          'fixed_buttons': list([
+            'airdir-swing',
+            'airdir-tilt',
+            'power-off',
+          ]),
+          'modes': dict({
+            'auto': dict({
+              'directions': list([
+              ]),
+              'directions_h': list([
+              ]),
+              'temperatures': list([
+                '-5',
+                '-4',
+                '-3',
+                '-2',
+                '-1',
+                '0',
+                '1',
+                '2',
+                '3',
+                '4',
+                '5',
+              ]),
+              'volumes': list([
+                'auto',
+              ]),
+            }),
+            'blow': dict({
+              'directions': list([
+              ]),
+              'directions_h': list([
+              ]),
+              'temperatures': list([
+              ]),
+              'volumes': list([
+                '1',
+                '2',
+                'auto',
+              ]),
+            }),
+            'cool': dict({
+              'directions': list([
+                '1',
+                '2',
+                'swing',
+                'auto',
+              ]),
+              'directions_h': list([
+                '1',
+                '2',
+                '3',
+                'swing',
+              ]),
+              'temperatures': list([
+                '24',
+                '25',
+                '26',
+                '27',
+                '28',
+              ]),
+              'volumes': list([
+                '1',
+                '2',
+                '3',
+                'auto',
+              ]),
+            }),
+            'dry': dict({
+              'directions': list([
+              ]),
+              'directions_h': list([
+              ]),
+              'temperatures': list([
+                '-2',
+                '-1',
+                '0',
+                '1',
+                '2',
+              ]),
+              'volumes': list([
+                'auto',
+              ]),
+            }),
+            'warm': dict({
+              'directions': list([
+                '1',
+                '2',
+                'swing',
+                'auto',
+              ]),
+              'directions_h': list([
+              ]),
+              'temperatures': list([
+                '18',
+                '19',
+                '20',
+                '21',
+                '22',
+              ]),
+              'volumes': list([
+                '1',
+                '2',
+                '3',
+                'auto',
+              ]),
+            }),
+          }),
+          'temp_unit': 'c',
+        }),
+        'device_id': 'device-remo3-1',
+        'floor_heater': None,
+        'id': 'appliance-ac-1',
+        'image': 'ico_ac_1',
+        'light': None,
+        'light_projector': None,
+        'model': dict({
+          'country': 'JP',
+          'id': 'model-ac-1',
+          'image': 'ico_ac_1',
+          'manufacturer': 'daikin',
+          'name': 'Daikin AC 001',
+          'remote_name': 'ARC478A30',
+          'series': 'Daikin AC',
+          'slug': None,
+        }),
+        'nickname': 'Living AC',
+        'settings': dict({
+          'button': '',
+          'direction': 'swing',
+          'direction_h': '',
+          'extra': dict({
+            'autoclean': 'on',
+          }),
+          'mode': 'cool',
+          'temperature': '26',
+          'temperature_unit': 'c',
+          'updated_at': '2026-07-18T06:00:00+00:00',
+          'volume': 'auto',
+        }),
+        'signals': list([
+        ]),
+        'smart_meter': None,
+        'tv': None,
+        'type': 'AC',
+      }),
+      dict({
+        'aircon': None,
+        'device_id': 'device-remo3-1',
+        'floor_heater': None,
+        'id': 'appliance-tv-1',
+        'image': 'ico_tv',
+        'light': None,
+        'light_projector': None,
+        'model': dict({
+          'country': 'JP',
+          'id': 'model-tv-1',
+          'image': 'ico_tv',
+          'manufacturer': 'sony',
+          'name': 'Sony TV 001',
+          'remote_name': 'RM-JD030',
+          'series': 'Sony TV',
+          'slug': None,
+        }),
+        'nickname': 'Living TV',
+        'settings': None,
+        'signals': list([
+        ]),
+        'smart_meter': None,
+        'tv': dict({
+          'buttons': list([
+            dict({
+              'image': 'ico_io',
+              'label': 'TV_power',
+              'name': 'power',
+            }),
+            dict({
+              'image': 'ico_input_t',
+              'label': 'Terrestrial',
+              'name': 'input-terrestrial',
+            }),
+            dict({
+              'image': 'ico_input_bs',
+              'label': 'BS',
+              'name': 'input-bs',
+            }),
+            dict({
+              'image': 'ico_input_cs',
+              'label': 'CS',
+              'name': 'input-cs',
+            }),
+            dict({
+              'image': 'ico_input',
+              'label': 'Source',
+              'name': 'select-input-src',
+            }),
+            dict({
+              'image': 'ico_vol_up',
+              'label': 'TV_vol_up',
+              'name': 'vol-up',
+            }),
+            dict({
+              'image': 'ico_vol_down',
+              'label': 'TV_vol_down',
+              'name': 'vol-down',
+            }),
+            dict({
+              'image': 'ico_mute',
+              'label': 'TV_mute',
+              'name': 'mute',
+            }),
+            dict({
+              'image': 'ico_ch_up',
+              'label': 'TV_ch_up',
+              'name': 'ch-up',
+            }),
+            dict({
+              'image': 'ico_ch_down',
+              'label': 'TV_ch_down',
+              'name': 'ch-down',
+            }),
+            dict({
+              'image': 'ico_input_legacy',
+              'label': 'TV_input',
+              'name': 'input',
+            }),
+            dict({
+              'image': '',
+              'label': '',
+              'name': '',
+            }),
+          ]),
+          'state': dict({
+            'input': 't',
+          }),
+        }),
+        'type': 'TV',
+      }),
+      dict({
+        'aircon': None,
+        'device_id': 'device-mini-1',
+        'floor_heater': None,
+        'id': 'appliance-light-1',
+        'image': 'ico_light',
+        'light': dict({
+          'buttons': list([
+            dict({
+              'image': 'ico_on',
+              'label': 'Light_on',
+              'name': 'on',
+            }),
+            dict({
+              'image': 'ico_off',
+              'label': 'Light_off',
+              'name': 'off',
+            }),
+            dict({
+              'image': 'ico_light_night',
+              'label': 'Light_night',
+              'name': 'night',
+            }),
+            dict({
+              'image': 'ico_light_all',
+              'label': 'Light_all',
+              'name': 'on-100',
+            }),
+            dict({
+              'image': 'ico_arrow_top',
+              'label': 'Light_bright_up',
+              'name': 'bright-up',
+            }),
+            dict({
+              'image': 'ico_arrow_bottom',
+              'label': 'Light_bright_down',
+              'name': 'bright-down',
+            }),
+          ]),
+          'state': dict({
+            'brightness': '100',
+            'last_button': 'on',
+            'power': 'on',
+          }),
+        }),
+        'light_projector': None,
+        'model': dict({
+          'country': 'JP',
+          'id': 'model-light-1',
+          'image': 'ico_light',
+          'manufacturer': 'panasonic',
+          'name': 'Panasonic Light 001',
+          'remote_name': 'HK9493',
+          'series': 'Panasonic Light',
+          'slug': None,
+        }),
+        'nickname': 'Bedroom Light',
+        'settings': None,
+        'signals': list([
+        ]),
+        'smart_meter': None,
+        'tv': None,
+        'type': 'LIGHT',
+      }),
+      dict({
+        'aircon': None,
+        'device_id': 'device-remo3-1',
+        'floor_heater': None,
+        'id': 'appliance-ir-1',
+        'image': 'ico_ir',
+        'light': None,
+        'light_projector': None,
+        'model': None,
+        'nickname': 'Fan',
+        'settings': None,
+        'signals': list([
+          dict({
+            'id': 'signal-1',
+            'image': 'ico_io',
+            'name': 'Power',
+          }),
+          dict({
+            'id': 'signal-2',
+            'image': 'ico_arrow_top',
+            'name': 'Speed',
+          }),
+        ]),
+        'smart_meter': None,
+        'tv': None,
+        'type': 'IR',
+      }),
+      dict({
+        'aircon': None,
+        'device_id': 'device-remoe-1',
+        'floor_heater': None,
+        'id': 'appliance-meter-1',
+        'image': 'ico_smartmeter',
+        'light': None,
+        'light_projector': None,
+        'model': None,
+        'nickname': 'Smart meter',
+        'settings': None,
+        'signals': list([
+        ]),
+        'smart_meter': dict({
+          'properties': list([
+            dict({
+              'epc': 211,
+              'name': 'coefficient',
+              'updated_at': '2026-07-18T07:55:00+00:00',
+              'value': '1',
+            }),
+            dict({
+              'epc': 215,
+              'name': 'cumulative_electric_energy_effective_digits',
+              'updated_at': '2026-07-18T07:55:00+00:00',
+              'value': '6',
+            }),
+            dict({
+              'epc': 224,
+              'name': 'normal_direction_cumulative_electric_energy',
+              'updated_at': '2026-07-18T07:55:00+00:00',
+              'value': '123456',
+            }),
+            dict({
+              'epc': 225,
+              'name': 'cumulative_electric_energy_unit',
+              'updated_at': '2026-07-18T07:55:00+00:00',
+              'value': '1',
+            }),
+            dict({
+              'epc': 227,
+              'name': 'reverse_direction_cumulative_electric_energy',
+              'updated_at': '2026-07-18T07:55:00+00:00',
+              'value': '1234',
+            }),
+            dict({
+              'epc': 231,
+              'name': 'measured_instantaneous',
+              'updated_at': '2026-07-18T07:58:00+00:00',
+              'value': '520',
+            }),
+          ]),
+        }),
+        'tv': None,
+        'type': 'EL_SMART_METER',
+      }),
+      dict({
+        'aircon': dict({
+          'extras': list([
+            dict({
+              'availability': 'available',
+              'default_time': '21:00',
+              'description': 'Adjusts the set temperature toward the wake-up time. Can only be used in cool or warm mode.',
+              'id': 'new_sleep',
+              'options': list([
+              ]),
+              'text': 'Night Set Mode',
+              'type': 'time',
+            }),
+            dict({
+              'availability': 'available',
+              'default_time': None,
+              'description': 'Blows air at a higher temperature than normal warm mode for about 30 minutes.',
+              'id': 'hotwind',
+              'options': list([
+                dict({
+                  'default': True,
+                  'text': 'Off',
+                  'value': 'off',
+                }),
+                dict({
+                  'default': False,
+                  'text': 'On',
+                  'value': 'on',
+                }),
+              ]),
+              'text': 'Hot Airflow',
+              'type': 'choice',
+            }),
+            dict({
+              'availability': 'available',
+              'default_time': None,
+              'description': 'Humidifies a room by drawing in moisture from the outside air. Can only be used in warm mode.',
+              'id': 'humid',
+              'options': list([
+                dict({
+                  'default': True,
+                  'text': 'Off',
+                  'value': 'off',
+                }),
+                dict({
+                  'default': False,
+                  'text': '40%',
+                  'value': '40%',
+                }),
+                dict({
+                  'default': False,
+                  'text': '45%',
+                  'value': '45%',
+                }),
+                dict({
+                  'default': False,
+                  'text': '50%',
+                  'value': '50%',
+                }),
+                dict({
+                  'default': False,
+                  'text': 'Continuous',
+                  'value': 'continuous',
+                }),
+                dict({
+                  'default': False,
+                  'text': 'Beauty skin',
+                  'value': 'beauty',
+                }),
+              ]),
+              'text': 'Humidify',
+              'type': 'choice',
+            }),
+            dict({
+              'availability': 'hidden',
+              'default_time': None,
+              'description': 'Lower the humidity in the room.',
+              'id': 'dehumid',
+              'options': list([
+                dict({
+                  'default': True,
+                  'text': 'Off',
+                  'value': 'off',
+                }),
+                dict({
+                  'default': False,
+                  'text': '60%',
+                  'value': '60%',
+                }),
+                dict({
+                  'default': False,
+                  'text': '55%',
+                  'value': '55%',
+                }),
+                dict({
+                  'default': False,
+                  'text': '50%',
+                  'value': '50%',
+                }),
+                dict({
+                  'default': False,
+                  'text': 'Continuous',
+                  'value': 'continuous',
+                }),
+                dict({
+                  'default': False,
+                  'text': 'Beauty skin',
+                  'value': 'beauty',
+                }),
+              ]),
+              'text': 'Dehumidify',
+              'type': 'choice',
+            }),
+            dict({
+              'availability': 'available',
+              'default_time': None,
+              'description': 'Quickly change the room temperature by changing the temperature setting to 18C for cool mode and to 30C for warm mode.',
+              'id': 'powerful',
+              'options': list([
+                dict({
+                  'default': True,
+                  'text': 'Off',
+                  'value': 'off',
+                }),
+                dict({
+                  'default': False,
+                  'text': 'On',
+                  'value': 'on',
+                }),
+              ]),
+              'text': 'Powerful',
+              'type': 'choice',
+            }),
+            dict({
+              'availability': 'hidden',
+              'default_time': None,
+              'description': 'Automatically dries the inside after cool or dry operation.',
+              'id': 'autoclean',
+              'options': list([
+                dict({
+                  'default': True,
+                  'text': 'Off',
+                  'value': 'off',
+                }),
+                dict({
+                  'default': False,
+                  'text': 'On',
+                  'value': 'on',
+                }),
+              ]),
+              'text': 'Mold Proof',
+              'type': 'choice',
+            }),
+            dict({
+              'availability': 'available',
+              'default_time': None,
+              'description': 'Diffuses aroma while running.',
+              'id': 'aroma',
+              'options': list([
+                dict({
+                  'default': True,
+                  'text': 'Off',
+                  'value': 'off',
+                }),
+                dict({
+                  'default': False,
+                  'text': 'Low',
+                  'value': 'low',
+                }),
+                dict({
+                  'default': False,
+                  'text': 'High',
+                  'value': 'high',
+                }),
+              ]),
+              'text': 'Aroma',
+              'type': 'choice',
+            }),
+            dict({
+              'availability': 'available',
+              'default_time': '23:00',
+              'description': 'Stops operation at the set time.',
+              'id': 'off_timer',
+              'options': list([
+              ]),
+              'text': 'Off Timer',
+              'type': 'time',
+            }),
+          ]),
+          'fixed_buttons': list([
+            'power-off',
+          ]),
+          'modes': dict({
+            'cool': dict({
+              'directions': list([
+                '1',
+                'auto',
+                'swing',
+              ]),
+              'directions_h': list([
+                '1',
+                'auto',
+                'swing',
+              ]),
+              'temperatures': list([
+                '24',
+                '24.5',
+                '25',
+                '25.5',
+                '26',
+              ]),
+              'volumes': list([
+                '1',
+                'auto',
+              ]),
+            }),
+            'warm': dict({
+              'directions': list([
+                '1',
+                'auto',
+                'swing',
+              ]),
+              'directions_h': list([
+                '1',
+                'auto',
+                'swing',
+              ]),
+              'temperatures': list([
+                '20',
+                '20.5',
+                '21',
+                '21.5',
+                '22',
+              ]),
+              'volumes': list([
+                '1',
+                'auto',
+              ]),
+            }),
+          }),
+          'temp_unit': 'c',
+        }),
+        'device_id': 'device-mini-1',
+        'floor_heater': None,
+        'id': 'appliance-ac-2',
+        'image': 'ico_ac_1',
+        'light': None,
+        'light_projector': None,
+        'model': dict({
+          'country': 'JP',
+          'id': 'model-ac-2',
+          'image': 'ico_ac_1',
+          'manufacturer': 'Daikin',
+          'name': 'Daikin AC 401',
+          'remote_name': 'arc472a82',
+          'series': '',
+          'slug': None,
+        }),
+        'nickname': 'Bedroom AC',
+        'settings': dict({
+          'button': '',
+          'direction': 'auto',
+          'direction_h': 'auto',
+          'extra': dict({
+            'powerful': 'off',
+          }),
+          'mode': 'warm',
+          'temperature': '22',
+          'temperature_unit': 'c',
+          'updated_at': '2026-07-25T02:52:00+00:00',
+          'volume': 'auto',
+        }),
+        'signals': list([
+        ]),
+        'smart_meter': None,
+        'tv': None,
+        'type': 'AC',
+      }),
+      dict({
+        'aircon': None,
+        'device_id': 'device-mini-1',
+        'floor_heater': dict({
+          'extras': list([
+            dict({
+              'availability': 'available',
+              'default_time': None,
+              'description': 'Reduce heating power',
+              'id': 'save_energy',
+              'options': list([
+                dict({
+                  'default': True,
+                  'text': 'Off',
+                  'value': 'off',
+                }),
+                dict({
+                  'default': False,
+                  'text': 'On',
+                  'value': 'on',
+                }),
+              ]),
+              'text': 'Save energy',
+              'type': 'choice',
+            }),
+          ]),
+          'fixed_buttons': list([
+            'power-off',
+          ]),
+          'modes': dict({
+            'auto': dict({
+              'directions': list([
+              ]),
+              'directions_h': list([
+              ]),
+              'temperatures': list([
+                '-2',
+                '-1',
+                '0',
+                '1',
+                '2',
+              ]),
+              'volumes': list([
+              ]),
+            }),
+            'warm': dict({
+              'directions': list([
+              ]),
+              'directions_h': list([
+              ]),
+              'temperatures': list([
+                '17',
+                '18',
+                '19',
+                '20',
+                '21',
+                '22',
+                '23',
+                '24',
+                '25',
+                '26',
+                '27',
+                '28',
+                '29',
+                '30',
+              ]),
+              'volumes': list([
+              ]),
+            }),
+          }),
+          'temp_unit': 'c',
+        }),
+        'id': 'appliance-floorheater-1',
+        'image': 'ico_floor_heater',
+        'light': None,
+        'light_projector': None,
+        'model': dict({
+          'country': 'JP',
+          'id': 'model-floorheater-1',
+          'image': 'ico_floor_heater',
+          'manufacturer': 'Corona',
+          'name': 'Corona Floor Heater 001',
+          'remote_name': 'rfc-a04',
+          'series': '',
+          'slug': None,
+        }),
+        'nickname': 'Floor heater',
+        'settings': dict({
+          'button': 'power-off',
+          'direction': '',
+          'direction_h': '',
+          'extra': dict({
+            'save_energy': 'off',
+          }),
+          'mode': 'auto',
+          'temperature': '0',
+          'temperature_unit': 'c',
+          'updated_at': '2026-07-25T02:41:25+00:00',
+          'volume': '',
+        }),
+        'signals': list([
+        ]),
+        'smart_meter': None,
+        'tv': None,
+        'type': 'FLOOR_HEATER',
+      }),
+      dict({
+        'aircon': None,
+        'device_id': 'device-mini-1',
+        'floor_heater': None,
+        'id': 'appliance-projector-1',
+        'image': 'ico_light_projector',
+        'light': None,
+        'light_projector': dict({
+          'buttons': list([
+            dict({
+              'image': 'ico_plus',
+              'name': 'plus',
+              'text': 'Volume Up',
+              'uuid': '00000000-0000-0000-0000-0000000000p1',
+            }),
+            dict({
+              'image': 'ico_minus',
+              'name': 'minus',
+              'text': 'Volume Down',
+              'uuid': '00000000-0000-0000-0000-0000000000p2',
+            }),
+            dict({
+              'image': 'ico_arrow_top',
+              'name': 'arrow-top',
+              'text': 'Top',
+              'uuid': '00000000-0000-0000-0000-0000000000c1',
+            }),
+            dict({
+              'image': 'ico_arrow_left',
+              'name': 'arrow-left',
+              'text': 'Left',
+              'uuid': '00000000-0000-0000-0000-0000000000c2',
+            }),
+            dict({
+              'image': 'ico_record',
+              'name': 'record',
+              'text': 'Ok',
+              'uuid': '00000000-0000-0000-0000-0000000000c3',
+            }),
+            dict({
+              'image': 'ico_arrow_right',
+              'name': 'arrow-right',
+              'text': 'Right',
+              'uuid': '00000000-0000-0000-0000-0000000000c4',
+            }),
+            dict({
+              'image': 'ico_arrow_bottom',
+              'name': 'arrow-bottom',
+              'text': 'Bottom',
+              'uuid': '00000000-0000-0000-0000-0000000000c5',
+            }),
+            dict({
+              'image': 'ico_light_all',
+              'name': 'light-all',
+              'text': 'Light',
+              'uuid': '00000000-0000-0000-0000-0000000000b1',
+            }),
+            dict({
+              'image': 'ico_focus',
+              'name': 'focus',
+              'text': 'Auto Forcus',
+              'uuid': '00000000-0000-0000-0000-0000000000b2',
+            }),
+            dict({
+              'image': 'ico_io',
+              'name': 'io',
+              'text': 'Power',
+              'uuid': '00000000-0000-0000-0000-0000000000b3',
+            }),
+            dict({
+              'image': 'ico_home',
+              'name': 'home',
+              'text': 'Home',
+              'uuid': '00000000-0000-0000-0000-0000000000b4',
+            }),
+            dict({
+              'image': 'ico_return',
+              'name': 'return',
+              'text': 'Back',
+              'uuid': '00000000-0000-0000-0000-0000000000b5',
+            }),
+            dict({
+              'image': 'ico_setting',
+              'name': 'setting',
+              'text': 'Settings',
+              'uuid': '00000000-0000-0000-0000-0000000000b6',
+            }),
+          ]),
+        }),
+        'model': dict({
+          'country': 'JP',
+          'id': 'model-projector-1',
+          'image': 'ico_projector',
+          'manufacturer': 'Anker Japan',
+          'name': 'Nebula Nova',
+          'remote_name': 'Nebula Nova',
+          'series': None,
+          'slug': None,
+        }),
+        'nickname': 'Projector',
+        'settings': None,
+        'signals': list([
+        ]),
+        'smart_meter': None,
+        'tv': None,
+        'type': 'LIGHT_PROJECTOR',
+      }),
+    ]),
+    'devices': list([
+      dict({
+        'bt_mac_address': '**REDACTED**',
+        'events': dict({
+          'hu': dict({
+            'created_at': '2026-07-18T07:59:00+00:00',
+            'value': 52.0,
+          }),
+          'il': dict({
+            'created_at': '2026-07-18T07:58:00+00:00',
+            'value': 123.4,
+          }),
+          'mo': dict({
+            'created_at': '2026-07-18T07:50:00+00:00',
+            'value': 1.0,
+          }),
+          'te': dict({
+            'created_at': '2026-07-18T07:59:00+00:00',
+            'value': 26.4,
+          }),
+        }),
+        'firmware_version': 'Remo/1.14.8',
+        'humidity_offset': 0.0,
+        'id': 'device-remo3-1',
+        'mac_address': '**REDACTED**',
+        'name': 'Living Remo',
+        'online': None,
+        'serial_number': '**REDACTED**',
+        'temperature_offset': 0.0,
+      }),
+      dict({
+        'bt_mac_address': None,
+        'events': dict({
+          'te': dict({
+            'created_at': '2026-07-18T07:59:10+00:00',
+            'value': 24.0,
+          }),
+        }),
+        'firmware_version': 'Remo-mini/1.10.0',
+        'humidity_offset': 0.0,
+        'id': 'device-mini-1',
+        'mac_address': '**REDACTED**',
+        'name': 'Bedroom Remo mini',
+        'online': None,
+        'serial_number': '**REDACTED**',
+        'temperature_offset': 1.0,
+      }),
+      dict({
+        'bt_mac_address': None,
+        'events': dict({
+        }),
+        'firmware_version': 'Remo-E-lite/1.7.2',
+        'humidity_offset': 0.0,
+        'id': 'device-remoe-1',
+        'mac_address': '**REDACTED**',
+        'name': 'Remo E lite',
+        'online': None,
+        'serial_number': '**REDACTED**',
+        'temperature_offset': 0.0,
+      }),
+    ]),
+    'entry_data': dict({
+      'api_token': '**REDACTED**',
+    }),
+    'rate_limit': dict({
+      'limit': 30,
+      'remaining': 25,
+      'reset': 1752825600,
+    }),
+  })
+# ---
