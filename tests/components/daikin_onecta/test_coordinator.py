@@ -733,8 +733,10 @@ class TestOnectaDataUpdateCoordinator:
 
         assert exc_info.value.translation_key == "authentication_failed"
 
-    async def test_token_refresh_reauth_error_propagates(self, coordinator):
-        """Preserve OAuth refresh failures for Home Assistant reauthentication."""
+    async def test_token_refresh_reauth_error_requires_authentication(
+        self, coordinator
+    ):
+        """Translate OAuth refresh rejection into an authentication failure."""
         coordinator._last_patch_call = None
         token_error = OAuth2TokenRequestReauthError(
             domain=DOMAIN,
@@ -744,10 +746,11 @@ class TestOnectaDataUpdateCoordinator:
         )
         coordinator._async_get_cloud_devices = AsyncMock(side_effect=token_error)
 
-        with pytest.raises(OAuth2TokenRequestReauthError) as exc_info:
+        with pytest.raises(ConfigEntryAuthFailed) as exc_info:
             await coordinator._async_update_data_from_cloud()
 
-        assert exc_info.value is token_error
+        assert exc_info.value.translation_key == "authentication_failed"
+        assert exc_info.value.__cause__ is token_error
 
     async def test_post_write_cooldown_is_checked_under_cloud_lock(self, coordinator):
         """Keep cached data when a write completes while polling waits for the lock."""
