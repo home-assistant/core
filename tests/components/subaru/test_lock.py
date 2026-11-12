@@ -7,19 +7,13 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from subarulink import SubaruException
 
-from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockService
 from homeassistant.components.subaru.const import DOMAIN, UNLOCK_DOOR_DRIVERS
 from homeassistant.components.subaru.services import (
     SubaruService,
     SubaruServiceArgument,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_LOCK,
-    SERVICE_UNLOCK,
-    STATE_UNAVAILABLE,
-    CommonServiceArgument,
-)
+from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -43,7 +37,10 @@ async def test_lock_cmd(hass: HomeAssistant, ev_entry) -> None:
     """Test subaru lock function."""
     with patch(MOCK_API_LOCK) as mock_lock:
         await hass.services.async_call(
-            LOCK_DOMAIN, SERVICE_LOCK, {ATTR_ENTITY_ID: DEVICE_ID}, blocking=True
+            LOCK_DOMAIN,
+            LockService.LOCK,
+            {CommonServiceArgument.ENTITY_ID: DEVICE_ID},
+            blocking=True,
         )
         await hass.async_block_till_done()
         mock_lock.assert_called_once()
@@ -53,7 +50,10 @@ async def test_unlock_cmd(hass: HomeAssistant, ev_entry) -> None:
     """Test subaru unlock function."""
     with patch(MOCK_API_UNLOCK) as mock_unlock:
         await hass.services.async_call(
-            LOCK_DOMAIN, SERVICE_UNLOCK, {ATTR_ENTITY_ID: DEVICE_ID}, blocking=True
+            LOCK_DOMAIN,
+            LockService.UNLOCK,
+            {CommonServiceArgument.ENTITY_ID: DEVICE_ID},
+            blocking=True,
         )
         await hass.async_block_till_done()
         mock_unlock.assert_called_once()
@@ -66,7 +66,10 @@ async def test_lock_cmd_fails(hass: HomeAssistant, ev_entry) -> None:
         pytest.raises(HomeAssistantError),
     ):
         await hass.services.async_call(
-            LOCK_DOMAIN, SERVICE_UNLOCK, {ATTR_ENTITY_ID: DEVICE_ID}, blocking=True
+            LOCK_DOMAIN,
+            LockService.UNLOCK,
+            {CommonServiceArgument.ENTITY_ID: DEVICE_ID},
+            blocking=True,
         )
     mock_lock.assert_not_called()
 
