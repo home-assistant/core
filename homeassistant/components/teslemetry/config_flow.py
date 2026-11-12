@@ -256,7 +256,7 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
         }
         vehicle_metadata = entry.runtime_data.metadata_coordinator.data["vehicles"]
         choices = {
-            vehicle.vin: vehicle.device["name"] or vehicle.vin
+            vehicle.vin: vehicle.device.name or vehicle.vin
             for vehicle in entry.runtime_data.vehicles
             if vehicle.vin not in already_added
             # Vehicles without the command protocol (pre-2021 Model S/X) report

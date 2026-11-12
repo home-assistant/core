@@ -16,11 +16,11 @@ from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonServi
 from homeassistant.components.enphase_envoy.const import Platform
 from homeassistant.components.enphase_envoy.coordinator import SCAN_INTERVAL
 from homeassistant.components.select import (
-    ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, CommonServiceArgument
+from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -129,10 +129,10 @@ async def test_button_sleep_uses_selected_soc(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: "select.acb_1234_battery_sleep_soc_target",
-            ATTR_OPTION: "50-55",
+            CommonServiceArgument.ENTITY_ID: "select.acb_1234_battery_sleep_soc_target",
+            SelectServiceArgument.OPTION: "50-55",
         },
         blocking=True,
     )
