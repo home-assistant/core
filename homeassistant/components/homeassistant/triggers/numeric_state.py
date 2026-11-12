@@ -20,6 +20,8 @@ from homeassistant.const import (
     CONF_FOR,  # noqa: F401
     CONF_PLATFORM,  # noqa: F401
     CONF_VALUE_TEMPLATE,  # noqa: F401
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
@@ -52,6 +54,7 @@ class NumericStateTriggerArgument(StrEnum):
     BELOW = "below"
     ENTITY_ID = "entity_id"
     FOR = "for"
+    IGNORE_INVALID_STATES = "ignore_invalid_states"
     PLATFORM = "platform"
     VALUE_TEMPLATE = "value_template"
 
@@ -96,6 +99,9 @@ _TRIGGER_SCHEMA = probatio.All(
                 NumericStateTriggerArgument.FOR
             ): cv.positive_time_period_template,
             probatio.Optional(NumericStateTriggerArgument.ATTRIBUTE): cv.match_all,
+            probatio.Optional(
+                NumericStateTriggerArgument.IGNORE_INVALID_STATES, default=False
+            ): cv.boolean,
         }
     ),
     probatio.AtLeastOne(
@@ -137,6 +143,9 @@ async def async_attach_trigger(
     armed_entities: set[str] = set()
     period: dict[str, timedelta] = {}
     attribute = config.get(NumericStateTriggerArgument.ATTRIBUTE)
+    ignore_invalid_states: bool = config[
+        NumericStateTriggerArgument.IGNORE_INVALID_STATES
+    ]
     job = HassJob(action, f"numeric state trigger {trigger_info}")
 
     trigger_data = trigger_info["trigger_data"]
@@ -164,8 +173,18 @@ async def async_attach_trigger(
             hass, to_s, below, above, value_template, variables(entity_id), attribute
         )
 
+    @callback
+    def is_ignored_state(state: State | None) -> bool:
+        """Return True if the entity is unknown or unavailable and should be skipped."""
+        return ignore_invalid_states and (
+            state is None or state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN)
+        )
+
     # Each entity that starts outside the range is already armed (ready to fire).
+    # Ignored entities start unarmed, so their first valid value can't fire.
     for entity_id in entity_ids:
+        if is_ignored_state(hass.states.get(entity_id)):
+            continue
         try:
             if not check_numeric_state(entity_id, None, entity_id):
                 armed_entities.add(entity_id)
@@ -184,6 +203,12 @@ async def async_attach_trigger(
         to_s = event.data["new_state"]
 
         if to_s is None:
+            return
+
+        # Match the purpose-specific triggers: a change from an ignored state
+        # never fires, so the entity is disarmed until it has a valid value again.
+        if is_ignored_state(to_s):
+            armed_entities.discard(entity_id)
             return
 
         @callback
@@ -212,6 +237,9 @@ async def async_attach_trigger(
             entity_id: str, from_s: State | None, to_s: State | None
         ) -> bool:
             """Return True if the criteria are now met, False otherwise."""
+            # A template can still match while the entity is unknown or unavailable
+            if is_ignored_state(to_s):
+                return False
             try:
                 return check_numeric_state(entity_id, from_s, to_s)
             except exceptions.ConditionError:
