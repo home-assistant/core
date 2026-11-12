@@ -1,7 +1,7 @@
 """UniFi entity representation."""
 
 from abc import abstractmethod
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Collection, Mapping
 from dataclasses import dataclass
 from datetime import date, time
 from typing import TYPE_CHECKING, Any, override
@@ -21,6 +21,7 @@ from aiounifi.models.firewall_policy import (
     FirewallPolicyScheduleMode,
     ScheduleDatesOutOfOrderError,
     ScheduleSettingUnusedError,
+    ScheduleWithoutDaysError,
     build_schedule,
 )
 
@@ -92,6 +93,7 @@ def async_firewall_policy_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
 SCHEDULE_ERROR_TRANSLATION_KEYS: dict[type[FirewallPolicyScheduleError], str] = {
     ScheduleDatesOutOfOrderError: "schedule_dates_out_of_order",
     ScheduleSettingUnusedError: "schedule_setting_unused_in_mode",
+    ScheduleWithoutDaysError: "schedule_needs_a_day",
 }
 
 
@@ -104,6 +106,8 @@ async def async_save_firewall_policy_schedule(
     end_time: time | None = None,
     start_date: date | None = None,
     end_date: date | None = None,
+    all_day: bool | None = None,
+    days: Collection[str] | None = None,
 ) -> None:
     """Save a change to a firewall policy's schedule.
 
@@ -120,6 +124,8 @@ async def async_save_firewall_policy_schedule(
                 end_time=end_time,
                 start_date=start_date,
                 end_date=end_date,
+                all_day=all_day,
+                days=days,
             )
         except FirewallPolicyScheduleError as err:
             raise ServiceValidationError(
