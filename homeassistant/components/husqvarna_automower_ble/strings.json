@@ -49,6 +49,9 @@
     },
     "pin_required": {
       "message": "PIN is required for {domain_name}"
+    },
+    "reconnect_failed": {
+      "message": "Unable to reconnect to device {address}"
     }
   }
 }

@@ -91,6 +91,10 @@ def mock_automower_client(enable_bluetooth: None) -> Generator[AsyncMock]:
             "homeassistant.components.husqvarna_automower_ble.config_flow.bluetooth.async_ble_device_from_address",
             return_value=mock_device,
         ),
+        patch(
+            "homeassistant.components.husqvarna_automower_ble.bluetooth.async_scanner_devices_by_address",
+            return_value=[Mock()],
+        ),
     ):
         client = mock_client.return_value
         client.connect.return_value = ResponseResult.OK
