@@ -1,7 +1,6 @@
 """Tests for the Reolink media_source platform."""
 
 from datetime import datetime, timedelta
-import logging
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -94,7 +93,6 @@ async def test_resolve(
     """Test resolving Reolink media items."""
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    caplog.set_level(logging.DEBUG)
 
     file_id = (
         f"FILE|{config_entry.entry_id}|{TEST_CHANNEL}|{TEST_STREAM}"
@@ -158,8 +156,6 @@ async def test_browsing(
     entries = dr.async_entries_for_config_entry(device_registry, entry_id)
     assert len(entries) > 0
     device_registry.async_update_device(entries[0].id, name_by_user=TEST_CAM_NAME)
-
-    caplog.set_level(logging.DEBUG)
 
     # browse root
     browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}")

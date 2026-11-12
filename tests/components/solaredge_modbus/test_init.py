@@ -16,9 +16,9 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from solaredged import SolarEdge, SolarEdgeConnectionError
 
 from homeassistant.components.select import (
-    ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
 from homeassistant.components.solaredge_modbus.const import (
     ATTACHMENT_SCAN_INTERVAL,
@@ -30,12 +30,7 @@ from homeassistant.components.solaredge_modbus.const import (
 )
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    STATE_ON,
-    STATE_UNAVAILABLE,
-    CommonServiceArgument,
-)
+from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
@@ -634,10 +629,10 @@ async def test_concurrent_control_writes_keep_both_changes(
     await asyncio.gather(
         hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: EXPORT_LIMITATION_ENTITY,
-                ATTR_OPTION: "production_control",
+                CommonServiceArgument.ENTITY_ID: EXPORT_LIMITATION_ENTITY,
+                SelectServiceArgument.OPTION: "production_control",
             },
             blocking=True,
         ),
