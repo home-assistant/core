@@ -202,6 +202,14 @@ async def test_entities_sharing_unique_id_keep_callbacks(
         entries
     )
 
+    # Removing the bypass switch must not drop the contact sensor's callback
+    switch_entry = next(entry for entry in entries if entry.domain == Platform.SWITCH)
+    entity_registry.async_remove(switch_entry.entity_id)
+    await hass.async_block_till_done()
+    assert sum(len(callbacks) for callbacks in service.callbacks.values()) == (
+        len(entries) - 1
+    )
+
     device.state = ShutterContactService.State.OPEN
     for callbacks in list(service.callbacks.values()):
         for callback in callbacks:
