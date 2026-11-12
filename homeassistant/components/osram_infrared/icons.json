@@ -1,0 +1,78 @@
+{
+  "entity": {
+    "button": {
+      "brightness_down": {
+        "default": "mdi:brightness-5"
+      },
+      "brightness_up": {
+        "default": "mdi:brightness-7"
+      },
+      "flash": {
+        "default": "mdi:flash"
+      },
+      "hue_000": {
+        "default": "mdi:palette"
+      },
+      "hue_015": {
+        "default": "mdi:palette"
+      },
+      "hue_030": {
+        "default": "mdi:palette"
+      },
+      "hue_045": {
+        "default": "mdi:palette"
+      },
+      "hue_060": {
+        "default": "mdi:palette"
+      },
+      "hue_120": {
+        "default": "mdi:palette"
+      },
+      "hue_135": {
+        "default": "mdi:palette"
+      },
+      "hue_150": {
+        "default": "mdi:palette"
+      },
+      "hue_165": {
+        "default": "mdi:palette"
+      },
+      "hue_180": {
+        "default": "mdi:palette"
+      },
+      "hue_240": {
+        "default": "mdi:palette"
+      },
+      "hue_255": {
+        "default": "mdi:palette"
+      },
+      "hue_270": {
+        "default": "mdi:palette"
+      },
+      "hue_285": {
+        "default": "mdi:palette"
+      },
+      "hue_300": {
+        "default": "mdi:palette"
+      },
+      "mode": {
+        "default": "mdi:palette"
+      },
+      "off": {
+        "default": "mdi:power-off"
+      },
+      "on": {
+        "default": "mdi:power-on"
+      },
+      "smooth": {
+        "default": "mdi:transition"
+      },
+      "strobe": {
+        "default": "mdi:flash-outline"
+      },
+      "white": {
+        "default": "mdi:lightbulb-on-outline"
+      }
+    }
+  }
+}
