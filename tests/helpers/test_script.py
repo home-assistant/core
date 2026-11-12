@@ -28,12 +28,7 @@ from pytest_homeassistant.common import (
 from homeassistant import config_entries, exceptions
 from homeassistant.components import scene
 from homeassistant.components.device_automation import InvalidDeviceAutomationConfig
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_DEVICE_ID,
-    CONF_DOMAIN,
-    SERVICE_TURN_ON,
-)
+from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CommonServiceArgument
 from homeassistant.core import (
     Context,
     CoreState,
@@ -636,7 +631,7 @@ async def test_activating_scene(
 ) -> None:
     """Test the activation of a scene."""
     context = Context()
-    calls = async_mock_service(hass, scene.DOMAIN, SERVICE_TURN_ON)
+    calls = async_mock_service(hass, scene.DOMAIN, scene.SceneService.TURN_ON)
 
     alias = "scene step"
     sequence = cv.SCRIPT_SCHEMA({"alias": alias, "scene": "scene.hello"})
@@ -647,7 +642,7 @@ async def test_activating_scene(
 
     assert len(calls) == 1
     assert calls[0].context is context
-    assert calls[0].data.get(ATTR_ENTITY_ID) == "scene.hello"
+    assert calls[0].data.get(CommonServiceArgument.ENTITY_ID) == "scene.hello"
     assert f"Executing step {alias}" in caplog.text
 
     assert_action_trace(
