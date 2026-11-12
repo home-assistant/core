@@ -47,6 +47,11 @@
         "name": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::heating%]"
       }
     },
+    "button": {
+      "sync_time": {
+        "name": "Sync time"
+      }
+    },
     "infrared": {
       "infrared_emitter": {
         "name": "IR emitter"
@@ -131,6 +136,9 @@
     "setup_failed": {
       "message": "Failed to set up the device at {host}"
     },
+    "sync_time_failed": {
+      "message": "Failed to set the time on the device: {error}"
+    },
     "transmit_failed": {
       "message": "Failed to transmit RF command: {error}"
     },
@@ -139,6 +147,18 @@
     },
     "update_failed": {
       "message": "Failed to update the device"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "auto_sync_time": "Keep the clock in sync"
+        },
+        "data_description": {
+          "auto_sync_time": "Set the thermostat clock to the Home Assistant time every 30 minutes and when daylight saving time changes. The thermostat runs its schedule on its own clock, which drifts and does not follow daylight saving time."
+        }
+      }
     }
   }
 }

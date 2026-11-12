@@ -8,7 +8,7 @@ import broadlink_async.exceptions as blke
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.broadlink.const import DOMAIN
+from homeassistant.components.broadlink.const import CONF_AUTO_SYNC_TIME, DOMAIN
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -1107,3 +1107,28 @@ async def test_dhcp_updates_host(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert mock_entry.data["host"] == "4.5.6.7"
+
+
+async def test_options_flow(hass: HomeAssistant) -> None:
+    """Test enabling the automatic clock sync of a thermostat."""
+    device = get_device("Guest room")
+    mock_entry = device.get_mock_entry()
+    mock_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(mock_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={CONF_AUTO_SYNC_TIME: True}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert mock_entry.options == {CONF_AUTO_SYNC_TIME: True}
+
+
+async def test_options_flow_only_for_thermostats(hass: HomeAssistant) -> None:
+    """Test devices other than thermostats have no options."""
+    mock_entry = get_device("Office").get_mock_entry()
+    mock_entry.add_to_hass(hass)
+
+    assert not mock_entry.supports_options
