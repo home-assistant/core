@@ -93,15 +93,14 @@ async def _async_requires_admin(
 ) -> bool:
     """Return if only admin users may use the tools of the server.
 
-    A server provided by an app is limited to admin users when the app's panel
-    is, so its tools reach no more users than the app itself. When that can't be
-    determined, it is limited to admin users. A server added by hand is
-    available to every user.
+    A server from an app follows the app's panel, and is limited to admin users
+    when that can't be determined.
     """
     if entry.source != SOURCE_HASSIO:
         return False
-    if (slug := entry.data.get(CONF_SLUG)) is None or not is_hassio(hass):
+    if not is_hassio(hass):
         return True
+    slug = entry.data[CONF_SLUG]
     try:
         panels = await get_supervisor_client(hass).ingress.panels()
     except SupervisorError as err:
