@@ -46,17 +46,17 @@ def bulb_w() -> str:
 
 
 @pytest.fixture(scope="module")
-def bulb_w_without_values(bulb_w: str) -> str:
-    """Return a bulb W response whose control reports no values."""
-    response = json.loads(bulb_w)
-    response[ATTR_LIGHT_CONTROL] = [{ATTR_ID: 0}]
-    return json.dumps(response)
-
-
-@pytest.fixture(scope="module")
 def bulb_ws() -> str:
     """Return a bulb WS response."""
     return load_fixture("bulb_ws.json", DOMAIN)
+
+
+@pytest.fixture(scope="module")
+def bulb_ws_without_values(bulb_ws: str) -> str:
+    """Return a bulb WS response whose control reports no values."""
+    response = json.loads(bulb_ws)
+    response[ATTR_LIGHT_CONTROL] = [{ATTR_ID: 0}]
+    return json.dumps(response)
 
 
 @pytest.fixture(scope="module")
@@ -479,12 +479,32 @@ async def test_turn_off_commands(
     ] == [("put", device.path, {"3311": [light_payload]})]
 
 
-@pytest.mark.parametrize("device", ["bulb_w_without_values"], indirect=True)
-@pytest.mark.usefixtures("device")
-async def test_light_without_values(hass: HomeAssistant) -> None:
-    """Test a light whose control reports no values."""
+@pytest.mark.parametrize("device", ["bulb_ws_without_values"], indirect=True)
+async def test_light_without_values(
+    hass: HomeAssistant,
+    command_store: CommandStore,
+    device: Device,
+    bulb_ws: str,
+) -> None:
+    """Test a light whose control reports no values and later recovers."""
+    entity_id = "light.test_ws"
     await setup_integration(hass)
 
-    state = hass.states.get("light.test_w")
+    state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_UNKNOWN
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.ONOFF]
+
+    await command_store.trigger_observe_callback(
+        hass,
+        device,
+        {ATTR_LIGHT_CONTROL: json.loads(bulb_ws)[ATTR_LIGHT_CONTROL]},
+    )
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.COLOR_TEMP]
+    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
+    assert state.attributes[ATTR_BRIGHTNESS] == 250
+    assert state.attributes[ATTR_COLOR_TEMP_KELVIN] == 2500
