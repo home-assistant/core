@@ -1,9 +1,10 @@
 """Tests for the select platform."""
 
 from collections.abc import Generator
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
+from pyvesync import VeSync
 from pyvesync.base_devices.outlet_base import VeSyncOutlet
 from pyvesync.base_devices.purifier_base import VeSyncPurifier
 from pyvesync.const import DeviceStatus, ProductTypes
@@ -15,22 +16,21 @@ from homeassistant.components.select import (
     SelectServiceArgument,
 )
 from homeassistant.components.vesync.const import (
+    DOMAIN as VESYNC_DOMAIN,
     HUMIDIFIER_NIGHT_LIGHT_LEVEL_BRIGHT,
     HUMIDIFIER_NIGHT_LIGHT_LEVEL_DIM,
     HUMIDIFIER_NIGHT_LIGHT_LEVEL_OFF,
     OUTLET_NIGHT_LIGHT_LEVEL_AUTO,
     PURIFIER_NIGHT_LIGHT_LEVEL_ON,
-    VS_DEVICES,
-    VS_DISCOVERY,
 )
 from homeassistant.components.vesync.select import (
     HA_TO_VS_HUMIDIFIER_NIGHT_LIGHT_LEVEL_MAP,
 )
+from homeassistant.components.vesync.services import VeSyncService
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .common import ENTITY_HUMIDIFIER_300S_NIGHT_LIGHT_SELECT
 
@@ -331,9 +331,11 @@ async def test_select_option_device_failure(
         )
 
 
-@pytest.mark.usefixtures("manager")
 async def test_discover_new_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, humidifier_300s: Mock
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    manager: VeSync,
+    humidifier_300s: Mock,
 ) -> None:
     """Test a select entity is added for a device discovered after setup."""
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -341,7 +343,13 @@ async def test_discover_new_device(
 
     assert hass.states.get(ENTITY_HUMIDIFIER_300S_NIGHT_LIGHT_SELECT) is None
 
-    async_dispatcher_send(hass, VS_DISCOVERY.format(VS_DEVICES), [humidifier_300s])
+    manager.get_devices = AsyncMock(
+        side_effect=lambda: manager.devices.humidifiers.append(humidifier_300s)
+    )
+
+    await hass.services.async_call(
+        VESYNC_DOMAIN, VeSyncService.UPDATE_DEVICES, {}, blocking=True
+    )
     await hass.async_block_till_done()
 
     assert (
