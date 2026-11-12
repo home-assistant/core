@@ -86,6 +86,7 @@ async def lock_fixture(hass: HomeAssistant) -> loqed.Lock:
     mock_lock.bolt_state = "locked"
     mock_lock.battery_percentage = 90
     mock_lock.ble_strength = -60
+    mock_lock.online = True
     return mock_lock
 
 

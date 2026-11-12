@@ -16,13 +16,14 @@ from pytest_homeassistant.common import (
     async_load_json_array_fixture,
     async_load_json_object_fixture,
 )
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.cloud import CloudNotConnected
 from homeassistant.components.lock import LockState
 from homeassistant.components.loqed.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import CONF_WEBHOOK_ID
+from homeassistant.const import CONF_WEBHOOK_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.network import get_url
@@ -106,6 +107,85 @@ async def test_webhook_ignores_rejected_message(
     state = hass.states.get("lock.home")
     assert state
     assert state.state == LockState.UNLOCKED
+
+
+@pytest.mark.parametrize("entity_id", ["lock.home", "sensor.home_battery"])
+async def test_entity_unavailable_when_lock_offline(
+    hass: HomeAssistant,
+    integration: MockConfigEntry,
+    lock: loqed.Lock,
+    entity_id: str,
+) -> None:
+    """Test entities follow the connection between the lock and the bridge."""
+    lock.online = False
+    integration.runtime_data.async_update_listeners()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+    lock.online = True
+    integration.runtime_data.async_update_listeners()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+
+
+async def test_webhook_logs_lock_availability_once(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    integration: MockConfigEntry,
+    lock: loqed.Lock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test going offline and coming back online are each logged once."""
+    await async_setup_component(hass, "http", {"http": {}})
+    client = await hass_client_no_auth()
+    message = await async_load_fixture(hass, "battery_update.json", DOMAIN)
+    online_states = iter([False, False, True, True])
+
+    async def receive_webhook(*args: Any) -> dict[str, Any]:
+        lock.online = next(online_states)
+        return {}
+
+    lock.receiveWebhook = AsyncMock(side_effect=receive_webhook)
+
+    for _ in range(4):
+        await client.post(
+            f"/api/webhook/{integration.data[CONF_WEBHOOK_ID]}",
+            data=message,
+            headers={"timestamp": "1653304609", "hash": "hash"},
+        )
+
+    assert caplog.text.count("LOQED lock Home is unavailable") == 1
+    assert caplog.text.count("LOQED lock Home is back online") == 1
+
+
+async def test_lock_offline_at_setup_is_logged(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    lock: loqed.Lock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a lock that is already offline at setup is logged and unavailable."""
+    config_entry.add_to_hass(hass)
+    lock.online = False
+    lock_status = await async_load_json_object_fixture(hass, "status_ok.json", DOMAIN)
+
+    with (
+        patch("loqedAPI.loqed.LoqedAPI.async_get_lock", return_value=lock),
+        patch(
+            "loqedAPI.loqed.LoqedAPI.async_get_lock_details", return_value=lock_status
+        ),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert caplog.text.count("LOQED lock Home is unavailable") == 1
+    state = hass.states.get("lock.home")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_setup_webhook_in_bridge(
@@ -570,6 +650,47 @@ async def test_setup_starts_reauth_when_bridge_rejects_credentials(
 
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
     assert list(config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
+
+
+@pytest.mark.parametrize(
+    ("status", "expected_state", "reauth_started"),
+    [
+        pytest.param(
+            HTTPStatus.UNAUTHORIZED, ConfigEntryState.SETUP_ERROR, True, id="401"
+        ),
+        pytest.param(
+            HTTPStatus.FORBIDDEN, ConfigEntryState.SETUP_ERROR, True, id="403"
+        ),
+        pytest.param(
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            ConfigEntryState.SETUP_RETRY,
+            False,
+            id="500",
+        ),
+    ],
+)
+async def test_setup_handles_bridge_status_error(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    status: HTTPStatus,
+    expected_state: ConfigEntryState,
+    reauth_started: bool,
+) -> None:
+    """Test bridge status errors from the real library map to reauth or retry."""
+    config_entry.add_to_hass(hass)
+    aioclient_mock.get(
+        f"http://{config_entry.data['bridge_ip']}/status", status=status, text="error"
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is expected_state
+    assert (
+        bool(list(config_entry.async_get_active_flows(hass, {SOURCE_REAUTH})))
+        is reauth_started
+    )
 
 
 @pytest.mark.parametrize(
