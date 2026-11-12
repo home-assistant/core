@@ -64,13 +64,22 @@ def _device_id(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -> str:
     return devices[0].id
 
 
+@pytest.mark.parametrize(
+    ("tone_args", "expected_tone"),
+    [
+        pytest.param({"tone_compression": 50}, 0.5, id="percentage"),
+        pytest.param({}, 0.0, id="empty_means_none"),
+    ],
+)
 async def test_upload_image_local_file(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_upload_device: MagicMock,
     mock_resolve_media: MagicMock,
+    tone_args: dict[str, int],
+    expected_tone: float,
 ) -> None:
-    """Test successful upload from a local file with tone compression."""
+    """Test successful upload from a local file and the tone it sends."""
     device_id = _device_id(hass, mock_config_entry)
 
     await hass.services.async_call(
@@ -82,12 +91,13 @@ async def test_upload_image_local_file(
                 "media_content_id": "media-source://local/test.png",
                 "media_content_type": "image/png",
             },
-            "tone_compression": 50,
+            **tone_args,
         },
         blocking=True,
     )
 
     mock_upload_device.upload_image.assert_called_once()
+    assert mock_upload_device.upload_image.call_args.kwargs["tone"] == expected_tone
 
 
 async def test_upload_image_remote_url(
