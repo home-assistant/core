@@ -5,6 +5,10 @@ from unittest.mock import Mock, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import (
+    generate_advertisement_data,
+    generate_ble_device,
+)
 from switchbot import SwitchbotAccountConnectionError, SwitchbotAuthenticationError
 
 from homeassistant.components.bluetooth import (
@@ -2117,3 +2121,52 @@ async def test_options_flow_lock_with_night_latch(
     assert len(mock_setup_entry.mock_calls) == 0
 
     assert entry.options[CONF_LOCK_NIGHTLATCH] is True
+
+
+@pytest.mark.parametrize(
+    ("sensor_type", "frame_class", "suffix"),
+    [
+        ("art_frame_luma", "SwitchbotArtFrameLuma", "11f1c0"),
+    ],
+)
+@pytest.mark.parametrize("pairing", [0, 1])
+async def test_new_frame_discovery(
+    hass: HomeAssistant, sensor_type: str, frame_class: str, suffix: str, pairing: int
+) -> None:
+    """Discover both frame models and validate their encryption keys."""
+    service_info = BluetoothServiceInfoBleak.from_device_and_advertisement_data(
+        generate_ble_device("AA:BB:CC:DD:EE:FF", "Frame"),
+        generate_advertisement_data(
+            service_data={
+                "0000fd3d-0000-1000-8000-00805f9b34fb": bytes([0, 0, 54, pairing])
+                + bytes.fromhex(suffix)
+            },
+            manufacturer_data={2409: bytes.fromhex("aabbccddeeff01b634125e")},
+        ),
+        source="local",
+        connectable=True,
+        time=0,
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_BLUETOOTH}, data=service_info
+    )
+    assert result["step_id"] == "encrypted_choose_method"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "encrypted_key"}
+    )
+    assert result["step_id"] == "encrypted_key"
+    with (
+        patch_async_setup_entry(),
+        patch(
+            f"switchbot.{frame_class}.verify_encryption_key", return_value=True
+        ) as verify,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_KEY_ID: "ff", CONF_ENCRYPTION_KEY: "ff" * 16},
+        )
+        await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_SENSOR_TYPE] == sensor_type
+    assert result["result"].unique_id == "aabbccddeeff"
+    verify.assert_awaited_once()
