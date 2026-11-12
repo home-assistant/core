@@ -8,6 +8,7 @@ from awesomeversion import AwesomeVersion
 import jwt
 import probatio
 from pyenphase import AUTH_TOKEN_MIN_VERSION, Envoy, EnvoyError, EnvoyTokenAuth
+from pyenphase.const import EnvoyOptions
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -31,6 +32,7 @@ from homeassistant.util import dt as dt_util
 from .const import (
     ACCESS_TOKEN_LOGIN_URL,
     CONF_MANUAL_TOKEN,
+    CONF_NO_SOLAR,
     DOMAIN,
     INVALID_AUTH_ERRORS,
     OPTION_DIAGNOSTICS_INCLUDE_FIXTURES,
@@ -88,11 +90,27 @@ async def validate_input(
     username: str,
     password: str,
     token: str | None,
+    no_solar_mode: bool,
     errors: dict[str, str],
     description_placeholders: dict[str, str],
 ) -> Envoy:
     """Validate the user input allows us to connect."""
-    envoy = Envoy(host, async_get_clientsession(hass, verify_ssl=False))
+    options = EnvoyOptions.V2_ACB_MODE | (
+        EnvoyOptions.NO_SOLAR if no_solar_mode else EnvoyOptions(0)
+    )
+    option_names = [EnvoyOptions.V2_ACB_MODE.name]
+    if no_solar_mode:
+        option_names.append(EnvoyOptions.NO_SOLAR.name)
+
+    _LOGGER.debug(
+        "Validating Envoy with host: %s and options: %s",
+        host,
+        " ".join(option_names),
+    )
+
+    envoy = Envoy(
+        host, async_get_clientsession(hass, verify_ssl=False), envoy_options=options
+    )
     try:
         await envoy.setup()
         await envoy.authenticate(username=username, password=password, token=token)
@@ -120,6 +138,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
         self.username = None
         self.protovers: str | None = None
         self.manual_token: bool = False
+        self.no_solar: bool = False
 
     @staticmethod
     @callback
@@ -164,6 +183,8 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # option to switch between automatic and manual token entry modes
         schema[probatio.Optional(CONF_MANUAL_TOKEN, default=self.manual_token)] = bool
+
+        schema[probatio.Optional(CONF_NO_SOLAR, default=self.no_solar)] = bool
 
         return probatio.Schema(schema)
 
@@ -237,6 +258,9 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
         token_days_left: str = UNKNOWN_TOKEN_TEXT
+        self.no_solar = (user_input or {}).get(
+            CONF_NO_SOLAR, reauth_entry.data.get(CONF_NO_SOLAR, False)
+        )
 
         if token := reauth_entry.data.get(CONF_TOKEN, ""):
             token_days_left = token_lifetime(token)
@@ -255,6 +279,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input.get(CONF_USERNAME, ""),
                 user_input.get(CONF_PASSWORD, ""),
                 token := user_input.get(CONF_TOKEN, "") or None,
+                user_input.get(CONF_NO_SOLAR, False),
                 errors,
                 description_placeholders,
             )
@@ -303,6 +328,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
         description_placeholders: dict[str, str] = {}
         host = (user_input or {}).get(CONF_HOST) or self.ip_address or ""
         token_days_left: str = UNKNOWN_TOKEN_TEXT
+        self.no_solar = (user_input or {}).get(CONF_NO_SOLAR, False)
 
         if user_input and (token := user_input.get(CONF_TOKEN, "")):
             token_days_left = token_lifetime(token)
@@ -322,6 +348,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
                     user_input.get(CONF_USERNAME, ""),
                     user_input.get(CONF_PASSWORD, ""),
                     token := user_input.get(CONF_TOKEN, "") or None,
+                    self.no_solar,
                     errors,
                     description_placeholders,
                 )
@@ -346,6 +373,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
                                 CONF_USERNAME: user_input.get(CONF_USERNAME, ""),
                                 CONF_PASSWORD: user_input.get(CONF_PASSWORD, ""),
                                 CONF_MANUAL_TOKEN: self.manual_token,
+                                CONF_NO_SOLAR: self.no_solar,
                             }
                             | token_update,
                             error="reauth_successful",
@@ -380,6 +408,9 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
         token_days_left: str = UNKNOWN_TOKEN_TEXT
+        self.no_solar = (user_input or {}).get(
+            CONF_NO_SOLAR, reconfigure_entry.data.get(CONF_NO_SOLAR, False)
+        )
 
         if token := reconfigure_entry.data.get(CONF_TOKEN, ""):
             token_days_left = token_lifetime(token)
@@ -397,6 +428,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
                 username := user_input.get(CONF_USERNAME, ""),
                 password := user_input.get(CONF_PASSWORD, ""),
                 token := user_input.get(CONF_TOKEN, "") or None,
+                self.no_solar,
                 errors,
                 description_placeholders,
             )
@@ -411,6 +443,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_USERNAME: username,
                         CONF_PASSWORD: password,
                         CONF_MANUAL_TOKEN: self.manual_token,
+                        CONF_NO_SOLAR: self.no_solar,
                     }
                     | (
                         {CONF_TOKEN: envoy.auth.token}

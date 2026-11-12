@@ -14,12 +14,14 @@
     "step": {
       "reauth_confirm": {
         "data": {
+          "no_solar_mode": "[%key:component::enphase_envoy::config::step::user::data::no_solar_mode%]",
           "password": "[%key:common::config_flow::data::password%]",
           "token": "[%key:component::enphase_envoy::config::step::user::data::token%]",
           "use_manual_token": "[%key:component::enphase_envoy::config::step::user::data::use_manual_token%]",
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
+          "no_solar_mode": "[%key:component::enphase_envoy::config::step::user::data_description::no_solar_mode%]",
           "password": "[%key:component::enphase_envoy::config::step::user::data_description::password%]",
           "token": "[%key:component::enphase_envoy::config::step::user::data_description::token%]",
           "use_manual_token": "[%key:component::enphase_envoy::config::step::user::data_description::use_manual_token%]",
@@ -30,6 +32,7 @@
       "reconfigure": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
+          "no_solar_mode": "[%key:component::enphase_envoy::config::step::user::data::no_solar_mode%]",
           "password": "[%key:common::config_flow::data::password%]",
           "token": "[%key:component::enphase_envoy::config::step::user::data::token%]",
           "use_manual_token": "[%key:component::enphase_envoy::config::step::user::data::use_manual_token%]",
@@ -37,6 +40,7 @@
         },
         "data_description": {
           "host": "[%key:component::enphase_envoy::config::step::user::data_description::host%]",
+          "no_solar_mode": "[%key:component::enphase_envoy::config::step::user::data_description::no_solar_mode%]",
           "password": "[%key:component::enphase_envoy::config::step::user::data_description::password%]",
           "token": "[%key:component::enphase_envoy::config::step::user::data_description::token%]",
           "use_manual_token": "[%key:component::enphase_envoy::config::step::user::data_description::use_manual_token%]",
@@ -47,6 +51,7 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
+          "no_solar_mode": "Envoy has no solar inverters.",
           "password": "[%key:common::config_flow::data::password%]",
           "token": "Envoy access token",
           "use_manual_token": "Enter the Envoy access token manually",
@@ -54,6 +59,7 @@
         },
         "data_description": {
           "host": "The hostname or IP address of your Enphase Envoy gateway.",
+          "no_solar_mode": "Enable this option if your Envoy has no solar inverters to avoid production data time-outs during integration load. Do not enable it if you have Enphase AC Batteries (ACB), as it disables collection of their power data.",
           "password": "Blank or Enphase Cloud password",
           "token": "Go to the [Enphase login]({enphase_url}) to get a new token. Current token lifetime: {token_life} days.",
           "use_manual_token": "If your Enphase Cloud account has multi-factor authentication enabled, check this option to add or update your token manually.",
