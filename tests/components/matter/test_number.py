@@ -316,6 +316,13 @@ async def test_temperature_control_temperature_setpoint(
         ),
     )
 
+    # only the Step subscription (2/86/3) is notified
+    set_node_attribute(matter_node, 2, 86, 3, 10)
+    await trigger_subscription_callback(hass, matter_client, attribute_path="2/86/3")
+    state = hass.states.get("number.refrigerator_temperature_setpoint_2")
+    assert state
+    assert state.attributes["step"] == 0.1
+
 
 @pytest.mark.parametrize("node_fixture", ["mock_dimmable_light"])
 async def test_matter_exception_on_write_attribute(

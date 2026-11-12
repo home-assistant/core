@@ -184,8 +184,8 @@ class MatterRangeNumber(MatterEntity, NumberEntity):
             step_value = self.get_matter_attribute_value(
                 self.entity_description.step_attribute
             )
-            # devices report 0 when no step is configured, which is not a valid NumberEntity step
-            if step_value:
+            # Step is 1 to (Max - Min) per spec, ignore out-of-range values such as 0
+            if step_value and step_value > 0:
                 step_convert = self.entity_description.format_step_value
                 self._attr_native_step = step_convert(step_value)
 
