@@ -33,9 +33,6 @@
     }
   },
   "services": {
-    "set_rain_delay": {
-      "service": "mdi:water-sync"
-    },
     "start_irrigation": {
       "service": "mdi:water"
     }

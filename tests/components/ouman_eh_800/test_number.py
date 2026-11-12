@@ -17,11 +17,11 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -79,8 +79,11 @@ async def test_async_set_native_value(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: target_value},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            NumberServiceArgument.VALUE: target_value,
+        },
         blocking=True,
     )
 
@@ -122,10 +125,10 @@ async def test_async_set_native_value_errors(
     with pytest.raises(HomeAssistantError, match=expected_message):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: "number.ouman_eh_800_heating_circuit_1_patterilammitys_water_out_minimum_temperature",
-                ATTR_VALUE: 20,
+                CommonServiceArgument.ENTITY_ID: "number.ouman_eh_800_heating_circuit_1_patterilammitys_water_out_minimum_temperature",
+                NumberServiceArgument.VALUE: 20,
             },
             blocking=True,
         )

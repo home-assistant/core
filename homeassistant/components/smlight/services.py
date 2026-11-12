@@ -1,10 +1,12 @@
 """SMLIGHT services."""
 
+from enum import StrEnum
+
 import probatio
 from pysmlight.exceptions import SmlightError
 from pysmlight.models import BuzzerPayload
 
-from homeassistant.const import ATTR_DEVICE_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
@@ -13,12 +15,21 @@ from homeassistant.helpers.service import async_extract_config_entry_ids
 from .const import DOMAIN
 from .coordinator import SmConfigEntry
 
-SERVICE_PLAY_RTTTL = "play_rtttl"
 
-ATTR_BPM = "bpm"
-ATTR_DURATION = "duration"
-ATTR_OCTAVE = "octave"
-ATTR_NOTES = "notes"
+class SmlightService(StrEnum):
+    """Store keys for SMLIGHT services."""
+
+    PLAY_RTTTL = "play_rtttl"
+
+
+class SmlightServiceArgument(StrEnum):
+    """Store keys for SMLIGHT service arguments."""
+
+    DURATION = "duration"
+    OCTAVE = "octave"
+    BPM = "bpm"
+    NOTES = "notes"
+
 
 RTTTL_VALID_BPMS: list[int] = [
     25,
@@ -62,10 +73,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     async def async_play_rtttl(call: ServiceCall) -> None:
         """Play RTTTL tone."""
-        notes = call.data[ATTR_NOTES]
-        octave: int = call.data[ATTR_OCTAVE]
-        bpm: int | None = call.data.get(ATTR_BPM)
-        duration: int | None = call.data.get(ATTR_DURATION)
+        notes = call.data[SmlightServiceArgument.NOTES]
+        octave: int = call.data[SmlightServiceArgument.OCTAVE]
+        bpm: int | None = call.data.get(SmlightServiceArgument.BPM)
+        duration: int | None = call.data.get(SmlightServiceArgument.DURATION)
 
         header: list[str] = []
 
@@ -115,25 +126,25 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     schema = probatio.Schema(
         {
-            probatio.Required(ATTR_DEVICE_ID): probatio.All(
+            probatio.Required(CommonServiceArgument.DEVICE_ID): probatio.All(
                 probatio.EnsureList(), [cv.string]
             ),
-            probatio.Optional(ATTR_DURATION): probatio.All(
+            probatio.Optional(SmlightServiceArgument.DURATION): probatio.All(
                 probatio.Coerce(int), probatio.In([1, 2, 4, 8, 16, 32])
             ),
-            probatio.Required(ATTR_OCTAVE): probatio.All(
+            probatio.Required(SmlightServiceArgument.OCTAVE): probatio.All(
                 probatio.Coerce(int), probatio.Range(min=4, max=7)
             ),
-            probatio.Optional(ATTR_BPM): probatio.All(
+            probatio.Optional(SmlightServiceArgument.BPM): probatio.All(
                 probatio.Coerce(int), probatio.In(RTTTL_VALID_BPMS)
             ),
-            probatio.Required(ATTR_NOTES): cv.string,
+            probatio.Required(SmlightServiceArgument.NOTES): cv.string,
         }
     )
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_PLAY_RTTTL,
+        SmlightService.PLAY_RTTTL,
         async_play_rtttl,
         schema=schema,
     )
