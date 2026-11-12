@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from systembridgeconnector.const import EventKey, EventType
+from systembridgeconnector.models.command_result import ExecuteResult
 from systembridgeconnector.models.fixtures.modules.audio import FIXTURE_AUDIO
 from systembridgeconnector.models.fixtures.modules.battery import FIXTURE_BATTERY
 from systembridgeconnector.models.fixtures.modules.cpu import FIXTURE_CPU
@@ -27,6 +28,7 @@ from systembridgeconnector.models.modules import (
     RegisterDataListener,
 )
 from systembridgeconnector.models.response import Response
+from systembridgeconnector.models.settings import SettingsCommands
 
 from homeassistant.components.system_bridge.config_flow import SystemBridgeConfigFlow
 from homeassistant.components.system_bridge.const import DOMAIN
@@ -35,6 +37,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 
 from . import (
+    FIXTURE_COMMAND,
     FIXTURE_REQUEST_ID,
     FIXTURE_TITLE,
     FIXTURE_USER_INPUT,
@@ -180,6 +183,12 @@ def mock_websocket_client(
             type=EventType.NOTIFICATION_SENT,
             message="Notification sent",
             data={"id": 1},
+        )
+        websocket_client.get_commands.return_value = SettingsCommands(
+            allowlist=[FIXTURE_COMMAND]
+        )
+        websocket_client.execute_command.return_value = ExecuteResult(
+            commandID=FIXTURE_COMMAND.id, exitCode=0, stdout="", stderr=""
         )
         # Trigger callback when listener is registered
         websocket_client.listen.side_effect = mock_data_listener

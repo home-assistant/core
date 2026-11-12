@@ -5,7 +5,7 @@ from urllib.parse import quote, urlencode
 
 from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.components.mjpeg import MjpegCamera, filter_urllib3_logging
-from homeassistant.const import HTTP_DIGEST_AUTHENTICATION
+from homeassistant.const import HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -56,7 +56,11 @@ class AxisCamera(AxisEntity, MjpegCamera):
             password=hub.config.password,
             mjpeg_url=self.mjpeg_source,
             still_image_url=self.image_source,
-            authentication=HTTP_DIGEST_AUTHENTICATION,
+            authentication=(
+                HTTP_BASIC_AUTHENTICATION
+                if hub.api.vapix.auth is not None
+                else HTTP_DIGEST_AUTHENTICATION
+            ),
             verify_ssl=False,
             unique_id=f"{hub.unique_id}-camera",
         )

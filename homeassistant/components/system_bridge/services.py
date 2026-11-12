@@ -2,6 +2,7 @@
 
 from collections.abc import Awaitable
 from dataclasses import asdict
+from enum import StrEnum
 import logging
 from typing import Any
 
@@ -15,6 +16,7 @@ from systembridgeconnector.models.open_path import OpenPath
 from systembridgeconnector.models.open_url import OpenUrl
 from systembridgeconnector.models.response import Response
 
+from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.const import (
     CONF_COMMAND,
     CONF_HOST,
@@ -52,9 +54,82 @@ POWER_COMMAND_MAP = {
 }
 
 
+class SystemBridgeService(StrEnum):
+    """Store keys for System Bridge notify entity services."""
+
+    SEND_MESSAGE = "send_message"
+
+
+class SystemBridgeServiceArgument(StrEnum):
+    """Store keys for System Bridge notify entity service arguments."""
+
+    BUTTONS = "buttons"
+    DURATION = "duration"
+    ICON = "icon"
+    MESSAGE = "message"
+    PATH = "path"
+    SOUND = "sound"
+    TITLE = "title"
+    URGENCY = "urgency"
+    URL = "url"
+
+
+BUTTON_ID = "id"
+BUTTON_LABEL = "label"
+# Clicking the notification itself reports this id
+BUTTON_ID_DEFAULT = "default"
+MAX_BUTTONS = 3
+URGENCIES = ["low", "normal", "critical"]
+CLICK_ACTION = "click_action"
+
+
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services for System Bridge integration."""
+
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SystemBridgeService.SEND_MESSAGE,
+        entity_domain=NOTIFY_DOMAIN,
+        schema={
+            probatio.Required(SystemBridgeServiceArgument.MESSAGE): cv.string,
+            probatio.Optional(SystemBridgeServiceArgument.TITLE): cv.string,
+            probatio.Optional(SystemBridgeServiceArgument.ICON): cv.string,
+            probatio.Optional(SystemBridgeServiceArgument.URGENCY): probatio.In(
+                URGENCIES
+            ),
+            probatio.Optional(
+                SystemBridgeServiceArgument.DURATION
+            ): cv.positive_time_period,
+            probatio.Optional(SystemBridgeServiceArgument.BUTTONS): probatio.All(
+                probatio.EnsureList(),
+                [
+                    {
+                        probatio.Required(BUTTON_ID): probatio.All(
+                            cv.string, probatio.NotIn([BUTTON_ID_DEFAULT])
+                        ),
+                        probatio.Required(BUTTON_LABEL): cv.string,
+                    }
+                ],
+                probatio.Length(max=MAX_BUTTONS),
+            ),
+            probatio.Optional(SystemBridgeServiceArgument.SOUND): cv.string,
+            probatio.Exclusive(
+                SystemBridgeServiceArgument.URL, CLICK_ACTION
+            ): cv.string,
+            probatio.Exclusive(
+                SystemBridgeServiceArgument.PATH, CLICK_ACTION
+            ): cv.string,
+        },
+        func="system_bridge_send_message",
+        supports_response=SupportsResponse.OPTIONAL,
+        # A url or path opens on the host, as open_url and open_path do
+        admin_only=True,
+        description_placeholders={
+            "icon_naming_url": "https://specifications.freedesktop.org/icon-naming/latest/"
+        },
+    )
 
     hass.services.async_register(
         DOMAIN,
