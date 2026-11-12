@@ -110,9 +110,7 @@ class WatercrystStateCoordinator(WatercrystBaseCoordinator[StateResponse]):
 
     @override
     async def _async_fetch_data(self) -> StateResponse:
-        lang = self.hass.config.language.split("-")[0]
-        locale = lang if lang in {"cs", "da", "de", "en", "es"} else "en"
-        return await self._client.get_state(locale=locale)
+        return await self._client.get_state(locale="en")
 
 
 class WatercrystMeasurementsCoordinator(WatercrystBaseCoordinator[MeasurementResponse]):
