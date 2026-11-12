@@ -9,6 +9,7 @@ from pyimouapi.const import (
     PARAM_MOTION_DETECT,
     PARAM_NIGHT_VISION_MODE,
     PARAM_OPTIONS,
+    PARAM_REF,
     PARAM_RESTART_DEVICE,
     PARAM_STATE,
     PARAM_STATE_VARIANT,
@@ -24,12 +25,14 @@ from homeassistant.components.imou.const import (
     CONF_API_URL,
     CONF_APP_ID,
     CONF_APP_SECRET,
+    PARAM_COUNT_DOWN_SWITCH,
     PARAM_DOOR_CONTACT_STATUS,
     PARAM_FRAME_REVERSE,
     PARAM_HEADER_DETECT,
     PARAM_LIGHT,
     PARAM_LINKAGE_SIREN,
     PARAM_LINKAGE_WHITE_LIGHT,
+    PARAM_OVERCHARGE_SWITCH,
     PARAM_PET_DETECT,
     PARAM_PLAY_SOUND,
     PARAM_PLUG_SWITCH,
@@ -124,6 +127,7 @@ def create_online_device(
     sensors: dict[str, dict] | None = None,
     selects: dict[str, dict] | None = None,
     binary_sensors: dict[str, dict] | None = None,
+    texts: dict[str, dict] | None = None,
 ) -> ImouHaDevice:
     """Build an online ImouHaDevice for tests."""
     return create_device(
@@ -136,6 +140,7 @@ def create_online_device(
         sensors=sensors,
         selects=selects,
         binary_sensors=binary_sensors,
+        texts=texts,
     )
 
 
@@ -169,6 +174,7 @@ def create_device(
     sensors: dict[str, dict] | None = None,
     selects: dict[str, dict] | None = None,
     binary_sensors: dict[str, dict] | None = None,
+    texts: dict[str, dict] | None = None,
 ) -> ImouHaDevice:
     """Build an ImouHaDevice for tests."""
     device = ImouHaDevice(device_id, name, "Imou", "m1", "1.0")
@@ -190,7 +196,15 @@ def create_device(
         device._binary_sensors.update(
             {key: dict(value) for key, value in binary_sensors.items()}
         )
+    if texts:
+        device._texts.update({key: dict(value) for key, value in texts.items()})
     return device
+
+
+DEFAULT_PLUG_TEXTS = {
+    PARAM_COUNT_DOWN_SWITCH: {PARAM_STATE: "0"},
+    PARAM_OVERCHARGE_SWITCH: {PARAM_STATE: "100", PARAM_REF: "128800"},
+}
 
 
 def default_mock_devices() -> list[ImouHaDevice]:
