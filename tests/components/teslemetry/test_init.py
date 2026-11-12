@@ -2747,8 +2747,7 @@ async def test_vehicle_bluetooth_out_of_range(
         ):
             assert isinstance(router, VehicleRouter)
 
-            with caplog.at_level(logging.DEBUG):
-                assert await router.flash_lights() == CLOUD_RESULT
+            assert await router.flash_lights() == CLOUD_RESULT
 
             cloud.assert_awaited_once()
             bluetooth_vehicle.flash_lights.assert_not_called()
@@ -4106,7 +4105,6 @@ async def test_paired_site_live_read_failure_logging(
             if record.getMessage().startswith("Local live poll")
         ]
 
-    caplog.set_level(logging.DEBUG)
     await _setup_energy_site_entry(hass, _entry_with_powerwall(), [Platform.SENSOR])
 
     await _tick_local_live(hass, freezer, 1)

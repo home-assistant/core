@@ -7,7 +7,7 @@ from pytest_homeassistant.components.bluetooth import (
     inject_bluetooth_service_info,
 )
 
-from homeassistant.components.event import ATTR_EVENT_TYPE
+from homeassistant.components.event import EventEntityStateAttribute
 from homeassistant.components.xiaomi_ble.const import DOMAIN
 from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -29,7 +29,7 @@ from . import make_advertisement
                 {
                     "entity": "event.smoke_detector_9cbc_button",
                     ATTR_FRIENDLY_NAME: "Smoke Detector 9CBC Button",
-                    ATTR_EVENT_TYPE: "press",
+                    EventEntityStateAttribute.EVENT_TYPE: "press",
                 }
             ],
         ),
@@ -44,7 +44,7 @@ from . import make_advertisement
                 {
                     "entity": "event.switch_double_button_1273_button_right",
                     ATTR_FRIENDLY_NAME: "Switch (double button) 1273 Button right",
-                    ATTR_EVENT_TYPE: "press",
+                    EventEntityStateAttribute.EVENT_TYPE: "press",
                 }
             ],
         ),
@@ -59,7 +59,7 @@ from . import make_advertisement
                 {
                     "entity": "event.remote_control_5074_button_m",
                     ATTR_FRIENDLY_NAME: "Remote Control 5074 Button M",
-                    ATTR_EVENT_TYPE: "long_press",
+                    EventEntityStateAttribute.EVENT_TYPE: "long_press",
                 }
             ],
         ),
@@ -74,7 +74,7 @@ from . import make_advertisement
                 {
                     "entity": "event.remote_control_5074_button_plus",
                     ATTR_FRIENDLY_NAME: "Remote Control 5074 Button plus",
-                    ATTR_EVENT_TYPE: "press",
+                    EventEntityStateAttribute.EVENT_TYPE: "press",
                 }
             ],
         ),
@@ -89,7 +89,7 @@ from . import make_advertisement
                 {
                     "entity": "event.nightlight_390c_motion",
                     ATTR_FRIENDLY_NAME: "Nightlight 390C Motion",
-                    ATTR_EVENT_TYPE: "motion_detected",
+                    EventEntityStateAttribute.EVENT_TYPE: "motion_detected",
                 }
             ],
         ),
@@ -104,7 +104,7 @@ from . import make_advertisement
                 {
                     "entity": "event.magic_cube_d354_cube",
                     ATTR_FRIENDLY_NAME: "Magic Cube D354 Cube",
-                    ATTR_EVENT_TYPE: "rotate_left",
+                    EventEntityStateAttribute.EVENT_TYPE: "rotate_left",
                 }
             ],
         ),
@@ -119,7 +119,7 @@ from . import make_advertisement
                 {
                     "entity": "event.dimmer_switch_988b_dimmer",
                     ATTR_FRIENDLY_NAME: "Dimmer Switch 988B Dimmer",
-                    ATTR_EVENT_TYPE: "rotate_left",
+                    EventEntityStateAttribute.EVENT_TYPE: "rotate_left",
                     "event_properties": {"steps": 1},
                 }
             ],
@@ -135,7 +135,7 @@ from . import make_advertisement
                 {
                     "entity": "event.dimmer_switch_988b_dimmer",
                     ATTR_FRIENDLY_NAME: "Dimmer Switch 988B Dimmer",
-                    ATTR_EVENT_TYPE: "press",
+                    EventEntityStateAttribute.EVENT_TYPE: "press",
                     "event_properties": {"duration": 2},
                 }
             ],
@@ -173,7 +173,10 @@ async def test_events(
         state = hass.states.get(meas["entity"])
         attributes = state.attributes
         assert attributes[ATTR_FRIENDLY_NAME] == meas[ATTR_FRIENDLY_NAME]
-        assert attributes[ATTR_EVENT_TYPE] == meas[ATTR_EVENT_TYPE]
+        assert (
+            attributes[EventEntityStateAttribute.EVENT_TYPE]
+            == meas[EventEntityStateAttribute.EVENT_TYPE]
+        )
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
@@ -197,7 +200,10 @@ async def test_events(
         state = hass.states.get(meas["entity"])
         attributes = state.attributes
         assert attributes[ATTR_FRIENDLY_NAME] == meas[ATTR_FRIENDLY_NAME]
-        assert attributes[ATTR_EVENT_TYPE] == meas[ATTR_EVENT_TYPE]
+        assert (
+            attributes[EventEntityStateAttribute.EVENT_TYPE]
+            == meas[EventEntityStateAttribute.EVENT_TYPE]
+        )
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
@@ -239,7 +245,7 @@ async def test_xiaomi_fingerprint(hass: HomeAssistant) -> None:
     event = hass.states.get("event.door_lock_8a91_fingerprint")
     event_attr = event.attributes
     assert event_attr[ATTR_FRIENDLY_NAME] == "Door Lock 8A91 Fingerprint"
-    assert event_attr[ATTR_EVENT_TYPE] == "match_successful"
+    assert event_attr[EventEntityStateAttribute.EVENT_TYPE] == "match_successful"
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
@@ -272,7 +278,7 @@ async def test_xiaomi_lock(hass: HomeAssistant) -> None:
     event = hass.states.get("event.door_lock_8a91_lock")
     event_attr = event.attributes
     assert event_attr[ATTR_FRIENDLY_NAME] == "Door Lock 8A91 Lock"
-    assert event_attr[ATTR_EVENT_TYPE] == "unlock_outside_the_door"
+    assert event_attr[EventEntityStateAttribute.EVENT_TYPE] == "unlock_outside_the_door"
 
     sensor = hass.states.get("sensor.door_lock_8a91_lock_method")
     sensor_attr = sensor.attributes
