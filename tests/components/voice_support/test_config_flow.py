@@ -47,10 +47,10 @@ ZEROCONF_DATA = ZeroconfServiceInfo(
     ip_address=ip_address(HOST),
     ip_addresses=[ip_address(HOST)],
     hostname="voice.local.",
-    name="Voice._placeholder._tcp.local.",
+    name="Voice._voice-support._tcp.local.",
     port=PORT,
     properties={},
-    type="_placeholder._tcp.local.",
+    type="_voice-support._tcp.local.",
 )
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
@@ -754,10 +754,10 @@ async def test_zeroconf_flow_no_port(hass: HomeAssistant) -> None:
             ip_address=ip_address(HOST),
             ip_addresses=[ip_address(HOST)],
             hostname="voice.local.",
-            name="Voice._placeholder._tcp.local.",
+            name="Voice._voice-support._tcp.local.",
             port=None,
             properties={},
-            type="_placeholder._tcp.local.",
+            type="_voice-support._tcp.local.",
         ),
     )
 

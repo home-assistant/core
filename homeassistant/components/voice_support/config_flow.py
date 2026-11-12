@@ -23,8 +23,6 @@ from .const import CONF_INTEGRATION_CREATED_APP, DOMAIN
 
 CONF_USE_APP = "use_app"
 
-# TODO: fill in the app's real port before merging, and the zeroconf service
-# type it advertises in the manifest
 DEFAULT_PORT = 10800
 
 APP_START_INTERVAL = 5

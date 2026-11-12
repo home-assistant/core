@@ -9,7 +9,6 @@ from homeassistant.helpers.singleton import singleton
 from .const import DOMAIN
 
 APP_NAME = "Voice"
-# TODO: fill in the real slug before merging, once the app is in the store
 APP_SLUG = "core_voice"
 
 DATA_APP_MANAGER = f"{DOMAIN}_app_manager"

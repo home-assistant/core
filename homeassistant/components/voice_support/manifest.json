@@ -15,5 +15,5 @@
     }
   },
   "quality_scale": "internal",
-  "zeroconf": ["_placeholder._tcp.local."]
+  "zeroconf": ["_voice-support._tcp.local."]
 }
