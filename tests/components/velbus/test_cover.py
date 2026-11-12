@@ -11,7 +11,7 @@ from homeassistant.components.cover import (
     CoverService,
     CoverServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -50,21 +50,21 @@ async def test_actions(
     await hass.services.async_call(
         COVER_DOMAIN,
         CoverService.CLOSE,
-        {ATTR_ENTITY_ID: entity_id},
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
     entity.close.assert_called_once()
     await hass.services.async_call(
         COVER_DOMAIN,
         CoverService.OPEN,
-        {ATTR_ENTITY_ID: entity_id},
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
     entity.open.assert_called_once()
     await hass.services.async_call(
         COVER_DOMAIN,
         CoverService.STOP,
-        {ATTR_ENTITY_ID: entity_id},
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
     entity.stop.assert_called_once()
@@ -81,7 +81,7 @@ async def test_position(
         COVER_DOMAIN,
         CoverService.SET_POSITION,
         {
-            ATTR_ENTITY_ID: "cover.basement_covername",
+            CommonServiceArgument.ENTITY_ID: "cover.basement_covername",
             CoverServiceArgument.POSITION: 25,
         },
         blocking=True,
