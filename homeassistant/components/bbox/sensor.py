@@ -216,8 +216,8 @@ class BboxData:
         self._password = password
         self._verify_ssl = verify_ssl
         self._api: BboxApi | None = None
-        self.data = None
-        self.router_infos = None
+        self.data: dict | None = None
+        self.router_infos: dict | None = None
         self._fetch_error: BboxError | None = None
 
     async def _async_fetch(self) -> tuple[dict, dict]:

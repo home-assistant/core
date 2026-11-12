@@ -69,6 +69,10 @@ class BboxDeviceScanner(DeviceScanner):
     ) -> None:
         """Initialize the scanner."""
         self.hass = hass
+        # The base class declares hass as HomeAssistant | None (the
+        # framework assigns it later); keep a non-optional handle for the
+        # bridged coroutine.
+        self._hass: HomeAssistant = hass
         self._host = host
         self._password = password
         self._verify_ssl = verify_ssl
@@ -87,7 +91,7 @@ class BboxDeviceScanner(DeviceScanner):
         if self._api is None:
             self._api = BboxApi(
                 async_create_clientsession(
-                    self.hass,
+                    self._hass,
                     verify_ssl=self._verify_ssl,
                     cookie_jar=CookieJar(unsafe=True),
                 ),
@@ -128,7 +132,7 @@ class BboxDeviceScanner(DeviceScanner):
 
         future = None
         try:
-            future = run_coroutine_threadsafe(self._async_fetch(), self.hass.loop)
+            future = run_coroutine_threadsafe(self._async_fetch(), self._hass.loop)
             result = future.result(REQUEST_TIMEOUT)
         except (BboxError, TimeoutError) as error:
             # A BboxError means the fetch already finished; only a bridge
