@@ -8,20 +8,14 @@ import logging
 import time
 from typing import override
 
-from aiohttp import ClientSession
 from bosch_shc_camera_client.cameras import (
     BoschCameraAuthError,
     BoschCameraConnectionError,
     BoschCameraInvalidResponseError,
     Camera,
-    get_latest_event_image,
-    list_cameras,
 )
-from bosch_shc_camera_client.cloud import cloud_set_privacy_mode
-from bosch_shc_camera_client.states import (
-    CameraAccountStates,
-    get_camera_account_states,
-)
+from bosch_shc_camera_client.client import BoschCameraClient
+from bosch_shc_camera_client.states import CameraAccountStates
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN
@@ -53,7 +47,7 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
 
     config_entry: BoschCameraConfigEntry
     _oauth_session: OAuth2Session
-    _session: ClientSession
+    _client: BoschCameraClient
 
     def __init__(
         self, hass: HomeAssistant, config_entry: BoschCameraConfigEntry
@@ -75,23 +69,28 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
     @override
     async def _async_setup(self) -> None:
         """Resolve the OAuth2 implementation and the shared HTTP session."""
-        self._session = async_get_clientsession(self.hass)
         implementation = await async_get_config_entry_implementation(
             self.hass, self.config_entry
         )
         self._oauth_session = OAuth2Session(
             self.hass, self.config_entry, implementation
         )
+        self._client = BoschCameraClient(
+            async_get_clientsession(self.hass), self._async_get_token
+        )
+
+    async def _async_get_token(self) -> str:
+        """Return a fresh access token."""
+        await self._oauth_session.async_ensure_token_valid()
+        return str(self._oauth_session.token[CONF_ACCESS_TOKEN])
 
     @override
     async def _async_update_data(self) -> dict[str, Camera]:
         """Fetch the camera list."""
-        await self._oauth_session.async_ensure_token_valid()
-        token = str(self._oauth_session.token[CONF_ACCESS_TOKEN])
         started = self._write_seq
         try:
-            cameras = await list_cameras(self._session, token)
-            states = await get_camera_account_states(self._session, token)
+            cameras = await self._client.list_cameras()
+            states = await self._client.get_camera_account_states()
         except BoschCameraAuthError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN, translation_key="auth_failed"
@@ -123,13 +122,8 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
             cached = self._snapshots.get(camera_id)
             if cached and time.monotonic() - cached[0] < SNAPSHOT_TTL:
                 return cached[1]
-            await self._oauth_session.async_ensure_token_valid()
             try:
-                image = await get_latest_event_image(
-                    self._session,
-                    str(self._oauth_session.token[CONF_ACCESS_TOKEN]),
-                    camera_id,
-                )
+                image = await self._client.get_latest_event_image(camera_id)
             except (
                 BoschCameraAuthError,
                 BoschCameraConnectionError,
@@ -143,13 +137,7 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
 
     async def async_set_privacy_mode(self, camera_id: str, enabled: bool) -> None:
         """Switch the privacy mode of a camera and update the cached state."""
-        await self._oauth_session.async_ensure_token_valid()
-        result = await cloud_set_privacy_mode(
-            self._session,
-            str(self._oauth_session.token[CONF_ACCESS_TOKEN]),
-            camera_id,
-            enabled,
-        )
+        result = await self._client.set_privacy_mode(camera_id, enabled)
         if result.status in (401, 403):
             self.config_entry.async_start_reauth_if_available(self.hass)
             raise HomeAssistantError(

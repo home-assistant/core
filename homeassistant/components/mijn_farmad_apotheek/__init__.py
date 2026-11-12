@@ -85,7 +85,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: FarmadConfigEntry) -> No
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="setup_failed",
-            translation_placeholders={"error": str(err)},
         ) from err
 
     entry.runtime_data = FarmadData(client=client, products=products)

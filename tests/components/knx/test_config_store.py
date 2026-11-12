@@ -98,8 +98,6 @@ async def test_create_entity(
     assert test_storage_data == {
         "entity": {
             "name": test_name,
-            "device_info": None,
-            "entity_category": None,
         },
         "knx": {
             "ga_switch": {"write": "1/2/3", "state": None, "passive": []},
@@ -586,8 +584,6 @@ async def test_get_entity_config(
     assert res["result"]["data"] == {
         "entity": {
             "name": "Test",
-            "device_info": None,
-            "entity_category": None,
         },
         "knx": {
             "ga_switch": {"write": "1/2/3", "passive": [], "state": None},
@@ -1141,7 +1137,6 @@ TYPED_CONFIG_CASES = [
             "invert": False,
             "ignore_internal_state": False,
             "context_timeout": 1.5,
-            "reset_after": None,
             "sync_state": True,
         },
         id="binary_sensor",
@@ -1152,9 +1147,6 @@ TYPED_CONFIG_CASES = [
         {"ga_sensor": {"state": "1/2/3", "dpt": "9.001"}, "sync_state": False},
         {
             "ga_sensor": {"state": "1/2/3", "passive": [], "dpt": "9.001"},
-            "unit_of_measurement": None,
-            "device_class": None,
-            "state_class": None,
             "always_callback": False,
             "sync_state": False,
         },
@@ -1173,11 +1165,7 @@ TYPED_CONFIG_CASES = [
             },
             "respond_to_read": False,
             "mode": "auto",
-            "min": None,
             "max": 50,
-            "step": None,
-            "unit_of_measurement": None,
-            "device_class": None,
             "sync_state": True,
         },
         id="number",
@@ -1208,19 +1196,8 @@ TYPED_CONFIG_CASES = [
         },
         {
             "ga_temperature": {"state": "1/2/3", "passive": []},
-            "ga_humidity": None,
-            "ga_air_pressure": None,
-            "ga_wind_speed": None,
-            "ga_wind_bearing": None,
-            "ga_brightness_east": None,
-            "ga_brightness_south": None,
-            "ga_brightness_west": None,
-            "ga_brightness_north": None,
-            "ga_day_night": None,
             "invert_day_night": False,
             "ga_rain_alarm": {"state": "1/2/4", "passive": ["1/2/5"]},
-            "ga_frost_alarm": None,
-            "ga_wind_alarm": None,
             "sync_state": True,
         },
         id="weather",
@@ -1236,10 +1213,6 @@ TYPED_CONFIG_CASES = [
         {
             "ga_up_down": {"write": "1/2/3", "passive": []},
             "invert_updown": False,
-            "ga_stop": None,
-            "ga_step": None,
-            "ga_position_set": None,
-            "ga_position_state": None,
             "invert_position": False,
             "ga_angle": {"write": "1/2/4", "state": "1/2/5", "passive": []},
             "invert_angle": False,
@@ -1254,12 +1227,10 @@ TYPED_CONFIG_CASES = [
         FanKnxConfig,
         {"speed": {"ga_step": {"write": "1/2/3"}, "max_step": 4.0}},
         {
-            "ga_switch": None,
             "speed": {
                 "ga_step": {"write": "1/2/3", "state": None, "passive": []},
                 "max_step": 4,
             },
-            "ga_oscillation": None,
             "sync_state": True,
         },
         id="fan_step",
@@ -1271,10 +1242,19 @@ TYPED_CONFIG_CASES = [
         {
             "ga_switch": {"write": "1/2/3", "state": None, "passive": []},
             "speed": {"ga_speed": {"write": "1/2/4", "state": None, "passive": []}},
-            "ga_oscillation": None,
             "sync_state": True,
         },
         id="fan_percentage",
+    ),
+    pytest.param(
+        Platform.FAN,
+        FanKnxConfig,
+        {"ga_switch": {"write": "1/2/3"}},
+        {
+            "ga_switch": {"write": "1/2/3", "state": None, "passive": []},
+            "sync_state": True,
+        },
+        id="fan_switch_only",
     ),
     pytest.param(
         Platform.LIGHT,
@@ -1285,8 +1265,6 @@ TYPED_CONFIG_CASES = [
         },
         {
             "ga_switch": {"write": "1/2/3", "state": None, "passive": []},
-            "ga_brightness": None,
-            "ga_color_temp": None,
             "color_temp_min": 2700,
             "color_temp_max": 6000,
             "color": {
@@ -1304,6 +1282,18 @@ TYPED_CONFIG_CASES = [
     pytest.param(
         Platform.LIGHT,
         LightKnxConfig,
+        {"ga_switch": {"write": "1/2/3"}},
+        {
+            "ga_switch": {"write": "1/2/3", "state": None, "passive": []},
+            "color_temp_min": 2700,
+            "color_temp_max": 6000,
+            "sync_state": True,
+        },
+        id="light_switch_only",
+    ),
+    pytest.param(
+        Platform.LIGHT,
+        LightKnxConfig,
         {
             "color": {
                 "ga_red_brightness": {"write": "1/2/1"},
@@ -1313,20 +1303,13 @@ TYPED_CONFIG_CASES = [
             }
         },
         {
-            "ga_switch": None,
-            "ga_brightness": None,
-            "ga_color_temp": None,
             "color_temp_min": 2700,
             "color_temp_max": 6000,
             "color": {
-                "ga_red_switch": None,
                 "ga_red_brightness": {"write": "1/2/1", "state": None, "passive": []},
-                "ga_green_switch": None,
                 "ga_green_brightness": {"write": "1/2/2", "state": None, "passive": []},
-                "ga_blue_switch": None,
                 "ga_blue_brightness": {"write": "1/2/3", "state": None, "passive": []},
                 "ga_white_switch": {"write": "1/2/4", "state": None, "passive": []},
-                "ga_white_brightness": None,
             },
             "sync_state": True,
         },
@@ -1346,7 +1329,6 @@ TYPED_CONFIG_CASES = [
         {
             "ga_switch": {"write": "1/2/3", "state": None, "passive": []},
             "ga_brightness": {"write": "1/2/4", "state": None, "passive": []},
-            "ga_color_temp": None,
             "color_temp_min": 2700,
             "color_temp_max": 6000,
             "color": {
@@ -1373,7 +1355,6 @@ TYPED_CONFIG_CASES = [
         },
         {
             "ga_temperature_current": {"state": "1/2/1", "passive": []},
-            "ga_humidity_current": None,
             "target_temperature": {
                 "ga_temperature_target": {"state": "1/2/2", "passive": []},
                 "ga_setpoint_shift": {
@@ -1386,25 +1367,11 @@ TYPED_CONFIG_CASES = [
                 "setpoint_shift_max": 6,
                 "temperature_step": 0.1,
             },
-            "ga_active": None,
-            "ga_valve": None,
-            "ga_operation_mode": None,
             "ignore_auto_mode": False,
-            "ga_operation_mode_comfort": None,
-            "ga_operation_mode_economy": None,
-            "ga_operation_mode_standby": None,
-            "ga_operation_mode_protection": None,
-            "ga_heat_cool": None,
-            "ga_on_off": None,
             "on_off_invert": False,
-            "ga_controller_mode": None,
-            "ga_controller_status": None,
             "default_controller_mode": "heat",
-            "ga_fan_speed": None,
             "fan_max_step": 3,
             "fan_zero_mode": "off",
-            "ga_fan_swing": None,
-            "ga_fan_swing_horizontal": None,
             "sync_state": True,
         },
         id="climate_setpoint_shift",
@@ -1498,8 +1465,6 @@ def test_typed_config_storage_roundtrip(
     stored = to_storage_dict(validated)
     assert stored["entity"] == {
         "name": "test",
-        "device_info": None,
-        "entity_category": None,
     }
     assert stored["knx"] == knx_stored
     assert json.loads(json.dumps(stored)) == stored  # storage is JSON
@@ -1509,6 +1474,67 @@ def test_typed_config_storage_roundtrip(
     ]
     assert reloaded == validated
     assert to_storage_dict(reloaded) == stored
+
+
+@pytest.mark.parametrize(
+    ("platform", "config_type", "knx_stored", "null_keys"),
+    [
+        pytest.param(
+            Platform.LIGHT,
+            LightKnxConfig,
+            {
+                "ga_switch": {"write": "1/2/3", "state": None, "passive": []},
+                "ga_brightness": None,
+                "ga_color_temp": None,
+                "color_temp_min": 2700,
+                "color_temp_max": 6000,
+                "color": None,
+                "sync_state": True,
+            },
+            ["ga_brightness", "ga_color_temp", "color"],
+            id="light",
+        ),
+        pytest.param(
+            Platform.FAN,
+            FanKnxConfig,
+            {
+                "ga_switch": {"write": "1/2/3", "state": None, "passive": []},
+                "speed": None,
+                "ga_oscillation": None,
+                "sync_state": True,
+            },
+            ["speed", "ga_oscillation"],
+            id="fan",
+        ),
+    ],
+)
+def test_null_optional_keys_load_and_are_dropped(
+    platform: Platform,
+    config_type: type,
+    knx_stored: dict[str, Any],
+    null_keys: list[str],
+) -> None:
+    """Test unset optional keys stored as `null` load and are rendered without them.
+
+    Storage written by 2026.11.0 holds unset group addresses and group selects
+    as `null`. The frontend reads those as unset; a re-render drops them.
+    """
+    stored = {
+        "entity": {"name": "test", "device_info": None, "entity_category": None},
+        "knx": knx_stored,
+    }
+    validated = validate_entity_data({CONF_PLATFORM: platform, CONF_DATA: stored})[
+        CONF_DATA
+    ]
+    assert isinstance(validated.knx, config_type)
+    assert all(getattr(validated.knx, key) is None for key in null_keys)
+
+    rendered = to_storage_dict(validated)
+    assert rendered["entity"] == {"name": "test"}
+    assert not set(null_keys) & rendered["knx"].keys()
+    assert rendered["knx"] == {
+        key: value for key, value in knx_stored.items() if value is not None
+    }
 
 
 @pytest.mark.parametrize(

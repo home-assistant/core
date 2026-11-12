@@ -281,9 +281,17 @@
           "description": "A human-readable color name.",
           "name": "Color name"
         },
+        "color_temp_kelvin": {
+          "description": "The temporary color temperature in Kelvin.",
+          "name": "[%key:component::light::common::field_color_temp_kelvin_name%]"
+        },
         "cycles": {
           "description": "Number of times the effect should run.",
           "name": "Cycles"
+        },
+        "hs_color": {
+          "description": "The temporary color in hue/sat format. A list of two numbers. Hue is 0-360 and Sat is 0-100.",
+          "name": "[%key:component::light::common::field_hs_color_name%]"
         },
         "mode": {
           "description": "Decides how colors are changed.",
@@ -300,6 +308,10 @@
         "rgb_color": {
           "description": "The temporary color in RGB-format.",
           "name": "RGB color"
+        },
+        "xy_color": {
+          "description": "The temporary color in XY-format. A list of two decimal numbers between 0 and 1.",
+          "name": "[%key:component::light::common::field_xy_color_name%]"
         }
       },
       "name": "Pulse effect"

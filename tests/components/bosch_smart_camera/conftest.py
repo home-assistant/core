@@ -47,17 +47,11 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture(autouse=True)
 def mock_list_cameras() -> Generator[AsyncMock]:
     """Mock the camera list of the library."""
-    with (
-        patch(
-            "homeassistant.components.bosch_smart_camera.coordinator.list_cameras",
-            autospec=True,
-            return_value=list(CAMERAS),
-        ) as mock,
-        patch(
-            "homeassistant.components.bosch_smart_camera.config_flow.list_cameras",
-            new=mock,
-        ),
-    ):
+    with patch(
+        "bosch_shc_camera_client.client.list_cameras",
+        autospec=True,
+        return_value=list(CAMERAS),
+    ) as mock:
         yield mock
 
 
@@ -65,7 +59,7 @@ def mock_list_cameras() -> Generator[AsyncMock]:
 def mock_account_states() -> Generator[AsyncMock]:
     """Mock the account states of the library."""
     with patch(
-        "homeassistant.components.bosch_smart_camera.coordinator.get_camera_account_states",
+        "bosch_shc_camera_client.client.get_camera_account_states",
         autospec=True,
         return_value={CAMERA_ID: CameraAccountStates(False, "FOLLOW_CAMERA_SCHEDULE")},
     ) as mock:
@@ -76,7 +70,7 @@ def mock_account_states() -> Generator[AsyncMock]:
 def mock_set_privacy_mode() -> Generator[AsyncMock]:
     """Mock the privacy mode write of the library."""
     with patch(
-        "homeassistant.components.bosch_smart_camera.coordinator.cloud_set_privacy_mode",
+        "bosch_shc_camera_client.client.cloud_set_privacy_mode",
         autospec=True,
         return_value=CloudPutResult(ok=True, status=204),
     ) as mock:
