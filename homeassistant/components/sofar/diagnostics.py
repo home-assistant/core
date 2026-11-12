@@ -17,8 +17,7 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: SofarConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    runtime_data = entry.runtime_data
-    device = runtime_data.readings.device
+    device = entry.runtime_data.readings.device
     raw = masks = read_error = None
     try:
         raw = await device.async_read_raw(redact_serial=True)

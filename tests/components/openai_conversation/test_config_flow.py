@@ -1383,7 +1383,17 @@ async def test_ai_task_subentry_not_loaded(
 @pytest.mark.parametrize(
     ("image_options", "image_model"),
     [
-        ({}, "gpt-image-2.5-flare"),
+        ({}, "gpt-image-2.6-flare"),
+        pytest.param(
+            {CONF_IMAGE_MODEL: "gpt-image-2.6-sunburst"},
+            "gpt-image-2.6-sunburst",
+            id="gpt-image-2.6-sunburst",
+        ),
+        pytest.param(
+            {CONF_IMAGE_MODEL: "gpt-image-2.6-flare"},
+            "gpt-image-2.6-flare",
+            id="gpt-image-2.6-flare",
+        ),
         (
             {CONF_IMAGE_MODEL: "gpt-image-2.5-sunburst"},
             "gpt-image-2.5-sunburst",

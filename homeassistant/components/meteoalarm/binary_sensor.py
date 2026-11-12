@@ -3,7 +3,7 @@
 from datetime import timedelta
 import logging
 
-from meteoalertapi import Meteoalert
+from meteoalarmapi import Meteoalert
 import probatio
 
 from homeassistant.components.binary_sensor import (

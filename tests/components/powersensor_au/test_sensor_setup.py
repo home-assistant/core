@@ -11,7 +11,6 @@ except where no observable HA boundary exists.
 
 from collections.abc import Callable, Coroutine
 from datetime import timedelta
-import logging
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
@@ -1018,7 +1017,6 @@ async def test_unsupported_role_is_shown_as_unsupported(
 
     Only the display is clamped; the reported role is still persisted.
     """
-    caplog.set_level(logging.DEBUG)
     await fire({"event": "device_found", "mac": SENSOR_MAC, "device_type": "sensor"})
     await fire(
         {

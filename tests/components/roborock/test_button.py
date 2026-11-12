@@ -17,7 +17,7 @@ from roborock.devices.traits.v1.device_features import DeviceFeaturesTrait
 from roborock.exceptions import RoborockTimeout
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.button import SERVICE_PRESS
+from homeassistant.components.button import ButtonService
 from homeassistant.components.roborock.const import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -140,7 +140,7 @@ async def test_update_success(
     assert hass.states.get(entity_id).state == "unknown"
     await hass.services.async_call(
         "button",
-        SERVICE_PRESS,
+        ButtonService.PRESS,
         blocking=True,
         target={"entity_id": entity_id},
     )
@@ -173,7 +173,7 @@ async def test_update_failure(
     ):
         await hass.services.async_call(
             "button",
-            SERVICE_PRESS,
+            ButtonService.PRESS,
             blocking=True,
             target={"entity_id": entity_id},
         )
@@ -221,7 +221,7 @@ async def test_press_routine_button_success(
     """Test pressing the button entities."""
     await hass.services.async_call(
         "button",
-        SERVICE_PRESS,
+        ButtonService.PRESS,
         blocking=True,
         target={"entity_id": entity_id},
     )
@@ -253,7 +253,7 @@ async def test_press_routine_button_failure(
     with pytest.raises(HomeAssistantError, match="Error while calling execute_scene"):
         await hass.services.async_call(
             "button",
-            SERVICE_PRESS,
+            ButtonService.PRESS,
             blocking=True,
             target={"entity_id": entity_id},
         )
@@ -294,7 +294,7 @@ async def test_press_a01_button_success(
 
     await hass.services.async_call(
         "button",
-        SERVICE_PRESS,
+        ButtonService.PRESS,
         blocking=True,
         target={"entity_id": entity_id},
     )
@@ -334,7 +334,7 @@ async def test_press_a01_button_failure(
     with pytest.raises(HomeAssistantError, match="Failed to press button"):
         await hass.services.async_call(
             "button",
-            SERVICE_PRESS,
+            ButtonService.PRESS,
             blocking=True,
             target={"entity_id": entity_id},
         )
@@ -357,7 +357,7 @@ async def test_press_q10_empty_dustbin_button_success(
     assert hass.states.get(entity_id) is not None
     await hass.services.async_call(
         "button",
-        SERVICE_PRESS,
+        ButtonService.PRESS,
         blocking=True,
         target={"entity_id": entity_id},
     )
@@ -386,7 +386,7 @@ async def test_press_q10_empty_dustbin_button_failure(
     with pytest.raises(HomeAssistantError, match="Error while calling empty_dustbin"):
         await hass.services.async_call(
             "button",
-            SERVICE_PRESS,
+            ButtonService.PRESS,
             blocking=True,
             target={"entity_id": entity_id},
         )
@@ -460,7 +460,7 @@ async def test_dock_cleaning_brush_button_press(
     assert hass.states.get(entity_id).state == "unknown"
     await hass.services.async_call(
         "button",
-        SERVICE_PRESS,
+        ButtonService.PRESS,
         blocking=True,
         target={"entity_id": entity_id},
     )
@@ -532,7 +532,7 @@ async def test_resolve_dock_error_button_press(
     assert hass.states.get(RESOLVE_DOCK_ERROR_ENTITY_ID).state == "unknown"
     await hass.services.async_call(
         "button",
-        SERVICE_PRESS,
+        ButtonService.PRESS,
         blocking=True,
         target={"entity_id": RESOLVE_DOCK_ERROR_ENTITY_ID},
     )
@@ -570,7 +570,7 @@ async def test_resolve_dock_error_button_press_without_error(
     ):
         await hass.services.async_call(
             "button",
-            SERVICE_PRESS,
+            ButtonService.PRESS,
             blocking=True,
             target={"entity_id": RESOLVE_DOCK_ERROR_ENTITY_ID},
         )
@@ -604,7 +604,7 @@ async def test_resolve_dock_error_button_press_failure(
     ):
         await hass.services.async_call(
             "button",
-            SERVICE_PRESS,
+            ButtonService.PRESS,
             blocking=True,
             target={"entity_id": RESOLVE_DOCK_ERROR_ENTITY_ID},
         )
@@ -633,7 +633,7 @@ async def test_resolve_dock_error_button_refreshes_sensor(
     status.resolve_error.side_effect = resolve_error
     await hass.services.async_call(
         "button",
-        SERVICE_PRESS,
+        ButtonService.PRESS,
         blocking=True,
         target={"entity_id": RESOLVE_DOCK_ERROR_ENTITY_ID},
     )

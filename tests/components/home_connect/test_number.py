@@ -45,14 +45,14 @@ from homeassistant.components.number import (
     DEFAULT_MAX_VALUE,
     DEFAULT_MIN_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_RESTORED,
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
+    CommonServiceArgument,
     Platform,
     UnitOfTemperature,
 )
@@ -357,9 +357,9 @@ async def test_number_entity_functionality(
     )
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: entity_id,
+            CommonServiceArgument.ENTITY_ID: entity_id,
             SERVICE_ATTR_VALUE: value,
         },
     )
@@ -506,9 +506,9 @@ async def test_number_entity_error(
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: entity_id,
+                CommonServiceArgument.ENTITY_ID: entity_id,
                 SERVICE_ATTR_VALUE: DEFAULT_MIN_VALUE,
             },
             blocking=True,
@@ -632,8 +632,8 @@ async def test_options_functionality(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: entity_id, SERVICE_ATTR_VALUE: 80},
+        NumberService.SET_VALUE,
+        {CommonServiceArgument.ENTITY_ID: entity_id, SERVICE_ATTR_VALUE: 80},
     )
     await hass.async_block_till_done()
 
@@ -693,8 +693,8 @@ async def test_options_entities_available_non_writable(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: entity_id, SERVICE_ATTR_VALUE: 80},
+        NumberService.SET_VALUE,
+        {CommonServiceArgument.ENTITY_ID: entity_id, CommonServiceArgument.VALUE: 80},
         blocking=True,
     )
 
@@ -741,8 +741,11 @@ async def test_options_entities_available_non_writable(
     with pytest.raises(HomeAssistantError, match=r"Option.*cannot be set"):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: entity_id, SERVICE_ATTR_VALUE: 80},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: entity_id,
+                CommonServiceArgument.VALUE: 80,
+            },
             blocking=True,
         )
 
