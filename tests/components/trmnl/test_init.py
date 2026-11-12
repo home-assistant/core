@@ -189,6 +189,10 @@ async def test_migrate_retries_when_trmnl_is_unreachable(
     await setup_integration(hass, mock_api_key_config_entry)
 
     assert mock_api_key_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert (
+        mock_api_key_config_entry.error_reason_translation_key
+        == "migration_connection_error"
+    )
     assert mock_api_key_config_entry.version == 1
 
 

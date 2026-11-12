@@ -73,9 +73,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: TRMNLConfigEntry) -> N
         ) from err
     except (TRMNLError, TimeoutError, ClientError) as err:
         raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="update_error",
-            translation_placeholders={"error": str(err)},
+            translation_domain=DOMAIN, translation_key="migration_connection_error"
         ) from err
 
     # The user may have signed in to the same account with OAuth while this entry failed to load.

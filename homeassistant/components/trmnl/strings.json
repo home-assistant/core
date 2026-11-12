@@ -8,6 +8,9 @@
       "missing_scopes": "Home Assistant needs to read and change your TRMNL devices. Sign in again and keep \"Read your devices\" and \"Change your device settings\" ticked.",
       "unique_id_mismatch": "You signed in to a different TRMNL account. Sign in to the original account."
     },
+    "create_entry": {
+      "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    },
     "initiate_flow": {
       "user": "[%key:common::config_flow::initiate_flow::account%]"
     },
@@ -22,9 +25,6 @@
         "description": "The TRMNL integration needs you to sign in to your account again.",
         "title": "[%key:common::config_flow::title::reauth%]"
       }
-    },
-    "create_entry": {
-      "default": "[%key:common::config_flow::create_entry::authenticated%]"
     }
   },
   "entity": {
@@ -56,6 +56,9 @@
     },
     "authentication_error": {
       "message": "Authentication failed. Please sign in to TRMNL again."
+    },
+    "migration_connection_error": {
+      "message": "Could not reach TRMNL to move this entry from the API key to signing in. Home Assistant will try again."
     },
     "migration_duplicate": {
       "message": "This TRMNL account is already set up with a newer entry. Remove this entry."
