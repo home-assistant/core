@@ -3,11 +3,10 @@
 from unittest.mock import patch
 
 from aiowatttime.errors import WattTimeError
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_authentication_error(

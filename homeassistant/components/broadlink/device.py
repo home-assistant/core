@@ -1,11 +1,12 @@
 """Support for Broadlink devices."""
 
+import asyncio
 from collections.abc import Awaitable, Callable
 from contextlib import suppress
 import logging
 
-import broadlink as blk
-from broadlink.exceptions import (
+import broadlink_async as blk
+from broadlink_async.exceptions import (
     AuthenticationError,
     AuthorizationError,
     BroadlinkException,
@@ -15,14 +16,7 @@ from broadlink.exceptions import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_MAC,
-    CONF_NAME,
-    CONF_TIMEOUT,
-    CONF_TYPE,
-    Platform,
-)
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_TIMEOUT, CONF_TYPE, Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -51,6 +45,8 @@ class BroadlinkDevice[_ApiT: blk.Device = blk.Device]:
         self.fw_version: int | None = None
         self.authorized: bool | None = None
         self.reset_jobs: list[CALLBACK_TYPE] = []
+        # Held across read-modify-write requests that resend device settings.
+        self.settings_lock = asyncio.Lock()
 
     @property
     def name(self) -> str:
@@ -224,4 +220,4 @@ class BroadlinkDevice[_ApiT: blk.Device = blk.Device]:
             self.api.host[0],
         )
 
-        self.config.async_start_reauth(self.hass, data={CONF_NAME: self.name})
+        self.config.async_start_reauth(self.hass)

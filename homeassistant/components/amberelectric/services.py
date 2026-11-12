@@ -1,9 +1,11 @@
 """Amber Electric Service class."""
 
+from enum import StrEnum
+
 from amberelectric.models.channel import ChannelType
 import probatio
 
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -16,20 +18,29 @@ from homeassistant.helpers import service
 from homeassistant.helpers.selector import ConfigEntrySelector
 from homeassistant.util.json import JsonValueType
 
-from .const import (
-    ATTR_CHANNEL_TYPE,
-    CONTROLLED_LOAD_CHANNEL,
-    DOMAIN,
-    FEED_IN_CHANNEL,
-    GENERAL_CHANNEL,
-)
+from .const import CONTROLLED_LOAD_CHANNEL, DOMAIN, FEED_IN_CHANNEL, GENERAL_CHANNEL
 from .coordinator import AmberConfigEntry
 from .helpers import format_cents_to_dollars, normalize_descriptor
 
+
+class AmberElectricService(StrEnum):
+    """Store keys for Amber Electric services."""
+
+    GET_FORECASTS = "get_forecasts"
+
+
+class AmberElectricServiceArgument(StrEnum):
+    """Store keys for Amber Electric service arguments."""
+
+    CHANNEL_TYPE = "channel_type"
+
+
 GET_FORECASTS_SCHEMA = probatio.Schema(
     {
-        ATTR_CONFIG_ENTRY_ID: ConfigEntrySelector({"integration": DOMAIN}),
-        ATTR_CHANNEL_TYPE: probatio.In(
+        CommonServiceArgument.CONFIG_ENTRY_ID: ConfigEntrySelector(
+            {"integration": DOMAIN}
+        ),
+        AmberElectricServiceArgument.CHANNEL_TYPE: probatio.In(
             [GENERAL_CHANNEL, CONTROLLED_LOAD_CHANNEL, FEED_IN_CHANNEL]
         ),
     }
@@ -90,9 +101,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the services for the Amber integration."""
 
     async def handle_get_forecasts(call: ServiceCall) -> ServiceResponse:
-        channel_type = call.data[ATTR_CHANNEL_TYPE]
+        channel_type = call.data[AmberElectricServiceArgument.CHANNEL_TYPE]
         entry: AmberConfigEntry = service.async_get_config_entry(
-            hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+            hass, DOMAIN, call.data[CommonServiceArgument.CONFIG_ENTRY_ID]
         )
         coordinator = entry.runtime_data
         forecasts = get_forecasts(channel_type, coordinator.data)
@@ -100,7 +111,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        "get_forecasts",
+        AmberElectricService.GET_FORECASTS,
         handle_get_forecasts,
         GET_FORECASTS_SCHEMA,
         supports_response=SupportsResponse.ONLY,

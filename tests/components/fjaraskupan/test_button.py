@@ -14,6 +14,8 @@ from fjaraskupan import (
 )
 from habluetooth import BluetoothServiceInfo
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.fjaraskupan.const import DOMAIN
@@ -22,9 +24,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from . import COOKER_SERVICE_INFO
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import inject_bluetooth_service_info
 
 BUTTON_ENTITY_ID = "button.fjaraskupan_reset_grease_filter"
 GREASE_FILTER_ENTITY_ID = "binary_sensor.fjaraskupan_grease_filter"

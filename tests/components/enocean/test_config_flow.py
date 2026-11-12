@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock, Mock, patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.enocean.config_flow import EnOceanFlowHandler
 from homeassistant.components.enocean.const import DOMAIN, MANUFACTURER
 from homeassistant.config_entries import (
@@ -14,8 +16,6 @@ from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
-
-from tests.common import MockConfigEntry
 
 GATEWAY_CLASS = "homeassistant.components.enocean.config_flow.Gateway"
 GLOB_METHOD = "homeassistant.components.enocean.config_flow.glob.glob"
@@ -117,7 +117,7 @@ async def test_detection_flow_with_invalid_path(hass: HomeAssistant) -> None:
 
     with (
         patch(GATEWAY_CLASS, return_value=Mock(start=AsyncMock(), stop=Mock())),
-        patch(SETUP_ENTRY_METHOD, AsyncMock(return_value=True)),
+        patch(SETUP_ENTRY_METHOD, AsyncMock(return_value=None)),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_DEVICE: USER_PROVIDED_PATH}
@@ -163,7 +163,7 @@ async def test_manual_flow_with_invalid_path(hass: HomeAssistant) -> None:
 
     with (
         patch(GATEWAY_CLASS, return_value=Mock(start=AsyncMock(), stop=Mock())),
-        patch(SETUP_ENTRY_METHOD, AsyncMock(return_value=True)),
+        patch(SETUP_ENTRY_METHOD, AsyncMock(return_value=None)),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_DEVICE: USER_PROVIDED_PATH}
@@ -241,7 +241,7 @@ async def test_usb_discovery(
             GATEWAY_CLASS,
             return_value=Mock(start=AsyncMock(), stop=Mock()),
         ),
-        patch(SETUP_ENTRY_METHOD, AsyncMock(return_value=True)),
+        patch(SETUP_ENTRY_METHOD, AsyncMock(return_value=None)),
         patch(
             "homeassistant.components.usb.get_serial_by_id",
             side_effect=lambda x: x,

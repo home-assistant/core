@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 
 from hole.exceptions import HoleConnectionError, HoleError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 import homeassistant
 from homeassistant.components import pi_hole
@@ -15,8 +16,6 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.util import dt as dt_util
 
 from . import CONFIG_DATA_DEFAULTS, ZERO_DATA, _create_mocked_hole, _patch_init_hole
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_change_api_5_to_6(

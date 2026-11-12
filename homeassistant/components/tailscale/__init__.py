@@ -10,7 +10,7 @@ from .coordinator import TailscaleConfigEntry, TailscaleDataUpdateCoordinator
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: TailscaleConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: TailscaleConfigEntry) -> None:
     """Set up Tailscale from a config entry."""
     if CONF_OAUTH_CLIENT_ID not in entry.data:
         # Entries created with a 90-day API access token migrate to a
@@ -31,9 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TailscaleConfigEntry) ->
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: TailscaleConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: TailscaleConfigEntry) -> None:
     """Unload Tailscale config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

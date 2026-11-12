@@ -44,7 +44,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: KodiConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: KodiConfigEntry) -> None:
     """Set up Kodi from a config entry."""
     conn = get_kodi_connection(
         entry.data[CONF_HOST],
@@ -78,12 +78,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: KodiConfigEntry) -> bool
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: KodiConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: KodiConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        await entry.runtime_data.connection.close()
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    await entry.runtime_data.connection.close()

@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import override
 
-from aioindiallsky import IndiAllSkyError, MediaData
+from aioindiallsky import IndiAllSkyAuthError, IndiAllSkyError, MediaData
 
 from homeassistant.components.image import (
     ImageEntity,
@@ -140,6 +140,9 @@ class IndiAllSkyImageEntity(IndiAllSkyEntity, ImageEntity):
             image_bytes = await self.coordinator.client.fetch_image(
                 self.entity_description.image_filename
             )
+        except IndiAllSkyAuthError:
+            self._entry.async_start_reauth(self.hass)
+            return None
         except IndiAllSkyError:
             return None
         else:

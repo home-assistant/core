@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock
 
 from pynina import ApiError, Warning
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.nina.const import (
     CONF_AREA_FILTER,
@@ -29,8 +30,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_platform
 from .const import DUMMY_USER_INPUT
-
-from tests.common import MockConfigEntry
 
 
 def assert_dummy_entry_created(result: dict[str, Any]) -> None:

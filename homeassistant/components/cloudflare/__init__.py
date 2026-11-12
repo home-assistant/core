@@ -17,7 +17,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: CloudflareConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: CloudflareConfigEntry) -> None:
     """Set up Cloudflare from a config entry."""
     entry.runtime_data = CloudflareCoordinator(hass, entry)
     await entry.runtime_data.async_config_entry_first_refresh()
@@ -25,10 +25,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: CloudflareConfigEntry) -
     # Since we are not using coordinator for data reads, we need to add dummy listener
     entry.async_on_unload(entry.runtime_data.async_add_listener(async_noop))
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: CloudflareConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: CloudflareConfigEntry) -> None:
     """Unload Cloudflare config entry."""
-
-    return True

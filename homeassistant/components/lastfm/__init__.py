@@ -6,7 +6,7 @@ from .const import PLATFORMS
 from .coordinator import LastFMConfigEntry, LastFMDataUpdateCoordinator
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: LastFMConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: LastFMConfigEntry) -> None:
     """Set up lastfm from a config entry."""
 
     coordinator = LastFMDataUpdateCoordinator(hass, entry)
@@ -15,9 +15,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LastFMConfigEntry) -> bo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: LastFMConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LastFMConfigEntry) -> None:
     """Unload lastfm config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

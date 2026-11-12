@@ -3,13 +3,12 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyipp import IPPConnectionError
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.ipp.const import REQUEST_TIMEOUT
 from homeassistant.components.ipp.coordinator import IPPDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @patch(

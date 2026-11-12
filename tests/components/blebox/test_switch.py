@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, PropertyMock
 
 import blebox_uniapi
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.switch import SwitchDeviceClass
 from homeassistant.config_entries import ConfigEntryState
@@ -27,8 +28,6 @@ from .conftest import (
     mock_only_feature,
     setup_product_mock,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="switchbox")
@@ -166,6 +165,7 @@ def switchbox_d_fixture():
     type(product).product = PropertyMock(return_value="switchBoxD")
     type(product).brand = PropertyMock(return_value="BleBox")
     type(product).firmware_version = PropertyMock(return_value="1.23")
+    type(product).hardware_version = PropertyMock(return_value="0.1")
     type(product).unique_id = PropertyMock(return_value="abcd0123ef5678")
 
     type(relay1).product = product

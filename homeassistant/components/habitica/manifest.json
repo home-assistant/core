@@ -1,8 +1,10 @@
 {
   "domain": "habitica",
   "name": "Habitica",
+  "categories": ["productivity_information.calendars_todos"],
   "codeowners": ["@tr4nt0r"],
   "config_flow": true,
+  "connectivity": ["cloud", "network"],
   "documentation": "https://www.home-assistant.io/integrations/habitica",
   "integration_type": "service",
   "iot_class": "cloud_polling",

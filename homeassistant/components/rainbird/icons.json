@@ -8,6 +8,9 @@
     "button": {
       "run_program": {
         "default": "mdi:sprinkler-variant"
+      },
+      "sync_time": {
+        "default": "mdi:clock-outline"
       }
     },
     "calendar": {

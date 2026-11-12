@@ -2,12 +2,12 @@
 
 import asyncio
 
+from pytest_homeassistant.common import get_system_health_info
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+
 from homeassistant.components.ipma.system_health import IPMA_API_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import get_system_health_info
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_ipma_system_health(

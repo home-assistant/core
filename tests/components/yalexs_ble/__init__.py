@@ -1,8 +1,11 @@
 """Tests for the Yale Access Bluetooth integration."""
 
-from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
+from pytest_homeassistant.components.bluetooth import (
+    generate_advertisement_data,
+    generate_ble_device,
+)
 
-from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
+from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 
 YALE_ACCESS_LOCK_DISCOVERY_INFO = BluetoothServiceInfoBleak(
     name="M1012LU",

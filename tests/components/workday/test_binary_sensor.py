@@ -5,9 +5,9 @@ from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.workday.binary_sensor import SERVICE_CHECK_DATE
 from homeassistant.components.workday.const import (
     DEFAULT_EXCLUDES,
     DEFAULT_NAME,
@@ -15,6 +15,7 @@ from homeassistant.components.workday.const import (
     DEFAULT_WORKDAYS,
     DOMAIN,
 )
+from homeassistant.components.workday.services import WorkdayService
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -51,8 +52,6 @@ from . import (
     TEST_OPTIONAL_CATEGORY,
     init_integration,
 )
-
-from tests.common import async_fire_time_changed
 
 
 @pytest.mark.parametrize(
@@ -359,7 +358,7 @@ async def test_check_date_service(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_CHECK_DATE,
+        WorkdayService.CHECK_DATE,
         {
             "entity_id": "binary_sensor.workday_sensor_de_bw",
             "check_date": date(2022, 12, 25),  # Christmas Day
@@ -371,7 +370,7 @@ async def test_check_date_service(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_CHECK_DATE,
+        WorkdayService.CHECK_DATE,
         {
             "entity_id": "binary_sensor.workday_sensor_de_bw",
             "check_date": date(2022, 12, 23),  # Normal Friday
@@ -383,7 +382,7 @@ async def test_check_date_service(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_CHECK_DATE,
+        WorkdayService.CHECK_DATE,
         {
             "entity_id": "binary_sensor.workday_sensor_de_bw",
             "check_date": date(2022, 12, 17),  # Saturday (no workday)
@@ -457,10 +456,14 @@ async def test_only_repairs_for_current_next_year(
         "remove_holidays": remove_dates,
         "language": "de",
     }
-    await init_integration(hass, config)
+    entry = await init_integration(hass, config)
 
     assert len(issue_registry.issues) == 2
     assert issue_registry.issues == snapshot
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+    assert len(issue_registry.issues) == 0
 
 
 async def test_missing_language(

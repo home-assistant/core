@@ -1,10 +1,11 @@
 """Common fixtures for the Victron VRM Forecasts tests."""
 
 from collections.abc import Generator
-import datetime
+import datetime as dt
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from victron_vrm.models.aggregations import ForecastAggregations
 
 from homeassistant.components.victron_remote_monitoring.const import (
@@ -13,8 +14,6 @@ from homeassistant.components.victron_remote_monitoring.const import (
 )
 from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 CONST_1_HOUR = 3600000
 CONST_12_HOURS = 43200000
@@ -40,7 +39,7 @@ def mock_setup_entry(mock_vrm_client) -> Generator[AsyncMock]:
     """Override async_setup_entry while client is patched."""
     with patch(
         "homeassistant.components.victron_remote_monitoring.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -66,9 +65,9 @@ def mock_vrm_client() -> Generator[AsyncMock]:
     """Patch the VictronVRMClient to supply forecast and site data."""
 
     def fake_dt_now():
-        return datetime.datetime.fromtimestamp(
+        return dt.datetime.fromtimestamp(
             (CONST_FORECAST_START + (CONST_24_HOURS + CONST_12_HOURS) + 60000) / 1000,
-            tz=datetime.UTC,
+            tz=dt.UTC,
         )
 
     solar_agg = ForecastAggregations(
@@ -76,7 +75,7 @@ def mock_vrm_client() -> Generator[AsyncMock]:
         end=CONST_FORECAST_END // 1000,
         records=[(x // 1000, y) for x, y in CONST_FORECAST_RECORDS],
         custom_dt_now=fake_dt_now,
-        time_zone=datetime.UTC,
+        time_zone=dt.UTC,
         site_id=123456,
     )
     consumption_agg = ForecastAggregations(
@@ -84,7 +83,7 @@ def mock_vrm_client() -> Generator[AsyncMock]:
         end=CONST_FORECAST_END // 1000,
         records=[(x // 1000, y) for x, y in CONST_FORECAST_RECORDS],
         custom_dt_now=fake_dt_now,
-        time_zone=datetime.UTC,
+        time_zone=dt.UTC,
         site_id=123456,
     )
 

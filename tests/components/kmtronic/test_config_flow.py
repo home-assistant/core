@@ -7,15 +7,14 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp import ClientConnectorError, ClientResponseError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant import config_entries
 from homeassistant.components.kmtronic.const import CONF_REVERSE, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 

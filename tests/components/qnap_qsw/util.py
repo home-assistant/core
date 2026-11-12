@@ -46,12 +46,11 @@ from aioqsw.const import (
     API_VAL,
     API_VERSION,
 )
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.qnap_qsw.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 CONFIG = {
     CONF_URL: "http://192.168.1.100",

@@ -31,8 +31,7 @@ from homeassistant.helpers.selector import (
     UnitOfMeasurementSelectorConfig,
 )
 
-from .const import DOMAIN
-from .sensor import DEFAULT_MAX, DEFAULT_MIN
+from .const import DEFAULT_MAX, DEFAULT_MIN, DOMAIN
 
 
 class _FlowType(StrEnum):

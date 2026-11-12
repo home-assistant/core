@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 from openhomedevice.device import Device
 from openhomedevice.exceptions import OpenhomeConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
@@ -20,10 +21,10 @@ from homeassistant.components.media_player import (
     SERVICE_SELECT_SOURCE,
     MediaType,
 )
-from homeassistant.components.openhome.const import DOMAIN
-from homeassistant.components.openhome.services import (
-    ATTR_PIN_INDEX,
-    SERVICE_INVOKE_PIN,
+from homeassistant.components.openhome.const import (
+    DOMAIN,
+    OpenhomeService,
+    OpenhomeServiceArgument,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -43,6 +44,7 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
     STATE_UNAVAILABLE,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -51,8 +53,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import async_poll, setup_integration
 from .conftest import TRACK_INFO
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 ENTITY_ID = "media_player.friendly_name"
 MEDIA_ID = "http://localhost/track.flac"
@@ -291,8 +291,8 @@ async def test_invoke_pin_calls_device(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_INVOKE_PIN,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PIN_INDEX: 3},
+        OpenhomeService.INVOKE_PIN,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_ID, OpenhomeServiceArgument.PIN: 3},
         blocking=True,
     )
 
@@ -302,7 +302,7 @@ async def test_invoke_pin_calls_device(
 @pytest.mark.parametrize(
     ("pins_enabled", "translation_key", "await_count"),
     [
-        pytest.param(True, SERVICE_INVOKE_PIN, 1, id="pins_supported"),
+        pytest.param(True, "invoke_pin", 1, id="pins_supported"),
         pytest.param(False, "pins_not_supported", 0, id="pins_not_supported"),
     ],
 )
@@ -323,8 +323,11 @@ async def test_invoke_pin(
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_INVOKE_PIN,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PIN_INDEX: 1},
+            OpenhomeService.INVOKE_PIN,
+            {
+                CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+                OpenhomeServiceArgument.PIN: 1,
+            },
             blocking=True,
         )
 

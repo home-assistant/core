@@ -5,10 +5,12 @@ from unittest.mock import patch
 from aioairzone.exceptions import (
     AirzoneError,
     HotWaterNotAvailable,
+    IaqSensorNotAvailable,
     InvalidMethod,
     SystemOutOfRange,
 )
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.airzone.const import DOMAIN
 from homeassistant.components.airzone.coordinator import SCAN_INTERVAL
@@ -17,8 +19,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import utcnow
 
 from .util import CONFIG, HVAC_MOCK, HVAC_MOCK_NEW_ZONES, HVAC_VERSION_MOCK
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_coordinator_client_connector_error(hass: HomeAssistant) -> None:
@@ -44,6 +44,10 @@ async def test_coordinator_client_connector_error(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
             side_effect=SystemOutOfRange,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_iaq",
+            side_effect=IaqSensorNotAvailable,
         ),
         patch(
             "homeassistant.components.airzone.AirzoneLocalApi.get_version",
@@ -94,6 +98,10 @@ async def test_coordinator_new_devices(
         patch(
             "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
             side_effect=SystemOutOfRange,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_iaq",
+            side_effect=IaqSensorNotAvailable,
         ),
         patch(
             "homeassistant.components.airzone.AirzoneLocalApi.get_version",

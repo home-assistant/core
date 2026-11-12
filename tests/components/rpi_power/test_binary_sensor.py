@@ -5,6 +5,12 @@ import logging
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    patch,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.rpi_power import binary_sensor
@@ -19,13 +25,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    patch,
-    snapshot_platform,
-)
 
 ENTITY_ID = "binary_sensor.raspberry_pi_power_status"
 
@@ -91,10 +90,17 @@ async def test_new_detected(
         DESCRIPTION_NORMALIZED,
     ) in caplog.record_tuples
 
-    assert issue_registry.async_get_issue(
+    issue = issue_registry.async_get_issue(
         domain=DOMAIN,
         issue_id="under_voltage_detected",
     )
+    assert issue
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert issue.config_entry_id == entry.entry_id
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, "under_voltage_detected") is None
 
 
 async def test_setup(

@@ -81,6 +81,7 @@ class SwitchbotCloudData:
 
     api: SwitchBotAPI
     devices: SwitchbotDevices
+    webhook_registered: bool = False
 
 
 type SwitchbotCloudConfigEntry = ConfigEntry[SwitchbotCloudData]
@@ -286,7 +287,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: SwitchbotCloudConfigEntry
-) -> bool:
+) -> None:
     """Set up SwitchBot via API from a config entry."""
     token = entry.data[CONF_API_TOKEN]
     secret = entry.data[CONF_API_KEY]
@@ -342,19 +343,15 @@ async def async_setup_entry(
     # retry to set up a second time
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: SwitchbotCloudConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
-    if unload_ok and CONF_WEBHOOK_ID in entry.data:
+    if CONF_WEBHOOK_ID in entry.data:
         webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
-
-    return unload_ok
 
 
 async def _initialize_webhook(
@@ -399,6 +396,7 @@ async def _initialize_webhook(
 
         # check if webhook is configured in switchbot cloud
 
+        entry.runtime_data.webhook_registered = False
         try:
             check_webhook_result = None
             with contextlib.suppress(Exception):
@@ -433,6 +431,7 @@ async def _initialize_webhook(
                 )
 
             _LOGGER.debug("Registered Switchbot cloud webhook at: %s", webhook_url)
+            entry.runtime_data.webhook_registered = True
         except SwitchBotDeviceOfflineError as e:
             _LOGGER.error("Failed to connect Switchbot cloud device: %s", e)
         except SwitchBotConnectionError as e:

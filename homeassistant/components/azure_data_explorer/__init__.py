@@ -69,7 +69,7 @@ async def async_setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Do the setup based on the config entry and the filter from yaml."""
     adx = AzureDataExplorer(hass, entry)
     try:
@@ -86,12 +86,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     entry.async_on_unload(adx.async_stop)
     await adx.async_start()
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
-    return True
 
 
 class AzureDataExplorer:

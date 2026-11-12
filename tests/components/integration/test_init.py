@@ -3,16 +3,18 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import integration
 from homeassistant.components.integration.config_flow import ConfigFlowHandler
-from homeassistant.components.integration.const import DOMAIN
+from homeassistant.components.integration.const import (
+    DOMAIN,
+    IntegrationEntityStateAttribute,
+)
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -129,7 +131,7 @@ async def test_setup_and_remove_config_entry(
     state = hass.states.get(integration_entity_id)
     assert state.state == "unknown"
     assert "unit_of_measurement" not in state.attributes
-    assert state.attributes["source"] == "sensor.input"
+    assert state.attributes[IntegrationEntityStateAttribute.SOURCE] == "sensor.input"
 
     hass.states.async_set(input_sensor_entity_id, 10, {"unit_of_measurement": "cat"})
     hass.states.async_set(input_sensor_entity_id, 11, {"unit_of_measurement": "cat"})

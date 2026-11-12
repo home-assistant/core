@@ -1,13 +1,20 @@
 """Tests for the Sofar switch platform."""
 
+from datetime import timedelta
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 from modbus_connection import ModbusError
 from modbus_connection.mock import MockModbusConnection
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.sofar.const import DOMAIN
+from homeassistant.components.sofar.const import DOMAIN, PACKS_SCAN_INTERVAL
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -21,8 +28,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import MOCK_ENTRY_DATA, MOCK_MODEL, MOCK_SERIAL, seed_pv_inverter
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def _setup_pv(
@@ -54,11 +59,16 @@ async def _setup_pv(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_pv_entities(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test the switch entities a PV-only inverter serves."""
-    entry, _ = await _setup_pv(hass)
+    """Test the switch entities a PV-only inverter serves after a poll."""
+    entry, connection = await _setup_pv(hass)
+    connection.for_unit(1).holding[0x1104] = 1  # remote switch on
+    freezer.tick(timedelta(seconds=PACKS_SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
     await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
 

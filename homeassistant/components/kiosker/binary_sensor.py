@@ -12,8 +12,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import KioskerConfigEntry
-from .coordinator import KioskerData
+from .coordinator import KioskerConfigEntry, KioskerData
 from .entity import KioskerEntity
 
 # These entities rely on the shared data coordinator instead of per-entity polling.

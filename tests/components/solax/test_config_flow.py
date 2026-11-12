@@ -78,7 +78,7 @@ async def test_form_success(
         patch("solax.RealTimeAPI.get_data", return_value=__mock_get_data()),
         patch(
             "homeassistant.components.solax.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = flow
@@ -133,7 +133,7 @@ async def test_form_discover_error(
         patch("solax.RealTimeAPI.get_data", return_value=__mock_get_data()),
         patch(
             "homeassistant.components.solax.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -202,7 +202,7 @@ async def test_form_finalize_error(
         patch("solax.RealTimeAPI.get_data", return_value=__mock_get_data()),
         patch(
             "homeassistant.components.solax.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(

@@ -1,6 +1,6 @@
 """Support for Pilight binary sensors."""
 
-import datetime
+import datetime as dt
 from typing import Any
 
 import probatio
@@ -153,12 +153,12 @@ class PilightTriggerSensor(BinarySensorEntity):
         self._on_value = on_value
         self._off_value = off_value
         self._reset_delay_sec = rst_dly_sec
-        self._delay_after: datetime.datetime | None = None
+        self._delay_after: dt.datetime | None = None
         self._hass = hass
 
         hass.bus.listen(EVENT, self._handle_code)
 
-    def _reset_state(self, _: datetime.datetime) -> None:
+    def _reset_state(self, _: dt.datetime) -> None:
         self._attr_is_on = False
         self._delay_after = None
         self.schedule_update_ha_state()
@@ -185,7 +185,7 @@ class PilightTriggerSensor(BinarySensorEntity):
             value = call.data[self._variable]
             self._attr_is_on = value == self._on_value
             if self._delay_after is None:
-                self._delay_after = dt_util.utcnow() + datetime.timedelta(
+                self._delay_after = dt_util.utcnow() + dt.timedelta(
                     seconds=self._reset_delay_sec
                 )
                 track_point_in_time(self._hass, self._reset_state, self._delay_after)

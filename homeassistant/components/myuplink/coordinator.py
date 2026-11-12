@@ -48,7 +48,7 @@ class MyUplinkDataCoordinator(DataUpdateCoordinator[CoordinatorData]):
     @override
     async def _async_update_data(self) -> CoordinatorData:
         """Fetch data from the myUplink API."""
-        async with asyncio.timeout(10):
+        async with asyncio.timeout(45):
             # Get systems
             systems = await self.api.async_get_systems()
 

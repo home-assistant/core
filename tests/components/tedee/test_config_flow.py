@@ -9,6 +9,7 @@ from aiotedee import (
 )
 from aiotedee.models import TedeeBridge
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.tedee.const import CONF_LOCAL_ACCESS_TOKEN, DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigFlowResult
@@ -17,8 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import WEBHOOK_ID
-
-from tests.common import MockConfigEntry
 
 FLOW_UNIQUE_ID = "112233445566778899"
 LOCAL_ACCESS_TOKEN = "api_token"

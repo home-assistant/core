@@ -52,15 +52,15 @@ def get_minio_notification_response(
 class MinioEventStreamIterator(Iterable):
     """Iterator wrapper over notification http response stream."""
 
-    @override
-    def __iter__(self) -> Self:
-        """Return self."""
-        return self
-
     def __init__(self, response):
         """Init."""
         self._response = response
         self._stream = response.stream()
+
+    @override
+    def __iter__(self) -> Self:
+        """Return self."""
+        return self
 
     def __next__(self):
         """Get next not empty line."""

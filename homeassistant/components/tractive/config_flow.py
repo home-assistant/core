@@ -16,6 +16,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CLIENT_ID, DOMAIN
+from .coordinator import TractiveConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -99,9 +100,26 @@ class TractiveConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
+        return await self._async_update_credentials(
+            self._get_reauth_entry(), "reauth_confirm", user_input
+        )
 
-        errors = {}
-        reauth_entry = self._get_reauth_entry()
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        return await self._async_update_credentials(
+            self._get_reconfigure_entry(), "reconfigure", user_input
+        )
+
+    async def _async_update_credentials(
+        self,
+        entry: TractiveConfigEntry,
+        step_id: str,
+        user_input: dict[str, Any] | None,
+    ) -> ConfigFlowResult:
+        """Validate new credentials and update the config entry."""
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             try:
@@ -119,14 +137,14 @@ class TractiveConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(info["user_id"])
                 self._abort_if_unique_id_mismatch()
                 return self.async_update_reload_and_abort(
-                    reauth_entry, data_updates=user_input
+                    entry, data_updates=user_input
                 )
 
         return self.async_show_form(
-            step_id="reauth_confirm",
+            step_id=step_id,
             data_schema=self.add_suggested_values_to_schema(
                 USER_DATA_SCHEMA,
-                {CONF_EMAIL: reauth_entry.data[CONF_EMAIL]},
+                {CONF_EMAIL: entry.data[CONF_EMAIL]},
             ),
             errors=errors,
         )

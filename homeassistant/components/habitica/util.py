@@ -1,7 +1,7 @@
 """Utility functions for Habitica."""
 
 from dataclasses import asdict, fields
-import datetime
+import datetime as dt
 from math import floor
 from typing import TYPE_CHECKING, Any, Literal
 
@@ -24,7 +24,7 @@ from habiticalib import ContentData, Frequency, GroupData, QuestBoss, TaskData, 
 from homeassistant.util import dt as dt_util
 
 
-def next_due_date(task: TaskData, today: datetime.datetime) -> datetime.date | None:
+def next_due_date(task: TaskData, today: dt.datetime) -> dt.date | None:
     """Calculate due date for dailies and yesterdailies."""
 
     if task.everyX == 0 or not task.nextDue:  # grey dailies never become due

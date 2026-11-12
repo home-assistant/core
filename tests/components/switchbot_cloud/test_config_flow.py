@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.switchbot_cloud.config_flow import (
@@ -17,8 +18,6 @@ from homeassistant.components.switchbot_cloud.const import (
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 OLD_CREDENTIALS = {CONF_API_TOKEN: "old-token", CONF_API_KEY: "old-secret-key"}
 NEW_CREDENTIALS = {CONF_API_TOKEN: "new-token", CONF_API_KEY: "new-secret-key"}

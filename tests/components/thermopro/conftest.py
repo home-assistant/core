@@ -4,13 +4,12 @@ from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from thermopro_ble import ThermoProDevice
 
 from homeassistant.components.thermopro.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import now
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)

@@ -3,6 +3,7 @@
 from typing import Any
 
 import probatio
+from zha.zigbee.device import ZigbeeDevice
 from zhaquirks.inovelli.types import AllLEDEffectType, SingleLEDEffectType
 from zigpy.zcl.clusters.security import IasWd
 
@@ -64,15 +65,14 @@ INOVELLI_INDIVIDUAL_LED_EFFECT_SCHEMA = INOVELLI_ALL_LED_EFFECT_SCHEMA.extend(
     }
 )
 
-ACTION_SCHEMA_MAP = {
-    INOVELLI_ALL_LED_EFFECT: INOVELLI_ALL_LED_EFFECT_SCHEMA,
-    INOVELLI_INDIVIDUAL_LED_EFFECT: INOVELLI_INDIVIDUAL_LED_EFFECT_SCHEMA,
-}
-
-ACTION_SCHEMA = probatio.Any(
-    INOVELLI_ALL_LED_EFFECT_SCHEMA,
-    INOVELLI_INDIVIDUAL_LED_EFFECT_SCHEMA,
-    DEFAULT_ACTION_SCHEMA,
+ACTION_SCHEMA = probatio.TaggedUnion(
+    CONF_TYPE,
+    {
+        ACTION_SQUAWK: DEFAULT_ACTION_SCHEMA,
+        ACTION_WARN: DEFAULT_ACTION_SCHEMA,
+        INOVELLI_ALL_LED_EFFECT: INOVELLI_ALL_LED_EFFECT_SCHEMA,
+        INOVELLI_INDIVIDUAL_LED_EFFECT: INOVELLI_INDIVIDUAL_LED_EFFECT_SCHEMA,
+    },
 )
 
 # Maps a cluster_id the device must expose to the available actions.
@@ -147,8 +147,7 @@ async def async_validate_action_config(
     hass: HomeAssistant, config: ConfigType
 ) -> ConfigType:
     """Validate config."""
-    schema = ACTION_SCHEMA_MAP.get(config[CONF_TYPE], DEFAULT_ACTION_SCHEMA)
-    return schema(config)
+    return ACTION_SCHEMA(config)
 
 
 async def async_get_actions(
@@ -158,6 +157,9 @@ async def async_get_actions(
     try:
         zha_device = async_get_zha_device_proxy(hass, device_id).device
     except KeyError, AttributeError:
+        return []
+    # Green Power devices have no clusters
+    if not isinstance(zha_device, ZigbeeDevice):
         return []
     cluster_ids = {
         cluster_id

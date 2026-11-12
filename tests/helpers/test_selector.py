@@ -1395,6 +1395,7 @@ def test_automation_behavior_selector_schema_error(schema) -> None:
             (
                 "abc123",
                 None,
+                {"name": "abc123", "percentage": 3},
                 [{"name": "abc123", "percentage": "nope"}],
                 [{"name": "abc123", "percentage": 3, "not_exist": 5}],
             ),
@@ -2503,6 +2504,22 @@ def test_language_selector_schema(schema, valid_selections, invalid_selections) 
                 {},
                 {"latitude": 1.0},
                 {"longitude": 1.0},
+                {
+                    "latitude": 91.0,
+                    "longitude": 1.0,
+                },
+                {
+                    "latitude": -91.0,
+                    "longitude": 1.0,
+                },
+                {
+                    "latitude": 1.0,
+                    "longitude": 181.0,
+                },
+                {
+                    "latitude": 1.0,
+                    "longitude": -181.0,
+                },
             ),
         ),
     ],

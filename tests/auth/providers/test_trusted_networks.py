@@ -9,6 +9,7 @@ import pytest
 
 from homeassistant import auth
 from homeassistant.auth import auth_store
+from homeassistant.auth.models import AuthFlowContext
 from homeassistant.auth.providers import trusted_networks as tn_auth
 from homeassistant.components.http import CONF_TRUSTED_PROXIES, CONF_USE_X_FORWARDED_FOR
 from homeassistant.core import HomeAssistant
@@ -195,6 +196,29 @@ async def test_validate_access(provider: tn_auth.TrustedNetworksAuthProvider) ->
         provider.async_validate_access(ip_address("127.0.0.1"))
     with pytest.raises(auth.InvalidAuthError):
         provider.async_validate_access(ip_address("2001:db8::ff00:42:8329"))
+
+
+@pytest.mark.parametrize(
+    ("context", "expected"),
+    [
+        pytest.param(
+            AuthFlowContext(ip_address=ip_address("192.168.0.1")), True, id="trusted"
+        ),
+        pytest.param(
+            AuthFlowContext(ip_address=ip_address("192.168.0.2")),
+            False,
+            id="untrusted",
+        ),
+        pytest.param(AuthFlowContext(), False, id="no-address"),
+    ],
+)
+async def test_can_start_login(
+    provider: tn_auth.TrustedNetworksAuthProvider,
+    context: AuthFlowContext,
+    expected: bool,
+) -> None:
+    """Test the login screen only offers trusted networks to trusted addresses."""
+    assert provider.async_can_start_login(context) is expected
 
 
 async def test_validate_access_proxy(

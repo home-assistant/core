@@ -40,6 +40,17 @@ def test_reviewed_counts_exclude_snapshots() -> None:
     assert (pr.reviewed_lines, pr.reviewed_files) == (22, 2)
 
 
+def test_reviewed_filenames_exclude_snapshots() -> None:
+    """Test snapshot files are left out of the reviewed file names."""
+    pr = _pull_request(
+        file_statuses={
+            "homeassistant/components/peblar/sensor.py": "modified",
+            "tests/components/peblar/snapshots/test_sensor.ambr": "modified",
+        }
+    )
+    assert pr.reviewed_filenames == ["homeassistant/components/peblar/sensor.py"]
+
+
 def test_to_meta_dict_omits_the_changed_filenames() -> None:
     """The metadata payload holds exactly the keys the agent reads."""
     assert _pull_request().to_meta_dict() == {

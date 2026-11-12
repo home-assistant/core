@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.const import EnergyExportMode, EnergyOperationMode
 from tesla_fleet_api.exceptions import InvalidCommand
@@ -32,8 +33,6 @@ from .const import (
     SITE_INFO,
     VEHICLE_DATA_ALT,
 )
-
-from tests.common import async_fire_time_changed
 
 # Entity description keys for the rear seat-heater entities gated by config.
 REAR_LEFT = "climate_state_seat_heater_rear_left"

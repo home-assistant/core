@@ -2,7 +2,7 @@
 
 import asyncio
 from collections.abc import Callable
-import datetime
+import datetime as dt
 from http import HTTPStatus
 import time
 from typing import Any
@@ -18,6 +18,9 @@ from oauth2client.client import (
     OAuth2DeviceCodeError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant import config_entries
 from homeassistant.components.application_credentials import (
@@ -41,12 +44,8 @@ from homeassistant.util.dt import utcnow
 
 from .conftest import CLIENT_ID, CLIENT_SECRET, EMAIL_ADDRESS, AsyncYieldFixture
 
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
-
 CODE_CHECK_INTERVAL = 1
-CODE_CHECK_ALARM_TIMEDELTA = datetime.timedelta(seconds=CODE_CHECK_INTERVAL * 2)
+CODE_CHECK_ALARM_TIMEDELTA = dt.timedelta(seconds=CODE_CHECK_INTERVAL * 2)
 OAUTH2_AUTHORIZE = "https://accounts.google.com/o/oauth2/v2/auth"
 OAUTH2_TOKEN = "https://oauth2.googleapis.com/token"
 
@@ -63,14 +62,14 @@ async def setup_app_creds(hass: HomeAssistant) -> None:
 
 
 @pytest.fixture
-async def code_expiration_delta() -> datetime.timedelta:
+async def code_expiration_delta() -> dt.timedelta:
     """Fixture for code expiration time, defaulting to the future."""
-    return datetime.timedelta(minutes=3)
+    return dt.timedelta(minutes=3)
 
 
 @pytest.fixture
 async def mock_code_flow(
-    code_expiration_delta: datetime.timedelta,
+    code_expiration_delta: dt.timedelta,
 ) -> AsyncYieldFixture[Mock]:
     """Fixture for initiating OAuth flow."""
     with patch(
@@ -132,7 +131,7 @@ async def primary_calendar(
     )
 
 
-async def fire_alarm(hass: HomeAssistant, point_in_time: datetime.datetime) -> None:
+async def fire_alarm(hass: HomeAssistant, point_in_time: dt.datetime) -> None:
     """Fire an alarm and wait for callbacks to run."""
     with freeze_time(point_in_time):
         async_fire_time_changed(hass, point_in_time)
@@ -158,7 +157,7 @@ async def test_full_flow_application_creds(
     assert "url" in result["description_placeholders"]
 
     with patch(
-        "homeassistant.components.google.async_setup_entry", return_value=True
+        "homeassistant.components.google.async_setup_entry", return_value=None
     ) as mock_setup:
         # Run one tick to invoke the credential exchange check
         now = utcnow()
@@ -235,7 +234,7 @@ async def test_timeout_error(
         assert result.get("reason") == "timeout_connect"
 
 
-@pytest.mark.parametrize("code_expiration_delta", [datetime.timedelta(seconds=50)])
+@pytest.mark.parametrize("code_expiration_delta", [dt.timedelta(seconds=50)])
 async def test_expired_after_exchange(
     hass: HomeAssistant,
     mock_code_flow: Mock,
@@ -261,7 +260,7 @@ async def test_expired_after_exchange(
         side_effect=FlowExchangeError(),
     ):
         now = utcnow()
-        await fire_alarm(hass, now + datetime.timedelta(seconds=65))
+        await fire_alarm(hass, now + dt.timedelta(seconds=65))
         await hass.async_block_till_done()
 
     result = await hass.config_entries.flow.async_configure(flow_id=result["flow_id"])
@@ -312,7 +311,7 @@ async def test_exchange_error(
 
     # Run another tick, which attempts credential exchange again
     with patch(
-        "homeassistant.components.google.async_setup_entry", return_value=True
+        "homeassistant.components.google.async_setup_entry", return_value=None
     ) as mock_setup:
         freezer.tick(CODE_CHECK_ALARM_TIMEDELTA)
         async_fire_time_changed(hass, utcnow())
@@ -359,7 +358,7 @@ async def test_duplicate_config_entries(
     # Load a config entry
     config_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.google.async_setup_entry", return_value=True
+        "homeassistant.components.google.async_setup_entry", return_value=None
     ) as mock_setup:
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -401,7 +400,7 @@ async def test_multiple_config_entries(
     # Load a config entry
     config_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.google.async_setup_entry", return_value=True
+        "homeassistant.components.google.async_setup_entry", return_value=None
     ) as mock_setup:
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -420,7 +419,7 @@ async def test_multiple_config_entries(
     assert "url" in result["description_placeholders"]
 
     with patch(
-        "homeassistant.components.google.async_setup_entry", return_value=True
+        "homeassistant.components.google.async_setup_entry", return_value=None
     ) as mock_setup:
         # Run one tick to invoke the credential exchange check
         now = utcnow()
@@ -530,7 +529,7 @@ async def test_reauth_flow(
     assert "url" in result["description_placeholders"]
 
     with patch(
-        "homeassistant.components.google.async_setup_entry", return_value=True
+        "homeassistant.components.google.async_setup_entry", return_value=None
     ) as mock_setup:
         # Run one tick to invoke the credential exchange check
         now = utcnow()
@@ -594,7 +593,7 @@ async def test_calendar_lookup_failure(
     assert "description_placeholders" in result
     assert "url" in result["description_placeholders"]
 
-    with patch("homeassistant.components.google.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.google.async_setup_entry", return_value=None):
         # Run one tick to invoke the credential exchange check
         now = utcnow()
         await fire_alarm(hass, now + CODE_CHECK_ALARM_TIMEDELTA)
@@ -615,7 +614,7 @@ async def test_options_flow_triggers_reauth(
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.google.async_setup_entry", return_value=True
+        "homeassistant.components.google.async_setup_entry", return_value=None
     ) as mock_setup:
         await hass.config_entries.async_setup(config_entry.entry_id)
         mock_setup.assert_called_once()
@@ -647,7 +646,7 @@ async def test_options_flow_no_changes(
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.google.async_setup_entry", return_value=True
+        "homeassistant.components.google.async_setup_entry", return_value=None
     ) as mock_setup:
         await hass.config_entries.async_setup(config_entry.entry_id)
         mock_setup.assert_called_once()
@@ -726,7 +725,7 @@ async def test_web_auth_compatibility(
     )
 
     with patch(
-        "homeassistant.components.google.async_setup_entry", return_value=True
+        "homeassistant.components.google.async_setup_entry", return_value=None
     ) as mock_setup:
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -876,7 +875,7 @@ async def test_web_reauth_flow(
     )
 
     with patch(
-        "homeassistant.components.google.async_setup_entry", return_value=True
+        "homeassistant.components.google.async_setup_entry", return_value=None
     ) as mock_setup:
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result["type"] is FlowResultType.ABORT
@@ -899,3 +898,178 @@ async def test_web_reauth_flow(
     }
 
     assert len(mock_setup.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("entry_unique_id", "primary_calendar_email", "reason", "access_token"),
+    [
+        pytest.param(
+            EMAIL_ADDRESS,
+            EMAIL_ADDRESS,
+            "reconfigure_successful",
+            "ACCESS_TOKEN",
+            id="success",
+        ),
+        pytest.param(
+            EMAIL_ADDRESS,
+            "another-email@example.com",
+            "unique_id_mismatch",
+            "OLD_ACCESS_TOKEN",
+            id="account_mismatch",
+        ),
+        pytest.param(
+            None,
+            EMAIL_ADDRESS,
+            "reconfigure_successful",
+            "ACCESS_TOKEN",
+            id="no_unique_id",
+        ),
+    ],
+)
+async def test_reconfigure_flow(
+    hass: HomeAssistant,
+    mock_code_flow: Mock,
+    mock_exchange: Mock,
+    entry_unique_id: str | None,
+    reason: str,
+    access_token: str,
+) -> None:
+    """Test reconfigure re-runs the device auth flow for the same account."""
+    options = {CONF_CALENDAR_ACCESS: FeatureAccess.read_only.name}
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=entry_unique_id,
+        data={
+            "auth_implementation": DOMAIN,
+            "token": {"access_token": "OLD_ACCESS_TOKEN"},
+        },
+        options=options,
+    )
+    config_entry.add_to_hass(hass)
+    await async_import_client_credential(
+        hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET)
+    )
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "auth"
+
+    with patch("homeassistant.components.google.async_setup_entry", return_value=None):
+        # Run one tick to invoke the credential exchange check
+        await fire_alarm(hass, utcnow() + CODE_CHECK_ALARM_TIMEDELTA)
+        result = await hass.config_entries.flow.async_configure(
+            flow_id=result["flow_id"]
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert config_entry.data["token"]["access_token"] == access_token
+    assert config_entry.options == options
+    assert config_entry.unique_id == EMAIL_ADDRESS
+
+
+async def test_reconfigure_flow_no_unique_id_already_configured(
+    hass: HomeAssistant,
+    mock_code_flow: Mock,
+    mock_exchange: Mock,
+) -> None:
+    """Test reconfigure of an entry without unique ID to an already configured account."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=EMAIL_ADDRESS,
+        data={
+            "auth_implementation": DOMAIN,
+            "token": {"access_token": "OTHER_ACCESS_TOKEN"},
+        },
+    ).add_to_hass(hass)
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "auth_implementation": DOMAIN,
+            "token": {"access_token": "OLD_ACCESS_TOKEN"},
+        },
+    )
+    config_entry.add_to_hass(hass)
+    await async_import_client_credential(
+        hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET)
+    )
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+
+    # Run one tick to invoke the credential exchange check
+    await fire_alarm(hass, utcnow() + CODE_CHECK_ALARM_TIMEDELTA)
+    result = await hass.config_entries.flow.async_configure(flow_id=result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert config_entry.unique_id is None
+    assert config_entry.data["token"]["access_token"] == "OLD_ACCESS_TOKEN"
+
+
+async def test_web_reconfigure_flow(
+    hass: HomeAssistant,
+    mock_code_flow: Mock,
+    aioclient_mock: AiohttpClientMocker,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
+    """Test reconfigure of a web credential entry asks for the configured access."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=EMAIL_ADDRESS,
+        data={
+            CONF_CREDENTIAL_TYPE: CredentialType.WEB_AUTH,
+            "auth_implementation": DOMAIN,
+            "token": {"access_token": "OLD_ACCESS_TOKEN"},
+        },
+        options={CONF_CALENDAR_ACCESS: FeatureAccess.read_only.name},
+    )
+    config_entry.add_to_hass(hass)
+    await async_import_client_credential(
+        hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET)
+    )
+
+    result = await config_entry.start_reconfigure_flow(hass)
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    assert result["url"] == (
+        f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
+        "&redirect_uri=https://example.com/auth/external/callback"
+        f"&state={state}"
+        "&scope=https://www.googleapis.com/auth/calendar.readonly"
+        "&access_type=offline&prompt=consent"
+    )
+    # Web auth credential type skips the device auth attempt
+    mock_code_flow.assert_not_called()
+
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == 200
+
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        json={
+            "refresh_token": "mock-refresh-token",
+            "access_token": "mock-access-token",
+            "token_type": "Bearer",
+            "expires_in": 60,
+            "scope": "https://www.googleapis.com/auth/calendar.readonly",
+        },
+    )
+
+    with patch("homeassistant.components.google.async_setup_entry", return_value=None):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert config_entry.data["token"]["access_token"] == "mock-access-token"
+    assert config_entry.data[CONF_CREDENTIAL_TYPE] == CredentialType.WEB_AUTH

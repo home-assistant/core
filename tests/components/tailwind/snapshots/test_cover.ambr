@@ -23,9 +23,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('tailwind', '_3c_e9_e_6d_21_84_-door1')]>,
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
@@ -56,7 +56,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': None,
     'connections': set({
     }),
@@ -79,7 +79,7 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': '10.10',
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('tailwind', '_3c_e9_e_6d_21_84_')]>,
   })
 # ---
 # name: test_cover_entities[cover.door_2]
@@ -106,9 +106,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('tailwind', '_3c_e9_e_6d_21_84_-door2')]>,
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
@@ -139,7 +139,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': None,
     'connections': set({
     }),
@@ -162,6 +162,6 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': '10.10',
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('tailwind', '_3c_e9_e_6d_21_84_')]>,
   })
 # ---

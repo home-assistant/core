@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from ring_doorbell import AuthenticationError, Ring, RingError, RingTimeout
 from syrupy.assertion import SnapshotAssertion
 
@@ -26,8 +27,6 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import MOCK_HARDWARE_ID
 from .device_mocks import FRONT_DOOR_DEVICE_ID
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_setup(hass: HomeAssistant, mock_ring_client) -> None:

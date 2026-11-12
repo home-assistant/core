@@ -10,6 +10,7 @@ from py_rejseplan.dataclasses.departure import Departure
 from py_rejseplan.dataclasses.product_type import ProductType
 from py_rejseplan.enums import TransportClass
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.rejseplanen.const import (
     CONF_DEPARTURE_TYPE,
@@ -20,8 +21,6 @@ from homeassistant.components.rejseplanen.const import (
 from homeassistant.config_entries import ConfigSubentryDataWithId
 from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 def make_mock_departures(stop_id: int) -> list[Departure]:
@@ -153,7 +152,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.rejseplanen.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -243,7 +242,7 @@ async def mock_setup_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_api: Mock,
-) -> AsyncGenerator[Any, Any]:
+) -> AsyncGenerator[Any]:
     """Fixture to set up the integration."""
     mock_config_entry.add_to_hass(hass)
     with patch(

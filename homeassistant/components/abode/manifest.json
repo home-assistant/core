@@ -1,8 +1,10 @@
 {
   "domain": "abode",
   "name": "Abode",
+  "categories": ["security_safety.alarm_systems"],
   "codeowners": ["@shred86"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/abode",
   "homekit": {
     "models": ["Abode", "Iota"]

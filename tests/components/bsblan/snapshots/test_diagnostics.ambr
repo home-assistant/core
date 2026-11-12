@@ -30,6 +30,7 @@
           'unit': '&deg;C',
           'value': 48.5,
         }),
+        'dhw_current_setpoint': None,
         'nominal_setpoint': dict({
           'data_type': 0,
           'data_type_family': '',
@@ -127,6 +128,7 @@
       'states': dict({
         '1': dict({
           'cooling_operating_mode': None,
+          'current_setpoint': None,
           'current_temperature': dict({
             'data_type': 0,
             'data_type_family': '',

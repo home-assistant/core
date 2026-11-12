@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_array_fixture
 
 from homeassistant.components.rova.const import (
     CONF_HOUSE_NUMBER,
@@ -10,8 +11,6 @@ from homeassistant.components.rova.const import (
     CONF_ZIP_CODE,
     DOMAIN,
 )
-
-from tests.common import MockConfigEntry, load_json_array_fixture
 
 
 @pytest.fixture

@@ -9,7 +9,7 @@ from .const import DEFAULT_API_URL, PLATFORMS
 from .coordinator import NexBlueConfigEntry, NexBlueDataUpdateCoordinator
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: NexBlueConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NexBlueConfigEntry) -> None:
     """Set up NexBlue from a config entry."""
     client = NexBlueClient(async_get_clientsession(hass), DEFAULT_API_URL)
     coordinator = NexBlueDataUpdateCoordinator(hass, entry, client)
@@ -17,9 +17,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: NexBlueConfigEntry) -> b
 
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: NexBlueConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NexBlueConfigEntry) -> None:
     """Unload a NexBlue config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

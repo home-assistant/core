@@ -5,6 +5,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.filesize.const import DOMAIN
@@ -14,8 +15,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 
 from . import TEST_FILE_NAME, async_create_file
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.parametrize(

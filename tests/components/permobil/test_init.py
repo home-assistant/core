@@ -1,5 +1,7 @@
 """Tests for the Permobil integration."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.permobil import DOMAIN
 from homeassistant.config_entries import (
     SOURCE_IGNORE,
@@ -8,8 +10,6 @@ from homeassistant.config_entries import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
-
-from tests.common import MockConfigEntry
 
 
 async def test_permobil_repair_issue(

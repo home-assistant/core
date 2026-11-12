@@ -4,6 +4,9 @@ from unittest.mock import Mock
 
 from besen.models import BesenData, BoardRevision, ChargerInfo, CommandResult
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.besen.diagnostics import (
@@ -20,10 +23,6 @@ from .conftest import (
     charger_state,
     setup_integration,
 )
-
-from tests.common import MockConfigEntry
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 
 async def test_diagnostics(

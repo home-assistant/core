@@ -3,14 +3,14 @@
 from ipaddress import ip_address
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant import config_entries
 from homeassistant.components.volumio.config_flow import CannotConnectError
 from homeassistant.components.volumio.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry
 
 TEST_SYSTEM_INFO = {"id": "1111-1111-1111-1111", "name": "TestVolumio"}
 
@@ -54,7 +54,7 @@ async def test_form(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.volumio.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -96,7 +96,7 @@ async def test_form_updates_unique_id(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.volumio.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -126,7 +126,7 @@ async def test_empty_system_info(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.volumio.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -173,7 +173,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.volumio.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -210,7 +210,7 @@ async def test_form_exception(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.volumio.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -236,7 +236,7 @@ async def test_discovery(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.volumio.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -308,7 +308,7 @@ async def test_discovery_updates_unique_id(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.volumio.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

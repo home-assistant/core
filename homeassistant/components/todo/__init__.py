@@ -1,7 +1,7 @@
 """The todo integration."""
 
 import dataclasses
-import datetime
+import datetime as dt
 import logging
 from typing import Any
 
@@ -11,13 +11,13 @@ from homeassistant.components import frontend, websocket_api
 from homeassistant.components.websocket_api import ERR_NOT_FOUND, ERR_NOT_SUPPORTED
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ENTITY_ID
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (  # noqa: F401
+from .const import (
     ATTR_DESCRIPTION,
     ATTR_DUE,
     ATTR_DUE_DATE,
@@ -29,6 +29,7 @@ from .const import (  # noqa: F401
     DOMAIN,
     TodoItemStatus,
     TodoListEntityFeature,
+    TodoServiceArgument,
     TodoServices,
 )
 from .entity import TodoItem, TodoListEntity, api_items_factory, serialize_todo_item
@@ -39,7 +40,27 @@ _LOGGER = logging.getLogger(__name__)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
-SCAN_INTERVAL = datetime.timedelta(seconds=60)
+SCAN_INTERVAL = dt.timedelta(seconds=60)
+
+__all__ = [
+    "ATTR_DESCRIPTION",
+    "ATTR_DUE",
+    "ATTR_DUE_DATE",
+    "ATTR_DUE_DATETIME",
+    "ATTR_ITEM",
+    "ATTR_RENAME",
+    "ATTR_STATUS",
+    "DOMAIN",
+    "ENTITY_ID_FORMAT",
+    "PLATFORM_SCHEMA",
+    "PLATFORM_SCHEMA_BASE",
+    "TodoItem",
+    "TodoItemStatus",
+    "TodoListEntity",
+    "TodoListEntityFeature",
+    "TodoServiceArgument",
+    "TodoServices",
+]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -60,14 +81,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up a config entry."""
-    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
+    if not await hass.data[DATA_COMPONENT].async_setup_entry(entry):
+        raise ConfigEntryError(
+            translation_domain=HOMEASSISTANT_DOMAIN,
+            translation_key="platform_setup_failed",
+            translation_placeholders={"platform": entry.domain, "domain": DOMAIN},
+        )
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
+    await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 @websocket_api.websocket_command(

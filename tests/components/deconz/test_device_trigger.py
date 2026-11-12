@@ -3,6 +3,7 @@
 from unittest.mock import Mock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_get_device_automations
 from pytest_unordered import unordered
 
 from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
@@ -38,8 +39,6 @@ from homeassistant.helpers.trigger import async_initialize_triggers
 from homeassistant.setup import async_setup_component
 
 from .conftest import WebsocketDataType
-
-from tests.common import MockConfigEntry, async_get_device_automations
 
 
 @pytest.mark.parametrize(

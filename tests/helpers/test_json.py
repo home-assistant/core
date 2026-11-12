@@ -1,7 +1,7 @@
 """Test Home Assistant remote methods and classes."""
 
 from collections.abc import Callable
-import datetime
+import datetime as dt
 from functools import partial
 import gc
 import json
@@ -14,6 +14,7 @@ from typing import Any, NamedTuple
 from unittest.mock import Mock, patch
 
 import pytest
+from pytest_homeassistant.common import json_round_trip
 
 from homeassistant.core import Event, HomeAssistant, State
 from homeassistant.helpers.json import (
@@ -34,8 +35,6 @@ from homeassistant.helpers.json import (
 from homeassistant.util import dt as dt_util
 from homeassistant.util.color import RGBColor
 from homeassistant.util.json import SerializationError, load_json
-
-from tests.common import json_round_trip
 
 # Test data that can be saved as JSON
 TEST_JSON_A = {"a": 1, "B": "two"}
@@ -65,10 +64,10 @@ def test_default_json_encoder(hass: HomeAssistant) -> None:
     """Test the default JSON encoder for date and time."""
     ha_json_enc = DefaultHASSJSONEncoder()
 
-    today = datetime.date(2026, 8, 23)
+    today = dt.date(2026, 8, 23)
     assert ha_json_enc.default(today) == today.isoformat()
 
-    current_time = datetime.time(12, 0)
+    current_time = dt.time(12, 0)
     assert ha_json_enc.default(current_time) == current_time.isoformat()
 
 
@@ -85,7 +84,7 @@ def test_extended_json_encoder(hass: HomeAssistant) -> None:
     """Test the extended JSON encoder."""
     ha_json_enc = ExtendedJSONEncoder()
     # Test serializing a timedelta
-    data = datetime.timedelta(
+    data = dt.timedelta(
         days=50,
         seconds=27,
         microseconds=10,
@@ -100,11 +99,11 @@ def test_extended_json_encoder(hass: HomeAssistant) -> None:
     }
 
     # Test serializing a time
-    o = datetime.time(7, 20)
+    o = dt.time(7, 20)
     assert ha_json_enc.default(o) == {"__type": str(type(o)), "isoformat": "07:20:00"}
 
     # Test serializing a date
-    o = datetime.date(2021, 12, 24)
+    o = dt.date(2021, 12, 24)
     assert ha_json_enc.default(o) == {"__type": str(type(o)), "isoformat": "2021-12-24"}
 
     # Default method falls back to repr(o)
@@ -168,20 +167,20 @@ def test_json_dumps_rgb_color_subclass() -> None:
 def test_json_dumps_date_time_subclasses() -> None:
     """Test the json dumps with date and time subclasses."""
 
-    class CustomDate(datetime.date):
+    class CustomDate(dt.date):
         """Custom date subclass."""
 
-    class CustomTime(datetime.time):
+    class CustomTime(dt.time):
         """Custom time subclass."""
 
-    class CustomDatetime(datetime.datetime):
+    class CustomDatetime(dt.datetime):
         """Custom datetime subclass."""
 
     d = CustomDate(2026, 8, 23)
     t = CustomTime(12, 30, 45)
-    dt = CustomDatetime(2026, 8, 23, 12, 30, 45)
+    date_time = CustomDatetime(2026, 8, 23, 12, 30, 45)
 
-    assert json_dumps({"date": d, "time": t, "datetime": dt}) == (
+    assert json_dumps({"date": d, "time": t, "datetime": date_time}) == (
         '{"date":"2026-08-23","time":"12:30:45","datetime":"2026-08-23T12:30:45"}'
     )
 
@@ -371,7 +370,7 @@ def test_custom_encoder(tmp_path: Path) -> None:
 def test_saving_subclassed_datetime(tmp_path: Path) -> None:
     """Test saving subclassed datetime objects."""
 
-    class SubClassDateTime(datetime.datetime):
+    class SubClassDateTime(dt.datetime):
         """Subclass datetime."""
 
     time = SubClassDateTime.fromtimestamp(0)
@@ -427,7 +426,7 @@ def test_find_unserializable_data() -> None:
 
         def default(self, o):
             """Mock JSON encode method."""
-            if isinstance(o, datetime.datetime):
+            if isinstance(o, dt.datetime):
                 return o.isoformat()
             return super().default(o)
 

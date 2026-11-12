@@ -16,6 +16,25 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from .const import DOMAIN, OAUTH2_SCOPES
 
 
+def _get_user_info(credentials: Credentials) -> dict[str, Any]:
+    """Get the user info and verify the Tasks API is accessible."""
+    user_resource = build(
+        "oauth2",
+        "v2",
+        credentials=credentials,
+    )
+    user_resource_cmd: HttpRequest = user_resource.userinfo().get()
+    user_resource_info: dict[str, Any] = user_resource_cmd.execute()
+    resource = build(
+        "tasks",
+        "v1",
+        credentials=credentials,
+    )
+    cmd: HttpRequest = resource.tasklists().list()
+    cmd.execute()
+    return user_resource_info
+
+
 class OAuth2FlowHandler(
     config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN
 ):
@@ -45,22 +64,9 @@ class OAuth2FlowHandler(
         """Create an entry for the flow."""
         credentials = Credentials(token=data[CONF_TOKEN][CONF_ACCESS_TOKEN])
         try:
-            user_resource = build(
-                "oauth2",
-                "v2",
-                credentials=credentials,
-            )
-            user_resource_cmd: HttpRequest = user_resource.userinfo().get()
             user_resource_info = await self.hass.async_add_executor_job(
-                user_resource_cmd.execute
+                _get_user_info, credentials
             )
-            resource = build(
-                "tasks",
-                "v1",
-                credentials=credentials,
-            )
-            cmd: HttpRequest = resource.tasklists().list()
-            await self.hass.async_add_executor_job(cmd.execute)
         except HttpError as ex:
             error = ex.reason
             return self.async_abort(

@@ -26,12 +26,9 @@ from .const import (
     DOMAIN,
     INSTEON_PLATFORMS,
 )
+from .ipdb import get_device_platforms
 from .services import async_setup_services
-from .utils import (
-    add_insteon_events,
-    get_device_platforms,
-    register_new_device_callback,
-)
+from .utils import add_insteon_events, register_new_device_callback
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,7 +79,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up an Insteon entry."""
 
     api.async_load_api(hass)
@@ -145,8 +142,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_create_background_task(
         hass, async_get_device_config(hass, entry), "insteon-get-device-config"
     )
-
-    return True
 
 
 def create_insteon_device(hass, device, config_entry_id):

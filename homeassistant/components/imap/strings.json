@@ -6,6 +6,7 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_characters": "NUL, CR and LF characters are not allowed",
       "invalid_charset": "The specified charset is not supported",
       "invalid_folder": "The selected folder is invalid",
       "invalid_search": "The selected search is invalid",
@@ -95,6 +96,7 @@
       "already_configured": "An entry with these folder and search options already exists.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_characters": "[%key:component::imap::config::error::invalid_characters%]",
       "invalid_charset": "[%key:component::imap::config::error::invalid_charset%]",
       "invalid_folder": "[%key:component::imap::config::error::invalid_folder%]",
       "invalid_search": "[%key:component::imap::config::error::invalid_search%]"

@@ -1,17 +1,18 @@
 """Config flow for Smappee."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any, override
 
 import probatio
 from pysmappee import helper, mqtt
+from pysmappee.api import SmappeeLocalApi
 
-from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_IP_ADDRESS
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from . import api
 from .const import (
     CONF_SERIALNUMBER,
     DOMAIN,
@@ -32,11 +33,30 @@ class SmappeeFlowHandler(
     serial_number: str  # Set by zeroconf step, used by zeroconf_confirm step
 
     @override
-    async def async_oauth_create_entry(self, data):
+    async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create an entry for the flow."""
+        if self.source == SOURCE_REAUTH:
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(), data=data
+            )
 
         await self.async_set_unique_id(unique_id=f"{DOMAIN}Cloud")
         return self.async_create_entry(title=f"{DOMAIN}Cloud", data=data)
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reauth upon an API authentication error."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Dialog that informs the user that reauth is required."""
+        if user_input is None:
+            return self.async_show_form(step_id="reauth_confirm")
+        # The user and environment steps abort when the cloud entry exists
+        return await self.async_step_pick_implementation()
 
     @property
     @override
@@ -97,7 +117,7 @@ class SmappeeFlowHandler(
                 return self.async_abort(reason="cannot_connect")
         else:
             # legacy devices, without local mqtt broker, try api access
-            smappee_api = api.api.SmappeeLocalApi(ip=self.ip_address)
+            smappee_api = SmappeeLocalApi(ip=self.ip_address)
             logon = await self.hass.async_add_executor_job(smappee_api.logon)
             if logon is None:
                 return self.async_abort(reason="cannot_connect")
@@ -167,7 +187,7 @@ class SmappeeFlowHandler(
 
         # Attempt 1: try to use the local api (older generation)
         # to resolve host to serialnumber
-        smappee_api = api.api.SmappeeLocalApi(ip=ip_address)
+        smappee_api = SmappeeLocalApi(ip=ip_address)
         logon = await self.hass.async_add_executor_job(smappee_api.logon)
         if logon is not None:
             advanced_config = await self.hass.async_add_executor_job(
