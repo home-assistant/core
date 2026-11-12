@@ -8,11 +8,11 @@ from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.modern_forms.const import DOMAIN
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -79,10 +79,10 @@ async def test_set_breeze_intensity(
     with patch("aiomodernforms.ModernFormsDevice.fan") as fan_mock:
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: "number.modernformsfan_breeze_intensity",
-                ATTR_VALUE: 3,
+                CommonServiceArgument.ENTITY_ID: "number.modernformsfan_breeze_intensity",
+                NumberServiceArgument.VALUE: 3,
             },
             blocking=True,
         )
@@ -111,10 +111,10 @@ async def test_set_breeze_intensity_connection_error(
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: "number.modernformsfan_breeze_intensity",
-                ATTR_VALUE: 3,
+                CommonServiceArgument.ENTITY_ID: "number.modernformsfan_breeze_intensity",
+                NumberServiceArgument.VALUE: 3,
             },
             blocking=True,
         )

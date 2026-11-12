@@ -14,9 +14,9 @@ from pytest_homeassistant.common import (
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
 from homeassistant.components.seafile.coordinator import UPDATE_INTERVAL
 from homeassistant.components.select import (
@@ -24,12 +24,7 @@ from homeassistant.components.select import (
     SelectService,
     SelectServiceArgument,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    STATE_UNAVAILABLE,
-    CommonServiceArgument,
-    Platform,
-)
+from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -88,8 +83,11 @@ async def test_set_value(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: HISTORY_DAYS, ATTR_VALUE: 90},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: HISTORY_DAYS,
+            NumberServiceArgument.VALUE: 90,
+        },
         blocking=True,
     )
 
@@ -113,8 +111,11 @@ async def test_set_value_error(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: HISTORY_DAYS, ATTR_VALUE: 90},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: HISTORY_DAYS,
+                NumberServiceArgument.VALUE: 90,
+            },
             blocking=True,
         )
     assert exc_info.value.translation_key == "api_error"

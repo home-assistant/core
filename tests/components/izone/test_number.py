@@ -15,11 +15,11 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.izone.const import DOMAIN
 from homeassistant.components.izone.coordinator import UPDATE_INTERVAL
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 import homeassistant.helpers.device_registry as dr
@@ -83,8 +83,8 @@ async def test_set_damper_limit(
     """Setting a damper limit sends an integer percent to the zone."""
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 35},
+        NumberService.SET_VALUE,
+        {CommonServiceArgument.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 35},
         blocking=True,
     )
 
@@ -100,8 +100,11 @@ async def test_set_damper_limit_off_step_rejected(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: DAMPER_MIN_ENTITY, ATTR_VALUE: 42},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: DAMPER_MIN_ENTITY,
+                NumberServiceArgument.VALUE: 42,
+            },
             blocking=True,
         )
 
@@ -140,8 +143,11 @@ async def test_set_damper_limit_error_handling(
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: DAMPER_MAX_ENTITY, ATTR_VALUE: 80},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: DAMPER_MAX_ENTITY,
+                NumberServiceArgument.VALUE: 80,
+            },
             blocking=True,
         )
 
