@@ -92,7 +92,6 @@ async def async_remove_config_entry_device(
     ):
         return False
     for _, identifier in device_entry.connections:
-        hub.entity_loader.async_forget_objects(identifier)
         hub.adoption.async_follow_if_unadopted(identifier)
     return True
 

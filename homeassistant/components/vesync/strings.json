@@ -89,6 +89,7 @@
       "night_light_level": {
         "name": "Night light level",
         "state": {
+          "auto": "[%key:common::state::auto%]",
           "bright": "Bright",
           "dim": "Dim",
           "off": "[%key:common::state::off%]",
@@ -99,6 +100,9 @@
     "sensor": {
       "air_quality": {
         "name": "Air quality"
+      },
+      "co2": {
+        "name": "Carbon dioxide"
       },
       "cook_set_temp": {
         "name": "Cooking set temperature"

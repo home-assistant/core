@@ -1,11 +1,13 @@
 """Tests for the A Better Routeplanner diagnostics."""
 
+from dataclasses import replace
 from datetime import UTC, datetime
 import json
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 from aioabrp import (
+    AbrpVehicle,
     ChargingState,
     ConnectionEvent,
     ConnectionState,
@@ -24,7 +26,6 @@ from homeassistant.core import HomeAssistant
 from . import setup_integration
 from .conftest import (
     MOCK_VEHICLE_ID,
-    MOCK_VEHICLE_MODEL,
     MOCK_VEHICLE_NAME,
     SENSOR_TEST_SUB,
     USER_SUB,
@@ -74,12 +75,14 @@ async def setup_entry(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
     mock_abrp_client: AsyncMock,
+    mock_abrp_vehicles: list[AbrpVehicle],
     mock_telemetry_stream: MagicMock,
 ) -> None:
-    """Set up the integration; only the first vehicle resolves a display."""
-    mock_abrp_client.display_responses[MOCK_VEHICLE_MODEL] = (
-        build_vehicle_model_display()
-    )
+    """Set up the integration; only the first vehicle has a display."""
+    mock_abrp_client.return_value = [
+        replace(mock_abrp_vehicles[0], display=build_vehicle_model_display()),
+        mock_abrp_vehicles[1],
+    ]
     await setup_integration(hass, config_entry_with_vehicles)
 
 

@@ -48,6 +48,9 @@
       },
       "indoor_unit_water_pump_state": {
         "default": "mdi:pump"
+      },
+      "on_off_thermostat_state": {
+        "default": "mdi:thermostat"
       }
     },
     "sensor": {

@@ -9,7 +9,6 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
-from homeassistant.components.alarmdecoder import config_flow
 from homeassistant.components.alarmdecoder.const import (
     CONF_ALT_NIGHT_MODE,
     CONF_AUTO_BYPASS,
@@ -441,9 +440,6 @@ async def test_options_zone_flow_validation(hass: HomeAssistant) -> None:
 )
 async def test_one_device_allowed(hass: HomeAssistant, protocol, connection) -> None:
     """Test that only one AlarmDecoder device is allowed."""
-    flow = config_flow.AlarmDecoderFlowHandler()
-    flow.hass = hass
-
     MockConfigEntry(
         domain=DOMAIN,
         data=connection,
