@@ -11,8 +11,8 @@ from pytest_homeassistant.components.bluetooth import (
     inject_bluetooth_service_info,
 )
 
-from homeassistant.components.snooz.const import DOMAIN
-from homeassistant.const import CONF_ADDRESS, CONF_TOKEN
+from homeassistant.components.snooz.const import CONF_FIRMWARE_VERSION, DOMAIN
+from homeassistant.const import CONF_ADDRESS, CONF_MODEL, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
@@ -20,6 +20,9 @@ TEST_ADDRESS = "00:00:00:00:AB:CD"
 TEST_SNOOZ_LOCAL_NAME = "Snooz-ABCD"
 TEST_SNOOZ_DISPLAY_NAME = "Snooz ABCD"
 TEST_PAIRING_TOKEN = "deadbeefdeadbeef"
+# what the SNOOZ_SERVICE_INFO_* advertisements parse to, as stored in the entry
+TEST_MODEL = 1  # SnoozDeviceModel.ORIGINAL
+TEST_FIRMWARE_VERSION = 2  # SnoozFirmwareVersion.V2
 
 NOT_SNOOZ_SERVICE_INFO = BluetoothServiceInfo(
     name="Definitely not snooz",
@@ -121,7 +124,13 @@ async def create_mock_snooz_config_entry(
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=TEST_ADDRESS,
-        data={CONF_ADDRESS: TEST_ADDRESS, CONF_TOKEN: TEST_PAIRING_TOKEN},
+        minor_version=2,
+        data={
+            CONF_ADDRESS: TEST_ADDRESS,
+            CONF_TOKEN: TEST_PAIRING_TOKEN,
+            CONF_MODEL: TEST_MODEL,
+            CONF_FIRMWARE_VERSION: TEST_FIRMWARE_VERSION,
+        },
     )
     entry.add_to_hass(hass)
     inject_bluetooth_service_info(hass, SNOOZ_SERVICE_INFO_NOT_PAIRING)

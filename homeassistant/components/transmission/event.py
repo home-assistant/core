@@ -9,8 +9,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
-    ATTR_DOWNLOAD_PATH,
-    ATTR_LABELS,
+    EVENT_ATTR_DOWNLOAD_PATH,
+    EVENT_ATTR_LABELS,
     EVENT_TYPE_DOWNLOADED,
     EVENT_TYPE_REMOVED,
     EVENT_TYPE_STARTED,
@@ -76,8 +76,8 @@ class TransmissionEvent(TransmissionEntity, EventEntity):
             {
                 ATTR_NAME: event_data.name,
                 ATTR_ID: event_data.id,
-                ATTR_DOWNLOAD_PATH: event_data.download_path,
-                ATTR_LABELS: event_data.labels,
+                EVENT_ATTR_DOWNLOAD_PATH: event_data.download_path,
+                EVENT_ATTR_LABELS: event_data.labels,
             },
         )
 

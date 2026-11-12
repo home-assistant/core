@@ -14,5 +14,5 @@
   "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["aioairzone"],
-  "requirements": ["aioairzone==1.0.6"]
+  "requirements": ["aioairzone==1.1.0"]
 }

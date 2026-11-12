@@ -1,26 +1,34 @@
 """Services for the Picnic integration."""
 
+from enum import StrEnum
 from typing import cast
 
 import probatio
 from python_picnic_api2 import PicnicAPI, PicnicParseError
 import requests
 
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, service
 
-from .const import (
-    ATTR_AMOUNT,
-    ATTR_GTIN,
-    ATTR_PRODUCT_ID,
-    ATTR_PRODUCT_IDENTIFIERS,
-    ATTR_PRODUCT_NAME,
-    DOMAIN,
-    SERVICE_ADD_PRODUCT_TO_CART,
-)
+from .const import ATTR_PRODUCT_IDENTIFIERS, DOMAIN
 from .coordinator import PicnicConfigEntry
+
+
+class PicnicService(StrEnum):
+    """Store keys for Picnic services."""
+
+    ADD_PRODUCT = "add_product"
+
+
+class PicnicServiceArgument(StrEnum):
+    """Store keys for Picnic service arguments."""
+
+    PRODUCT_ID = "product_id"
+    GTIN = "gtin"
+    PRODUCT_NAME = "product_name"
+    AMOUNT = "amount"
 
 
 class PicnicServiceException(Exception):
@@ -50,26 +58,28 @@ def async_setup_services(hass: HomeAssistant) -> None:
     """Register services for the Picnic integration, if not registered yet."""
 
     async def async_add_product_service(call: ServiceCall):
-        api_client = await get_api_client(hass, call.data[ATTR_CONFIG_ENTRY_ID])
+        api_client = await get_api_client(
+            hass, call.data[CommonServiceArgument.CONFIG_ENTRY_ID]
+        )
         await handle_add_product(hass, api_client, call)
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_ADD_PRODUCT_TO_CART,
+        PicnicService.ADD_PRODUCT,
         async_add_product_service,
         schema=probatio.Schema(
             {
-                probatio.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
+                probatio.Required(CommonServiceArgument.CONFIG_ENTRY_ID): cv.string,
                 probatio.Exclusive(
-                    ATTR_PRODUCT_ID, ATTR_PRODUCT_IDENTIFIERS
+                    PicnicServiceArgument.PRODUCT_ID, ATTR_PRODUCT_IDENTIFIERS
                 ): cv.string,
                 probatio.Exclusive(
-                    ATTR_PRODUCT_NAME, ATTR_PRODUCT_IDENTIFIERS
+                    PicnicServiceArgument.PRODUCT_NAME, ATTR_PRODUCT_IDENTIFIERS
                 ): cv.string,
-                probatio.Exclusive(ATTR_GTIN, ATTR_PRODUCT_IDENTIFIERS): probatio.All(
-                    cv.string, validate_gtin
-                ),
-                probatio.Optional(ATTR_AMOUNT): probatio.All(
+                probatio.Exclusive(
+                    PicnicServiceArgument.GTIN, ATTR_PRODUCT_IDENTIFIERS
+                ): probatio.All(cv.string, validate_gtin),
+                probatio.Optional(PicnicServiceArgument.AMOUNT): probatio.All(
                     probatio.Coerce(int), probatio.Range(min=1)
                 ),
             }
@@ -89,8 +99,8 @@ async def handle_add_product(
     hass: HomeAssistant, api_client: PicnicAPI, call: ServiceCall
 ) -> None:
     """Handle the call for the add_product service."""
-    product_id = call.data.get(ATTR_PRODUCT_ID)
-    if gtin := call.data.get(ATTR_GTIN):
+    product_id = call.data.get(PicnicServiceArgument.PRODUCT_ID)
+    if gtin := call.data.get(PicnicServiceArgument.GTIN):
         try:
             article = await hass.async_add_executor_job(
                 api_client.get_article_by_gtin, gtin
@@ -110,14 +120,18 @@ async def handle_add_product(
         product_id = article.id
     elif not product_id:
         product_id = await hass.async_add_executor_job(
-            product_search, api_client, cast(str, call.data[ATTR_PRODUCT_NAME])
+            product_search,
+            api_client,
+            cast(str, call.data[PicnicServiceArgument.PRODUCT_NAME]),
         )
 
     if not product_id:
         raise PicnicServiceException("No product found or no product ID given!")
 
     await hass.async_add_executor_job(
-        api_client.add_product, product_id, call.data.get(ATTR_AMOUNT, 1)
+        api_client.add_product,
+        product_id,
+        call.data.get(PicnicServiceArgument.AMOUNT, 1),
     )
 
 
