@@ -11,6 +11,7 @@ Support for controlling Policy Engine rules.
 import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
+from functools import partial
 from typing import TYPE_CHECKING, Any, override
 
 import aiounifi
@@ -36,7 +37,7 @@ from aiounifi.models.device import (
 from aiounifi.models.dpi_restriction_app import DPIRestrictionAppEnableRequest
 from aiounifi.models.dpi_restriction_group import DPIRestrictionGroup
 from aiounifi.models.event import Event, EventKey
-from aiounifi.models.firewall_policy import FirewallPolicy
+from aiounifi.models.firewall_policy import SCHEDULE_WEEKDAYS, FirewallPolicy
 from aiounifi.models.object_oriented_network_config import (
     ObjectOrientedNetworkConfig,
     ObjectOrientedNetworkInternetMode,
@@ -75,6 +76,7 @@ from .entity import (
     async_wlan_device_info_fn,
     request_failed_error,
 )
+from .firewall_policy_schedule import async_save_schedule
 from .hub import UnifiHub
 
 PARALLEL_UPDATES = 1
@@ -138,6 +140,49 @@ async def async_firewall_policy_control_fn(
     """Control firewall policy state."""
     policy = hub.api.firewall_policies[obj_id]
     await hub.api.firewall_policies.save(policy, enabled=target)
+
+
+@callback
+def async_firewall_policy_schedule_all_day_is_on_fn(
+    hub: UnifiHub, policy: FirewallPolicy
+) -> bool | None:
+    """Return whether a firewall policy's schedule runs all day."""
+    return policy.schedule_settings.all_day
+
+
+async def async_firewall_policy_schedule_all_day_control_fn(
+    hub: UnifiHub, obj_id: str, target: bool
+) -> None:
+    """Make a firewall policy's schedule run all day, or in a time window."""
+    if hub.api.firewall_policies[obj_id].schedule_settings.all_day is target:
+        return
+    await async_save_schedule(hub, obj_id, all_day=target)
+
+
+@callback
+def async_firewall_policy_schedule_day_is_on_fn(
+    day: str, hub: UnifiHub, policy: FirewallPolicy
+) -> bool | None:
+    """Return whether a firewall policy's schedule includes a day."""
+    if (days := policy.schedule_settings.days) is None:
+        return None
+    return day in days
+
+
+async def async_firewall_policy_schedule_day_control_fn(
+    day: str, hub: UnifiHub, obj_id: str, target: bool
+) -> None:
+    """Add a day to a firewall policy's schedule, or remove it."""
+    current = hub.api.firewall_policies[obj_id].schedule_settings.days
+    # A mode without days is left to aiounifi to reject.
+    if current is not None and (day in current) == target:
+        return
+    days = set(current or ())
+    if target:
+        days.add(day)
+    else:
+        days.discard(day)
+    await async_save_schedule(hub, obj_id, days=days)
 
 
 async def async_object_oriented_network_config_control_fn(
@@ -243,13 +288,36 @@ class UnifiSwitchEntityDescription[HandlerT: APIHandler, ApiItemT: ApiItem](
     """Class describing UniFi switch entity."""
 
     control_fn: Callable[[UnifiHub, str, bool], Coroutine[Any, Any, None]]
-    is_on_fn: Callable[[UnifiHub, ApiItemT], bool]
+    is_on_fn: Callable[[UnifiHub, ApiItemT], bool | None]
 
     # Optional
     custom_subscribe: Callable[[aiounifi.Controller], SubscriptionType] | None = None
     """Callback for additional subscriptions to any UniFi handler."""
     only_event_for_state_change: bool = False
     """Use only UniFi events to trigger state changes."""
+
+
+def _schedule_switch_description(
+    name: str,
+    control_fn: Callable[[UnifiHub, str, bool], Coroutine[Any, Any, None]],
+    is_on_fn: Callable[[UnifiHub, FirewallPolicy], bool | None],
+) -> UnifiSwitchEntityDescription[FirewallPolicies, FirewallPolicy]:
+    """Describe a switch for one setting of a firewall policy's schedule."""
+    return UnifiSwitchEntityDescription[FirewallPolicies, FirewallPolicy](
+        key=f"Firewall policy schedule {name}",
+        translation_key=f"firewall_policy_schedule_{name}",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        api_handler_fn=lambda api: api.firewall_policies,
+        control_fn=control_fn,
+        device_info_fn=async_unifi_network_device_info_fn,
+        is_on_fn=is_on_fn,
+        object_fn=lambda api, obj_id: api.firewall_policies[obj_id],
+        supported_fn=async_firewall_policy_supported_fn,
+        translation_placeholders_fn=lambda policy: {"policy_name": policy.name},
+        unique_id_fn=lambda hub, obj_id: f"firewall_policy_schedule_{name}-{obj_id}",
+    )
 
 
 ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
@@ -402,6 +470,22 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         is_on_fn=lambda hub, wlan: wlan.enabled,
         object_fn=lambda api, obj_id: api.wlans[obj_id],
         unique_id_fn=lambda hub, obj_id: f"wlan-{obj_id}",
+    ),
+)
+
+ENTITY_DESCRIPTIONS += (
+    _schedule_switch_description(
+        "all_day",
+        async_firewall_policy_schedule_all_day_control_fn,
+        async_firewall_policy_schedule_all_day_is_on_fn,
+    ),
+    *(
+        _schedule_switch_description(
+            f"day_{day}",
+            partial(async_firewall_policy_schedule_day_control_fn, day),
+            partial(async_firewall_policy_schedule_day_is_on_fn, day),
+        )
+        for day in SCHEDULE_WEEKDAYS
     ),
 )
 

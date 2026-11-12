@@ -82,6 +82,30 @@
       "firewall_policy_control": {
         "default": "mdi:security-network"
       },
+      "firewall_policy_schedule_all_day": {
+        "default": "mdi:hours-24"
+      },
+      "firewall_policy_schedule_day_fri": {
+        "default": "mdi:calendar-week"
+      },
+      "firewall_policy_schedule_day_mon": {
+        "default": "mdi:calendar-week"
+      },
+      "firewall_policy_schedule_day_sat": {
+        "default": "mdi:calendar-week"
+      },
+      "firewall_policy_schedule_day_sun": {
+        "default": "mdi:calendar-week"
+      },
+      "firewall_policy_schedule_day_thu": {
+        "default": "mdi:calendar-week"
+      },
+      "firewall_policy_schedule_day_tue": {
+        "default": "mdi:calendar-week"
+      },
+      "firewall_policy_schedule_day_wed": {
+        "default": "mdi:calendar-week"
+      },
       "poe_port_control": {
         "default": "mdi:ethernet",
         "state": {
