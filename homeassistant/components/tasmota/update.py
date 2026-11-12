@@ -1,7 +1,8 @@
 """Update entity for Tasmota."""
 
+from collections.abc import Callable
 import re
-from typing import override
+from typing import Any, override
 
 from homeassistant.components.update import (
     UpdateDeviceClass,
@@ -9,11 +10,12 @@ from homeassistant.components.update import (
     UpdateEntityFeature,
 )
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HassJobType, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.event import async_track_device_registry_updated_event
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DATA_REMOVE_DISCOVER_COMPONENT
@@ -53,8 +55,6 @@ async def async_setup_entry(
         )
     )
 
-    await coordinator.async_request_refresh()
-
 
 class TasmotaUpdateEntity(
     CoordinatorEntity[TasmotaLatestReleaseUpdateCoordinator], UpdateEntity
@@ -65,6 +65,8 @@ class TasmotaUpdateEntity(
     _attr_has_entity_name = True
     _attr_title = "Tasmota firmware"
     _attr_supported_features = UpdateEntityFeature.RELEASE_NOTES
+
+    _unsub_tasmota_device_updates: Callable[[], None] | None = None
 
     def __init__(
         self,
@@ -80,6 +82,45 @@ class TasmotaUpdateEntity(
                 self._connection = (connection_type, connection_value)
                 self._attr_unique_id = connection_value
                 break
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to device-registry updates for firmware changes."""
+        await super().async_added_to_hass()
+        if self.hass is None:
+            return
+        device = dr.async_get(self.hass).async_get_device_by_connection(
+            self._connection, self._config_entry_id
+        )
+        if device is None:
+            return
+        self._unsub_tasmota_device_updates = async_track_device_registry_updated_event(
+            self.hass,
+            device.id,
+            self._handle_device_registry_update,
+            job_type=HassJobType.Callback,
+        )
+        self.async_on_remove(self._unsubscribe_device_updates)
+
+    @callback
+    def _handle_device_registry_update(
+        self, event: Event[dr.EventDeviceRegistryUpdatedData]
+    ) -> None:
+        """Refresh state when the device's firmware version changes."""
+        data: dict[str, Any] = event.data  # type: ignore[assignment]
+        if data.get("action") != "update":
+            return
+        changes = data.get("changes", {})
+        if not isinstance(changes, dict) or "sw_version" not in changes:
+            return
+        self.async_write_ha_state()
+
+    @callback
+    def _unsubscribe_device_updates(self) -> None:
+        """Unsubscribe from device-registry updates."""
+        if self._unsub_tasmota_device_updates is not None:
+            self._unsub_tasmota_device_updates()
+            self._unsub_tasmota_device_updates = None
 
     @property
     @override

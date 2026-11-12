@@ -31,12 +31,12 @@ from .const import (
     DATA_UNSUB,
     PLATFORMS,
 )
-from .coordinator import TasmotaLatestReleaseUpdateCoordinator
+from .coordinator import TasmotaConfigEntry, TasmotaLatestReleaseUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_setup_entry(hass: HomeAssistant, entry: TasmotaConfigEntry) -> None:
     """Set up Tasmota from a config entry."""
     hass.data[DATA_UNSUB] = []
 
@@ -66,6 +66,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
     entry.runtime_data = TasmotaLatestReleaseUpdateCoordinator(hass, entry)
 
+    # Intentionally not async_config_entry_first_refresh,
+    # because we don't want to fail/retry the whole config entry setup due to
+    # issues determining update availability. Tasmota is local-only-capable,
+    # so we might have a setup where it will never have a chance to succeed.
+    await entry.runtime_data.async_refresh()
+
     async def async_discover_device(config: TasmotaDeviceConfig, mac: str) -> None:
         """Discover and add a Tasmota device."""
         await async_setup_device(
@@ -80,7 +86,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     )
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_unload_entry(hass: HomeAssistant, entry: TasmotaConfigEntry) -> None:
     """Unload a config entry."""
 
     # cleanup platforms

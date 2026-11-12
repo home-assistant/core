@@ -247,3 +247,40 @@ async def test_device_update_entity_github_failure(
     assert state.attributes[ATTR_RELEASE_URL] == (
         "https://github.com/arendst/Tasmota/releases/tag/v14.6.0"
     )
+
+
+async def test_device_update_entity_refreshes_on_firmware_change(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the update entity reflects firmware changes reported by the device."""
+    await setup_tasmota_helper(hass)
+
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    mac = config["mac"]
+    config_topic = f"{DEFAULT_PREFIX}/{mac}/config"
+
+    async_fire_mqtt_message(hass, config_topic, json.dumps(config))
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.UPDATE, DOMAIN, dr.format_mac(mac)
+    )
+    assert entity_id is not None
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_INSTALLED_VERSION] == DEFAULT_CONFIG["sw"]
+
+    # Device reports a newer firmware version over MQTT
+    updated_config = copy.deepcopy(config)
+    updated_config["sw"] = "14.6.0"
+    async_fire_mqtt_message(hass, config_topic, json.dumps(updated_config))
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "14.6.0"
+    assert state.state == STATE_OFF
