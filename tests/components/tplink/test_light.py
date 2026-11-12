@@ -1389,9 +1389,9 @@ async def test_scene_effect_light(
 
     await hass.services.async_call(
         SCENE_DOMAIN,
-        SERVICE_TURN_ON,
+        SceneService.TURN_ON,
         {
-            ATTR_ENTITY_ID: "scene.effect_off_scene",
+            CommonServiceArgument.ENTITY_ID: "scene.effect_off_scene",
         },
         blocking=True,
     )
