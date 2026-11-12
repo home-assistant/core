@@ -7,7 +7,7 @@ from typing import Any, TypedDict
 from awesomeversion import AwesomeVersion
 import probatio
 
-from homeassistant.components import websocket_api
+from homeassistant.components import automation, script, websocket_api
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, __version__
 from homeassistant.core import HomeAssistant, callback
@@ -38,8 +38,11 @@ class RunSnapshot(TypedDict):
     entities: dict[str, dict[str, str]]
     # registry ids of entities without a state or unavailable/unknown
     unhealthy: list[str]
-    # (domain, issue_id) of active issues that are not ignored
+    # (domain, issue_id) of active issues that are not ignored, without
+    # breaking changes
     issues: list[list[str]]
+    # (domain, issue_id) of issues with a breaks_in_ha_version
+    upcoming: list[list[str]]
 
 
 class StoredData(TypedDict):
@@ -134,6 +137,7 @@ def _counts(report: dict[str, Any]) -> dict[str, int]:
         + len(report["entities_renamed"])
         + len(report["entities_removed"]),
         "issues": len(report["issues"]),
+        "upcoming": len(report["upcoming"]),
     }
     return counts if any(counts.values()) else {}
 
@@ -154,6 +158,7 @@ def _async_active_issues(hass: HomeAssistant) -> list[tuple[str, str]]:
         if issue.active
         and not issue_registry.async_is_hidden(issue)
         and issue.dismissed_version is None
+        and not issue.breaks_in_ha_version
         and key != (DOMAIN, UPDATE_REPORT_ISSUE_ID)
     ]
 
@@ -184,13 +189,18 @@ def async_take_snapshot(hass: HomeAssistant) -> RunSnapshot:
         "entities": entities,
         "unhealthy": unhealthy,
         "issues": [list(key) for key in _async_active_issues(hass)],
+        "upcoming": [
+            [domain, issue_id]
+            for (domain, issue_id), issue in ir.async_get(hass).issues.items()
+            if issue.breaks_in_ha_version
+        ],
     }
 
 
 @callback
 def async_diff(hass: HomeAssistant, baseline: RunSnapshot) -> dict[str, Any]:
     """Return what got worse compared to the baseline run."""
-    config_entries: list[dict[str, str | None]] = []
+    config_entries: list[dict[str, Any]] = []
     for domain, titles in baseline["config_entries"].items():
         for entry_id, title in titles.items():
             if (entry := hass.config_entries.async_get_entry(entry_id)) is None:
@@ -201,6 +211,9 @@ def async_diff(hass: HomeAssistant, baseline: RunSnapshot) -> dict[str, Any]:
                         "title": title,
                         "state": None,
                         "reason": None,
+                        "error_reason_translation_domain": None,
+                        "error_reason_translation_key": None,
+                        "error_reason_translation_placeholders": None,
                     }
                 )
             elif (
@@ -213,6 +226,15 @@ def async_diff(hass: HomeAssistant, baseline: RunSnapshot) -> dict[str, Any]:
                         "title": entry.title,
                         "state": entry.state.value,
                         "reason": entry.reason,
+                        "error_reason_translation_domain": (
+                            entry.error_reason_translation_domain
+                        ),
+                        "error_reason_translation_key": (
+                            entry.error_reason_translation_key
+                        ),
+                        "error_reason_translation_placeholders": (
+                            entry.error_reason_translation_placeholders
+                        ),
                     }
                 )
     failed_entry_ids = {entry["entry_id"] for entry in config_entries}
@@ -273,13 +295,18 @@ def async_diff(hass: HomeAssistant, baseline: RunSnapshot) -> dict[str, Any]:
         "entities_renamed": sorted(renamed, key=by_entity_id),
         "entities_removed": sorted(removed, key=by_entity_id),
         "issues": sorted(issues, key=itemgetter("domain", "issue_id")),
-        "upcoming": _async_upcoming(hass),
+        "upcoming": _async_upcoming(
+            hass,
+            {(domain, issue_id) for domain, issue_id in baseline["upcoming"]},
+        ),
     }
 
 
 @callback
-def _async_upcoming(hass: HomeAssistant) -> list[dict[str, Any]]:
-    """Return issues of set up integrations that break in a future version."""
+def _async_upcoming(
+    hass: HomeAssistant, known: set[tuple[str, str]]
+) -> list[dict[str, Any]]:
+    """Return new issues of set up integrations that break in a future version."""
     issue_registry = ir.async_get(hass)
     current = AwesomeVersion(__version__)
     upcoming = [
@@ -290,8 +317,9 @@ def _async_upcoming(hass: HomeAssistant) -> list[dict[str, Any]]:
             "breaks_in_ha_version": issue.breaks_in_ha_version,
             "dismissed": issue.dismissed_version is not None,
         }
-        for issue in issue_registry.issues.values()
-        if issue.active
+        for key, issue in issue_registry.issues.items()
+        if key not in known
+        and issue.active
         and not issue_registry.async_is_hidden(issue)
         and issue.breaks_in_ha_version
         and AwesomeVersion(issue.breaks_in_ha_version) > current
@@ -323,7 +351,21 @@ def ws_update_report(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Return what changed since the run before the last update."""
-    connection.send_result(msg["id"], hass.data[DATA_UPDATE_REPORT].async_get_report())
+    if (report := hass.data[DATA_UPDATE_REPORT].async_get_report()) is not None:
+        for entity in report["entities_removed"]:
+            entity |= _async_references(hass, entity["entity_id"])
+        for entity in report["entities_renamed"]:
+            entity |= _async_references(hass, entity["old_entity_id"])
+    connection.send_result(msg["id"], report)
+
+
+@callback
+def _async_references(hass: HomeAssistant, entity_id: str) -> dict[str, list[str]]:
+    """Return the automations and scripts that still use an old entity ID."""
+    return {
+        "automations": sorted(automation.automations_with_entity(hass, entity_id)),
+        "scripts": sorted(script.scripts_with_entity(hass, entity_id)),
+    }
 
 
 @websocket_api.require_admin

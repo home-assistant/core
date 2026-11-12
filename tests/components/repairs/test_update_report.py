@@ -36,6 +36,7 @@ def _snapshot(version: str = OLD_VERSION, **data: Any) -> RunSnapshot:
         "entities": {},
         "unhealthy": [],
         "issues": [],
+        "upcoming": [],
     } | data
 
 
@@ -93,7 +94,14 @@ async def test_update_report(
     """Test the report lists only what got worse since the update."""
     failed = MockConfigEntry(domain="demo", title="Failed", entry_id="failed")
     failed.add_to_hass(hass)
-    failed.mock_state(hass, ConfigEntryState.SETUP_RETRY, reason="Timeout")
+    failed._async_set_state(
+        hass,
+        ConfigEntryState.SETUP_RETRY,
+        "Timeout",
+        error_reason_translation_key="cannot_connect",
+        error_reason_translation_placeholders={"host": "1.2.3.4"},
+        error_reason_translation_domain="demo",
+    )
     loaded = MockConfigEntry(domain="demo", title="Loaded", entry_id="loaded")
     loaded.add_to_hass(hass)
     loaded.mock_state(hass, ConfigEntryState.LOADED)
@@ -148,6 +156,8 @@ async def test_update_report(
         ("ignored_issue", None, None, None),
         ("hidden_issue", None, None, "disabled"),
         ("breaks_later", "repairs", "2099.5.0", None),
+        ("breaks_known", "repairs", "2099.2.0", None),
+        ("breaks_known_dismissed", "repairs", "2099.2.0", None),
         ("breaks_sooner", "repairs", "2099.1.0", None),
         ("breaks_dismissed", "http", "2099.3.0", None),
         ("breaks_not_set_up", "not_set_up", "2099.1.0", None),
@@ -167,6 +177,7 @@ async def test_update_report(
         )
     ir.async_ignore_issue(hass, "homeassistant", "ignored_issue", True)
     ir.async_ignore_issue(hass, "homeassistant", "breaks_dismissed", True)
+    ir.async_ignore_issue(hass, "homeassistant", "breaks_known_dismissed", True)
 
     old = _snapshot(
         config_entries={
@@ -175,15 +186,10 @@ async def test_update_report(
         },
         entities={"demo": entity_ids},
         unhealthy=[entities["unhealthy_before"].id],
-        issues=[
-            ["homeassistant", issue_id]
-            for issue_id in (
-                "old_issue",
-                "breaks_later",
-                "breaks_sooner",
-                "breaks_not_set_up",
-                "breaks_reached",
-            )
+        issues=[["homeassistant", "old_issue"]],
+        upcoming=[
+            ["homeassistant", "breaks_known"],
+            ["homeassistant", "breaks_known_dismissed"],
         ],
     )
     _store(
@@ -194,9 +200,69 @@ async def test_update_report(
         }[stored],
     )
 
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": [
+                _automation(alias, entity_id)
+                for alias, entity_id in (
+                    ("Uses gone", "sensor.gone"),
+                    ("Uses old name", "sensor.old_name"),
+                    ("Uses new name", "sensor.renamed"),
+                )
+            ]
+        },
+    )
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "uses_old_name": {
+                    "sequence": [
+                        {
+                            "action": "homeassistant.update_entity",
+                            "target": {"entity_id": "sensor.old_name"},
+                        }
+                    ]
+                }
+            }
+        },
+    )
     assert await async_setup_component(hass, DOMAIN, {})
 
     assert await _get_report(hass, hass_ws_client) == snapshot
+
+
+def _automation(alias: str, entity_id: str) -> dict[str, Any]:
+    return {
+        "alias": alias,
+        "triggers": {"trigger": "state", "entity_id": entity_id},
+        "actions": [],
+    }
+
+
+async def test_references_without_automation_and_script(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test removed entities have no references when automation and script are not set up."""
+    _store(hass_storage, _snapshot(entities={"demo": {"gone": "sensor.gone"}}))
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    report = await _get_report(hass, hass_ws_client)
+
+    assert report is not None
+    assert report["entities_removed"] == [
+        {
+            "entity_id": "sensor.gone",
+            "platform": "demo",
+            "automations": [],
+            "scripts": [],
+        }
+    ]
 
 
 @pytest.mark.parametrize(
@@ -284,6 +350,40 @@ async def test_issue_lifecycle(
         "config_entries": "0",
         "entities": "1",
         "issues": "0",
+        "upcoming": "0",
+    }
+
+
+async def test_issue_counts_breaking_change_as_upcoming(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    issue_registry: ir.IssueRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a new breaking change issue is counted as upcoming, not as a repair."""
+    _store(hass_storage, _snapshot())
+    ir.async_create_issue(
+        hass,
+        "homeassistant",
+        "breaks",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        breaks_in_ha_version="2099.1.0",
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="country_not_configured",
+    )
+    assert await async_setup_component(hass, DOMAIN, {})
+    await _tick(hass, freezer, STARTUP_GRACE)
+
+    issue = issue_registry.async_get_issue(DOMAIN, UPDATE_REPORT_ISSUE_ID)
+    assert issue
+    assert issue.translation_placeholders == {
+        "from_version": OLD_VERSION,
+        "to_version": __version__,
+        "config_entries": "0",
+        "entities": "0",
+        "issues": "0",
+        "upcoming": "1",
     }
 
 
@@ -339,6 +439,16 @@ async def test_snapshot_before_update(
         severity=ir.IssueSeverity.WARNING,
         translation_key="country_not_configured",
     )
+    ir.async_create_issue(
+        hass,
+        "homeassistant",
+        "breaks_ignored",
+        is_fixable=False,
+        breaks_in_ha_version="2099.1.0",
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="country_not_configured",
+    )
+    ir.async_ignore_issue(hass, "homeassistant", "breaks_ignored", True)
     assert await async_setup_component(hass, DOMAIN, {})
     assert hass_storage[STORAGE_KEY]["data"] == {
         "baseline": old,
@@ -356,6 +466,7 @@ async def test_snapshot_before_update(
         "entities": {"demo": {sensor.id: SENSOR}},
         "unhealthy": [],
         "issues": [["homeassistant", "issue"]],
+        "upcoming": [["homeassistant", "breaks_ignored"]],
     }
 
 

@@ -5,6 +5,11 @@
       dict({
         'domain': 'demo',
         'entry_id': 'failed',
+        'error_reason_translation_domain': 'demo',
+        'error_reason_translation_key': 'cannot_connect',
+        'error_reason_translation_placeholders': dict({
+          'host': '1.2.3.4',
+        }),
         'reason': 'Timeout',
         'state': 'setup_retry',
         'title': 'Failed',
@@ -12,6 +17,9 @@
       dict({
         'domain': 'old',
         'entry_id': 'gone_entry',
+        'error_reason_translation_domain': None,
+        'error_reason_translation_key': None,
+        'error_reason_translation_placeholders': None,
         'reason': None,
         'state': None,
         'title': 'Gone',
@@ -20,15 +28,26 @@
     'created': '2026-10-31T12:00:00+00:00',
     'entities_removed': list([
       dict({
+        'automations': list([
+          'automation.uses_gone',
+        ]),
         'entity_id': 'sensor.gone',
         'platform': 'demo',
+        'scripts': list([
+        ]),
       }),
     ]),
     'entities_renamed': list([
       dict({
+        'automations': list([
+          'automation.uses_old_name',
+        ]),
         'entity_id': 'sensor.renamed',
         'old_entity_id': 'sensor.old_name',
         'platform': 'demo',
+        'scripts': list([
+          'script.uses_old_name',
+        ]),
       }),
     ]),
     'entities_unavailable': list([
@@ -87,6 +106,11 @@
       dict({
         'domain': 'demo',
         'entry_id': 'failed',
+        'error_reason_translation_domain': 'demo',
+        'error_reason_translation_key': 'cannot_connect',
+        'error_reason_translation_placeholders': dict({
+          'host': '1.2.3.4',
+        }),
         'reason': 'Timeout',
         'state': 'setup_retry',
         'title': 'Failed',
@@ -94,6 +118,9 @@
       dict({
         'domain': 'old',
         'entry_id': 'gone_entry',
+        'error_reason_translation_domain': None,
+        'error_reason_translation_key': None,
+        'error_reason_translation_placeholders': None,
         'reason': None,
         'state': None,
         'title': 'Gone',
@@ -102,15 +129,26 @@
     'created': '2026-10-31T12:00:00+00:00',
     'entities_removed': list([
       dict({
+        'automations': list([
+          'automation.uses_gone',
+        ]),
         'entity_id': 'sensor.gone',
         'platform': 'demo',
+        'scripts': list([
+        ]),
       }),
     ]),
     'entities_renamed': list([
       dict({
+        'automations': list([
+          'automation.uses_old_name',
+        ]),
         'entity_id': 'sensor.renamed',
         'old_entity_id': 'sensor.old_name',
         'platform': 'demo',
+        'scripts': list([
+          'script.uses_old_name',
+        ]),
       }),
     ]),
     'entities_unavailable': list([
