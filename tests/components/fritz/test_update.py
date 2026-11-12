@@ -113,6 +113,7 @@ async def test_available_update_can_be_installed(
         pytest.param("256.07.50", "7.50", id="leading_zero"),
         pytest.param("256.10.01", "10.01", id="no_leading_zero"),
         pytest.param("256.08.03-123456", "8.03-123456", id="labor_build"),
+        pytest.param("8.50", "8.50", id="already_normalized"),
         pytest.param(None, "7.29", id="not_matching"),
     ],
 )

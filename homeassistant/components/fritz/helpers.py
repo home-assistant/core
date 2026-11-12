@@ -40,6 +40,6 @@ def normalize_version(version: str | None) -> str | None:
     """Normalize FRITZ!OS version strings."""
     if version is None:
         return None
-    if (version_normalized := re.search(r"^\d+\.[0]?(.*)", version)) is not None:
+    if (version_normalized := re.search(r"^\d+\.0?(\d+\.\d+.*)$", version)) is not None:
         return version_normalized.group(1)
     return version
