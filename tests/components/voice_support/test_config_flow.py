@@ -89,6 +89,7 @@ async def test_manual_flow(hass: HomeAssistant) -> None:
     ("response", "reason"),
     [
         pytest.param({"exc": aiohttp.ClientError}, "cannot_connect", id="unreachable"),
+        pytest.param({"json": {"name": "Voice"}}, "cannot_connect", id="malformed"),
         pytest.param(
             {"json": {**INFO, "api_version": 2}}, "unsupported_version", id="version"
         ),
@@ -561,6 +562,7 @@ async def test_hassio_flow_feature_off(hass: HomeAssistant) -> None:
     ("response", "reason"),
     [
         pytest.param({"exc": aiohttp.ClientError}, "cannot_connect", id="unreachable"),
+        pytest.param({"json": {"name": "Voice"}}, "cannot_connect", id="malformed"),
         pytest.param(
             {"json": {**INFO, "api_version": 2}}, "unsupported_version", id="version"
         ),
@@ -769,6 +771,7 @@ async def test_zeroconf_flow_no_port(hass: HomeAssistant) -> None:
     ("response", "reason"),
     [
         pytest.param({"exc": aiohttp.ClientError}, "cannot_connect", id="unreachable"),
+        pytest.param({"json": {"name": "Voice"}}, "cannot_connect", id="malformed"),
         pytest.param(
             {"json": {**INFO, "api_version": 2}}, "unsupported_version", id="version"
         ),

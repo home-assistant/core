@@ -7,8 +7,8 @@ import pytest
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.voice_support.client import (
-    CONNECT_ERRORS,
     AppInfo,
+    InvalidResponseError,
     UnsupportedVersionError,
     VoiceSupportClient,
     normalize_wake_word,
@@ -72,28 +72,63 @@ async def test_update_info_wrong_api_version(
 
 
 @pytest.mark.parametrize(
-    "response",
+    ("response", "error"),
     [
-        pytest.param({"exc": aiohttp.ClientError}, id="unreachable"),
-        pytest.param({"status": 500}, id="error"),
-        pytest.param({"text": "not json"}, id="garbage"),
-        pytest.param({"json": {"name": "Voice", "api_version": 1}}, id="incomplete"),
-        pytest.param({"json": {**INFO, "wake_words": [{}]}}, id="nameless_wake_word"),
         pytest.param(
-            {"json": {**INFO, "wake_words": [{"id": None}]}}, id="wake_word_id_not_text"
+            {"exc": aiohttp.ClientError}, aiohttp.ClientError, id="unreachable"
         ),
-        pytest.param({"json": {**INFO, "wake_words": "okay nabu"}}, id="wrong_type"),
+        pytest.param({"status": 500}, aiohttp.ClientResponseError, id="error"),
+        pytest.param(
+            {"text": "not json", "headers": {"Content-Type": "application/json"}},
+            InvalidResponseError,
+            id="garbage",
+        ),
+        pytest.param(
+            {"json": {"name": "Voice", "api_version": 1}},
+            InvalidResponseError,
+            id="incomplete",
+        ),
+        pytest.param(
+            {"json": {**INFO, "wake_words": [{}]}},
+            InvalidResponseError,
+            id="nameless_wake_word",
+        ),
+        pytest.param(
+            {"json": {**INFO, "wake_words": [{"id": None}]}},
+            InvalidResponseError,
+            id="wake_word_id_not_text",
+        ),
+        pytest.param(
+            {"json": {**INFO, "wake_words": "okay nabu"}},
+            InvalidResponseError,
+            id="wrong_type",
+        ),
     ],
 )
 async def test_update_info_failure(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, response: dict[str, Any]
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    response: dict[str, Any],
+    error: type[Exception],
 ) -> None:
     """Test an app that cannot be read, or breaks the contract, is forgotten."""
     aioclient_mock.get(INFO_URL, **response)
     client = VoiceSupportClient(hass, HOST, PORT)
     client.info = AppInfo.from_json(INFO)
 
-    with pytest.raises(CONNECT_ERRORS):
+    with pytest.raises(error):
         await client.async_update_info()
 
     assert client.info is None
+
+
+@pytest.mark.parametrize("error", [AttributeError, KeyError, TypeError, ValueError])
+async def test_update_info_unexpected_error(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, error: type[Exception]
+) -> None:
+    """Test errors outside response parsing are not handled as client failures."""
+    aioclient_mock.get(INFO_URL, exc=error)
+    client = VoiceSupportClient(hass, HOST, PORT)
+
+    with pytest.raises(error):
+        await client.async_update_info()

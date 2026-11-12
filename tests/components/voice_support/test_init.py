@@ -46,6 +46,7 @@ async def test_setup_entry(
     ("response", "reason"),
     [
         pytest.param({"exc": aiohttp.ClientError}, "cannot_connect", id="unreachable"),
+        pytest.param({"json": {"name": "Voice"}}, "cannot_connect", id="malformed"),
         pytest.param(
             {"json": {**INFO, "api_version": 2}}, "unsupported_version", id="version"
         ),
@@ -94,6 +95,7 @@ async def test_info_refresh(
     ("response", "reason"),
     [
         pytest.param({"exc": aiohttp.ClientError}, "cannot_connect", id="unreachable"),
+        pytest.param({"json": {"name": "Voice"}}, "cannot_connect", id="malformed"),
         pytest.param(
             {"json": {**INFO, "api_version": 2}}, "unsupported_version", id="version"
         ),

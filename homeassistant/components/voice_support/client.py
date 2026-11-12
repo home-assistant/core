@@ -14,18 +14,16 @@ from homeassistant.helpers.event import async_track_time_interval
 
 API_VERSION = 1
 INFO_TIMEOUT = 10
-CONNECT_ERRORS = (
-    aiohttp.ClientError,
-    TimeoutError,
-    AttributeError,
-    KeyError,
-    TypeError,
-    ValueError,
-)
-"""What reading the app's info may raise, a malformed answer included."""
 INFO_REFRESH_INTERVAL = timedelta(minutes=5)
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class InvalidResponseError(Exception):
+    """The app returned malformed information."""
+
+
+CLIENT_ERRORS = (aiohttp.ClientError, TimeoutError, InvalidResponseError)
 
 
 class UnsupportedVersionError(Exception):
@@ -103,7 +101,7 @@ class VoiceSupportClient:
     async def _async_refresh_info(self, _now: datetime | None = None) -> None:
         try:
             await self.async_update_info()
-        except (*CONNECT_ERRORS, UnsupportedVersionError) as err:
+        except (*CLIENT_ERRORS, UnsupportedVersionError) as err:
             _LOGGER.debug("Cannot use the app at %s (%r)", self.url, err)
             if self._on_disconnect is not None:
                 self._on_disconnect()
@@ -111,7 +109,7 @@ class VoiceSupportClient:
     async def async_update_info(self) -> AppInfo:
         """Ask the app what it is and what it can verify.
 
-        Raises UnsupportedVersionError, besides CONNECT_ERRORS, for an app
+        Raises UnsupportedVersionError, besides CLIENT_ERRORS, for an app
         that cannot be used.
         """
         session = async_get_clientsession(self.hass)
@@ -120,8 +118,19 @@ class VoiceSupportClient:
                 self.url / "info", timeout=aiohttp.ClientTimeout(total=INFO_TIMEOUT)
             ) as response:
                 response.raise_for_status()
-                info = AppInfo.from_json(await response.json())
-        except CONNECT_ERRORS:
+                try:
+                    data = await response.json()
+                except ValueError as err:
+                    raise InvalidResponseError(
+                        "Invalid JSON from the Voice app"
+                    ) from err
+                try:
+                    info = AppInfo.from_json(data)
+                except (AttributeError, KeyError, TypeError, ValueError) as err:
+                    raise InvalidResponseError(
+                        "Invalid info from the Voice app"
+                    ) from err
+        except CLIENT_ERRORS:
             self.info = None
             raise
 

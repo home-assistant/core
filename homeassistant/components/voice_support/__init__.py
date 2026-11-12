@@ -21,7 +21,7 @@ from homeassistant.util.hass_dict import HassKey
 from .app import get_app_manager
 from .client import (
     API_VERSION,
-    CONNECT_ERRORS,
+    CLIENT_ERRORS,
     UnsupportedVersionError,
     VoiceSupportClient,
 )
@@ -68,7 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         await client.async_connect(
             partial(hass.config_entries.async_schedule_reload, entry.entry_id)
         )
-    except CONNECT_ERRORS as err:
+    except CLIENT_ERRORS as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",
