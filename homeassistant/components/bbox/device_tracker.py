@@ -14,7 +14,7 @@ from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
-from homeassistant.const import CONF_HOST, CONF_PASSWORD
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
@@ -34,6 +34,9 @@ PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
         # The hosts list requires an authenticated session on recent
         # firmwares.
         probatio.Required(CONF_PASSWORD): cv.string,
+        # The Bbox certificate covers mabbox.bytel.fr only: a numeric
+        # host needs verify_ssl: false.
+        probatio.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
     }
 )
 
@@ -42,7 +45,10 @@ def get_scanner(hass: HomeAssistant, config: ConfigType) -> BboxDeviceScanner | 
     """Validate the configuration and return a Bbox scanner."""
     domain_config = config[DEVICE_TRACKER_DOMAIN]
     scanner = BboxDeviceScanner(
-        hass, domain_config[CONF_HOST], domain_config[CONF_PASSWORD]
+        hass,
+        domain_config[CONF_HOST],
+        domain_config[CONF_PASSWORD],
+        domain_config[CONF_VERIFY_SSL],
     )
 
     return scanner if scanner.success_init else None
@@ -54,17 +60,24 @@ Device = namedtuple("Device", ["mac", "name", "ip", "last_update"])  # noqa: PYI
 class BboxDeviceScanner(DeviceScanner):
     """Scanner for devices connected to the bbox."""
 
-    def __init__(self, hass: HomeAssistant, host: str, password: str) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        host: str,
+        password: str,
+        verify_ssl: bool = True,
+    ) -> None:
         """Initialize the scanner."""
         self.hass = hass
         self._host = host
         self._password = password
+        self._verify_ssl = verify_ssl
         self._api: BboxApi | None = None
         self.last_results: list[Device] = []
 
         self.success_init = self._update_info()
 
-    async def _async_fetch(self):
+    async def _async_fetch(self) -> list[dict]:
         """Fetch the connected devices from the event loop.
 
         The session and the api client must be created on the event loop:
@@ -74,7 +87,9 @@ class BboxDeviceScanner(DeviceScanner):
         if self._api is None:
             self._api = BboxApi(
                 async_create_clientsession(
-                    self.hass, cookie_jar=CookieJar(unsafe=True)
+                    self.hass,
+                    verify_ssl=self._verify_ssl,
+                    cookie_jar=CookieJar(unsafe=True),
                 ),
                 self._password,
                 self._host,
@@ -84,6 +99,9 @@ class BboxDeviceScanner(DeviceScanner):
     @override
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
+        # The return value of _update_info() is deliberately ignored:
+        # Throttle returns None when the call is skipped, and a failed
+        # fetch has already cleared last_results.
         self._update_info()
 
         return [device.mac for device in self.last_results]
@@ -103,7 +121,8 @@ class BboxDeviceScanner(DeviceScanner):
     def _update_info(self):
         """Check the Bbox for devices.
 
-        Returns boolean if scanning successful.
+        Returns True on success, False on failure, None when the
+        Throttle skips the call.
         """
         _LOGGER.debug("Scanning")
 
@@ -112,25 +131,41 @@ class BboxDeviceScanner(DeviceScanner):
             future = run_coroutine_threadsafe(self._async_fetch(), self.hass.loop)
             result = future.result(REQUEST_TIMEOUT)
         except (BboxError, TimeoutError) as error:
-            # Do not leave the abandoned fetch running under a bridge
-            # timeout: it would keep hitting the Bbox for a discarded
-            # result.
-            if future is not None:
+            # A BboxError means the fetch already finished; only a bridge
+            # timeout leaves a coroutine running for a discarded result.
+            if isinstance(error, TimeoutError) and future is not None:
                 future.cancel()
             _LOGGER.error("Error fetching Bbox device list: %s", error)
             self.last_results = []
             return False
+        except RuntimeError as error:
+            # The event loop is closed (shutdown in progress): a plain
+            # fetch failure, not an unhandled traceback.
+            _LOGGER.warning("Bbox scan skipped, loop closed: %s", error)
+            self.last_results = []
+            return False
 
         now = dt_util.now()
+        if not isinstance(result, list):
+            _LOGGER.error("Unexpected Bbox device list: %s", result)
+            self.last_results = []
+            return False
         last_results = []
         for device in result:
-            if device["active"] != 1:
-                continue
-            last_results.append(
-                Device(
-                    device["macaddress"], device["hostname"], device["ipaddress"], now
+            try:
+                if device["active"] != 1:
+                    continue
+                last_results.append(
+                    Device(
+                        device["macaddress"],
+                        device["hostname"],
+                        device["ipaddress"],
+                        now,
+                    )
                 )
-            )
+            except KeyError, TypeError:
+                # A malformed entry must not take down the whole scan.
+                _LOGGER.warning("Skipping malformed Bbox device: %s", device)
 
         self.last_results = last_results
 

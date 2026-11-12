@@ -16,7 +16,7 @@ from homeassistant.components.bbox.device_tracker import (
 from homeassistant.components.device_tracker.const import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
 )
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -40,9 +40,18 @@ def test_platform_schema_requires_password() -> None:
 
 
 def test_platform_schema_defaults() -> None:
-    """Test the platform default for host."""
+    """Test the platform defaults for host and verify_ssl."""
     config = PLATFORM_SCHEMA({"platform": "bbox", "password": PASSWORD})
     assert config[CONF_HOST] == DEFAULT_HOST
+    assert config[CONF_VERIFY_SSL] is True
+
+
+def test_platform_schema_verify_ssl_disabled() -> None:
+    """Test that verify_ssl can be disabled, e.g. for a numeric host."""
+    config = PLATFORM_SCHEMA(
+        {"platform": "bbox", "password": PASSWORD, "verify_ssl": False}
+    )
+    assert config[CONF_VERIFY_SSL] is False
 
 
 async def test_scanner(
@@ -57,6 +66,28 @@ async def test_scanner(
     name = await hass.async_add_executor_job(scanner.get_device_name, ACTIVE_MAC)
     assert name == ACTIVE_HOST["hostname"]
     assert scanner.get_device_name("aa:bb:cc:dd:ee:99") is None
+
+
+async def test_scanner_skips_malformed_entries(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test that malformed device entries are skipped, not fatal."""
+    malformed_response = [
+        {
+            "hosts": {
+                "list": [
+                    {"hostname": "Ghost"},  # no active/macaddress
+                    {"active": 1},  # active but no macaddress
+                    ACTIVE_HOST,
+                ]
+            }
+        }
+    ]
+    aioclient_mock.get(HOSTS_URL, json=malformed_response)
+    scanner = await hass.async_add_executor_job(BboxDeviceScanner, hass, HOST, PASSWORD)
+    assert scanner.success_init is True
+    devices = await hass.async_add_executor_job(scanner.scan_devices)
+    assert devices == [ACTIVE_MAC]
 
 
 async def test_scanner_is_throttled(

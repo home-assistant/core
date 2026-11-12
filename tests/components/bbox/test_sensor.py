@@ -7,7 +7,10 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
-from homeassistant.components.bbox.sensor import BboxData
+from homeassistant.components.bbox.api import BboxConnectionError
+from homeassistant.components.bbox.const import DEFAULT_HOST
+from homeassistant.components.bbox.sensor import PLATFORM_SCHEMA, BboxData
+from homeassistant.const import CONF_HOST, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
@@ -48,6 +51,15 @@ def mock_bbox(aioclient_mock: AiohttpClientMocker) -> AiohttpClientMocker:
     aioclient_mock.get(WAN_IP_STATS_URL, json=WAN_IP_STATS_RESPONSE)
     aioclient_mock.get(DEVICE_URL, json=DEVICE_INFO_RESPONSE)
     return aioclient_mock
+
+
+def test_platform_schema_defaults() -> None:
+    """Test the sensor platform defaults for host and verify_ssl."""
+    config = PLATFORM_SCHEMA({**SENSOR_PLATFORM_CONFIG})
+    assert config[CONF_HOST] == DEFAULT_HOST
+    assert config[CONF_VERIFY_SSL] is True
+    config = PLATFORM_SCHEMA({**SENSOR_PLATFORM_CONFIG, "verify_ssl": False})
+    assert config[CONF_VERIFY_SSL] is False
 
 
 async def test_sensors(
@@ -100,3 +112,25 @@ async def test_bbox_data_is_throttled(
     freezer.tick(timedelta(seconds=61))
     await hass.async_add_executor_job(bbox_data.update)
     assert mock_bbox.call_count == 4
+
+
+async def test_update_raises_and_keeps_last_value_on_failure(
+    hass: HomeAssistant,
+    mock_bbox: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a failed refresh raises and keeps the last known payloads."""
+    freezer.move_to("2026-11-11T15:00:00+00:00")
+    bbox_data = BboxData(hass, HOST, "")
+    await hass.async_add_executor_job(bbox_data.update)
+    assert bbox_data.data is not None
+
+    mock_bbox.clear_requests()
+    mock_bbox.get(WAN_IP_STATS_URL, exc=ClientConnectionError("boom"))
+    mock_bbox.get(DEVICE_URL, exc=ClientConnectionError("boom"))
+    freezer.tick(timedelta(seconds=61))
+    with pytest.raises(BboxConnectionError):
+        await hass.async_add_executor_job(bbox_data.update)
+    # The last known payloads are kept, not cleared.
+    assert bbox_data.data == WAN_IP_STATS_RESPONSE[0]["wan"]["ip"]["stats"]
+    assert bbox_data.router_infos == DEVICE_INFO_RESPONSE[0]

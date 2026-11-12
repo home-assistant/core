@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_MONITORED_VARIABLES,
     CONF_NAME,
     CONF_PASSWORD,
+    CONF_VERIFY_SSL,
     UnitOfDataRate,
 )
 from homeassistant.core import HomeAssistant
@@ -98,6 +99,9 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
         # The Bbox only needs the password for endpoints like the hosts
         # list; the WAN and device endpoints answer without it.
         probatio.Optional(CONF_PASSWORD, default=""): cv.string,
+        # The Bbox certificate covers mabbox.bytel.fr only: a numeric
+        # host needs verify_ssl: false.
+        probatio.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
     }
 )
 
@@ -112,7 +116,9 @@ def setup_platform(
     # Create a data fetcher to support all of the configured sensors. Then make
     # the first call to init the data.
     try:
-        bbox_data = BboxData(hass, config[CONF_HOST], config[CONF_PASSWORD])
+        bbox_data = BboxData(
+            hass, config[CONF_HOST], config[CONF_PASSWORD], config[CONF_VERIFY_SSL]
+        )
         bbox_data.update()
     except BboxError as error:
         _LOGGER.error(error)
@@ -197,25 +203,36 @@ class BboxSensor(SensorEntity):
 class BboxData:
     """Get data from the Bbox."""
 
-    def __init__(self, hass: HomeAssistant, host: str, password: str | None) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        host: str,
+        password: str | None,
+        verify_ssl: bool = True,
+    ) -> None:
         """Initialize the data object."""
         self._hass = hass
         self._host = host
         self._password = password
+        self._verify_ssl = verify_ssl
         self._api: BboxApi | None = None
         self.data = None
         self.router_infos = None
+        self._fetch_error: BboxError | None = None
 
-    async def _async_fetch(self):
+    async def _async_fetch(self) -> tuple[dict, dict]:
         """Fetch the stats and the device info from the event loop.
 
         The session and the api client must be created on the event loop:
-        this method only runs there, through the bridge in :meth:`update`.
+        this method only runs there, through the bridge in
+        :meth:`_fetch_latest_data`.
         """
         if self._api is None:
             self._api = BboxApi(
                 async_create_clientsession(
-                    self._hass, cookie_jar=CookieJar(unsafe=True)
+                    self._hass,
+                    verify_ssl=self._verify_ssl,
+                    cookie_jar=CookieJar(unsafe=True),
                 ),
                 self._password,
                 self._host,
@@ -223,29 +240,49 @@ class BboxData:
         return await self._api.get_ip_stats_and_info()
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
-        """Get the latest data from the Bbox.
+    def _fetch_latest_data(self) -> None:
+        """Fetch stats and device info into the stored payloads.
 
-        Raises BboxError when the fetch fails: setup stops without
-        entities, and entity updates keep their last known value.
+        Records failures instead of raising: Throttle only stamps its
+        timestamp on a normal return, so a raising fetch would arm
+        nothing and repeat itself every entity update.
         """
-
         future = None
         try:
             future = run_coroutine_threadsafe(self._async_fetch(), self._hass.loop)
             self.data, self.router_infos = future.result(REQUEST_TIMEOUT)
-        except BboxError:
-            # Do not leave the abandoned fetch running: it would keep
-            # hitting the Bbox for a discarded result.
-            if future is not None:
-                future.cancel()
-            raise
+            self._fetch_error = None
+        except BboxError as error:
+            # The fetch already finished with this error: nothing left
+            # to cancel, just record it.
+            _LOGGER.error(error)
+            self._fetch_error = error
         except TimeoutError as error:
-            # The bridge wait expired: cancel the fetch and surface a
-            # typed error instead of swallowing it, so the stored
-            # payloads are never read while cleared.
+            # The bridge wait expired: cancel the still-running fetch and
+            # cache a typed error instead of swallowing it, so the stored
+            # payloads are never read while stale.
             if future is not None:
                 future.cancel()
-            raise BboxConnectionError(
+            _LOGGER.error(error)
+            fetch_error = BboxConnectionError(
                 f"Bbox fetch did not complete in {REQUEST_TIMEOUT} seconds"
-            ) from error
+            )
+            fetch_error.__cause__ = error
+            self._fetch_error = fetch_error
+        except RuntimeError as error:
+            # The event loop is closed (shutdown in progress): record a
+            # typed failure instead of letting an unhandled error escape.
+            _LOGGER.warning("Bbox fetch could not be scheduled: %s", error)
+            fetch_error = BboxConnectionError("Bbox fetch could not be scheduled")
+            fetch_error.__cause__ = error
+            self._fetch_error = fetch_error
+
+    def update(self) -> None:
+        """Get the latest data from the Bbox.
+
+        Raises BboxError when the last fetch failed: setup stops without
+        entities, and entity updates keep their last known value.
+        """
+        self._fetch_latest_data()
+        if self._fetch_error is not None:
+            raise self._fetch_error
