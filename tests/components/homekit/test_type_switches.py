@@ -32,10 +32,9 @@ from homeassistant.components.input_number import (
 )
 from homeassistant.components.lawn_mower import (
     DOMAIN as LAWN_MOWER_DOMAIN,
-    SERVICE_DOCK,
-    SERVICE_START_MOWING,
     LawnMowerActivity,
     LawnMowerEntityFeature,
+    LawnMowerService,
 )
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.select import ATTR_OPTIONS
@@ -485,8 +484,10 @@ async def test_lawn_mower_set_state(
     assert acc.char_on.value == 0
 
     # Set from HomeKit
-    call_turn_on = async_mock_service(hass, LAWN_MOWER_DOMAIN, SERVICE_START_MOWING)
-    call_turn_off = async_mock_service(hass, LAWN_MOWER_DOMAIN, SERVICE_DOCK)
+    call_turn_on = async_mock_service(
+        hass, LAWN_MOWER_DOMAIN, LawnMowerService.START_MOWING
+    )
+    call_turn_off = async_mock_service(hass, LAWN_MOWER_DOMAIN, LawnMowerService.DOCK)
 
     acc.char_on.client_update_value(1)
     await hass.async_block_till_done()

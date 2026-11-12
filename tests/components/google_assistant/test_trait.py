@@ -595,7 +595,9 @@ async def test_dock_lawn_mower(hass: HomeAssistant) -> None:
 
     assert trt.query_attributes() == {"isDocked": False}
 
-    calls = async_mock_service(hass, lawn_mower.DOMAIN, lawn_mower.SERVICE_DOCK)
+    calls = async_mock_service(
+        hass, lawn_mower.DOMAIN, lawn_mower.LawnMowerService.DOCK
+    )
     await trt.execute(trait.COMMAND_DOCK, BASIC_DATA, {}, {})
     assert len(calls) == 1
     assert calls[0].data == {ATTR_ENTITY_ID: "lawn_mower.bla"}
@@ -621,19 +623,21 @@ async def test_startstop_lawn_mower(hass: HomeAssistant) -> None:
     assert trt.query_attributes() == {"isRunning": False, "isPaused": True}
 
     start_calls = async_mock_service(
-        hass, lawn_mower.DOMAIN, lawn_mower.SERVICE_START_MOWING
+        hass, lawn_mower.DOMAIN, lawn_mower.LawnMowerService.START_MOWING
     )
     await trt.execute(trait.COMMAND_START_STOP, BASIC_DATA, {"start": True}, {})
     assert len(start_calls) == 1
     assert start_calls[0].data == {ATTR_ENTITY_ID: "lawn_mower.bla"}
 
-    pause_calls = async_mock_service(hass, lawn_mower.DOMAIN, lawn_mower.SERVICE_PAUSE)
+    pause_calls = async_mock_service(
+        hass, lawn_mower.DOMAIN, lawn_mower.LawnMowerService.PAUSE
+    )
     await trt.execute(trait.COMMAND_PAUSE_UNPAUSE, BASIC_DATA, {"pause": True}, {})
     assert len(pause_calls) == 1
     assert pause_calls[0].data == {ATTR_ENTITY_ID: "lawn_mower.bla"}
 
     unpause_calls = async_mock_service(
-        hass, lawn_mower.DOMAIN, lawn_mower.SERVICE_START_MOWING
+        hass, lawn_mower.DOMAIN, lawn_mower.LawnMowerService.START_MOWING
     )
     await trt.execute(trait.COMMAND_PAUSE_UNPAUSE, BASIC_DATA, {"pause": False}, {})
     assert len(unpause_calls) == 1

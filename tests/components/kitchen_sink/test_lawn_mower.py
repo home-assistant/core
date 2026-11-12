@@ -9,11 +9,8 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.kitchen_sink import DOMAIN
 from homeassistant.components.lawn_mower import (
     DOMAIN as LAWN_MOWER_DOMAIN,
-    SERVICE_DOCK,
-    SERVICE_PAUSE,
-    SERVICE_START_MOWING,
-    SERVICE_STOP,
     LawnMowerActivity,
+    LawnMowerService,
 )
 from homeassistant.const import ATTR_ENTITY_ID, EVENT_STATE_CHANGED, Platform
 from homeassistant.core import HomeAssistant
@@ -50,37 +47,37 @@ async def test_states(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
     [
         (
             "lawn_mower.mower_can_mow",
-            SERVICE_START_MOWING,
+            LawnMowerService.START_MOWING,
             LawnMowerActivity.DOCKED,
             LawnMowerActivity.MOWING,
         ),
         (
             "lawn_mower.mower_can_pause",
-            SERVICE_PAUSE,
+            LawnMowerService.PAUSE,
             LawnMowerActivity.DOCKED,
             LawnMowerActivity.PAUSED,
         ),
         (
             "lawn_mower.mower_is_paused",
-            SERVICE_START_MOWING,
+            LawnMowerService.START_MOWING,
             LawnMowerActivity.PAUSED,
             LawnMowerActivity.MOWING,
         ),
         (
             "lawn_mower.mower_can_dock",
-            SERVICE_DOCK,
+            LawnMowerService.DOCK,
             LawnMowerActivity.MOWING,
             LawnMowerActivity.DOCKED,
         ),
         (
             "lawn_mower.mower_can_return",
-            SERVICE_DOCK,
+            LawnMowerService.DOCK,
             LawnMowerActivity.RETURNING,
             LawnMowerActivity.DOCKED,
         ),
         (
             "lawn_mower.mower_can_stop",
-            SERVICE_STOP,
+            LawnMowerService.STOP,
             LawnMowerActivity.MOWING,
             LawnMowerActivity.IDLE,
         ),
@@ -112,10 +109,10 @@ async def test_mower(
 @pytest.mark.parametrize(
     "service_call",
     [
-        SERVICE_DOCK,
-        SERVICE_START_MOWING,
-        SERVICE_PAUSE,
-        SERVICE_STOP,
+        LawnMowerService.DOCK,
+        LawnMowerService.START_MOWING,
+        LawnMowerService.PAUSE,
+        LawnMowerService.STOP,
     ],
 )
 async def test_service_calls_mocked(hass: HomeAssistant, service_call) -> None:

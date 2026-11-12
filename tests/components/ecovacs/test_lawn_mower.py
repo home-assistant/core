@@ -13,11 +13,8 @@ from homeassistant.components.ecovacs.const import DOMAIN
 from homeassistant.components.ecovacs.controller import EcovacsController
 from homeassistant.components.lawn_mower import (
     DOMAIN as LAWN_MOWER_DOMAIN,
-    SERVICE_DOCK,
-    SERVICE_PAUSE,
-    SERVICE_START_MOWING,
-    SERVICE_STOP,
     LawnMowerActivity,
+    LawnMowerService,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
@@ -114,10 +111,12 @@ class MowerTestCase:
             "5xu9h3",
             "lawn_mower.goat_g1",
             [
-                MowerTestCase(Charge(), SERVICE_DOCK),
-                MowerTestCase(CleanV2(CleanAction.PAUSE), SERVICE_PAUSE),
-                MowerTestCase(CleanV2(CleanAction.START), SERVICE_START_MOWING),
-                MowerTestCase(CleanV2(CleanAction.STOP), SERVICE_STOP),
+                MowerTestCase(Charge(), LawnMowerService.DOCK),
+                MowerTestCase(CleanV2(CleanAction.PAUSE), LawnMowerService.PAUSE),
+                MowerTestCase(
+                    CleanV2(CleanAction.START), LawnMowerService.START_MOWING
+                ),
+                MowerTestCase(CleanV2(CleanAction.STOP), LawnMowerService.STOP),
             ],
         ),
     ],
