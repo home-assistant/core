@@ -66,11 +66,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: TasmotaConfigEntry) -> N
 
     entry.runtime_data = TasmotaLatestReleaseUpdateCoordinator(hass, entry)
 
-    # Intentionally not async_config_entry_first_refresh,
-    # because we don't want to fail/retry the whole config entry setup due to
-    # issues determining update availability. Tasmota is local-only-capable,
-    # so we might have a setup where it will never have a chance to succeed.
-    await entry.runtime_data.async_refresh()
+    # Do a fire-and-forget first background refresh of firmware update availability.
+    # This is of secondary importance for this integration,
+    # and we don't want it to delay the setup even if it happens to take some time.
+    entry.async_create_task(
+        hass, entry.runtime_data.async_refresh(), name="Tasmota latest release refresh"
+    )
 
     async def async_discover_device(config: TasmotaDeviceConfig, mac: str) -> None:
         """Discover and add a Tasmota device."""
