@@ -22,7 +22,9 @@ from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
+    CONF_COLD_WHITE_KELVIN,
     CONF_KEEP_MAIN_LIGHT,
+    CONF_WARM_WHITE_KELVIN,
     DEFAULT_KEEP_MAIN_LIGHT,
     DOMAIN,
     LOGGER,
@@ -81,6 +83,7 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
     """Class to manage fetching WLED data from single endpoint."""
 
     keep_main_light: bool
+    white_kelvin_range: tuple[int, int] | None
     config_entry: WLEDConfigEntry
 
     def __init__(
@@ -92,6 +95,16 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
         """Initialize global WLED data updater."""
         self.keep_main_light = entry.options.get(
             CONF_KEEP_MAIN_LIGHT, DEFAULT_KEEP_MAIN_LIGHT
+        )
+        # Color temperature of the warm and cold white LEDs, when configured
+        self.white_kelvin_range = (
+            (
+                entry.options[CONF_WARM_WHITE_KELVIN],
+                entry.options[CONF_COLD_WHITE_KELVIN],
+            )
+            if CONF_WARM_WHITE_KELVIN in entry.options
+            and CONF_COLD_WHITE_KELVIN in entry.options
+            else None
         )
         self.wled = WLED(entry.data[CONF_HOST], session=async_get_clientsession(hass))
         self.unsub: CALLBACK_TYPE | None = None

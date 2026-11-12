@@ -32,7 +32,13 @@ from .const import (
 )
 from .coordinator import WLEDConfigEntry, WLEDDataUpdateCoordinator
 from .entity import WLEDEntity
-from .helpers import kelvin_to_255, kelvin_to_255_reverse, wled_exception_handler
+from .helpers import (
+    cct_to_kelvin,
+    kelvin_to_255,
+    kelvin_to_255_reverse,
+    kelvin_to_cct,
+    wled_exception_handler,
+)
 
 PARALLEL_UPDATES = 1
 
@@ -163,6 +169,19 @@ def _has_warm_and_cold_white(device: WLEDDevice, segment: int) -> bool:
     )
 
 
+def _mixes_white_leds(device: WLEDDevice, segment: int) -> bool:
+    """Return whether a segment's color temperature mixes warm and cold white LEDs.
+
+    Not when WLED calculates it from the RGB color, or when it only drives
+    white balance correction of RGB(W) LEDs.
+    """
+    if (led_config := device.led_config) is None or led_config.cct_from_rgb:
+        return False
+
+    outputs = device.segment_led_outputs(segment)
+    return bool(outputs) and all(output.has_cct for output in outputs)
+
+
 class WLEDSegmentLight(WLEDEntity, LightEntity):
     """Defines a WLED light based on a segment."""
 
@@ -190,6 +209,17 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         self._attr_unique_id = (
             f"{self.coordinator.data.info.mac_address}_{self._segment}"
         )
+
+        self._white_kelvin_range = (
+            coordinator.white_kelvin_range
+            if _mixes_white_leds(coordinator.data, segment)
+            else None
+        )
+        if self._white_kelvin_range is not None:
+            (
+                self._attr_min_color_temp_kelvin,
+                self._attr_max_color_temp_kelvin,
+            ) = self._white_kelvin_range
 
         self._color_modes: list[ColorMode] = []
         self._has_white_channel = False
@@ -288,6 +318,8 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
     def color_temp_kelvin(self) -> int | None:
         """Return the CT color value in K."""
         cct = self.coordinator.data.state.segments[self._segment].cct
+        if self._white_kelvin_range is not None:
+            return cct_to_kelvin(cct, *self._white_kelvin_range)
         return kelvin_to_255_reverse(cct, COLOR_TEMP_K_MIN, COLOR_TEMP_K_MAX)
 
     @property
@@ -370,9 +402,14 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
             data[ATTR_COLOR_PRIMARY] = (red, green, blue, white)
 
         if ATTR_COLOR_TEMP_KELVIN in kwargs:
-            data[ATTR_CCT] = kelvin_to_255(
-                kwargs[ATTR_COLOR_TEMP_KELVIN], COLOR_TEMP_K_MIN, COLOR_TEMP_K_MAX
-            )
+            if self._white_kelvin_range is not None:
+                data[ATTR_CCT] = kelvin_to_cct(
+                    kwargs[ATTR_COLOR_TEMP_KELVIN], *self._white_kelvin_range
+                )
+            else:
+                data[ATTR_CCT] = kelvin_to_255(
+                    kwargs[ATTR_COLOR_TEMP_KELVIN], COLOR_TEMP_K_MIN, COLOR_TEMP_K_MAX
+                )
             # A color temperature only shows on white light: the white channel
             # where there is one, otherwise full white.
             if self._color_modes:

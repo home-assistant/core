@@ -32,7 +32,9 @@ from homeassistant.components.light import (
     ColorMode,
 )
 from homeassistant.components.wled.const import (
+    CONF_COLD_WHITE_KELVIN,
     CONF_KEEP_MAIN_LIGHT,
+    CONF_WARM_WHITE_KELVIN,
     DOMAIN,
     SCAN_INTERVAL,
 )
@@ -51,6 +53,13 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 pytestmark = pytest.mark.usefixtures("init_integration")
+
+WHITE_KELVIN_RANGE_OPTIONS = {
+    CONF_KEEP_MAIN_LIGHT: False,
+    CONF_WARM_WHITE_KELVIN: 3000,
+    CONF_COLD_WHITE_KELVIN: 6500,
+}
+WS2805_LED_CONFIG = {"ins": [{"start": 0, "len": 178, "type": 32}]}
 
 
 @pytest.fixture(autouse=True)
@@ -411,6 +420,99 @@ async def test_cct_light(hass: HomeAssistant, mock_wled: MagicMock) -> None:
         on=True,
         segment_id=0,
     )
+
+
+@pytest.mark.parametrize(
+    ("kelvin", "cct"),
+    [
+        pytest.param(4000, 118, id="mired_midpoint"),
+        pytest.param(3000, 0, id="warm_white"),
+        pytest.param(6500, 255, id="cold_white"),
+    ],
+)
+@pytest.mark.parametrize("device_fixture", ["cct"])
+async def test_cct_light_white_kelvin_range(
+    hass: HomeAssistant,
+    mock_wled: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    kelvin: int,
+    cct: int,
+) -> None:
+    """Test the configured white LED range drives the color temperature mapping."""
+    hass.config_entries.async_update_entry(
+        mock_config_entry, options=WHITE_KELVIN_RANGE_OPTIONS
+    )
+    await _async_load_segment(
+        hass, mock_wled, mock_config_entry, 7, [0, 0, 0, 255], WS2805_LED_CONFIG
+    )
+
+    assert (state := hass.states.get("light.wled_cct_light"))
+    assert state.attributes.get(ATTR_MIN_COLOR_TEMP_KELVIN) == 3000
+    assert state.attributes.get(ATTR_MAX_COLOR_TEMP_KELVIN) == 6500
+    # CCT 127 is 4099 K when mixed in mireds between 3000 and 6500 K
+    assert state.attributes.get(ATTR_COLOR_TEMP_KELVIN) == 4099
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "light.wled_cct_light", ATTR_COLOR_TEMP_KELVIN: kelvin},
+        blocking=True,
+    )
+    mock_wled.segment.assert_called_with(
+        cct=cct,
+        color_primary=(0, 0, 0, 255),
+        on=True,
+        segment_id=0,
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["cct"])
+@pytest.mark.parametrize(
+    ("led_config", "kelvin_range"),
+    [
+        pytest.param(WS2805_LED_CONFIG, (3000, 6500), id="warm_and_cold_white"),
+        pytest.param(
+            {"cct": True, "ins": [{"start": 0, "len": 178, "type": 30}]},
+            (2000, 6535),
+            id="white_balance_correction_only",
+        ),
+        pytest.param(
+            {"cr": True, "ins": [{"start": 0, "len": 178, "type": 32}]},
+            (2000, 6535),
+            id="cct_from_rgb",
+        ),
+        pytest.param(
+            {
+                "ins": [
+                    {"start": 0, "len": 100, "type": 32},
+                    {"start": 100, "len": 78, "type": 30},
+                ]
+            },
+            (2000, 6535),
+            id="partly_warm_and_cold_white",
+        ),
+    ],
+)
+async def test_white_kelvin_range_only_for_white_leds(
+    hass: HomeAssistant,
+    mock_wled: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    led_config: dict[str, Any],
+    kelvin_range: tuple[int, int],
+) -> None:
+    """Test the white range only applies to segments mixing warm and cold white LEDs."""
+    hass.config_entries.async_update_entry(
+        mock_config_entry, options=WHITE_KELVIN_RANGE_OPTIONS
+    )
+    await _async_load_segment(
+        hass, mock_wled, mock_config_entry, 7, [0, 0, 0, 255], led_config
+    )
+
+    assert (state := hass.states.get("light.wled_cct_light"))
+    assert (
+        state.attributes[ATTR_MIN_COLOR_TEMP_KELVIN],
+        state.attributes[ATTR_MAX_COLOR_TEMP_KELVIN],
+    ) == kelvin_range
 
 
 @pytest.mark.parametrize("device_fixture", ["rgb_single_segment"])
