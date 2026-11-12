@@ -10,10 +10,10 @@ from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_i
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.switchbot.const import DOMAIN
 from homeassistant.components.switchbot.services import (
-    SERVICE_ADD_PASSWORD,
+    SwitchbotService,
     async_setup_services,
 )
-from homeassistant.const import ATTR_DEVICE_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
@@ -60,9 +60,9 @@ async def test_add_password_service(
 
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ADD_PASSWORD,
+            SwitchbotService.ADD_PASSWORD,
             {
-                ATTR_DEVICE_ID: device_entry.id,
+                CommonServiceArgument.DEVICE_ID: device_entry.id,
                 "password": "123456",
             },
             blocking=True,
@@ -91,9 +91,9 @@ async def test_device_not_found(
         with pytest.raises(ServiceValidationError) as err:
             await hass.services.async_call(
                 DOMAIN,
-                SERVICE_ADD_PASSWORD,
+                SwitchbotService.ADD_PASSWORD,
                 {
-                    ATTR_DEVICE_ID: "nonexistent_device",
+                    CommonServiceArgument.DEVICE_ID: "nonexistent_device",
                     "password": "123456",
                 },
                 blocking=True,
@@ -133,9 +133,9 @@ async def test_device_not_belonging(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ADD_PASSWORD,
+            SwitchbotService.ADD_PASSWORD,
             {
-                ATTR_DEVICE_ID: device_entry.id,
+                CommonServiceArgument.DEVICE_ID: device_entry.id,
                 "password": "123456",
             },
             blocking=True,
@@ -180,9 +180,9 @@ async def test_device_entry_not_loaded(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ADD_PASSWORD,
+            SwitchbotService.ADD_PASSWORD,
             {
-                ATTR_DEVICE_ID: device_entry.id,
+                CommonServiceArgument.DEVICE_ID: device_entry.id,
                 "password": "123456",
             },
             blocking=True,
@@ -219,9 +219,9 @@ async def test_service_unsupported_device(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ADD_PASSWORD,
+            SwitchbotService.ADD_PASSWORD,
             {
-                ATTR_DEVICE_ID: device_entry.id,
+                CommonServiceArgument.DEVICE_ID: device_entry.id,
                 "password": "123456",
             },
             blocking=True,
@@ -244,9 +244,9 @@ async def test_device_without_config_entry_id(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ADD_PASSWORD,
+            SwitchbotService.ADD_PASSWORD,
             {
-                ATTR_DEVICE_ID: "abc",
+                CommonServiceArgument.DEVICE_ID: "abc",
                 "password": "123456",
             },
             blocking=True,

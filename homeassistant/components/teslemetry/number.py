@@ -29,7 +29,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import TeslemetryConfigEntry
 from .const import CHARGE_LIMIT_SOC_KEY, CHARGE_ON_SOLAR_LOWER_LIMIT_KEY
 from .entity import (
     TeslemetryChargeOnSolarEntity,
@@ -41,6 +40,7 @@ from .entity import (
 from .helpers import async_set_charge_on_solar, handle_command, handle_vehicle_command
 from .models import (
     TeslemetryChargeOnSolarStore,
+    TeslemetryConfigEntry,
     TeslemetryEnergyData,
     TeslemetryVehicleData,
 )

@@ -10,17 +10,8 @@ from zigpy.typing import UNDEFINED as ZIGPY_UNDEFINED
 from zigpy.zcl.clusters import general
 from zigpy.zgp.types import ApplicationID, SrcID
 
-from homeassistant.components.zha.const import DOMAIN
+from homeassistant.components.zha.const import DOMAIN, ZHAService
 from homeassistant.components.zha.helpers import get_zha_gateway
-from homeassistant.components.zha.services import (
-    SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND,
-    SERVICE_ISSUE_ZIGBEE_GROUP_COMMAND,
-    SERVICE_PERMIT,
-    SERVICE_REMOVE,
-    SERVICE_SET_ZIGBEE_CLUSTER_ATTRIBUTE,
-    SERVICE_WARNING_DEVICE_SQUAWK,
-    SERVICE_WARNING_DEVICE_WARN,
-)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
@@ -44,13 +35,13 @@ async def test_services_registered_without_gateway(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     for service in (
-        SERVICE_PERMIT,
-        SERVICE_REMOVE,
-        SERVICE_SET_ZIGBEE_CLUSTER_ATTRIBUTE,
-        SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND,
-        SERVICE_ISSUE_ZIGBEE_GROUP_COMMAND,
-        SERVICE_WARNING_DEVICE_SQUAWK,
-        SERVICE_WARNING_DEVICE_WARN,
+        ZHAService.PERMIT,
+        ZHAService.REMOVE,
+        ZHAService.SET_ZIGBEE_CLUSTER_ATTRIBUTE,
+        ZHAService.ISSUE_ZIGBEE_CLUSTER_COMMAND,
+        ZHAService.ISSUE_ZIGBEE_GROUP_COMMAND,
+        ZHAService.WARNING_DEVICE_SQUAWK,
+        ZHAService.WARNING_DEVICE_WARN,
     ):
         assert hass.services.has_service(DOMAIN, service)
 
@@ -58,10 +49,10 @@ async def test_services_registered_without_gateway(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("service", "data"),
     [
-        pytest.param(SERVICE_PERMIT, {}, id="permit"),
-        pytest.param(SERVICE_REMOVE, {"ieee": IEEE_SWITCH_DEVICE}, id="remove"),
+        pytest.param(ZHAService.PERMIT, {}, id="permit"),
+        pytest.param(ZHAService.REMOVE, {"ieee": IEEE_SWITCH_DEVICE}, id="remove"),
         pytest.param(
-            SERVICE_SET_ZIGBEE_CLUSTER_ATTRIBUTE,
+            ZHAService.SET_ZIGBEE_CLUSTER_ATTRIBUTE,
             {
                 "ieee": IEEE_SWITCH_DEVICE,
                 "endpoint_id": 1,
@@ -72,7 +63,7 @@ async def test_services_registered_without_gateway(hass: HomeAssistant) -> None:
             id="set_zigbee_cluster_attribute",
         ),
         pytest.param(
-            SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND,
+            ZHAService.ISSUE_ZIGBEE_CLUSTER_COMMAND,
             {
                 "ieee": IEEE_SWITCH_DEVICE,
                 "endpoint_id": 1,
@@ -84,17 +75,17 @@ async def test_services_registered_without_gateway(hass: HomeAssistant) -> None:
             id="issue_zigbee_cluster_command",
         ),
         pytest.param(
-            SERVICE_ISSUE_ZIGBEE_GROUP_COMMAND,
+            ZHAService.ISSUE_ZIGBEE_GROUP_COMMAND,
             {"group": 1, "cluster_id": 6, "command": 0},
             id="issue_zigbee_group_command",
         ),
         pytest.param(
-            SERVICE_WARNING_DEVICE_SQUAWK,
+            ZHAService.WARNING_DEVICE_SQUAWK,
             {"ieee": IEEE_SWITCH_DEVICE},
             id="warning_device_squawk",
         ),
         pytest.param(
-            SERVICE_WARNING_DEVICE_WARN,
+            ZHAService.WARNING_DEVICE_WARN,
             {"ieee": IEEE_SWITCH_DEVICE},
             id="warning_device_warn",
         ),
@@ -118,14 +109,14 @@ async def test_service_without_gateway_raises(
     ("service", "data", "method", "expected_call"),
     [
         pytest.param(
-            SERVICE_SET_ZIGBEE_CLUSTER_ATTRIBUTE,
+            ZHAService.SET_ZIGBEE_CLUSTER_ATTRIBUTE,
             SET_ATTRIBUTE_DATA,
             "write_zigbee_attribute",
             call(1, 6, 0, 1, cluster_type="in", manufacturer=ZIGPY_UNDEFINED),
             id="set_zigbee_cluster_attribute",
         ),
         pytest.param(
-            SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND,
+            ZHAService.ISSUE_ZIGBEE_CLUSTER_COMMAND,
             {**CLUSTER_COMMAND_DATA, "manufacturer": 0x1234},
             "issue_cluster_command",
             call(1, 6, 0, "server", None, {}, cluster_type="in", manufacturer=0x1234),
@@ -171,12 +162,12 @@ async def test_cluster_service(
     ("service", "data"),
     [
         pytest.param(
-            SERVICE_SET_ZIGBEE_CLUSTER_ATTRIBUTE,
+            ZHAService.SET_ZIGBEE_CLUSTER_ATTRIBUTE,
             SET_ATTRIBUTE_DATA,
             id="set_zigbee_cluster_attribute",
         ),
         pytest.param(
-            SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND,
+            ZHAService.ISSUE_ZIGBEE_CLUSTER_COMMAND,
             CLUSTER_COMMAND_DATA,
             id="issue_zigbee_cluster_command",
         ),
@@ -201,12 +192,12 @@ async def test_cluster_service_unknown_device_raises(
     ("service", "data"),
     [
         pytest.param(
-            SERVICE_SET_ZIGBEE_CLUSTER_ATTRIBUTE,
+            ZHAService.SET_ZIGBEE_CLUSTER_ATTRIBUTE,
             SET_ATTRIBUTE_DATA,
             id="set_zigbee_cluster_attribute",
         ),
         pytest.param(
-            SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND,
+            ZHAService.ISSUE_ZIGBEE_CLUSTER_COMMAND,
             CLUSTER_COMMAND_DATA,
             id="issue_zigbee_cluster_command",
         ),

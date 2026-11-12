@@ -9,7 +9,6 @@ from peblar import ChargeLimiter, CPState
 DOMAIN: Final = "peblar"
 
 CONF_EVCC_ID: Final = "evcc_id"
-CONF_UID: Final = "uid"
 
 # How far back to look for the session the charger is on. Wide enough to
 # still find one after a quiet week, narrow enough to stay a few kilobytes:

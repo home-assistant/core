@@ -11,10 +11,7 @@ from pytest_homeassistant.common import (
     mock_restore_cache_with_extra_data,
 )
 
-from homeassistant.components.select import (
-    DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
-)
+from homeassistant.components.select import DOMAIN as SELECT_DOMAIN, SelectService
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     SensorDeviceClass,
@@ -45,6 +42,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    CommonServiceArgument,
     UnitOfEnergy,
     UnitOfVolume,
 )
@@ -161,8 +159,8 @@ async def test_state(hass: HomeAssistant, yaml_config, config_entry_config) -> N
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.energy_bill", "option": "offpeak"},
+        SelectService.SELECT_OPTION,
+        {CommonServiceArgument.ENTITY_ID: "select.energy_bill", "option": "offpeak"},
         blocking=True,
     )
 
@@ -1664,8 +1662,8 @@ async def test_non_periodically_resetting_meter_with_tariffs(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.energy_bill", "option": "high"},
+        SelectService.SELECT_OPTION,
+        {CommonServiceArgument.ENTITY_ID: "select.energy_bill", "option": "high"},
         blocking=True,
     )
     await hass.async_block_till_done()

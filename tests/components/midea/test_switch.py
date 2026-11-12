@@ -27,6 +27,7 @@ from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    SwitchService,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -34,6 +35,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    CommonServiceArgument,
     EntityCategory,
     Platform,
 )
@@ -127,7 +129,10 @@ def _set_attribute_calls(device: DummyDevice) -> list[tuple]:
         pytest.param(
             DummyDevice(
                 DeviceType.A1,
-                attributes={A1Attributes.pump: False},
+                attributes={
+                    A1Attributes.anion: True,
+                    A1Attributes.pump: False,
+                },
                 capabilities={"pump": True},
             ),
             id="a1",
@@ -685,6 +690,46 @@ async def test_a1_pump_services(
     assert state.state == STATE_OFF
 
 
+async def test_a1_anion_services(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
+    """Test the A1 dehumidifier anion switch."""
+    device = DummyDevice(
+        DeviceType.A1,
+        attributes={A1Attributes.anion: False},
+    )
+    config_entry = mock_config_entry(device)
+    with patch("homeassistant.components.midea._PLATFORMS", [Platform.SWITCH]):
+        await setup_integration(hass, config_entry, device)
+    entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_anion"]
+
+    assert (state := hass.states.get(entity_entry.entity_id)) is not None
+    assert state.state == STATE_OFF
+
+    await _assert_service_call(
+        hass,
+        entity_entry.entity_id,
+        SERVICE_TURN_ON,
+        [("set_attribute", A1Attributes.anion, True)],
+        device,
+    )
+    await hass.async_block_till_done()
+    assert (state := hass.states.get(entity_entry.entity_id)) is not None
+    assert state.state == STATE_ON
+
+    await _assert_service_call(
+        hass,
+        entity_entry.entity_id,
+        SERVICE_TURN_OFF,
+        [("set_attribute", A1Attributes.anion, False)],
+        device,
+    )
+    await hass.async_block_till_done()
+    assert (state := hass.states.get(entity_entry.entity_id)) is not None
+    assert state.state == STATE_OFF
+
+
 async def test_a1_pump_not_created_without_capability(
     hass: HomeAssistant,
     mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
@@ -838,8 +883,8 @@ async def test_switch_turn_on_raises_on_device_communication_error(
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_entry.entity_id},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: entity_entry.entity_id},
             blocking=True,
         )
 

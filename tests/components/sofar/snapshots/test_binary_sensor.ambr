@@ -97,7 +97,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'on',
   })
 # ---
 # name: test_all_entities[binary_sensor.4_4_ktlx_g3_arc_fault_afci-entry]
@@ -556,7 +556,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'on',
   })
 # ---
 # name: test_all_entities[binary_sensor.4_4_ktlx_g3_input_fuse_open-entry]
