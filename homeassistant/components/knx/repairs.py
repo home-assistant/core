@@ -231,7 +231,9 @@ class DataSecureGroupIssueRepairFlow(RepairsFlow):
             ),
             probatio.Required(
                 probatio.Secret(CONF_KNX_KNXKEY_PASSWORD)
-            ): selector.TextSelector(),
+            ): selector.TextSelector(
+                selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD),
+            ),
         }
         return self.async_show_form(
             step_id="secure_knxkeys",
