@@ -16,7 +16,7 @@ from homeassistant.components.select import (
     SelectServiceArgument,
 )
 from homeassistant.components.vesync.const import (
-    DOMAIN as VESYNC_DOMAIN,
+    DOMAIN,
     HUMIDIFIER_NIGHT_LIGHT_LEVEL_BRIGHT,
     HUMIDIFIER_NIGHT_LIGHT_LEVEL_DIM,
     HUMIDIFIER_NIGHT_LIGHT_LEVEL_OFF,
@@ -348,7 +348,7 @@ async def test_discover_new_device(
     )
 
     await hass.services.async_call(
-        VESYNC_DOMAIN, VeSyncService.UPDATE_DEVICES, {}, blocking=True
+        DOMAIN, VeSyncService.UPDATE_DEVICES, {}, blocking=True
     )
     await hass.async_block_till_done()
 
