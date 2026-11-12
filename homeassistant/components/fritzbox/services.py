@@ -4,16 +4,13 @@ from enum import StrEnum
 
 import probatio
 
-from homeassistant.const import ATTR_DEVICE_ID
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.service import (
-    async_extract_config_entry_ids,
-    verify_domain_control,
-)
+from homeassistant.helpers import device_registry as dr, entity_registry as er, service
+from homeassistant.helpers.service import verify_domain_control
 
 from .const import DOMAIN, LOGGER
-from .coordinator import FritzboxConfigEntry, FritzboxDataUpdateCoordinator
+from .coordinator import FritzboxConfigEntry
 
 
 class FritzboxService(StrEnum):
@@ -31,7 +28,7 @@ class FritzboxServiceArgument(StrEnum):
 
 SERVICE_SET_WINDOW_OPEN_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_DEVICE_ID): str,
+        probatio.Required(ATTR_ENTITY_ID): str,
         probatio.Required(FritzboxServiceArgument.DURATION): probatio.All(
             probatio.Coerce(int), probatio.Range(min=1, max=24 * 60 * 60)
         ),
@@ -39,7 +36,7 @@ SERVICE_SET_WINDOW_OPEN_SCHEMA = probatio.Schema(
 )
 SERVICE_SET_WINDOW_CLOSE_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_DEVICE_ID): str,
+        probatio.Required(ATTR_ENTITY_ID): str,
     }
 )
 SERVICES = {
@@ -51,37 +48,41 @@ SERVICES = {
 @verify_domain_control(DOMAIN)
 async def _service_handler(call: ServiceCall) -> None:
     """Call one of the Fritzbox services."""
-
-    device_reg = dr.async_get(call.hass)
-    target_entry_ids = await async_extract_config_entry_ids(call)
-    target_entries: list[FritzboxConfigEntry] = [
-        loaded_entry
-        for loaded_entry in call.hass.config_entries.async_loaded_entries(DOMAIN)
-        if loaded_entry.entry_id in target_entry_ids
+    assert call.service in [
+        FritzboxService.SET_WINDOW_OPEN,
+        FritzboxService.SET_WINDOW_CLOSE,
     ]
 
-    for target_entry in target_entries:
-        coordinator: FritzboxDataUpdateCoordinator = target_entry.runtime_data
-        if device_entry := device_reg.async_get(call.data[ATTR_DEVICE_ID]):
-            for domain, ain in device_entry.identifiers:
-                if domain == DOMAIN:
-                    if call.service in [
-                        FritzboxService.SET_WINDOW_OPEN,
-                        FritzboxService.SET_WINDOW_CLOSE,
-                    ]:
-                        LOGGER.debug("Executing service %s", call.service)
-                        await call.hass.async_add_executor_job(
-                            coordinator.fritz.set_window_open,
-                            ain,
-                            call.data.get(FritzboxServiceArgument.DURATION, 0),
-                            True,
-                        )
-                        return
+    enttiy_reg = er.async_get(call.hass)
+    entity_id = enttiy_reg.async_get(call.data[ATTR_ENTITY_ID])
+
+    assert entity_id is not None
+    assert entity_id.platform == DOMAIN
+    assert entity_id.domain == Platform.CLIMATE
+    assert entity_id.device_id is not None
+
+    device_reg = dr.async_get(call.hass)
+    if device_entry := device_reg.async_get(entity_id.device_id):
+        for domain, ain in device_entry.identifiers:
+            assert domain == DOMAIN
+
+            LOGGER.debug("Executing service %s", call.service)
+            config_entry: FritzboxConfigEntry = service.async_get_config_entry(
+                call.hass, DOMAIN, None
+            )
+            coordinator = config_entry.runtime_data
+            await call.hass.async_add_executor_job(
+                coordinator.fritz.set_window_open,
+                ain,
+                call.data.get(FritzboxServiceArgument.DURATION, 0),
+                True,
+            )
+            await coordinator.async_refresh()
 
 
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Actions setup handler."""
 
-    for service, schema in SERVICES.items():
-        hass.services.async_register(DOMAIN, service, _service_handler, schema)
+    for service_, schema in SERVICES.items():
+        hass.services.async_register(DOMAIN, service_, _service_handler, schema)

@@ -39,7 +39,6 @@ async def test_set_window_open_good(
     """Test set_window_open action with valid durations."""
     device = FritzDeviceClimateMock()
 
-    ENTITY_ID = f"{CLIMATE_DOMAIN}.{CONF_FAKE_NAME}"
     entry = await setup_config_entry(
         hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )

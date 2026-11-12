@@ -125,9 +125,9 @@
     "set_window_close": {
       "description": "Notify the device about a closed window, taking over the internal detection.",
       "fields": {
-        "device_id": {
-          "description": "Select the climate device to notify",
-          "name": "Device"
+        "entity_id": {
+          "description": "Select the climate entity to notify",
+          "name": "Climate entity"
         }
       },
       "name": "Notify closed window"
@@ -135,13 +135,13 @@
     "set_window_open": {
       "description": "Notify the device about an open window, taking over the internal detection.",
       "fields": {
-        "device_id": {
-          "description": "Select the climate device to notify",
-          "name": "Device"
-        },
         "duration": {
           "description": "Duration that the device will assume an open window. Afterwards the device will return to normal schedule. At most 24h.",
           "name": "Window open duration"
+        },
+        "entity_id": {
+          "description": "Select the climate entity to notify",
+          "name": "Climate entity"
         }
       },
       "name": "Notify open window"
