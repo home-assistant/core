@@ -544,6 +544,37 @@ async def test_failed_schedule_waits_for_the_other_requests(
     assert finished_at_failure == [other.id]
 
 
+async def test_claim_lost_by_one_schedule_outranks_another_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_webhook_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a claim lost by one request starts reauth when another got a 401."""
+    resource, schedule = _directive_fixture()
+    other = replace(resource, id="22222222-2222-2222-2222-222222222222")
+    mock_webhook_client.api_access_token = "device-token"
+    mock_webhook_client.get_directives = AsyncMock(return_value=[resource, other])
+    mock_webhook_client.get_directive_data = AsyncMock(return_value=schedule)
+    coordinator = await _setup_with_directives(hass, mock_config_entry)
+
+    async def get_directive_data(directive_id: str) -> DirectiveData:
+        if directive_id == DIRECTIVE_ID:
+            raise ClientResponseError(request_info=MagicMock(), history=(), status=401)
+        await asyncio.sleep(0)
+        mock_webhook_client.is_claimed = False
+        raise PermissionError("The device is not authenticated")
+
+    mock_webhook_client.get_directive_data = AsyncMock(side_effect=get_directive_data)
+    freezer.tick(DIRECTIVE_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert not coordinator.last_update_success
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert [flow["context"]["source"] for flow in flows] == ["reauth"]
+
+
 async def test_schedule_server_error_keeps_directive_granted(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
