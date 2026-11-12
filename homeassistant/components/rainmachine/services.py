@@ -290,8 +290,6 @@ def async_setup_services(hass: HomeAssistant) -> None:
             async_unrestrict_watering,
         ),
     ):
-        if hass.services.has_service(DOMAIN, service_name):
-            continue
         hass.services.async_register(
             DOMAIN,
             service_name,
