@@ -69,6 +69,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
         self._last_patch_call: datetime | None = None
         self._polling_backoff_until: datetime | None = None
         self._cloud_lock = asyncio.Lock()
+        self._scheduled_refresh = True
 
         super().__init__(
             hass,
@@ -77,6 +78,27 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
             name=DOMAIN,
             update_interval=self._determine_update_interval(),
         )
+
+    @override
+    async def _async_refresh(
+        self,
+        log_failures: bool = True,
+        raise_on_auth_failed: bool = False,
+        scheduled: bool = False,
+        raise_on_entry_error: bool = False,
+    ) -> None:
+        """Track scheduled refreshes so manual requests can bypass poll backoff."""
+        previous_scheduled_refresh = self._scheduled_refresh
+        self._scheduled_refresh = scheduled
+        try:
+            await super()._async_refresh(
+                log_failures=log_failures,
+                raise_on_auth_failed=raise_on_auth_failed,
+                scheduled=scheduled,
+                raise_on_entry_error=raise_on_entry_error,
+            )
+        finally:
+            self._scheduled_refresh = previous_scheduled_refresh
 
     @property
     def client(self) -> OnectaClient:
@@ -94,11 +116,17 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
         return cast("str", self.session.token["access_token"])
 
     async def _async_get_cloud_devices(
-        self, *, cooldown: timedelta | None = None
+        self,
+        *,
+        cooldown: timedelta | None = None,
+        respect_polling_backoff: bool = True,
     ) -> list[GatewayDevice] | None:
         """Get typed device data from the Daikin cloud, respecting cooldown."""
         async with self._cloud_lock:
-            if self._polling_backoff_remaining() is not None:
+            if (
+                respect_polling_backoff
+                and self._polling_backoff_remaining() is not None
+            ):
                 return None
             if (
                 cooldown is not None
@@ -210,9 +238,11 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
 
     async def _async_update_data_from_cloud(self) -> dict[str, DaikinOnectaDevice]:
         """Fetch the latest device state from Daikin."""
-
         devices = self.data or {}
-        if (remaining := self._polling_backoff_remaining()) is not None:
+        if (
+            self._scheduled_refresh
+            and (remaining := self._polling_backoff_remaining()) is not None
+        ):
             self.update_interval = remaining
             if not self.last_update_success:
                 raise UpdateFailed(
@@ -239,9 +269,15 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
             # request fails, retries must not remain at the cooldown cadence.
             self.update_interval = self._determine_update_interval()
             try:
-                cloud_devices = await self._async_get_cloud_devices(
-                    cooldown=_POST_WRITE_COOLDOWN
-                )
+                if self._scheduled_refresh:
+                    cloud_devices = await self._async_get_cloud_devices(
+                        cooldown=_POST_WRITE_COOLDOWN
+                    )
+                else:
+                    cloud_devices = await self._async_get_cloud_devices(
+                        cooldown=_POST_WRITE_COOLDOWN,
+                        respect_polling_backoff=False,
+                    )
             except OAuth2TokenRequestReauthError as err:
                 # Convert reauth failures so the coordinator notifies entities
                 # that their state is no longer current.

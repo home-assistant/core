@@ -548,6 +548,27 @@ class TestOnectaDataUpdateCoordinator:
 
         assert get_cloud_devices.await_count == 2
 
+    async def test_manual_update_polls_during_write_polling_backoff(
+        self,
+        hass: HomeAssistant,
+        config_entry: MockConfigEntry,
+    ) -> None:
+        """Manual refreshes poll even while scheduled polling is deferred."""
+        await _async_setup_fixture(hass, config_entry, "minimal_data")
+        coordinator = config_entry.runtime_data
+        coordinator._polling_backoff_until = (
+            coordinator_module.dt_util.utcnow() + timedelta(minutes=1)
+        )
+        coordinator.client.get_gateway_devices = AsyncMock(
+            return_value=_load_gateway_devices("minimal_data")
+        )
+        entity_id = hass.states.async_entity_ids(CLIMATE_DOMAIN)[0]
+
+        await async_update_entity(hass, entity_id)
+
+        coordinator.client.get_gateway_devices.assert_awaited_once()
+        assert coordinator._polling_backoff_until is not None
+
     @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.utcnow")
     async def test_rate_limited_write_defers_polling(
         self, mock_utcnow, coordinator: OnectaDataUpdateCoordinator
