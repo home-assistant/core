@@ -63,6 +63,14 @@ def deprecate_entity(
     return False
 
 
+def dishwasher_delay_start_time_to_minutes(value: str | None) -> int | None:
+    """Convert a dishwasher delay start time duration (HH:MM:00) to minutes."""
+    if value is None:
+        return None
+    hours, minutes, _ = value.split(":")
+    return int(hours) * 60 + int(minutes)
+
+
 def get_automations_and_scripts_using_entity(
     hass: HomeAssistant,
     entity_id: str,
