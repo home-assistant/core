@@ -557,7 +557,7 @@ class HomeConnectSelectOptionEntity(HomeConnectOptionEntity, SelectEntity):
     """Select option class for Home Connect."""
 
     entity_description: HomeConnectSelectEntityDescription
-    _original_option_keys: set[str | None]
+    _original_option_keys: set[str]
 
     def __init__(
         self,
@@ -588,16 +588,24 @@ class HomeConnectSelectOptionEntity(HomeConnectOptionEntity, SelectEntity):
             if self.option_value is not None
             else None
         )
+        allowed_values = None
         if (
             (option_definition := self.appliance.available_options.get(self.bsh_key))
             and (option_constraints := option_definition.constraints)
             and option_constraints.allowed_values
-            and self._original_option_keys != set(option_constraints.allowed_values)
         ):
-            self._original_option_keys = set(option_constraints.allowed_values)
+            allowed_values = {
+                option
+                for option in option_constraints.allowed_values
+                if option is not None
+            }
+        elif option_definition or self.bsh_key in self.appliance.options:
+            allowed_values = set(self.entity_description.values_translation_key)
+
+        if allowed_values is not None and self._original_option_keys != allowed_values:
+            self._original_option_keys = allowed_values
             self._attr_options = [
                 self.entity_description.values_translation_key[option]
                 for option in self._original_option_keys
-                if option is not None
-                and option in self.entity_description.values_translation_key
+                if option in self.entity_description.values_translation_key
             ]

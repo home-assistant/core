@@ -40,7 +40,7 @@ from aiohomeconnect.model.setting import SettingConstraints
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
-from homeassistant.components.home_connect.const import DOMAIN
+from homeassistant.components.home_connect.const import DOMAIN, TEMPERATURE_OPTIONS
 from homeassistant.components.select import (
     ATTR_OPTION,
     ATTR_OPTIONS,
@@ -1026,7 +1026,14 @@ async def test_options_entities_available_non_writable(
             ProgramKey.UNKNOWN,
             options=[
                 ProgramDefinitionOption(
-                    OptionKey.LAUNDRY_CARE_WASHER_TEMPERATURE, "Enumeration"
+                    OptionKey.LAUNDRY_CARE_WASHER_TEMPERATURE,
+                    "Enumeration",
+                    constraints=ProgramDefinitionConstraints(
+                        allowed_values=[
+                            "LaundryCare.Washer.EnumType.Temperature.UlCold",
+                            "LaundryCare.Washer.EnumType.Temperature.UlWarm",
+                        ]
+                    ),
                 )
             ],
         )
@@ -1038,6 +1045,10 @@ async def test_options_entities_available_non_writable(
     state = hass.states.get(entity_id)
     assert state
     assert state.state != STATE_UNAVAILABLE
+    assert state.attributes[ATTR_OPTIONS] == [
+        "laundry_care_washer_enum_type_temperature_ul_cold",
+        "laundry_care_washer_enum_type_temperature_ul_warm",
+    ]
 
     await hass.services.async_call(
         SELECT_DOMAIN,
@@ -1086,6 +1097,7 @@ async def test_options_entities_available_non_writable(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "laundry_care_washer_enum_type_temperature_ul_cold"
+    assert set(state.attributes[ATTR_OPTIONS]) == set(TEMPERATURE_OPTIONS.keys())
 
     client.set_active_program_option.reset_mock()
     with pytest.raises(HomeAssistantError, match=r"Option.*cannot be set"):
