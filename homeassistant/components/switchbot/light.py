@@ -47,6 +47,7 @@ async def async_setup_entry(
     elif isinstance(coordinator.device, switchbot.SwitchbotRgbicwwCeilingLight):
         async_add_entities(
             [
+                SwitchbotRgbicwwCeilingLightMasterEntity(coordinator),
                 SwitchbotRgbicwwCeilingLightMainEntity(coordinator),
                 SwitchbotRgbicwwCeilingLightColorEntity(coordinator),
             ]
@@ -432,3 +433,30 @@ class SwitchbotRgbicwwCeilingLightColorEntity(SwitchbotEntity, LightEntity):
         """Turn the color light off."""
         _LOGGER.debug("Turning off color light %s, address %s", kwargs, self._address)
         await self._device.turn_off_color()
+
+
+class SwitchbotRgbicwwCeilingLightMasterEntity(SwitchbotEntity, LightEntity):
+    """Control the complete ceiling light without changing its channel mix."""
+
+    _device: switchbot.SwitchbotRgbicwwCeilingLight
+    _attr_name = None
+    _attr_supported_color_modes = {ColorMode.ONOFF}
+    _attr_color_mode = ColorMode.ONOFF
+
+    @property
+    @override
+    def is_on(self) -> bool | None:
+        """Return whether either sub-light is on."""
+        return self._device.is_any_light_on
+
+    @exception_handler
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Restore the device's previous light combination."""
+        await self._device.turn_on()
+
+    @exception_handler
+    @override
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off both sub-lights."""
+        await self._device.turn_off()

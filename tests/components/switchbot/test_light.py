@@ -6,7 +6,10 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, mock_restore_cache
-from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
+from pytest_homeassistant.components.bluetooth import (
+    generate_advertisement_data,
+    inject_bluetooth_service_info,
+)
 from switchbot import SwitchbotOperationError
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
@@ -968,11 +971,11 @@ async def test_rgbicww_ceiling_light_color_services(
         mocked_instance.assert_awaited_once_with(*expected_args)
 
 
-async def test_rgbicww_ceiling_light_creates_two_entities(
+async def test_rgbicww_ceiling_light_creates_three_entities(
     hass: HomeAssistant,
     mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
 ) -> None:
-    """Test that RGBICWW Ceiling Light creates two sub-light entities."""
+    """Test that RGBICWW Ceiling Light creates a master and two sub-light entities."""
     inject_bluetooth_service_info(hass, RGBICWW_CEILING_LIGHT_SERVICE_INFO)
 
     entry = mock_entry_encrypted_factory(sensor_type="rgbicww_ceiling_light")
@@ -985,5 +988,124 @@ async def test_rgbicww_ceiling_light_creates_two_entities(
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
+    assert hass.states.get("light.test_name") is not None
     assert hass.states.get("light.test_name_main_light") is not None
     assert hass.states.get("light.test_name_color_light") is not None
+
+
+@pytest.mark.parametrize(
+    ("channel_states", "master_state", "main_state", "color_state"),
+    [
+        ("1e20", STATE_OFF, STATE_OFF, STATE_OFF),
+        ("1ea0", STATE_ON, STATE_ON, STATE_OFF),
+        ("9e20", STATE_ON, STATE_OFF, STATE_ON),
+        ("9ea0", STATE_ON, STATE_ON, STATE_ON),
+    ],
+)
+async def test_ceiling_independent_states(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+    channel_states: str,
+    master_state: str,
+    main_state: str,
+    color_state: str,
+) -> None:
+    """Read both channels independently and derive the master state."""
+    channels = bytes.fromhex(channel_states)
+    manufacturer = bytearray(RGBICWW_CEILING_LIGHT_SERVICE_INFO.manufacturer_data[2409])
+    manufacturer[7] = channels[0]
+    manufacturer[13] = channels[1]
+    info = BluetoothServiceInfoBleak.from_device_and_advertisement_data(
+        RGBICWW_CEILING_LIGHT_SERVICE_INFO.device,
+        generate_advertisement_data(
+            manufacturer_data={2409: bytes(manufacturer)},
+            service_data=RGBICWW_CEILING_LIGHT_SERVICE_INFO.service_data,
+        ),
+        source="local",
+        connectable=True,
+        time=0,
+    )
+    inject_bluetooth_service_info(hass, info)
+    entry = mock_entry_encrypted_factory("rgbicww_ceiling_light")
+    entry.add_to_hass(hass)
+    with patch(
+        "switchbot.SwitchbotRgbicwwCeilingLight._get_multi_commands_results",
+        return_value=(
+            bytes.fromhex("01001c"),
+            bytes.fromhex("01001e285078a00fa0000200"),
+        ),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+    master = hass.states.get("light.test_name")
+    main = hass.states.get("light.test_name_main_light")
+    color = hass.states.get("light.test_name_color_light")
+    assert master.state == master_state
+    assert master.attributes["supported_color_modes"] == ["onoff"]
+    assert main.state == main_state
+    assert color.state == color_state
+    assert main.attributes["supported_color_modes"] == ["color_temp"]
+    assert color.attributes["supported_color_modes"] == ["rgb"]
+
+
+async def test_ceiling_channel_attributes(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+) -> None:
+    """Expose each channel's brightness, color and color temperature."""
+    inject_bluetooth_service_info(hass, RGBICWW_CEILING_LIGHT_SERVICE_INFO)
+    entry = mock_entry_encrypted_factory("rgbicww_ceiling_light")
+    entry.add_to_hass(hass)
+    with patch(
+        "switchbot.SwitchbotRgbicwwCeilingLight._get_multi_commands_results",
+        return_value=(
+            bytes.fromhex("01001c"),
+            bytes.fromhex("01001e285078a00fa0000200"),
+        ),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+    main = hass.states.get("light.test_name_main_light")
+    color = hass.states.get("light.test_name_color_light")
+    assert main.attributes[ATTR_BRIGHTNESS] == 82
+    assert main.attributes[ATTR_COLOR_TEMP_KELVIN] == 4000
+    assert color.attributes[ATTR_BRIGHTNESS] == 76
+    assert color.attributes[ATTR_RGB_COLOR] == (40, 80, 120)
+
+
+@pytest.mark.parametrize(
+    ("service", "method"),
+    [(SERVICE_TURN_ON, "turn_on"), (SERVICE_TURN_OFF, "turn_off")],
+)
+async def test_ceiling_master_services(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+    service: str,
+    method: str,
+) -> None:
+    """Use the native master command instead of forcing both channels on."""
+    inject_bluetooth_service_info(hass, RGBICWW_CEILING_LIGHT_SERVICE_INFO)
+    entry = mock_entry_encrypted_factory("rgbicww_ceiling_light")
+    entry.add_to_hass(hass)
+    operations = {
+        name: AsyncMock(return_value=True)
+        for name in (
+            "turn_on",
+            "turn_off",
+            "turn_on_main",
+            "turn_off_main",
+            "turn_on_color",
+            "turn_off_color",
+        )
+    }
+    with patch.multiple(
+        "switchbot.SwitchbotRgbicwwCeilingLight", update=AsyncMock(), **operations
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        await hass.services.async_call(
+            LIGHT_DOMAIN, service, {ATTR_ENTITY_ID: "light.test_name"}, blocking=True
+        )
+    operations[method].assert_awaited_once_with()
+    for name in operations.keys() - {method}:
+        operations[name].assert_not_awaited()
