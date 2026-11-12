@@ -56,8 +56,11 @@ from .const import (
     CONF_BIRTH_MESSAGE,
     CONF_BROKER,
     CONF_CERTIFICATE,
+    CONF_CERTIFICATE_FILE,
     CONF_CLIENT_CERT,
+    CONF_CLIENT_CERT_FILE,
     CONF_CLIENT_KEY,
+    CONF_CLIENT_KEY_FILE,
     CONF_KEEPALIVE,
     CONF_TLS_INSECURE,
     CONF_TRANSPORT,
@@ -405,12 +408,17 @@ class MqttClientSetup:
             self._client.username_pw_set(username, password)
 
         if (
-            certificate := get_file_path(CONF_CERTIFICATE, config.get(CONF_CERTIFICATE))
+            certificate := config.get(CONF_CERTIFICATE_FILE)
+            or get_file_path(CONF_CERTIFICATE, config.get(CONF_CERTIFICATE))
         ) == "auto":
             certificate = certifi.where()
 
-        client_key = get_file_path(CONF_CLIENT_KEY, config.get(CONF_CLIENT_KEY))
-        client_cert = get_file_path(CONF_CLIENT_CERT, config.get(CONF_CLIENT_CERT))
+        client_key = config.get(CONF_CLIENT_KEY_FILE) or get_file_path(
+            CONF_CLIENT_KEY, config.get(CONF_CLIENT_KEY)
+        )
+        client_cert = config.get(CONF_CLIENT_CERT_FILE) or get_file_path(
+            CONF_CLIENT_CERT, config.get(CONF_CLIENT_CERT)
+        )
         tls_insecure = config.get(CONF_TLS_INSECURE)
         if transport == TRANSPORT_WEBSOCKETS:
             ws_path: str = config.get(CONF_WS_PATH, DEFAULT_WS_PATH)

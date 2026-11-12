@@ -28,7 +28,13 @@ from pytest_homeassistant.typing import (
 
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt.client import RECONNECT_INTERVAL_SECONDS
-from homeassistant.components.mqtt.const import DOMAIN, SUPPORTED_COMPONENTS
+from homeassistant.components.mqtt.const import (
+    CONF_CERTIFICATE_FILE,
+    CONF_CLIENT_CERT_FILE,
+    CONF_CLIENT_KEY_FILE,
+    DOMAIN,
+    SUPPORTED_COMPONENTS,
+)
 from homeassistant.components.mqtt.models import (
     DATA_MQTT,
     MessageCallbackType,
@@ -1933,6 +1939,33 @@ async def test_tls_version(
     assert (
         mqtt_client_mock.tls_set.mock_calls[0][2]["tls_version"]
         == ssl.PROTOCOL_TLS_CLIENT
+    )
+
+
+@pytest.mark.parametrize(
+    "mqtt_config_entry_data",
+    [
+        {
+            mqtt.CONF_BROKER: "mock-broker",
+            CONF_CERTIFICATE_FILE: "/ssl/mqtt/ca.crt",
+            CONF_CLIENT_CERT_FILE: "/ssl/mqtt/client.crt",
+            CONF_CLIENT_KEY_FILE: "/ssl/mqtt/client.key",
+        }
+    ],
+)
+async def test_setup_uses_certificate_files(
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test setup loads the certificates from the configured file paths."""
+    await mqtt_mock_entry()
+    await hass.async_block_till_done()
+    assert mqtt_client_mock.tls_set.mock_calls[0] == call(
+        "/ssl/mqtt/ca.crt",
+        certfile="/ssl/mqtt/client.crt",
+        keyfile="/ssl/mqtt/client.key",
+        tls_version=ssl.PROTOCOL_TLS_CLIENT,
     )
 
 
