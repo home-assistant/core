@@ -112,7 +112,7 @@ class SolarEdgeV2:
                     now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
                     + timedelta(days=32)
                 ).replace(day=1)
-                retry_after = (self._monthly_limit_until - now).total_seconds()
+                retry_after = int((self._monthly_limit_until - now).total_seconds())
             raise SolarEdgeRateLimitError(
                 retry_after=retry_after, monthly_limit=monthly_limit
             )
