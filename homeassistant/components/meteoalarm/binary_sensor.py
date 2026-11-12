@@ -10,7 +10,12 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_COUNTRY, CONF_LANGUAGE, CONF_NAME
+from homeassistant.const import (
+    CONF_COUNTRY,
+    CONF_ENTITY_NAMESPACE,
+    CONF_LANGUAGE,
+    CONF_NAME,
+)
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
@@ -21,7 +26,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import dt as dt_util
+from homeassistant.util import dt as dt_util, slugify
 
 from .const import ATTRIBUTION, CONF_PROVINCE, DEFAULT_LANGUAGE, DEFAULT_NAME, DOMAIN
 from .coordinator import MeteoAlarmConfigEntry, MeteoAlarmCoordinator
@@ -47,6 +52,12 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Import the legacy YAML configuration into a config entry."""
+    name = config[CONF_NAME]
+    # The entity ID comes from the entry title, so keep the namespace that the
+    # YAML platform put in front of it.
+    if namespace := config.get(CONF_ENTITY_NAMESPACE):
+        name = f"{namespace} {name}"
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
@@ -54,29 +65,34 @@ async def async_setup_platform(
             CONF_COUNTRY: config[CONF_COUNTRY],
             CONF_PROVINCE: config[CONF_PROVINCE],
             CONF_LANGUAGE: config[CONF_LANGUAGE],
-            CONF_NAME: config[CONF_NAME],
+            CONF_NAME: name,
         },
     )
 
-    if (
-        result["type"] is FlowResultType.ABORT
-        and (reason := result["reason"]) != "already_configured"
-    ):
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            f"deprecated_yaml_import_issue_{reason}",
-            breaks_in_ha_version=BREAKS_IN_HA_VERSION,
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key=f"deprecated_yaml_import_issue_{reason}",
-            translation_placeholders={
-                "country": config[CONF_COUNTRY],
-                "province": config[CONF_PROVINCE],
-            },
-        )
-        return
+    if result["type"] is FlowResultType.ABORT:
+        reason = result["reason"]
+        if reason == "already_in_progress":
+            # The same region is configured twice; the first import reports.
+            return
+        if reason != "already_configured":
+            region = slugify(
+                f"{config[CONF_COUNTRY]}_{config[CONF_PROVINCE]}_{config[CONF_LANGUAGE]}"
+            )
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                f"deprecated_yaml_import_issue_{reason}_{region}",
+                breaks_in_ha_version=BREAKS_IN_HA_VERSION,
+                is_fixable=False,
+                issue_domain=DOMAIN,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key=f"deprecated_yaml_import_issue_{reason}",
+                translation_placeholders={
+                    "country": config[CONF_COUNTRY],
+                    "province": config[CONF_PROVINCE],
+                },
+            )
+            return
 
     ir.async_create_issue(
         hass,

@@ -14,6 +14,7 @@ from homeassistant.components.meteoalarm.const import CONF_PROVINCE, DOMAIN
 from homeassistant.components.meteoalarm.coordinator import SCAN_INTERVAL
 from homeassistant.const import (
     CONF_COUNTRY,
+    CONF_ENTITY_NAMESPACE,
     CONF_LANGUAGE,
     CONF_NAME,
     CONF_PLATFORM,
@@ -251,17 +252,67 @@ async def test_yaml_import_failed(
     side_effect: Exception,
     reason: str,
 ) -> None:
-    """Test a failed import raises an issue saying why, and creates no entry."""
+    """Test each failed import raises its own issue saying why, and no entry."""
     mock_meteoalert.return_value.get_alert.side_effect = side_effect
+    config = {
+        BINARY_SENSOR_DOMAIN: [
+            YAML_CONFIG[BINARY_SENSOR_DOMAIN],
+            YAML_CONFIG[BINARY_SENSOR_DOMAIN] | {CONF_PROVINCE: "Other province"},
+        ]
+    }
 
-    assert await async_setup_component(hass, BINARY_SENSOR_DOMAIN, YAML_CONFIG)
+    assert await async_setup_component(hass, BINARY_SENSOR_DOMAIN, config)
     await hass.async_block_till_done()
 
     assert not hass.config_entries.async_entries(DOMAIN)
     assert hass.states.get("binary_sensor.test_alert") is None
-    assert issue_registry.async_get_issue(
-        DOMAIN, f"deprecated_yaml_import_issue_{reason}"
-    )
+    for region in (
+        "netherlands_test_province_en_gb",
+        "netherlands_other_province_en_gb",
+    ):
+        assert issue_registry.async_get_issue(
+            DOMAIN, f"deprecated_yaml_import_issue_{reason}_{region}"
+        )
     assert not issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
+
+
+async def test_yaml_import_entity_namespace(
+    hass: HomeAssistant, mock_meteoalert: MagicMock
+) -> None:
+    """Test the imported entity keeps the entity ID the YAML namespace gave it."""
+    config = {
+        BINARY_SENSOR_DOMAIN: YAML_CONFIG[BINARY_SENSOR_DOMAIN]
+        | {CONF_ENTITY_NAMESPACE: "local"}
+    }
+
+    assert await async_setup_component(hass, BINARY_SENSOR_DOMAIN, config)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("binary_sensor.local_test_alert").state == STATE_ON
+
+
+async def test_yaml_import_same_region_twice(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_meteoalert: MagicMock,
+) -> None:
+    """Test a region in YAML twice is imported once, without an import issue."""
+    config = {
+        BINARY_SENSOR_DOMAIN: [
+            YAML_CONFIG[BINARY_SENSOR_DOMAIN],
+            YAML_CONFIG[BINARY_SENSOR_DOMAIN],
+        ]
+    }
+
+    assert await async_setup_component(hass, BINARY_SENSOR_DOMAIN, config)
+    await hass.async_block_till_done()
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert not [
+        issue for issue in issue_registry.issues.values() if issue.domain == DOMAIN
+    ]
+    assert issue_registry.async_get_issue(
         HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
     )
