@@ -1,6 +1,8 @@
 """The tests for the Recorder component."""
 
 from datetime import datetime, timedelta
+import subprocess
+import sys
 
 import pytest
 from pytest_homeassistant.components.recorder.common import (
@@ -8,10 +10,17 @@ from pytest_homeassistant.components.recorder.common import (
     db_state_attributes_to_native,
     db_state_to_native,
 )
+from sqlalchemy.dialects import mysql
+from sqlalchemy.dialects.mysql.mariadb import MariaDBDialect
+from sqlalchemy.engine.interfaces import Dialect
+from sqlalchemy.schema import CreateIndex, CreateTable
 
 from homeassistant import core as ha
 from homeassistant.components.recorder.const import SupportedDialect
 from homeassistant.components.recorder.db_schema import (
+    EVENTS_CONTEXT_ID_BIN_INDEX,
+    STATES_CONTEXT_ID_BIN_INDEX,
+    Base,
     EventData,
     Events,
     StateAttributes,
@@ -411,3 +420,36 @@ async def test_lazy_state_handles_different_last_reported() -> None:
     assert lstate.last_changed_timestamp == last_updated_ts
     assert lstate.last_updated_timestamp == last_updated_ts
     assert lstate.last_reported_timestamp == last_reported_ts
+
+
+@pytest.mark.parametrize("dialect", [mysql.dialect(), MariaDBDialect()])
+def test_mysql_table_and_index_options(dialect: Dialect) -> None:
+    """Test the MySQL and MariaDB table and index options are used."""
+    for table in Base.metadata.sorted_tables:
+        ddl = str(CreateTable(table).compile(dialect=dialect))
+        assert "COLLATE utf8mb4_bin" in ddl
+        assert "DEFAULT CHARSET=utf8mb4" in ddl
+        assert "ENGINE=InnoDB" in ddl
+        for index in table.indexes:
+            ddl = str(CreateIndex(index).compile(dialect=dialect))
+            if index.name in (EVENTS_CONTEXT_ID_BIN_INDEX, STATES_CONTEXT_ID_BIN_INDEX):
+                assert ddl.endswith("(context_id_bin(16))")
+            else:
+                assert "(16)" not in ddl
+
+
+def test_schema_does_not_import_unused_dialects() -> None:
+    """Test importing the schema only imports the SQLAlchemy dialects it uses."""
+    code = (
+        "import sys; import homeassistant.components.recorder.db_schema; "
+        "print(sorted(n for n in ('mysql', 'oracle', 'postgresql')"
+        " if f'sqlalchemy.dialects.{n}' in sys.modules))"
+    )
+    result = subprocess.run(
+        [sys.executable, "-c", code],
+        capture_output=True,
+        check=True,
+        text=True,
+        timeout=120,
+    )
+    assert result.stdout.strip() == "[]"
