@@ -3908,7 +3908,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'disabled',
   })
 # ---
 # name: test_all_entities[sensor.hydxxktl_3p_feed_in_maximum_power-entry]

@@ -176,9 +176,8 @@ class SofarEnumSensor(SofarEntity, SensorEntity):
     @override
     def native_value(self) -> str | None:
         # IntEnum stringifies as the raw int; use the option slug.
-        if (value := self.entity_description.value_fn(self.coordinator.device)) is None:
-            return None
-        return option_slug(value)
+        value = self.entity_description.value_fn(self.coordinator.device)
+        return option_slug(value) if value is not None else None
 
 
 class SofarTotalSensor(SofarEntity, RestoreSensor):

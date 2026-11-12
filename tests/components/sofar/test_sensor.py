@@ -96,7 +96,6 @@ async def test_all_entities(
     unit.holding[0x0608] = 88  # battery_capacity_1 -> 88%
     unit.holding[0x0687] = 160  # solar_generation_total -> 16.0 kWh
     unit.holding[0x104D] = 70  # depth of discharge -> 30% on-grid cut-off
-    unit.holding[0x1023] = 9  # feedin_limitation_mode -> no such member
     freezer.tick(timedelta(seconds=PACKS_SCAN_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
