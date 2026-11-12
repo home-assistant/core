@@ -63,6 +63,7 @@ and has to match the directory name of the integration."""
                 "oauth2": True,
                 "iot_class": "local_polling",
                 "categories": ["diy_makers"],
+                "integration_type": "hub",
             }
         )
     else:
@@ -118,6 +119,22 @@ More info @ https://contributors.home-assistant.io/core/integrations/manifest/#i
                 ]
             ],
         },
+        "integration_type": {
+            "prompt": (
+                f"""What is the integration type?
+
+Valid types are {", ".join(IntegrationType)}.
+
+More info @ https://contributors.home-assistant.io/core/integrations/manifest/#integration_type
+"""
+            ),
+            "validators": [
+                [
+                    f"You need to pick one of {', '.join(IntegrationType)}.",
+                    lambda value: value in IntegrationType,
+                ]
+            ],
+        },
     }
 
     if determine_auth:
@@ -139,30 +156,6 @@ More info @ https://contributors.home-assistant.io/core/integrations/manifest/#i
                     ),
                     "default": "no",
                     **YES_NO,
-                },
-                "integration_type": {
-                    "prompt": (
-                        "What is the integration type?"
-                        "\n\nValid types are "
-                        f"{', '.join(IntegrationType)}."
-                        "\nThis field is recommended and"
-                        " required in some cases."
-                        " To intentionally leave it"
-                        " unset, type 'omit'."
-                        "\n\nMore info @ "
-                        "https://contributors.home-assistant.io"
-                        "/core/integrations/manifest"
-                        "/#integration_type\n"
-                    ),
-                    "validators": [
-                        [
-                            "You need to pick one of"
-                            f" {', '.join(IntegrationType)}"
-                            " or 'omit'.",
-                            lambda value: value in IntegrationType or value == "omit",
-                        ]
-                    ],
-                    "converter": lambda value: None if value == "omit" else value,
                 },
                 "oauth2": {
                     "prompt": (
