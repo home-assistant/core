@@ -79,6 +79,11 @@ class FenixControlCoordinator(DataUpdateCoordinator[FenixControlData]):
 
     def async_set_device(self, device: Device) -> None:
         """Show the commanded state of a thermostat until a later poll."""
+        current = self.data.devices.get(device.id)
+        if current is None or current.holiday_active:
+            # A poll finished while the command ran and found the thermostat
+            # gone or locked by a holiday; that is newer than the command
+            return
         self._commanded.add(device.id)
         self.data = replace(self.data, devices={**self.data.devices, device.id: device})
         # Keep the poll schedule; frequent commands must not postpone polling

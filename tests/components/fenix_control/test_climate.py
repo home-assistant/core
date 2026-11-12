@@ -495,6 +495,59 @@ async def test_running_poll_with_holiday_wins_over_command(
 
 @pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
+    ("devices", "expected_state"),
+    [
+        # A holiday started while the command ran: the holiday mode stays
+        ([HOLIDAY_DEVICE], HVACMode.AUTO),
+        # The cloud stopped reporting the thermostat while the command ran
+        ([], STATE_UNAVAILABLE),
+    ],
+)
+async def test_poll_during_command_wins(
+    hass: HomeAssistant,
+    mock_fenix_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    devices: list[Device],
+    expected_state: str,
+) -> None:
+    """Test a poll that finishes while a command runs isn't overwritten by it."""
+    sending = asyncio.Event()
+    release = asyncio.Event()
+
+    async def slow_set_preset_mode(*args: object) -> None:
+        sending.set()
+        await release.wait()
+
+    mock_fenix_client.set_preset_mode.side_effect = slow_set_preset_mode
+    command = hass.async_create_task(
+        hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.OFF},
+            blocking=True,
+        )
+    )
+    await asyncio.wait_for(sending.wait(), 1)
+
+    # The poll can't wait for all tasks: the command is still running
+    mock_fenix_client.get_devices.return_value = devices
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    for _ in range(100):
+        if hass.states.get(ENTITY_ID).state == expected_state:
+            break
+        await asyncio.sleep(0)
+    assert hass.states.get(ENTITY_ID).state == expected_state
+
+    release.set()
+    await command
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == expected_state
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
     ("hvac_mode", "preset_mode"),
     [
         (HVACMode.OFF, PresetMode.OFF),
