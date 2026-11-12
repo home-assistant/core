@@ -2,26 +2,29 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "unique_id_mismatch": "The API key belongs to a different account. Please use the API key for the original account."
-    },
-    "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "missing_account_identity": "TRMNL did not say which account you signed in to. Sign in again and keep \"Sign you in\" ticked.",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "missing_scopes": "Home Assistant needs to read and change your TRMNL devices. Sign in again and keep \"Read your devices\" and \"Change your device settings\" ticked.",
+      "unique_id_mismatch": "You signed in to a different TRMNL account. Sign in to the original account."
     },
     "initiate_flow": {
       "user": "[%key:common::config_flow::initiate_flow::account%]"
     },
     "step": {
-      "user": {
-        "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]"
-        },
-        "data_description": {
-          "api_key": "The API key for your TRMNL account."
-        },
-        "description": "You can find your API key on [your TRMNL account page]({account_url})."
+      "oauth_discovery": {
+        "description": "Home Assistant found a TRMNL device on your network. Select **Submit** to sign in to your TRMNL account."
+      },
+      "pick_implementation": {
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      },
+      "reauth_confirm": {
+        "description": "The TRMNL integration needs you to sign in to your account again.",
+        "title": "[%key:common::config_flow::title::reauth%]"
       }
+    },
+    "create_entry": {
+      "default": "[%key:common::config_flow::create_entry::authenticated%]"
     }
   },
   "entity": {
@@ -52,7 +55,13 @@
       "message": "An error occurred while communicating with TRMNL: {error}"
     },
     "authentication_error": {
-      "message": "Authentication failed. Please check your API key."
+      "message": "Authentication failed. Please sign in to TRMNL again."
+    },
+    "migration_duplicate": {
+      "message": "This TRMNL account is already set up with a newer entry. Remove this entry."
+    },
+    "migration_failed": {
+      "message": "TRMNL no longer accepts the API key this entry was set up with. Remove the TRMNL integration and add it again to sign in."
     },
     "update_error": {
       "message": "An error occurred while communicating with TRMNL: {error}"

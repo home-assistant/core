@@ -66,7 +66,9 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: done
+  reconfiguration-flow:
+    status: exempt
+    comment: Signing in again is the only setting; reauth covers it.
   repair-issues:
     status: exempt
     comment: There are no repairable issues
