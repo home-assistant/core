@@ -2252,14 +2252,11 @@
         },
         "meraki": {
           "integration_type": "hub",
-          "config_flow": false,
+          "config_flow": true,
           "iot_class": "cloud_polling",
           "categories": [
             "presence_location.network_presence",
             "computers_network.routers_network"
-          ],
-          "connectivity": [
-            "cloud"
           ],
           "name": "Meraki"
         }
