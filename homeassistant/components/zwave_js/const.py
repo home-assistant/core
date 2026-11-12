@@ -97,10 +97,6 @@ ATTR_DESCRIPTION = "description"
 ATTR_EVENT_SOURCE = "event_source"
 ATTR_PARTIAL_DICT_MATCH = "partial_dict_match"
 
-# service constants
-
-# credential management attribute constants
-
 # credential type string values
 CREDENTIAL_TYPE_BLE = "ble"
 CREDENTIAL_TYPE_DESFIRE = "desfire"
@@ -137,15 +133,12 @@ ATTR_CONFIG_PARAMETER = "parameter"
 ATTR_CONFIG_PARAMETER_BITMASK = "bitmask"
 # refresh value
 ATTR_REFRESH_ALL_VALUES = "refresh_all_values"
-# multicast
 # meter reset
 ATTR_METER_TYPE = "meter_type"
 ATTR_METER_TYPE_NAME = "meter_type_name"
 # invoke CC API
 ATTR_METHOD_NAME = "method_name"
 ATTR_PARAMETERS = "parameters"
-# lock set configuration
-
 ADDON_SLUG = "core_zwave_js"
 
 NODE_STATUSES = ["asleep", "awake", "dead", "alive"]
