@@ -33,7 +33,7 @@ from .utils import (
 DOMAIN = "unifiprotect"
 
 ALARM_HUB_MAC = "AABBCCDDEEFF"
-HUB_EVENT = "event.alarm_hub_activity"
+HUB_EVENT = "event.alarm_hub"
 INPUT_EVENT = "event.alarm_hub_input_7"
 NAMED_INPUT_EVENT = "event.alarm_hub_hallway"
 
@@ -340,10 +340,7 @@ async def test_alarm_hub_without_name(
     assert device.name == f"{model} {ALARM_HUB_MAC}"
     assert device.model == model
     assert device.model_id == device_type
-    assert (
-        hass.states.get(f"event.{object_id}_{ALARM_HUB_MAC.lower()}_activity")
-        is not None
-    )
+    assert hass.states.get(f"event.{object_id}_{ALARM_HUB_MAC.lower()}") is not None
 
 
 async def test_alarm_hub_unavailable_when_public_bootstrap_lost(

@@ -756,6 +756,7 @@ class ProtectAlarmHubEventEntity(
     their own.
     """
 
+    _attr_name = None  # device name is the entity name
     _ufp_uses_public = True
     _ufp_requires_events_ws = True
 
