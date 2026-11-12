@@ -146,6 +146,18 @@
       "effect_reverse": {
         "default": "mdi:swap-horizontal"
       },
+      "input_lock": {
+        "default": "mdi:lock-open-outline",
+        "state": {
+          "on": "mdi:lock-outline"
+        }
+      },
+      "input_lock_with_channel_name": {
+        "default": "mdi:lock-open-outline",
+        "state": {
+          "on": "mdi:lock-outline"
+        }
+      },
       "left_slot": {
         "default": "mdi:scent",
         "state": {
