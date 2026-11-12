@@ -7,7 +7,7 @@
       "different_device": "The provided printer does not match the printer that was set up before.",
       "ipp_error": "Encountered IPP error.",
       "ipp_version_error": "IPP version not supported by printer.",
-      "parse_error": "Failed to parse response from printer.",
+      "parse_error": "Failed to parse response from printer: {error}. The log has a masked copy of the response to attach to a bug report.",
       "unique_id_required": "Device missing unique identification required for discovery."
     },
     "error": {
