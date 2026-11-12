@@ -177,13 +177,15 @@ def test_roles_fit_the_dpt() -> None:
     assert _function_roles(TEST_PROJECT, function) == {}
 
 
-def _com_object(address: str, write: bool) -> dict[str, Any]:
+def _com_object(
+    address: str, write: bool, communication: bool = True
+) -> dict[str, Any]:
     return {
         "group_address_links": [address],
         "flags": {
             "read": not write,
             "write": write,
-            "communication": True,
+            "communication": communication,
             "transmit": not write,
             "update": False,
             "read_on_init": False,
@@ -214,6 +216,11 @@ def test_command_roles_need_a_writing_receiver() -> None:
     # without linked objects in the project, the receivers are unknown
     function = _function("Socket", "FT-10", "P-2", ("4/0/1", "SwitchOnOff"))
     assert _function_roles(project, function) == {"SwitchOnOff": "4/0/1"}
+    # an object without the communication flag takes no part on the bus
+    project["communication_objects"]["O-3"] = _com_object(
+        "4/0/1", write=True, communication=False
+    )
+    assert _function_roles(project, function) == {}
 
 
 def test_brightness_feedback_without_brightness_value() -> None:

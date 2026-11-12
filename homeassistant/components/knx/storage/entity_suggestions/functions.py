@@ -8,7 +8,8 @@ functions, while KNX Information Model semantics of channels are still rare.
 The role stored with a group address is used when it is one of the function
 type; other group addresses get the first free function point of their DPT. A
 group address whose DPT doesn't fit a function point is left unmatched, and one
-no linked communication object writes never takes a command role.
+no linked communication object receives (communication and write flags) never
+takes a command role.
 """
 
 from collections.abc import Mapping
@@ -200,17 +201,19 @@ def _fits(dpt: DPTType | None, point: tuple[int, int]) -> bool:
 
 
 def _receivers(project: KNXProject) -> dict[str, bool]:
-    """Whether a linked communication object writes each group address.
+    """Whether a linked communication object receives each group address.
 
-    Group addresses without a linked communication object in the project are not
-    included: whether anything receives them is unknown.
+    An object receives with both its communication and its write flag set; one
+    without the communication flag takes no part on the bus. Group addresses
+    without a linked communication object in the project are not included:
+    whether anything receives them is unknown.
     """
     receivers: dict[str, bool] = {}
     for com_object in (project.get("communication_objects") or {}).values():
+        flags = com_object["flags"]
+        receives = flags["communication"] and flags["write"]
         for address in com_object["group_address_links"]:
-            receivers[address] = (
-                receivers.get(address, False) or com_object["flags"]["write"]
-            )
+            receivers[address] = receivers.get(address, False) or receives
     return receivers
 
 
@@ -226,7 +229,7 @@ def _function_roles(
     second status address never becomes a command. Group addresses without such
     a role get the first free function point they fit. A command role (written
     by the entity) only fits a group address a linked communication object
-    writes, as far as the project knows its links (`receivers`, see
+    receives, as far as the project knows its links (`receivers`, see
     `_receivers`).
     """
     if receivers is None:
