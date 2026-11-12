@@ -2,6 +2,7 @@
 
 from datetime import datetime, timedelta
 import logging
+import ssl
 from typing import override
 
 from homeassistant.config_entries import ConfigEntry
@@ -28,10 +29,13 @@ class CertExpiryDataUpdateCoordinator(DataUpdateCoordinator[datetime | None]):
         config_entry: CertExpiryConfigEntry,
         host: str,
         port: int,
+        ssl_context: ssl.SSLContext,
     ) -> None:
         """Initialize global Cert Expiry data updater."""
         self.host = host
         self.port = port
+        self._ssl_context = ssl_context
+        self._verify_ssl = ssl_context.verify_mode == ssl.CERT_REQUIRED
         self.cert_error: ValidationFailure | None = None
         self.is_cert_valid = False
 
@@ -44,14 +48,19 @@ class CertExpiryDataUpdateCoordinator(DataUpdateCoordinator[datetime | None]):
             config_entry=config_entry,
             name=name,
             update_interval=timedelta(hours=12),
-            always_update=False,
         )
 
     @override
     async def _async_update_data(self) -> datetime | None:
         """Fetch certificate."""
         try:
-            timestamp = await get_cert_expiry_timestamp(self.hass, self.host, self.port)
+            timestamp = await get_cert_expiry_timestamp(
+                self.hass,
+                self.host,
+                self.port,
+                verify_ssl=self._verify_ssl,
+                ssl_context=self._ssl_context,
+            )
         except TemporaryFailure as err:
             raise UpdateFailed(err.args[0]) from err
         except ValidationFailure as err:
@@ -61,5 +70,5 @@ class CertExpiryDataUpdateCoordinator(DataUpdateCoordinator[datetime | None]):
             return None
 
         self.cert_error = None
-        self.is_cert_valid = True
+        self.is_cert_valid = self._verify_ssl
         return timestamp

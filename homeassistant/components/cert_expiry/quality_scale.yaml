@@ -13,8 +13,8 @@ rules:
     comment: test_abort_on_socket_failed can be parametrized and should end in CREATE_ENTRY to test flow recovery.
   config-flow: done
   dependency-transparency:
-    status: exempt
-    comment: Integration has no external library dependencies.
+    status: done
+    comment: Uses cryptography, an existing Home Assistant Core dependency.
   docs-actions:
     status: exempt
     comment: Integration does not register custom actions.
