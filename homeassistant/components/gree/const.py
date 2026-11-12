@@ -1,5 +1,7 @@
 """Constants for the Gree Climate integration."""
 
+CONF_KNOWN_HOSTS = "known_hosts"
+
 DISCOVERY_SCAN_INTERVAL = 300
 DISCOVERY_TIMEOUT = 8
 DISPATCH_DEVICE_DISCOVERED = "gree_device_discovered"
