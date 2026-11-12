@@ -5,6 +5,7 @@ from typing import Any, override
 
 from pyvesync.base_devices.bulb_base import VeSyncBulb
 from pyvesync.base_devices.switch_base import VeSyncSwitch
+from pyvesync.const import DeviceStatus
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -84,7 +85,7 @@ class VeSyncBaseLightHA(VeSyncBaseEntity[VeSyncSwitch | VeSyncBulb], LightEntity
     @override
     def is_on(self) -> bool:
         """Return True if device is on."""
-        return self.device.state.device_status == "on"
+        return self.device.state.device_status == DeviceStatus.ON
 
     @property
     @override

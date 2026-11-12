@@ -86,7 +86,7 @@ class VeSyncSwitchEntityDescription(SwitchEntityDescription):
 SENSOR_DESCRIPTIONS: Final[tuple[VeSyncSwitchEntityDescription, ...]] = (
     VeSyncSwitchEntityDescription(
         key="device_status",
-        is_on=lambda device: device.state.device_status == "on",
+        is_on=lambda device: device.state.device_status == DeviceStatus.ON,
         # Other types of wall switches support dimming.  Those use light.py platform.
         exists_fn=lambda device: is_wall_switch(device) or is_outlet(device),
         name=None,
@@ -95,7 +95,7 @@ SENSOR_DESCRIPTIONS: Final[tuple[VeSyncSwitchEntityDescription, ...]] = (
     ),
     VeSyncSwitchEntityDescription(
         key="display",
-        is_on=lambda device: device.state.display_set_status == "on",
+        is_on=lambda device: device.state.display_set_status == DeviceStatus.ON,
         exists_fn=(
             lambda device: rgetattr(device, "state.display_set_status") is not None
         ),
