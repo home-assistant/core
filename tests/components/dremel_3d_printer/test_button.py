@@ -5,7 +5,7 @@ from unittest.mock import patch
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.dremel_3d_printer.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
@@ -36,7 +36,7 @@ async def test_buttons(
     ) as mock:
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
+            ButtonService.PRESS,
             {ATTR_ENTITY_ID: [f"button.dremel_3d45_{button}_job"]},
             blocking=True,
         )
@@ -51,7 +51,7 @@ async def test_buttons(
     ):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
+            ButtonService.PRESS,
             {ATTR_ENTITY_ID: [f"button.dremel_3d45_{button}_job"]},
             blocking=True,
         )

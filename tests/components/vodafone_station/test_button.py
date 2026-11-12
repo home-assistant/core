@@ -12,7 +12,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.vodafone_station.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
@@ -50,7 +50,7 @@ async def test_pressing_button(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
+        ButtonService.PRESS,
         {ATTR_ENTITY_ID: f"button.vodafone_station_{TEST_SERIAL_NUMBER}_restart"},
         blocking=True,
     )
@@ -83,7 +83,7 @@ async def test_button_fails(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
+            ButtonService.PRESS,
             {ATTR_ENTITY_ID: f"button.vodafone_station_{TEST_SERIAL_NUMBER}_restart"},
             blocking=True,
         )

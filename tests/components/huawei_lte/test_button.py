@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 from huawei_lte_api.enums.device import ControlModeEnum
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.huawei_lte.const import (
     BUTTON_KEY_CLEAR_TRAFFIC_STATISTICS,
     BUTTON_KEY_RESTART,
@@ -35,7 +35,7 @@ async def test_clear_traffic_statistics(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
+        ButtonService.PRESS,
         {ATTR_ENTITY_ID: f"button.test_router_{BUTTON_KEY_CLEAR_TRAFFIC_STATISTICS}"},
         blocking=True,
     )
@@ -67,7 +67,7 @@ async def test_restart(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
+        ButtonService.PRESS,
         {ATTR_ENTITY_ID: f"button.test_router_{BUTTON_KEY_RESTART}"},
         blocking=True,
     )

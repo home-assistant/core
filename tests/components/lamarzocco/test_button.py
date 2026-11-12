@@ -6,7 +6,7 @@ from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -39,7 +39,7 @@ async def test_start_backflush(
     ):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
+            ButtonService.PRESS,
             {
                 ATTR_ENTITY_ID: f"button.{serial_number}_start_backflush",
             },
@@ -73,7 +73,7 @@ async def test_button_error(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
+            ButtonService.PRESS,
             {
                 ATTR_ENTITY_ID: f"button.{serial_number}_start_backflush",
             },
