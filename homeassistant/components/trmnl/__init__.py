@@ -30,6 +30,7 @@ from .const import (
     CLIENT_ID,
     CONF_HOME_ENTITIES,
     CONF_HOME_PLUGIN_SETTING_ID,
+    CONF_MESSAGES_PLUGIN_SETTING_ID,
     DOMAIN,
     HOMEY_PLUGIN_ID,
     LOGGER,
@@ -37,7 +38,12 @@ from .const import (
 from .coordinator import TRMNLConfigEntry, TRMNLCoordinator, scope_granted
 from .home import HomePusher
 
-PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.SWITCH, Platform.TIME]
+PLATFORMS: list[Platform] = [
+    Platform.NOTIFY,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.TIME,
+]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -163,9 +169,13 @@ async def async_migrate_entry(hass: HomeAssistant, entry: TRMNLConfigEntry) -> N
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: TRMNLConfigEntry) -> None:
-    """Delete the plugin setting the integration created, if the user granted delete."""
-    plugin_setting_id = entry.options.get(CONF_HOME_PLUGIN_SETTING_ID)
-    if plugin_setting_id is None or not scope_granted(entry, "delete"):
+    """Delete the plugin settings the integration created, if the user granted delete."""
+    plugin_setting_ids = [
+        entry.options[key]
+        for key in (CONF_HOME_PLUGIN_SETTING_ID, CONF_MESSAGES_PLUGIN_SETTING_ID)
+        if key in entry.options
+    ]
+    if not plugin_setting_ids or not scope_granted(entry, "delete"):
         return
     implementation = await async_get_config_entry_implementation(hass, entry)
     token = entry.data["token"]
@@ -173,8 +183,10 @@ async def async_remove_entry(hass: HomeAssistant, entry: TRMNLConfigEntry) -> No
         # The entry is already removed, so a refreshed token cannot be saved to it.
         if not OAuth2Session(hass, entry, implementation).valid_token:
             token = await implementation.async_refresh_token(token)
-        await TRMNLClient(
+        client = TRMNLClient(
             token=token["access_token"], session=async_get_clientsession(hass)
-        ).delete_plugin_setting(plugin_setting_id)
+        )
+        for plugin_setting_id in plugin_setting_ids:
+            await client.delete_plugin_setting(plugin_setting_id)
     except (ClientError, TRMNLError) as err:
-        LOGGER.warning("Could not delete the TRMNL home plugin setting: %s", err)
+        LOGGER.warning("Could not delete the TRMNL plugin settings: %s", err)

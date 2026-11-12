@@ -18,3 +18,5 @@ CONF_HOME_ENTITIES = "home_entities"
 CONF_HOME_PLUGIN_SETTING_ID = "home_plugin_setting_id"
 # QUESTION: TRMNL's id for its Homey plugin; replace with a keyname lookup once the API takes one.
 HOMEY_PLUGIN_ID = 95
+PRIVATE_PLUGIN_ID = 37
+CONF_MESSAGES_PLUGIN_SETTING_ID = "messages_plugin_setting_id"

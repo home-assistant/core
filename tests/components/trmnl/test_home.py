@@ -3,7 +3,7 @@
 import asyncio
 from datetime import timedelta
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -15,6 +15,7 @@ from trmnl.models import PluginSetting
 from homeassistant.components.trmnl.const import (
     CONF_HOME_ENTITIES,
     CONF_HOME_PLUGIN_SETTING_ID,
+    CONF_MESSAGES_PLUGIN_SETTING_ID,
     DOMAIN,
     HOMEY_PLUGIN_ID,
     OAUTH2_TOKEN,
@@ -583,13 +584,15 @@ async def test_remove_entry_deletes_plugin_setting_when_allowed(
         domain=DOMAIN,
         version=2,
         data={**home_entry.data, "token": token},
-        options={CONF_HOME_PLUGIN_SETTING_ID: 42},
+        options={CONF_HOME_PLUGIN_SETTING_ID: 42, CONF_MESSAGES_PLUGIN_SETTING_ID: 7},
     )
     await setup_integration(hass, entry)
 
     await hass.config_entries.async_remove(entry.entry_id)
 
-    assert mock_trmnl_client.delete_plugin_setting.await_count == int(deleted)
+    assert mock_trmnl_client.delete_plugin_setting.await_args_list == (
+        [call(42), call(7)] if deleted else []
+    )
 
 
 async def test_remove_entry_refreshes_an_expired_token_without_saving_it(
@@ -650,4 +653,4 @@ async def test_remove_entry_logs_failed_delete(
     await hass.config_entries.async_remove(entry.entry_id)
 
     mock_trmnl_client.delete_plugin_setting.assert_awaited_once_with(42)
-    assert "Could not delete the TRMNL home plugin setting" in caplog.text
+    assert "Could not delete the TRMNL plugin settings" in caplog.text

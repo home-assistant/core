@@ -28,6 +28,11 @@
     }
   },
   "entity": {
+    "notify": {
+      "message": {
+        "name": "Message"
+      }
+    },
     "sensor": {
       "battery_voltage": {
         "name": "Battery voltage"
@@ -56,6 +61,9 @@
     },
     "authentication_error": {
       "message": "Authentication failed. Please sign in to TRMNL again."
+    },
+    "content_not_granted": {
+      "message": "Your TRMNL sign in does not let Home Assistant change plugin settings. Sign in again with \"Change your markup, plugin settings, playlists and mashups\" ticked."
     },
     "migration_connection_error": {
       "message": "Could not reach TRMNL to move this entry from the API key to signing in. Home Assistant will try again."
