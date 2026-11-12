@@ -88,12 +88,12 @@ async def test_fan_state(
     ("metrics", "expected_preset", "expected_percentage"),
     [
         # The fan speeds come from metrics.json: Home 30, Away 10 and Boost 80.
-        pytest.param(METRICS_PROFILE_HOME, "Home", 30, id="home"),
-        pytest.param(METRICS_PROFILE_AWAY, "Away", 10, id="away"),
-        pytest.param(METRICS_PROFILE_BOOST, "Boost", 80, id="boost"),
-        pytest.param(METRICS_PROFILE_FIREPLACE, "Fireplace", None, id="fireplace"),
-        pytest.param(METRICS_PROFILE_EXTRA, "Extra", None, id="extra"),
-        pytest.param(METRICS_PROFILE_AUTO, "Auto", None, id="auto"),
+        pytest.param(METRICS_PROFILE_HOME, "home", 30, id="home"),
+        pytest.param(METRICS_PROFILE_AWAY, "away", 10, id="away"),
+        pytest.param(METRICS_PROFILE_BOOST, "boost", 80, id="boost"),
+        pytest.param(METRICS_PROFILE_FIREPLACE, "fireplace", None, id="fireplace"),
+        pytest.param(METRICS_PROFILE_EXTRA, "extra", None, id="extra"),
+        pytest.param(METRICS_PROFILE_AUTO, "auto", None, id="auto"),
         pytest.param(METRICS_PROFILE_UNKNOWN, None, None, id="unknown"),
     ],
 )
@@ -188,7 +188,7 @@ async def test_turn_on_off_exception(
     [
         pytest.param(
             METRICS_UNIT_OFF,
-            {ATTR_PERCENTAGE: 15, ATTR_PRESET_MODE: "Away"},
+            {ATTR_PERCENTAGE: 15, ATTR_PRESET_MODE: "away"},
             [
                 call.set_fan_speed(Profile.AWAY, 15),
                 call.set_profile(Profile.AWAY),
@@ -199,7 +199,7 @@ async def test_turn_on_off_exception(
         ),
         pytest.param(
             METRICS_UNIT_ON,
-            {ATTR_PERCENTAGE: 15, ATTR_PRESET_MODE: "Away"},
+            {ATTR_PERCENTAGE: 15, ATTR_PRESET_MODE: "away"},
             [
                 call.set_fan_speed(Profile.AWAY, 15),
                 call.set_profile(Profile.AWAY),
@@ -210,7 +210,7 @@ async def test_turn_on_off_exception(
         ),
         pytest.param(
             METRICS_UNIT_ON,
-            {ATTR_PRESET_MODE: "Away"},
+            {ATTR_PRESET_MODE: "away"},
             [
                 call.set_profile(Profile.AWAY),
                 call.set_values(METRICS_UNIT_ON),
@@ -223,7 +223,7 @@ async def test_turn_on_off_exception(
         # regardless.
         pytest.param(
             METRICS_UNIT_ON,
-            {ATTR_PRESET_MODE: "Home"},
+            {ATTR_PRESET_MODE: "home"},
             [
                 call.set_profile(Profile.HOME),
                 call.set_values(METRICS_UNIT_ON),
@@ -252,7 +252,7 @@ async def test_turn_on_off_exception(
         ),
         pytest.param(
             METRICS_UNIT_ON,
-            {ATTR_PERCENTAGE: 0, ATTR_PRESET_MODE: "Away"},
+            {ATTR_PERCENTAGE: 0, ATTR_PRESET_MODE: "away"},
             [
                 call.set_values(METRICS_UNIT_OFF),
                 call.fetch_metric_data(),
@@ -341,7 +341,7 @@ async def test_turn_on_exception(
             {
                 ATTR_ENTITY_ID: FAN_ENTITY_ID,
                 ATTR_PERCENTAGE: 15,
-                ATTR_PRESET_MODE: "Away",
+                ATTR_PRESET_MODE: "away",
             },
             blocking=True,
         )
@@ -368,12 +368,12 @@ async def test_turn_on_unsupported_profile(
             {
                 ATTR_ENTITY_ID: FAN_ENTITY_ID,
                 ATTR_PERCENTAGE: 40,
-                ATTR_PRESET_MODE: "Fireplace",
+                ATTR_PRESET_MODE: "fireplace",
             },
             blocking=True,
         )
     assert exc.value.translation_key == "preset_without_fan_speed"
-    assert exc.value.translation_placeholders == {"preset_mode": "Fireplace"}
+    assert exc.value.translation_placeholders == {"preset_mode": "fireplace"}
 
     # The library rejects the speed before sending, so the unit is left as it was.
     assert mock_vallox_client.method_calls == [
@@ -385,19 +385,19 @@ async def test_turn_on_unsupported_profile(
 @pytest.mark.parametrize(
     ("preset", "metrics", "expected_profile"),
     [
-        pytest.param("Home", METRICS_PROFILE_AWAY, Profile.HOME, id="home"),
-        pytest.param("Away", METRICS_PROFILE_HOME, Profile.AWAY, id="away"),
-        pytest.param("Boost", METRICS_PROFILE_HOME, Profile.BOOST, id="boost"),
+        pytest.param("home", METRICS_PROFILE_AWAY, Profile.HOME, id="home"),
+        pytest.param("away", METRICS_PROFILE_HOME, Profile.AWAY, id="away"),
+        pytest.param("boost", METRICS_PROFILE_HOME, Profile.BOOST, id="boost"),
         pytest.param(
-            "Fireplace", METRICS_PROFILE_HOME, Profile.FIREPLACE, id="fireplace"
+            "fireplace", METRICS_PROFILE_HOME, Profile.FIREPLACE, id="fireplace"
         ),
-        pytest.param("Extra", METRICS_PROFILE_HOME, Profile.EXTRA, id="extra"),
-        pytest.param("Auto", METRICS_PROFILE_HOME, Profile.AUTO, id="auto"),
+        pytest.param("extra", METRICS_PROFILE_HOME, Profile.EXTRA, id="extra"),
+        pytest.param("auto", METRICS_PROFILE_HOME, Profile.AUTO, id="auto"),
         # The preset is already active according to the last poll. The unit may
         # have changed since, for example when its Boost timer ran out, so check
         # that the preset is sent regardless.
-        pytest.param("Home", METRICS_PROFILE_HOME, Profile.HOME, id="active_home"),
-        pytest.param("Boost", METRICS_PROFILE_BOOST, Profile.BOOST, id="active_boost"),
+        pytest.param("home", METRICS_PROFILE_HOME, Profile.HOME, id="active_home"),
+        pytest.param("boost", METRICS_PROFILE_BOOST, Profile.BOOST, id="active_boost"),
     ],
 )
 async def test_set_preset_mode(
@@ -443,7 +443,7 @@ async def test_set_preset_mode_exception(
         await hass.services.async_call(
             FAN_DOMAIN,
             SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: FAN_ENTITY_ID, ATTR_PRESET_MODE: "Away"},
+            {ATTR_ENTITY_ID: FAN_ENTITY_ID, ATTR_PRESET_MODE: "away"},
             blocking=True,
         )
 
@@ -522,6 +522,6 @@ async def test_set_percentage_unsupported_profile(
             blocking=True,
         )
     assert exc.value.translation_key == "preset_without_fan_speed"
-    assert exc.value.translation_placeholders == {"preset_mode": "Fireplace"}
+    assert exc.value.translation_placeholders == {"preset_mode": "fireplace"}
 
     mock_vallox_client.set_fan_speed.assert_called_once_with(Profile.FIREPLACE, 40)

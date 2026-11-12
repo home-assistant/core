@@ -13,7 +13,7 @@ import re
 import threading
 import time
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun import freeze_time
 import probatio
@@ -2019,6 +2019,37 @@ async def test_serviceregistry_callback_service_raise_exception(
 
 
 @pytest.mark.parametrize(
+    ("domain", "service", "expected"),
+    [
+        pytest.param(
+            "test_domain", "test_service", SupportsResponse.ONLY, id="registered"
+        ),
+        pytest.param(
+            "TEST_DOMAIN", "TEST_SERVICE", SupportsResponse.ONLY, id="mixed_case"
+        ),
+        pytest.param(
+            "test_domain", "other_service", SupportsResponse.NONE, id="missing_service"
+        ),
+        pytest.param(
+            "other_domain", "test_service", SupportsResponse.NONE, id="missing_domain"
+        ),
+    ],
+)
+async def test_serviceregistry_supports_response(
+    hass: HomeAssistant, domain: str, service: str, expected: SupportsResponse
+) -> None:
+    """Test the response support of registered and missing services."""
+    hass.services.async_register(
+        "test_domain",
+        "test_service",
+        AsyncMock(return_value={}),
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    assert hass.services.supports_response(domain, service) is expected
+
+
+@pytest.mark.parametrize(
     "supports_response",
     [
         SupportsResponse.ONLY,
@@ -2428,7 +2459,6 @@ async def test_log_blocking_events(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Ensure we log which task is blocking startup when debug logging is on."""
-    caplog.set_level(logging.DEBUG)
 
     async def _wait_a_bit_1():
         await asyncio.sleep(0.1)
@@ -2451,7 +2481,6 @@ async def test_chained_logging_hits_log_timeout(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Ensure we log which task is blocking startup on chain."""
-    caplog.set_level(logging.DEBUG)
 
     created = 0
 
@@ -2480,7 +2509,6 @@ async def test_chained_logging_misses_log_timeout(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Ensure we do not log blocking task if no timeout hit."""
-    caplog.set_level(logging.DEBUG)
 
     created = 0
 

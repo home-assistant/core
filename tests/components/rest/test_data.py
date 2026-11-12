@@ -273,7 +273,6 @@ async def test_rest_data_debug_logging_shows_response_details(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that debug logging shows response details."""
-    caplog.set_level(logging.DEBUG)
 
     aioclient_mock.get(
         "http://example.com/api",
@@ -313,7 +312,6 @@ async def test_rest_data_no_content_type_header(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test handling of responses without Content-Type header."""
-    caplog.set_level(logging.DEBUG)
 
     # Mock response without Content-Type header
     aioclient_mock.get(

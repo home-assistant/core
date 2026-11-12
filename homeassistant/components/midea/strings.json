@@ -228,6 +228,26 @@
         }
       }
     },
+    "humidifier": {
+      "humidifier": {
+        "state_attributes": {
+          "mode": {
+            "state": {
+              "auto": "[%key:common::state::auto%]",
+              "bed_room": "Bedroom",
+              "clothes_dry": "Clothes dry",
+              "continuous": "Continuous",
+              "kitchen": "Kitchen",
+              "living_room": "Living room",
+              "manual": "[%key:common::state::manual%]",
+              "shoes_dry": "Shoes dry",
+              "silent": "Silent",
+              "sleep": "[%key:component::humidifier::entity_component::_::state_attributes::mode::state::sleep%]"
+            }
+          }
+        }
+      }
+    },
     "light": {
       "light": {
         "state_attributes": {

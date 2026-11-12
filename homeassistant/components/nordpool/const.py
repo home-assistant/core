@@ -12,4 +12,3 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 DEFAULT_NAME = "Nord Pool"
 
 CONF_AREAS = "areas"
-ATTR_RESOLUTION = "resolution"

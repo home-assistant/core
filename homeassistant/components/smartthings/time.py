@@ -102,9 +102,11 @@ class SmartThingsDnDTime(SmartThingsEntity, TimeEntity):
 
     @property
     @override
-    def native_value(self) -> time:
+    def native_value(self) -> time | None:
         """Return the time value."""
         state = self.get_attribute_value(
             Capability.CUSTOM_DO_NOT_DISTURB_MODE, self.entity_description.attribute
         )
-        return time(int(state[:2]), int(state[3:5]))
+        if state is None:
+            return None
+        return time(int(state[:2]), int(state[2:4]))

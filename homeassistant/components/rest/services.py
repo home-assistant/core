@@ -1,10 +1,10 @@
 """Services for the rest integration."""
 
 import contextlib
+from enum import StrEnum
 
 import probatio
 
-from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.reload import (
@@ -14,6 +14,12 @@ from homeassistant.helpers.reload import (
 
 from .const import DOMAIN, PLATFORMS
 from .util import async_process_config, async_setup_shared_data
+
+
+class RestService(StrEnum):
+    """Store keys for RESTful services."""
+
+    RELOAD = "reload"
 
 
 async def _reload_service_handler(service: ServiceCall) -> None:
@@ -34,5 +40,5 @@ async def _reload_service_handler(service: ServiceCall) -> None:
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register the rest services."""
     hass.services.async_register(
-        DOMAIN, SERVICE_RELOAD, _reload_service_handler, schema=probatio.Schema({})
+        DOMAIN, RestService.RELOAD, _reload_service_handler, schema=probatio.Schema({})
     )

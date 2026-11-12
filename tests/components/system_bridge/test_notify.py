@@ -1,20 +1,23 @@
 """Tests for the System Bridge notify platform."""
 
 from collections.abc import Generator
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
+import probatio
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.common import MockConfigEntry, MockUser, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 from systembridgeconnector.const import EventType
 from systembridgeconnector.exceptions import ConnectionClosedException
-from systembridgeconnector.models.notification import Notification
+from systembridgeconnector.models.notification import Notification, NotificationButton
 from systembridgeconnector.models.response import Response
 
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_MESSAGE,
     ATTR_TITLE,
+    ATTR_TITLE_DEFAULT,
     DOMAIN as NOTIFY_DOMAIN,
     SERVICE_SEND_MESSAGE,
 )
@@ -28,9 +31,9 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     Platform,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, Unauthorized
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.discovery import async_load_platform
 
 from . import FIXTURE_REQUEST_ID
@@ -124,8 +127,9 @@ async def test_legacy_notify_service(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_websocket_client: AsyncMock,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test sending a message with the legacy notify service."""
+    """Test sending a message with the deprecated legacy notify service."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -156,6 +160,195 @@ async def test_legacy_notify_service(
             title="Hello",
         )
     )
+    issue = issue_registry.async_get_issue(
+        DOMAIN, "deprecated_notify_action_system_bridge_hostname"
+    )
+    assert issue
+    assert issue.breaks_in_ha_version == "2027.6.0"
+    assert issue.translation_placeholders
+    assert issue.translation_placeholders["action"] == "notify.system_bridge_hostname"
+
+
+@pytest.mark.usefixtures("mock_version")
+@pytest.mark.freeze_time("2009-02-13T23:31:30.000Z")
+@pytest.mark.parametrize(
+    ("data", "notification", "response_data", "response"),
+    [
+        pytest.param(
+            {ATTR_MESSAGE: "World"},
+            Notification(title=ATTR_TITLE_DEFAULT, message="World"),
+            {"id": 1},
+            {"id": 1},
+            id="message_only",
+        ),
+        pytest.param(
+            {
+                ATTR_MESSAGE: "World",
+                ATTR_TITLE: "Hello",
+                "icon": "dialog-information",
+                "urgency": "critical",
+                "duration": {"seconds": 10},
+                "buttons": [
+                    {"id": "yes", "label": "Yes"},
+                    {"id": "no", "label": "No"},
+                ],
+                "sound": "/usr/share/sounds/message.oga",
+                "url": "https://www.home-assistant.io",
+            },
+            Notification(
+                title="Hello",
+                message="World",
+                icon="dialog-information",
+                urgency="critical",
+                duration=10000,
+                buttons=[
+                    NotificationButton(id="yes", label="Yes"),
+                    NotificationButton(id="no", label="No"),
+                ],
+                sound="/usr/share/sounds/message.oga",
+                action_url="https://www.home-assistant.io",
+            ),
+            {"id": 1},
+            {"id": 1},
+            id="all_fields",
+        ),
+        pytest.param(
+            {ATTR_MESSAGE: "World", "path": "/home/user/Documents"},
+            Notification(
+                title=ATTR_TITLE_DEFAULT,
+                message="World",
+                action_path="/home/user/Documents",
+            ),
+            {"id": 1},
+            {"id": 1},
+            id="path",
+        ),
+        pytest.param(
+            {ATTR_MESSAGE: "World"},
+            Notification(title=ATTR_TITLE_DEFAULT, message="World"),
+            {"title": ATTR_TITLE_DEFAULT, "message": "World"},
+            {"id": None},
+            id="no_id_before_5_20",
+        ),
+    ],
+)
+async def test_system_bridge_send_message(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: AsyncMock,
+    data: dict[str, Any],
+    notification: Notification,
+    response_data: dict[str, Any],
+    response: dict[str, Any],
+) -> None:
+    """Test sending a message with the system_bridge.send_message action."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_websocket_client.send_notification.return_value = Response(
+        id=FIXTURE_REQUEST_ID,
+        type=EventType.NOTIFICATION_SENT,
+        message="Notification sent",
+        data=response_data,
+    )
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        "send_message",
+        {ATTR_ENTITY_ID: "notify.hostname", **data},
+        blocking=True,
+        return_response=True,
+    )
+
+    assert result == {"notify.hostname": response}
+    mock_websocket_client.send_notification.assert_awaited_once_with(notification)
+    state = hass.states.get("notify.hostname")
+    assert state
+    assert state.state == "2009-02-13T23:31:30+00:00"
+
+
+@pytest.mark.usefixtures("mock_version")
+@pytest.mark.parametrize(
+    "data",
+    [
+        pytest.param({}, id="no_message"),
+        pytest.param({ATTR_MESSAGE: "World", "urgency": "urgent"}, id="urgency"),
+        pytest.param(
+            {
+                ATTR_MESSAGE: "World",
+                "buttons": [{"id": str(i), "label": str(i)} for i in range(4)],
+            },
+            id="too_many_buttons",
+        ),
+        pytest.param(
+            {
+                ATTR_MESSAGE: "World",
+                "buttons": [{"id": "default", "label": "Default"}],
+            },
+            id="default_button_id",
+        ),
+        pytest.param(
+            {ATTR_MESSAGE: "World", "buttons": [{"id": "yes"}]},
+            id="button_without_label",
+        ),
+        pytest.param(
+            {
+                ATTR_MESSAGE: "World",
+                "url": "https://www.home-assistant.io",
+                "path": "/home/user/Documents",
+            },
+            id="url_and_path",
+        ),
+    ],
+)
+async def test_system_bridge_send_message_invalid(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: AsyncMock,
+    data: dict[str, Any],
+) -> None:
+    """Test the system_bridge.send_message action rejects invalid data."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with pytest.raises(probatio.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            "send_message",
+            {ATTR_ENTITY_ID: "notify.hostname", **data},
+            blocking=True,
+            return_response=True,
+        )
+
+    mock_websocket_client.send_notification.assert_not_awaited()
+
+
+@pytest.mark.usefixtures("mock_version")
+async def test_system_bridge_send_message_requires_admin(
+    hass: HomeAssistant,
+    hass_read_only_user: MockUser,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: AsyncMock,
+) -> None:
+    """Test the system_bridge.send_message action needs an admin user."""
+    # Control of every entity, so only the admin check can refuse the call
+    hass_read_only_user.mock_policy({"entities": {"all": {"control": True}}})
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with pytest.raises(Unauthorized):
+        await hass.services.async_call(
+            DOMAIN,
+            "send_message",
+            {ATTR_ENTITY_ID: "notify.hostname", ATTR_MESSAGE: "World"},
+            blocking=True,
+            context=Context(user_id=hass_read_only_user.id),
+        )
+
+    mock_websocket_client.send_notification.assert_not_awaited()
 
 
 @pytest.mark.usefixtures("mock_version")

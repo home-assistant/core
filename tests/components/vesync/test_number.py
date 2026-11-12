@@ -9,11 +9,11 @@ from pyvesync.devices.vesynchumidifier import VeSyncHumid200300S
 from pyvesync.utils.errors import ResponseInfo
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -42,8 +42,11 @@ async def test_set_mist_level_bad_range(
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: ENTITY_HUMIDIFIER_MIST_LEVEL, ATTR_VALUE: "10"},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: ENTITY_HUMIDIFIER_MIST_LEVEL,
+                NumberServiceArgument.VALUE: "10",
+            },
             blocking=True,
         )
     await hass.async_block_till_done()
@@ -61,8 +64,11 @@ async def test_set_mist_level(
     ) as method_mock:
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: ENTITY_HUMIDIFIER_MIST_LEVEL, ATTR_VALUE: "3"},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: ENTITY_HUMIDIFIER_MIST_LEVEL,
+                NumberServiceArgument.VALUE: "3",
+            },
             blocking=True,
         )
     await hass.async_block_till_done()
@@ -103,8 +109,11 @@ async def test_set_mist_level_failure(
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: ENTITY_HUMIDIFIER_MIST_LEVEL, ATTR_VALUE: "3"},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: ENTITY_HUMIDIFIER_MIST_LEVEL,
+                NumberServiceArgument.VALUE: "3",
+            },
             blocking=True,
         )
 

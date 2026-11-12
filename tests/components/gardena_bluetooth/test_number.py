@@ -16,11 +16,11 @@ from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 
 from . import AQUA_CONTOUR_SERVICE_INFO, WATER_TIMER_SERVICE_INFO, setup_entry
@@ -152,8 +152,11 @@ async def test_config(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: value},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            NumberServiceArgument.VALUE: value,
+        },
         blocking=True,
     )
 
