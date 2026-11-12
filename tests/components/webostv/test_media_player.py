@@ -31,26 +31,20 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.components.webostv.const import (
-    ATTR_PAYLOAD,
     ATTR_SOUND_OUTPUT,
     CONF_SOURCES,
     DOMAIN,
     LIVE_TV_APP_ID,
     WebOsTvCommandError,
+    WebOsTvService,
+    WebOsTvServiceArgument,
 )
 from homeassistant.components.webostv.media_player import (
     SUPPORT_WEBOSTV,
     SUPPORT_WEBOSTV_VOLUME,
 )
-from homeassistant.components.webostv.services import (
-    ATTR_BUTTON,
-    SERVICE_BUTTON,
-    SERVICE_COMMAND,
-    SERVICE_SELECT_SOUND_OUTPUT,
-)
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
-    ATTR_COMMAND,
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     CONF_CLIENT_SECRET,
@@ -237,9 +231,9 @@ async def test_button(hass: HomeAssistant, client) -> None:
 
     data = {
         ATTR_ENTITY_ID: ENTITY_ID,
-        ATTR_BUTTON: "test",
+        WebOsTvServiceArgument.BUTTON: "test",
     }
-    await hass.services.async_call(DOMAIN, SERVICE_BUTTON, data, True)
+    await hass.services.async_call(DOMAIN, WebOsTvService.BUTTON, data, True)
     await hass.async_block_till_done()
     client.button.assert_called_once()
     client.button.assert_called_with("test")
@@ -261,10 +255,10 @@ async def test_command(
 
     data = {
         ATTR_ENTITY_ID: ENTITY_ID,
-        ATTR_COMMAND: "audio/getVolume",
+        WebOsTvServiceArgument.COMMAND: "audio/getVolume",
     }
     response = await hass.services.async_call(
-        DOMAIN, SERVICE_COMMAND, data, True, return_response=True
+        DOMAIN, WebOsTvService.COMMAND, data, True, return_response=True
     )
     await hass.async_block_till_done()
     client.request.assert_called_with("audio/getVolume", payload=None)
@@ -277,10 +271,10 @@ async def test_command_with_optional_arg(hass: HomeAssistant, client) -> None:
 
     data = {
         ATTR_ENTITY_ID: ENTITY_ID,
-        ATTR_COMMAND: "test",
-        ATTR_PAYLOAD: {"target": "https://www.google.com"},
+        WebOsTvServiceArgument.COMMAND: "test",
+        WebOsTvServiceArgument.PAYLOAD: {"target": "https://www.google.com"},
     }
-    await hass.services.async_call(DOMAIN, SERVICE_COMMAND, data, True)
+    await hass.services.async_call(DOMAIN, WebOsTvService.COMMAND, data, True)
     await hass.async_block_till_done()
     client.request.assert_called_with(
         "test", payload={"target": "https://www.google.com"}
@@ -301,11 +295,11 @@ async def test_select_sound_output(
 
     data = {
         ATTR_ENTITY_ID: ENTITY_ID,
-        ATTR_SOUND_OUTPUT: "external_speaker",
+        WebOsTvServiceArgument.SOUND_OUTPUT: "external_speaker",
     }
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_SELECT_SOUND_OUTPUT,
+        WebOsTvService.SELECT_SOUND_OUTPUT,
         data,
         True,
         return_response=True,
@@ -388,9 +382,11 @@ async def test_service_entity_id_none(hass: HomeAssistant, client) -> None:
 
     data = {
         ATTR_ENTITY_ID: ENTITY_MATCH_NONE,
-        ATTR_SOUND_OUTPUT: "external_speaker",
+        WebOsTvServiceArgument.SOUND_OUTPUT: "external_speaker",
     }
-    await hass.services.async_call(DOMAIN, SERVICE_SELECT_SOUND_OUTPUT, data, True)
+    await hass.services.async_call(
+        DOMAIN, WebOsTvService.SELECT_SOUND_OUTPUT, data, True
+    )
 
     client.change_sound_output.assert_not_called()
 

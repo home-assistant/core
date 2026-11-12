@@ -1,0 +1,77 @@
+# serializer version: 1
+# name: test_active_alert
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Information provided by MeteoAlarm',
+      'awareness_level': '2; yellow; Moderate',
+      'awareness_type': '1; Wind',
+      'category': 'Met',
+      'certainty': 'Likely',
+      'description': 'Maximum gusts of 70 km/h.',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'safety',
+      'effective': '2026-01-01T08:00:00+00:00',
+      'event': 'Moderate wind warning',
+      'expires': '2026-01-01T18:00:00+00:00',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test alert',
+      'headline': 'Moderate wind warning. Test province',
+      'instruction': 'Be prepared.',
+      'language': 'en-GB',
+      'onset': '2026-01-01T10:00:00+00:00',
+      'responseType': 'Monitor',
+      'senderName': 'Test weather service',
+      'severity': 'Moderate',
+      'urgency': 'Future',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_alert',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_no_active_alert[expired_alert]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Information provided by MeteoAlarm',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'safety',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test alert',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_alert',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_no_active_alert[invalid_expires]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Information provided by MeteoAlarm',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'safety',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test alert',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_alert',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_no_active_alert[no_alert]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Information provided by MeteoAlarm',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'safety',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test alert',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_alert',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
