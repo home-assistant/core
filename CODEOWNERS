@@ -465,6 +465,8 @@ AGENTS.md @home-assistant/core
 /tests/components/duckdns/ @tr4nt0r
 /homeassistant/components/duco/ @ronaldvdmeer
 /tests/components/duco/ @ronaldvdmeer
+/homeassistant/components/duosida_ev/ @americodias
+/tests/components/duosida_ev/ @americodias
 /homeassistant/components/duotecno/ @cereal2nd
 /tests/components/duotecno/ @cereal2nd
 /homeassistant/components/dwd_weather_warnings/ @runningman84 @stephan192

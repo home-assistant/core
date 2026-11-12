@@ -192,6 +192,7 @@ FLOWS = {
         "duckdns",
         "duco",
         "dunehd",
+        "duosida_ev",
         "duotecno",
         "dwd_weather_warnings",
         "dynalite",
