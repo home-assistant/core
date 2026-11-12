@@ -1633,6 +1633,7 @@ async def test_integration_reload_failed(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_modbus
 ) -> None:
     """Run test for integration connect failure on reload."""
+    caplog.set_level(logging.DEBUG)
     caplog.clear()
 
     yaml_path = get_fixture_path("configuration.yaml", "modbus")
