@@ -25,6 +25,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "meter_connectivity": {
+        "name": "Meter connectivity"
+      }
+    },
     "sensor": {
       "energy_price": {
         "name": "Energy price"
