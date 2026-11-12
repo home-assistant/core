@@ -13,10 +13,10 @@ from neopool_modbus.capabilities import (
     is_ph_module_present,
     is_redox_module_present,
 )
-from neopool_modbus.registers import ( 
-    HIDRO_COVER_ENABLE_BIT, 
-    aux_relay_available, 
-    is_valid_relay_gpio
+from neopool_modbus.registers import (
+    HIDRO_COVER_ENABLE_BIT,
+    aux_relay_available,
+    is_valid_relay_gpio,
 )
 
 from homeassistant.components.binary_sensor import (
