@@ -31,7 +31,7 @@ from homeassistant.util import Throttle
 from homeassistant.util.dt import utcnow
 
 from .api import BboxApi, BboxConnectionError, BboxError
-from .const import DEFAULT_HOST, REQUEST_TIMEOUT
+from .const import DEFAULT_HOST
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -247,28 +247,16 @@ class BboxData:
         timestamp on a normal return, so a raising fetch would arm
         nothing and repeat itself every entity update.
         """
-        future = None
         try:
-            future = run_coroutine_threadsafe(self._async_fetch(), self._hass.loop)
-            self.data, self.router_infos = future.result(REQUEST_TIMEOUT)
+            self.data, self.router_infos = run_coroutine_threadsafe(
+                self._async_fetch(), self._hass.loop
+            ).result()
             self._fetch_error = None
         except BboxError as error:
             # The fetch already finished with this error: nothing left
             # to cancel, just record it.
             _LOGGER.error(error)
             self._fetch_error = error
-        except TimeoutError as error:
-            # The bridge wait expired: cancel the still-running fetch and
-            # cache a typed error instead of swallowing it, so the stored
-            # payloads are never read while stale.
-            if future is not None:
-                future.cancel()
-            _LOGGER.error(error)
-            fetch_error = BboxConnectionError(
-                f"Bbox fetch did not complete in {REQUEST_TIMEOUT} seconds"
-            )
-            fetch_error.__cause__ = error
-            self._fetch_error = fetch_error
         except RuntimeError as error:
             # The event loop is closed (shutdown in progress): record a
             # typed failure instead of letting an unhandled error escape.

@@ -1,5 +1,6 @@
 """Tests for the Bbox API client."""
 
+import asyncio
 from http import HTTPStatus
 from typing import Any
 from unittest.mock import patch
@@ -135,17 +136,92 @@ async def test_grouped_fetch_logs_in_once(
     assert len(logins) == 1
 
 
+async def test_request_during_login_shares_login_attempt(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test that a request started during login reuses its outcome."""
+    login_started = asyncio.Event()
+    release_login = asyncio.Event()
+    second_request_unauthorized = asyncio.Event()
+    get_calls = 0
+
+    async def get_side_effect(
+        method: str, url: URL, data: Any
+    ) -> AiohttpClientMockResponse:
+        nonlocal get_calls
+        get_calls += 1
+        if get_calls <= 2:
+            if get_calls == 2:
+                second_request_unauthorized.set()
+            return AiohttpClientMockResponse(
+                method=method,
+                url=URL(url),
+                status=HTTPStatus.UNAUTHORIZED,
+                json=UNAUTHORIZED_BODY,
+            )
+        return AiohttpClientMockResponse(
+            method=method, url=URL(url), json=DEVICE_INFO_RESPONSE
+        )
+
+    async def post_side_effect(
+        method: str, url: URL, data: Any
+    ) -> AiohttpClientMockResponse:
+        login_started.set()
+        await release_login.wait()
+        return AiohttpClientMockResponse(
+            method=method, url=URL(url), status=HTTPStatus.OK
+        )
+
+    aioclient_mock.get(DEVICE_URL, side_effect=get_side_effect)
+    aioclient_mock.post(LOGIN_URL, side_effect=post_side_effect)
+    api = BboxApi(async_get_clientsession(hass), PASSWORD)
+
+    first_request = asyncio.create_task(api._request_with_login_retry("device"))
+    await login_started.wait()
+    second_request = asyncio.create_task(api._request_with_login_retry("device"))
+    await second_request_unauthorized.wait()
+    release_login.set()
+
+    assert await asyncio.gather(first_request, second_request) == [
+        DEVICE_INFO_RESPONSE[0],
+        DEVICE_INFO_RESPONSE[0],
+    ]
+    logins = [call for call in aioclient_mock.mock_calls if call[0].upper() == "POST"]
+    assert len(logins) == 1
+
+
 async def test_grouped_fetch_failed_login_attempted_once(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test that a failed login is shared: one POST /login for concurrent 401s."""
-    aioclient_mock.get(
-        WAN_IP_STATS_URL, status=HTTPStatus.UNAUTHORIZED, json=UNAUTHORIZED_BODY
-    )
-    aioclient_mock.get(
-        DEVICE_URL, status=HTTPStatus.UNAUTHORIZED, json=UNAUTHORIZED_BODY
-    )
-    aioclient_mock.post(LOGIN_URL, status=HTTPStatus.UNAUTHORIZED)
+    initial_gets_complete = asyncio.Event()
+    get_calls = 0
+
+    async def get_side_effect(
+        method: str, url: URL, data: Any
+    ) -> AiohttpClientMockResponse:
+        nonlocal get_calls
+        get_calls += 1
+        if get_calls == 2:
+            initial_gets_complete.set()
+        return AiohttpClientMockResponse(
+            method=method,
+            url=URL(url),
+            status=HTTPStatus.UNAUTHORIZED,
+            json=UNAUTHORIZED_BODY,
+        )
+
+    async def post_side_effect(
+        method: str, url: URL, data: Any
+    ) -> AiohttpClientMockResponse:
+        await initial_gets_complete.wait()
+        return AiohttpClientMockResponse(
+            method=method, url=URL(url), status=HTTPStatus.UNAUTHORIZED
+        )
+
+    aioclient_mock.get(WAN_IP_STATS_URL, side_effect=get_side_effect)
+    aioclient_mock.get(DEVICE_URL, side_effect=get_side_effect)
+    aioclient_mock.post(LOGIN_URL, side_effect=post_side_effect)
     api = BboxApi(async_get_clientsession(hass), PASSWORD)
     with pytest.raises(BboxAuthError):
         await api.get_ip_stats_and_info()
@@ -306,7 +382,11 @@ async def test_unexpected_payload(
     method_name: str,
 ) -> None:
     """Test that an unexpected payload shape raises a typed error."""
-    endpoints = {"get_ip_stats": WAN_IP_STATS_URL, "get_connected_devices": HOSTS_URL}
+    endpoints = {
+        "get_ip_stats": WAN_IP_STATS_URL,
+        "get_connected_devices": HOSTS_URL,
+        "get_bbox_info": DEVICE_URL,
+    }
     aioclient_mock.get(endpoints[method_name], json=response)
     api = BboxApi(async_get_clientsession(hass), PASSWORD)
     with pytest.raises(BboxError, match="Unexpected Bbox payload"):

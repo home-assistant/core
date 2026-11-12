@@ -20,8 +20,8 @@ from .const import DEFAULT_HOST
 
 _LOGGER = logging.getLogger(__name__)
 
-# Per-request client timeout; the bridge wait (const.REQUEST_TIMEOUT)
-# must cover a full request/login/retry chain of these.
+# Per-request client timeout; the legacy platform bridge waits for the
+# complete request/login/retry chain.
 DEFAULT_TIMEOUT = 10  # seconds
 
 
@@ -78,12 +78,12 @@ class BboxApi:
         self._login_lock = Lock()
         # Login single-flight state: _login_epoch counts login attempts,
         # _login_ok_epoch is the epoch of the last successful login and
-        # _last_attempt_epoch the epoch of the last attempt (success or
-        # failure), so concurrent requests share one login — and one
-        # failed login — instead of racing to POST /login.
+        # _last_failed_login_epoch the epoch of the last failed one, so
+        # concurrent requests share one login — and one failed login —
+        # instead of racing to POST /login.
         self._login_epoch = 0
         self._login_ok_epoch = -1
-        self._last_attempt_epoch = 0
+        self._last_failed_login_epoch = -1
 
     def _url(self, endpoint: str) -> str:
         """Build the full URL of an API endpoint."""
@@ -168,19 +168,27 @@ class BboxApi:
                 raise
             if not err.stale:
                 async with self._login_lock:
-                    if (
-                        self._login_ok_epoch > err.start_epoch
-                        or self._last_attempt_epoch > err.start_epoch
-                    ):
-                        # A login already happened — or was attempted and
-                        # failed — after this request was rejected.
+                    if self._login_ok_epoch > err.start_epoch:
+                        # A login already succeeded after this request was
+                        # rejected, so retry without logging in again.
                         pass
+                    elif self._last_failed_login_epoch >= err.start_epoch:
+                        # A login already failed for this epoch.
+                        raise
                     else:
-                        self._login_epoch += 1
-                        self._last_attempt_epoch = self._login_epoch
+                        attempt_epoch = self._login_epoch
                         _LOGGER.debug("Logging in to the Bbox")
-                        await self.login()
-                        self._login_ok_epoch = self._login_epoch
+                        try:
+                            await self.login()
+                        except BboxError:
+                            # Share the failure with concurrent requests
+                            # rejected in the same epoch (Bbox rate limit).
+                            self._last_failed_login_epoch = attempt_epoch
+                            raise
+                        else:
+                            self._login_ok_epoch = attempt_epoch + 1
+                        finally:
+                            self._login_epoch = attempt_epoch + 1
         _LOGGER.debug("Retrying %s after login", endpoint)
         return await self._request(endpoint)
 

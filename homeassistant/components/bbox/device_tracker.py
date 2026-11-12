@@ -22,7 +22,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle, dt as dt_util
 
 from .api import BboxApi, BboxError
-from .const import DEFAULT_HOST, REQUEST_TIMEOUT
+from .const import DEFAULT_HOST
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -130,15 +130,11 @@ class BboxDeviceScanner(DeviceScanner):
         """
         _LOGGER.debug("Scanning")
 
-        future = None
         try:
-            future = run_coroutine_threadsafe(self._async_fetch(), self._hass.loop)
-            result = future.result(REQUEST_TIMEOUT)
-        except (BboxError, TimeoutError) as error:
-            # A BboxError means the fetch already finished; only a bridge
-            # timeout leaves a coroutine running for a discarded result.
-            if isinstance(error, TimeoutError) and future is not None:
-                future.cancel()
+            result = run_coroutine_threadsafe(
+                self._async_fetch(), self._hass.loop
+            ).result()
+        except BboxError as error:
             _LOGGER.error("Error fetching Bbox device list: %s", error)
             self.last_results = []
             return False
