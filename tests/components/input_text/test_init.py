@@ -249,7 +249,26 @@ async def test_initial_state_not_matching_pattern(
     state = hass.states.get("input_text.test_1")
     assert state
     assert state.state == "unknown"
-    assert "Ignoring invalid initial value of test_1: letters" in caplog.text
+    assert "Ignoring invalid initial value of input_text.test_1: letters" in caplog.text
+
+
+async def test_malformed_pattern(hass: HomeAssistant) -> None:
+    """Test a malformed pattern only fails the affected helper."""
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                "test_1": {"initial": "test", "pattern": "["},
+                "test_2": {"initial": "test"},
+            }
+        },
+    )
+
+    assert hass.states.get("input_text.test_1") is None
+    state = hass.states.get("input_text.test_2")
+    assert state
+    assert state.state == "test"
 
 
 async def test_initial_state_overrules_restore_state(hass: HomeAssistant) -> None:

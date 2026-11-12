@@ -38,8 +38,8 @@ class InputText(collection.CollectionEntity, TextEntity, RestoreEntity):
 
     def __init__(self, config: ConfigType) -> None:
         """Initialize a text input."""
+        self._attr_native_value = config.get(CONF_INITIAL)
         self._update_config_attributes(config)
-        self._attr_native_value = self._valid_initial(config)
 
     def _update_config_attributes(self, config: ConfigType) -> None:
         """Update attributes based on the config."""
@@ -58,17 +58,14 @@ class InputText(collection.CollectionEntity, TextEntity, RestoreEntity):
             return False
         return self.pattern_cmp is None or self.pattern_cmp.match(value) is not None
 
-    def _valid_initial(self, config: ConfigType) -> str | None:
-        """Return the initial value of the config, or None if it is invalid."""
-        initial: str | None = config.get(CONF_INITIAL)
-        if initial is None:
-            return None
-        if not self._is_valid(initial):
-            _LOGGER.warning(
-                "Ignoring invalid initial value of %s: %s", config[CONF_ID], initial
-            )
-            return None
-        return initial
+    def _valid_initial(self, initial: str | None) -> str | None:
+        """Return the initial value, or None if it is invalid."""
+        if initial is None or self._is_valid(initial):
+            return initial
+        _LOGGER.warning(
+            "Ignoring invalid initial value of %s: %s", self.entity_id, initial
+        )
+        return None
 
     @classmethod
     @override
@@ -97,6 +94,7 @@ class InputText(collection.CollectionEntity, TextEntity, RestoreEntity):
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
+        self._attr_native_value = self._valid_initial(self._attr_native_value)
         if self._attr_native_value is not None:
             return
 
@@ -133,5 +131,5 @@ class InputText(collection.CollectionEntity, TextEntity, RestoreEntity):
         """Handle when the config is updated."""
         self._update_config_attributes(config)
         if self.native_value is not None and not self._is_valid(self.native_value):
-            self._attr_native_value = self._valid_initial(config)
+            self._attr_native_value = self._valid_initial(config.get(CONF_INITIAL))
         self.async_write_ha_state()
