@@ -19,7 +19,7 @@ from homeassistant.components.light import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.components.vesync.const import DOMAIN, VS_DEVICES, VS_DISCOVERY
+from homeassistant.components.vesync.const import DOMAIN, SERVICE_UPDATE_DEVS
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
@@ -31,7 +31,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .common import ALL_DEVICE_NAMES, mock_devices_response
 
@@ -493,7 +492,10 @@ async def test_rgb_nightlight_discovery(
     with patch("homeassistant.components.vesync.PLATFORMS", [Platform.LIGHT]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    async_dispatcher_send(hass, VS_DISCOVERY.format(VS_DEVICES), [rgb_humidifier])
+    manager.get_devices = AsyncMock(
+        side_effect=lambda: manager.devices.humidifiers.append(rgb_humidifier)
+    )
+    await hass.services.async_call(DOMAIN, SERVICE_UPDATE_DEVS, {}, blocking=True)
     await hass.async_block_till_done()
     assert (
         entity_registry.async_get_entity_id(
