@@ -3393,6 +3393,68 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_all_entities[sensor.freezer_door-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'closed',
+        'locked',
+        'open',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('home_connect', 'BOSCH-HCS000000-D00000000003')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.freezer_door',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Door',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Door',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door',
+    'unique_id': 'BOSCH-HCS000000-D00000000003-BSH.Common.Status.DoorState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.freezer_door-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Freezer Door',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'closed',
+        'locked',
+        'open',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.freezer_door',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
 # name: test_all_entities[sensor.freezer_freezer_door_alarm-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -3589,6 +3651,68 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'ready',
+  })
+# ---
+# name: test_all_entities[sensor.fridgefreezer_door-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'closed',
+        'locked',
+        'open',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('home_connect', 'SIEMENS-HCS05FRF1-304F4F9E541D')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.fridgefreezer_door',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Door',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Door',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door',
+    'unique_id': 'SIEMENS-HCS05FRF1-304F4F9E541D-BSH.Common.Status.DoorState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.fridgefreezer_door-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'FridgeFreezer Door',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'closed',
+        'locked',
+        'open',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.fridgefreezer_door',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
   })
 # ---
 # name: test_all_entities[sensor.fridgefreezer_freezer_door_alarm-entry]
@@ -5677,6 +5801,68 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.refrigerator_door-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'closed',
+        'locked',
+        'open',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('home_connect', 'BOSCH-HCS000000-D00000000002')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.refrigerator_door',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Door',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Door',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door',
+    'unique_id': 'BOSCH-HCS000000-D00000000002-BSH.Common.Status.DoorState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.refrigerator_door-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Refrigerator Door',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'closed',
+        'locked',
+        'open',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.refrigerator_door',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
   })
 # ---
 # name: test_all_entities[sensor.refrigerator_operation_state-entry]

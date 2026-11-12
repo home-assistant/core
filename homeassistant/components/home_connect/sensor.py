@@ -1,7 +1,7 @@
 """Provides a sensor for Home Connect."""
 
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime, timedelta
 import logging
 from typing import cast, override
@@ -638,7 +638,7 @@ def _get_entities_for_appliance(
     appliance_coordinator: HomeConnectApplianceCoordinator,
 ) -> list[HomeConnectEntity]:
     """Get a list of entities."""
-    skip_door_state = _has_compartment_doors(appliance_coordinator)
+    disable_door_state = _has_compartment_doors(appliance_coordinator)
     return [
         *[
             HomeConnectEventSensor(appliance_coordinator, description)
@@ -653,12 +653,15 @@ def _get_entities_for_appliance(
             and appliance_coordinator.data.info.type in desc.appliance_types
         ],
         *[
-            HomeConnectSensor(appliance_coordinator, description)
+            HomeConnectSensor(
+                appliance_coordinator,
+                replace(description, entity_registry_enabled_default=False)
+                if disable_door_state
+                and description.key == StatusKey.BSH_COMMON_DOOR_STATE
+                else description,
+            )
             for description in SENSORS
             if description.key in appliance_coordinator.data.status
-            and not (
-                skip_door_state and description.key == StatusKey.BSH_COMMON_DOOR_STATE
-            )
         ],
     ]
 

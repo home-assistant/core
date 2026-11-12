@@ -731,7 +731,7 @@ async def test_sensors_states(
 
 
 @pytest.mark.parametrize(
-    ("appliance", "status_keys", "door_state_entity_id", "expected_created"),
+    ("appliance", "status_keys", "door_state_entity_id", "expected_enabled"),
     [
         pytest.param(
             ApplianceType.REFRIGERATOR,
@@ -779,10 +779,11 @@ async def test_door_state_sensor_with_compartment_doors(
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     status_keys: list[StatusKey],
+    entity_registry: er.EntityRegistry,
     door_state_entity_id: str,
-    expected_created: bool,
+    expected_enabled: bool,
 ) -> None:
-    """Test the generic door sensor isn't created next to compartment doors."""
+    """Test the generic door sensor is disabled by default next to compartment doors."""
     client.get_status = AsyncMock(
         return_value=ArrayOfStatus(
             [
@@ -794,7 +795,14 @@ async def test_door_state_sensor_with_compartment_doors(
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
 
-    assert (hass.states.get(door_state_entity_id) is not None) is expected_created
+    entry = entity_registry.async_get(door_state_entity_id)
+    assert entry
+    if expected_enabled:
+        assert entry.disabled_by is None
+        assert hass.states.get(door_state_entity_id)
+    else:
+        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+        assert hass.states.get(door_state_entity_id) is None
 
 
 @pytest.mark.parametrize(
