@@ -147,8 +147,8 @@ async def test_config_flow_auth_and_claim_step_success(hass: HomeAssistant) -> N
         )
         await hass.async_block_till_done()
 
-        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert final_result["type"] is FlowResultType.CREATE_ENTRY
+        assert final_result["result"].unique_id == final_result["data"][CONF_DEVICE_ID]
         assert final_result["title"] == TEST_RECORD_NAME
         assert final_result["description"] == "add_sensor_mapping_hint"
 
@@ -441,8 +441,8 @@ async def test_config_flow_external_step_claimed_during_display(
         )
         await hass.async_block_till_done()
 
-        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert final_result["type"] is FlowResultType.CREATE_ENTRY
+        assert final_result["result"].unique_id == final_result["data"][CONF_DEVICE_ID]
 
 
 async def test_config_flow_auth_and_claim_step_not_claimed(hass: HomeAssistant) -> None:
@@ -477,19 +477,28 @@ async def test_config_flow_auth_and_claim_step_not_claimed(hass: HomeAssistant) 
         assert result3["step_id"] == "auth_and_claim"
 
 
+@pytest.mark.parametrize(
+    "unique_id",
+    [
+        pytest.param("homeassistant_eid_existing_device", id="claimed_before_setup"),
+        pytest.param(None, id="claimed_during_setup"),
+    ],
+)
 async def test_config_flow_reauth_success(
     hass: HomeAssistant,
+    unique_id: str | None,
 ) -> None:
     """Test the reauthentication flow for EnergyID integration (success path)."""
     # Existing config entry
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="site_12345",
+        unique_id=unique_id,
         data={
             CONF_PROVISIONING_KEY: "old_key",
             CONF_PROVISIONING_SECRET: "old_secret",
-            CONF_DEVICE_ID: "existing_device",
+            CONF_DEVICE_ID: "homeassistant_eid_existing_device",
             CONF_DEVICE_NAME: "Existing Device",
+            "record_number": "site_12345",
         },
     )
     entry.add_to_hass(hass)
@@ -520,10 +529,49 @@ async def test_config_flow_reauth_success(
         await hass.async_block_till_done()
 
         assert result2["type"] is FlowResultType.ABORT
+        assert result2["reason"] == "reauth_successful"
         # Entry should be updated
         updated_entry = hass.config_entries.async_get_entry(entry.entry_id)
         assert updated_entry.data[CONF_PROVISIONING_KEY] == "new_key"
         assert updated_entry.data[CONF_PROVISIONING_SECRET] == "new_secret"
+
+
+async def test_config_flow_reauth_wrong_record(hass: HomeAssistant) -> None:
+    """Test reauthentication aborts when the credentials link another record."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="homeassistant_eid_existing_device",
+        data={
+            CONF_PROVISIONING_KEY: "old_key",
+            CONF_PROVISIONING_SECRET: "old_secret",
+            CONF_DEVICE_ID: "homeassistant_eid_existing_device",
+            CONF_DEVICE_NAME: "Existing Device",
+            "record_number": "site_12345",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    mock_client = MagicMock()
+    mock_client.authenticate = AsyncMock(return_value=True)
+    mock_client.recordNumber = "other_site"
+    mock_client.recordName = "Other Site"
+
+    with patch(
+        "homeassistant.components.energyid.config_flow.WebhookClient",
+        return_value=mock_client,
+    ):
+        result = await entry.start_reauth_flow(hass)
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_PROVISIONING_KEY: "new_key",
+                CONF_PROVISIONING_SECRET: "new_secret",
+            },
+        )
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "wrong_account"
+    assert entry.data[CONF_PROVISIONING_KEY] == "old_key"
 
 
 @pytest.mark.parametrize(
@@ -584,15 +632,16 @@ async def test_config_flow_client_response_error(
 
 
 async def test_config_flow_reauth_needs_claim(hass: HomeAssistant) -> None:
-    """Test reauth flow when device needs to be claimed."""
+    """Test reauth flow updates the entry once the device is claimed again."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="site_12345",
+        unique_id="homeassistant_eid_existing_device",
         data={
             CONF_PROVISIONING_KEY: "old_key",
             CONF_PROVISIONING_SECRET: "old_secret",
-            CONF_DEVICE_ID: "existing_device",
+            CONF_DEVICE_ID: "homeassistant_eid_existing_device",
             CONF_DEVICE_NAME: "Existing Device",
+            "record_number": TEST_RECORD_NUMBER,
         },
     )
     entry.add_to_hass(hass)
@@ -601,11 +650,14 @@ async def test_config_flow_reauth_needs_claim(hass: HomeAssistant) -> None:
     mock_client = MagicMock()
     mock_client.authenticate = AsyncMock(return_value=False)
     mock_client.get_claim_info.return_value = {"claim_url": "http://claim.me"}
+    claimed = _mock_claimed_client()
 
     with (
         patch(
             "homeassistant.components.energyid.config_flow.WebhookClient",
-            return_value=mock_client,
+            side_effect=lambda *args, **kwargs: (
+                mock_client if mock_client.authenticate.await_count == 0 else claimed
+            ),
         ),
     ):
         result = await entry.start_reauth_flow(hass)
@@ -623,6 +675,18 @@ async def test_config_flow_reauth_needs_claim(hass: HomeAssistant) -> None:
 
         assert result2["type"] is FlowResultType.EXTERNAL_STEP
         assert result2["step_id"] == "auth_and_claim"
+
+        result3 = await hass.config_entries.flow.async_configure(result2["flow_id"])
+        assert result3["type"] is FlowResultType.EXTERNAL_STEP_DONE
+
+        result4 = await hass.config_entries.flow.async_configure(result2["flow_id"])
+        await hass.async_block_till_done()
+
+    assert result4["type"] is FlowResultType.ABORT
+    assert result4["reason"] == "reauth_successful"
+    assert hass.config_entries.async_entries(DOMAIN) == [entry]
+    assert entry.data[CONF_PROVISIONING_KEY] == "new_key"
+    assert entry.data[CONF_PROVISIONING_SECRET] == "new_secret"
 
 
 async def test_async_get_supported_subentry_types(hass: HomeAssistant) -> None:
@@ -794,12 +858,13 @@ async def test_reauth_with_error(hass: HomeAssistant) -> None:
     """Test that reauth flow shows error when authentication fails with 401."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id=TEST_RECORD_NUMBER,
+        unique_id="homeassistant_eid_test_device",
         data={
             CONF_PROVISIONING_KEY: "old_key",
             CONF_PROVISIONING_SECRET: "old_secret",
-            CONF_DEVICE_ID: "test_device_id",
+            CONF_DEVICE_ID: "homeassistant_eid_test_device",
             CONF_DEVICE_NAME: "test_device_name",
+            "record_number": TEST_RECORD_NUMBER,
         },
     )
     mock_entry.add_to_hass(hass)
@@ -976,8 +1041,8 @@ async def test_polling_cancellation_on_success(hass: HomeAssistant) -> None:
         result_done = await hass.config_entries.flow.async_configure(
             result_external["flow_id"]
         )
-        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result_done["type"] is FlowResultType.CREATE_ENTRY
+        assert result_done["result"].unique_id == result_done["data"][CONF_DEVICE_ID]
 
         # Verify polling was cancelled - the auth count should not increase
         assert auth_call_count == 2
