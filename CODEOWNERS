@@ -226,6 +226,8 @@ AGENTS.md @home-assistant/core
 /homeassistant/components/azure_service_bus/ @hfurubotten
 /homeassistant/components/azure_storage/ @zweckj
 /tests/components/azure_storage/ @zweckj
+/homeassistant/components/baby_tracker/ @wtadler
+/tests/components/baby_tracker/ @wtadler
 /homeassistant/components/backblaze_b2/ @ElCruncharino
 /tests/components/backblaze_b2/ @ElCruncharino
 /homeassistant/components/backup/ @home-assistant/core
