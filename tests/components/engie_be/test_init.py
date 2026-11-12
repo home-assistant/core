@@ -1798,3 +1798,63 @@ async def test_remove_retained_household_device(
     price_state = hass.states.get(price_entity_id)
     assert price_state is not None
     assert float(price_state.state) == pytest.approx(0.123456)
+
+
+async def test_household_leaving_during_add_is_skipped(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test an agreement that leaves during its tariff lookup gets no household."""
+    leaving_ban = "000000000003"
+    client = mock_engie_client.return_value
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    lookup_started = asyncio.Event()
+    release_lookup = asyncio.Event()
+
+    async def _contracts(queried_ban: str) -> EnergyContractsResponse:
+        if queried_ban == leaving_ban:
+            lookup_started.set()
+            await release_lookup.wait()
+        return build_contracts()
+
+    client.async_get_energy_contracts.side_effect = _contracts
+    client.async_get_customer_account_relations.return_value = build_relations(
+        BAN, BAN_2, leaving_ban
+    )
+    freezer.tick(RELATIONS_SCAN_INTERVAL + timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    async with asyncio.timeout(10):
+        await lookup_started.wait()
+
+    client.async_get_customer_account_relations.return_value = build_relations(
+        BAN, BAN_2
+    )
+    freezer.tick(RELATIONS_SCAN_INTERVAL + timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    release_lookup.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "KeyError" not in caplog.text
+    assert leaving_ban not in mock_config_entry.runtime_data.households
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, leaving_ban), mock_config_entry.entry_id
+        )
+        is None
+    )
+    price_entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{BAN_2}_{OFFTAKE_ONLY_EAN}_offtake_TOTAL_HOURS"
+    )
+    assert price_entity_id is not None
+    price_state = hass.states.get(price_entity_id)
+    assert price_state is not None
+    assert float(price_state.state) == pytest.approx(0.123456)

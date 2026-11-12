@@ -253,14 +253,19 @@ async def _async_add_households(
     """Create the coordinators, device and entities of each household that joined."""
     runtime_data = entry.runtime_data
     try:
-        dynamic_flags = await asyncio.gather(
+        results = await asyncio.gather(
             *(_async_is_dynamic(runtime_data.client, ban) for ban in bans)
         )
     except ConfigEntryAuthFailed:
         entry.async_start_reauth(hass)
         return
-    for ban, is_dynamic in zip(bans, dynamic_flags, strict=True):
-        runtime_data.households[ban] = _create_household(hass, entry, ban, is_dynamic)
+    dynamic_flags = dict(zip(bans, results, strict=True))
+    if not (bans := {ban for ban in bans if ban in runtime_data.relations.data}):
+        return
+    for ban in bans:
+        runtime_data.households[ban] = _create_household(
+            hass, entry, ban, dynamic_flags[ban]
+        )
     if runtime_data.epex is None and any(
         runtime_data.households[ban].is_dynamic is not False for ban in bans
     ):
