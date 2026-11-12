@@ -5,7 +5,12 @@ from typing import Any
 
 import pytest
 from pytest_homeassistant.common import load_fixture
-from pytradfri.const import ATTR_DEVICE_STATE, ATTR_LIGHT_CONTROL, ATTR_REACHABLE_STATE
+from pytradfri.const import (
+    ATTR_DEVICE_STATE,
+    ATTR_ID,
+    ATTR_LIGHT_CONTROL,
+    ATTR_REACHABLE_STATE,
+)
 from pytradfri.device import Device
 
 from homeassistant.components.light import (
@@ -27,6 +32,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 
@@ -37,6 +43,14 @@ from .common import CommandStore, setup_integration
 def bulb_w() -> str:
     """Return a bulb W response."""
     return load_fixture("bulb_w.json", DOMAIN)
+
+
+@pytest.fixture(scope="module")
+def bulb_w_without_values(bulb_w: str) -> str:
+    """Return a bulb W response whose control reports no values."""
+    response = json.loads(bulb_w)
+    response[ATTR_LIGHT_CONTROL] = [{ATTR_ID: 0}]
+    return json.dumps(response)
 
 
 @pytest.fixture(scope="module")
@@ -463,3 +477,14 @@ async def test_turn_off_commands(
         (command.method, command.path, command.data)
         for command in command_store.sent_commands
     ] == [("put", device.path, {"3311": [light_payload]})]
+
+
+@pytest.mark.parametrize("device", ["bulb_w_without_values"], indirect=True)
+@pytest.mark.usefixtures("device")
+async def test_light_without_values(hass: HomeAssistant) -> None:
+    """Test a light whose control reports no values."""
+    await setup_integration(hass)
+
+    state = hass.states.get("light.test_w")
+    assert state
+    assert state.state == STATE_UNKNOWN

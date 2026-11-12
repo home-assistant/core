@@ -41,12 +41,13 @@ def _get_air_quality(device: Device) -> int | None:
     return device.air_purifier_control.air_purifiers[0].air_quality
 
 
-def _get_filter_time_left(device: Device) -> int:
+def _get_filter_time_left(device: Device) -> int | None:
     """Fetch the filter's remaining lifetime (in hours)."""
     assert device.air_purifier_control is not None
-    return round(
-        device.air_purifier_control.air_purifiers[0].filter_lifetime_remaining / 60
-    )
+    remaining = device.air_purifier_control.air_purifiers[0].filter_lifetime_remaining
+    if remaining is None:
+        return None
+    return round(remaining / 60)
 
 
 SENSOR_DESCRIPTIONS_BATTERY: tuple[TradfriSensorEntityDescription, ...] = (

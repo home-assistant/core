@@ -1,9 +1,10 @@
 """Tradfri cover (recognised as blinds in the IKEA ecosystem) platform tests."""
 
+import json
 from typing import Any
 
 import pytest
-from pytradfri.const import ATTR_REACHABLE_STATE
+from pytradfri.const import ATTR_ID, ATTR_REACHABLE_STATE, ATTR_START_BLINDS
 from pytradfri.device import Device
 
 from homeassistant.components.cover import (
@@ -11,10 +12,18 @@ from homeassistant.components.cover import (
     DOMAIN as COVER_DOMAIN,
     CoverState,
 )
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 from .common import CommandStore, setup_integration
+
+
+@pytest.fixture(scope="module")
+def blind_without_values(blind: str) -> str:
+    """Return a blind response whose control reports no values."""
+    response = json.loads(blind)
+    response[ATTR_START_BLINDS] = [{ATTR_ID: 0}]
+    return json.dumps(response)
 
 
 @pytest.mark.parametrize("device", ["blind"], indirect=True)
@@ -85,3 +94,15 @@ async def test_cover_services(
     assert state
     assert state.state == expected_state
     assert state.attributes[ATTR_CURRENT_POSITION] == expected_position
+
+
+@pytest.mark.parametrize("device", ["blind_without_values"], indirect=True)
+@pytest.mark.usefixtures("device")
+async def test_cover_without_values(hass: HomeAssistant) -> None:
+    """Test a cover whose control reports no values."""
+    await setup_integration(hass)
+
+    state = hass.states.get("cover.test")
+    assert state
+    assert state.state == STATE_UNKNOWN
+    assert ATTR_CURRENT_POSITION not in state.attributes

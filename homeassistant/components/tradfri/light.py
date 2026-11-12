@@ -105,7 +105,7 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
 
     @property
     @override
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if light is on."""
         return self._device_data.state
 
