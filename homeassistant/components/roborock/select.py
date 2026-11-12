@@ -154,7 +154,7 @@ SELECT_DESCRIPTIONS: list[RoborockSelectDescription] = [
         value_fn=lambda api: api.status.water_mode_name,
         entity_category=EntityCategory.CONFIG,
         options_lambda=lambda api: (
-            [mode.value for mode in api.status.water_mode_options]
+            [mode.display_name for mode in api.status.water_mode_options]
             if api.status.water_mode_options
             else None
         ),

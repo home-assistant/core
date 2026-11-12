@@ -23,6 +23,7 @@ from homeassistant.components.roborock.select import (
     A01_SELECT_DESCRIPTIONS,
     RoborockSelectEntityA01,
 )
+from homeassistant.components.select import ATTR_OPTIONS
 from homeassistant.const import SERVICE_SELECT_OPTION, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -181,6 +182,33 @@ async def test_selected_map_without_name(
     select_entity = hass.states.get("select.roborock_s7_maxv_selected_map")
     assert select_entity
     assert select_entity.state == "Map 0"
+
+
+@pytest.mark.usefixtures("setup_entry")
+async def test_mop_intensity_select_state(
+    hass: HomeAssistant,
+) -> None:
+    """Test the V1 mop intensity select state and options."""
+    state = hass.states.get("select.roborock_s7_maxv_mop_intensity")
+    assert state is not None
+    assert state.state == "intense"
+    assert state.attributes[ATTR_OPTIONS] == [
+        "off",
+        "low",
+        "mild",
+        "medium",
+        "standard",
+        "high",
+        "intense",
+        "min",
+        "max",
+        "custom",
+        "custom_water_flow",
+        "extreme",
+        "smart_mode",
+        "slight",
+        "moderate",
+    ]
 
 
 async def test_cleaning_mode_select_current_option(

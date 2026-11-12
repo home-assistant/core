@@ -504,7 +504,7 @@ def create_v1_properties(network_info: NetworkInfo) -> AsyncMock:
     v1_properties.status = make_mock_status_trait()
     v1_properties.device_features = make_device_features()
     _fan_speed_mapping = {m.code: m.value for m in VacuumModes}
-    _water_mode_mapping = {m.code: m.value for m in WaterModes}
+    _water_mode_mapping = {m.code: m.display_name for m in WaterModes}
     _mop_route_mapping = {m.code: m.display_name for m in CleanRoutes}
     v1_properties.status.fan_speed_options = list(VacuumModes)
     v1_properties.status.fan_speed_mapping = _fan_speed_mapping
