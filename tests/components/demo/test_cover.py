@@ -331,6 +331,36 @@ async def test_set_cover_tilt_position(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 90
 
 
+async def test_toggle_cover_during_tilt_move(hass: HomeAssistant) -> None:
+    """Test toggling the cover stops a tilt move in progress."""
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_CLOSE_COVER_TILT,
+        {ATTR_ENTITY_ID: ENTITY_COVER},
+        blocking=True,
+    )
+    future = dt_util.utcnow() + timedelta(seconds=1)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_TOGGLE,
+        {ATTR_ENTITY_ID: ENTITY_COVER},
+        blocking=True,
+    )
+    state = hass.states.get(ENTITY_COVER)
+    assert state.state == CoverState.OPEN
+
+    for _ in range(3):
+        future = dt_util.utcnow() + timedelta(seconds=1)
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_COVER)
+    assert state.state == CoverState.OPEN
+    assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 40
+
+
 async def test_stop_cover_tilt(hass: HomeAssistant) -> None:
     """Test stopping the cover tilt."""
     state = hass.states.get(ENTITY_COVER)

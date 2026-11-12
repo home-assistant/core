@@ -240,25 +240,31 @@ class DemoCover(CoverEntity):
     @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
+        self._stop_position()
+        self._stop_tilt()
+        self.async_write_ha_state()
+
+    @override
+    async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
+        """Stop the cover tilt."""
+        self._stop_tilt()
+        self.async_write_ha_state()
+
+    @callback
+    def _stop_position(self) -> None:
+        """Stop the position movement."""
         self._is_closing = False
         self._is_opening = False
-        self.async_write_ha_state()
-        if self._position is None:
-            return
         if self._unsub_listener_cover is not None:
             self._unsub_listener_cover()
             self._unsub_listener_cover = None
             self._set_position = None
 
-    @override
-    async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
-        """Stop the cover tilt."""
+    @callback
+    def _stop_tilt(self) -> None:
+        """Stop the tilt movement."""
         self._is_closing_tilt = False
         self._is_opening_tilt = False
-        self.async_write_ha_state()
-        if self._tilt_position is None:
-            return
-
         if self._unsub_listener_cover_tilt is not None:
             self._unsub_listener_cover_tilt()
             self._unsub_listener_cover_tilt = None
@@ -282,7 +288,7 @@ class DemoCover(CoverEntity):
             self._position += 10
 
         if self._position in (100, 0, self._set_position):
-            await self.async_stop_cover()
+            self._stop_position()
 
         self._closed = (
             self.current_cover_position is not None and self.current_cover_position <= 0
@@ -307,7 +313,6 @@ class DemoCover(CoverEntity):
             self._tilt_position += 10
 
         if self._tilt_position in (100, 0, self._set_tilt_position):
-            await self.async_stop_cover_tilt()
-            return
+            self._stop_tilt()
 
         self.async_write_ha_state()
