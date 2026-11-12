@@ -621,6 +621,17 @@
           "smart": "Smart"
         }
       },
+      "power_on_behavior": {
+        "name": "Power-on behavior",
+        "state": {
+          "last": "Previous state",
+          "memory": "[%key:component::tuya::entity::select::power_on_behavior::state::last%]",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]",
+          "power_off": "[%key:common::state::off%]",
+          "power_on": "[%key:common::state::on%]"
+        }
+      },
       "pump_mode": {
         "name": "Mode"
       },
@@ -639,17 +650,6 @@
         "state": {
           "1": "Record events only",
           "2": "Continuous recording"
-        }
-      },
-      "relay_status": {
-        "name": "Power-on behavior",
-        "state": {
-          "last": "Previous state",
-          "memory": "[%key:component::tuya::entity::select::relay_status::state::last%]",
-          "off": "[%key:common::state::off%]",
-          "on": "[%key:common::state::on%]",
-          "power_off": "[%key:common::state::off%]",
-          "power_on": "[%key:common::state::on%]"
         }
       },
       "siren_mode": {
@@ -905,6 +905,9 @@
       },
       "last_watering_time": {
         "name": "Last watering time"
+      },
+      "leakage_current": {
+        "name": "Leakage current"
       },
       "lifetime_battery_charge_energy": {
         "name": "Lifetime battery charge energy"
