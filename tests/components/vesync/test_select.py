@@ -1,8 +1,10 @@
 """Tests for the select platform."""
 
-from unittest.mock import MagicMock, Mock
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from pyvesync.const import DeviceStatus
 from pyvesync.utils.errors import ResponseInfo
 
@@ -18,13 +20,14 @@ from homeassistant.components.vesync.const import (
 )
 from homeassistant.components.vesync.select import (
     HA_TO_VS_HUMIDIFIER_NIGHT_LIGHT_LEVEL_MAP,
+    _set_purifier_auto_preference,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from .common import ENTITY_HUMIDIFIER_300S_NIGHT_LIGHT_SELECT
+from .common import ENTITY_HUMIDIFIER_300S_NIGHT_LIGHT_SELECT, mock_devices_response
 
 
 @pytest.mark.parametrize(
@@ -125,3 +128,67 @@ async def test_select_option_device_failure(
             },
             blocking=True,
         )
+
+
+@pytest.mark.parametrize(
+    ("room_size", "expected_args"),
+    [
+        pytest.param(400, ("quiet", 400), id="room_size"),
+        pytest.param(0, ("quiet",), id="no_room_size"),
+    ],
+)
+async def test_purifier_auto_preference(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    room_size: int,
+    expected_args: tuple[str | int, ...],
+) -> None:
+    """Test the purifier auto mode preference select."""
+    mock_devices_response(aioclient_mock, "Air Purifier Vital 200S")
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = "select.air_purifier_vital_200s_auto_mode_preference"
+    assert hass.states.get(entity_id).state == "default"
+
+    device = config_entry.runtime_data.manager.devices.air_purifiers[0]
+    device.state.auto_room_size = room_size
+
+    with patch(
+        "pyvesync.devices.vesyncpurifier.VeSyncAirBaseV2.set_auto_preference",
+        return_value=True,
+    ) as method_mock:
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: entity_id,
+                SelectServiceArgument.OPTION: "quiet",
+            },
+            blocking=True,
+        )
+
+    method_mock.assert_awaited_once_with(*expected_args)
+
+
+async def test_no_auto_preference_without_support(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test a purifier that reports no auto preference gets no select."""
+    mock_devices_response(aioclient_mock, "Air Purifier 200s")
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("fan.air_purifier_200s") is not None
+    assert hass.states.get("select.air_purifier_200s_auto_mode_preference") is None
+
+
+def test_auto_preference_unsupported_device() -> None:
+    """Test setting an auto preference on a device without one raises."""
+    with pytest.raises(HomeAssistantError):
+        _set_purifier_auto_preference(Mock(spec=[]), "quiet")
