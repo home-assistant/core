@@ -16,8 +16,12 @@ from pytest_homeassistant.common import (
 )
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.time import DOMAIN as TIME_DOMAIN, SERVICE_SET_VALUE
-from homeassistant.const import ATTR_TIME, Platform
+from homeassistant.components.time import (
+    DOMAIN as TIME_DOMAIN,
+    TimeService,
+    TimeServiceArgument,
+)
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform as ep, entity_registry as er
@@ -61,8 +65,8 @@ def _time_entity(hass: HomeAssistant, entity_id: str) -> Any:
 async def _set_time(hass: HomeAssistant, entity_id: str, value: dt_time) -> None:
     await hass.services.async_call(
         TIME_DOMAIN,
-        SERVICE_SET_VALUE,
-        {"entity_id": entity_id, ATTR_TIME: value},
+        TimeService.SET_VALUE,
+        {"entity_id": entity_id, TimeServiceArgument.TIME: value},
         blocking=True,
     )
 

@@ -76,6 +76,7 @@ async def authenticate(
             and not appliances_manager.dryers
             and not appliances_manager.ovens
             and not appliances_manager.refrigerators
+            and not appliances_manager.unsupported_appliances
         ):
             return "no_appliances"
 

@@ -11,6 +11,7 @@ from .const import (
     DEFAULT_WATERING_DURATION,
     SWITCH_OFF_REFRESH_DELAY,
     SWITCH_ON_REFRESH_DELAY,
+    YardianServiceArgument,
 )
 from .coordinator import YardianConfigEntry, YardianUpdateCoordinator
 from .entity import YardianZoneEntity
@@ -63,7 +64,9 @@ class YardianSwitch(YardianZoneEntity, SwitchEntity):
         self.coordinator.data.active_zones.add(self._zone_id)
         self.async_write_ha_state()
 
-        duration = kwargs.get("duration", DEFAULT_WATERING_DURATION)
+        duration = kwargs.get(
+            YardianServiceArgument.DURATION, DEFAULT_WATERING_DURATION
+        )
 
         await self.coordinator.controller.start_irrigation(self._zone_id, duration)
         await asyncio.sleep(SWITCH_ON_REFRESH_DELAY)
