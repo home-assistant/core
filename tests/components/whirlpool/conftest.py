@@ -89,6 +89,7 @@ def fixture_mock_appliances_manager_api(
             mock_oven_dual_cavity_api,
         ]
         mock_appliances_manager.return_value.refrigerators = [mock_refrigerator_api]
+        mock_appliances_manager.return_value.microwaves = []
         mock_appliances_manager.return_value.unsupported_appliances = [
             mock_unsupported_appliance_api
         ]
