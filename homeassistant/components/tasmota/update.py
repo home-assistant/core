@@ -159,8 +159,8 @@ class TasmotaUpdateEntity(
         return self.coordinator.data.name
 
     @override
-    def release_notes(self) -> str | None:
-        """Return the release notes."""
+    async def async_release_notes(self) -> str | None:
+        """Return full release notes."""
         if not self.coordinator.data or not self.coordinator.data.body:
             return None
         # Remove the picture tag, it uses relative URLs that won't work in the UI
