@@ -120,6 +120,9 @@
       "next_setting": { "name": "Next setting" },
       "solar_azimuth": { "name": "Solar azimuth" },
       "solar_elevation": { "name": "Solar elevation" }
+    },
+    "sun": {
+      "sun": { "name": "[%key:component::sun::title%]" }
     }
   },
   "entity_component": {
