@@ -841,6 +841,8 @@ async def test_database_usage_waits_for_database_ready(
             {"type": "recorder/database_usage", "refresh": True}
         )
         response = await client.receive_json()
+        # A stop queued before the recorder runs its event loop is lost
+        await async_wait_recording_done(hass)
 
     assert response["success"]
     assert response["result"]["total_bytes"] > 0
