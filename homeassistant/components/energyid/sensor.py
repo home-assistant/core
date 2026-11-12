@@ -5,7 +5,7 @@ from typing import Any, override
 from energyid_webhooks.directives import DirectiveResource
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, ServiceResponse, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -144,4 +144,29 @@ class EnergyIDDirectiveSensor(
             "next_state": SIGNAL_TO_STATE.get(state.next_signal.signal)
             if state.next_signal
             else None,
+        }
+
+    async def async_get_directive_schedule(self) -> ServiceResponse:
+        """Return the complete current schedule for this directive."""
+        snapshot = self.snapshot
+        schedule = snapshot.schedule
+        provider = snapshot.resource.signal_provider
+        return {
+            "title": schedule.title,
+            "description": schedule.description,
+            "interval": schedule.interval,
+            "provider": {
+                "id": provider.id,
+                "display_name": provider.display_name,
+                "logo_url": provider.logo_url,
+            },
+            "data": [
+                {
+                    "timestamp": point.timestamp.isoformat(),
+                    "signal": point.signal,
+                    "color": point.color,
+                    "raw_value": point.raw_value,
+                }
+                for point in schedule.data
+            ],
         }

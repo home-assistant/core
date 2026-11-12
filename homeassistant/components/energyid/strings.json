@@ -130,5 +130,11 @@
         "title": "[%key:component::energyid::config::step::directives::title%]"
       }
     }
+  },
+  "services": {
+    "get_directive_schedule": {
+      "description": "Returns the complete current schedule for the selected EnergyID directive entities.",
+      "name": "Get directive schedule"
+    }
   }
 }
