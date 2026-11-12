@@ -317,8 +317,15 @@ async def test_temperature_control_temperature_setpoint(
     )
 
     # only the Step subscription (2/86/3) is notified
-    set_node_attribute(matter_node, 2, 86, 3, 10)
-    await trigger_subscription_callback(hass, matter_client, attribute_path="2/86/3")
+    await set_node_attribute_and_notify(
+        hass,
+        matter_client,
+        matter_node,
+        endpoint=2,
+        cluster_id=86,
+        attribute_id=3,
+        value=10,
+    )
     state = hass.states.get("number.refrigerator_temperature_setpoint_2")
     assert state
     assert state.attributes["step"] == 0.1
