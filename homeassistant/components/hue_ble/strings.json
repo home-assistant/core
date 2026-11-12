@@ -28,6 +28,30 @@
       }
     }
   },
+  "entity": {
+    "light": {
+      "hue_ble_light": {
+        "state_attributes": {
+          "effect": {
+            "state": {
+              "candle": "Candle",
+              "cosmos": "Cosmos",
+              "enchant": "Enchant",
+              "fireplace": "Fireplace",
+              "glisten": "Glisten",
+              "opal": "Opal",
+              "prism": "Prism",
+              "sparkle": "Sparkle",
+              "sunbeam": "Sunbeam",
+              "sunrise": "Sunrise",
+              "sunset": "Sunset",
+              "underwater": "Underwater"
+            }
+          }
+        }
+      }
+    }
+  },
   "exceptions": {
     "device_not_found": {
       "message": "The light {name} ({mac}) was not found: {reason}"
