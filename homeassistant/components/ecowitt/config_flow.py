@@ -23,10 +23,10 @@ def _get_station_target_url(hass: HomeAssistant) -> URL:
     Stations can only upload over plain HTTP on the local network, so configured
     HTTPS or external URLs (e.g. behind a reverse proxy) do not work for them.
     """
-    if hass.config.internal_url:
-        internal_url = URL(hass.config.internal_url)
-        if internal_url.scheme == "http":
-            return internal_url
+    if (internal_url := hass.config.internal_url) and (
+        url := URL(internal_url)
+    ).scheme == "http":
+        return url
 
     api = hass.config.api
     if (
