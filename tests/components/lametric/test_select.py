@@ -22,12 +22,11 @@ from homeassistant.components.select import (
     SelectServiceArgument,
 )
 from homeassistant.components.time import (
-    ATTR_TIME,
     DOMAIN as TIME_DOMAIN,
-    SERVICE_SET_VALUE,
+    TimeService,
+    TimeServiceArgument,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     STATE_UNAVAILABLE,
     CommonServiceArgument,
@@ -228,10 +227,10 @@ async def test_screensaver_mode_then_schedule_change(
 
     await hass.services.async_call(
         TIME_DOMAIN,
-        SERVICE_SET_VALUE,
+        TimeService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: "time.frenck_s_lametric_screensaver_start_time",
-            ATTR_TIME: "20:00:00",
+            CommonServiceArgument.ENTITY_ID: "time.frenck_s_lametric_screensaver_start_time",
+            TimeServiceArgument.TIME: "20:00:00",
         },
         blocking=True,
     )
