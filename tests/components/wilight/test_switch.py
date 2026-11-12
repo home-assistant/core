@@ -6,7 +6,7 @@ import pytest
 import pywilight
 from pywilight.wilight_device import PyWiLightDevice
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.components.wilight.const import (
     ATTR_PAUSE_TIME,
     ATTR_WATERING_TIME,
@@ -27,10 +27,9 @@ from homeassistant.components.wilight.switch import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    CommonServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -109,8 +108,8 @@ async def test_on_off_switch_state(
     # On - watering
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.wl000000000099_1_watering"},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: "switch.wl000000000099_1_watering"},
         blocking=True,
     )
 
@@ -122,8 +121,8 @@ async def test_on_off_switch_state(
     # Off - watering
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.wl000000000099_1_watering"},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: "switch.wl000000000099_1_watering"},
         blocking=True,
     )
 
@@ -135,8 +134,8 @@ async def test_on_off_switch_state(
     # On - pause
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.wl000000000099_2_pause"},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: "switch.wl000000000099_2_pause"},
         blocking=True,
     )
 
@@ -148,8 +147,8 @@ async def test_on_off_switch_state(
     # Off - pause
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.wl000000000099_2_pause"},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: "switch.wl000000000099_2_pause"},
         blocking=True,
     )
 

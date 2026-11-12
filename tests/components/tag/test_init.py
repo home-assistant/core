@@ -1,6 +1,5 @@
 """Tests for the tag component."""
 
-import logging
 from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
@@ -287,7 +286,6 @@ async def test_entity_created_and_removed(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test tag entity created and removed."""
-    caplog.at_level(logging.DEBUG)
     assert await storage_setup()
 
     client = await hass_ws_client(hass)

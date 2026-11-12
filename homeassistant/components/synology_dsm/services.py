@@ -1,5 +1,6 @@
 """The Synology DSM component."""
 
+from enum import StrEnum
 import logging
 from typing import cast
 
@@ -12,15 +13,28 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.service import async_register_admin_service
 
-from .const import CONF_SERIAL, DOMAIN, SERVICE_REBOOT, SERVICE_SHUTDOWN, SERVICES
+from .const import DOMAIN
 from .coordinator import SynologyDSMConfigEntry
 
 LOGGER = logging.getLogger(__name__)
 
 
+class SynologyDSMService(StrEnum):
+    """Store keys for Synology DSM services."""
+
+    REBOOT = "reboot"
+    SHUTDOWN = "shutdown"
+
+
+class SynologyDSMServiceArgument(StrEnum):
+    """Store keys for Synology DSM service arguments."""
+
+    SERIAL = "serial"
+
+
 async def _service_handler(call: ServiceCall) -> None:
     """Handle service call."""
-    serial: str | None = call.data.get(CONF_SERIAL)
+    serial: str | None = call.data.get(SynologyDSMServiceArgument.SERIAL)
     entries: list[SynologyDSMConfigEntry] = (
         call.hass.config_entries.async_loaded_entries(DOMAIN)
     )
@@ -53,7 +67,7 @@ async def _service_handler(call: ServiceCall) -> None:
             translation_placeholders={"serials": ", ".join(sorted(dsm_devices))},
         )
 
-    if call.service in [SERVICE_REBOOT, SERVICE_SHUTDOWN]:
+    if call.service in [SynologyDSMService.REBOOT, SynologyDSMService.SHUTDOWN]:
         LOGGER.debug("%s DSM with serial %s", call.service, serial)
         ir.async_create_issue(
             call.hass,
@@ -84,7 +98,7 @@ async def _service_handler(call: ServiceCall) -> None:
 def async_setup_services(hass: HomeAssistant) -> None:
     """Service handler setup."""
 
-    for service in SERVICES:
+    for service in SynologyDSMService:
         # The call data is left as permissive as it has always been here, the
         # helper would otherwise reject the optional serial with its default
         # empty schema.

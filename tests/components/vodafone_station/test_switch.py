@@ -18,10 +18,10 @@ from pytest_homeassistant.common import (
 )
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SERVICE_TOGGLE
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.components.vodafone_station.const import DOMAIN
 from homeassistant.components.vodafone_station.coordinator import SCAN_INTERVAL
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -82,8 +82,8 @@ async def test_switch(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TOGGLE,
-        {ATTR_ENTITY_ID: entity_id},
+        SwitchService.TOGGLE,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -132,7 +132,7 @@ async def test_switch_fails(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TOGGLE,
+            SwitchService.TOGGLE,
             {
                 ATTR_ENTITY_ID: (
                     f"switch.vodafone_station_{TEST_SERIAL_NUMBER}_guest_5ghz_network"
