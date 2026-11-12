@@ -3,7 +3,6 @@
 from datetime import timedelta
 import logging
 
-from huum.exceptions import Forbidden, NotAuthenticated
 from huum.huum import Huum
 from huum.schemas import HuumStatusResponse
 
@@ -14,7 +13,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN
+from .const import AUTH_ERRORS, DOMAIN
 
 type HuumConfigEntry = ConfigEntry[HuumDataUpdateCoordinator]
 
@@ -52,7 +51,7 @@ class HuumDataUpdateCoordinator(DataUpdateCoordinator[HuumStatusResponse]):
 
         try:
             return await self.huum.status()
-        except (Forbidden, NotAuthenticated) as err:
+        except AUTH_ERRORS as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="auth_failed",

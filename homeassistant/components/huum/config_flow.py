@@ -4,7 +4,6 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from huum.exceptions import Forbidden, NotAuthenticated
 from huum.huum import Huum
 import voluptuous as vol
 
@@ -12,7 +11,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
+from .const import AUTH_ERRORS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +42,7 @@ class HuumConfigFlow(ConfigFlow, domain=DOMAIN):
                     session=async_get_clientsession(self.hass),
                 )
                 await huum.status()
-            except Forbidden, NotAuthenticated:
+            except AUTH_ERRORS:
                 errors["base"] = "invalid_auth"
             except Exception:
                 _LOGGER.exception("Unknown error")
@@ -73,7 +72,7 @@ class HuumConfigFlow(ConfigFlow, domain=DOMAIN):
                     session=async_get_clientsession(self.hass),
                 )
                 await huum.status()
-            except Forbidden, NotAuthenticated:
+            except AUTH_ERRORS:
                 errors["base"] = "invalid_auth"
             except Exception:
                 _LOGGER.exception("Unknown error")
@@ -115,7 +114,7 @@ class HuumConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             try:
                 await huum.status()
-            except Forbidden, NotAuthenticated:
+            except AUTH_ERRORS:
                 errors["base"] = "invalid_auth"
             except Exception:
                 _LOGGER.exception("Unknown error")

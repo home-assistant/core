@@ -3,6 +3,7 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock
 
+from aiohttp import ContentTypeError
 from freezegun.api import FrozenDateTimeFactory
 from huum.exceptions import Forbidden, NotAuthenticated, RequestError
 import pytest
@@ -35,6 +36,18 @@ async def test_loading_and_unloading_config_entry(
     [
         Forbidden("Forbidden"),
         NotAuthenticated("Not authenticated"),
+        pytest.param(
+            ContentTypeError(
+                None,
+                (),
+                status=200,
+                message=(
+                    "Attempt to decode JSON with unexpected mimetype: "
+                    "text/html; charset=utf-8"
+                ),
+            ),
+            id="content_type_error",
+        ),
     ],
 )
 async def test_setup_entry_auth_error(
@@ -93,6 +106,18 @@ async def test_device_entry(
     [
         Forbidden("Forbidden"),
         NotAuthenticated("Not authenticated"),
+        pytest.param(
+            ContentTypeError(
+                None,
+                (),
+                status=200,
+                message=(
+                    "Attempt to decode JSON with unexpected mimetype: "
+                    "text/html; charset=utf-8"
+                ),
+            ),
+            id="content_type_error",
+        ),
     ],
 )
 @pytest.mark.usefixtures("init_integration")

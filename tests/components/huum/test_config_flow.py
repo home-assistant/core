@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+from aiohttp import ContentTypeError
 from huum.exceptions import Forbidden
 import pytest
 
@@ -15,6 +16,13 @@ from tests.common import MockConfigEntry
 
 TEST_USERNAME = "huum@sauna.org"
 TEST_PASSWORD = "ukuuku"
+
+CONTENT_TYPE_ERROR = ContentTypeError(
+    None,
+    (),
+    status=200,
+    message="Attempt to decode JSON with unexpected mimetype: text/html; charset=utf-8",
+)
 
 
 @pytest.mark.usefixtures("mock_huum_client")
@@ -75,6 +83,7 @@ async def test_signup_flow_already_set_up(
     [
         (Exception, "unknown"),
         (Forbidden, "invalid_auth"),
+        pytest.param(CONTENT_TYPE_ERROR, "invalid_auth", id="content_type_error"),
     ],
 )
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -143,6 +152,7 @@ async def test_reauth_flow(
     [
         (Exception, "unknown"),
         (Forbidden, "invalid_auth"),
+        pytest.param(CONTENT_TYPE_ERROR, "invalid_auth", id="content_type_error"),
     ],
 )
 async def test_reauth_errors(
@@ -248,6 +258,7 @@ async def test_reconfigure_flow_already_configured(
     [
         (Exception, "unknown"),
         (Forbidden, "invalid_auth"),
+        pytest.param(CONTENT_TYPE_ERROR, "invalid_auth", id="content_type_error"),
     ],
 )
 @pytest.mark.usefixtures("mock_setup_entry")
