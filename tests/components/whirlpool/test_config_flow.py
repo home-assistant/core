@@ -224,7 +224,15 @@ async def test_already_configured(
 
 
 @pytest.mark.parametrize(
-    "appliance_type", ["aircons", "washers", "dryers", "ovens", "refrigerators"]
+    "appliance_type",
+    [
+        "aircons",
+        "washers",
+        "dryers",
+        "ovens",
+        "refrigerators",
+        "unsupported_appliances",
+    ],
 )
 async def test_no_appliances_flow(
     hass: HomeAssistant,
@@ -250,6 +258,7 @@ async def test_no_appliances_flow(
     mock_appliances_manager_api.return_value.dryers = []
     mock_appliances_manager_api.return_value.ovens = []
     mock_appliances_manager_api.return_value.refrigerators = []
+    mock_appliances_manager_api.return_value.unsupported_appliances = []
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], CONFIG_INPUT | {CONF_REGION: region[0], CONF_BRAND: brand[0]}
     )

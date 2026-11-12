@@ -1,12 +1,7 @@
 """The tests for the litejet component."""
 
 from homeassistant.components import scene
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_ON,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -42,7 +37,10 @@ async def test_activate(hass: HomeAssistant, mock_litejet) -> None:
     assert state is not None
 
     await hass.services.async_call(
-        scene.DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_SCENE}, blocking=True
+        scene.DOMAIN,
+        scene.SceneService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_SCENE},
+        blocking=True,
     )
 
     mock_litejet.activate_scene.assert_called_once_with(ENTITY_SCENE_NUMBER)

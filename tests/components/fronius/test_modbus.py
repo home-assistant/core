@@ -26,18 +26,13 @@ from homeassistant.components.fronius.coordinator import (
     FroniusModbusSettingsUpdateCoordinator,
 )
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_HOST,
-    CommonServiceArgument,
-    Platform,
-)
+from homeassistant.const import CONF_HOST, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -602,8 +597,8 @@ async def _turn_on_limit(
     """Set a limit and put it into effect."""
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: number, ATTR_VALUE: limit},
+        NumberService.SET_VALUE,
+        {CommonServiceArgument.ENTITY_ID: number, NumberServiceArgument.VALUE: limit},
         blocking=True,
     )
     await hass.services.async_call(
@@ -1214,8 +1209,11 @@ async def test_battery_settings_leave_a_foreign_period_alone(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: MINIMUM_RESERVE, ATTR_VALUE: 30},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: MINIMUM_RESERVE,
+            NumberServiceArgument.VALUE: 30,
+        },
         blocking=True,
     )
     assert_state(hass, MINIMUM_RESERVE, 30.0)
@@ -1254,8 +1252,11 @@ async def test_battery_writes_do_not_hold_back_the_power_limit_beat(
         await hass.async_block_till_done(wait_background_tasks=True)
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: MINIMUM_RESERVE, ATTR_VALUE: reserve},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: MINIMUM_RESERVE,
+                NumberServiceArgument.VALUE: reserve,
+            },
             blocking=True,
         )
 

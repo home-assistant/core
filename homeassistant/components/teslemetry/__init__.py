@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Callable
+from datetime import datetime
 from functools import partial
 from pathlib import Path
 import re
@@ -75,6 +76,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     async_get_config_entry_implementation,
 )
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
@@ -90,6 +92,7 @@ from .const import (
     LOGGER,
     POWERWALL_KEY_FILE,
     RSA_PARENT_KEY,
+    STREAM_DISCONNECT_GRACE,
     SUBENTRY_TYPE_ENERGY_SITE,
     SUBENTRY_TYPE_VEHICLE,
     VEHICLE_ISSUE_LEARN_MORE,
@@ -1009,7 +1012,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
         if energysites:
             entry.async_on_unload(
                 stream.async_add_connection_listener(
-                    create_handle_energy_stream_connection(hass, energysites)
+                    create_handle_energy_stream_connection(hass, entry, energysites)
                 )
             )
 
@@ -1044,19 +1047,30 @@ def _setup_subentry_change_reload(
 
 def create_handle_energy_stream_connection(
     hass: HomeAssistant,
+    entry: TeslemetryConfigEntry,
     energysites: list[TeslemetryEnergyData],
 ) -> Callable[[bool], None]:
     """Create a stream connection listener for the energy coordinators."""
+    cancel_grace: CALLBACK_TYPE | None = None
 
     @callback
-    def handle_connection(connected: bool) -> None:
+    def cancel_grace_timer() -> None:
+        nonlocal cancel_grace
+        if cancel_grace is not None:
+            cancel_grace()
+            cancel_grace = None
+
+    @callback
+    def fail_coordinators(_now: datetime) -> None:
         """Fail stream-driven energy coordinators while the stream is down.
 
         Each subsequent streamed document restores its coordinator via
         async_set_updated_data, so no reload is required on reconnect.
         """
-        # Stopping cancels the listen task, which reports a disconnect.
-        if connected or hass.is_stopping:
+        nonlocal cancel_grace
+        cancel_grace = None
+        # A drop just before shutdown leaves the timer pending while stopping.
+        if hass.is_stopping:
             return
         error = UpdateFailed(
             translation_domain=DOMAIN,
@@ -1073,6 +1087,26 @@ def create_handle_energy_stream_connection(
                     error
                 )
 
+    @callback
+    def handle_connection(connected: bool) -> None:
+        """Fail the energy coordinators if the stream stays down past the grace."""
+        nonlocal cancel_grace
+        if connected:
+            cancel_grace_timer()
+            return
+        # Stopping cancels the listen task, which reports a disconnect.
+        # Failed reconnect attempts must not restart a running grace timer.
+        if hass.is_stopping or cancel_grace is not None:
+            return
+        LOGGER.debug(
+            "Teslemetry stream disconnected, waiting %s seconds for it to reconnect",
+            STREAM_DISCONNECT_GRACE,
+        )
+        cancel_grace = async_call_later(
+            hass, STREAM_DISCONNECT_GRACE, fail_coordinators
+        )
+
+    entry.async_on_unload(cancel_grace_timer)
     return handle_connection
 
 

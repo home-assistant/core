@@ -3,7 +3,6 @@
 from collections.abc import Generator
 import copy
 import json
-import logging
 from typing import Any
 from unittest.mock import patch
 
@@ -49,9 +48,10 @@ from homeassistant.components.select import (
     ATTR_OPTION,
     ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.const import ATTR_ASSUMED_STATE, STATE_UNKNOWN, CommonServiceArgument
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.typing import ConfigType
 
@@ -112,11 +112,10 @@ async def test_run_select_setup(
     state = hass.states.get("select.test_select")
     assert state.state == "beer"
 
-    if caplog.at_level(logging.DEBUG):
-        async_fire_mqtt_message(hass, topic, "")
-        await hass.async_block_till_done()
+    async_fire_mqtt_message(hass, topic, "")
+    await hass.async_block_till_done()
 
-        assert "Ignoring empty payload" in caplog.text
+    assert "Ignoring empty payload" in caplog.text
 
     state = hass.states.get("select.test_select")
     assert state.state == "beer"
@@ -195,8 +194,11 @@ async def test_run_select_service_optimistic(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.test_select", ATTR_OPTION: "beer"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: "select.test_select",
+            SelectServiceArgument.OPTION: "beer",
+        },
         blocking=True,
     )
 
@@ -238,8 +240,11 @@ async def test_run_select_service_optimistic_with_command_template(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.test_select", ATTR_OPTION: "beer"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: "select.test_select",
+            SelectServiceArgument.OPTION: "beer",
+        },
         blocking=True,
     )
 
@@ -281,8 +286,11 @@ async def test_run_select_service(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.test_select", ATTR_OPTION: "milk"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: "select.test_select",
+            SelectServiceArgument.OPTION: "milk",
+        },
         blocking=True,
     )
     mqtt_mock.async_publish.assert_called_once_with(
@@ -323,8 +331,11 @@ async def test_run_select_service_with_command_template(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.test_select", ATTR_OPTION: "milk"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: "select.test_select",
+            SelectServiceArgument.OPTION: "milk",
+        },
         blocking=True,
     )
     mqtt_mock.async_publish.assert_called_once_with(

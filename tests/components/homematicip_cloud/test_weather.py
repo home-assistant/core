@@ -1,11 +1,6 @@
 """Tests for HomematicIP Cloud weather."""
 
-from homeassistant.components.weather import (
-    ATTR_WEATHER_HUMIDITY,
-    ATTR_WEATHER_TEMPERATURE,
-    ATTR_WEATHER_WIND_BEARING,
-    ATTR_WEATHER_WIND_SPEED,
-)
+from homeassistant.components.weather import WeatherEntityStateAttribute
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant
 
@@ -28,14 +23,14 @@ async def test_hmip_weather_sensor(
     )
 
     assert ha_state.state == ""
-    assert ha_state.attributes[ATTR_WEATHER_TEMPERATURE] == 4.3
-    assert ha_state.attributes[ATTR_WEATHER_HUMIDITY] == 97
-    assert ha_state.attributes[ATTR_WEATHER_WIND_SPEED] == 15.0
+    assert ha_state.attributes[WeatherEntityStateAttribute.TEMPERATURE] == 4.3
+    assert ha_state.attributes[WeatherEntityStateAttribute.HUMIDITY] == 97
+    assert ha_state.attributes[WeatherEntityStateAttribute.WIND_SPEED] == 15.0
     assert ha_state.attributes[ATTR_ATTRIBUTION] == "Powered by Homematic IP"
 
     await async_manipulate_test_data(hass, hmip_device, "actualTemperature", 12.1)
     ha_state = hass.states.get(entity_id)
-    assert ha_state.attributes[ATTR_WEATHER_TEMPERATURE] == 12.1
+    assert ha_state.attributes[WeatherEntityStateAttribute.TEMPERATURE] == 12.1
 
 
 async def test_hmip_weather_sensor_pro(
@@ -54,15 +49,15 @@ async def test_hmip_weather_sensor_pro(
     )
 
     assert ha_state.state == "sunny"
-    assert ha_state.attributes[ATTR_WEATHER_TEMPERATURE] == 15.4
-    assert ha_state.attributes[ATTR_WEATHER_HUMIDITY] == 65
-    assert ha_state.attributes[ATTR_WEATHER_WIND_SPEED] == 2.6
-    assert ha_state.attributes[ATTR_WEATHER_WIND_BEARING] == 295.0
+    assert ha_state.attributes[WeatherEntityStateAttribute.TEMPERATURE] == 15.4
+    assert ha_state.attributes[WeatherEntityStateAttribute.HUMIDITY] == 65
+    assert ha_state.attributes[WeatherEntityStateAttribute.WIND_SPEED] == 2.6
+    assert ha_state.attributes[WeatherEntityStateAttribute.WIND_BEARING] == 295.0
     assert ha_state.attributes[ATTR_ATTRIBUTION] == "Powered by Homematic IP"
 
     await async_manipulate_test_data(hass, hmip_device, "actualTemperature", 12.1)
     ha_state = hass.states.get(entity_id)
-    assert ha_state.attributes[ATTR_WEATHER_TEMPERATURE] == 12.1
+    assert ha_state.attributes[WeatherEntityStateAttribute.TEMPERATURE] == 12.1
 
 
 async def test_hmip_home_weather(
@@ -79,10 +74,10 @@ async def test_hmip_home_weather(
     )
     assert hmip_device
     assert ha_state.state == "partlycloudy"
-    assert ha_state.attributes[ATTR_WEATHER_TEMPERATURE] == 16.6
-    assert ha_state.attributes[ATTR_WEATHER_HUMIDITY] == 54
-    assert ha_state.attributes[ATTR_WEATHER_WIND_SPEED] == 8.6
-    assert ha_state.attributes[ATTR_WEATHER_WIND_BEARING] == 294
+    assert ha_state.attributes[WeatherEntityStateAttribute.TEMPERATURE] == 16.6
+    assert ha_state.attributes[WeatherEntityStateAttribute.HUMIDITY] == 54
+    assert ha_state.attributes[WeatherEntityStateAttribute.WIND_SPEED] == 8.6
+    assert ha_state.attributes[WeatherEntityStateAttribute.WIND_BEARING] == 294
     assert ha_state.attributes[ATTR_ATTRIBUTION] == "Powered by Homematic IP"
 
     await async_manipulate_test_data(
@@ -90,4 +85,4 @@ async def test_hmip_home_weather(
     )
 
     ha_state = hass.states.get(entity_id)
-    assert ha_state.attributes[ATTR_WEATHER_TEMPERATURE] == 28.3
+    assert ha_state.attributes[WeatherEntityStateAttribute.TEMPERATURE] == 28.3
