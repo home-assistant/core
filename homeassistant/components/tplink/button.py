@@ -228,6 +228,7 @@ class TPLinkPtzPresetButtonEntity(CoordinatedTPLinkEntity, ButtonEntity):
         """Move the camera to the preset."""
         await self._pan_tilt.goto_preset(self._preset_id)
 
+    @callback
     @override
     def _async_update_attrs(self) -> bool:
         """Follow preset renames, the button is unavailable when it was removed."""
