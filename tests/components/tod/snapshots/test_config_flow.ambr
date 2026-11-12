@@ -1,4 +1,37 @@
 # serializer version: 1
+# name: test_config_flow[default-time]
+  dict({
+    'after': dict({
+      'time': '10:00',
+    }),
+    'before': dict({
+      'time': '18:00',
+    }),
+    'name': 'My tod',
+  })
+# ---
+# name: test_config_flow[hidden-sun-fields]
+  dict({
+    'after': dict({
+      'time': '10:00',
+    }),
+    'before': dict({
+      'time': '18:00',
+    }),
+    'name': 'My tod',
+  })
+# ---
+# name: test_config_flow[hidden-time-fields]
+  dict({
+    'after': dict({
+      'event': 'sunrise',
+    }),
+    'before': dict({
+      'event': 'sunset',
+    }),
+    'name': 'My tod',
+  })
+# ---
 # name: test_config_flow[sun-to-time]
   dict({
     'after': dict({
@@ -50,67 +83,163 @@
   })
 # ---
 # name: test_form
-  dict({
-    'selector': dict({
-      'choose': dict({
-        'choices': dict({
-          'sun': dict({
-            'selector': dict({
-              'object': dict({
-                'fields': dict({
-                  'event': dict({
-                    'required': True,
-                    'selector': dict({
-                      'select': dict({
-                        'custom_value': False,
-                        'mode': 'dropdown',
-                        'multiple': False,
-                        'options': list([
-                          'sunrise',
-                          'sunset',
-                        ]),
-                        'sort': False,
-                        'translation_key': 'sun_event',
-                      }),
-                    }),
-                  }),
-                  'offset': dict({
-                    'selector': dict({
-                      'duration': dict({
-                        'enable_second': True,
-                        'mode': 'offset',
-                      }),
-                    }),
-                  }),
-                }),
-                'multiple': False,
-                'translation_key': 'boundary',
-              }),
-            }),
-          }),
-          'time': dict({
-            'selector': dict({
-              'time': dict({
-              }),
-            }),
-          }),
+  list([
+    dict({
+      'name': 'name',
+      'required': True,
+      'selector': dict({
+        'text': dict({
+          'multiline': False,
+          'multiple': False,
         }),
-        'translation_key': 'boundary',
       }),
     }),
-  })
+    dict({
+      'default': 'time',
+      'name': 'after',
+      'required': True,
+      'selector': dict({
+        'select': dict({
+          'custom_value': False,
+          'mode': 'dropdown',
+          'multiple': False,
+          'options': list([
+            'time',
+            'sun',
+          ]),
+          'sort': False,
+          'translation_key': 'boundary',
+        }),
+      }),
+    }),
+    dict({
+      'name': 'after_time',
+      'required': True,
+      'selector': dict({
+        'time': dict({
+        }),
+      }),
+      'visible': dict({
+        'field': 'after',
+        'value': 'time',
+      }),
+    }),
+    dict({
+      'name': 'after_sun',
+      'required': True,
+      'selector': dict({
+        'select': dict({
+          'custom_value': False,
+          'mode': 'dropdown',
+          'multiple': False,
+          'options': list([
+            'sunrise',
+            'sunset',
+          ]),
+          'sort': False,
+          'translation_key': 'sun_event',
+        }),
+      }),
+      'visible': dict({
+        'field': 'after',
+        'value': 'sun',
+      }),
+    }),
+    dict({
+      'name': 'after_offset',
+      'optional': True,
+      'required': False,
+      'selector': dict({
+        'duration': dict({
+          'enable_second': True,
+          'mode': 'offset',
+        }),
+      }),
+      'visible': dict({
+        'field': 'after',
+        'value': 'sun',
+      }),
+    }),
+    dict({
+      'default': 'time',
+      'name': 'before',
+      'required': True,
+      'selector': dict({
+        'select': dict({
+          'custom_value': False,
+          'mode': 'dropdown',
+          'multiple': False,
+          'options': list([
+            'time',
+            'sun',
+          ]),
+          'sort': False,
+          'translation_key': 'boundary',
+        }),
+      }),
+    }),
+    dict({
+      'name': 'before_time',
+      'required': True,
+      'selector': dict({
+        'time': dict({
+        }),
+      }),
+      'visible': dict({
+        'field': 'before',
+        'value': 'time',
+      }),
+    }),
+    dict({
+      'name': 'before_sun',
+      'required': True,
+      'selector': dict({
+        'select': dict({
+          'custom_value': False,
+          'mode': 'dropdown',
+          'multiple': False,
+          'options': list([
+            'sunrise',
+            'sunset',
+          ]),
+          'sort': False,
+          'translation_key': 'sun_event',
+        }),
+      }),
+      'visible': dict({
+        'field': 'before',
+        'value': 'sun',
+      }),
+    }),
+    dict({
+      'name': 'before_offset',
+      'optional': True,
+      'required': False,
+      'selector': dict({
+        'duration': dict({
+          'enable_second': True,
+          'mode': 'offset',
+        }),
+      }),
+      'visible': dict({
+        'field': 'before',
+        'value': 'sun',
+      }),
+    }),
+  ])
 # ---
 # name: test_options[mixed-sun-to-time]
   tuple(
     'sun',
+    None,
+    'sunrise',
     dict({
-      'event': 'sunrise',
-      'offset': dict({
-        'hours': -2,
-      }),
+      'hours': -2,
     }),
     'time',
     '12:00',
+    None,
+    None,
   )
 # ---
 # name: test_options[mixed-sun-to-time].2
@@ -145,25 +274,29 @@
 # ---
 # name: test_options[mixed-sun-to-time][reopened]
   tuple(
+    'sun',
+    None,
+    'sunrise',
     dict({
-      'event': 'sunrise',
-      'offset': dict({
-        'hours': -2,
-      }),
+      'hours': -2,
     }),
+    'time',
     '13:00',
+    None,
+    None,
   )
 # ---
 # name: test_options[mixed-time-to-sun]
   tuple(
     'time',
     '12:00',
+    None,
+    None,
     'sun',
+    None,
+    'sunset',
     dict({
-      'event': 'sunset',
-      'offset': dict({
-        'minutes': 30,
-      }),
+      'minutes': 30,
     }),
   )
 # ---
@@ -196,27 +329,29 @@
 # ---
 # name: test_options[mixed-time-to-sun][reopened]
   tuple(
+    'time',
     '12:00',
-    dict({
-      'event': 'sunset',
-    }),
+    None,
+    None,
+    'sun',
+    None,
+    'sunset',
+    None,
   )
 # ---
 # name: test_options[remove-sun-offset]
   tuple(
     'sun',
+    None,
+    'sunrise',
     dict({
-      'event': 'sunrise',
-      'offset': dict({
-        'hours': -2,
-      }),
+      'hours': -2,
     }),
     'sun',
+    None,
+    'sunset',
     dict({
-      'event': 'sunset',
-      'offset': dict({
-        'minutes': 30,
-      }),
+      'minutes': 30,
     }),
   )
 # ---
@@ -252,32 +387,31 @@
 # ---
 # name: test_options[remove-sun-offset][reopened]
   tuple(
+    'sun',
+    None,
+    'sunrise',
     dict({
-      'event': 'sunrise',
-      'offset': dict({
-        'hours': -2,
-      }),
+      'hours': -2,
     }),
-    dict({
-      'event': 'sunset',
-    }),
+    'sun',
+    None,
+    'sunset',
+    None,
   )
 # ---
 # name: test_options[sun-to-time]
   tuple(
     'sun',
+    None,
+    'sunrise',
     dict({
-      'event': 'sunrise',
-      'offset': dict({
-        'hours': -2,
-      }),
+      'hours': -2,
     }),
     'sun',
+    None,
+    'sunset',
     dict({
-      'event': 'sunset',
-      'offset': dict({
-        'minutes': 30,
-      }),
+      'minutes': 30,
     }),
   )
 # ---
@@ -313,21 +447,28 @@
 # ---
 # name: test_options[sun-to-time][reopened]
   tuple(
+    'sun',
+    None,
+    'sunrise',
     dict({
-      'event': 'sunrise',
-      'offset': dict({
-        'hours': -2,
-      }),
+      'hours': -2,
     }),
+    'time',
     '17:05',
+    None,
+    None,
   )
 # ---
 # name: test_options[time-to-sun]
   tuple(
     'time',
     '10:00',
+    None,
+    None,
     'time',
     '18:05',
+    None,
+    None,
   )
 # ---
 # name: test_options[time-to-sun].2
@@ -362,12 +503,15 @@
 # ---
 # name: test_options[time-to-sun][reopened]
   tuple(
+    'time',
     '10:00',
+    None,
+    None,
+    'sun',
+    None,
+    'sunset',
     dict({
-      'event': 'sunset',
-      'offset': dict({
-        'hours': -12,
-      }),
+      'hours': -12,
     }),
   )
 # ---
@@ -375,8 +519,12 @@
   tuple(
     'time',
     '10:00',
+    None,
+    None,
     'time',
     '18:05',
+    None,
+    None,
   )
 # ---
 # name: test_options[time].2
@@ -408,7 +556,13 @@
 # ---
 # name: test_options[time][reopened]
   tuple(
+    'time',
     '10:00',
+    None,
+    None,
+    'time',
     '17:05',
+    None,
+    None,
   )
 # ---

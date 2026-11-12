@@ -3,6 +3,7 @@
 from typing import Any
 from unittest.mock import patch
 
+import probatio
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
 from syrupy.assertion import SnapshotAssertion
@@ -10,70 +11,123 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant import config_entries
 from homeassistant.components.tod.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType, InvalidData
+from homeassistant.data_entry_flow import (
+    FlowResultType,
+    InvalidData,
+    add_visible_conditions_to_serialized_schema,
+)
+from homeassistant.helpers import config_validation as cv
+
+FORM_FIELDS = (
+    "after",
+    "after_time",
+    "after_sun",
+    "after_offset",
+    "before",
+    "before_time",
+    "before_sun",
+    "before_offset",
+)
 
 
 async def test_form(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
-    """Test the boundary selector offered by the form."""
+    """Test the selectors and visibility conditions offered by the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
-    assert result["data_schema"].schema["after"].serialize() == snapshot
+    schema = result["data_schema"]
+    fields = probatio.to_field_list(schema, custom_serializer=cv.custom_serializer)
+    add_visible_conditions_to_serialized_schema(schema, fields)
+    assert fields == snapshot
 
 
 @pytest.mark.parametrize(
-    ("after", "before"),
+    "user_input",
     [
         pytest.param(
-            {"active_choice": "time", "time": "10:00"},
-            {"active_choice": "time", "time": "18:00"},
+            {
+                "after": "time",
+                "after_time": "10:00",
+                "before": "time",
+                "before_time": "18:00",
+            },
             id="time",
         ),
         pytest.param(
+            {"after_time": "10:00", "before_time": "18:00"},
+            id="default-time",
+        ),
+        pytest.param(
             {
-                "active_choice": "sun",
-                "sun": {"event": "sunrise", "offset": {"hours": -2}},
-            },
-            {
-                "active_choice": "sun",
-                "sun": {"event": "sunset", "offset": {"minutes": 30}},
+                "after": "sun",
+                "after_sun": "sunrise",
+                "after_offset": {"hours": -2},
+                "before": "sun",
+                "before_sun": "sunset",
+                "before_offset": {"minutes": 30},
             },
             id="sun",
         ),
         pytest.param(
-            {"active_choice": "sun", "sun": {"event": "sunrise"}},
-            {"active_choice": "time", "time": "07:00"},
+            {
+                "after": "sun",
+                "after_sun": "sunrise",
+                "before": "time",
+                "before_time": "07:00",
+            },
             id="sun-to-time",
         ),
         pytest.param(
-            {"active_choice": "time", "time": "17:00"},
-            {"active_choice": "sun", "sun": {"event": "sunset"}},
+            {
+                "after": "time",
+                "after_time": "17:00",
+                "before": "sun",
+                "before_sun": "sunset",
+            },
             id="time-to-sun",
+        ),
+        pytest.param(
+            {
+                "after": "time",
+                "after_time": "10:00",
+                "after_sun": "invalid",
+                "after_offset": {"minutes": "invalid"},
+                "before": "time",
+                "before_time": "18:00",
+                "before_sun": "invalid",
+                "before_offset": {"minutes": "invalid"},
+            },
+            id="hidden-sun-fields",
+        ),
+        pytest.param(
+            {
+                "after": "sun",
+                "after_sun": "sunrise",
+                "after_time": "invalid",
+                "before": "sun",
+                "before_sun": "sunset",
+                "before_time": "invalid",
+            },
+            id="hidden-time-fields",
         ),
     ],
 )
 async def test_config_flow(
     hass: HomeAssistant,
-    after: dict[str, Any],
-    before: dict[str, Any],
+    user_input: dict[str, Any],
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test creating fixed time, sun, and mixed boundaries."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] is None
-
     with patch(
-        "homeassistant.components.tod.async_setup_entry",
-        return_value=None,
+        "homeassistant.components.tod.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"after": after, "before": before, "name": "My tod"},
+            result["flow_id"], {"name": "My tod", **user_input}
         )
         await hass.async_block_till_done()
 
@@ -91,34 +145,27 @@ async def test_config_flow(
 
 
 @pytest.mark.parametrize(
-    "boundary",
+    "user_input",
     [
-        pytest.param({"active_choice": "time", "time": "25:00"}, id="invalid-time"),
+        pytest.param({"after": "time", "after_time": "25:00"}, id="invalid-time"),
+        pytest.param({"after": "time"}, id="missing-time"),
+        pytest.param({"after": "sun", "after_sun": "noon"}, id="invalid-sun"),
+        pytest.param({"after": "sun"}, id="missing-sun"),
+        pytest.param({"after": "invalid"}, id="invalid-type"),
         pytest.param(
             {
-                "active_choice": "time",
-                "time": {"time": "10:00", "offset": {"minutes": 30}},
-            },
-            id="time-offset",
-        ),
-        pytest.param(
-            {"active_choice": "sun", "sun": {"event": "noon"}}, id="invalid-sun"
-        ),
-        pytest.param(
-            {"active_choice": "sun", "sun": {"offset": {"hours": 1}}},
-            id="missing-event",
-        ),
-        pytest.param(
-            {
-                "active_choice": "sun",
-                "sun": {"event": "sunrise", "offset": {"hours": "invalid"}},
+                "after": "sun",
+                "after_sun": "sunrise",
+                "after_offset": {"hours": "invalid"},
             },
             id="invalid-offset",
         ),
     ],
 )
-async def test_invalid_boundary(hass: HomeAssistant, boundary: dict[str, Any]) -> None:
-    """Test rejecting invalid boundaries."""
+async def test_invalid_boundary(
+    hass: HomeAssistant, user_input: dict[str, Any]
+) -> None:
+    """Test rejecting missing or invalid visible fields."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -127,53 +174,88 @@ async def test_invalid_boundary(hass: HomeAssistant, boundary: dict[str, Any]) -
             result["flow_id"],
             {
                 "name": "My tod",
-                "after": boundary,
-                "before": {"active_choice": "time", "time": "18:00"},
+                "before": "time",
+                "before_time": "18:00",
+                **user_input,
             },
         )
 
 
 @pytest.mark.freeze_time("2022-03-16 17:37:00", tz_offset=-7)
 @pytest.mark.parametrize(
-    ("after", "before", "new_before"),
+    ("after", "before", "user_input"),
     [
         pytest.param(
             {"time": "10:00"},
             {"time": "18:05"},
-            {"active_choice": "time", "time": "17:05"},
+            {
+                "after": "time",
+                "after_time": "10:00",
+                "before": "time",
+                "before_time": "17:05",
+            },
             id="time",
         ),
         pytest.param(
             {"event": "sunrise", "offset": {"hours": -2}},
             {"event": "sunset", "offset": {"minutes": 30}},
-            {"active_choice": "time", "time": "17:05"},
+            {
+                "after": "sun",
+                "after_sun": "sunrise",
+                "after_offset": {"hours": -2},
+                "before": "time",
+                "before_time": "17:05",
+                "before_sun": "sunset",
+                "before_offset": {"minutes": 30},
+            },
             id="sun-to-time",
         ),
         pytest.param(
             {"time": "10:00"},
             {"time": "18:05"},
             {
-                "active_choice": "sun",
-                "sun": {"event": "sunset", "offset": {"hours": -12}},
+                "after": "time",
+                "after_time": "10:00",
+                "before": "sun",
+                "before_sun": "sunset",
+                "before_offset": {"hours": -12},
+                "before_time": "18:05",
             },
             id="time-to-sun",
         ),
         pytest.param(
             {"event": "sunrise", "offset": {"hours": -2}},
             {"event": "sunset", "offset": {"minutes": 30}},
-            {"active_choice": "sun", "sun": {"event": "sunset"}},
+            {
+                "after": "sun",
+                "after_sun": "sunrise",
+                "after_offset": {"hours": -2},
+                "before": "sun",
+                "before_sun": "sunset",
+            },
             id="remove-sun-offset",
         ),
         pytest.param(
             {"event": "sunrise", "offset": {"hours": -2}},
             {"time": "12:00"},
-            {"active_choice": "time", "time": "13:00"},
+            {
+                "after": "sun",
+                "after_sun": "sunrise",
+                "after_offset": {"hours": -2},
+                "before": "time",
+                "before_time": "13:00",
+            },
             id="mixed-sun-to-time",
         ),
         pytest.param(
             {"time": "12:00"},
             {"event": "sunset", "offset": {"minutes": 30}},
-            {"active_choice": "sun", "sun": {"event": "sunset"}},
+            {
+                "after": "time",
+                "after_time": "12:00",
+                "before": "sun",
+                "before_sun": "sunset",
+            },
             id="mixed-time-to-sun",
         ),
     ],
@@ -182,10 +264,10 @@ async def test_options(
     hass: HomeAssistant,
     after: dict[str, Any],
     before: dict[str, Any],
-    new_before: dict[str, Any],
+    user_input: dict[str, Any],
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test reconfiguring boundaries and reloading the existing entity."""
+    """Test restoring values, changing modes, and reloading the same entity."""
     config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
@@ -200,19 +282,16 @@ async def test_options(
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
-    schema = result["data_schema"].schema
-    suggested_after = get_schema_suggested_value(schema, "after")
-    suggested_before = get_schema_suggested_value(schema, "before")
-    after_choice = next(iter(schema["after"].config["choices"]))
-    before_choice = next(iter(schema["before"].config["choices"]))
-    assert (after_choice, suggested_after, before_choice, suggested_before) == snapshot
-
-    # The frontend wraps suggested values in the first selector choice.
-    after_input = {"active_choice": after_choice, after_choice: suggested_after}
+    assert (
+        tuple(
+            get_schema_suggested_value(result["data_schema"].schema, key)
+            for key in FORM_FIELDS
+        )
+        == snapshot
+    )
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={"after": after_input, "before": new_before},
+        result["flow_id"], user_input=user_input
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == snapshot(name="options")
@@ -222,12 +301,10 @@ async def test_options(
 
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 1
-    state = hass.states.get("binary_sensor.my_tod")
-    assert state == snapshot
+    assert hass.states.get("binary_sensor.my_tod") == snapshot
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] is FlowResultType.FORM
-    assert (
-        get_schema_suggested_value(result["data_schema"].schema, "after"),
-        get_schema_suggested_value(result["data_schema"].schema, "before"),
+    assert tuple(
+        get_schema_suggested_value(result["data_schema"].schema, key)
+        for key in FORM_FIELDS
     ) == snapshot(name="reopened")
