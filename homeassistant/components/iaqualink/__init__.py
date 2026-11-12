@@ -8,13 +8,6 @@ from typing import Any, Concatenate
 
 import httpx2
 from iaqualink.client import AqualinkClient
-from iaqualink.device import (
-    AqualinkBinarySensor,
-    AqualinkLight,
-    AqualinkSensor,
-    AqualinkSwitch,
-    AqualinkThermostat,
-)
 from iaqualink.exception import (
     AqualinkServiceException,
     AqualinkServiceUnauthorizedException,
@@ -59,12 +52,6 @@ class AqualinkRuntimeData:
 
     client: AqualinkClient
     coordinators: dict[str, AqualinkDataUpdateCoordinator]
-    # These will contain the initialized devices
-    binary_sensors: list[AqualinkBinarySensor]
-    lights: list[AqualinkLight]
-    sensors: list[AqualinkSensor]
-    switches: list[AqualinkSwitch]
-    thermostats: list[AqualinkThermostat]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> None:
@@ -112,40 +99,46 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> 
     runtime_data = AqualinkRuntimeData(
         aqualink,
         coordinators={},
-        binary_sensors=[],
-        lights=[],
-        sensors=[],
-        switches=[],
-        thermostats=[],
     )
+    device_registry = dr.async_get(hass)
+
+    # Remove devices belonging to systems no longer in the account.
+    current_serials = set(systems)
+    all_device_entries = [
+        *dr.async_entries_for_config_entry(device_registry, entry.entry_id),
+        *dr.async_child_entries_for_config_entry(device_registry, entry.entry_id),
+    ]
+    for device_entry in all_device_entries:
+        for domain, identifier in device_entry.identifiers:
+            if domain != DOMAIN:
+                continue
+            # System-level device: identifier is just the serial.
+            # Child device: identifier is "{serial}_{name}".
+            belongs_to_current = any(
+                identifier == s or identifier.startswith(f"{s}_")
+                for s in current_serials
+            )
+            if not belongs_to_current:
+                device_registry.async_remove_device(device_entry.id)
+            break
+
     for system in systems_list:
         coordinator = AqualinkDataUpdateCoordinator(hass, entry, system)
         runtime_data.coordinators[system.serial] = coordinator
+
+        prefix = f"{system.serial}_"
+        known_devices: set[str] = set()
+        for device_entry in all_device_entries:
+            for domain, identifier in device_entry.identifiers:
+                if domain == DOMAIN and identifier.startswith(prefix):
+                    known_devices.add(identifier.removeprefix(prefix))
+        coordinator.seed_previous_devices(known_devices)
+
         try:
             await coordinator.async_config_entry_first_refresh()
         except ConfigEntryAuthFailed:
             await aqualink.close()
             raise
-
-        try:
-            devices = await system.get_devices()
-        except AqualinkServiceUnauthorizedException as auth_exception:
-            await aqualink.close()
-            raise ConfigEntryAuthFailed(
-                "Invalid credentials for iAquaLink"
-            ) from auth_exception
-        except (
-            AqualinkServiceException,
-            TimeoutError,
-            httpx2.HTTPError,
-        ) as svc_exception:
-            await aqualink.close()
-            raise ConfigEntryNotReady(
-                "Error while attempting to retrieve devices list: "
-                f"{error_detail(svc_exception)}"
-            ) from svc_exception
-
-        device_registry = dr.async_get(hass)
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             name=system.name,
@@ -153,34 +146,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> 
             manufacturer="Jandy",
             serial_number=system.serial,
         )
-
-        for dev in devices.values():
-            if isinstance(dev, AqualinkThermostat):
-                runtime_data.thermostats += [dev]
-            elif isinstance(dev, AqualinkLight):
-                runtime_data.lights += [dev]
-            elif isinstance(dev, AqualinkSwitch):
-                runtime_data.switches += [dev]
-            elif isinstance(dev, AqualinkBinarySensor):
-                runtime_data.binary_sensors += [dev]
-            elif isinstance(dev, AqualinkSensor):
-                runtime_data.sensors += [dev]
-
-    _LOGGER.debug(
-        "Got %s binary sensors: %s",
-        len(runtime_data.binary_sensors),
-        runtime_data.binary_sensors,
-    )
-    _LOGGER.debug("Got %s lights: %s", len(runtime_data.lights), runtime_data.lights)
-    _LOGGER.debug("Got %s sensors: %s", len(runtime_data.sensors), runtime_data.sensors)
-    _LOGGER.debug(
-        "Got %s switches: %s", len(runtime_data.switches), runtime_data.switches
-    )
-    _LOGGER.debug(
-        "Got %s thermostats: %s",
-        len(runtime_data.thermostats),
-        runtime_data.thermostats,
-    )
 
     entry.runtime_data = runtime_data
 
