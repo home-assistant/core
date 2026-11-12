@@ -1,6 +1,7 @@
 """Support for Ubiquiti's UniFi Protect NVR."""
 
 from collections.abc import Iterable
+from datetime import datetime
 import logging
 from typing import override
 
@@ -14,6 +15,7 @@ from uiprotect.data import (
     channel_id_for_quality,
 )
 from uiprotect.data.public_devices import PublicCamera
+from uiprotect.exceptions import ClientError, NotAuthorized
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.const import CONF_VERIFY_SSL
@@ -313,7 +315,11 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
                 )
         else:
             source = streams.get_stream_url(quality, srtp=False)
-        self._attr_supported_features = _ENABLE_FEATURE if source else _DISABLE_FEATURE
+        features = _ENABLE_FEATURE if source else _DISABLE_FEATURE
+        # Recorded history is only on the private API, see uilibs/uiprotect#1154.
+        if self._private is not None and not self._is_package:
+            features |= CameraEntityFeature.PAST_IMAGE
+        self._attr_supported_features = features
         self._stream_source = source
 
     @callback
@@ -453,6 +459,43 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
             package=self._is_package,
         )
         return self._last_image
+
+    @override
+    async def async_camera_image_past(
+        self,
+        timestamp: datetime,
+        width: int | None = None,
+        height: int | None = None,
+    ) -> bytes:
+        """Return the recorded image closest to ``timestamp``."""
+        assert self._private is not None
+        name = self._public.display_name
+        try:
+            image = await self._private.get_snapshot(
+                width=width, height=height, dt=timestamp
+            )
+        except NotAuthorized as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="no_media_permission",
+                translation_placeholders={"camera_name": name},
+            ) from err
+        except ClientError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
+        if image is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="no_recording",
+                translation_placeholders={
+                    "camera_name": name,
+                    "timestamp": timestamp.isoformat(),
+                },
+            )
+        return image
 
     @override
     async def stream_source(self) -> str | None:

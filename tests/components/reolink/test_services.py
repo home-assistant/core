@@ -9,6 +9,7 @@ from pytest_homeassistant.common import MockConfigEntry
 from reolink_aio.api import Chime
 from reolink_aio.exceptions import InvalidParameterError, ReolinkError
 
+from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN, SERVICE_SNAPSHOT
 from homeassistant.components.reolink.const import DOMAIN
 from homeassistant.components.reolink.services import (
     ATTR_RINGTONE,
@@ -174,6 +175,37 @@ async def test_snapshot_past_service(
         0, datetime(2025, 9, 29, 21, 30, tzinfo=dt_util.UTC), "sub", "ffmpeg"
     )
     mopen.assert_called_once_with(TEST_FILE, "wb")
+    assert mopen().write.mock_calls[0][1][0] == b"image"
+
+
+@pytest.mark.usefixtures("camera_config_entry")
+async def test_camera_snapshot_with_timestamp(
+    hass: HomeAssistant,
+    reolink_host: MagicMock,
+) -> None:
+    """Test camera.snapshot with a timestamp takes the image from a recording."""
+    reolink_host.baichuan.snapshot_past = AsyncMock(return_value=b"image")
+    mopen = mock_open()
+
+    with (
+        patch("homeassistant.components.camera.services.open", mopen, create=True),
+        patch("homeassistant.components.camera.services.os.makedirs"),
+        patch.object(hass.config, "is_allowed_path", return_value=True),
+    ):
+        await hass.services.async_call(
+            CAMERA_DOMAIN,
+            SERVICE_SNAPSHOT,
+            {
+                ATTR_ENTITY_ID: TEST_CAMERA_ID,
+                ATTR_TIMESTAMP: "2025-09-29 14:30:00",
+                CONF_FILENAME: TEST_FILE,
+            },
+            blocking=True,
+        )
+
+    reolink_host.baichuan.snapshot_past.assert_called_once_with(
+        0, datetime(2025, 9, 29, 21, 30, tzinfo=dt_util.UTC), "sub", "ffmpeg"
+    )
     assert mopen().write.mock_calls[0][1][0] == b"image"
 
 

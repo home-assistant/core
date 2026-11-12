@@ -1,11 +1,19 @@
 """Camera helper functions."""
 
+import asyncio
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.util import dt as dt_util
 
-from .const import DATA_COMPONENT, DOMAIN, CameraEntityFeature
+from .const import (
+    CAMERA_PAST_IMAGE_TIMEOUT,
+    DATA_COMPONENT,
+    DOMAIN,
+    CameraEntityFeature,
+)
 
 if TYPE_CHECKING:
     from . import Camera
@@ -44,6 +52,43 @@ async def async_get_stream_image(
             width=width, height=height, wait_for_next_keyframe=wait_for_next_keyframe
         )
     return None
+
+
+async def async_get_past_image(camera: Camera, timestamp: datetime) -> bytes:
+    """Return a JPEG from the camera's recorded history.
+
+    A naive timestamp is local time. A camera that is off gives no image,
+    like the live one.
+    """
+    if CameraEntityFeature.PAST_IMAGE not in camera.supported_features:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="past_image_not_supported",
+            translation_placeholders={"entity_id": camera.entity_id},
+        )
+    if not camera.is_on:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="camera_off",
+            translation_placeholders={"entity_id": camera.entity_id},
+        )
+    if timestamp.tzinfo is None:
+        timestamp = timestamp.replace(tzinfo=dt_util.get_default_time_zone())
+    if timestamp > dt_util.utcnow():
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="past_image_in_future",
+            translation_placeholders={"timestamp": timestamp.isoformat()},
+        )
+    try:
+        async with asyncio.timeout(CAMERA_PAST_IMAGE_TIMEOUT):
+            return await camera.async_camera_image_past(timestamp)
+    except TimeoutError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="snapshot_timeout",
+            translation_placeholders={"timeout": str(CAMERA_PAST_IMAGE_TIMEOUT)},
+        ) from err
 
 
 async def async_stream_endpoint_url(

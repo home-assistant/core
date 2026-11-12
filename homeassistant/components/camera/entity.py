@@ -4,6 +4,7 @@ import asyncio
 import collections
 from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
+from datetime import datetime
 from functools import partial
 from random import SystemRandom
 import time
@@ -307,6 +308,22 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return await self.hass.async_add_executor_job(
             partial(self.camera_image, width=width, height=height)
         )
+
+    async def async_camera_image_past(
+        self,
+        timestamp: datetime,
+        width: int | None = None,
+        height: int | None = None,
+    ) -> bytes:
+        """Return a JPEG from recorded history.
+
+        Called through the camera helper only for cameras with
+        CameraEntityFeature.PAST_IMAGE, with a timezone aware timestamp that is
+        not in the future. Return the closest recorded image, never the live
+        one, and raise HomeAssistantError when there is none. width and height
+        are a hint, as for async_camera_image.
+        """
+        raise NotImplementedError
 
     async def handle_async_still_stream(
         self, request: web.Request, interval: float

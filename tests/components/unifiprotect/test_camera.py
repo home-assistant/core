@@ -1,6 +1,7 @@
 """Test the UniFi Protect camera platform."""
 
 from collections.abc import Callable, Coroutine
+from datetime import UTC, datetime
 from typing import Any
 from unittest.mock import AsyncMock, Mock
 
@@ -12,13 +13,15 @@ from uiprotect.data import (
     ChannelQuality,
     DeviceState,
     ModelType,
+    Permission,
     StateType,
     WSAction,
     quality_for_channel_id,
 )
-from uiprotect.exceptions import ClientError, NotAuthorized
+from uiprotect.exceptions import ClientError, NotAuthorized, NvrError
 from uiprotect.websocket import WebsocketState
 
+from homeassistant.components import media_source
 from homeassistant.components.camera import (
     CameraEntityFeature,
     async_get_image,
@@ -41,6 +44,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     issue_registry as ir,
 )
+from homeassistant.setup import async_setup_component
 
 from . import patch_ufp_method
 from .utils import (
@@ -57,6 +61,7 @@ from .utils import (
     set_active_rtsps_qualities,
 )
 
+PAST = datetime(2020, 10, 20, 6, 0, tzinfo=UTC)
 HIGH_STREAM_SOURCE = "rtsps://127.0.0.1:7441/test_high_alias"
 MEDIUM_STREAM_SOURCE = "rtsps://127.0.0.1:7441/test_medium_alias"
 PACKAGE_STREAM_SOURCE = "rtsps://127.0.0.1:7441/test_package_alias"
@@ -172,7 +177,7 @@ async def test_no_active_stream(
     assert await async_get_stream_source(hass, high_id) is None
     state = hass.states.get(high_id)
     assert state
-    assert state.attributes["supported_features"] == CameraEntityFeature(0)
+    assert state.attributes["supported_features"] == CameraEntityFeature.PAST_IMAGE
     assert (
         issue_registry.async_get_issue(DOMAIN, f"rtsp_disabled_{camera.id}") is not None
     )
@@ -215,6 +220,78 @@ async def test_camera_image(
     await async_get_image(hass, _channel_entity_id(camera, 0))
     ufp.api.get_public_api_camera_snapshot.assert_called_once()
     assert ufp.api.get_public_api_camera_snapshot.call_args.kwargs["package"] is False
+
+
+async def _get_past_image(hass: HomeAssistant, camera: ProtectCamera) -> bytes:
+    assert await async_setup_component(hass, "media_source", {})
+    entity_id = _channel_entity_id(camera, 0)
+    image = await media_source.async_get_media_image(
+        hass, f"media-source://camera/{entity_id}/{PAST.isoformat()}"
+    )
+    return image.content
+
+
+async def test_camera_image_past(
+    hass: HomeAssistant, ufp: MockUFPFixture, camera: ProtectCamera
+) -> None:
+    """A past image is fetched from the recording on the private API."""
+    await init_entry(hass, ufp, [camera])
+    ufp.api.get_camera_snapshot = AsyncMock(return_value=b"past")
+
+    assert await _get_past_image(hass, camera) == b"past"
+    assert ufp.api.get_camera_snapshot.call_args.kwargs["dt"] == PAST
+
+
+@pytest.mark.parametrize(
+    ("result", "translation_key", "placeholders"),
+    [
+        pytest.param(
+            {"return_value": None},
+            "no_recording",
+            {"camera_name": "Test Camera", "timestamp": PAST.isoformat()},
+            id="no_recording",
+        ),
+        pytest.param(
+            {"side_effect": NvrError("console down")},
+            "command_error",
+            {"error": "console down"},
+            id="nvr_error",
+        ),
+    ],
+)
+async def test_camera_image_past_error(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    camera: ProtectCamera,
+    result: dict[str, Any],
+    translation_key: str,
+    placeholders: dict[str, str],
+) -> None:
+    """A failed recording request raises a translated error."""
+    await init_entry(hass, ufp, [camera])
+    ufp.api.get_camera_snapshot = AsyncMock(**result)
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await _get_past_image(hass, camera)
+    assert exc_info.value.translation_key == translation_key
+    assert exc_info.value.translation_placeholders == placeholders
+
+
+async def test_camera_image_past_no_permission(
+    hass: HomeAssistant, ufp: MockUFPFixture, camera: ProtectCamera
+) -> None:
+    """An account that can't read recordings gets a translated error."""
+    await init_entry(hass, ufp, [camera])
+    ufp.api.bootstrap.auth_user.all_permissions = [
+        Permission.unifi_dict_to_dict({"rawPermission": "camera:read:*"})
+    ]
+    ufp.api.get_camera_snapshot = AsyncMock(return_value=b"past")
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await _get_past_image(hass, camera)
+    assert exc_info.value.translation_key == "no_media_permission"
+    assert exc_info.value.translation_placeholders == {"camera_name": "Test Camera"}
+    ufp.api.get_camera_snapshot.assert_not_called()
 
 
 async def test_package_camera_image(
@@ -419,6 +496,8 @@ async def test_public_only_camera(
     assert state.state != STATE_UNAVAILABLE
     # diagnostics have no public equivalent and degrade to None
     assert state.attributes["fps"] is None
+    # recorded history needs the console login
+    assert CameraEntityFeature.PAST_IMAGE not in state.attributes["supported_features"]
 
     # device identity degrades to name-only, but the NVR link still resolves
     # from the public bootstrap
@@ -835,7 +914,7 @@ async def test_stream_capability_published_on_prime(
     high_id = _channel_entity_id(camera_all, 0)
     state = hass.states.get(high_id)
     assert state
-    assert state.attributes["supported_features"] == CameraEntityFeature(0)
+    assert state.attributes["supported_features"] == CameraEntityFeature.PAST_IMAGE
 
     # The library primes the streams; availability, recording, and motion are
     # unchanged, so the capability flip is the only observable difference.
@@ -848,7 +927,9 @@ async def test_stream_capability_published_on_prime(
 
     state = hass.states.get(high_id)
     assert state
-    assert state.attributes["supported_features"] == CameraEntityFeature.STREAM
+    assert state.attributes["supported_features"] == (
+        CameraEntityFeature.STREAM | CameraEntityFeature.PAST_IMAGE
+    )
 
 
 async def test_camera_without_main_tiers_skipped_with_warning(

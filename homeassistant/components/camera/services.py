@@ -28,13 +28,18 @@ from .const import (
     CameraService,
     CameraServiceArgument,
 )
-from .helper import async_get_stream_image, async_stream_endpoint_url
+from .helper import (
+    async_get_past_image,
+    async_get_stream_image,
+    async_stream_endpoint_url,
+)
 
 if TYPE_CHECKING:
     from .entity import Camera
 
 CAMERA_SERVICE_SNAPSHOT: VolDictType = {
-    probatio.Required(CameraServiceArgument.FILENAME): cv.template
+    probatio.Required(CameraServiceArgument.FILENAME): cv.template,
+    probatio.Optional(CameraServiceArgument.TIMESTAMP): cv.datetime,
 }
 
 
@@ -72,19 +77,25 @@ async def _async_handle_snapshot_service(
             translation_placeholders={"filename": snapshot_file},
         )
 
-    try:
-        async with asyncio.timeout(CAMERA_IMAGE_TIMEOUT):
-            image = (
-                await async_get_stream_image(camera, wait_for_next_keyframe=True)
-                if camera.use_stream_for_stills
-                else await camera.async_camera_image()
-            )
-    except TimeoutError as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="snapshot_timeout",
-            translation_placeholders={"timeout": str(CAMERA_IMAGE_TIMEOUT)},
-        ) from err
+    image: bytes | None
+    if (
+        timestamp := service_call.data.get(CameraServiceArgument.TIMESTAMP)
+    ) is not None:
+        image = await async_get_past_image(camera, timestamp)
+    else:
+        try:
+            async with asyncio.timeout(CAMERA_IMAGE_TIMEOUT):
+                image = (
+                    await async_get_stream_image(camera, wait_for_next_keyframe=True)
+                    if camera.use_stream_for_stills
+                    else await camera.async_camera_image()
+                )
+        except TimeoutError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="snapshot_timeout",
+                translation_placeholders={"timeout": str(CAMERA_IMAGE_TIMEOUT)},
+            ) from err
 
     if image is None:
         return

@@ -165,6 +165,14 @@ class ReolinkCamera(ReolinkChannelCoordinatorEntity, Camera):
                 )
             )
 
+        # snapshot_past has no lens parameter, so telephoto streams are left out.
+        if (
+            self._host.api.supported(channel, "replay")
+            and self._host.api.hdd_info
+            and not entity_description.stream.startswith(("telephoto", "autotrack"))
+        ):
+            self._attr_supported_features |= CameraEntityFeature.PAST_IMAGE
+
         if self._host.api.is_dual_lens:
             self._attr_translation_key = (
                 f"{entity_description.translation_key}_lens_{self._channel}"
@@ -188,7 +196,13 @@ class ReolinkCamera(ReolinkChannelCoordinatorEntity, Camera):
         )
 
     @raise_translated_error
-    async def async_camera_image_past(self, timestamp: datetime) -> bytes:
+    @override
+    async def async_camera_image_past(
+        self,
+        timestamp: datetime,
+        width: int | None = None,
+        height: int | None = None,
+    ) -> bytes:
         """Return a still image from a past recording."""
         if timestamp.tzinfo is None:
             timestamp = timestamp.replace(tzinfo=dt_util.get_default_time_zone())

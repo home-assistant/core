@@ -1,6 +1,7 @@
 """Test helpers for camera."""
 
 from collections.abc import AsyncGenerator, Generator
+from datetime import datetime
 from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
 import pytest
@@ -22,8 +23,48 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from .common import STREAM_SOURCE, WEBRTC_ANSWER, SomeTestProvider
+
+PAST = datetime(2020, 10, 20, 6, 0, tzinfo=dt_util.UTC)
+HISTORY_ID = "camera.history"
+LIVE_ID = "camera.live"
+
+
+class HistoryCamera(camera.Camera):
+    """A camera with recorded history."""
+
+    _attr_name = "History"
+    _attr_supported_features = camera.CameraEntityFeature.PAST_IMAGE
+
+    def __init__(self) -> None:
+        """Initialize the camera."""
+        super().__init__()
+        self.past_calls: list[datetime] = []
+
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes:
+        """Return the live image."""
+        return b"live"
+
+    async def async_camera_image_past(
+        self,
+        timestamp: datetime,
+        width: int | None = None,
+        height: int | None = None,
+    ) -> bytes:
+        """Return a recorded image."""
+        self.past_calls.append(timestamp)
+        return b"past"
+
+
+class LiveCamera(HistoryCamera):
+    """A camera without recorded history."""
+
+    _attr_name = "Live"
+    _attr_supported_features = camera.CameraEntityFeature(0)
 
 
 @pytest.fixture(autouse=True)
@@ -55,6 +96,18 @@ async def mock_camera_fixture(hass: HomeAssistant) -> AsyncGenerator[None]:
         return_value=b"Test",
     ):
         yield
+
+
+@pytest.fixture
+async def history_camera(hass: HomeAssistant) -> HistoryCamera:
+    """Set up a camera with recorded history and one without."""
+    entity = HistoryCamera()
+    setup_test_component_platform(hass, camera.DOMAIN, [entity, LiveCamera()])
+    assert await async_setup_component(
+        hass, camera.DOMAIN, {camera.DOMAIN: {"platform": "test"}}
+    )
+    await hass.async_block_till_done()
+    return entity
 
 
 @pytest.fixture(name="mock_camera_hls")
