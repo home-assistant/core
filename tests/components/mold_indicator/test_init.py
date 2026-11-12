@@ -18,7 +18,7 @@ from homeassistant.components.mold_indicator.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, EntityCapabilityAttribute
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
@@ -527,8 +527,15 @@ async def test_async_handle_source_entity_new_entity_id(
     # Check that the mold_indicator config entry is not removed
     assert mold_indicator_config_entry.entry_id in hass.config_entries.async_entry_ids()
 
-    # Check we got the expected events
-    assert events == []
+    # The reloaded helper entity updates its source entities capability
+    assert events == ["update"]
+    mold_indicator_entity_entry = entity_registry.async_get(
+        mold_indicator_entity_entry.entity_id
+    )
+    source_entities = mold_indicator_entity_entry.capabilities[
+        EntityCapabilityAttribute.SOURCE_ENTITIES
+    ]
+    assert "sensor.new_entity_id" in source_entities
 
 
 async def test_migration_1_1(
