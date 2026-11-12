@@ -1,10 +1,15 @@
 """Tests for gree component."""
 
+from asyncio import DatagramTransport
+from collections.abc import Callable
 from datetime import datetime, timedelta
 from ipaddress import IPv4Address
+import json
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+from greeclimate.cipher import CipherV1
+from greeclimate.discovery import Discovery
 from greeclimate.network import Response
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
@@ -19,7 +24,7 @@ from homeassistant.components.gree.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from .common import FakeDiscovery, async_setup_gree, build_device_mock
+from .common import async_setup_gree, build_device_mock
 
 ENTITY_ID_1 = f"{CLIMATE_DOMAIN}.fake_device_1"
 ENTITY_ID_2 = f"{CLIMATE_DOMAIN}.fake_device_2"
@@ -110,26 +115,43 @@ async def test_coordinator_updates(
 async def test_known_hosts_discovery_survives_reload(
     hass: HomeAssistant, discovery: MagicMock, device: MagicMock
 ) -> None:
-    """Test configured targets discover devices again after entry reload."""
+    """Test real library discovery finds a configured target before and after reload."""
     host = "192.0.2.14"
-    discovered_device = build_device_mock(
+    discovery.side_effect = Discovery
+    device.return_value = build_device_mock(
         name="known-host", ipAddress=host, mac="bbccdd223344"
     )
-    first_discovery = FakeDiscovery()
-    first_discovery.mock_devices = []
-    first_discovery.mock_devices_by_address[host] = [discovered_device]
-    second_discovery = FakeDiscovery()
-    second_discovery.mock_devices = []
-    second_discovery.mock_devices_by_address[host] = [discovered_device]
-    discovery.side_effect = [first_discovery, second_discovery]
-    device.side_effect = [discovered_device, discovered_device]
+    pack, _ = CipherV1().encrypt({"mac": "bbccdd223344", "name": "known-host"})
+    response = json.dumps({"pack": pack}).encode()
+
+    async def create_datagram_endpoint(
+        protocol_factory: Callable[[], Discovery], **kwargs: object
+    ) -> tuple[DatagramTransport, Discovery]:
+        """Replace UDP I/O while running the real discovery protocol."""
+        protocol = protocol_factory()
+        transport = MagicMock(spec=DatagramTransport)
+        protocol.connection_made(transport)
+
+        def sendto(data: bytes, addr: tuple[str, int]) -> None:
+            """Reply only to a scan directed at the configured target."""
+            assert json.loads(data) == {"t": "scan"}
+            if addr == (host, 7000):
+                protocol.datagram_received(response, addr)
+
+        transport.sendto.side_effect = sendto
+        return transport, protocol
 
     entry = MockConfigEntry(domain=DOMAIN, data={CONF_KNOWN_HOSTS: [host]})
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.gree.async_get_ipv4_broadcast_addresses",
-        return_value={IPv4Address("192.0.2.255")},
+    with (
+        patch(
+            "homeassistant.components.gree.async_get_ipv4_broadcast_addresses",
+            return_value={IPv4Address("192.0.2.255")},
+        ),
+        patch.object(
+            hass.loop, "create_datagram_endpoint", side_effect=create_datagram_endpoint
+        ),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
