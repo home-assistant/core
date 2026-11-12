@@ -325,3 +325,20 @@ async def test_outdoor_siren_binary_sensors(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == expected
+
+
+@pytest.mark.usefixtures("mock_session")
+async def test_outdoor_siren_no_siren_service(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """An outdoor siren without the siren service gets no alarm sensors."""
+    siren = outdoor_siren_device()
+    siren.siren = None
+    mock_session.device_helper.outdoor_sirens = [siren]
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("binary_sensor.outdoor_siren_acoustic_alarm") is None
+    assert hass.states.get("binary_sensor.outdoor_siren_visual_alarm") is None
+    assert hass.states.get("binary_sensor.outdoor_siren_tamper") is None

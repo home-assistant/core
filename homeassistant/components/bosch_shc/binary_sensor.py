@@ -191,6 +191,7 @@ async def async_setup_entry(
             entity_description=description,
         )
         for siren in session.device_helper.outdoor_sirens
+        if siren.siren is not None
         for description in OUTDOOR_SIREN_DESCRIPTIONS
     )
 
