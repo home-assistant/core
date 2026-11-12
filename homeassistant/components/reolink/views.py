@@ -313,15 +313,9 @@ class ThumbnailView(HomeAssistantView):
     ) -> web.Response:
         """Get the key frame at the start of a recording as JPEG."""
         try:
-            host = get_host(self.hass, config_entry_id)
+            get_host(self.hass, config_entry_id)
         except Unresolvable:
-            _LOGGER.debug(
-                "Thumbnail requested for unknown config entry %s", config_entry_id
-            )
-            err_str = (
-                f"Reolink thumbnail could not find config entry id: {config_entry_id}"
-            )
-            return web.Response(body=err_str, status=HTTPStatus.BAD_REQUEST)
+            return self._unknown_config_entry(config_entry_id)
 
         try:
             ch = int(channel)
@@ -335,6 +329,12 @@ class ThumbnailView(HomeAssistantView):
             return web.Response(body=err_str, status=HTTPStatus.BAD_REQUEST)
 
         async with self._semaphores[config_entry_id]:
+            # The config entry can be unloaded or reloaded while waiting.
+            try:
+                host = get_host(self.hass, config_entry_id)
+            except Unresolvable:
+                return self._unknown_config_entry(config_entry_id)
+
             try:
                 image = await host.api.baichuan.snapshot_past(
                     ch,
@@ -357,3 +357,12 @@ class ThumbnailView(HomeAssistantView):
             content_type="image/jpeg",
             headers={"Cache-Control": "private, max-age=86400"},
         )
+
+    @staticmethod
+    def _unknown_config_entry(config_entry_id: str) -> web.Response:
+        """Return the response for an unknown or unloaded config entry."""
+        _LOGGER.debug(
+            "Thumbnail requested for unknown config entry %s", config_entry_id
+        )
+        err_str = f"Reolink thumbnail could not find config entry id: {config_entry_id}"
+        return web.Response(body=err_str, status=HTTPStatus.BAD_REQUEST)

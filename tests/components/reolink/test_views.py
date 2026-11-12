@@ -15,7 +15,9 @@ from pytest_homeassistant.typing import ClientSessionGenerator
 from reolink_aio.enums import VodRequestType
 from reolink_aio.exceptions import ReolinkError, UnexpectedDataError
 
+from homeassistant.components.reolink.util import get_host
 from homeassistant.components.reolink.views import (
+    MAX_PARALLEL_THUMBNAILS,
     async_generate_playback_proxy_url,
     async_generate_thumbnail_url,
 )
@@ -559,3 +561,51 @@ async def test_thumbnail_unloaded_config_entry(
 
     assert response.status == HTTPStatus.BAD_REQUEST
     reolink_host.baichuan.snapshot_past.assert_not_called()
+
+
+async def test_thumbnail_unloaded_while_queued(
+    hass: HomeAssistant,
+    reolink_host: MagicMock,
+    config_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test a queued thumbnail request after the config entry has been unloaded."""
+    release = asyncio.Event()
+
+    async def snapshot_past(*args: Any) -> bytes:
+        await release.wait()
+        return TEST_IMAGE
+
+    reolink_host.baichuan.snapshot_past = AsyncMock(side_effect=snapshot_past)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    http_client = await hass_client()
+    thumbnail_url = async_generate_thumbnail_url(
+        config_entry.entry_id, int(TEST_CHANNEL), TEST_START_TIME_ID
+    )
+    with patch(
+        "homeassistant.components.reolink.views.get_host", wraps=get_host
+    ) as mock_get_host:
+        requests = [
+            asyncio.create_task(http_client.get(thumbnail_url))
+            for _ in range(MAX_PARALLEL_THUMBNAILS)
+        ]
+        while reolink_host.baichuan.snapshot_past.call_count < MAX_PARALLEL_THUMBNAILS:
+            await asyncio.sleep(0)
+        checks = mock_get_host.call_count
+        requests.append(asyncio.create_task(http_client.get(thumbnail_url)))
+        # Past its first config entry check, the request waits for the semaphore.
+        while mock_get_host.call_count == checks:
+            await asyncio.sleep(0)
+
+        assert await hass.config_entries.async_unload(config_entry.entry_id)
+        release.set()
+        responses = await asyncio.gather(*requests)
+
+    assert sorted(response.status for response in responses) == [
+        *[HTTPStatus.OK] * MAX_PARALLEL_THUMBNAILS,
+        HTTPStatus.BAD_REQUEST,
+    ]
+    assert reolink_host.baichuan.snapshot_past.call_count == MAX_PARALLEL_THUMBNAILS
