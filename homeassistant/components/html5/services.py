@@ -4,16 +4,14 @@ from enum import StrEnum
 
 import probatio
 
-from homeassistant.components.notify import (
-    ATTR_TITLE,
-    ATTR_TITLE_DEFAULT,
-    DOMAIN as NOTIFY_DOMAIN,
-)
-from homeassistant.const import ATTR_ICON
+from homeassistant.components.notify import ATTR_TITLE_DEFAULT, DOMAIN as NOTIFY_DOMAIN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, service
 
 from .const import ATTR_ACTION, DOMAIN
+
+ATTR_ICON = "icon"
+ATTR_TITLE = "title"
 
 
 class HTML5Service(StrEnum):

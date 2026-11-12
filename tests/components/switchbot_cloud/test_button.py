@@ -6,10 +6,10 @@ import pytest
 from switchbot_api import BotCommands, Device
 from switchbot_api.commands import ArtFrameCommands
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.switchbot_cloud import SwitchBotAPI
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 
 from . import configure_integration
@@ -54,7 +54,10 @@ async def test_pressmode_bot(
 
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
-            BUTTON_DOMAIN, SERVICE_PRESS, {ATTR_ENTITY_ID: entity_id}, blocking=True
+            BUTTON_DOMAIN,
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
+            blocking=True,
         )
         mock_send_command.assert_called_once_with(
             "bot-id-1", BotCommands.PRESS.value, "command", "default"
@@ -131,7 +134,10 @@ async def test_loaded_buttons(
 
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
-            BUTTON_DOMAIN, SERVICE_PRESS, {ATTR_ENTITY_ID: entity_id}, blocking=True
+            BUTTON_DOMAIN,
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
+            blocking=True,
         )
         mock_send_command.assert_called()
 

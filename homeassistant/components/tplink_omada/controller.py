@@ -17,6 +17,7 @@ from .coordinator import (
     OmadaControllerUpdateCoordinator,
     OmadaDevicesCoordinator,
     OmadaGatewayCoordinator,
+    OmadaKnownClientsCoordinator,
     OmadaSwitchPortCoordinator,
     OmadaVpnPoliciesCoordinator,
 )
@@ -54,11 +55,15 @@ class OmadaSiteController:
         self._clients_coordinator = OmadaClientsCoordinator(
             hass, config_entry, omada_client
         )
+        self._known_clients_coordinator = OmadaKnownClientsCoordinator(
+            hass, config_entry, omada_client
+        )
 
     async def initialize_first_refresh(self) -> None:
         """Initialize the all coordinators, and perform first refresh."""
         await self._controller_status_coordinator.async_config_entry_first_refresh()
         await self._controller_update_coordinator.async_request_refresh()
+        await self._known_clients_coordinator.async_config_entry_first_refresh()
         await self._devices_coordinator.async_config_entry_first_refresh()
 
         devices = self._devices_coordinator.data.values()
@@ -163,6 +168,11 @@ class OmadaSiteController:
     def clients_coordinator(self) -> OmadaClientsCoordinator:
         """Gets the coordinator for site's clients."""
         return self._clients_coordinator
+
+    @property
+    def known_clients_coordinator(self) -> OmadaKnownClientsCoordinator:
+        """Gets the coordinator for all clients known to the controller."""
+        return self._known_clients_coordinator
 
     @property
     def vpn_policies_coordinator(self) -> OmadaVpnPoliciesCoordinator | None:

@@ -16,15 +16,15 @@ from systembridgeconnector.models.response import Response
 from systembridgeconnector.models.system_control import PowerProfileRequest
 
 from homeassistant.components.select import (
-    ATTR_OPTION,
     ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -66,8 +66,11 @@ async def test_power_profile(
     """Test picking a power profile switches to it."""
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: POWER_PROFILE_ENTITY_ID, ATTR_OPTION: "performance"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: POWER_PROFILE_ENTITY_ID,
+            SelectServiceArgument.OPTION: "performance",
+        },
         blocking=True,
     )
 
@@ -144,8 +147,11 @@ async def test_power_profile_error(
     with pytest.raises(HomeAssistantError, match=message):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: POWER_PROFILE_ENTITY_ID, ATTR_OPTION: "performance"},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: POWER_PROFILE_ENTITY_ID,
+                SelectServiceArgument.OPTION: "performance",
+            },
             blocking=True,
         )
 
@@ -168,8 +174,11 @@ async def test_select_default_input(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_OPTION: "Headset"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+            SelectServiceArgument.OPTION: "Headset",
+        },
         blocking=True,
     )
 
@@ -202,8 +211,11 @@ async def test_select_duplicate_names(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_OPTION: f"{microphone.name} (twin)"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+            SelectServiceArgument.OPTION: f"{microphone.name} (twin)",
+        },
         blocking=True,
     )
 

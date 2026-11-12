@@ -302,6 +302,18 @@
         }
       }
     },
+    "fan": {
+      "fan": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "auto": "[%key:common::state::auto%]",
+              "manual": "[%key:common::state::manual%]"
+            }
+          }
+        }
+      }
+    },
     "infrared": {
       "infrared_emitter": {
         "name": "Infrared emitter"
@@ -491,6 +503,24 @@
           }
         }
       },
+      "humidity_level": {
+        "name": "Humidity level",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "very_high": "[%key:common::state::very_high%]"
+        }
+      },
+      "humidity_level_with_channel_name": {
+        "name": "{channel_name} humidity level",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "very_high": "[%key:common::state::very_high%]"
+        }
+      },
       "humidity_with_channel_name": {
         "name": "{channel_name} humidity"
       },
@@ -500,6 +530,14 @@
           "bright": "Bright",
           "dark": "Dark",
           "twilight": "Twilight"
+        }
+      },
+      "illuminance_level_with_channel_name": {
+        "name": "{channel_name} illuminance level",
+        "state": {
+          "bright": "[%key:component::shelly::entity::sensor::illuminance_level::state::bright%]",
+          "dark": "[%key:component::shelly::entity::sensor::illuminance_level::state::dark%]",
+          "twilight": "[%key:component::shelly::entity::sensor::illuminance_level::state::twilight%]"
         }
       },
       "lamp_life": {
@@ -667,6 +705,12 @@
       "right_slot_vial": {
         "name": "Right slot vial"
       },
+      "runtime_above_power_threshold": {
+        "name": "Runtime above power threshold"
+      },
+      "runtime_above_power_threshold_with_channel_name": {
+        "name": "{channel_name} runtime above power threshold"
+      },
       "self_test": {
         "name": "Self-test",
         "state": {
@@ -695,11 +739,23 @@
       "storage_free_space": {
         "name": "Free storage space"
       },
+      "switching_cycles": {
+        "name": "Switching cycles"
+      },
+      "switching_cycles_with_channel_name": {
+        "name": "{channel_name} switching cycles"
+      },
       "temperature_with_channel_name": {
         "name": "{channel_name} temperature"
       },
       "tilt": {
         "name": "Tilt"
+      },
+      "total_runtime": {
+        "name": "Total runtime"
+      },
+      "total_runtime_with_channel_name": {
+        "name": "{channel_name} total runtime"
       },
       "valve_position": {
         "name": "Valve position"
@@ -747,6 +803,9 @@
       }
     },
     "switch": {
+      "boost": {
+        "name": "Boost"
+      },
       "camera_privacy": {
         "name": "Privacy"
       },
