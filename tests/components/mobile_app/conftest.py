@@ -13,6 +13,8 @@ from homeassistant.setup import async_setup_component
 
 from .const import REGISTER, REGISTER_CLEARTEXT
 
+from tests.components.zone.common import improved_presence_detection  # noqa: F401
+
 
 @pytest.fixture
 async def create_registrations(

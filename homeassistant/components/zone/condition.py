@@ -41,8 +41,8 @@ from homeassistant.helpers.condition import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from . import in_zone
-from .const import DOMAIN
+from . import async_is_improved_presence_detection_enabled, in_zone, zone_relation
+from .const import DOMAIN, ZoneRelation
 from .helpers import get_in_zones_attribute
 
 _OPTIONS_SCHEMA_DICT: dict[probatio.Marker, Any] = {
@@ -56,8 +56,13 @@ def zone(
     hass: HomeAssistant,
     zone_ent: str | State | None,
     entity: str | State | None,
+    previous_match: bool = False,
 ) -> bool:
     """Test if zone-condition matches.
+
+    If improved presence detection is enabled and the entity's accuracy circle
+    only partly overlaps the zone, previous_match is returned. Legacy device
+    trackers always use the default overlap test.
 
     Async friendly.
     """
@@ -107,9 +112,19 @@ def zone(
             "zone", f"entity {entity_id} has no 'longitude' attribute"
         )
 
-    return in_zone(
-        zone_ent, latitude, longitude, entity.attributes.get(ATTR_GPS_ACCURACY, 0)
-    )
+    radius = entity.attributes.get(ATTR_GPS_ACCURACY)
+    # Legacy device trackers, which don't report in_zones, don't support
+    # improved presence detection
+    if (
+        entity.domain == DEVICE_TRACKER_DOMAIN
+        or not async_is_improved_presence_detection_enabled(hass)
+    ):
+        return in_zone(zone_ent, latitude, longitude, radius)
+
+    relation = zone_relation(zone_ent, latitude, longitude, radius)
+    if relation is ZoneRelation.OVERLAPPING:
+        return previous_match
+    return relation is ZoneRelation.CONTAINED
 
 
 class ZoneCondition(Condition):

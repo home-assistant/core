@@ -529,6 +529,20 @@ async def test_see_state(hass: HomeAssistant, yaml_devices: str) -> None:
     assert attrs["number"] == 1
 
 
+@pytest.mark.usefixtures("improved_presence_detection", "yaml_devices")
+async def test_see_location_accuracy_overlap(hass: HomeAssistant) -> None:
+    """Test legacy devices always use the default overlap test."""
+    assert await async_setup_component(hass, device_tracker.DOMAIN, TEST_PLATFORM)
+    await hass.config.async_update(latitude=50.0, longitude=60.0, radius=200)
+    await hass.async_block_till_done()
+
+    # The accuracy circle only overlaps the home zone, ~222 m from its center
+    common.async_see(hass, dev_id="phone", gps=[50.002, 60.0], gps_accuracy=100)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("device_tracker.phone").state == STATE_HOME
+
+
 async def test_see_passive_zone_state(
     hass: HomeAssistant,
     mock_device_tracker_conf: list[legacy.Device],
