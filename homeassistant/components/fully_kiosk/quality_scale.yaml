@@ -69,4 +69,7 @@ rules:
   # Platinum
   async-dependency: todo
   inject-websession: done
-  strict-typing: done
+  strict-typing:
+    status: todo
+    comment: |
+      Requirement 'python-fullykiosk==0.0.17' does not conform to PEP 561 (no py.typed file).

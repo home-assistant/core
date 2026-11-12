@@ -76,7 +76,11 @@ rules:
   icon-translations:
     status: exempt
     comment: No entity icons are used.
-  reconfiguration-flow: done
+  reconfiguration-flow:
+    status: todo
+    comment: |
+      Only the subentries support reconfiguration. The config entry itself
+      cannot be reconfigured yet.
   repair-issues: done
   stale-devices: todo
 

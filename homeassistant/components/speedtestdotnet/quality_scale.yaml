@@ -85,4 +85,7 @@ rules:
   # Platinum
   async-dependency: todo
   inject-websession: todo
-  strict-typing: done
+  strict-typing:
+    status: todo
+    comment: |
+      Requirement 'speedtest-cli==2.1.3' does not conform to PEP 561 (no py.typed file).
