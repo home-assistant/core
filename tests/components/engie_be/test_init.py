@@ -1361,6 +1361,40 @@ async def test_household_removed_then_returns(
         )
         is not None
     )
+    assert (
+        entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{BAN_2}_capacity_tariff_monthly_power_peak"
+        )
+        is not None
+    )
+
+
+@pytest.mark.usefixtures("frozen_afternoon")
+async def test_dynamic_household_joins_running_epex(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a dynamic household joining while EPEX runs gets its EPEX entities."""
+    await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
+    epex_coordinator = mock_config_entry.runtime_data.epex
+    assert epex_coordinator is not None
+
+    mock_engie_client.return_value.async_get_customer_account_relations.return_value = (
+        build_relations(BAN, BAN_2)
+    )
+    await _sync_households(hass, freezer)
+
+    assert mock_config_entry.runtime_data.epex is epex_coordinator
+    assert _current_hour_price(hass, entity_registry, BAN_2) == pytest.approx(0.16)
+    assert (
+        entity_registry.async_get_entity_id(
+            "binary_sensor", DOMAIN, f"{BAN_2}_epex_tomorrow_available"
+        )
+        is not None
+    )
 
 
 @pytest.mark.usefixtures("frozen_afternoon")
@@ -1631,9 +1665,10 @@ async def test_contracts_retry_ignores_replaced_household(
         return build_contracts(dynamic=True)
 
     client.async_get_energy_contracts.side_effect = _contracts
-    freezer.tick(CONTRACTS_RETRY_INTERVAL)
+    freezer.tick(CONTRACTS_RETRY_INTERVAL + timedelta(seconds=30))
     async_fire_time_changed(hass)
-    await retry_started.wait()
+    async with asyncio.timeout(10):
+        await retry_started.wait()
 
     removed = asyncio.Event()
     added = asyncio.Event()
@@ -1658,15 +1693,17 @@ async def test_contracts_retry_ignores_replaced_household(
     )
 
     client.async_get_customer_account_relations.return_value = build_relations(BAN_2)
-    freezer.tick(RELATIONS_SCAN_INTERVAL)
+    freezer.tick(RELATIONS_SCAN_INTERVAL + timedelta(seconds=30))
     async_fire_time_changed(hass)
-    await removed.wait()
+    async with asyncio.timeout(10):
+        await removed.wait()
     client.async_get_customer_account_relations.return_value = build_relations(
         BAN, BAN_2
     )
-    freezer.tick(RELATIONS_SCAN_INTERVAL)
+    freezer.tick(RELATIONS_SCAN_INTERVAL + timedelta(seconds=30))
     async_fire_time_changed(hass)
-    await added.wait()
+    async with asyncio.timeout(10):
+        await added.wait()
     await hass.async_block_till_done()
     assert runtime_data.households[BAN].is_dynamic is True
 

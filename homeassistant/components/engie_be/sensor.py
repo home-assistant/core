@@ -109,10 +109,25 @@ async def async_setup_entry(
             )
             async_add_entities(new_entities)
 
-    for household in runtime_data.households.values():
-        entry.async_on_unload(
-            household.prices.async_add_listener(_async_add_new_entities)
-        )
+    price_listener_unsubs: dict[str, Callable[[], None]] = {}
+
+    @callback
+    def _async_track_prices(ban: str) -> None:
+        """Add new price sensors whenever the prices of a household update."""
+        price_listener_unsubs[ban] = runtime_data.households[
+            ban
+        ].prices.async_add_listener(_async_add_new_entities)
+
+    @callback
+    def _async_untrack_all_prices() -> None:
+        """Stop following the prices of every household."""
+        for unsub in price_listener_unsubs.values():
+            unsub()
+        price_listener_unsubs.clear()
+
+    for ban in runtime_data.households:
+        _async_track_prices(ban)
+    entry.async_on_unload(_async_untrack_all_prices)
     _async_add_new_entities()
 
     known_epex_bans: set[str] = set()
@@ -148,11 +163,7 @@ async def async_setup_entry(
     def _async_add_household_entities(new_bans: set[str]) -> None:
         """Add the sensors of the households that appeared after setup."""
         for ban in new_bans:
-            entry.async_on_unload(
-                runtime_data.households[ban].prices.async_add_listener(
-                    _async_add_new_entities
-                )
-            )
+            _async_track_prices(ban)
         async_add_entities(
             EngieBePeaksSensor(
                 runtime_data.households[ban].peaks,
@@ -170,6 +181,7 @@ async def async_setup_entry(
     def _async_remove_household_entities(removed_bans: set[str]) -> None:
         """Forget the households that left so they are treated as new when they return."""
         for ban in removed_bans:
+            price_listener_unsubs.pop(ban)()
             prefix = f"{ban}_"
             known_unique_ids.difference_update(
                 {
