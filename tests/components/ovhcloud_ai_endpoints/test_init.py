@@ -1,5 +1,7 @@
 """Tests for the OVHcloud AI Endpoints integration setup."""
 
+import subprocess
+import sys
 from unittest.mock import AsyncMock
 
 import httpx2
@@ -14,6 +16,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
+
+IMPORT_TIMEOUT = 60
 
 
 async def test_setup_unload(
@@ -111,3 +115,47 @@ async def test_new_subentry_creates_entity_and_device(
     )
     assert device is not None
     assert device.name == "Meta-Llama-3_3-70B-Instruct"
+
+
+CHECK_CLIENT_RESOURCE_IMPORTS = """
+import importlib
+
+import homeassistant.components.ovhcloud_ai_endpoints
+import openai
+
+imports = []
+import_module = importlib.import_module
+
+
+def record_import(name, package=None):
+    imports.append(name)
+    return import_module(name, package)
+
+
+importlib.import_module = record_import
+client = openai.AsyncOpenAI(api_key="test")
+client.chat.completions
+print(imports)
+"""
+
+
+def test_client_resources_are_imported_with_the_integration() -> None:
+    """Accessing the client chat resource must not import anything in the event loop.
+
+    The OpenAI client imports its chat resource on first use through
+    importlib.import_module, which Home Assistant reports as a blocking call
+    when it happens in the event loop. Having the submodules in sys.modules is
+    not enough: the call uses a relative name that the check does not resolve.
+
+    A clean interpreter is the only way to see this: anything the test suite
+    imported first would hide it.
+    """
+    result = subprocess.run(
+        [sys.executable, "-c", CHECK_CLIENT_RESOURCE_IMPORTS],
+        capture_output=True,
+        check=True,
+        text=True,
+        timeout=IMPORT_TIMEOUT,
+    )
+
+    assert result.stdout.strip() == "[]"
