@@ -4,6 +4,7 @@ import asyncio
 from bisect import bisect_right
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from http import HTTPStatus
 import logging
 from typing import override
 
@@ -127,11 +128,10 @@ class EnergyIDDirectiveCoordinator(DataUpdateCoordinator[EnergyIDDirectivesData]
             self._raise_if_unclaimed()
             return EnergyIDDirectivesData(resources={}, schedules={})
         except ClientResponseError as err:
-            if err.status in (401, 403):
-                raise ConfigEntryAuthFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="invalid_credentials",
-                ) from err
+            self._raise_if_unclaimed()
+            # A 403 means directive access is not granted to this record.
+            if err.status == HTTPStatus.FORBIDDEN:
+                return EnergyIDDirectivesData(resources={}, schedules={})
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="directives_update_failed",
@@ -207,10 +207,11 @@ class EnergyIDDirectiveCoordinator(DataUpdateCoordinator[EnergyIDDirectivesData]
         try:
             schedule = await self.client.get_directive_data(resource.id)
         except ClientResponseError as err:
-            if err.status in (401, 403):
-                raise ConfigEntryAuthFailed(
+            if err.status == HTTPStatus.UNAUTHORIZED:
+                self._raise_if_unclaimed()
+                raise UpdateFailed(
                     translation_domain=DOMAIN,
-                    translation_key="invalid_credentials",
+                    translation_key="directives_update_failed",
                 ) from err
             self._log_unavailable(resource, err)
             return None
