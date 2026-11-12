@@ -24,16 +24,13 @@ from homeassistant.components.engie_be.const import (
     CONTRACTS_RETRY_INTERVAL,
     DOMAIN,
     EPEX_SCAN_INTERVAL,
-    NEW_HOUSEHOLDS_SIGNAL,
     PRICES_SCAN_INTERVAL,
     RELATIONS_SCAN_INTERVAL,
-    REMOVED_HOUSEHOLDS_SIGNAL,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
 
 from .conftest import (
@@ -1633,6 +1630,7 @@ async def test_contracts_retry_ignores_replaced_household(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_engie_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
@@ -1670,26 +1668,33 @@ async def test_contracts_retry_ignores_replaced_household(
     async with asyncio.timeout(10):
         await retry_started.wait()
 
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, BAN), mock_config_entry.entry_id
+    )
+    assert device is not None
     removed = asyncio.Event()
     added = asyncio.Event()
 
     @callback
-    def _removed(_bans: set[str]) -> None:
-        removed.set()
+    def _device_updated(event: Event[dr.EventDeviceRegistryUpdatedData]) -> None:
+        if event.data["action"] == "remove" and event.data["device_id"] == device.id:
+            removed.set()
 
     @callback
-    def _added(_bans: set[str]) -> None:
-        added.set()
+    def _entity_updated(event: Event[er.EventEntityRegistryUpdatedData]) -> None:
+        if (
+            event.data["action"] == "create"
+            and (entry := entity_registry.async_get(event.data["entity_id"]))
+            is not None
+            and entry.unique_id == f"{BAN}_epex_current_hour"
+        ):
+            added.set()
 
-    mock_config_entry.async_on_unload(
-        async_dispatcher_connect(
-            hass, REMOVED_HOUSEHOLDS_SIGNAL.format(mock_config_entry.entry_id), _removed
-        )
+    unsub_device = hass.bus.async_listen(
+        dr.EVENT_DEVICE_REGISTRY_UPDATED, _device_updated
     )
-    mock_config_entry.async_on_unload(
-        async_dispatcher_connect(
-            hass, NEW_HOUSEHOLDS_SIGNAL.format(mock_config_entry.entry_id), _added
-        )
+    unsub_entity = hass.bus.async_listen(
+        er.EVENT_ENTITY_REGISTRY_UPDATED, _entity_updated
     )
 
     client.async_get_customer_account_relations.return_value = build_relations(BAN_2)
@@ -1704,6 +1709,8 @@ async def test_contracts_retry_ignores_replaced_household(
     async_fire_time_changed(hass)
     async with asyncio.timeout(10):
         await added.wait()
+    unsub_device()
+    unsub_entity()
     await hass.async_block_till_done()
     assert runtime_data.households[BAN].is_dynamic is True
 
