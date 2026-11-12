@@ -214,6 +214,25 @@ async def test_pipeline_api_audio(
             {},
         )
 
+        # Wake word rejected by verification
+        event_callback(
+            PipelineEvent(
+                type=PipelineEventType.WAKE_WORD_REJECTED,
+                data={
+                    "wake_word_output": {
+                        "wake_word_phrase": "test-wake-word",
+                        "wake_word_audio_ms": 1500,
+                        "reason": "test-reason",
+                    }
+                },
+            )
+        )
+
+        assert mock_client.send_voice_assistant_event.call_args_list[-1].args == (
+            VoiceAssistantEventType.VOICE_ASSISTANT_WAKE_WORD_REJECTED,
+            {},
+        )
+
         # STT
         event_callback(
             PipelineEvent(
