@@ -10,6 +10,7 @@ from uiprotect.data import (
     Bootstrap,
     EventType,
     Fob,
+    LinkStation,
     ModelType,
     ProtectAdoptableDeviceModel,
     PublicCamera,
@@ -35,7 +36,9 @@ from homeassistant.helpers.event import async_call_at
 from .const import (
     ATTR_EVENT_ID,
     ATTR_EVENT_SOURCE,
+    ATTR_INPUT,
     ATTR_SMART_DETECT_TYPES,
+    ATTR_STATUS,
     EVENT_TYPE_FINGERPRINT_IDENTIFIED,
     EVENT_TYPE_FINGERPRINT_NOT_IDENTIFIED,
     EVENT_TYPE_NFC_SCANNED,
@@ -687,6 +690,63 @@ class ProtectFobButtonEventEntity(
         self._fire_once(event, button_type, {ATTR_EVENT_ID: event.id})
 
 
+_ALARM_HUB_EVENT_TYPES: dict[EventType, str] = {
+    EventType.ALARM_HUB_MOTION: "motion",
+    EventType.ALARM_HUB_ENTRY_OPENED: "entry_opened",
+    EventType.ALARM_HUB_ENTRY_CLOSED: "entry_closed",
+    EventType.ALARM_HUB_SMOKE: "smoke",
+    EventType.ALARM_HUB_GLASS_BREAK: "glass_break",
+    EventType.ALARM_HUB_BUTTON_PRESS: "button_press",
+    EventType.ALARM_HUB_TAMPER: "tamper",
+    EventType.ALARM_HUB_DEVICE_TAMPER: "device_tamper",
+    EventType.ALARM_HUB_RELAY_SWITCHED: "relay_switched",
+    EventType.ALARM_HUB_BATTERY_LOW: "battery_low",
+    EventType.ALARM_HUB_BATTERY_CONNECTED: "battery_connected",
+}
+
+_ALARM_HUB_EVENT_DESCRIPTION = EventEntityDescription(
+    key="alarm_hub",
+    translation_key="alarm_hub",
+    event_types=list(_ALARM_HUB_EVENT_TYPES.values()),
+)
+
+
+class ProtectAlarmHubEventEntity(
+    ProtectFireOnceMixin, ProtectPublicEventSubscriberEntity, EventEntity
+):
+    """A UniFi Protect alarm hub event entity.
+
+    Each hub exposes one event entity that fires every alarm hub event, with
+    the input and its status as event data.
+    """
+
+    _ufp_uses_public = True
+    _ufp_requires_events_ws = True
+
+    def __init__(self, data: ProtectData, hub: LinkStation) -> None:
+        """Initialize the alarm hub event entity."""
+        super().__init__(data, hub, _ALARM_HUB_EVENT_DESCRIPTION)
+
+    @override
+    def _async_public_event_subscriptions(
+        self,
+    ) -> Iterable[tuple[EventType, Callable[[ProtectEvent], None]]]:
+        return (
+            (event_type, self._async_hub_event) for event_type in _ALARM_HUB_EVENT_TYPES
+        )
+
+    @callback
+    def _async_hub_event(self, event: ProtectEvent) -> None:
+        event_data: dict[str, Any] = {ATTR_EVENT_ID: event.id}
+        if (metadata := event.metadata) is not None:
+            if (pin := metadata.pin) is not None and pin.isdecimal():
+                # Protect numbers the inputs from 1, the API from 0.
+                event_data[ATTR_INPUT] = int(pin) + 1
+            if metadata.status_text is not None:
+                event_data[ATTR_STATUS] = metadata.status_text
+        self._fire_once(event, _ALARM_HUB_EVENT_TYPES[event.type], event_data)
+
+
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class ProtectSensorEventEntityDescription(ProtectPublicEventEntityDescription):
     """Describes a sensor event entity driven by the public events WS."""
@@ -891,6 +951,8 @@ async def async_setup_entry(
     def _add_new_public_device(device: PublicDeviceModel) -> None:
         if isinstance(device, Fob):
             async_add_entities([ProtectFobButtonEventEntity(data, device)])
+        elif isinstance(device, LinkStation) and device.is_alarm_hub:
+            async_add_entities([ProtectAlarmHubEventEntity(data, device)])
         elif isinstance(device, PublicCamera):
             async_add_entities(_async_public_event_entities(data, device))
         elif isinstance(device, PublicSensor):
@@ -905,12 +967,20 @@ async def async_setup_entry(
     )
 
     # The public bootstrap is primed only with an API key and supported NVR
-    # firmware; without it there are no fobs to expose.
+    # firmware; without it there are no fobs or alarm hubs to expose.
     api = data.api
     if api.has_public_bootstrap:
         async_add_entities(
-            ProtectFobButtonEventEntity(data, fob)
-            for fob in api.public_bootstrap.fobs.values()
+            [
+                *(
+                    ProtectFobButtonEventEntity(data, fob)
+                    for fob in api.public_bootstrap.fobs.values()
+                ),
+                *(
+                    ProtectAlarmHubEventEntity(data, hub)
+                    for hub in api.public_bootstrap.alarm_hubs.values()
+                ),
+            ]
         )
 
     if api.is_public_only:

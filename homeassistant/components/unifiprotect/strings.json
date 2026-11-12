@@ -337,6 +337,26 @@
           }
         }
       },
+      "alarm_hub": {
+        "name": "Activity",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "battery_connected": "Battery connected",
+              "battery_low": "Battery low",
+              "button_press": "Button pressed",
+              "device_tamper": "Hub tampered",
+              "entry_closed": "Entry closed",
+              "entry_opened": "Entry opened",
+              "glass_break": "Glass break",
+              "motion": "Motion",
+              "relay_switched": "Relay switched",
+              "smoke": "Smoke",
+              "tamper": "Input tampered"
+            }
+          }
+        }
+      },
       "doorbell": {
         "state_attributes": {
           "event_type": {
