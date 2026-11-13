@@ -17,11 +17,12 @@ from homeassistant.components.sensor import (
 from homeassistant.const import EntityCategory, UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from .const import ATTRIBUTION
+from .const import ATTRIBUTION, NEW_HOUSEHOLDS_SIGNAL, REMOVED_HOUSEHOLDS_SIGNAL
 from .coordinator import (
     BRUSSELS_TIME_ZONE,
     EngieBeEpexCoordinator,
@@ -108,10 +109,25 @@ async def async_setup_entry(
             )
             async_add_entities(new_entities)
 
-    for household in runtime_data.households.values():
-        entry.async_on_unload(
-            household.prices.async_add_listener(_async_add_new_entities)
-        )
+    price_listener_unsubs: dict[str, Callable[[], None]] = {}
+
+    @callback
+    def _async_track_prices(ban: str) -> None:
+        """Add new price sensors whenever the prices of a household update."""
+        price_listener_unsubs[ban] = runtime_data.households[
+            ban
+        ].prices.async_add_listener(_async_add_new_entities)
+
+    @callback
+    def _async_untrack_all_prices() -> None:
+        """Stop following the prices of every household."""
+        for unsub in price_listener_unsubs.values():
+            unsub()
+        price_listener_unsubs.clear()
+
+    for ban in runtime_data.households:
+        _async_track_prices(ban)
+    entry.async_on_unload(_async_untrack_all_prices)
     _async_add_new_entities()
 
     known_epex_bans: set[str] = set()
@@ -142,6 +158,54 @@ async def async_setup_entry(
 
     runtime_data.epex_ready_callbacks.append(_async_add_epex_sensors)
     _async_add_epex_sensors()
+
+    @callback
+    def _async_add_household_entities(new_bans: set[str]) -> None:
+        """Add the sensors of the households that appeared after setup."""
+        for ban in new_bans:
+            _async_track_prices(ban)
+        async_add_entities(
+            EngieBePeaksSensor(
+                runtime_data.households[ban].peaks,
+                ban=ban,
+                device_info=runtime_data.households[ban].prices.device_info,
+                description=description,
+            )
+            for ban in new_bans
+            for description in _CAPACITY_TARIFF_SENSORS
+        )
+        _async_add_new_entities()
+        _async_add_epex_sensors()
+
+    @callback
+    def _async_remove_household_entities(removed_bans: set[str]) -> None:
+        """Forget the households that left so they are treated as new when they return."""
+        for ban in removed_bans:
+            price_listener_unsubs.pop(ban)()
+            prefix = f"{ban}_"
+            known_unique_ids.difference_update(
+                {
+                    unique_id
+                    for unique_id in known_unique_ids
+                    if unique_id.startswith(prefix)
+                }
+            )
+            known_epex_bans.discard(ban)
+
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            NEW_HOUSEHOLDS_SIGNAL.format(entry.entry_id),
+            _async_add_household_entities,
+        )
+    )
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            REMOVED_HOUSEHOLDS_SIGNAL.format(entry.entry_id),
+            _async_remove_household_entities,
+        )
+    )
 
     async_add_entities(
         EngieBePeaksSensor(

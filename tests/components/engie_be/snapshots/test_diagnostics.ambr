@@ -116,7 +116,7 @@
     'relations': dict({
       'agreement_count': 1,
       'last_update_success': True,
-      'update_interval': None,
+      'update_interval': '1:00:00',
     }),
   })
 # ---
@@ -237,7 +237,7 @@
     'relations': dict({
       'agreement_count': 1,
       'last_update_success': True,
-      'update_interval': None,
+      'update_interval': '1:00:00',
     }),
   })
 # ---
@@ -337,7 +337,7 @@
     'relations': dict({
       'agreement_count': 1,
       'last_update_success': True,
-      'update_interval': None,
+      'update_interval': '1:00:00',
     }),
   })
 # ---
@@ -409,7 +409,7 @@
     'relations': dict({
       'agreement_count': 1,
       'last_update_success': True,
-      'update_interval': None,
+      'update_interval': '1:00:00',
     }),
   })
 # ---
