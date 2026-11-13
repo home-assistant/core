@@ -40,7 +40,11 @@ from homeassistant.exceptions import (
     OAuth2TokenRequestReauthError,
 )
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailed,
+    UpdateFailedUnreachable,
+)
 
 from .const import (
     API_DEFAULT_RETRY_AFTER,
@@ -661,17 +665,6 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
 
         return self.data
 
-    @callback
-    @override
-    def _async_refresh_finished(self) -> None:
-        """Called when a refresh is finished.
-
-        If the last update was successful but the appliance was disconnected
-        the data wasn't actually refreshed, so we mark the last update as failed.
-        """
-        if self.last_update_success and not self.data.info.connected:
-            self.last_update_success = False
-
     async def get_appliance_data(self) -> None:
         """Get appliance data."""
         appliance = self.data.info
@@ -684,12 +677,14 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
         )
         if not appliance.connected:
             self.data.update(HomeConnectApplianceData.empty(appliance))
-            self.logger.info(
-                "Appliance %s (%s) is disconnected, not possible to fetch data",
-                appliance.name,
-                appliance.ha_id,
+            raise UpdateFailedUnreachable(
+                translation_domain=DOMAIN,
+                translation_key="appliance_disconnected",
+                translation_placeholders={
+                    "appliance_name": appliance.name,
+                    "ha_id": appliance.ha_id,
+                },
             )
-            return
         try:
             settings = {
                 setting.key: setting
