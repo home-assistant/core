@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 import json
 from typing import Any
 
+from aiohttp import ClientError
 from trmnl.exceptions import TRMNLError, TRMNLForbiddenError
 
 from homeassistant.config_entries import ConfigEntry
@@ -18,6 +19,7 @@ from homeassistant.core import (
     State,
     callback,
 )
+from homeassistant.exceptions import OAuth2TokenRequestReauthError
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
@@ -256,8 +258,8 @@ class HomePusher:
         self._push_task: asyncio.Task[None] | None = None
         self._push_pending = False
         self._stopped = False
-        # Set when TRMNL refuses for a missing scope; the reauth reload makes a new pusher.
-        self._refused_for_scope = False
+        # Set when TRMNL refuses the token or its scope; the reauth reload makes a new pusher.
+        self._waiting_for_reauth = False
 
     @callback
     def async_start(self) -> None:
@@ -279,14 +281,12 @@ class HomePusher:
             unsubscribe()
         if self._cancel_wait is not None:
             self._cancel_wait()
-        if (task := self._push_task) is not None:
-            await asyncio.wait([task])
-            if err := task.exception():
-                LOGGER.warning("Could not send the home to TRMNL: %s", err)
+        if self._push_task is not None:
+            await asyncio.wait([self._push_task])
 
     @callback
     def _async_request_push(self, wait: bool = False) -> None:
-        if self._refused_for_scope:
+        if self._waiting_for_reauth:
             return
         if self._push_task is not None or self._cancel_wait is not None:
             self._push_pending = True
@@ -329,8 +329,13 @@ class HomePusher:
             return
         try:
             await self._push(snapshot)
+        except OAuth2TokenRequestReauthError as err:
+            self._waiting_for_reauth = True
+            self._entry.async_start_reauth(self._hass)
+            LOGGER.warning("TRMNL rejected the sign-in, sign in again: %s", err)
+            return
         except TRMNLForbiddenError as err:
-            self._refused_for_scope = True
+            self._waiting_for_reauth = True
             self._entry.async_start_reauth(self._hass)
             LOGGER.warning(
                 'TRMNL refused the home: %s. Sign in again with "Change your'
@@ -338,7 +343,7 @@ class HomePusher:
                 err,
             )
             return
-        except TRMNLError as err:
+        except (TRMNLError, ClientError) as err:
             LOGGER.warning("Could not send the home to TRMNL: %s", err)
             return
         self._last_body = body
