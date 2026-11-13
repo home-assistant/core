@@ -313,11 +313,20 @@ def isdir(value: Any) -> str:
 ensure_list = probatio.EnsureList()
 
 
+def _is_item_list(value: Any) -> bool:
+    """Return if _list_of takes a value for a list of items, not for one item."""
+    return isinstance(value, list)
+
+
 def _list_of(item_validator: Callable[[Any], Any]) -> Callable[[Any], list[Any]]:
     """Validate a list of items, or a single item which is wrapped in a list.
 
     Unlike All(ensure_list, [item_validator]), errors of a single item have no
     list index in their path, so the path is valid in the config as written.
+
+    script.async_validate_block_collect_errors follows the forms accepted here
+    to find the items of a config as written: a new form needs a rule there,
+    and a test case.
     """
     list_schema = probatio.Schema([item_validator])
     # A schema, to raise MultipleInvalid like the list schema does
@@ -326,7 +335,7 @@ def _list_of(item_validator: Callable[[Any], Any]) -> Callable[[Any], list[Any]]
     def validate(value: Any) -> list[Any]:
         if value is None:
             return []
-        if isinstance(value, list):
+        if _is_item_list(value):
             return cast(list[Any], list_schema(value))
         return [item_schema(value)]
 
@@ -1825,6 +1834,25 @@ def _condition_shorthand(value: Any) -> tuple[str, str, probatio.Schema] | None:
     return None
 
 
+def _condition_list_key(value: Any) -> str | None:
+    """Return the key which holds the conditions of an and, or or not condition.
+
+    The key is the one in the condition as written, also for a shorthand.
+
+    script.async_validate_block_collect_errors uses this to find the items of
+    a config as written: a new form needs a rule there, and a test case.
+    """
+    if (shorthand := _condition_shorthand(value)) is not None:
+        return shorthand[0]
+    if (
+        isinstance(value, dict)
+        and CONF_CONDITIONS in value
+        and value.get(CONF_CONDITION) in ("and", "or", "not")
+    ):
+        return CONF_CONDITIONS
+    return None
+
+
 def _condition_validator(
     default_schema: VolSchemaType | Callable[[Any], dict[str, Any]],
 ) -> Callable[[Any], dict[Hashable, Any]]:
@@ -1942,9 +1970,18 @@ _TRIGGER_SUBLIST_SCHEMA = probatio.Schema(
 )
 
 
+def _is_trigger_sublist(value: Any) -> bool:
+    """Return if an item of a trigger list is a 'triggers:' sublist.
+
+    script.async_validate_block_collect_errors uses this to find the items of
+    a config as written: a new form needs a rule there, and a test case.
+    """
+    return isinstance(value, dict) and CONF_TRIGGERS in value and len(value) == 1
+
+
 def _trigger_list_item(value: Any) -> list[Any]:
     """Validate an item of a trigger list, a 'triggers:' sublist gives several."""
-    if isinstance(value, dict) and CONF_TRIGGERS in value and len(value) == 1:
+    if _is_trigger_sublist(value):
         return cast(list[Any], _TRIGGER_SUBLIST_SCHEMA(value)[CONF_TRIGGERS])
     return [_TRIGGER_ITEM_SCHEMA(value)]
 
@@ -2090,13 +2127,22 @@ _SCRIPT_SEQUENCE_SCHEMA = probatio.Schema(
 )
 
 
-def _parallel_branch(value: Any) -> dict[str, Any]:
-    """Validate a parallel branch, wrapping shorthand actions in a sequence."""
-    if (
+def _is_parallel_sequence_branch(value: Any) -> bool:
+    """Return if a parallel branch is a sequence action, not a shorthand.
+
+    script.async_validate_block_collect_errors uses this to find the items of
+    a config as written: a new form needs a rule there, and a test case.
+    """
+    return (
         isinstance(value, dict)
         and CONF_SEQUENCE in value
         and determine_script_action(value) == SCRIPT_ACTION_SEQUENCE
-    ):
+    )
+
+
+def _parallel_branch(value: Any) -> dict[str, Any]:
+    """Validate a parallel branch, wrapping shorthand actions in a sequence."""
+    if _is_parallel_sequence_branch(value):
         return cast(dict[str, Any], _SCRIPT_SEQUENCE_SCHEMA(value))
     return {CONF_SEQUENCE: SCRIPT_SCHEMA(value)}
 
