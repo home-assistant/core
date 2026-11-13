@@ -125,6 +125,7 @@ async def async_setup_platform(
 
     async def _shutdown_coordinator(_: Event) -> None:
         await coordinator.async_shutdown()
+        await api.close()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown_coordinator)
 

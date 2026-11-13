@@ -4,8 +4,8 @@ from http import HTTPStatus
 import logging
 from typing import Any, override
 
+from httpx import HTTPStatusError  # noqa: TID251  # SDK 4.0.1 uses httpx
 import probatio
-from requests.exceptions import HTTPError
 from todoist_api_python.api_async import TodoistAPIAsync
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -46,7 +46,7 @@ class TodoistConfigFlow(ConfigFlow, domain=DOMAIN):
             api = TodoistAPIAsync(user_input[CONF_TOKEN])
             try:
                 await api.get_tasks()
-            except HTTPError as err:
+            except HTTPStatusError as err:
                 if err.response.status_code == HTTPStatus.UNAUTHORIZED:
                     errors["base"] = "invalid_api_key"
                 else:
@@ -56,6 +56,8 @@ class TodoistConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(title="Todoist", data=user_input)
+            finally:
+                await api.close()
 
         return self.async_show_form(
             step_id="user",
