@@ -82,13 +82,25 @@ class CeilingFanIrFanEntity(
         if percentage is not None:
             await self.async_set_percentage(percentage)
             return
+        if self._attr_is_on is True:
+            # The remote only has a toggle key, so sending it again would turn
+            # the fan off while the entity keeps reporting it as on.
+            return
         await self._send_command(GenericCeilingFanCode.FAN_TOGGLE.to_command())
         self._attr_is_on = True
+        if not self._attr_percentage:
+            # The speed is unknown until a speed key is pressed. Report it as
+            # unknown instead of 0 %, so restoring a scene captured in this
+            # state does not turn the fan off.
+            self._attr_percentage = None
         self.async_write_ha_state()
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
+        if self._attr_is_on is False:
+            # Already off, toggling again would turn the fan on.
+            return
         await self._send_command(GenericCeilingFanCode.FAN_TOGGLE.to_command())
         self._attr_is_on = False
         self._attr_percentage = 0
