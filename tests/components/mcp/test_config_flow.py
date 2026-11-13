@@ -142,6 +142,7 @@ async def test_form(
     ("side_effect", "expected_error"),
     [
         (httpx2.TimeoutException("Some timeout"), "timeout_connect"),
+        (TimeoutError("Overall timeout"), "timeout_connect"),
         (
             httpx2.HTTPStatusError("", request=None, response=httpx2.Response(500)),
             "cannot_connect",
