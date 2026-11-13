@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Any, override
+from typing import override
 
 import metno
 import probatio
@@ -96,7 +96,7 @@ class AirSensor(AirQualityEntity):
 
     @property
     @override
-    def extra_state_attributes(self) -> dict[str, Any]:
+    def extra_state_attributes(self) -> dict:
         """Return other details about the sensor state."""
         return {
             "level": self._api.data.get("level"),

@@ -47,7 +47,6 @@ class AirMonitorB1(XiaomiMiioEntity, AirQualityEntity):
     """Air Quality class for Xiaomi cgllc.airmonitor.b1 device."""
 
     _attr_icon = "mdi:cloud"
-    _device: AirQualityMonitor
 
     def __init__(
         self,
@@ -67,7 +66,7 @@ class AirMonitorB1(XiaomiMiioEntity, AirQualityEntity):
         self._temperature = None
         self._humidity = None
 
-    async def async_update(self) -> None:
+    async def async_update(self):
         """Fetch state from the miio device."""
         try:
             state = await self.hass.async_add_executor_job(self._device.status)
@@ -137,7 +136,7 @@ class AirMonitorS1(AirMonitorB1):
     """Air Quality class for Xiaomi cgllc.airmonitor.s1 device."""
 
     @override
-    async def async_update(self) -> None:
+    async def async_update(self):
         """Fetch state from the miio device."""
         try:
             state = await self.hass.async_add_executor_job(self._device.status)
@@ -158,7 +157,7 @@ class AirMonitorV1(AirMonitorB1):
     """Air Quality class for Xiaomi cgllc.airmonitor.s1 device."""
 
     @override
-    async def async_update(self) -> None:
+    async def async_update(self):
         """Fetch state from the miio device."""
         try:
             state = await self.hass.async_add_executor_job(self._device.status)
@@ -181,7 +180,6 @@ class AirMonitorCGDN1(XiaomiMiioEntity, AirQualityEntity):
     """Air Quality class for cgllc.airm.cgdn1 device."""
 
     _attr_icon = "mdi:cloud"
-    _device: AirQualityMonitorCGDN1
 
     def __init__(
         self,
@@ -197,7 +195,7 @@ class AirMonitorCGDN1(XiaomiMiioEntity, AirQualityEntity):
         self._particulate_matter_2_5 = None
         self._particulate_matter_10 = None
 
-    async def async_update(self) -> None:
+    async def async_update(self):
         """Fetch state from the miio device."""
         try:
             state = await self.hass.async_add_executor_job(self._device.status)

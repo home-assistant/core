@@ -55,7 +55,7 @@ class KaiterraAirQuality(AirQualityEntity):
 
     @property
     @override
-    def available(self) -> bool:
+    def available(self):
         """Return the availability of the sensor."""
         return self._api.data.get(self._device_id) is not None
 
@@ -126,7 +126,7 @@ class KaiterraAirQuality(AirQualityEntity):
         }
 
     @override
-    async def async_added_to_hass(self) -> None:
+    async def async_added_to_hass(self):
         """Register callback."""
         self.async_on_remove(
             async_dispatcher_connect(
