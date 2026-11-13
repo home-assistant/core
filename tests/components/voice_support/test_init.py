@@ -3,7 +3,7 @@
 import asyncio
 from collections.abc import AsyncGenerator
 from typing import Any
-from unittest.mock import ANY, AsyncMock, call, patch
+from unittest.mock import ANY, AsyncMock, Mock, call, patch
 
 from aiohasupervisor import SupervisorError
 import aiohttp
@@ -17,7 +17,9 @@ from homeassistant.components.voice_support import (
     INFO_REFRESH_INTERVAL,
     PREVIEW_FEATURE_NEXT_GENERATION_VOICE,
     AudioRunRequest,
+    async_on_wake_words_changed,
     async_start_run,
+    async_verifies_wake_word,
 )
 from homeassistant.components.voice_support.client import AppInfo
 from homeassistant.components.voice_support.const import (
@@ -382,6 +384,61 @@ async def test_remove_entry_app_error(
     assert uninstall_addon.call_count == 0
     assert "Failed to stop the Voice app: busy" in caplog.text
     assert not hass.config_entries.async_entries(DOMAIN)
+
+
+@pytest.mark.usefixtures("labs", "app_info")
+async def test_verifies_wake_word(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test a wake word is verified only with the feature on and an app that has it."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await async_update_preview_feature(
+        hass, DOMAIN, PREVIEW_FEATURE_NEXT_GENERATION_VOICE, True
+    )
+    assert not async_verifies_wake_word(hass, "Okay Nabu")
+
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert async_verifies_wake_word(hass, "Okay Nabu")
+    assert not async_verifies_wake_word(hass, "Hey Jarvis")
+
+    await async_update_preview_feature(
+        hass, DOMAIN, PREVIEW_FEATURE_NEXT_GENERATION_VOICE, False
+    )
+    await hass.async_block_till_done()
+    assert not async_verifies_wake_word(hass, "Okay Nabu")
+
+
+@pytest.mark.usefixtures("labs", "app_info")
+async def test_wake_words_changed(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test listeners hear when the app comes and goes and the feature changes."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    listener = Mock()
+    remove_listener = async_on_wake_words_changed(hass, listener)
+
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert listener.call_count == 1
+
+    await async_update_preview_feature(
+        hass, DOMAIN, PREVIEW_FEATURE_NEXT_GENERATION_VOICE, True
+    )
+    await hass.async_block_till_done()
+    assert listener.call_count == 2
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    assert listener.call_count == 3
+
+    remove_listener()
+    await async_update_preview_feature(
+        hass, DOMAIN, PREVIEW_FEATURE_NEXT_GENERATION_VOICE, False
+    )
+    await hass.async_block_till_done()
+    assert listener.call_count == 3
 
 
 async def _no_audio() -> AsyncGenerator[bytes]:

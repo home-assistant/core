@@ -9,7 +9,7 @@ import probatio
 import pytest
 from pytest_homeassistant.common import MockUser
 
-from homeassistant.components import stt
+from homeassistant.components import stt, voice_support
 from homeassistant.components.assist_pipeline import (
     OPTION_PREFERRED,
     AudioSettings,
@@ -1223,3 +1223,37 @@ async def test_wake_word_start_keeps_responding(
     entity.tts_response_finished()
     state = hass.states.get(ENTITY_ID)
     assert state.state == AssistSatelliteState.IDLE
+
+
+@pytest.mark.parametrize(
+    ("verified_wake_words", "expected"),
+    [
+        pytest.param({"1234"}, True, id="active_wake_word"),
+        pytest.param({"5678"}, False, id="inactive_wake_word"),
+    ],
+)
+@pytest.mark.usefixtures("init_components")
+async def test_wake_word_audio_wanted(
+    entity: MockAssistSatellite, verified_wake_words: set[str], expected: bool
+) -> None:
+    """Test wake word audio is wanted only if an active wake word is verified."""
+    with patch.object(
+        voice_support,
+        "async_verifies_wake_word",
+        lambda _hass, wake_word: wake_word in verified_wake_words,
+    ):
+        assert entity.wake_word_audio_wanted is expected
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_wake_word_audio_wanted_without_configuration(
+    entity: MockAssistSatellite,
+) -> None:
+    """Test wake word audio is not wanted from a satellite without a configuration."""
+    with (
+        patch.object(
+            entity, "async_get_configuration", side_effect=NotImplementedError
+        ),
+        patch.object(voice_support, "async_verifies_wake_word", return_value=True),
+    ):
+        assert entity.wake_word_audio_wanted is False
