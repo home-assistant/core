@@ -17,9 +17,11 @@ from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
     ConfigFlowResult,
 )
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 
+from .application_credentials import async_revoke_token
 from .const import CLIENT_ID, DOMAIN, LOGGER, OAUTH2_SCOPES, REQUIRED_SCOPES
 
 
@@ -67,18 +69,28 @@ class TRMNLConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
     @override
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
-        """Create the entry, or update it after reauth."""
+        """Create the entry, or revoke the new token when the flow aborts."""
+        try:
+            return await self._async_create_or_update_entry(data)
+        except AbortFlow as abort:
+            await async_revoke_token(self.hass, data["token"]["access_token"])
+            return self.async_abort(reason=abort.reason)
+
+    async def _async_create_or_update_entry(
+        self, data: dict[str, Any]
+    ) -> ConfigFlowResult:
+        """Create the entry, or update it after reauth or reconfigure."""
         try:
             subject = jwt.decode(
                 data["token"]["id_token"], options={"verify_signature": False}
             )["sub"]
         except KeyError, jwt.DecodeError:
-            return self.async_abort(reason="missing_account_identity")
+            raise AbortFlow("missing_account_identity") from None
 
         # A token response without scope was granted every requested scope (RFC 6749 5.1).
         granted = set(data["token"].get("scope", OAUTH2_SCOPES).split())
         if not REQUIRED_SCOPES.issubset(granted):
-            return self.async_abort(reason="missing_scopes")
+            raise AbortFlow("missing_scopes")
 
         client = TRMNLClient(
             token=data["token"]["access_token"],
@@ -88,9 +100,9 @@ class TRMNLConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             await client.get_devices()
             user = await client.get_me() if "profile" in granted else None
         except TRMNLAuthenticationError:
-            return self.async_abort(reason="oauth_unauthorized")
+            raise AbortFlow("oauth_unauthorized") from None
         except TRMNLError, TimeoutError:
-            return self.async_abort(reason="cannot_connect")
+            raise AbortFlow("cannot_connect") from None
 
         await self.async_set_unique_id(subject)
         if self.source == SOURCE_REAUTH:

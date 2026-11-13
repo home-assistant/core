@@ -24,6 +24,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
+from .application_credentials import async_revoke_token
 from .const import CLIENT_ID, DOMAIN
 from .coordinator import TRMNLConfigEntry, TRMNLCoordinator
 
@@ -80,6 +81,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: TRMNLConfigEntry) -> N
             ) from err
 
         if hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, token.sub):
+            await async_revoke_token(hass, token.access_token)
             raise ConfigEntryError(
                 translation_domain=DOMAIN, translation_key="migration_duplicate"
             )

@@ -14,7 +14,12 @@ from pytest_homeassistant.plugins import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 from trmnl.exceptions import TRMNLAuthenticationError, TRMNLError
 
-from homeassistant.components.trmnl.const import CLIENT_ID, DOMAIN, OAUTH2_TOKEN
+from homeassistant.components.trmnl.const import (
+    CLIENT_ID,
+    DOMAIN,
+    OAUTH2_REVOKE,
+    OAUTH2_TOKEN,
+)
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, instance_id
@@ -198,16 +203,22 @@ async def test_migrate_retries_when_trmnl_is_unreachable(
 
 async def test_migrate_account_already_signed_in(
     hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
     mock_config_entry: MockConfigEntry,
     mock_api_key_config_entry: MockConfigEntry,
     mock_trmnl_client: AsyncMock,
 ) -> None:
     """Test an API key entry for an account already set up with OAuth is not migrated."""
+    aioclient_mock.post(OAUTH2_REVOKE)
     await setup_integration(hass, mock_config_entry)
     await setup_integration(hass, mock_api_key_config_entry)
 
     assert mock_api_key_config_entry.state is ConfigEntryState.MIGRATION_ERROR
     assert mock_api_key_config_entry.unique_id == "30561"
+    assert aioclient_mock.mock_calls[-1][2] == {
+        "token": "migrated-access",
+        "client_id": CLIENT_ID,
+    }
 
 
 @pytest.mark.parametrize("expires_at", [time() - 60])
