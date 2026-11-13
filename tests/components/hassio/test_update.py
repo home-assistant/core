@@ -713,7 +713,7 @@ async def test_update_core(
         HomeAssistantUpdateOptions(version=None, backup=False)
     )
     # The update report compares the next run with this snapshot.
-    before_update = hass_storage["repairs.update_report"]["data"]["before_update"]
+    before_update = hass_storage["update.report"]["data"]["before_update"]
     assert before_update["version"] == HAVERSION
 
 
