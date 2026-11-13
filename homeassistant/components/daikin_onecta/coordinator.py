@@ -28,7 +28,11 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import config_entry_oauth2_flow, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailed,
+    UpdateFailedUnreachable,
+)
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
@@ -296,7 +300,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                     retry_after=err.retry_after,
                 ) from err
             except OnectaConnectionError as err:
-                raise UpdateFailed(
+                raise UpdateFailedUnreachable(
                     translation_domain=DOMAIN,
                     translation_key="connection_failed",
                 ) from err

@@ -37,7 +37,10 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_component import async_update_entity
-from homeassistant.helpers.update_coordinator import UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    UpdateFailed,
+    UpdateFailedUnreachable,
+)
 
 from .test_climate_snapshots import _async_setup_fixture, _load_gateway_devices
 
@@ -821,7 +824,7 @@ class TestOnectaDataUpdateCoordinator:
             )
         )
 
-        with pytest.raises(UpdateFailed) as exc_info:
+        with pytest.raises(UpdateFailedUnreachable) as exc_info:
             await coordinator._async_update_data_from_cloud()
 
         assert isinstance(exc_info.value.__cause__, OnectaConnectionError)
