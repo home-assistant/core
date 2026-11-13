@@ -45,6 +45,44 @@ async def handle_command(command: Awaitable[dict[str, Any]]) -> dict[str, Any]:
     return result
 
 
+async def handle_fleet_command(command: Awaitable[dict[str, Any]], name: str) -> None:
+    """Handle a Fleet API vehicle command sent through Tessie's proxy."""
+    result = await handle_command(command)
+    if (response := result.get("response")) is None:
+        if error := result.get("error"):
+            # No response with error
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={"message": error},
+            )
+        # No response without error (unexpected)
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="unknown",
+            translation_placeholders={"name": name},
+        )
+    if response.get("result") is True:
+        return
+    reason: str | None = response.get("reason")
+    if reason in ("already_set", "not_charging", "requested"):
+        # Reason is acceptable
+        return
+    if reason:
+        # Result of false with reason
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key=TRANSLATED_ERRORS.get(reason, "command_failed"),
+            translation_placeholders={"name": name, "message": reason},
+        )
+    # Result of false without reason (unexpected)
+    raise HomeAssistantError(
+        translation_domain=DOMAIN,
+        translation_key="unknown",
+        translation_placeholders={"name": name},
+    )
+
+
 async def handle_legacy_command(command: Awaitable[dict[str, Any]], name: str) -> None:
     """Handle a legacy tessie_api command result."""
     try:

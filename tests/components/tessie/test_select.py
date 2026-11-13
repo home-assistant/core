@@ -258,3 +258,81 @@ async def test_steering_wheel_heater_state(
 
     assert (entity_state := hass.states.get(STEERING_WHEEL_ENTITY_ID))
     assert entity_state.state == expected
+
+
+@pytest.mark.parametrize(
+    ("response", "translation_key"),
+    [
+        pytest.param(
+            {"response": {"result": False, "reason": "could_not_wake_buses"}},
+            "command_failed",
+            id="reason",
+        ),
+        pytest.param(
+            {"response": {"result": False, "reason": ""}},
+            "unknown",
+            id="no_reason",
+        ),
+        pytest.param(
+            {"response": None, "error": "vehicle unavailable"},
+            "command_failed",
+            id="error",
+        ),
+        pytest.param({"response": None}, "unknown", id="no_response"),
+    ],
+)
+async def test_steering_wheel_heater_rejected(
+    hass: HomeAssistant,
+    mock_get_state_of_all_vehicles: AsyncMock,
+    mock_request: AsyncMock,
+    response: dict[str, Any],
+    translation_key: str,
+) -> None:
+    """Test a steering wheel heat level the vehicle rejects is not kept."""
+    vehicles = deepcopy(TEST_STATE_OF_ALL_VEHICLES)
+    vehicles["results"][0]["last_state"]["climate_state"]["is_climate_on"] = True
+    mock_get_state_of_all_vehicles.return_value = vehicles
+    await setup_platform(hass, [Platform.SELECT])
+    mock_request.return_value = response
+
+    with pytest.raises(HomeAssistantError) as error:
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: STEERING_WHEEL_ENTITY_ID,
+                SelectServiceArgument.OPTION: TessieSeatHeaterOptions.LOW,
+            },
+            blocking=True,
+        )
+
+    assert error.value.translation_domain == "tessie"
+    assert error.value.translation_key == translation_key
+    assert (entity_state := hass.states.get(STEERING_WHEEL_ENTITY_ID))
+    assert entity_state.state == TessieSeatHeaterOptions.OFF
+
+
+async def test_steering_wheel_heater_already_set(
+    hass: HomeAssistant,
+    mock_get_state_of_all_vehicles: AsyncMock,
+    mock_request: AsyncMock,
+) -> None:
+    """Test an already set steering wheel heat level is accepted."""
+    vehicles = deepcopy(TEST_STATE_OF_ALL_VEHICLES)
+    vehicles["results"][0]["last_state"]["climate_state"]["is_climate_on"] = True
+    mock_get_state_of_all_vehicles.return_value = vehicles
+    await setup_platform(hass, [Platform.SELECT])
+    mock_request.return_value = {"response": {"result": False, "reason": "already_set"}}
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: STEERING_WHEEL_ENTITY_ID,
+            SelectServiceArgument.OPTION: TessieSeatHeaterOptions.LOW,
+        },
+        blocking=True,
+    )
+
+    assert (entity_state := hass.states.get(STEERING_WHEEL_ENTITY_ID))
+    assert entity_state.state == TessieSeatHeaterOptions.LOW
