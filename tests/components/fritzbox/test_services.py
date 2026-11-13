@@ -12,9 +12,8 @@ from homeassistant.components.fritzbox.services import (
     FritzboxService,
     FritzboxServiceArgument,
 )
-from homeassistant.const import ATTR_DEVICE_ID, CONF_DEVICES
+from homeassistant.const import ATTR_ENTITY_ID, CONF_DEVICES
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
 
 from . import FritzDeviceClimateMock, setup_config_entry
 from .const import CONF_FAKE_NAME, MOCK_CONFIG
@@ -33,7 +32,6 @@ ENTITY_ID = f"{CLIMATE_DOMAIN}.{CONF_FAKE_NAME}"
 async def test_set_window_open_good(
     hass: HomeAssistant,
     fritz: Mock,
-    device_registry: dr.DeviceRegistry,
     service_data: dict[str, int],
 ) -> None:
     """Test set_window_open action with valid durations."""
@@ -45,15 +43,10 @@ async def test_set_window_open_good(
     assert entry
     assert fritz().update_devices.call_count == 1
 
-    device_entry = device_registry.async_get_device_by_identifier(
-        (DOMAIN, device.ain), entry.entry_id
-    )
-    assert device_entry
-
     await hass.services.async_call(
         DOMAIN,
         FritzboxService.SET_WINDOW_OPEN,
-        {ATTR_DEVICE_ID: device_entry.id, **service_data},
+        {ATTR_ENTITY_ID: ENTITY_ID, **service_data},
         True,
     )
     assert fritz().set_window_open.call_count == 1
@@ -80,7 +73,6 @@ async def test_set_window_open_good(
 async def test_set_window_open_bad(
     hass: HomeAssistant,
     fritz: Mock,
-    device_registry: dr.DeviceRegistry,
     service_data: tuple[dict[str, int], str],
 ) -> None:
     """Test set_window_open action with invalid durations."""
@@ -92,16 +84,11 @@ async def test_set_window_open_bad(
     assert entry
     assert fritz().update_devices.call_count == 1
 
-    device_entry = device_registry.async_get_device_by_identifier(
-        (DOMAIN, device.ain), entry.entry_id
-    )
-    assert device_entry
-
     with pytest.raises(MultipleInvalid, match=service_data[1]):
         await hass.services.async_call(
             DOMAIN,
             FritzboxService.SET_WINDOW_OPEN,
-            {ATTR_DEVICE_ID: device_entry.id, **service_data[0]},
+            {ATTR_ENTITY_ID: ENTITY_ID, **service_data[0]},
             True,
         )
 
@@ -109,7 +96,8 @@ async def test_set_window_open_bad(
 
 
 async def test_set_window_close(
-    hass: HomeAssistant, fritz: Mock, device_registry: dr.DeviceRegistry
+    hass: HomeAssistant,
+    fritz: Mock,
 ) -> None:
     """Test set_window_close action."""
     device = FritzDeviceClimateMock()
@@ -120,15 +108,10 @@ async def test_set_window_close(
     assert entry
     assert fritz().update_devices.call_count == 1
 
-    device_entry = device_registry.async_get_device_by_identifier(
-        (DOMAIN, device.ain), entry.entry_id
-    )
-    assert device_entry
-
     await hass.services.async_call(
         DOMAIN,
         FritzboxService.SET_WINDOW_CLOSE,
-        {ATTR_DEVICE_ID: device_entry.id},
+        {ATTR_ENTITY_ID: ENTITY_ID},
         True,
     )
 
