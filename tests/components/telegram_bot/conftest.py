@@ -26,10 +26,10 @@ from homeassistant.components.telegram_bot.const import (
     CONF_TRUSTED_NETWORKS,
     DEFAULT_API_ENDPOINT,
     DOMAIN,
-    PARSER_MD,
     PLATFORM_BROADCAST,
     PLATFORM_POLLING,
     PLATFORM_WEBHOOKS,
+    TelegramBotParseMode,
 )
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import CONF_API_KEY, CONF_PLATFORM, CONF_URL
@@ -48,7 +48,7 @@ def mock_polling_config_entry() -> MockConfigEntry:
             CONF_API_KEY: "mock api key",
             CONF_API_ENDPOINT: DEFAULT_API_ENDPOINT,
         },
-        options={ATTR_PARSER: PARSER_MD},
+        options={ATTR_PARSER: TelegramBotParseMode.MARKDOWN},
         subentries_data=[
             ConfigSubentryData(
                 unique_id="1234567890",
@@ -319,7 +319,7 @@ def mock_broadcast_config_entry() -> MockConfigEntry:
             CONF_API_ENDPOINT: DEFAULT_API_ENDPOINT,
             CONF_API_KEY: "mock api key",
         },
-        options={ATTR_PARSER: PARSER_MD},
+        options={ATTR_PARSER: TelegramBotParseMode.MARKDOWN},
         subentries_data=[
             ConfigSubentryData(
                 unique_id="123456",
@@ -351,7 +351,7 @@ def mock_webhooks_config_entry() -> MockConfigEntry:
             CONF_API_ENDPOINT: "http://mock/bot",
             CONF_TRUSTED_NETWORKS: ["127.0.0.1"],
         },
-        options={ATTR_PARSER: PARSER_MD},
+        options={ATTR_PARSER: TelegramBotParseMode.MARKDOWN},
         subentries_data=[
             ConfigSubentryData(
                 unique_id="12345678",

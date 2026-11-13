@@ -78,6 +78,15 @@ class TelegramBotServiceArgument(StrEnum):
     ONE_TIME_KEYBOARD = "one_time_keyboard"
 
 
+class TelegramBotParseMode(StrEnum):
+    """Parse modes of the Telegram bot messages."""
+
+    HTML = "html"
+    MARKDOWN = "markdown"
+    MARKDOWN_V2 = "markdownv2"
+    PLAIN_TEXT = "plain_text"
+
+
 PLATFORM_BROADCAST = "broadcast"
 PLATFORM_POLLING = "polling"
 PLATFORM_WEBHOOKS = "webhooks"
