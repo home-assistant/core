@@ -1,7 +1,6 @@
 """Coordinator for EnergyID directives."""
 
 import asyncio
-from bisect import bisect_right
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from http import HTTPStatus
@@ -13,7 +12,7 @@ from energyid_webhooks.client_v2 import WebhookClient
 from energyid_webhooks.directives import (
     DirectiveData,
     DirectiveResource,
-    DirectiveSignal,
+    DirectiveState,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -39,47 +38,15 @@ def async_directives_enabled(entry: ConfigEntry) -> bool:
 
 
 @dataclass(frozen=True)
-class EnergyIDDirectiveState:
-    """Signal of a directive at one moment and when it changes next."""
-
-    current: DirectiveSignal | None
-    next_change: datetime | None
-    next_signal: DirectiveSignal | None
-
-
-@dataclass(frozen=True)
 class EnergyIDDirectiveSnapshot:
     """Fetched schedule of one directive."""
 
     resource: DirectiveResource
     schedule: DirectiveData
 
-    def state_at(self, moment: datetime) -> EnergyIDDirectiveState:
+    def state_at(self, moment: datetime) -> DirectiveState:
         """Return the signal at a moment and the first change after it."""
-        points = sorted(self.schedule.data, key=lambda point: point.timestamp)
-        timestamps = [point.timestamp for point in points]
-        interval = dt_util.parse_duration(self.schedule.interval)
-
-        def signal_at(when: datetime) -> DirectiveSignal | None:
-            index = bisect_right(timestamps, when)
-            if not index:
-                return None
-            point = points[index - 1]
-            if interval and when >= point.timestamp + interval:
-                return None
-            return point
-
-        current = signal_at(moment)
-        boundaries = set(timestamps)
-        if interval:
-            boundaries.update(timestamp + interval for timestamp in timestamps)
-        for boundary in sorted(boundaries):
-            if boundary <= moment:
-                continue
-            signal = signal_at(boundary)
-            if _signal_value(signal) != _signal_value(current):
-                return EnergyIDDirectiveState(current, boundary, signal)
-        return EnergyIDDirectiveState(current, None, None)
+        return self.schedule.state_at(moment)
 
 
 @dataclass(frozen=True)
@@ -245,11 +212,6 @@ class EnergyIDDirectiveCoordinator(DataUpdateCoordinator[EnergyIDDirectivesData]
                 translation_domain=DOMAIN,
                 translation_key="device_not_claimed",
             )
-
-
-def _signal_value(point: DirectiveSignal | None) -> str | None:
-    """Return the signal of a point, or None when no slot is active."""
-    return point.signal if point else None
 
 
 @dataclass
