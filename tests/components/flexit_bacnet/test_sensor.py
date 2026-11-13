@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
@@ -27,14 +28,16 @@ async def test_sensors(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.parametrize("humidity", [None, 0.0])
 async def test_extract_air_humidity_not_supported(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_flexit_bacnet: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    humidity: float | None,
 ) -> None:
     """Test extract air humidity sensor is not created on units without the sensor."""
-    mock_flexit_bacnet.extract_air_humidity = 0.0
+    mock_flexit_bacnet.extract_air_humidity = humidity
 
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.SENSOR])
 

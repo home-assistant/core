@@ -3,6 +3,9 @@
   "name": "Snooz",
   "bluetooth": [
     {
+      "local_name": "Breez*"
+    },
+    {
       "local_name": "Snooz*"
     },
     {

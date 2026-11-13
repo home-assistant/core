@@ -24,7 +24,6 @@ from homeassistant.config_entries import (
     SOURCE_IGNORE,
     SOURCE_USB,
     SOURCE_ZEROCONF,
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -1702,7 +1701,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         # deduplicated against a pending prompt or an ignored entry.
         placeholder_unique_id = f"esphome_{discovery_info.name}"
         if discovery_info.zwave_home_id:
-            existing_entry: ConfigEntry | None = None
+            existing_entry: ZwaveJSConfigEntry | None = None
             if (
                 (
                     current_config_entries := self._async_current_entries(

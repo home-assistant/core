@@ -1,6 +1,5 @@
 """Tests for the Yoto integration setup."""
 
-import logging
 from unittest.mock import MagicMock, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -126,7 +125,6 @@ async def test_status_push_tick_error(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """A failed status request is logged and the timer keeps running."""
-    caplog.set_level(logging.DEBUG)
     mock_yoto_client.is_mqtt_connected = True
     await setup_integration(hass, mock_config_entry)
     mock_yoto_client.request_player_status.side_effect = YotoError("timed out")

@@ -28,6 +28,7 @@ from homeassistant.util import slugify
 from .const import (
     API_VERSION,
     APP_DESC,
+    CONNECTION_IP_SENSORS_KEYS,
     CONNECTION_SENSORS_KEYS,
     DOMAIN,
     HOME_COMPATIBLE_CATEGORIES,
@@ -165,7 +166,7 @@ class FreeboxRouter:
         self.sensors_temperature_names: dict[str, str] = {}
         self.sensors_fan: dict[str, int] = {}
         self.sensors_fan_names: dict[str, str] = {}
-        self.sensors_connection: dict[str, float] = {}
+        self.sensors_connection: dict[str, float | str | None] = {}
         self.call_list: list[dict[str, Any]] = []
         self.home_granted = True
         self.home_devices: dict[str, Any] = {}
@@ -239,6 +240,8 @@ class FreeboxRouter:
         connection_datas: dict[str, Any] = await self._api.connection.get_status()
         for sensor_key in CONNECTION_SENSORS_KEYS:
             self.sensors_connection[sensor_key] = connection_datas[sensor_key]
+        for sensor_key in CONNECTION_IP_SENSORS_KEYS:
+            self.sensors_connection[sensor_key] = connection_datas.get(sensor_key)
 
         self._attrs = {
             "IPv4": connection_datas.get("ipv4"),

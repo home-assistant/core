@@ -4,6 +4,7 @@ aiodhcpwatcher==1.2.7
 aiodiscover==3.3.2
 aiodns==4.0.4
 aiogithubapi==26.0.0
+aiohasupervisor==0.11.0
 aiohttp-asyncmdnsresolver==0.2.0
 aiohttp-fast-zlib==0.3.0
 aiohttp==3.14.5
@@ -28,7 +29,7 @@ bluetooth-data-tools==1.29.24
 cached-ipaddress==1.1.2
 certifi>=2021.5.30
 ciso8601==2.3.3
-cronsim==2.7
+cronsim==2.8
 cryptography==50.0.2
 dbus-fast==5.0.22
 file-read-backwards==2.0.0
@@ -40,12 +41,14 @@ habluetooth==7.1.2
 hass-nabucasa==2.8.1
 hassil==3.12.1
 home-assistant-bluetooth==2.0.0
-home-assistant-frontend==20261028.4
+home-assistant-frontend==20261028.6
 home-assistant-intents==2026.10.27
 httpx2==2.14.0
 ifaddr==0.2.0
 Jinja2==3.1.6
 lru-dict==1.4.1
+matter-ble-proxy==0.7.1
+matter-python-client==1.5.5
 mutagen==1.48.1
 openai==3.26.0
 orjson==3.13.0
@@ -67,17 +70,17 @@ PyYAML==6.0.3
 requests==2.34.2
 securetar==2026.10.0
 serialx==1.15.1
-SQLAlchemy==2.1.6
+SQLAlchemy==2.1.8
 standard-aifc==3.13.0
 standard-telnetlib==3.13.0
 truststore==0.10.4
 typing-extensions>=4.16.0,<5.0
 ulid-transform==2.2.9
 urllib3>=2.0
-uv==0.13.6
+uv==0.13.7
 webrtc-models==0.3.0
 yarl==1.25.1
-zeroconf==0.152.0
+zeroconf==0.153.0
 
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238
@@ -120,7 +123,7 @@ uuid==1000000000.0.0
 # httpx2 requires httpcore2 and anyio, while httpcore2 requires h11. The
 # version constraints on anyio and h11 are quite loose. Pin them so we can
 # directly link HA versions to these library versions.
-anyio==4.15.1
+anyio==4.16.0
 h11==0.16.0
 
 # Many libraries still depend on httpx/httpcore. Those imports are aliased to
@@ -141,7 +144,7 @@ multidict>=6.0.2
 Brotli>=1.2.1
 
 # ensure pydantic version does not float since it might have breaking changes
-pydantic==2.14.1
+pydantic==2.14.3
 
 # Required for Python 3.14.0 compatibility (#119223).
 mashumaro>=3.17.0

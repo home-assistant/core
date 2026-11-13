@@ -14,7 +14,6 @@ from pytomorrowio.pytomorrowio import TomorrowioV4
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
@@ -41,6 +40,7 @@ from .const import (
     SUBENTRY_TYPE_LOCATION,
     TMRW_ATTR_TEMPERATURE,
 )
+from .coordinator import TomorrowioConfigEntry
 from .entity import async_get_base_unique_id
 
 _LOGGER = logging.getLogger(__name__)
@@ -127,7 +127,7 @@ class TomorrowioConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: TomorrowioConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         return {SUBENTRY_TYPE_LOCATION: LocationSubentryFlowHandler}

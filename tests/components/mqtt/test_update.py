@@ -36,8 +36,13 @@ from pytest_homeassistant.typing import MqttMockHAClientGenerator, MqttMockPahoC
 
 from homeassistant.components import update
 from homeassistant.components.mqtt.const import DOMAIN
-from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN, SERVICE_INSTALL
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNKNOWN
+from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN, UpdateService
+from homeassistant.const import (
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNKNOWN,
+    CommonServiceArgument,
+)
 from homeassistant.core import HomeAssistant
 
 DEFAULT_CONFIG = {
@@ -592,8 +597,8 @@ async def test_run_install_service(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: "update.test_update"},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: "update.test_update"},
         blocking=True,
     )
 
