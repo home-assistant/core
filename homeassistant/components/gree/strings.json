@@ -1,8 +1,16 @@
 {
   "config": {
+    "error": {
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]"
+    },
     "step": {
-      "confirm": {
-        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      "config": {
+        "data": {
+          "known_hosts": "[%key:component::cast::config::step::config::data::known_hosts%]"
+        },
+        "data_description": {
+          "known_hosts": "[%key:component::doorbird::config::abort::not_ipv4_address%]"
+        }
       }
     }
   },
@@ -55,6 +63,21 @@
       },
       "xfan": {
         "name": "Xtra fan"
+      }
+    }
+  },
+  "options": {
+    "error": {
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]"
+    },
+    "step": {
+      "init": {
+        "data": {
+          "known_hosts": "[%key:component::cast::config::step::config::data::known_hosts%]"
+        },
+        "data_description": {
+          "known_hosts": "[%key:component::doorbird::config::abort::not_ipv4_address%]"
+        }
       }
     }
   }

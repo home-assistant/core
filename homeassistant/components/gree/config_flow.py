@@ -1,22 +1,107 @@
 """Config flow for Gree."""
 
-from greeclimate.discovery import Discovery
+from ipaddress import IPv4Address
+from typing import Any, override
 
-from homeassistant.components.network import async_get_ipv4_broadcast_addresses
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_entry_flow
+import probatio
 
-from .const import DISCOVERY_TIMEOUT, DOMAIN
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
+from homeassistant.core import callback
+from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
+
+from .const import CONF_KNOWN_HOSTS, DOMAIN
+
+KNOWN_HOSTS_SCHEMA = probatio.Schema(
+    {
+        probatio.Optional(CONF_KNOWN_HOSTS): SelectSelector(
+            SelectSelectorConfig(custom_value=True, options=[], multiple=True)
+        )
+    }
+)
 
 
-async def _async_has_devices(hass: HomeAssistant) -> bool:
-    """Return if there are devices that can be discovered."""
-    gree_discovery = Discovery(DISCOVERY_TIMEOUT)
-    bcast_addr = list(await async_get_ipv4_broadcast_addresses(hass))
-    devices = await gree_discovery.scan(
-        wait_for=DISCOVERY_TIMEOUT, bcast_ifaces=bcast_addr
-    )
-    return len(devices) > 0
+class GreeConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle a config flow."""
+
+    VERSION = 1
+
+    @staticmethod
+    @callback
+    @override
+    def async_get_options_flow(config_entry: ConfigEntry) -> GreeOptionsFlow:
+        """Get the options flow for this handler."""
+        return GreeOptionsFlow()
+
+    @override
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a flow initialized by the user."""
+        await self.async_set_unique_id(DOMAIN)
+        self._abort_if_unique_id_configured()
+        return await self.async_step_config()
+
+    async def async_step_config(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Configure optional IPv4 discovery hints."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            try:
+                known_hosts = _normalize_known_hosts(
+                    user_input.get(CONF_KNOWN_HOSTS, [])
+                )
+            except ValueError:
+                errors[CONF_KNOWN_HOSTS] = "invalid_host"
+            else:
+                return self.async_create_entry(
+                    title="Gree Climate",
+                    data={CONF_KNOWN_HOSTS: known_hosts},
+                )
+
+        return self.async_show_form(
+            step_id="config", data_schema=KNOWN_HOSTS_SCHEMA, errors=errors
+        )
 
 
-config_entry_flow.register_discovery_flow(DOMAIN, "Gree Climate", _async_has_devices)
+class GreeOptionsFlow(OptionsFlow):
+    """Handle Gree options."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Configure optional IPv4 discovery hints."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            try:
+                known_hosts = _normalize_known_hosts(
+                    user_input.get(CONF_KNOWN_HOSTS, [])
+                )
+            except ValueError:
+                errors[CONF_KNOWN_HOSTS] = "invalid_host"
+            else:
+                updated_data = dict(self.config_entry.data)
+                updated_data[CONF_KNOWN_HOSTS] = known_hosts
+                self.hass.config_entries.async_update_entry(
+                    self.config_entry, data=updated_data
+                )
+                return self.async_create_entry(title="", data={})
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=self.add_suggested_values_to_schema(
+                KNOWN_HOSTS_SCHEMA, self.config_entry.data
+            ),
+            errors=errors,
+            last_step=True,
+        )
+
+
+def _normalize_known_hosts(hosts: list[str]) -> list[str]:
+    """Trim and validate optional IPv4 discovery hints."""
+    return [str(IPv4Address(address)) for host in hosts if (address := host.strip())]
