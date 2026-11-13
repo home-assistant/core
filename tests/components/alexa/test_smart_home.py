@@ -2,7 +2,6 @@
 
 import asyncio
 from collections.abc import Generator
-import logging
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, call, patch
 
@@ -19,11 +18,15 @@ from webrtc_models import RTCIceCandidate, RTCIceCandidateInit
 from homeassistant.components import camera
 from homeassistant.components.alexa import smart_home, state_report
 from homeassistant.components.alexa.handlers import RTC_MAX_SESSION_DURATION
-from homeassistant.components.climate import ClimateEntityFeature
+from homeassistant.components.climate import (
+    ClimateEntityCapabilityAttribute,
+    ClimateEntityFeature,
+)
 from homeassistant.components.cover import CoverDeviceClass, CoverEntityFeature
 from homeassistant.components.media_player import MediaPlayerEntityFeature
 from homeassistant.components.vacuum import VacuumEntityFeature
 from homeassistant.components.valve import SERVICE_STOP_VALVE, ValveEntityFeature
+from homeassistant.components.water_heater import WaterHeaterCapabilityAttribute
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_CLOSE_VALVE,
@@ -37,7 +40,11 @@ from homeassistant.core import Context, Event, HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.helpers import entity_registry as er, entityfilter
 from homeassistant.setup import async_setup_component
-from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
+from homeassistant.util.unit_system import (
+    METRIC_SYSTEM,
+    US_CUSTOMARY_SYSTEM,
+    UnitSystem,
+)
 
 from .test_common import (
     MockConfig,
@@ -2871,9 +2878,16 @@ async def test_unknown_sensor(hass: HomeAssistant) -> None:
     await discovery_test(device, hass, expected_endpoints=0)
 
 
-async def test_thermostat(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "unit_system",
+    [
+        pytest.param(US_CUSTOMARY_SYSTEM, id="us_customary_system"),
+        pytest.param(METRIC_SYSTEM, id="metric_system"),
+    ],
+)
+async def test_thermostat(hass: HomeAssistant, unit_system: UnitSystem) -> None:
     """Test thermostat discovery."""
-    hass.config.units = US_CUSTOMARY_SYSTEM
+    hass.config.units = unit_system
     device = (
         "climate.test_thermostat",
         "cool",
@@ -2889,6 +2903,7 @@ async def test_thermostat(hass: HomeAssistant) -> None:
             "preset_modes": ["eco"],
             "min_temp": 50,
             "max_temp": 90,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
         },
     )
     appliance = await discovery_test(device, hass)
@@ -3163,6 +3178,7 @@ async def test_onoff_thermostat(hass: HomeAssistant) -> None:
             "hvac_modes": ["auto"],
             "min_temp": 7,
             "max_temp": 30,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         },
     )
     appliance = await discovery_test(device, hass)
@@ -3255,6 +3271,7 @@ async def test_onoff_thermostat(hass: HomeAssistant) -> None:
             "hvac_modes": ["auto"],
             "min_temp": 7,
             "max_temp": 30,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         },
     )
     appliance = await discovery_test(device, hass)
@@ -3272,9 +3289,16 @@ async def test_onoff_thermostat(hass: HomeAssistant) -> None:
     )
 
 
-async def test_water_heater(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "unit_system",
+    [
+        pytest.param(US_CUSTOMARY_SYSTEM, id="us_customary_system"),
+        pytest.param(METRIC_SYSTEM, id="metric_system"),
+    ],
+)
+async def test_water_heater(hass: HomeAssistant, unit_system: UnitSystem) -> None:
     """Test water_heater discovery."""
-    hass.config.units = US_CUSTOMARY_SYSTEM
+    hass.config.units = unit_system
     device = (
         "water_heater.boyler",
         "gas",
@@ -3289,6 +3313,7 @@ async def test_water_heater(hass: HomeAssistant) -> None:
             "operation_mode": "gas",
             "min_temp": 50,
             "max_temp": 90,
+            WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
         },
     )
     appliance = await discovery_test(device, hass)
@@ -3465,6 +3490,7 @@ async def test_no_current_target_temp_adjusting_temp(hass: HomeAssistant) -> Non
             "preset_modes": ["eco"],
             "min_temp": 50,
             "max_temp": 90,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
         },
     )
     appliance = await discovery_test(device, hass)
@@ -3516,12 +3542,19 @@ async def test_no_current_target_temp_adjusting_temp(hass: HomeAssistant) -> Non
     )
 
 
-async def test_thermostat_dual(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "unit_system",
+    [
+        pytest.param(US_CUSTOMARY_SYSTEM, id="us_customary_system"),
+        pytest.param(METRIC_SYSTEM, id="metric_system"),
+    ],
+)
+async def test_thermostat_dual(hass: HomeAssistant, unit_system: UnitSystem) -> None:
     """Test thermostat discovery with auto mode.
 
     Uses upper and lower target temperatures.
     """
-    hass.config.units = US_CUSTOMARY_SYSTEM
+    hass.config.units = unit_system
     device = (
         "climate.test_thermostat",
         "auto",
@@ -3537,6 +3570,7 @@ async def test_thermostat_dual(hass: HomeAssistant) -> None:
             "preset_modes": ["eco"],
             "min_temp": 50,
             "max_temp": 90,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
         },
     )
     appliance = await discovery_test(device, hass)
@@ -6002,7 +6036,6 @@ async def test_initiate_session_with_offer(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test InitiateSessionWithOffer returns an answer with gathered candidates."""
-    caplog.set_level(logging.DEBUG)
     request = get_new_request(
         "Alexa.RTCSessionController",
         "InitiateSessionWithOffer",
@@ -6094,7 +6127,6 @@ async def test_initiate_session_with_offer_candidate_timeout(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the answer is returned when no end of candidates is signalled."""
-    caplog.set_level(logging.DEBUG)
     request = get_new_request(
         "Alexa.RTCSessionController",
         "InitiateSessionWithOffer",
@@ -6429,7 +6461,6 @@ async def test_rtc_session_connected(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test SessionConnected is acknowledged."""
-    caplog.set_level(logging.DEBUG)
     request = get_new_request(
         "Alexa.RTCSessionController", "SessionConnected", DEMO_CAMERA_ENDPOINT
     )
@@ -6454,7 +6485,6 @@ async def test_rtc_session_disconnected(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, camera_on: bool
 ) -> None:
     """Test SessionDisconnected closes the WebRTC session, even for a camera that is off."""
-    caplog.set_level(logging.DEBUG)
     await hass.services.async_call(
         camera.DOMAIN,
         SERVICE_TURN_ON if camera_on else SERVICE_TURN_OFF,
@@ -6544,7 +6574,6 @@ async def test_rtc_session_expires(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a session is closed when Alexa never sends SessionDisconnected."""
-    caplog.set_level(logging.DEBUG)
     with patch(
         "homeassistant.components.camera.Camera.close_webrtc_session"
     ) as mock_close:

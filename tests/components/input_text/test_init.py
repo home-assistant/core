@@ -129,6 +129,38 @@ async def test_set_value(hass: HomeAssistant) -> None:
     assert hass.states.get(entity_id_2).state == ""
 
 
+async def test_set_value_pattern(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test set_value rejects values that do not match the pattern."""
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                "test_1": {
+                    "initial": "07:30",
+                    "min": 0,
+                    "max": 20,
+                    "pattern": "^$|^[0-9]{2}:[0-9]{2}$",
+                },
+            }
+        },
+    )
+    entity_id = "input_text.test_1"
+    assert hass.states.get(entity_id).state == "07:30"
+
+    await async_set_value(hass, entity_id, "12:45")
+    assert hass.states.get(entity_id).state == "12:45"
+
+    await async_set_value(hass, entity_id, "invalid")
+    assert hass.states.get(entity_id).state == "12:45"
+    assert "Invalid value: invalid" in caplog.text
+
+    await async_set_value(hass, entity_id, "")
+    assert hass.states.get(entity_id).state == ""
+
+
 async def test_mode(hass: HomeAssistant) -> None:
     """Test mode settings."""
     assert await async_setup_component(

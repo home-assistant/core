@@ -8,9 +8,13 @@ from pytest_homeassistant.common import MockConfigEntry
 from reolink_aio.enums import SpotlightModeEnum
 from reolink_aio.exceptions import InvalidParameterError, ReolinkError
 
-from homeassistant.components.time import DOMAIN as TIME_DOMAIN, SERVICE_SET_VALUE
+from homeassistant.components.time import (
+    DOMAIN as TIME_DOMAIN,
+    TimeService,
+    TimeServiceArgument,
+)
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TIME, STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -47,8 +51,11 @@ async def test_floodlight_schedule(
     # Setting the start time keeps the existing end time (6:30)
     await hass.services.async_call(
         TIME_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: start_id, ATTR_TIME: time(20, 15)},
+        TimeService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: start_id,
+            TimeServiceArgument.TIME: time(20, 15),
+        },
         blocking=True,
     )
     reolink_host.set_spotlight_lighting_schedule.assert_called_with(0, 6, 30, 20, 15)
@@ -56,8 +63,8 @@ async def test_floodlight_schedule(
     # Setting the end time keeps the existing start time (18:00)
     await hass.services.async_call(
         TIME_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: end_id, ATTR_TIME: time(7, 0)},
+        TimeService.SET_VALUE,
+        {CommonServiceArgument.ENTITY_ID: end_id, TimeServiceArgument.TIME: time(7, 0)},
         blocking=True,
     )
     reolink_host.set_spotlight_lighting_schedule.assert_called_with(0, 7, 0, 18, 0)
@@ -68,8 +75,11 @@ async def test_floodlight_schedule(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             TIME_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: start_id, ATTR_TIME: time(20, 15)},
+            TimeService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: start_id,
+                TimeServiceArgument.TIME: time(20, 15),
+            },
             blocking=True,
         )
 
@@ -79,8 +89,11 @@ async def test_floodlight_schedule(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             TIME_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: start_id, ATTR_TIME: time(20, 15)},
+            TimeService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: start_id,
+                TimeServiceArgument.TIME: time(20, 15),
+            },
             blocking=True,
         )
 

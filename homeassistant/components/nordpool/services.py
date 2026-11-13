@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from datetime import date, datetime
+from enum import StrEnum
 from functools import partial
 import logging
 from typing import TYPE_CHECKING
@@ -17,7 +18,6 @@ from pynordpool import (
     PriceIndicesData,
 )
 
-from homeassistant.const import ATTR_DATE
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -33,7 +33,7 @@ from homeassistant.util.json import JsonValueType
 
 if TYPE_CHECKING:
     from . import NordPoolConfigEntry
-from .const import ATTR_RESOLUTION, DOMAIN
+from .const import DOMAIN
 from .coordinator import NordPoolDataUpdateCoordinator
 
 
@@ -53,22 +53,37 @@ def _validate_areas(areas: list[str]) -> list[str]:
 
 
 _LOGGER = logging.getLogger(__name__)
-ATTR_CONFIG_ENTRY = "config_entry"
 ATTR_AREAS = "areas"
 ATTR_CURRENCY = "currency"
 
-SERVICE_GET_PRICES_FOR_DATE = "get_prices_for_date"
-SERVICE_GET_PRICE_INDICES_FOR_DATE = "get_price_indices_for_date"
+
+class NordPoolService(StrEnum):
+    """Store keys for Nord Pool services."""
+
+    GET_PRICES_FOR_DATE = "get_prices_for_date"
+    GET_PRICE_INDICES_FOR_DATE = "get_price_indices_for_date"
+
+
+class NordPoolServiceArgument(StrEnum):
+    """Store keys for Nord Pool service arguments."""
+
+    CONFIG_ENTRY = "config_entry"
+    DATE = "date"
+    AREAS = "areas"
+    CURRENCY = "currency"
+    RESOLUTION = "resolution"
+
+
 SERVICE_GET_PRICES_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector(
+        probatio.Required(NordPoolServiceArgument.CONFIG_ENTRY): ConfigEntrySelector(
             {"integration": DOMAIN}
         ),
-        probatio.Required(ATTR_DATE): cv.date,
-        probatio.Optional(ATTR_AREAS, default=[]): probatio.All(
+        probatio.Required(NordPoolServiceArgument.DATE): cv.date,
+        probatio.Optional(NordPoolServiceArgument.AREAS, default=[]): probatio.All(
             probatio.EnsureList(), _validate_areas
         ),
-        probatio.Optional(ATTR_CURRENCY): probatio.All(
+        probatio.Optional(NordPoolServiceArgument.CURRENCY): probatio.All(
             cv.string,
             probatio.Upper,
             probatio.In([currency.value for currency in Currency]),
@@ -77,7 +92,7 @@ SERVICE_GET_PRICES_SCHEMA = probatio.Schema(
 )
 SERVICE_GET_PRICE_INDICES_SCHEMA = SERVICE_GET_PRICES_SCHEMA.extend(
     {
-        probatio.Optional(ATTR_RESOLUTION, default=60): probatio.All(
+        probatio.Optional(NordPoolServiceArgument.RESOLUTION, default=60): probatio.All(
             cv.positive_int,
             probatio.All(probatio.Coerce(int), probatio.In((15, 30, 60))),
         ),
@@ -94,18 +109,18 @@ def async_setup_services(hass: HomeAssistant) -> None:
     ) -> tuple[NordPoolDataUpdateCoordinator, date, str, list[str], int]:
         """Return the parameters for the service."""
         entry: NordPoolConfigEntry = service.async_get_config_entry(
-            hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY]
+            hass, DOMAIN, call.data[NordPoolServiceArgument.CONFIG_ENTRY]
         )
         coordinator = entry.runtime_data
-        asked_date: date = call.data[ATTR_DATE]
+        asked_date: date = call.data[NordPoolServiceArgument.DATE]
 
-        areas = call.data.get(ATTR_AREAS)
+        areas = call.data.get(NordPoolServiceArgument.AREAS)
         areas = areas or entry.data[ATTR_AREAS]
 
-        currency = call.data.get(ATTR_CURRENCY)
+        currency = call.data.get(NordPoolServiceArgument.CURRENCY)
         currency = currency or entry.data[ATTR_CURRENCY]
 
-        resolution = call.data.get(ATTR_RESOLUTION)
+        resolution = call.data.get(NordPoolServiceArgument.RESOLUTION)
         resolution = resolution or 60
 
         return (coordinator, asked_date, currency, areas, resolution)
@@ -185,14 +200,14 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_GET_PRICES_FOR_DATE,
+        NordPoolService.GET_PRICES_FOR_DATE,
         partial(get_prices, get_prices_for_date),
         schema=SERVICE_GET_PRICES_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
     hass.services.async_register(
         DOMAIN,
-        SERVICE_GET_PRICE_INDICES_FOR_DATE,
+        NordPoolService.GET_PRICE_INDICES_FOR_DATE,
         partial(get_prices, get_price_indices_for_date),
         schema=SERVICE_GET_PRICE_INDICES_SCHEMA,
         supports_response=SupportsResponse.ONLY,

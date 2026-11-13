@@ -1,11 +1,12 @@
 """Service calls for the Tesla Fleet integration."""
 
+from enum import StrEnum
 from typing import TYPE_CHECKING
 
 import probatio
 from tesla_fleet_api.const import Scope
 
-from homeassistant.const import CONF_DEVICE_ID, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CommonServiceArgument
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import (
@@ -21,15 +22,21 @@ from .models import TeslaFleetVehicleData
 if TYPE_CHECKING:
     from . import TeslaFleetConfigEntry
 
-# Attributes
-ATTR_DESTINATION = "destination"
-ATTR_GPS = "gps"
-ATTR_PLACE_IDS = "place_ids"
 
-# Services
-SERVICE_NAVIGATE_TO_DESTINATION = "navigate_to_destination"
-SERVICE_NAVIGATE_TO_COORDINATES = "navigate_to_coordinates"
-SERVICE_NAVIGATE_TO_WAYPOINTS = "navigate_to_waypoints"
+class TeslaFleetService(StrEnum):
+    """Store keys for Tesla Fleet services."""
+
+    NAVIGATE_TO_DESTINATION = "navigate_to_destination"
+    NAVIGATE_TO_COORDINATES = "navigate_to_coordinates"
+    NAVIGATE_TO_WAYPOINTS = "navigate_to_waypoints"
+
+
+class TeslaFleetServiceArgument(StrEnum):
+    """Store keys for Tesla Fleet service arguments."""
+
+    DESTINATION = "destination"
+    GPS = "gps"
+    PLACE_IDS = "place_ids"
 
 
 def async_get_vehicle_for_service_call(
@@ -40,7 +47,10 @@ def async_get_vehicle_for_service_call(
     config: TeslaFleetConfigEntry
     # Vehicles are matched by serial number, which only a main device has
     device, config = service.async_get_device_and_config_entry(
-        hass, DOMAIN, call.data[CONF_DEVICE_ID], include_child_devices=False
+        hass,
+        DOMAIN,
+        call.data[CommonServiceArgument.DEVICE_ID],
+        include_child_devices=False,
     )
     if Scope.VEHICLE_CMDS not in config.runtime_data.scopes:
         raise ServiceValidationError(
@@ -66,17 +76,19 @@ def async_setup_services(hass: HomeAssistant) -> None:
         vehicle = async_get_vehicle_for_service_call(hass, call)
         await wake_up_vehicle(vehicle)
         await handle_vehicle_command(
-            vehicle.api.navigation_request(call.data[ATTR_DESTINATION])
+            vehicle.api.navigation_request(
+                call.data[TeslaFleetServiceArgument.DESTINATION]
+            )
         )
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_NAVIGATE_TO_DESTINATION,
+        TeslaFleetService.NAVIGATE_TO_DESTINATION,
         navigate_to_destination,
         schema=probatio.Schema(
             {
-                probatio.Required(CONF_DEVICE_ID): cv.string,
-                probatio.Required(ATTR_DESTINATION): cv.string,
+                probatio.Required(CommonServiceArgument.DEVICE_ID): cv.string,
+                probatio.Required(TeslaFleetServiceArgument.DESTINATION): cv.string,
             }
         ),
     )
@@ -87,19 +99,19 @@ def async_setup_services(hass: HomeAssistant) -> None:
         await wake_up_vehicle(vehicle)
         await handle_vehicle_command(
             vehicle.api.navigation_gps_request(
-                lat=call.data[ATTR_GPS][CONF_LATITUDE],
-                lon=call.data[ATTR_GPS][CONF_LONGITUDE],
+                lat=call.data[TeslaFleetServiceArgument.GPS][CONF_LATITUDE],
+                lon=call.data[TeslaFleetServiceArgument.GPS][CONF_LONGITUDE],
             )
         )
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_NAVIGATE_TO_COORDINATES,
+        TeslaFleetService.NAVIGATE_TO_COORDINATES,
         navigate_to_coordinates,
         schema=probatio.Schema(
             {
-                probatio.Required(CONF_DEVICE_ID): cv.string,
-                probatio.Required(ATTR_GPS): {
+                probatio.Required(CommonServiceArgument.DEVICE_ID): cv.string,
+                probatio.Required(TeslaFleetServiceArgument.GPS): {
                     probatio.Required(CONF_LATITUDE): cv.latitude,
                     probatio.Required(CONF_LONGITUDE): cv.longitude,
                 },
@@ -113,18 +125,21 @@ def async_setup_services(hass: HomeAssistant) -> None:
         await wake_up_vehicle(vehicle)
         await handle_vehicle_command(
             vehicle.api.navigation_waypoints_request(
-                ",".join(f"refId:{place_id}" for place_id in call.data[ATTR_PLACE_IDS])
+                ",".join(
+                    f"refId:{place_id}"
+                    for place_id in call.data[TeslaFleetServiceArgument.PLACE_IDS]
+                )
             )
         )
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_NAVIGATE_TO_WAYPOINTS,
+        TeslaFleetService.NAVIGATE_TO_WAYPOINTS,
         navigate_to_waypoints,
         schema=probatio.Schema(
             {
-                probatio.Required(CONF_DEVICE_ID): cv.string,
-                probatio.Required(ATTR_PLACE_IDS): probatio.All(
+                probatio.Required(CommonServiceArgument.DEVICE_ID): cv.string,
+                probatio.Required(TeslaFleetServiceArgument.PLACE_IDS): probatio.All(
                     [probatio.All(str, probatio.Match(r"^[^\s,:]+\Z"))],
                     probatio.Length(min=1),
                 ),

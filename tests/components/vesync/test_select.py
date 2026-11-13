@@ -4,11 +4,12 @@ from unittest.mock import MagicMock, Mock
 
 import pytest
 from pyvesync.const import DeviceStatus
+from pyvesync.utils.errors import ResponseInfo
 
 from homeassistant.components.select import (
-    ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
 from homeassistant.components.vesync.const import (
     HUMIDIFIER_NIGHT_LIGHT_LEVEL_BRIGHT,
@@ -19,8 +20,9 @@ from homeassistant.components.vesync.select import (
     HA_TO_VS_HUMIDIFIER_NIGHT_LIGHT_LEVEL_MAP,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from .common import ENTITY_HUMIDIFIER_300S_NIGHT_LIGHT_SELECT
 
@@ -35,10 +37,10 @@ async def test_humidifier_set_nightlight_level(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: ENTITY_HUMIDIFIER_300S_NIGHT_LIGHT_SELECT,
-            ATTR_OPTION: HUMIDIFIER_NIGHT_LIGHT_LEVEL_DIM,
+            CommonServiceArgument.ENTITY_ID: ENTITY_HUMIDIFIER_300S_NIGHT_LIGHT_SELECT,
+            SelectServiceArgument.OPTION: HUMIDIFIER_NIGHT_LIGHT_LEVEL_DIM,
         },
         blocking=True,
     )
@@ -82,3 +84,44 @@ async def test_humidifier_nightlight_level(
         hass.states.get(ENTITY_HUMIDIFIER_300S_NIGHT_LIGHT_SELECT).state
         == expected_state
     )
+
+
+@pytest.mark.parametrize(
+    "install_humidifier_device", ["humidifier_300s"], indirect=True
+)
+@pytest.mark.parametrize(
+    ("last_response", "message"),
+    [
+        pytest.param(
+            ResponseInfo(name="error", error_type="error", message="Device error"),
+            "Device error",
+            id="last_response",
+        ),
+        pytest.param(
+            None,
+            "Unknown error selecting option, no response.",
+            id="no_last_response",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("install_humidifier_device")
+async def test_select_option_device_failure(
+    hass: HomeAssistant,
+    humidifier_300s: Mock,
+    last_response: ResponseInfo | None,
+    message: str,
+) -> None:
+    """Test an error is raised when the device rejects the option."""
+    humidifier_300s.set_nightlight_brightness.return_value = False
+    humidifier_300s.last_response = last_response
+
+    with pytest.raises(HomeAssistantError, match=message):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: ENTITY_HUMIDIFIER_300S_NIGHT_LIGHT_SELECT,
+                SelectServiceArgument.OPTION: HUMIDIFIER_NIGHT_LIGHT_LEVEL_DIM,
+            },
+            blocking=True,
+        )

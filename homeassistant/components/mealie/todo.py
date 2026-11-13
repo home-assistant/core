@@ -170,7 +170,7 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
 
         LOGGER.debug("Parsed ingredient: %s", parsed_ingredient)
 
-        if not parsed_ingredient or not parsed_ingredient.confidence:
+        if not parsed_ingredient:
             return None
         if (parsed_ingredient.confidence.average or 0.0) < MINIMUM_PARSER_CONFIDENCE:
             return None

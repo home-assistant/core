@@ -1,7 +1,6 @@
 """Define tests for the Vodafone Station coordinator."""
 
 from json import JSONDecodeError
-import logging
 from unittest.mock import AsyncMock, create_autospec, patch
 
 from aiohttp import ClientSession
@@ -31,7 +30,6 @@ async def test_coordinator_device_cleanup(
 ) -> None:
     """Test Device cleanup on coordinator update."""
 
-    caplog.set_level(logging.DEBUG)
     await setup_integration(hass, mock_config_entry)
 
     device = device_registry.async_get_or_create(
