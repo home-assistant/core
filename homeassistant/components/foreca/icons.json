@@ -5,6 +5,9 @@
     },
     "get_forecasts_extra": {
       "service": "mdi:weather-cloudy-clock"
+    },
+    "get_minute_forecast": {
+      "service": "mdi:weather-pouring"
     }
   }
 }
