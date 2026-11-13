@@ -262,50 +262,33 @@ class ReolinkVODMediaSource(MediaSource):
                 host.api.camera_name(channel),
             )
 
+        # some cameras only have a main stream, no sub stream
+        streams = [("main", "High resolution")]
+        if host.api.supported(channel, "sub"):
+            streams.insert(0, ("sub", "Low resolution"))
+        if host.api.supported(channel, "autotrack_stream"):
+            if host.api.supported(channel, "sub"):
+                streams.append(("autotrack_sub", "Telephoto low resolution"))
+            streams.append(("autotrack_main", "Telephoto high resolution"))
+
+        if len(streams) == 1:
+            # only one resolution available, skip the resolution select
+            return await self._async_generate_camera_days(
+                config_entry_id, channel, streams[0][0]
+            )
+
         children = [
             BrowseMediaSource(
                 domain=DOMAIN,
-                identifier=f"RES|{config_entry_id}|{channel}|sub",
+                identifier=f"RES|{config_entry_id}|{channel}|{stream}",
                 media_class=MediaClass.CHANNEL,
                 media_content_type=MediaType.PLAYLIST,
-                title="Low resolution",
+                title=stream_title,
                 can_play=False,
                 can_expand=True,
-            ),
-            BrowseMediaSource(
-                domain=DOMAIN,
-                identifier=f"RES|{config_entry_id}|{channel}|main",
-                media_class=MediaClass.CHANNEL,
-                media_content_type=MediaType.PLAYLIST,
-                title="High resolution",
-                can_play=False,
-                can_expand=True,
-            ),
-        ]
-
-        if host.api.supported(channel, "autotrack_stream"):
-            children.extend(
-                [
-                    BrowseMediaSource(
-                        domain=DOMAIN,
-                        identifier=f"RES|{config_entry_id}|{channel}|autotrack_sub",
-                        media_class=MediaClass.CHANNEL,
-                        media_content_type=MediaType.PLAYLIST,
-                        title="Telephoto low resolution",
-                        can_play=False,
-                        can_expand=True,
-                    ),
-                    BrowseMediaSource(
-                        domain=DOMAIN,
-                        identifier=f"RES|{config_entry_id}|{channel}|autotrack_main",
-                        media_class=MediaClass.CHANNEL,
-                        media_content_type=MediaType.PLAYLIST,
-                        title="Telephoto high resolution",
-                        can_play=False,
-                        can_expand=True,
-                    ),
-                ]
             )
+            for stream, stream_title in streams
+        ]
 
         title = host.api.camera_name(channel)
         if host.api.is_dual_lens:

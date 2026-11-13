@@ -107,7 +107,7 @@
         'supports_drying_mode': 'Method',
         'supports_nightlight': 'Method',
         'supports_nightlight_brightness': 'Method',
-        'supports_rgb_nightlight': 'Method',
+        'supports_rgb_nightlight': False,
         'supports_warm_mist': 'Method',
         'target_minmax': list([
           30,

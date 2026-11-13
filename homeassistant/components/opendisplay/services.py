@@ -85,7 +85,7 @@ SCHEMA_UPLOAD_IMAGE = probatio.Schema(
         ): probatio.All(probatio.Coerce(int), probatio.Coerce(Rotation)),
         probatio.Optional(
             OpenDisplayServiceArgument.DITHER_MODE, default="burkes"
-        ): _str_to_int_enum(DitherMode),
+        ): probatio.Coerce(DitherMode),
         probatio.Optional(
             OpenDisplayServiceArgument.REFRESH_MODE, default="full"
         ): _str_to_int_enum(RefreshMode),
@@ -174,8 +174,8 @@ async def _async_upload_image(call: ServiceCall) -> None:
     tone_compression_pct: float | None = call.data.get(
         OpenDisplayServiceArgument.TONE_COMPRESSION
     )
-    tone_compression: float | str = (
-        tone_compression_pct / 100.0 if tone_compression_pct is not None else "auto"
+    tone_compression = (
+        tone_compression_pct / 100.0 if tone_compression_pct is not None else 0.0
     )
 
     ble_device = async_ble_device_from_address(call.hass, address, connectable=True)

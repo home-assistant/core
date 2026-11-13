@@ -505,7 +505,14 @@ async def async_validate_trigger_config(
     hass: HomeAssistant, trigger_config: list[ConfigType]
 ) -> list[ConfigType]:
     """Validate triggers."""
-    return [await _async_validate_trigger(hass, conf) for conf in trigger_config]
+    config = []
+    for index, conf in enumerate(trigger_config):
+        try:
+            config.append(await _async_validate_trigger(hass, conf))
+        except probatio.Invalid as err:
+            err.prepend([index])
+            raise
+    return config
 
 
 async def _async_validate_trigger(hass: HomeAssistant, conf: ConfigType) -> ConfigType:

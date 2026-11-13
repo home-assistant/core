@@ -127,13 +127,13 @@ class CoverPositionMixin(ZWaveBaseEntity, CoverEntity):
     def _fully_open_position(self) -> int:
         """Return value that represents fully opened position."""
         max_ = self.info.primary_value.metadata.max
-        return 99 if max_ is None else max_
+        return 99 if max_ is None else int(max_)
 
     @property
     def _fully_closed_position(self) -> int:
         """Return value that represents fully closed position."""
         min_ = self.info.primary_value.metadata.min
-        return 0 if min_ is None else min_
+        return 0 if min_ is None else int(min_)
 
     @property
     def _position_range(self) -> int:
@@ -293,13 +293,13 @@ class CoverTiltMixin(ZWaveBaseEntity, CoverEntity):
     def _fully_open_tilt(self) -> int:
         """Return value that represents fully opened tilt."""
         max_ = self.info.primary_value.metadata.max
-        return 99 if max_ is None else max_
+        return 99 if max_ is None else int(max_)
 
     @property
     def _fully_closed_tilt(self) -> int:
         """Return value that represents fully closed tilt."""
         min_ = self.info.primary_value.metadata.min
-        return 0 if min_ is None else min_
+        return 0 if min_ is None else int(min_)
 
     @property
     def _tilt_range(self) -> int:

@@ -14,19 +14,14 @@ from zwave_js_server.event import Event
 from zwave_js_server.exceptions import FailedZWaveCommand, NotFoundError
 from zwave_js_server.model.node import Node, NodeStatus
 
-from homeassistant.components.lock import (
-    DOMAIN as LOCK_DOMAIN,
-    SERVICE_LOCK,
-    SERVICE_UNLOCK,
-    LockState,
-)
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockService, LockState
 from homeassistant.components.zwave_js.const import (
     DOMAIN,
     ZWaveJSService,
     ZWaveJSServiceArgument,
 )
 from homeassistant.components.zwave_js.helpers import ZwaveValueMatcher
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, CommonServiceArgument
+from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 
@@ -50,8 +45,8 @@ async def test_door_lock(
     # Test locking
     await hass.services.async_call(
         LOCK_DOMAIN,
-        SERVICE_LOCK,
-        {ATTR_ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY},
+        LockService.LOCK,
+        {CommonServiceArgument.ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY},
         blocking=True,
     )
 
@@ -97,8 +92,8 @@ async def test_door_lock(
     # Test unlocking
     await hass.services.async_call(
         LOCK_DOMAIN,
-        SERVICE_UNLOCK,
-        {ATTR_ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY},
+        LockService.UNLOCK,
+        {CommonServiceArgument.ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY},
         blocking=True,
     )
 

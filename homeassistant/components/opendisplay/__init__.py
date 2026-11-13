@@ -10,6 +10,7 @@ from opendisplay import (
     AuthenticationRequiredError,
     BLEConnectionError,
     BLETimeoutError,
+    ColorScheme,
     GlobalConfig,
     OpenDisplayDevice,
     OpenDisplayError,
@@ -128,9 +129,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenDisplayConfigEntry) 
     display = device_config.displays[0]
     color_scheme_enum = display.color_scheme_enum
     color_scheme = (
-        str(color_scheme_enum)
-        if isinstance(color_scheme_enum, int)
-        else color_scheme_enum.name
+        color_scheme_enum.name
+        if isinstance(color_scheme_enum, ColorScheme)
+        else str(color_scheme_enum)
     )
     size = (
         f'{display.screen_diagonal_inches:.1f}"'
