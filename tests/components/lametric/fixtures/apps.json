@@ -1,0 +1,223 @@
+{
+  "com.lametric.clock": {
+    "actions": {
+      "clock.alarm": {
+        "enabled": {
+          "data_type": "bool",
+          "name": "enabled",
+          "required": false
+        },
+        "time": {
+          "data_type": "string",
+          "format": "[0-9]{2}:[0-9]{2}(?::[0-9]{2})?",
+          "name": "time",
+          "required": false
+        },
+        "wake_with_radio": {
+          "data_type": "bool",
+          "name": "wake_with_radio",
+          "required": false
+        }
+      },
+      "clock.clockface": {
+        "icon": {
+          "data_type": "string",
+          "name": "icon",
+          "required": false
+        },
+        "type": {
+          "data_type": "string",
+          "format": "weather|page_a_day|custom|none",
+          "name": "type",
+          "required": false
+        }
+      },
+      "settings.dateFormats": {}
+    },
+    "package": "com.lametric.clock",
+    "title": "Clock",
+    "triggers": {
+      "alarm": {
+        "snooze": {
+          "data_type": "bool",
+          "name": "snooze"
+        }
+      }
+    },
+    "vendor": "LaMetric",
+    "version": "2.8.10",
+    "version_code": "44",
+    "widgets": {
+      "1_com.lametric.clock": {
+        "index": 0,
+        "package": "com.lametric.clock",
+        "settings": {
+          "_title": "Clock"
+        },
+        "visible": true
+      }
+    }
+  },
+  "com.lametric.countdown": {
+    "actions": {
+      "countdown.configure": {
+        "duration": {
+          "data_type": "int",
+          "name": "duration",
+          "required": false
+        },
+        "start_now": {
+          "data_type": "bool",
+          "name": "start_now",
+          "required": false
+        }
+      },
+      "countdown.pause": {},
+      "countdown.reset": {},
+      "countdown.start": {}
+    },
+    "package": "com.lametric.countdown",
+    "title": "Timer",
+    "triggers": {
+      "finished": {
+        "duration": {
+          "data_type": "int",
+          "name": "duration"
+        }
+      },
+      "paused": {
+        "duration": {
+          "data_type": "int",
+          "name": "duration"
+        }
+      },
+      "reset": {
+        "duration": {
+          "data_type": "int",
+          "name": "duration"
+        }
+      },
+      "resumed": {
+        "duration": {
+          "data_type": "int",
+          "name": "duration"
+        }
+      },
+      "started": {
+        "duration": {
+          "data_type": "int",
+          "name": "duration"
+        }
+      }
+    },
+    "vendor": "LaMetric",
+    "version": "1.2.1",
+    "version_code": "19",
+    "widgets": {
+      "6_com.lametric.countdown": {
+        "index": 5,
+        "package": "com.lametric.countdown",
+        "settings": {
+          "_title": "Timer"
+        },
+        "visible": false
+      }
+    }
+  },
+  "com.lametric.custommessage": {
+    "package": "com.lametric.custommessage",
+    "title": "Message Board",
+    "triggers": {},
+    "vendor": "LaMetric",
+    "version": "1.2.11",
+    "version_code": "30",
+    "widgets": {
+      "3_com.lametric.custommessage": {
+        "index": 2,
+        "package": "com.lametric.custommessage",
+        "settings": {
+          "_title": "Message Board"
+        },
+        "visible": false
+      }
+    }
+  },
+  "com.lametric.radio": {
+    "actions": {
+      "radio.next": {},
+      "radio.play": {},
+      "radio.play.at": {
+        "idx": {
+          "data_type": "int",
+          "name": "idx",
+          "required": false
+        }
+      },
+      "radio.prev": {},
+      "radio.state": {},
+      "radio.stop": {}
+    },
+    "package": "com.lametric.radio",
+    "title": "Radio",
+    "triggers": {},
+    "vendor": "LaMetric",
+    "version": "1.4.33",
+    "version_code": "87",
+    "widgets": {
+      "4_com.lametric.radio": {
+        "index": 3,
+        "package": "com.lametric.radio",
+        "settings": {
+          "_title": "Radio"
+        },
+        "visible": false
+      }
+    }
+  },
+  "com.lametric.stopwatch": {
+    "actions": {
+      "stopwatch.pause": {},
+      "stopwatch.reset": {},
+      "stopwatch.start": {}
+    },
+    "package": "com.lametric.stopwatch",
+    "title": "Stopwatch",
+    "triggers": {},
+    "vendor": "LaMetric",
+    "version": "1.2.0",
+    "version_code": "16",
+    "widgets": {
+      "5_com.lametric.stopwatch": {
+        "index": 4,
+        "package": "com.lametric.stopwatch",
+        "settings": {
+          "_title": "Stopwatch"
+        },
+        "visible": false
+      }
+    }
+  },
+  "com.lametric.weather": {
+    "actions": {
+      "weather.forecast": {},
+      "weather.get.cc": {},
+      "weather.setProduct": {}
+    },
+    "package": "com.lametric.weather",
+    "title": "Weather",
+    "triggers": {},
+    "vendor": "LaMetric",
+    "version": "1.2.3",
+    "version_code": "33",
+    "widgets": {
+      "2_com.lametric.weather": {
+        "index": 1,
+        "package": "com.lametric.weather",
+        "settings": {
+          "_title": "Weather"
+        },
+        "visible": false
+      }
+    }
+  }
+}

@@ -53,3 +53,19 @@ async def test_wifi_signal(
     assert device.name == "Frenck's LaMetric"
     assert device.serial_number == "SA110405124500W00BS9"
     assert device.sw_version == "2.2.2"
+
+
+async def test_current_app(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the LaMetric current app sensor."""
+    state = hass.states.get("sensor.frenck_s_lametric_current_app")
+    assert state
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Frenck's LaMetric Current app"
+    assert state.state == "Clock"
+    entry = entity_registry.async_get(state.entity_id)
+    assert entry
+    assert entry.device_id
+    assert entry.entity_category is None
+    assert entry.unique_id == "SA110405124500W00BS9-current_app"
