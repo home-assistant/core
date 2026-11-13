@@ -121,6 +121,7 @@ _LOGGER = logging.getLogger(__name__)
 # Controls how often we clean up
 # States and Events objects
 EXPIRE_AFTER_COMMITS = 120
+MAX_PENDING_STATE_CHAIN_LENGTH = 250
 
 SHUTDOWN_TASK = sentinel("SHUTDOWN_TASK")
 
@@ -1174,10 +1175,11 @@ class Recorder(threading.Thread):
                 states_manager.update_pending_last_reported(
                     old_state_id, old_state.last_reported_timestamp
                 )
+        chain_length = 0
         if entity_removed:
             dbstate.state = None
         else:
-            states_manager.add_pending(entity_id, dbstate)
+            chain_length = states_manager.add_pending(entity_id, dbstate)
 
         if entity_id is None or not (
             shared_attrs_bytes := state_attributes_manager.serialize_from_event(event)
@@ -1226,6 +1228,9 @@ class Recorder(threading.Thread):
             dbstate.state_attributes = dbstate_attributes
 
         self._add_to_session(session, dbstate)
+        # Long old_state chains make SQLAlchemy's dependency ordering expensive.
+        if chain_length >= MAX_PENDING_STATE_CHAIN_LENGTH:
+            self._commit_event_session_or_retry()
 
     def _handle_database_error(self, err: Exception, *, setup_run: bool) -> bool:
         """Handle a database error that may result in moving away the corrupt db."""
