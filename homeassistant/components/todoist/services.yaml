@@ -113,7 +113,7 @@ new_task:
       selector:
         number:
           min: 1
-          max: 5000
+          max: 255
           unit_of_measurement: m
     reminder_location_direction:
       default: on_enter

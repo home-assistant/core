@@ -29,7 +29,7 @@ REMINDER_LOCATION_VALID_DIRECTIONS = [
     REMINDER_LOCATION_DIRECTION_LEAVE,
 ]
 # The largest radius, in meters, the Todoist API accepts for a location reminder
-MAX_REMINDER_RADIUS = 5000
+MAX_REMINDER_RADIUS = 255
 
 
 class TodoistService(StrEnum):
@@ -171,19 +171,27 @@ def _get_reminder_location(call: ServiceCall) -> dict[str, Any] | None:
         name = zone.name
         latitude = zone.attributes[ATTR_LATITUDE]
         longitude = zone.attributes[ATTR_LONGITUDE]
-        # Zones don't limit their radius, so apply the same bounds as coordinates.
         zone_radius = zone.attributes[ATTR_RADIUS]
         radius = int(zone_radius)
-        if not 1 <= radius <= MAX_REMINDER_RADIUS:
+        if radius < 1:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="zone_radius_invalid",
                 translation_placeholders={
                     "zone": zone_entity_id,
                     "radius": f"{zone_radius:g}",
-                    "max_radius": str(MAX_REMINDER_RADIUS),
                 },
             )
+        if radius > MAX_REMINDER_RADIUS:
+            _LOGGER.warning(
+                "Zone %s has a radius of %g meters, but Todoist limits location "
+                "reminders to %s meters, so the reminder uses %s meters",
+                zone_entity_id,
+                zone_radius,
+                MAX_REMINDER_RADIUS,
+                MAX_REMINDER_RADIUS,
+            )
+            radius = MAX_REMINDER_RADIUS
     elif TodoistServiceArgument.REMINDER_LOCATION_NAME in call.data:
         name = call.data[TodoistServiceArgument.REMINDER_LOCATION_NAME]
         latitude = call.data[TodoistServiceArgument.REMINDER_LATITUDE]

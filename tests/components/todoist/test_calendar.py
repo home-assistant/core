@@ -614,18 +614,14 @@ async def test_create_task_service_call_with_unknown_zone(
     api.add_task.assert_not_called()
 
 
-@pytest.mark.parametrize(
-    "radius",
-    [pytest.param(0.5, id="too_small"), pytest.param(6000, id="too_large")],
-)
-async def test_create_task_service_call_with_zone_radius_out_of_range(
-    hass: HomeAssistant, api: AsyncMock, radius: float
+async def test_create_task_service_call_with_zone_radius_too_small(
+    hass: HomeAssistant, api: AsyncMock
 ) -> None:
-    """Test a zone whose radius Todoist doesn't accept raises an error."""
+    """Test a zone with a radius below one meter raises an error."""
     hass.states.async_set(
         ZONE_ENTITY_ID,
         "zoning",
-        {"latitude": 37.7749, "longitude": -122.4194, "radius": radius},
+        {"latitude": 37.7749, "longitude": -122.4194, "radius": 0.5},
     )
 
     with pytest.raises(ServiceValidationError) as exc:
@@ -642,6 +638,47 @@ async def test_create_task_service_call_with_zone_radius_out_of_range(
 
     assert exc.value.translation_key == "zone_radius_invalid"
     api.add_task.assert_not_called()
+
+
+@pytest.mark.usefixtures("created_task")
+async def test_create_task_service_call_with_large_zone_radius(
+    hass: HomeAssistant, api: AsyncMock, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test a zone larger than Todoist allows is clamped with a warning."""
+    hass.states.async_set(
+        ZONE_ENTITY_ID,
+        "zoning",
+        {
+            "friendly_name": "Office",
+            "latitude": 37.7749,
+            "longitude": -122.4194,
+            "radius": 300,
+        },
+    )
+
+    await hass.services.async_call(
+        DOMAIN,
+        TodoistService.NEW_TASK,
+        {
+            TodoistServiceArgument.CONTENT: "task",
+            TodoistServiceArgument.PROJECT: "Name",
+            TodoistServiceArgument.REMINDER_ZONE: ZONE_ENTITY_ID,
+        },
+        blocking=True,
+    )
+
+    api.add_location_reminder.assert_called_once_with(
+        NEW_TASK_ID,
+        name="Office",
+        loc_lat="37.7749",
+        loc_long="-122.4194",
+        loc_trigger="on_enter",
+        radius=255,
+    )
+    assert (
+        "Zone zone.office has a radius of 300 meters, but Todoist limits location "
+        "reminders to 255 meters, so the reminder uses 255 meters" in caplog.text
+    )
 
 
 @pytest.mark.parametrize(
@@ -664,8 +701,20 @@ async def test_create_task_service_call_with_zone_radius_out_of_range(
             TodoistServiceArgument.REMINDER_LONGITUDE: -122.0839,
             TodoistServiceArgument.REMINDER_RADIUS: 100,
         },
+        # Todoist doesn't accept a radius above 255 meters.
+        {
+            TodoistServiceArgument.REMINDER_LOCATION_NAME: "Store",
+            TodoistServiceArgument.REMINDER_LATITUDE: 37.3861,
+            TodoistServiceArgument.REMINDER_LONGITUDE: -122.0839,
+            TodoistServiceArgument.REMINDER_RADIUS: 256,
+        },
     ],
-    ids=("incomplete_coordinates", "no_location_name", "zone_and_coordinates"),
+    ids=(
+        "incomplete_coordinates",
+        "no_location_name",
+        "zone_and_coordinates",
+        "radius_too_large",
+    ),
 )
 async def test_create_task_service_call_invalid_location(
     hass: HomeAssistant, api: AsyncMock, reminder_fields: dict[str, Any]
