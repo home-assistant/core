@@ -741,7 +741,9 @@ class _RotatingFileHandlerWithoutShouldRollOver(RotatingFileHandler):
         return False
 
 
-def _get_domains(hass: core.HomeAssistant, config: dict[str, Any]) -> set[str]:
+def _get_domains(
+    hass: core.HomeAssistant, config: dict[str, Any], *, include_disabled: bool = True
+) -> set[str]:
     """Get domains of components to set up."""
     # The common config section [homeassistant] could be filtered here,
     # but that is not necessary, since it corresponds to the core integration,
@@ -751,7 +753,9 @@ def _get_domains(hass: core.HomeAssistant, config: dict[str, Any]) -> set[str]:
     # Add config entry and default domains
     if not hass.config.recovery_mode:
         domains.update(DEFAULT_INTEGRATIONS)
-        domains.update(hass.config_entries.async_domains())
+        domains.update(
+            hass.config_entries.async_domains(include_disabled=include_disabled)
+        )
     else:
         domains.update(DEFAULT_INTEGRATIONS_RECOVERY_MODE)
 
@@ -764,14 +768,16 @@ def _get_domains(hass: core.HomeAssistant, config: dict[str, Any]) -> set[str]:
 
 async def _async_resolve_domains_and_preload(
     hass: core.HomeAssistant, config: dict[str, Any]
-) -> tuple[dict[str, Integration], dict[str, Integration]]:
+) -> tuple[dict[str, Integration], dict[str, Integration], set[str]]:
     """Resolve all dependencies and return integrations to set up.
 
-    The return value is a tuple of two dictionaries:
+    The return value is a tuple of two dictionaries and a set:
     - The first dictionary contains integrations
       specified by the configuration (including config entries).
     - The second dictionary contains the same integrations as the first dictionary
       together with all their dependencies.
+    - The set contains the domains from the second dictionary which are only
+      set up because of disabled config entries.
     """
     domains_to_setup = _get_domains(hass, config)
 
@@ -833,6 +839,17 @@ async def _async_resolve_domains_and_preload(
             all_integrations_to_setup
         )
     )
+    # Domains neither required by the configuration nor a dependency of a
+    # required domain are only set up because of disabled config entries.
+    required_domains = _get_domains(hass, config, include_disabled=False)
+    disabled_only_domains = set(all_integrations_to_setup).difference(
+        required_domains,
+        *(
+            integrations_dependencies[domain]
+            for domain in required_domains
+            if domain in integrations_dependencies
+        ),
+    )
 
     # Gather requirements for all integrations,
     # their dependencies and after dependencies.
@@ -890,7 +907,7 @@ async def _async_resolve_domains_and_preload(
         eager_start=True,
     )
 
-    return integrations_to_setup, all_integrations_to_setup
+    return integrations_to_setup, all_integrations_to_setup, disabled_only_domains
 
 
 async def _async_set_up_integrations(
@@ -900,25 +917,32 @@ async def _async_set_up_integrations(
     watcher = _WatchPendingSetups(hass, _setup_started(hass))
     watcher.async_start()
 
-    integrations, all_integrations = await _async_resolve_domains_and_preload(
-        hass, config
-    )
-    # Detect all cycles
+    (
+        integrations,
+        all_integrations,
+        disabled_only_domains,
+    ) = await _async_resolve_domains_and_preload(hass, config)
+    # Detect all cycles. Domains only set up because of disabled config entries
+    # are not considered after dependencies, so nothing waits for them, fails
+    # with them, or promotes them to an earlier stage.
+    possible_after_dependencies = set(all_integrations) - disabled_only_domains
     integrations_after_dependencies = (
         await loader.resolve_integrations_after_dependencies(
-            hass, all_integrations.values(), set(all_integrations)
+            hass, all_integrations.values(), possible_after_dependencies
         )
     )
     all_domains = set(integrations_after_dependencies)
     domains = set(integrations) & all_domains
 
     _LOGGER.info(
-        "Domains to be set up: %s\nDependencies: %s",
+        "Domains to be set up: %s\nDependencies: %s\n"
+        "Only set up for disabled config entries: %s",
         domains or "{}",
         (all_domains - domains) or "{}",
+        (disabled_only_domains & all_domains) or "{}",
     )
 
-    async_set_domains_to_be_loaded(hass, all_domains)
+    async_set_domains_to_be_loaded(hass, all_domains - disabled_only_domains)
 
     # Initialize recorder
     if "recorder" in all_domains:
