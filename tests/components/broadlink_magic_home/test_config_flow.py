@@ -104,6 +104,7 @@ async def test_latest_import_wins_over_unfinished_flow(
 
     result = await hass.config_entries.flow.async_configure(latest["flow_id"], {})
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "family-1"
     assert all(
         flow["flow_id"] != stale["flow_id"]
         for flow in hass.config_entries.flow.async_progress()
