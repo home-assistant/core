@@ -14,6 +14,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
+    ATTR_FRIENDLY_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
     Platform,
     UnitOfTemperature,
@@ -77,3 +78,5 @@ async def test_sensor_smo20_extra_parameters(
     assert degree_minutes.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
     degree_minutes_entry = entity_registry.async_get(degree_minutes_id)
     assert degree_minutes_entry.options["sensor"]["suggested_display_precision"] == 0
+    assert degree_minutes_entry.translation_key == "degree_minutes"
+    assert degree_minutes.attributes[ATTR_FRIENDLY_NAME].endswith("Degree minutes")
