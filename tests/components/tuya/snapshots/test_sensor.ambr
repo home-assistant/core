@@ -38213,7 +38213,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2.2',
+    'state': 'unknown',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.wallbox_status-entry]
@@ -38224,13 +38224,12 @@
     'area_id': None,
     'capabilities': dict({
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'no_connet',
-        'connect',
-        'charing',
-        'wait_rfid',
-        'finish',
-        'wait_charing',
-        'error',
+        'charger_free',
+        'charger_insert',
+        'charger_wait',
+        'charger_charging',
+        'charger_end',
+        'charger_fault',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -38269,13 +38268,12 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wallbox Status',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'no_connet',
-        'connect',
-        'charing',
-        'wait_rfid',
-        'finish',
-        'wait_charing',
-        'error',
+        'charger_free',
+        'charger_insert',
+        'charger_wait',
+        'charger_charging',
+        'charger_end',
+        'charger_fault',
       ]),
     }),
     'context': <ANY>,
@@ -38283,7 +38281,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'charing',
+    'state': 'unknown',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.wallbox_temperature-entry]
@@ -38341,7 +38339,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '32.0',
+    'state': '18.8',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.wallbox_total_power-entry]
@@ -38399,7 +38397,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '10.6',
+    'state': 'unknown',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.waschmaschine_current-entry]
