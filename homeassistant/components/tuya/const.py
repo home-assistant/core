@@ -740,8 +740,10 @@ class DPCode(StrEnum):
     FAN_VERTICAL = "fan_vertical"  # Vertical swing flap angle
     FAR_DETECTION = "far_detection"
     FAULT = "fault"
+    FEED_BLOCK_STATUS = "feed_block_status"
     FEED_REPORT = "feed_report"
     FEED_STATE = "feed_state"
+    FEED_STUCK_STATUS = "feed_stuck_status"
     FEEDIN_POWER_LIMIT_ENABLE = "feedin_power_limit_enable"
     FEELLIKE_TEMP = "feellike_temp"
     FILTER = "filter"
