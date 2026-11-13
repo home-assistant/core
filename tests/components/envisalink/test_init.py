@@ -28,7 +28,7 @@ from .conftest import (
     setup_envisalink,
 )
 
-SetupPlatform = Callable[
+type SetupPlatform = Callable[
     [HomeAssistant, ConfigType, AddEntitiesCallback, DiscoveryInfoType | None],
     Awaitable[None],
 ]

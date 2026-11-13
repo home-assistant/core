@@ -28,33 +28,19 @@ from homeassistant.helpers.typing import VolDictType
 from homeassistant.util import color as color_util
 
 from .bridge import HueBridge, HueConfigEntry
-from .const import (
-    ATTR_BRIGHTNESS,
-    ATTR_DURATION,
-    ATTR_DYNAMIC,
-    ATTR_GROUP_NAME,
-    ATTR_SCENE_NAME,
-    ATTR_SECOND_RGB_COLOR,
-    ATTR_SPEED,
-    ATTR_TRANSITION,
-    DOMAIN,
-    SERVICE_ACTIVATE_SCENE,
-    SERVICE_FLASH,
-    SERVICE_HUE_ACTIVATE_SCENE,
-    SERVICE_STOP_FLASH,
-)
+from .const import DOMAIN, HueService, HueServiceArgument
 from .v2.group import GroupedHueLight
 from .v2.light import HueLight
 
 ACTIVATE_SCENE_SCHEMA: VolDictType = {
-    probatio.Optional(ATTR_DYNAMIC): probatio.Coerce(bool),
-    probatio.Optional(ATTR_SPEED): probatio.All(
+    probatio.Optional(HueServiceArgument.DYNAMIC): probatio.Coerce(bool),
+    probatio.Optional(HueServiceArgument.SPEED): probatio.All(
         probatio.Coerce(int), probatio.Percentage()
     ),
-    probatio.Optional(ATTR_TRANSITION): probatio.All(
+    probatio.Optional(HueServiceArgument.TRANSITION): probatio.All(
         probatio.Coerce(float), probatio.Range(min=0, max=3600)
     ),
-    probatio.Optional(ATTR_BRIGHTNESS): probatio.All(
+    probatio.Optional(HueServiceArgument.BRIGHTNESS): probatio.All(
         probatio.Coerce(int), probatio.Range(min=1, max=255)
     ),
 }
@@ -63,12 +49,12 @@ RGB_COLOR_SCHEMA = probatio.All(
     probatio.Coerce(tuple), probatio.ExactSequence((cv.byte,) * 3)
 )
 FLASH_SCHEMA: VolDictType = {
-    probatio.Required(ATTR_DURATION): probatio.All(
+    probatio.Required(HueServiceArgument.DURATION): probatio.All(
         cv.time_period,
         probatio.Range(min=timedelta(seconds=1), max=timedelta(seconds=65534)),
     ),
     probatio.Optional(ATTR_RGB_COLOR): RGB_COLOR_SCHEMA,
-    probatio.Optional(ATTR_SECOND_RGB_COLOR): RGB_COLOR_SCHEMA,
+    probatio.Optional(HueServiceArgument.SECOND_RGB_COLOR): RGB_COLOR_SCHEMA,
 }
 FLASH_SIGNAL_BY_COLOR_COUNT = {
     0: Signal.ON_OFF,
@@ -92,10 +78,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async def hue_activate_scene(call: ServiceCall, skip_reload=True) -> None:
         """Handle activation of Hue scene."""
         # Get parameters
-        group_name = call.data[ATTR_GROUP_NAME]
-        scene_name = call.data[ATTR_SCENE_NAME]
-        transition = call.data.get(ATTR_TRANSITION)
-        dynamic = call.data.get(ATTR_DYNAMIC, False)
+        group_name = call.data[HueServiceArgument.GROUP_NAME]
+        scene_name = call.data[HueServiceArgument.SCENE_NAME]
+        transition = call.data.get(HueServiceArgument.TRANSITION)
+        dynamic = call.data.get(HueServiceArgument.DYNAMIC, False)
 
         # Call the set scene function on each bridge
         entries: list[HueConfigEntry] = hass.config_entries.async_loaded_entries(DOMAIN)
@@ -123,21 +109,21 @@ def async_setup_services(hass: HomeAssistant) -> None:
     # Register a local handler for scene activation
     hass.services.async_register(
         DOMAIN,
-        SERVICE_HUE_ACTIVATE_SCENE,
+        HueService.HUE_ACTIVATE_SCENE,
         verify_domain_control(DOMAIN)(hue_activate_scene),
         schema=probatio.Schema(
             {
-                probatio.Required(ATTR_GROUP_NAME): cv.string,
-                probatio.Required(ATTR_SCENE_NAME): cv.string,
-                probatio.Optional(ATTR_TRANSITION): cv.positive_int,
-                probatio.Optional(ATTR_DYNAMIC): cv.boolean,
+                probatio.Required(HueServiceArgument.GROUP_NAME): cv.string,
+                probatio.Required(HueServiceArgument.SCENE_NAME): cv.string,
+                probatio.Optional(HueServiceArgument.TRANSITION): cv.positive_int,
+                probatio.Optional(HueServiceArgument.DYNAMIC): cv.boolean,
             }
         ),
     )
     async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_ACTIVATE_SCENE,
+        HueService.ACTIVATE_SCENE,
         entity_domain=SCENE_DOMAIN,
         func="_async_activate",
         schema=ACTIVATE_SCENE_SCHEMA,
@@ -145,7 +131,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async_register_batched_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_FLASH,
+        HueService.FLASH,
         entity_domain=LIGHT_DOMAIN,
         func=hue_flash,
         schema=FLASH_SCHEMA,
@@ -153,7 +139,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async_register_batched_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_STOP_FLASH,
+        HueService.STOP_FLASH,
         entity_domain=LIGHT_DOMAIN,
         func=hue_stop_flash,
         schema=None,
@@ -162,21 +148,24 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
 async def hue_flash(entities: list[Entity], call: ServiceCall) -> None:
     """Flash Hue lights and grouped lights (V2 only)."""
-    if ATTR_SECOND_RGB_COLOR in call.data and ATTR_RGB_COLOR not in call.data:
+    if (
+        HueServiceArgument.SECOND_RGB_COLOR in call.data
+        and ATTR_RGB_COLOR not in call.data
+    ):
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="second_color_without_color",
         )
     colors = [
         ColorFeaturePut(xy=ColorPoint(*color_util.color_RGB_to_xy(*call.data[field])))
-        for field in (ATTR_RGB_COLOR, ATTR_SECOND_RGB_COLOR)
+        for field in (ATTR_RGB_COLOR, HueServiceArgument.SECOND_RGB_COLOR)
         if field in call.data
     ]
     await _async_set_signal(
         entities,
         SignalingFeaturePut(
             signal=FLASH_SIGNAL_BY_COLOR_COUNT[len(colors)],
-            duration=int(call.data[ATTR_DURATION].total_seconds() * 1000),
+            duration=int(call.data[HueServiceArgument.DURATION].total_seconds() * 1000),
             colors=colors or None,
         ),
     )
@@ -277,7 +266,7 @@ async def hue_activate_scene_v2(
             "Use of service_call '%s' is deprecated and will be removed "
             "in a future release. Please use scene entities instead"
         ),
-        SERVICE_HUE_ACTIVATE_SCENE,
+        HueService.HUE_ACTIVATE_SCENE,
     )
     api: HueBridgeV2 = bridge.api
     for scene in api.scenes:

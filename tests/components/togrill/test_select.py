@@ -15,9 +15,9 @@ from togrill_bluetooth.packets import (
 )
 
 from homeassistant.components.select import (
-    ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
@@ -104,7 +104,7 @@ async def test_setup(
                     temperature_1=50.0,
                 ),
             ],
-            "select.probe_1_grill_type",
+            "select.pro_05_probe_1_grill_type",
             "veal",
             PacketA303Write(probe=1, grill_type=GrillType.VEAL, taste=None),
             id="grill_type",
@@ -117,7 +117,7 @@ async def test_setup(
                     grill_type=GrillType.BEEF,
                 ),
             ],
-            "select.probe_1_taste",
+            "select.pro_05_probe_1_taste",
             "medium",
             PacketA303Write(probe=1, grill_type=GrillType.BEEF, taste=Taste.MEDIUM),
             id="taste",
@@ -131,7 +131,7 @@ async def test_setup(
                     taste=Taste.MEDIUM,
                 ),
             ],
-            "select.probe_1_taste",
+            "select.pro_05_probe_1_taste",
             "none",
             PacketA303Write(probe=1, grill_type=GrillType.BEEF, taste=None),
             id="taste_none",
@@ -158,9 +158,9 @@ async def test_set_option(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         service_data={
-            ATTR_OPTION: value,
+            SelectServiceArgument.OPTION: value,
         },
         target={
             ATTR_ENTITY_ID: entity_id,

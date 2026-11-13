@@ -8,12 +8,11 @@ import probatio
 
 from homeassistant.components import cover
 from homeassistant.components.cover import (
-    ATTR_POSITION,
-    ATTR_TILT_POSITION,
     DEVICE_CLASSES_SCHEMA,
     CoverEntity,
     CoverEntityFeature,
     CoverEntityStateAttribute,
+    CoverServiceArgument,
     CoverState,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -577,7 +576,7 @@ class MqttCover(MqttEntity, CoverEntity):
     @override
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
-        tilt_percentage = kwargs[ATTR_TILT_POSITION]
+        tilt_percentage = kwargs[CoverServiceArgument.TILT_POSITION]
         tilt_ranged = round(
             percentage_to_ranged_value(self._tilt_range, tilt_percentage)
         )
@@ -610,7 +609,7 @@ class MqttCover(MqttEntity, CoverEntity):
     @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        position_percentage = kwargs[ATTR_POSITION]
+        position_percentage = kwargs[CoverServiceArgument.POSITION]
         position_ranged = round(
             percentage_to_ranged_value(self._pos_range, position_percentage)
         )

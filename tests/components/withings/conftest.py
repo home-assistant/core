@@ -161,13 +161,13 @@ def mock_withings():
     """Mock withings."""
 
     devices_json = load_json_array_fixture("withings/devices.json")
-    devices = [Device.from_api(device) for device in devices_json]
+    devices = [Device.from_dict(device) for device in devices_json]
 
     measurement_groups = load_measurements_fixture()
 
     notification_json = load_json_array_fixture("withings/notifications.json")
     notifications = [
-        NotificationConfiguration.from_api(not_conf) for not_conf in notification_json
+        NotificationConfiguration.from_dict(not_conf) for not_conf in notification_json
     ]
 
     workouts = load_workout_fixture()

@@ -9,19 +9,17 @@ from pytest_homeassistant.common import MockUser, mock_component, mock_restore_c
 from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.input_boolean import DOMAIN, is_on
-from homeassistant.components.input_boolean.const import CONF_INITIAL
+from homeassistant.components.input_boolean.const import (
+    CONF_INITIAL,
+    InputBooleanEntityStateAttribute,
+    InputBooleanService,
+)
 from homeassistant.const import (
-    ATTR_EDITABLE,
     ATTR_ENTITY_ID,
-    ATTR_FRIENDLY_NAME,
-    ATTR_ICON,
-    ATTR_NAME,
-    SERVICE_RELOAD,
-    SERVICE_TOGGLE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
+    CONF_NAME,
     STATE_OFF,
     STATE_ON,
+    EntityStateAttribute,
 )
 from homeassistant.core import Context, CoreState, HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
@@ -72,19 +70,19 @@ async def test_methods(hass: HomeAssistant) -> None:
     assert not is_on(hass, entity_id)
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        DOMAIN, InputBooleanService.TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
 
     assert is_on(hass, entity_id)
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        DOMAIN, InputBooleanService.TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
 
     assert not is_on(hass, entity_id)
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        DOMAIN, InputBooleanService.TOGGLE, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
 
     assert is_on(hass, entity_id)
@@ -118,12 +116,12 @@ async def test_config_options(hass: HomeAssistant) -> None:
     assert state_2 is not None
 
     assert state_1.state == STATE_OFF
-    assert ATTR_ICON not in state_1.attributes
-    assert ATTR_FRIENDLY_NAME not in state_1.attributes
+    assert EntityStateAttribute.ICON not in state_1.attributes
+    assert EntityStateAttribute.FRIENDLY_NAME not in state_1.attributes
 
     assert state_2.state == STATE_ON
-    assert state_2.attributes.get(ATTR_FRIENDLY_NAME) == "Hello World"
-    assert state_2.attributes.get(ATTR_ICON) == "mdi:work"
+    assert state_2.attributes.get(EntityStateAttribute.FRIENDLY_NAME) == "Hello World"
+    assert state_2.attributes.get(EntityStateAttribute.ICON) == "mdi:work"
 
 
 async def test_restore_state(hass: HomeAssistant) -> None:
@@ -251,7 +249,7 @@ async def test_reload(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_RELOAD,
+            InputBooleanService.RELOAD,
             blocking=True,
             context=Context(user_id=hass_admin_user.id),
         )
@@ -271,8 +269,11 @@ async def test_reload(
     assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, "test_3") is not None
 
     assert state_2.state == STATE_ON  # reload is not supposed to change entity state
-    assert state_2.attributes.get(ATTR_FRIENDLY_NAME) == "Hello World reloaded"
-    assert state_2.attributes.get(ATTR_ICON) == "mdi:work_reloaded"
+    assert (
+        state_2.attributes.get(EntityStateAttribute.FRIENDLY_NAME)
+        == "Hello World reloaded"
+    )
+    assert state_2.attributes.get(EntityStateAttribute.ICON) == "mdi:work_reloaded"
 
 
 async def test_load_from_storage(hass: HomeAssistant, storage_setup) -> None:
@@ -280,8 +281,8 @@ async def test_load_from_storage(hass: HomeAssistant, storage_setup) -> None:
     assert await storage_setup()
     state = hass.states.get(f"{DOMAIN}.from_storage")
     assert state.state == STATE_OFF
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "from storage"
-    assert state.attributes.get(ATTR_EDITABLE)
+    assert state.attributes.get(EntityStateAttribute.FRIENDLY_NAME) == "from storage"
+    assert state.attributes.get(InputBooleanEntityStateAttribute.EDITABLE)
 
 
 async def test_editable_state_attribute(hass: HomeAssistant, storage_setup) -> None:
@@ -290,12 +291,12 @@ async def test_editable_state_attribute(hass: HomeAssistant, storage_setup) -> N
 
     state = hass.states.get(f"{DOMAIN}.from_storage")
     assert state.state == STATE_OFF
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "from storage"
-    assert state.attributes.get(ATTR_EDITABLE)
+    assert state.attributes.get(EntityStateAttribute.FRIENDLY_NAME) == "from storage"
+    assert state.attributes.get(InputBooleanEntityStateAttribute.EDITABLE)
 
     state = hass.states.get(f"{DOMAIN}.from_yaml")
     assert state.state == STATE_OFF
-    assert not state.attributes.get(ATTR_EDITABLE)
+    assert not state.attributes.get(InputBooleanEntityStateAttribute.EDITABLE)
 
 
 async def test_ws_list(
@@ -317,7 +318,7 @@ async def test_ws_list(
     assert len(result) == 1
     assert storage_ent in result
     assert yaml_ent not in result
-    assert result[storage_ent][ATTR_NAME] == "from storage"
+    assert result[storage_ent][CONF_NAME] == "from storage"
 
 
 async def test_ws_delete(
@@ -450,7 +451,7 @@ async def test_setup_no_config(hass: HomeAssistant, hass_admin_user: MockUser) -
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_RELOAD,
+            InputBooleanService.RELOAD,
             blocking=True,
             context=Context(user_id=hass_admin_user.id),
         )

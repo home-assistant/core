@@ -11,7 +11,7 @@ from airly import Airly
 from airly.exceptions import AirlyError
 import probatio
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
@@ -28,6 +28,7 @@ from .const import (
     DOMAIN,
     NO_AIRLY_SENSORS,
 )
+from .coordinator import AirlyConfigEntry
 
 DESCRIPTION_PLACEHOLDERS = {
     "developer_registration_url": "https://developer.airly.eu/register",
@@ -128,7 +129,7 @@ class AirlyFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def _async_update_api_key(
-        self, step_id: str, entry: ConfigEntry, user_input: dict[str, Any] | None
+        self, step_id: str, entry: AirlyConfigEntry, user_input: dict[str, Any] | None
     ) -> ConfigFlowResult:
         """Validate a new API key against the entry's location and update the entry."""
         errors: dict[str, str] = {}

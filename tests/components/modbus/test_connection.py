@@ -20,6 +20,7 @@ from homeassistant.components.modbus.connection import (
     async_get_unit,
 )
 from homeassistant.config_entries import ConfigFlow
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -149,11 +150,12 @@ async def test_a_serial_framing_over_a_socket_keeps_the_line_speed_asked_for(
 
     with (
         pytest.deprecated_call(),
-        pytest.raises(HomeAssistantError, match="different link settings"),
+        pytest.raises(HomeAssistantError) as exc_info,
     ):
         async_get_unit(
             hass, entry, ModbusTcpParams(host="1.2.3.4", port=502, framer="rtu"), 2
         )
+    assert exc_info.value.translation_key == "device_in_use"
 
 
 async def test_one_device_cannot_be_used_with_two_link_settings(
@@ -169,8 +171,9 @@ async def test_one_device_cannot_be_used_with_two_link_settings(
 
     async_get_unit(hass, entry, ModbusTcpParams(host="1.2.3.4", port=502), 1)
 
-    with pytest.raises(HomeAssistantError, match="different link settings"):
+    with pytest.raises(HomeAssistantError) as exc_info:
         async_get_unit(hass, entry, ModbusTlsParams(host="1.2.3.4", port=502), 2)
+    assert exc_info.value.translation_key == "device_in_use"
 
 
 async def test_the_last_consumer_closes_the_connection(
@@ -199,6 +202,63 @@ async def test_the_last_consumer_closes_the_connection(
 
     assert close.called
     assert not hass.data[DATA_MODBUS_CONNECTIONS]
+
+
+async def test_stopping_home_assistant_closes_every_connection(
+    hass: HomeAssistant, consumer: ConsumerFactory
+) -> None:
+    """Entries are not unloaded on shutdown, so stopping closes the connections."""
+    one = consumer()
+    await hass.config_entries.async_setup(one.entry_id)
+    two = consumer()
+    await hass.config_entries.async_setup(two.entry_id)
+
+    async_get_unit(hass, one, ModbusTcpParams(host="1.2.3.4", port=502), 1)
+    async_get_unit(hass, two, ModbusTcpParams(host="5.6.7.8", port=502), 1)
+    first, second = (s.connection for s in hass.data[DATA_MODBUS_CONNECTIONS].values())
+
+    with (
+        patch.object(first, "close") as first_close,
+        patch.object(second, "close") as second_close,
+    ):
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        await hass.async_block_till_done()
+
+        first_close.assert_called_once()
+        second_close.assert_called_once()
+        assert not hass.data[DATA_MODBUS_CONNECTIONS]
+
+        # A release after the stop must not close a connection a second time.
+        await hass.config_entries.async_unload(one.entry_id)
+        await hass.async_block_till_done()
+
+    first_close.assert_called_once()
+
+
+async def test_a_connection_failing_to_close_on_stop_does_not_block_the_rest(
+    hass: HomeAssistant,
+    consumer: ConsumerFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """One connection raising while closing is logged and the others still close."""
+    one = consumer()
+    await hass.config_entries.async_setup(one.entry_id)
+    two = consumer()
+    await hass.config_entries.async_setup(two.entry_id)
+
+    async_get_unit(hass, one, ModbusTcpParams(host="1.2.3.4", port=502), 1)
+    async_get_unit(hass, two, ModbusTcpParams(host="5.6.7.8", port=502), 1)
+    first, second = (s.connection for s in hass.data[DATA_MODBUS_CONNECTIONS].values())
+
+    with (
+        patch.object(first, "close", side_effect=OSError("boom")),
+        patch.object(second, "close") as second_close,
+    ):
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        await hass.async_block_till_done()
+
+    second_close.assert_called_once()
+    assert "Error closing the Modbus connection to" in caplog.text
 
 
 async def test_one_entry_holding_twice_releases_twice(
@@ -303,11 +363,12 @@ async def test_a_temporary_unit_cannot_clash_with_held_link_settings(
     await hass.config_entries.async_setup(entry.entry_id)
     async_get_unit(hass, entry, ModbusTcpParams(host="1.2.3.4", port=502), 1)
 
-    with pytest.raises(HomeAssistantError, match="different link settings"):
+    with pytest.raises(HomeAssistantError) as exc_info:
         async with async_get_temporary_unit(
             hass, ModbusTlsParams(host="1.2.3.4", port=502), 2
         ):
             pass
+    assert exc_info.value.translation_key == "device_in_use"
 
     [shared] = hass.data[DATA_MODBUS_CONNECTIONS].values()
     assert shared.consumers == 1

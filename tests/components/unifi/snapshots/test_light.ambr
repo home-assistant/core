@@ -11,7 +11,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry connections=[('mac', '10:00:00:00:01:01')]>,
     'disabled_by': None,

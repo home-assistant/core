@@ -18,6 +18,8 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
 
+from .test_sensor import TEST_EVENTS
+
 
 @pytest.fixture
 def mock_error_handler() -> MagicMock:
@@ -154,3 +156,20 @@ async def test_local_setup_unauthorized(
     assert (
         local_config_entry.reason == "Failed to authenticate with the local Risco panel"
     )
+
+
+@pytest.mark.parametrize("events", [TEST_EVENTS])
+@pytest.mark.usefixtures("two_zone_cloud")
+async def test_remove_entry_removes_last_event_store(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    setup_risco_cloud: MockConfigEntry,
+) -> None:
+    """Test removing the entry removes the stored last event timestamp."""
+    store_key = f"risco_{setup_risco_cloud.entry_id}_last_event_timestamp"
+    assert store_key in hass_storage
+
+    await hass.config_entries.async_remove(setup_risco_cloud.entry_id)
+    await hass.async_block_till_done()
+
+    assert store_key not in hass_storage

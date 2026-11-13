@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 from google_maps_routing_api import (
+    ComputeRoutesResponse,
     GoogleMapsRoutingApiAuthError,
     GoogleMapsRoutingApiConnectionTimeoutError,
     GoogleMapsRoutingApiError,
@@ -50,6 +51,7 @@ async def test_service_get_travel_times(
             {
                 "duration": 1620,
                 "duration_text": "27 mins",
+                "static_duration": 1560,
                 "static_duration_text": "26 mins",
                 "distance_meters": 21300,
                 "distance_text": "21.3 km",
@@ -79,6 +81,7 @@ async def test_service_get_travel_times_with_all_options(
             "units": "imperial",
             "language": "en",
             "avoid": "tolls",
+            "travel_routing_preference": "traffic_aware_optimal",
             "traffic_model": "best_guess",
             "departure_time": "08:00:00",
         },
@@ -181,6 +184,53 @@ async def test_service_get_travel_times_errors(
     ("data", "options"),
     [(MOCK_CONFIG, DEFAULT_OPTIONS)],
 )
+@pytest.mark.parametrize(
+    "travel_routing_preference",
+    ["traffic_aware", "traffic_unaware"],
+)
+@pytest.mark.parametrize(
+    "traffic_model",
+    ["best_guess", "pessimistic", "optimistic"],
+)
+async def test_service_get_travel_times_traffic_model_error(
+    hass: HomeAssistant,
+    routes_mock: AsyncMock,
+    mock_config: MockConfigEntry,
+    travel_routing_preference: str,
+    traffic_model: str,
+) -> None:
+    """Test service get_travel_times with invalid traffic model for the routing preference."""
+    routes_mock.async_compute_routes.reset_mock()
+
+    with pytest.raises(
+        HomeAssistantError,
+        check=lambda e: e.translation_key == "traffic_model_not_allowed",
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "get_travel_times",
+            {
+                "config_entry_id": mock_config.entry_id,
+                "origin": "location1",
+                "destination": "location2",
+                "mode": "driving",
+                "units": "imperial",
+                "language": "en",
+                "avoid": "tolls",
+                "travel_routing_preference": travel_routing_preference,
+                "traffic_model": traffic_model,
+                "departure_time": "08:00:00",
+            },
+            blocking=True,
+            return_response=True,
+        )
+    routes_mock.async_compute_routes.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("data", "options"),
+    [(MOCK_CONFIG, DEFAULT_OPTIONS)],
+)
 async def test_service_get_transit_times(
     hass: HomeAssistant,
     routes_mock: AsyncMock,
@@ -204,6 +254,7 @@ async def test_service_get_transit_times(
             {
                 "duration": 1620,
                 "duration_text": "27 mins",
+                "static_duration": 1560,
                 "static_duration_text": "26 mins",
                 "distance_meters": 21300,
                 "distance_text": "21.3 km",
@@ -302,3 +353,34 @@ async def test_service_get_transit_times_errors(
             blocking=True,
             return_response=True,
         )
+
+
+@pytest.mark.parametrize(
+    ("data", "options"),
+    [(MOCK_CONFIG, DEFAULT_OPTIONS)],
+)
+async def test_service_static_duration_falls_back_to_duration(
+    hass: HomeAssistant,
+    routes_mock: AsyncMock,
+    mock_config: MockConfigEntry,
+) -> None:
+    """Test static_duration is the duration when the API doesn't return it."""
+    routes_mock.async_compute_routes.return_value = ComputeRoutesResponse.from_dict(
+        {"routes": [{"distanceMeters": 21300, "duration": "1620s"}]}
+    )
+
+    response_data = await hass.services.async_call(
+        DOMAIN,
+        "get_travel_times",
+        {
+            "config_entry_id": mock_config.entry_id,
+            "origin": "location1",
+            "destination": "location2",
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+    route = response_data["routes"][0]
+    assert route["duration"] == 1620
+    assert route["static_duration"] == 1620

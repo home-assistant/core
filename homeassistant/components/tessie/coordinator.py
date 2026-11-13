@@ -16,10 +16,10 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
+from .const import DOMAIN, ENERGY_HISTORY_FIELDS
+
 if TYPE_CHECKING:
     from . import TessieConfigEntry
-
-from .const import DOMAIN, ENERGY_HISTORY_FIELDS
 
 # This matches the update interval Tessie performs server side
 TESSIE_SYNC_INTERVAL = 10

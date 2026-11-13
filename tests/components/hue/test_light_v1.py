@@ -6,7 +6,7 @@ import aiohue
 import pytest
 
 from homeassistant.components import hue
-from homeassistant.components.hue.const import CONF_ALLOW_HUE_GROUPS, SERVICE_FLASH
+from homeassistant.components.hue.const import CONF_ALLOW_HUE_GROUPS, HueService
 from homeassistant.components.hue.v1 import light as hue_light
 from homeassistant.components.light import ColorMode
 from homeassistant.config_entries import ConfigEntryState
@@ -1010,7 +1010,7 @@ async def test_flash_not_supported(hass: HomeAssistant, mock_bridge_v1: Mock) ->
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             hue.DOMAIN,
-            SERVICE_FLASH,
+            HueService.FLASH,
             {ATTR_ENTITY_ID: "light.hue_lamp_1", "duration": 5},
             blocking=True,
         )

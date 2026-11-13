@@ -16,6 +16,7 @@
   "categories": ["sensors.air_quality"],
   "codeowners": ["@aschmitz", "@thecode", "@anrijs"],
   "config_flow": true,
+  "connectivity": ["bluetooth"],
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/aranet",
   "integration_type": "device",

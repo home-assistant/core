@@ -181,6 +181,8 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
     ) -> ConfigFlowResult:
         """Show progress dialog for installing firmware."""
         if not self.firmware_install_task:
+            # Keep track of the firmware we're working with, for error messages
+            self.installing_firmware_name = firmware_name
             self.firmware_install_task = self.hass.async_create_task(
                 self._install_firmware(
                     fw_update_url,
@@ -189,6 +191,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
                     expected_installed_firmware_type,
                 ),
                 f"Install {firmware_name} firmware",
+                eager_start=False,
             )
         if not self.firmware_install_task.done():
             return self.async_show_progress(
@@ -224,9 +227,6 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
     ) -> None:
         """Install firmware."""
         assert self._device is not None
-
-        # Keep track of the firmware we're working with, for error messages
-        self.installing_firmware_name = firmware_name
 
         # For the duration of firmware flashing, hint to other integrations (i.e. ZHA)
         # that the hardware is in use and should not be accessed. This is separate from

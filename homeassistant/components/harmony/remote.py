@@ -32,6 +32,7 @@ from .const import (
 from .data import HarmonyConfigEntry, HarmonyData
 from .entity import HarmonyEntity
 from .subscriber import HarmonyCallback
+from .util import config_file_path
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,8 +53,9 @@ async def async_setup_entry(
     default_activity: str | None = entry.options.get(ATTR_ACTIVITY)
     delay_secs: float = entry.options.get(ATTR_DELAY_SECS, DEFAULT_DELAY_SECS)
 
-    harmony_conf_file = hass.config.path(f"harmony_{entry.unique_id}.conf")
-    device = HarmonyRemote(data, default_activity, delay_secs, harmony_conf_file)
+    device = HarmonyRemote(
+        data, default_activity, delay_secs, config_file_path(hass, entry.unique_id)
+    )
     async_add_entities([device])
 
 
