@@ -820,6 +820,18 @@
     "invalid_credential_data": {
       "message": "Invalid credential data: {reason}."
     },
+    "preset_write_busy": {
+      "message": "Failed to update presets: another preset change is already running on the thermostat. Try again."
+    },
+    "preset_write_data_version_mismatch": {
+      "message": "Failed to update presets: the thermostat's presets changed while they were being read. Try again."
+    },
+    "preset_write_failed": {
+      "message": "Failed to update presets: thermostat returned status `{status}`."
+    },
+    "preset_write_invalid_in_state": {
+      "message": "Failed to update presets: the thermostat ended or refused the edit. Try again."
+    },
     "set_credential_failed": {
       "message": "Failed to set credential: lock returned status `{status}`."
     }

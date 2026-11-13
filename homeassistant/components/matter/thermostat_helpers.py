@@ -1,13 +1,13 @@
 """Thermostat cluster helpers for the Matter integration.
 
-Currently covers preset management: the atomic-write handshake required to
-add, edit, or remove entries in the Thermostat cluster's Presets attribute
-(Matter 1.4 spec §7.15 "Atomic Request" and §4.3.11.50 "Presets attribute
-write rules").
+Currently covers preset management: creating, editing and removing entries in
+the Thermostat cluster's Presets attribute, which may only be written inside
+an atomic write (Matter 1.4 spec §7.15 "Atomic Request"). The server runs that
+handshake, and the device's own write rules (§4.3.11.50), behind
+`write_atomic_attribute`.
 """
 
 from collections.abc import Callable
-import contextlib
 from typing import TYPE_CHECKING, Any, cast
 
 from chip.clusters import Objects as clusters
@@ -16,24 +16,29 @@ from matter_server.common.helpers.util import create_attribute_path_from_attribu
 
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
-from .const import (
-    THERMOSTAT_PRESET_ATOMIC_WRITE_TIMEOUT_MS,
-    THERMOSTAT_PRESET_MIN_ATOMIC_WRITE_TIMEOUT_MS,
-)
+from .const import DOMAIN
 
 if TYPE_CHECKING:
     from matter_server.client import MatterClient
     from matter_server.client.models.node import MatterEndpoint, MatterNode
 
-_AtomicRequestType = clusters.Globals.Enums.AtomicRequestTypeEnum
 _Status = clusters.Globals.Enums.status
 _PresetTypeFeature = clusters.Thermostat.Bitmaps.PresetTypeFeaturesBitmap
 _PresetScenario = clusters.Thermostat.Enums.PresetScenarioEnum
 _PresetStruct = clusters.Thermostat.Structs.PresetStruct
 
-# A Timed Write transaction for the Presets write itself, distinct from the
-# AtomicRequest window above (Matter spec §4.3.11.50 write rule 2).
-THERMOSTAT_PRESET_TIMED_WRITE_TIMEOUT_MS = 3000
+# A DATA_VERSION_MISMATCH mostly comes from another attribute of the cluster
+# changing, such as the measured temperature, so a retried read usually
+# succeeds; this is the write-server's own retry count for that case.
+PRESET_WRITE_ATTEMPTS = 2
+
+# What a rejected preset write means for the user, for the statuses that
+# the device returns for a reason other than our own request shape.
+_PRESET_WRITE_HINTS: dict[int, str] = {
+    _Status.kDataVersionMismatch: "preset_write_data_version_mismatch",
+    _Status.kBusy: "preset_write_busy",
+    _Status.kInvalidInState: "preset_write_invalid_in_state",
+}
 
 
 class ThermostatEndpointNotFoundError(HomeAssistantError):
@@ -49,15 +54,20 @@ class PresetNotFoundError(ServiceValidationError):
 
 
 class InvalidPresetDataError(ServiceValidationError):
-    """Preset name, setpoints, or scenario fail device validation rules."""
+    """A required argument for this preset operation is missing."""
 
 
-class PresetInUseError(ServiceValidationError):
-    """Preset cannot be removed because it is built-in, active, or scheduled."""
+class PresetWriteRejectedError(HomeAssistantError):
+    """The device rejected a Presets write; `status` is its Matter status."""
 
-
-class AtomicWriteError(HomeAssistantError):
-    """The atomic-write handshake for the Presets attribute failed."""
+    def __init__(self, status: int) -> None:
+        """Translate the device's status into a HomeAssistantError."""
+        super().__init__(
+            translation_domain=DOMAIN,
+            translation_key=_PRESET_WRITE_HINTS.get(status, "preset_write_failed"),
+            translation_placeholders={"status": str(status)},
+        )
+        self.status = status
 
 
 def _normalize[T](value: T) -> T | None:
@@ -92,196 +102,6 @@ def _preset_type_supports_names(preset_types: list[Any], scenario: int) -> bool:
     )
 
 
-def _preset_type_limit(preset_types: list[Any], scenario: int) -> int | None:
-    """Return the maximum number of presets allowed for `scenario`."""
-    for preset_type in preset_types:
-        if preset_type.presetScenario == scenario:
-            return int(preset_type.numberOfPresets)
-    return None
-
-
-def _preset_name_conflict(
-    current_presets: list[Any],
-    scenario: int,
-    name: str | None,
-    except_handle: bytes | None,
-) -> str | None:
-    """Return why `name` cannot be used for a preset of `scenario`, or None.
-
-    Names must be unique per scenario, a missing name included, and a
-    UserDefined preset needs one (Matter spec §4.3.10.23.3, §4.3.10.17).
-    """
-    if scenario == _PresetScenario.kUserDefined and name is None:
-        return "A user-defined preset needs a name"
-    for preset in current_presets:
-        if preset.presetHandle == except_handle:
-            continue
-        if preset.presetScenario != scenario:
-            continue
-        if _normalize(preset.name) != name:
-            continue
-        if name is None:
-            return "Another preset of this scenario already has no name"
-        return f'Another preset of this scenario is already named "{name}"'
-    return None
-
-
-def _preset_in_use(
-    endpoint: MatterEndpoint,
-    preset_handle: bytes,
-) -> str | None:
-    """Return why `preset_handle` cannot be removed, or None."""
-    presets = (
-        endpoint.get_attribute_value(None, clusters.Thermostat.Attributes.Presets) or []
-    )
-    for preset in presets:
-        if preset.presetHandle == preset_handle and _normalize(preset.builtIn) is True:
-            return "Built-in presets cannot be removed"
-    active_handle = endpoint.get_attribute_value(
-        None, clusters.Thermostat.Attributes.ActivePresetHandle
-    )
-    if _normalize(active_handle) == preset_handle:
-        return "The active preset cannot be removed"
-    schedules = (
-        endpoint.get_attribute_value(None, clusters.Thermostat.Attributes.Schedules)
-        or []
-    )
-    for schedule in schedules:
-        if _normalize(schedule.presetHandle) == preset_handle:
-            return "A schedule uses this preset"
-        for transition in schedule.transitions:
-            if _normalize(transition.presetHandle) == preset_handle:
-                return "A schedule uses this preset"
-    return None
-
-
-def _describe_atomic_failure(
-    response: clusters.Thermostat.Commands.AtomicResponse,
-) -> str:
-    """Format the most relevant status code of a failed AtomicResponse."""
-    for status in response.attributeStatus:
-        if status.statusCode != _Status.kSuccess:
-            return f"{status.statusCode.name} ({status.statusCode})"
-    return f"{response.statusCode.name} ({response.statusCode})"
-
-
-async def _atomic_request(
-    matter_client: MatterClient,
-    node: MatterNode,
-    endpoint_id: int,
-    request_type: clusters.Globals.Enums.AtomicRequestTypeEnum,
-    attribute_requests: list[int],
-    timeout: int | None = None,
-) -> clusters.Thermostat.Commands.AtomicResponse:
-    """Send a Thermostat AtomicRequest command."""
-    return await matter_client.send_device_command(
-        node_id=node.node_id,
-        endpoint_id=endpoint_id,
-        command=clusters.Thermostat.Commands.AtomicRequest(
-            requestType=request_type,
-            attributeRequests=attribute_requests,
-            timeout=timeout,
-        ),
-    )
-
-
-def _ensure_write_window_long_enough(timeout: int | None) -> None:
-    """Raise if the device granted a BeginWrite window that is too short to use."""
-    if timeout is not None and timeout < THERMOSTAT_PRESET_MIN_ATOMIC_WRITE_TIMEOUT_MS:
-        raise AtomicWriteError(
-            f"The device allows only {timeout} ms to edit presets, "
-            "too short to write them"
-        )
-
-
-def _require_reported_presets(
-    live_values: dict[str, Any], presets_path: str
-) -> list[Any]:
-    """Return the live Presets value, or raise if the device did not report it."""
-    current_presets = live_values.get(presets_path)
-    if current_presets is None:
-        raise AtomicWriteError("The device did not report its presets")
-    return cast(list[Any], current_presets)
-
-
-async def _write_presets(
-    matter_client: MatterClient,
-    node: MatterNode,
-    endpoint: MatterEndpoint,
-    build_next: Callable[[list[Any]], list[Any]],
-) -> None:
-    """Replace the device's Presets list with the list `build_next` derives from it.
-
-    The result is the full intended list, not a diff: per §4.3.11.50 a handle
-    missing from it is a removal, and a preset with `presetHandle` null is an
-    addition. Presets may only be written inside the cluster's atomic-write
-    handshake (§7.15.3): the current list is read from the device inside that
-    window rather than from our (possibly stale) attribute cache, and the
-    write itself is a Timed Write so other clients don't observe the pending
-    list before it is committed.
-
-    A window shorter than the required minimum is rolled back without
-    writing (§7.15.1 step 1.2). A failed CommitWrite response already
-    discards the pending write on the device (§7.15.6.4.2); any other
-    failure after a successful BeginWrite, including one raised by
-    `build_next`, is followed by a RollbackWrite.
-    """
-    presets_attribute_id = clusters.Thermostat.Attributes.Presets.attribute_id
-    begin = await _atomic_request(
-        matter_client,
-        node,
-        endpoint.endpoint_id,
-        _AtomicRequestType.kBeginWrite,
-        [presets_attribute_id],
-        THERMOSTAT_PRESET_ATOMIC_WRITE_TIMEOUT_MS,
-    )
-    if begin.statusCode != _Status.kSuccess:
-        raise AtomicWriteError(
-            f"Could not start editing presets: {_describe_atomic_failure(begin)}"
-        )
-
-    atomic_attributes = [status.attributeID for status in begin.attributeStatus] or [
-        presets_attribute_id
-    ]
-
-    try:
-        _ensure_write_window_long_enough(begin.timeout)
-        presets_path = create_attribute_path_from_attribute(
-            endpoint_id=endpoint.endpoint_id,
-            attribute=clusters.Thermostat.Attributes.Presets,
-        )
-        live_values = await matter_client.read_attribute(node.node_id, presets_path)
-        current_presets = _require_reported_presets(live_values, presets_path)
-        await matter_client.write_attribute(
-            node_id=node.node_id,
-            attribute_path=presets_path,
-            value=build_next(current_presets),
-            timed_request_timeout_ms=THERMOSTAT_PRESET_TIMED_WRITE_TIMEOUT_MS,
-        )
-        commit = await _atomic_request(
-            matter_client,
-            node,
-            endpoint.endpoint_id,
-            _AtomicRequestType.kCommitWrite,
-            atomic_attributes,
-        )
-    except Exception:
-        with contextlib.suppress(Exception):
-            await _atomic_request(
-                matter_client,
-                node,
-                endpoint.endpoint_id,
-                _AtomicRequestType.kRollbackWrite,
-                atomic_attributes,
-            )
-        raise
-
-    if commit.statusCode != _Status.kSuccess:
-        raise AtomicWriteError(
-            f"Could not commit preset changes: {_describe_atomic_failure(commit)}"
-        )
-
-
 def _resolve_name(
     preset_types: list[Any],
     scenario: int,
@@ -296,6 +116,68 @@ def _resolve_name(
     if not _preset_type_supports_names(preset_types, scenario):
         return None
     return name.strip() if name and name.strip() else None
+
+
+def _write_error_status(result: Any) -> int | None:
+    """Return the first unsuccessful Matter status of a write response, if any.
+
+    A write is answered with a list of per-path results rather than an error,
+    so a device rejecting the write otherwise looks like a successful call.
+    """
+    if not isinstance(result, list):
+        return None
+    for item in result:
+        status: int | None = item.get("Status") if isinstance(item, dict) else None
+        if status:
+            return status
+    return None
+
+
+async def _write_presets(
+    matter_client: MatterClient,
+    node: MatterNode,
+    endpoint: MatterEndpoint,
+    build_next: Callable[[list[Any]], list[Any]],
+) -> None:
+    """Replace the device's Presets list with the list `build_next` derives from it.
+
+    The result is the full intended list, not a diff: per §4.3.11.50 a handle
+    missing from it is a removal, and a preset with `presetHandle` null is an
+    addition. `write_atomic_attribute` runs the AtomicRequest handshake and
+    the device's own write-rule validation (built-in/active/schedule
+    protection on removal, name uniqueness, per-scenario limits); this helper
+    no longer duplicates those rules. The write carries the cluster's data
+    version from this read, so the device refuses it instead of silently
+    overwriting a change made elsewhere since.
+    """
+    presets_path = create_attribute_path_from_attribute(
+        endpoint_id=endpoint.endpoint_id,
+        attribute=clusters.Thermostat.Attributes.Presets,
+    )
+    cluster_path = f"{endpoint.endpoint_id}/{clusters.Thermostat.id}"
+    status: int | None = None
+    for attempt in range(PRESET_WRITE_ATTEMPTS):
+        report = await matter_client.read(node.node_id, [presets_path])
+        current_presets = report.attributes.get(presets_path)
+        data_version = (report.data_versions or {}).get(cluster_path)
+        if current_presets is None or data_version is None:
+            raise HomeAssistantError("The device did not report its presets")
+        # write_atomic_attribute ships in matter-python-client after 1.5.5; drop
+        # this ignore once the requirement is bumped past that.
+        result = await matter_client.write_atomic_attribute(  # type: ignore[attr-defined]
+            node_id=node.node_id,
+            attribute_path=presets_path,
+            value=build_next(cast(list[Any], current_presets)),
+            data_version=data_version,
+        )
+        status = _write_error_status(result)
+        if (
+            status != _Status.kDataVersionMismatch
+            or attempt == PRESET_WRITE_ATTEMPTS - 1
+        ):
+            break
+    if status is not None:
+        raise PresetWriteRejectedError(status)
 
 
 async def set_thermostat_preset(
@@ -329,22 +211,7 @@ async def set_thermostat_preset(
                 raise InvalidPresetDataError(
                     "preset_scenario is required when adding a new preset"
                 )
-            limit = _preset_type_limit(preset_types, preset_scenario)
-            existing_for_scenario = sum(
-                1
-                for preset in current_presets
-                if preset.presetScenario == preset_scenario
-            )
-            if limit is not None and existing_for_scenario >= limit:
-                raise InvalidPresetDataError(
-                    "This device does not allow more presets of this scenario"
-                )
             resolved_name = _resolve_name(preset_types, preset_scenario, name)
-            conflict = _preset_name_conflict(
-                current_presets, preset_scenario, resolved_name, None
-            )
-            if conflict is not None:
-                raise InvalidPresetDataError(conflict)
             new_preset = _PresetStruct(
                 presetHandle=NullValue,
                 presetScenario=preset_scenario,
@@ -364,11 +231,6 @@ async def set_thermostat_preset(
         resolved_name = _resolve_name(preset_types, preset.presetScenario, name)
         if resolved_name is None:
             resolved_name = _normalize(preset.name)
-        conflict = _preset_name_conflict(
-            current_presets, preset.presetScenario, resolved_name, preset_handle
-        )
-        if conflict is not None:
-            raise InvalidPresetDataError(conflict)
         edited_preset = _PresetStruct(
             presetHandle=preset_handle,
             presetScenario=preset.presetScenario,
@@ -398,13 +260,13 @@ async def remove_thermostat_preset(
     node: MatterNode,
     preset_handle: bytes,
 ) -> None:
-    """Remove a preset from the thermostat."""
+    """Remove a preset from the thermostat.
+
+    Built-in, active, or schedule-referenced presets are rejected by the
+    device's own write rules (§4.3.11.50) rather than checked here.
+    """
     endpoint = _get_thermostat_endpoint_or_raise(node)
     _ensure_presets_supported(endpoint)
-
-    blocked_reason = _preset_in_use(endpoint, preset_handle)
-    if blocked_reason is not None:
-        raise PresetInUseError(blocked_reason)
 
     def build_next(current_presets: list[Any]) -> list[Any]:
         if not any(preset.presetHandle == preset_handle for preset in current_presets):

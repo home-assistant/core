@@ -157,13 +157,6 @@ ATTR_HEATING_SETPOINT = "heating_setpoint"
 ATTR_PRESET_NAME = "name"
 ATTR_PRESET_SCENARIO = "preset_scenario"
 
-# The Presets attribute requires a Timed Write inside an atomic-write
-# transaction (Matter spec §4.3.11.50, §7.15). We request more than the
-# 2-second minimum a device must grant (§7.15.1) to leave headroom for the
-# read-modify-write that happens inside the window.
-THERMOSTAT_PRESET_ATOMIC_WRITE_TIMEOUT_MS = 5000
-THERMOSTAT_PRESET_MIN_ATOMIC_WRITE_TIMEOUT_MS = 2000
-
 # PresetScenario mapping (Matter Thermostat PresetScenarioEnum)
 _PresetScenario = clusters.Thermostat.Enums.PresetScenarioEnum
 PRESET_SCENARIO_MAP: dict[int, str] = {
