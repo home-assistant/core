@@ -2111,6 +2111,18 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "ceiling_fan_infrared": {
+      "name": "Ceiling Fan Infrared",
+      "integration_type": "device",
+      "categories": [
+        "climate.fans_ventilation"
+      ],
+      "connectivity": [
+        "infrared"
+      ],
+      "config_flow": true,
+      "iot_class": "assumed_state"
+    },
     "centriconnect": {
       "name": "CentriConnect/MyPropane",
       "integration_type": "device",
