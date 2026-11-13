@@ -1200,16 +1200,10 @@ async def test_turned_off_while_saving(
     hass_storage: dict[str, Any],
     freezer: FrozenDateTimeFactory,
     supervisor_client: AsyncMock,
-    entity_registry: er.EntityRegistry,
     store_key: str,
     saved_key: str,
 ) -> None:
     """Test turning automatic updates off during a save stops the update."""
-    # Registered in an earlier run; in tests the update starts before the platforms.
-    entity_registry.async_get_or_create(
-        "update", DOMAIN, "home_assistant_core_version_latest"
-    )
-    assert await async_setup_component(hass, "update", {})
     save = Store.async_save
 
     async def save_and_turn_off(store: Store, data: Any) -> None:

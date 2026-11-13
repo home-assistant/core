@@ -248,6 +248,14 @@ class AutoUpdateManager:
         self._entry.async_on_unload(
             self._coordinator.async_add_listener(self._async_record_offered_version)
         )
+
+    @callback
+    def async_start(self) -> None:
+        """Start checking once Home Assistant has started.
+
+        Called after the platforms are set up, so the update report can save
+        a snapshot for the Core update entity.
+        """
         self._entry.async_on_unload(
             async_at_started(self._hass, self._async_start_checking)
         )
