@@ -34,8 +34,8 @@ from .const import (
     CONF_HOME_PLUGIN_SETTING_ID,
     CONF_MESSAGES_PLUGIN_SETTING_ID,
     DOMAIN,
-    HOMEY_PLUGIN_ID,
     LOGGER,
+    PLUGIN_KEYNAME,
 )
 from .coordinator import TRMNLConfigEntry, TRMNLCoordinator, scope_granted
 from .home import HomePusher
@@ -74,7 +74,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TRMNLConfigEntry) -> Non
     entity_ids = entry.options.get(CONF_HOME_ENTITIES, [])
     # With no entities left, one empty push clears the plugin the integration made.
     if entity_ids or (
-        CONF_HOME_PLUGIN_SETTING_ID in entry.options and scope_granted(entry, "content")
+        CONF_HOME_PLUGIN_SETTING_ID in entry.data and scope_granted(entry, "content")
     ):
         coordinator.home_pusher = HomePusher(
             hass, entry, entity_ids, _home_push(hass, entry)
@@ -85,34 +85,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: TRMNLConfigEntry) -> Non
 def _home_push(
     hass: HomeAssistant, entry: TRMNLConfigEntry
 ) -> Callable[[dict[str, Any]], Coroutine[Any, Any, None]]:
-    """Return a push to the entry's Homey plugin setting, made again if the user deleted it."""
+    """Return a push to the entry's home plugin setting, made again if the user deleted it."""
     coordinator = entry.runtime_data
 
     async def create_plugin_setting() -> int:
         plugin_setting = await coordinator.client.create_plugin_setting(
-            hass.config.location_name, HOMEY_PLUGIN_ID
+            hass.config.location_name, plugin_keyname=PLUGIN_KEYNAME
         )
         hass.config_entries.async_update_entry(
             entry,
-            options={
-                **entry.options,
-                CONF_HOME_PLUGIN_SETTING_ID: plugin_setting.identifier,
-            },
+            data={**entry.data, CONF_HOME_PLUGIN_SETTING_ID: plugin_setting.identifier},
         )
         return plugin_setting.identifier
 
-    async def push(snapshot: dict[str, Any]) -> None:
+    async def push(home: dict[str, Any]) -> None:
         await coordinator.async_ensure_token_valid()
-        plugin_setting_id = entry.options.get(CONF_HOME_PLUGIN_SETTING_ID)
+        plugin_setting_id = entry.data.get(CONF_HOME_PLUGIN_SETTING_ID)
         if plugin_setting_id is None:
             plugin_setting_id = await create_plugin_setting()
         try:
-            await coordinator.client.update_plugin_setting_data(
-                plugin_setting_id, snapshot
-            )
+            await coordinator.client.update_plugin_setting_data(plugin_setting_id, home)
         except TRMNLNotFoundError:
             await coordinator.client.update_plugin_setting_data(
-                await create_plugin_setting(), snapshot
+                await create_plugin_setting(), home
             )
 
     return push
@@ -174,7 +169,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: TRMNLConfigEntry) -> No
     plugin_setting_ids = [
         plugin_setting_id
         for key in (CONF_HOME_PLUGIN_SETTING_ID, CONF_MESSAGES_PLUGIN_SETTING_ID)
-        if (plugin_setting_id := entry.options.get(key)) is not None
+        if (plugin_setting_id := entry.data.get(key)) is not None
     ]
     if not plugin_setting_ids or not scope_granted(entry, "delete"):
         return
@@ -187,7 +182,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: TRMNLConfigEntry) -> No
         client = TRMNLClient(
             token=token["access_token"], session=async_get_clientsession(hass)
         )
-    except ClientError as err:
+    except (ClientError, TimeoutError) as err:
         LOGGER.warning("Could not delete the TRMNL plugin settings: %s", err)
         return
     for plugin_setting_id in plugin_setting_ids:
@@ -195,7 +190,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: TRMNLConfigEntry) -> No
             await client.delete_plugin_setting(plugin_setting_id)
         except TRMNLNotFoundError:
             continue
-        except TRMNLError as err:
+        except (TRMNLError, ClientError, TimeoutError) as err:
             LOGGER.warning(
                 "Could not delete TRMNL plugin setting %s: %s", plugin_setting_id, err
             )

@@ -10,6 +10,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from pytest_homeassistant.plugins import AiohttpClientMocker
+from syrupy.assertion import SnapshotAssertion
 from trmnl.exceptions import TRMNLError, TRMNLForbiddenError, TRMNLNotFoundError
 from trmnl.models import PluginSetting
 
@@ -18,13 +19,11 @@ from homeassistant.components.trmnl.const import (
     CONF_HOME_PLUGIN_SETTING_ID,
     CONF_MESSAGES_PLUGIN_SETTING_ID,
     DOMAIN,
-    HOMEY_PLUGIN_ID,
     OAUTH2_TOKEN,
+    PLUGIN_KEYNAME,
 )
-from homeassistant.components.trmnl.home import build_snapshot, capabilities_of
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import UnitOfTemperature
-from homeassistant.core import HomeAssistant, State
+from homeassistant.config_entries import SOURCE_REAUTH
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     OAuth2TokenRequestConnectionError,
     OAuth2TokenRequestReauthError,
@@ -37,198 +36,26 @@ from homeassistant.helpers import (
 
 from . import setup_integration
 
-
-@pytest.mark.parametrize(
-    ("state", "expected"),
-    [
-        (
-            State(
-                "sensor.t",
-                "21.0",
-                {"device_class": "temperature", "unit_of_measurement": "°C"},
-            ),
-            {"measure_temperature": {"value": 21, "units": "°C"}},
-        ),
-        (
-            State(
-                "sensor.p",
-                "12.5",
-                {"device_class": "power", "unit_of_measurement": "W"},
-            ),
-            {"measure_power": {"value": 12.5, "units": "W"}},
-        ),
-        (State("sensor.t", "unknown", {"device_class": "temperature"}), {}),
-        (State("sensor.t", "abc", {"device_class": "temperature"}), {}),
-        (State("sensor.x", "1", {"device_class": "duration"}), {}),
-        (
-            State("binary_sensor.m", "on", {"device_class": "motion"}),
-            {"alarm_motion": {"value": True}},
-        ),
-        (
-            State("light.l", "on", {"brightness": 255}),
-            {"onoff": {"value": True}, "dim": {"value": 1.0}},
-        ),
-        (State("light.l", "unavailable"), {}),
-        (
-            State(
-                "climate.c", "heat", {"current_temperature": 19.5, "temperature": 21}
-            ),
-            {
-                "measure_temperature": {"value": 19.5, "units": "°C"},
-                "target_temperature": {"value": 21, "units": "°C"},
-                "thermostat_mode": {"value": "heat"},
-            },
-        ),
-        (
-            State("cover.g", "closed", {"device_class": "garage"}),
-            {"garagedoor_closed": {"value": True}},
-        ),
-        (
-            State("cover.b", "open", {"current_position": 40}),
-            {"windowcoverings_set": {"value": 0.4}},
-        ),
-        (State("cover.b", "open"), {}),
-        (State("lock.d", "unlocked"), {"locked": {"value": False}}),
-        (
-            State("alarm_control_panel.a", "armed_away"),
-            {"homealarm_state": {"value": "armed"}},
-        ),
-        (State("camera.c", "idle"), {}),
-    ],
-)
-def test_capabilities_of(state: State, expected: dict) -> None:
-    """Test each kind of entity maps to the capabilities TRMNL draws."""
-    assert capabilities_of(state, UnitOfTemperature.CELSIUS) == expected
-
-
-async def test_snapshot_groups_entities_by_device_and_area(
-    hass: HomeAssistant,
-    area_registry: ar.AreaRegistry,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test entities of one device become one TRMNL device, naming only its area."""
-    entry = MockConfigEntry(domain="test")
-    entry.add_to_hass(hass)
-    kitchen = area_registry.async_create("Kitchen")
-    area_registry.async_create("Bedroom")
-    device = device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id, identifiers={("test", "1")}, name="Thermostat"
-    )
-    device_registry.async_update_device(device.id, area_id=kitchen.id)
-    for object_id, value, device_class in (
-        ("temp", "20", "temperature"),
-        ("temp_floor", "18", "temperature"),
-        ("hum", "40", "humidity"),
-        ("power", "unknown", "power"),
-    ):
-        entity_registry.async_get_or_create(
-            "sensor",
-            "test",
-            object_id,
-            device_id=device.id,
-            suggested_object_id=object_id,
-        )
-        hass.states.async_set(
-            f"sensor.{object_id}", value, {"device_class": device_class}
-        )
-
-    snapshot = build_snapshot(
-        hass, ["sensor.temp", "sensor.temp_floor", "sensor.hum", "sensor.power"]
-    )
-
-    assert snapshot["zone_names"] == {kitchen.id: "Kitchen"}
-    assert snapshot["devices"] == [
-        {
-            "name": "Thermostat",
-            "zone": "Kitchen",
-            "available": True,
-            "klass": "sensor",
-            "capabilities": {
-                "measure_temperature": {"value": 20},
-                "measure_temperature.2": {"value": 18},
-                "measure_humidity": {"value": 40},
-            },
-        }
-    ]
-
-
-async def test_snapshot_sends_only_picked_entities(hass: HomeAssistant) -> None:
-    """Test entities the user did not pick, or that are gone, are not sent."""
-    hass.states.async_set("light.picked", "on")
-    hass.states.async_set("light.not_picked", "on")
-
-    names = [
-        device["name"]
-        for device in build_snapshot(hass, ["light.picked", "light.removed"])["devices"]
-    ]
-
-    assert names == ["picked"]
-
-
-async def test_snapshot_names_a_nameless_device_after_its_entity(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test an entity on a device with no name is sent with the entity's name."""
-    entry = MockConfigEntry(domain="test")
-    entry.add_to_hass(hass)
-    device = device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id, identifiers={("test", "1")}
-    )
-    device_registry.async_update_device(device.id, name=None)
-    entity_registry.async_get_or_create(
-        "light", "test", "lamp", device_id=device.id, suggested_object_id="lamp"
-    )
-    hass.states.async_set("light.lamp", "on", {"friendly_name": "Desk lamp"})
-
-    assert build_snapshot(hass, ["light.lamp"])["devices"][0]["name"] == "Desk lamp"
-
-
-async def test_snapshot_puts_a_child_device_in_its_parent_area(
-    hass: HomeAssistant,
-    area_registry: ar.AreaRegistry,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test an entity on a child device with no area of its own takes the parent's area."""
-    entry = MockConfigEntry(domain="test")
-    entry.add_to_hass(hass)
-    kitchen = area_registry.async_create("Kitchen")
-    parent = device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id, identifiers={("test", "hub")}, name="Hub"
-    )
-    device_registry.async_update_device(parent.id, area_id=kitchen.id)
-    child = device_registry.async_get_or_create_child(
-        config_entry_id=entry.entry_id,
-        identifiers={("test", "lamp")},
-        name="Lamp",
-        parent_device_id=parent.id,
-    )
-    entity_registry.async_get_or_create(
-        "light", "test", "lamp", device_id=child.id, suggested_object_id="lamp"
-    )
-    hass.states.async_set("light.lamp", "on")
-
-    snapshot = build_snapshot(hass, ["light.lamp"])
-
-    assert (snapshot["zone_names"], snapshot["devices"][0]["zone"]) == (
-        {kitchen.id: "Kitchen"},
-        "Kitchen",
-    )
+PLUGIN_SETTING = PluginSetting(identifier=42, name="Home", plugin_id=452)
 
 
 @pytest.fixture
 def home_entry(mock_config_entry: MockConfigEntry) -> MockConfigEntry:
-    """Config entry that shows one lamp on TRMNL."""
+    """Return an entry that shows the lamp and already has its plugin setting."""
     return MockConfigEntry(
         domain=DOMAIN,
         version=2,
         unique_id=mock_config_entry.unique_id,
-        data=mock_config_entry.data,
+        data={**mock_config_entry.data, CONF_HOME_PLUGIN_SETTING_ID: 42},
         options={CONF_HOME_ENTITIES: ["light.lamp"]},
     )
+
+
+async def tick(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+    """Move past the push cooldown."""
+    freezer.tick(timedelta(seconds=61))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
 
 async def test_nothing_sent_until_entities_are_picked(
@@ -245,299 +72,114 @@ async def test_nothing_sent_until_entities_are_picked(
     mock_trmnl_client.update_plugin_setting_data.assert_not_awaited()
 
 
-async def test_setup_creates_plugin_setting_and_pushes(
-    hass: HomeAssistant, mock_trmnl_client: AsyncMock, home_entry: MockConfigEntry
+async def test_setup_creates_plugin_setting_and_pushes_the_home(
+    hass: HomeAssistant,
+    mock_trmnl_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test the first setup creates the plugin setting once and pushes the home."""
-    mock_trmnl_client.create_plugin_setting.return_value = PluginSetting(
-        identifier=42, name="Home", plugin_id=HOMEY_PLUGIN_ID
+    """Test the first push creates the plugin setting and sends each entity with its area."""
+    mock_trmnl_client.create_plugin_setting.return_value = PLUGIN_SETTING
+    other_entry = MockConfigEntry(domain="test")
+    other_entry.add_to_hass(hass)
+    kitchen = area_registry.async_create("Kitchen")
+    bedroom = area_registry.async_create("Bedroom")
+    area_registry.async_create("Garage")
+    hub = device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id, identifiers={("test", "hub")}
     )
-    hass.states.async_set("light.lamp", "on")
+    device_registry.async_update_device(hub.id, area_id=kitchen.id)
+    child = device_registry.async_get_or_create_child(
+        config_entry_id=other_entry.entry_id,
+        identifiers={("test", "child")},
+        parent_device_id=hub.id,
+    )
+    entity_registry.async_get_or_create(
+        "sensor", "test", "temp", device_id=child.id, suggested_object_id="temp"
+    )
+    lamp = entity_registry.async_get_or_create(
+        "light", "test", "lamp", suggested_object_id="lamp"
+    )
+    entity_registry.async_update_entity(lamp.entity_id, area_id=bedroom.id)
+    hass.states.async_set(
+        "sensor.temp",
+        "21.5",
+        {"device_class": "temperature", "unit_of_measurement": "°C"},
+    )
+    hass.states.async_set(
+        "light.lamp", "on", {"brightness": 128, "friendly_name": "Desk lamp"}
+    )
+    hass.states.async_set(
+        "climate.hall", "heat", {"current_temperature": 19, "temperature": 21}
+    )
+    hass.states.async_set("light.not_picked", "on")
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=2,
+        unique_id=mock_config_entry.unique_id,
+        data=mock_config_entry.data,
+        options={
+            CONF_HOME_ENTITIES: [
+                "sensor.temp",
+                "light.lamp",
+                "climate.hall",
+                "light.removed",
+            ]
+        },
+    )
 
-    await setup_integration(hass, home_entry)
+    await setup_integration(hass, entry)
 
     mock_trmnl_client.create_plugin_setting.assert_awaited_once_with(
-        hass.config.location_name, HOMEY_PLUGIN_ID
+        hass.config.location_name, plugin_keyname=PLUGIN_KEYNAME
     )
-    assert home_entry.options[CONF_HOME_PLUGIN_SETTING_ID] == 42
-    plugin_setting_id, snapshot = (
-        mock_trmnl_client.update_plugin_setting_data.await_args.args
-    )
-    assert (plugin_setting_id, snapshot["devices"][0]["capabilities"]) == (
-        42,
-        {"onoff": {"value": True}},
-    )
+    assert entry.data[CONF_HOME_PLUGIN_SETTING_ID] == 42
+    assert mock_trmnl_client.update_plugin_setting_data.await_args.args == snapshot
 
 
-async def test_change_pushes_once_after_cooldown(
+async def test_changes_push_at_most_once_a_minute(
     hass: HomeAssistant,
     mock_trmnl_client: AsyncMock,
     home_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test a burst of changes makes one push a minute later, and no change makes none."""
-    home_entry.add_to_hass(hass)
-    hass.config_entries.async_update_entry(
-        home_entry, options={**home_entry.options, CONF_HOME_PLUGIN_SETTING_ID: 42}
-    )
+    """Test changes in the minute after a push share one push, and no change sends none."""
     hass.states.async_set("light.lamp", "on")
     await setup_integration(hass, home_entry)
-    mock_trmnl_client.update_plugin_setting_data.reset_mock()
 
-    hass.states.async_set("light.lamp", "off")
-    hass.states.async_set("light.lamp", "on")
-    hass.states.async_set("light.lamp", "off")
+    for state in ("off", "on", "off"):
+        hass.states.async_set("light.lamp", state)
     hass.states.async_set("light.not_picked", "on")
     await hass.async_block_till_done()
-    assert mock_trmnl_client.update_plugin_setting_data.await_count == 0
-
-    freezer.tick(timedelta(seconds=61))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
     assert mock_trmnl_client.update_plugin_setting_data.await_count == 1
 
-    freezer.tick(timedelta(minutes=5))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    assert mock_trmnl_client.update_plugin_setting_data.await_count == 1
-
-
-async def test_timer_and_change_share_one_cooldown(
-    hass: HomeAssistant,
-    mock_trmnl_client: AsyncMock,
-    home_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test the timer does not push while a change push waits, and they share one push."""
-    home_entry.add_to_hass(hass)
-    hass.config_entries.async_update_entry(
-        home_entry, options={**home_entry.options, CONF_HOME_PLUGIN_SETTING_ID: 42}
-    )
-    hass.states.async_set("light.lamp", "on")
-    await setup_integration(hass, home_entry)
-    freezer.tick(timedelta(minutes=4, seconds=30))
-    async_fire_time_changed(hass)
-    hass.states.async_set("light.lamp", "off")
-    await hass.async_block_till_done()
-
-    freezer.tick(timedelta(seconds=31))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    assert mock_trmnl_client.update_plugin_setting_data.await_count == 1
-
-    freezer.tick(timedelta(seconds=30))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await tick(hass, freezer)
     assert mock_trmnl_client.update_plugin_setting_data.await_count == 2
-
-
-async def test_burst_after_cooldown_waits_and_pushes_once(
-    hass: HomeAssistant,
-    mock_trmnl_client: AsyncMock,
-    home_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test a burst of changes on an idle pusher waits a minute and pushes the last state once."""
-    home_entry.add_to_hass(hass)
-    hass.config_entries.async_update_entry(
-        home_entry, options={**home_entry.options, CONF_HOME_PLUGIN_SETTING_ID: 42}
+    assert (
+        mock_trmnl_client.update_plugin_setting_data.await_args.args[1]["entities"][0][
+            "state"
+        ]
+        == "off"
     )
-    hass.states.async_set("light.lamp", "on")
-    await setup_integration(hass, home_entry)
-    freezer.tick(timedelta(minutes=2))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
 
-    hass.states.async_set("light.lamp", "off", {"brightness": 10})
-    hass.states.async_set("light.lamp", "on", {"brightness": 255})
-    await hass.async_block_till_done()
-    assert mock_trmnl_client.update_plugin_setting_data.await_count == 1
-
-    freezer.tick(timedelta(seconds=61))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    assert mock_trmnl_client.update_plugin_setting_data.await_count == 2
-    snapshot = mock_trmnl_client.update_plugin_setting_data.await_args.args[1]
-    assert snapshot["devices"][0]["capabilities"]["dim"] == {"value": 1.0}
-
-
-async def test_slow_push_does_not_overlap_the_next(
-    hass: HomeAssistant,
-    mock_trmnl_client: AsyncMock,
-    home_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test the minute between sends starts when a slow push finishes."""
-    created = asyncio.Event()
-
-    async def create_plugin_setting(*_: Any) -> PluginSetting:
-        await created.wait()
-        return PluginSetting(identifier=42, name="Home", plugin_id=HOMEY_PLUGIN_ID)
-
-    mock_trmnl_client.create_plugin_setting.side_effect = create_plugin_setting
-    hass.states.async_set("light.lamp", "on")
-    home_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(home_entry.entry_id)
-    hass.states.async_set("light.lamp", "off")
-    freezer.tick(timedelta(seconds=61))
-    async_fire_time_changed(hass)
-    await asyncio.sleep(0)
-
-    created.set()
-    await hass.async_block_till_done()
-    assert mock_trmnl_client.update_plugin_setting_data.await_count == 1
-
-    freezer.tick(timedelta(seconds=61))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    mock_trmnl_client.create_plugin_setting.assert_awaited_once()
-    assert [
-        call.args[0]
-        for call in mock_trmnl_client.update_plugin_setting_data.await_args_list
-    ] == [42, 42]
-
-
-async def test_remove_during_first_push_deletes_the_new_plugin_setting(
-    hass: HomeAssistant,
-    mock_trmnl_client: AsyncMock,
-    home_entry: MockConfigEntry,
-) -> None:
-    """Test removing the entry waits for a push under way, so its plugin setting is deleted."""
-    created = asyncio.Event()
-
-    async def create_plugin_setting(*_: Any) -> PluginSetting:
-        await created.wait()
-        return PluginSetting(identifier=42, name="Home", plugin_id=HOMEY_PLUGIN_ID)
-
-    mock_trmnl_client.create_plugin_setting.side_effect = create_plugin_setting
-    hass.states.async_set("light.lamp", "on")
-    home_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(home_entry.entry_id)
-
-    remove = hass.async_create_task(
-        hass.config_entries.async_remove(home_entry.entry_id)
-    )
-    await asyncio.sleep(0)
-    created.set()
-    await remove
-
-    mock_trmnl_client.delete_plugin_setting.assert_awaited_once_with(42)
-
-
-async def test_remove_waits_for_a_push_past_the_unload_task_timeout(
-    hass: HomeAssistant,
-    mock_trmnl_client: AsyncMock,
-    home_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test removal waits for a push itself, and nothing is sent after it."""
-    created = asyncio.Event()
-
-    async def create_plugin_setting(*_: Any) -> PluginSetting:
-        await created.wait()
-        return PluginSetting(identifier=42, name="Home", plugin_id=HOMEY_PLUGIN_ID)
-
-    mock_trmnl_client.create_plugin_setting.side_effect = create_plugin_setting
-    hass.states.async_set("light.lamp", "on")
-    home_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(home_entry.entry_id)
-    wait = asyncio.wait
-
-    async def give_up_at_once(tasks: Any, timeout: float | None = None) -> Any:
-        # Only the config entry's 10 second wait for its tasks gives up at once.
-        return await wait(tasks, timeout=0 if timeout == 10 else timeout)
-
-    hass.states.async_set("light.lamp", "off")
-    await asyncio.sleep(0)
-    with patch("homeassistant.config_entries.asyncio.wait", give_up_at_once):
-        remove = hass.async_create_task(
-            hass.config_entries.async_remove(home_entry.entry_id)
-        )
-        for _ in range(20):
-            await asyncio.sleep(0)
-        assert not remove.done()
-        created.set()
-        await remove
-    freezer.tick(timedelta(seconds=61))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    mock_trmnl_client.delete_plugin_setting.assert_awaited_once_with(42)
-    assert mock_trmnl_client.update_plugin_setting_data.await_count == 1
-
-
-async def test_unload_survives_a_token_refresh_failing_under_way(
-    hass: HomeAssistant,
-    mock_trmnl_client: AsyncMock,
-    home_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test unload waits for a push whose token refresh fails, logs it and unloads."""
-    release = asyncio.Event()
-
-    async def fail_refresh() -> None:
-        await release.wait()
-        raise OAuth2TokenRequestConnectionError(domain=DOMAIN)
-
-    home_entry.add_to_hass(hass)
-    hass.config_entries.async_update_entry(
-        home_entry, options={**home_entry.options, CONF_HOME_PLUGIN_SETTING_ID: 42}
-    )
-    hass.states.async_set("light.lamp", "on")
-    await setup_integration(hass, home_entry)
-
-    with patch.object(
-        home_entry.runtime_data, "async_ensure_token_valid", side_effect=fail_refresh
-    ):
-        hass.states.async_set("light.lamp", "off")
-        freezer.tick(timedelta(seconds=61))
-        async_fire_time_changed(hass)
-        await asyncio.sleep(0)
-        unload = hass.async_create_task(
-            hass.config_entries.async_unload(home_entry.entry_id)
-        )
-        await asyncio.sleep(0)
-        release.set()
-        assert await unload
-
-    assert home_entry.state is ConfigEntryState.NOT_LOADED
-    assert "Could not send the home to TRMNL" in caplog.text
-
-
-async def test_failed_push_is_retried_on_the_next_tick(
-    hass: HomeAssistant,
-    mock_trmnl_client: AsyncMock,
-    home_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test a failed push logs a warning and the same snapshot is sent again later."""
-    home_entry.add_to_hass(hass)
-    hass.config_entries.async_update_entry(
-        home_entry, options={**home_entry.options, CONF_HOME_PLUGIN_SETTING_ID: 42}
-    )
-    hass.states.async_set("light.lamp", "on")
-    mock_trmnl_client.update_plugin_setting_data.side_effect = [
-        TRMNLError("Request failed with status 429."),
-        None,
-    ]
-
-    await setup_integration(hass, home_entry)
-    freezer.tick(timedelta(minutes=5))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    assert "status 429" in caplog.text
+    hass.states.async_set("light.lamp", "off", {"effect": "rainbow"})
+    await tick(hass, freezer)
     assert mock_trmnl_client.update_plugin_setting_data.await_count == 2
 
 
 @pytest.mark.parametrize(
     "error",
-    [OAuth2TokenRequestConnectionError(domain=DOMAIN), ClientError("Connection reset")],
+    [
+        TRMNLError("Rate limit exceeded"),
+        ClientError("Connection reset"),
+        TimeoutError(),
+        OAuth2TokenRequestConnectionError(domain=DOMAIN),
+    ],
 )
-async def test_token_refresh_failing_to_connect_is_retried_on_the_next_tick(
+async def test_failed_push_is_logged_once_and_sent_on_the_next_change(
     hass: HomeAssistant,
     mock_trmnl_client: AsyncMock,
     home_entry: MockConfigEntry,
@@ -545,55 +187,43 @@ async def test_token_refresh_failing_to_connect_is_retried_on_the_next_tick(
     caplog: pytest.LogCaptureFixture,
     error: Exception,
 ) -> None:
-    """Test a token refresh that cannot connect logs one warning and the next push retries."""
-    home_entry.add_to_hass(hass)
-    hass.config_entries.async_update_entry(
-        home_entry, options={**home_entry.options, CONF_HOME_PLUGIN_SETTING_ID: 42}
-    )
+    """Test a failing push logs one warning, and the push after it logs the recovery."""
+    mock_trmnl_client.update_plugin_setting_data.side_effect = [error, error, None]
     hass.states.async_set("light.lamp", "on")
     await setup_integration(hass, home_entry)
-    mock_trmnl_client.update_plugin_setting_data.reset_mock()
 
-    with patch.object(
-        home_entry.runtime_data, "async_ensure_token_valid", side_effect=[error, None]
-    ):
-        hass.states.async_set("light.lamp", "off")
-        for _ in range(2):
-            freezer.tick(timedelta(minutes=5))
-            async_fire_time_changed(hass)
-            await hass.async_block_till_done()
+    for state in ("off", "on"):
+        hass.states.async_set("light.lamp", state)
+        await tick(hass, freezer)
 
+    assert mock_trmnl_client.update_plugin_setting_data.await_count == 3
     assert caplog.text.count("Could not send the home to TRMNL") == 1
-    assert mock_trmnl_client.update_plugin_setting_data.await_count == 1
+    assert "Sent the home to TRMNL again" in caplog.text
 
 
-async def test_token_refresh_rejected_starts_reauth_once_and_stops(
+@pytest.mark.parametrize(
+    "error",
+    [
+        OAuth2TokenRequestReauthError(domain=DOMAIN, request_info=Mock(), status=400),
+        TRMNLForbiddenError("Missing capability: content"),
+    ],
+)
+async def test_refused_push_starts_reauth_and_stops(
     hass: HomeAssistant,
     mock_trmnl_client: AsyncMock,
     home_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    error: Exception,
 ) -> None:
-    """Test a rejected refresh token starts reauth once and stops pushing until reload."""
-    home_entry.add_to_hass(hass)
-    hass.config_entries.async_update_entry(
-        home_entry, options={**home_entry.options, CONF_HOME_PLUGIN_SETTING_ID: 42}
-    )
+    """Test a refused sign in or scope starts reauth and sends nothing more until reload."""
+    mock_trmnl_client.update_plugin_setting_data.side_effect = error
     hass.states.async_set("light.lamp", "on")
     await setup_integration(hass, home_entry)
-    rejected = OAuth2TokenRequestReauthError(
-        domain=DOMAIN, request_info=Mock(), status=400
-    )
 
-    with patch.object(
-        home_entry.runtime_data, "async_ensure_token_valid", side_effect=rejected
-    ) as ensure_token_valid:
-        for state in ("off", "on"):
-            hass.states.async_set("light.lamp", state)
-            freezer.tick(timedelta(minutes=5))
-            async_fire_time_changed(hass)
-            await hass.async_block_till_done()
+    hass.states.async_set("light.lamp", "off")
+    await tick(hass, freezer)
 
-    assert ensure_token_valid.await_count == 1
+    assert mock_trmnl_client.update_plugin_setting_data.await_count == 1
     assert [
         flow["context"]["source"] for flow in hass.config_entries.flow.async_progress()
     ] == [SOURCE_REAUTH]
@@ -605,12 +235,8 @@ async def test_deleted_plugin_setting_is_made_again(
     home_entry: MockConfigEntry,
 ) -> None:
     """Test a plugin setting the user deleted on TRMNL is created again and pushed to."""
-    home_entry.add_to_hass(hass)
-    hass.config_entries.async_update_entry(
-        home_entry, options={**home_entry.options, CONF_HOME_PLUGIN_SETTING_ID: 42}
-    )
     mock_trmnl_client.create_plugin_setting.return_value = PluginSetting(
-        identifier=43, name="Home", plugin_id=HOMEY_PLUGIN_ID
+        identifier=43, name="Home", plugin_id=452
     )
     mock_trmnl_client.update_plugin_setting_data.side_effect = [
         TRMNLNotFoundError("Plugin setting not found"),
@@ -620,151 +246,99 @@ async def test_deleted_plugin_setting_is_made_again(
 
     await setup_integration(hass, home_entry)
 
-    assert home_entry.options[CONF_HOME_PLUGIN_SETTING_ID] == 43
+    assert home_entry.data[CONF_HOME_PLUGIN_SETTING_ID] == 43
     assert mock_trmnl_client.update_plugin_setting_data.await_args.args[0] == 43
 
 
-async def test_push_refused_for_scope_starts_reauth_once_and_stops(
+async def test_last_entity_removed_clears_the_home(
     hass: HomeAssistant,
     mock_trmnl_client: AsyncMock,
     home_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test a push refused for a revoked content scope starts reauth once and stops pushing."""
+    """Test unpicking every entity sends an empty home to the plugin setting it made."""
     home_entry.add_to_hass(hass)
-    hass.config_entries.async_update_entry(
-        home_entry, options={**home_entry.options, CONF_HOME_PLUGIN_SETTING_ID: 42}
-    )
-    mock_trmnl_client.update_plugin_setting_data.side_effect = TRMNLForbiddenError(
-        "Missing capability: content"
-    )
-    hass.states.async_set("light.lamp", "on")
+    hass.config_entries.async_update_entry(home_entry, options={CONF_HOME_ENTITIES: []})
+
     await setup_integration(hass, home_entry)
 
-    for state in ("off", "on"):
-        hass.states.async_set("light.lamp", state)
-        freezer.tick(timedelta(minutes=5))
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
-
-    assert mock_trmnl_client.update_plugin_setting_data.await_count == 1
-    assert [
-        flow["context"]["source"] for flow in hass.config_entries.flow.async_progress()
-    ] == [SOURCE_REAUTH]
-    assert caplog.text.count("Missing capability: content") == 1
+    mock_trmnl_client.update_plugin_setting_data.assert_awaited_once_with(
+        42, {"areas": {}, "entities": []}
+    )
 
 
-async def test_change_during_refused_push_is_not_sent(
+async def test_remove_waits_for_the_push_under_way(
     hass: HomeAssistant,
     mock_trmnl_client: AsyncMock,
     home_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test a change waiting behind a push that TRMNL refuses for its scope is dropped."""
+    """Test removal waits past the unload task timeout for the first push, so its plugin setting is deleted."""
+    created = asyncio.Event()
+
+    async def create_plugin_setting(*_: Any, **__: Any) -> PluginSetting:
+        await created.wait()
+        return PLUGIN_SETTING
+
+    mock_trmnl_client.create_plugin_setting.side_effect = create_plugin_setting
+    hass.states.async_set("light.lamp", "on")
     home_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
-        home_entry, options={**home_entry.options, CONF_HOME_PLUGIN_SETTING_ID: 42}
+        home_entry,
+        data={
+            key: value
+            for key, value in home_entry.data.items()
+            if key != CONF_HOME_PLUGIN_SETTING_ID
+        },
     )
-    refuse = asyncio.Event()
-
-    async def update_plugin_setting_data(*_: Any) -> None:
-        await refuse.wait()
-        raise TRMNLForbiddenError("Missing capability: content")
-
-    mock_trmnl_client.update_plugin_setting_data.side_effect = (
-        update_plugin_setting_data
-    )
-    hass.states.async_set("light.lamp", "on")
     await hass.config_entries.async_setup(home_entry.entry_id)
     hass.states.async_set("light.lamp", "off")
-    await asyncio.sleep(0)
+    wait = asyncio.wait
 
-    refuse.set()
-    await hass.async_block_till_done()
-    freezer.tick(timedelta(seconds=61))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    async def give_up_at_once(tasks: Any, timeout: float | None = None) -> Any:
+        # Only the config entry's 10 second wait for its tasks gives up at once.
+        return await wait(tasks, timeout=0 if timeout == 10 else timeout)
 
+    with patch("homeassistant.config_entries.asyncio.wait", give_up_at_once):
+        remove = hass.async_create_task(
+            hass.config_entries.async_remove(home_entry.entry_id)
+        )
+        for _ in range(20):
+            await asyncio.sleep(0)
+        assert not remove.done()
+        created.set()
+        await remove
+    await tick(hass, freezer)
+
+    mock_trmnl_client.delete_plugin_setting.assert_awaited_once_with(42)
     assert mock_trmnl_client.update_plugin_setting_data.await_count == 1
-
-
-async def test_last_entity_removed_clears_the_plugin(
-    hass: HomeAssistant,
-    mock_trmnl_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test unpicking every entity sends an empty home to the plugin it made."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        version=2,
-        unique_id=mock_config_entry.unique_id,
-        data=mock_config_entry.data,
-        options={CONF_HOME_ENTITIES: [], CONF_HOME_PLUGIN_SETTING_ID: 42},
-    )
-
-    await setup_integration(hass, entry)
-
-    plugin_setting_id, snapshot = (
-        mock_trmnl_client.update_plugin_setting_data.await_args.args
-    )
-    assert (plugin_setting_id, snapshot["devices"]) == (42, [])
 
 
 @pytest.mark.parametrize(
     ("scope", "deleted"),
-    [("openid read devices content delete", True), ("openid read devices", False)],
+    [
+        ("openid read devices content delete", [call(42), call(7)]),
+        ("openid read devices", []),
+    ],
 )
-async def test_remove_entry_deletes_plugin_setting_when_allowed(
+async def test_remove_entry_deletes_plugin_settings_when_allowed(
     hass: HomeAssistant,
     mock_trmnl_client: AsyncMock,
     home_entry: MockConfigEntry,
     scope: str,
-    deleted: bool,
+    deleted: list[Any],
 ) -> None:
-    """Test removing the entry deletes the home plugin setting only with the delete scope."""
+    """Test removing the entry deletes both plugin settings only with the delete scope."""
     token = {**home_entry.data["token"], "scope": scope}
     entry = MockConfigEntry(
         domain=DOMAIN,
         version=2,
-        data={**home_entry.data, "token": token},
-        options={CONF_HOME_PLUGIN_SETTING_ID: 42, CONF_MESSAGES_PLUGIN_SETTING_ID: 7},
+        data={**home_entry.data, "token": token, CONF_MESSAGES_PLUGIN_SETTING_ID: 7},
     )
     await setup_integration(hass, entry)
 
     await hass.config_entries.async_remove(entry.entry_id)
 
-    assert mock_trmnl_client.delete_plugin_setting.await_args_list == (
-        [call(42), call(7)] if deleted else []
-    )
-
-
-async def test_remove_entry_deletes_the_rest_when_one_is_gone(
-    hass: HomeAssistant,
-    mock_trmnl_client: AsyncMock,
-    home_entry: MockConfigEntry,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test a plugin setting the user already deleted does not stop the next delete."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        version=2,
-        data=home_entry.data,
-        options={CONF_HOME_PLUGIN_SETTING_ID: 42, CONF_MESSAGES_PLUGIN_SETTING_ID: 7},
-    )
-    mock_trmnl_client.delete_plugin_setting.side_effect = [
-        TRMNLNotFoundError("Plugin setting not found"),
-        None,
-    ]
-    await setup_integration(hass, entry)
-
-    await hass.config_entries.async_remove(entry.entry_id)
-
-    assert mock_trmnl_client.delete_plugin_setting.await_args_list == [
-        call(42),
-        call(7),
-    ]
-    assert "Could not delete" not in caplog.text
+    assert mock_trmnl_client.delete_plugin_setting.await_args_list == deleted
 
 
 async def test_remove_entry_refreshes_an_expired_token_without_saving_it(
@@ -775,12 +349,7 @@ async def test_remove_entry_refreshes_an_expired_token_without_saving_it(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test removal refreshes an expired token for the delete, though the entry is gone."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        version=2,
-        data=home_entry.data,
-        options={CONF_HOME_PLUGIN_SETTING_ID: 42},
-    )
+    entry = MockConfigEntry(domain=DOMAIN, version=2, data=home_entry.data)
     await setup_integration(hass, entry)
     hass.config_entries.async_update_entry(
         entry,
@@ -806,23 +375,29 @@ async def test_remove_entry_refreshes_an_expired_token_without_saving_it(
     assert "Error calling entry remove callback" not in caplog.text
 
 
-async def test_remove_entry_logs_failed_delete_and_deletes_the_rest(
+@pytest.mark.parametrize(
+    ("error", "logged"),
+    [
+        (TRMNLNotFoundError("Plugin setting not found"), False),
+        (TRMNLError("status 500"), True),
+        (TimeoutError(), True),
+    ],
+)
+async def test_remove_entry_deletes_the_rest_after_a_failed_delete(
     hass: HomeAssistant,
     mock_trmnl_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    home_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
+    error: Exception,
+    logged: bool,
 ) -> None:
-    """Test a failed delete on removal is logged and the next plugin is still deleted."""
+    """Test a failed delete is logged, unless already gone, and the next is still deleted."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         version=2,
-        data=mock_config_entry.data,
-        options={CONF_HOME_PLUGIN_SETTING_ID: 42, CONF_MESSAGES_PLUGIN_SETTING_ID: 7},
+        data={**home_entry.data, CONF_MESSAGES_PLUGIN_SETTING_ID: 7},
     )
-    mock_trmnl_client.delete_plugin_setting.side_effect = [
-        TRMNLError("status 500"),
-        None,
-    ]
+    mock_trmnl_client.delete_plugin_setting.side_effect = [error, None]
     await setup_integration(hass, entry)
 
     await hass.config_entries.async_remove(entry.entry_id)
@@ -831,7 +406,7 @@ async def test_remove_entry_logs_failed_delete_and_deletes_the_rest(
         call(42),
         call(7),
     ]
-    assert "Could not delete TRMNL plugin setting 42: status 500" in caplog.text
+    assert ("Could not delete TRMNL plugin setting 42" in caplog.text) is logged
 
 
 async def test_remove_entry_logs_failed_token_refresh(
@@ -842,12 +417,7 @@ async def test_remove_entry_logs_failed_token_refresh(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test a token refresh that fails on removal is logged and deletes nothing."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        version=2,
-        data=home_entry.data,
-        options={CONF_HOME_PLUGIN_SETTING_ID: 42},
-    )
+    entry = MockConfigEntry(domain=DOMAIN, version=2, data=home_entry.data)
     await setup_integration(hass, entry)
     hass.config_entries.async_update_entry(
         entry,

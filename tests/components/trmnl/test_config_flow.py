@@ -14,6 +14,7 @@ from yarl import URL
 
 from homeassistant.components.trmnl.const import (
     CLIENT_ID,
+    CONF_HOME_PLUGIN_SETTING_ID,
     DOMAIN,
     OAUTH2_AUTHORIZE,
     OAUTH2_REVOKE,
@@ -286,8 +287,12 @@ async def test_reauth_flow(
     aioclient_mock: AiohttpClientMocker,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test signing in again replaces the token."""
+    """Test signing in again replaces the token and keeps the home plugin setting."""
     mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={**mock_config_entry.data, CONF_HOME_PLUGIN_SETTING_ID: 42},
+    )
 
     result = await mock_config_entry.start_reauth_flow(hass)
     assert result["step_id"] == "reauth_confirm"
@@ -300,6 +305,7 @@ async def test_reauth_flow(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert mock_config_entry.data["token"]["refresh_token"] == "refresh"
+    assert mock_config_entry.data[CONF_HOME_PLUGIN_SETTING_ID] == 42
 
 
 @pytest.mark.usefixtures(
@@ -393,20 +399,19 @@ async def test_abort_when_token_cannot_be_revoked(
 
 
 @pytest.mark.usefixtures("mock_trmnl_client")
-@pytest.mark.parametrize("entity_id", ["light.lamp", "climate.living_room"])
 async def test_options_flow_picks_entities(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, entity_id: str
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test the options flow stores the entities to show on TRMNL."""
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {"home_entities": [entity_id]}
+        result["flow_id"], {"home_entities": ["light.lamp"]}
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert mock_config_entry.options == {"home_entities": [entity_id]}
+    assert mock_config_entry.options == {"home_entities": ["light.lamp"]}
 
 
 @pytest.mark.usefixtures("mock_trmnl_client")

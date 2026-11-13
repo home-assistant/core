@@ -86,7 +86,7 @@
   },
   "options": {
     "abort": {
-      "content_not_granted": "Your TRMNL sign in does not let Home Assistant change plugin settings. Home Assistant has started a new sign in: finish it from the TRMNL integration with \"Change your markup, plugin settings, playlists and mashups\" ticked, then pick the entities again."
+      "content_not_granted": "Your TRMNL sign in does not let Home Assistant change plugin settings. Home Assistant has started a new sign in: finish it from the TRMNL integration with \"Change your markup, plugin settings, playlists and mashups\" selected, then pick the entities again."
     },
     "step": {
       "init": {
@@ -94,9 +94,9 @@
           "home_entities": "Entities to show"
         },
         "data_description": {
-          "home_entities": "The first time, Home Assistant creates a plugin on your TRMNL account. Add it, or a Homey recipe, to a playlist."
+          "home_entities": "The first time, Home Assistant creates a Home Assistant plugin on your TRMNL account. Add it to a playlist."
         },
-        "description": "Home Assistant sends the entities you pick to a TRMNL Homey plugin every 5 minutes and soon after they change. Nothing is sent until you pick at least one.",
+        "description": "Home Assistant sends the entities you pick to TRMNL when it starts and at most once a minute after they change. Nothing is sent until you pick at least one.",
         "title": "Show your home on TRMNL"
       }
     }
