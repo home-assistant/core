@@ -38,8 +38,6 @@ from telegram.request import HTTPXRequest
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_COMMAND,
-    ATTR_DATE,
     CONF_API_KEY,
     HTTP_BASIC_AUTHENTICATION,
     HTTP_BEARER_AUTHENTICATION,
@@ -54,38 +52,14 @@ from homeassistant.util import raise_if_invalid_filename, raise_if_invalid_path
 from homeassistant.util.json import JsonValueType
 
 from .const import (
-    ATTR_ARGS,
-    ATTR_AUTHENTICATION,
-    ATTR_CAPTION,
-    ATTR_CHAT_ID,
-    ATTR_CHAT_INSTANCE,
-    ATTR_DATA,
     ATTR_DISABLE_NOTIF,
     ATTR_DISABLE_WEB_PREV,
-    ATTR_FILE,
-    ATTR_FILE_ID,
-    ATTR_FILE_MIME_TYPE,
-    ATTR_FILE_NAME,
-    ATTR_FILE_PATH,
-    ATTR_FILE_SIZE,
-    ATTR_FROM_FIRST,
-    ATTR_FROM_LAST,
     ATTR_INLINE_MESSAGE_ID,
-    ATTR_MEDIA_TYPE,
-    ATTR_MESSAGE_ID,
     ATTR_MESSAGE_TAG,
     ATTR_MESSAGE_THREAD_ID,
-    ATTR_MSG,
-    ATTR_MSGID,
     ATTR_PARSER,
-    ATTR_PASSWORD,
     ATTR_REPLY_TO_MSGID,
     ATTR_REPLYMARKUP,
-    ATTR_TEXT,
-    ATTR_URL,
-    ATTR_USER_ID,
-    ATTR_USERNAME,
-    ATTR_VERIFY_SSL,
     CONF_API_ENDPOINT,
     CONF_CHAT_ID,
     CONF_PROXY_URL,
@@ -93,9 +67,11 @@ from .const import (
     DOMAIN,
     TelegramBotChatAction,
     TelegramBotEvent,
+    TelegramBotEventData,
     TelegramBotParseMode,
     TelegramBotService,
     TelegramBotServiceArgument,
+    TelegramBotServiceResponse,
 )
 from .helpers import signal
 
@@ -181,12 +157,12 @@ class BaseTelegramBot:
             _LOGGER.warning("Unhandled update: %s", update)
             return True
 
-        self.most_recent_chat_id = event_data[ATTR_CHAT_ID]
+        self.most_recent_chat_id = event_data[TelegramBotEventData.CHAT_ID]
 
         if not self.authorize_update(update):
             return False
 
-        event_data["bot"] = _get_bot_info(self._bot, self.config)
+        event_data[TelegramBotEventData.BOT] = _get_bot_info(self._bot, self.config)
 
         event_context = Context()
 
@@ -202,17 +178,19 @@ class BaseTelegramBot:
         command_parts = command_text.split()
         command = command_parts[0]
         args = command_parts[1:]
-        return {ATTR_COMMAND: command, ATTR_ARGS: args}
+        return {TelegramBotEventData.COMMAND: command, TelegramBotEventData.ARGS: args}
 
     def _get_message_event_data(self, message: Message) -> tuple[str, dict[str, Any]]:
         event_data: dict[str, Any] = {
-            ATTR_MSGID: message.message_id,
-            ATTR_CHAT_ID: message.chat.id,
-            ATTR_DATE: message.date,
-            ATTR_MESSAGE_THREAD_ID: message.message_thread_id,
+            TelegramBotEventData.ID: message.message_id,
+            TelegramBotEventData.CHAT_ID: message.chat.id,
+            TelegramBotEventData.DATE: message.date,
+            TelegramBotEventData.MESSAGE_THREAD_ID: message.message_thread_id,
         }
         if message.reply_to_message:
-            event_data[ATTR_REPLY_TO_MSGID] = message.reply_to_message.message_id
+            event_data[TelegramBotEventData.REPLY_TO_MESSAGE_ID] = (
+                message.reply_to_message.message_id
+            )
 
         if filters.COMMAND.filter(message):
             # This is a command message - set event type
@@ -221,11 +199,11 @@ class BaseTelegramBot:
             event_data.update(self._get_command_event_data(message.text))
         elif filters.ATTACHMENT.filter(message):
             event_type = TelegramBotEvent.ATTACHMENT
-            event_data[ATTR_TEXT] = message.caption
+            event_data[TelegramBotEventData.TEXT] = message.caption
             event_data.update(self._get_file_id_event_data(message))
         else:
             event_type = TelegramBotEvent.TEXT
-            event_data[ATTR_TEXT] = message.text
+            event_data[TelegramBotEventData.TEXT] = message.text
 
         if message.from_user:
             event_data.update(self._get_user_event_data(message.from_user))
@@ -237,26 +215,26 @@ class BaseTelegramBot:
         if filters.PHOTO.filter(message):
             photos = cast(Sequence[PhotoSize], message.effective_attachment)
             return {
-                ATTR_FILE_ID: photos[-1].file_id,
-                ATTR_FILE_MIME_TYPE: "image/jpeg",
-                ATTR_FILE_SIZE: photos[-1].file_size,
+                TelegramBotEventData.FILE_ID: photos[-1].file_id,
+                TelegramBotEventData.FILE_MIME_TYPE: "image/jpeg",
+                TelegramBotEventData.FILE_SIZE: photos[-1].file_size,
             }
         return {
             k: getattr(message.effective_attachment, v)
             for k, v in (
-                (ATTR_FILE_ID, "file_id"),
-                (ATTR_FILE_NAME, "file_name"),
-                (ATTR_FILE_MIME_TYPE, "mime_type"),
-                (ATTR_FILE_SIZE, "file_size"),
+                (TelegramBotEventData.FILE_ID, "file_id"),
+                (TelegramBotEventData.FILE_NAME, "file_name"),
+                (TelegramBotEventData.FILE_MIME_TYPE, "mime_type"),
+                (TelegramBotEventData.FILE_SIZE, "file_size"),
             )
             if hasattr(message.effective_attachment, v)
         }
 
     def _get_user_event_data(self, user: User) -> dict[str, Any]:
         return {
-            ATTR_USER_ID: user.id,
-            ATTR_FROM_FIRST: user.first_name,
-            ATTR_FROM_LAST: user.last_name,
+            TelegramBotEventData.USER_ID: user.id,
+            TelegramBotEventData.FROM_FIRST: user.first_name,
+            TelegramBotEventData.FROM_LAST: user.last_name,
         }
 
     def _get_callback_query_event_data(
@@ -264,15 +242,15 @@ class BaseTelegramBot:
     ) -> tuple[str, dict[str, Any]]:
         event_type = TelegramBotEvent.CALLBACK
         event_data: dict[str, Any] = {
-            ATTR_MSGID: callback_query.id,
-            ATTR_CHAT_INSTANCE: callback_query.chat_instance,
-            ATTR_DATA: callback_query.data,
-            ATTR_MSG: None,
-            ATTR_CHAT_ID: None,
+            TelegramBotEventData.ID: callback_query.id,
+            TelegramBotEventData.CHAT_INSTANCE: callback_query.chat_instance,
+            TelegramBotEventData.DATA: callback_query.data,
+            TelegramBotEventData.MESSAGE: None,
+            TelegramBotEventData.CHAT_ID: None,
         }
         if callback_query.message:
-            event_data[ATTR_MSG] = callback_query.message.to_dict()
-            event_data[ATTR_CHAT_ID] = callback_query.message.chat.id
+            event_data[TelegramBotEventData.MESSAGE] = callback_query.message.to_dict()
+            event_data[TelegramBotEventData.CHAT_ID] = callback_query.message.chat.id
 
         if callback_query.from_user:
             event_data.update(self._get_user_event_data(callback_query.from_user))
@@ -473,7 +451,7 @@ class TelegramNotificationService:
 
         :return: dict with chat_id keys and message_id values for successful sends
         """
-        chat_id: int = kwargs_msg.pop(ATTR_CHAT_ID)
+        chat_id: int = kwargs_msg.pop(TelegramBotServiceArgument.CHAT_ID)
         _LOGGER.debug("%s to chat ID %s", func_send.__name__, chat_id)
 
         response: Message | tuple[Message, ...] = await self._send_msg(
@@ -516,15 +494,17 @@ class TelegramNotificationService:
             )
 
             event_data: dict[str, Any] = {
-                ATTR_CHAT_ID: chat_id,
-                ATTR_MESSAGE_ID: message_id,
+                TelegramBotEventData.CHAT_ID: chat_id,
+                TelegramBotEventData.MESSAGE_ID: message_id,
             }
             if message_tag is not None:
-                event_data[ATTR_MESSAGE_TAG] = message_tag
-            if kwargs_msg.get(ATTR_MESSAGE_THREAD_ID) is not None:
-                event_data[ATTR_MESSAGE_THREAD_ID] = kwargs_msg[ATTR_MESSAGE_THREAD_ID]
+                event_data[TelegramBotEventData.MESSAGE_TAG] = message_tag
+            if kwargs_msg.get(TelegramBotServiceArgument.MESSAGE_THREAD_ID) is not None:
+                event_data[TelegramBotEventData.MESSAGE_THREAD_ID] = kwargs_msg[
+                    TelegramBotServiceArgument.MESSAGE_THREAD_ID
+                ]
 
-            event_data["bot"] = _get_bot_info(self.bot, self.config)
+            event_data[TelegramBotEventData.BOT] = _get_bot_info(self.bot, self.config)
 
             self.hass.bus.async_fire(TelegramBotEvent.SENT, event_data, context=context)
             async_dispatcher_send(
@@ -577,26 +557,32 @@ class TelegramNotificationService:
         for entry in input_media:
             file_content = await load_data(
                 self.hass,
-                url=entry.get(ATTR_URL),
-                filepath=entry.get(ATTR_FILE),
-                username=entry.get(ATTR_USERNAME, ""),
-                password=entry.get(ATTR_PASSWORD, ""),
-                authentication=entry.get(ATTR_AUTHENTICATION),
-                verify_ssl=entry[ATTR_VERIFY_SSL],
+                url=entry.get(TelegramBotServiceArgument.URL),
+                filepath=entry.get(TelegramBotServiceArgument.FILE),
+                username=entry.get(TelegramBotServiceArgument.USERNAME, ""),
+                password=entry.get(TelegramBotServiceArgument.PASSWORD, ""),
+                authentication=entry.get(TelegramBotServiceArgument.AUTHENTICATION),
+                verify_ssl=entry[TelegramBotServiceArgument.VERIFY_SSL],
             )
-            _LOGGER.debug("downloaded: %s", entry.get(ATTR_URL) or entry.get(ATTR_FILE))
+            _LOGGER.debug(
+                "downloaded: %s",
+                entry.get(TelegramBotServiceArgument.URL)
+                or entry.get(TelegramBotServiceArgument.FILE),
+            )
 
             # The parse mode of the media group itself only applies to a caption
             # of the whole group, so each caption needs its own
             caption_kwargs: dict[str, Any] = {
-                "caption": entry.get(ATTR_CAPTION),
+                "caption": entry.get(TelegramBotServiceArgument.CAPTION),
                 "parse_mode": params[ATTR_PARSER],
             }
-            if entry[ATTR_MEDIA_TYPE] == InputMediaType.AUDIO:
+            if entry[TelegramBotServiceArgument.MEDIA_TYPE] == InputMediaType.AUDIO:
                 media.append(InputMediaAudio(file_content, **caption_kwargs))
-            elif entry[ATTR_MEDIA_TYPE] == InputMediaType.DOCUMENT:
+            elif (
+                entry[TelegramBotServiceArgument.MEDIA_TYPE] == InputMediaType.DOCUMENT
+            ):
                 media.append(InputMediaDocument(file_content, **caption_kwargs))
-            elif entry[ATTR_MEDIA_TYPE] == InputMediaType.PHOTO:
+            elif entry[TelegramBotServiceArgument.MEDIA_TYPE] == InputMediaType.PHOTO:
                 media.append(InputMediaPhoto(file_content, **caption_kwargs))
             else:
                 media.append(InputMediaVideo(file_content, **caption_kwargs))
@@ -1136,7 +1122,7 @@ class TelegramNotificationService:
             )
         except OSError as err:
             raise os_write_error(err, custom_path) from err
-        return {ATTR_FILE_PATH: custom_path}
+        return {TelegramBotServiceResponse.FILE_PATH: custom_path}
 
     @staticmethod
     def _prepare_download_directory(directory_path: str) -> None:
