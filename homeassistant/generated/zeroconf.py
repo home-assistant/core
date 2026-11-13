@@ -1191,6 +1191,11 @@ ZEROCONF = {
             "name": "xzg*",
         },
     ],
+    "_zentraly._tcp.local.": [
+        {
+            "domain": "zentraly",
+        },
+    ],
     "_zigate-zigbee-gateway._tcp.local.": [
         {
             "domain": "zha",

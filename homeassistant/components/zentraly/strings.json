@@ -1,0 +1,58 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "unsupported_device": "This Zentraly device is not supported.",
+      "zeroconf_only": "Zentraly devices can only be added after being discovered on the local network."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "flow_title": "{name}",
+    "step": {
+      "auth": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "The password configured on the Zentraly device."
+        },
+        "description": "Enter the password for the Zentraly device.",
+        "title": "Authentication"
+      }
+    }
+  },
+  "exceptions": {
+    "action_failed": {
+      "message": "The device could not complete the action."
+    },
+    "authentication_failed": {
+      "message": "Authentication failed for Zentraly device {device_id}."
+    },
+    "cannot_connect": {
+      "message": "Unable to communicate with the device."
+    },
+    "command_rejected": {
+      "message": "The device rejected the action."
+    },
+    "connection_busy": {
+      "message": "The Zentraly connection is busy. Please try again later."
+    },
+    "invalid_action": {
+      "message": "The requested value or operation is not supported by this device."
+    },
+    "invalid_response": {
+      "message": "The device returned an invalid response."
+    },
+    "setup_cannot_connect": {
+      "message": "Unable to connect to Zentraly device {device_id}."
+    },
+    "unexpected_device": {
+      "message": "The device at {host} does not match the configured Zentraly device."
+    },
+    "unsupported_model": {
+      "message": "The Zentraly device with ID {device_id} is not supported."
+    }
+  }
+}
