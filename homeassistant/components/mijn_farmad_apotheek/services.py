@@ -12,6 +12,7 @@ from aiofarmad import (
     FarmadAuthorizationError,
     FarmadCommunicationError,
     FarmadError,
+    FarmadMissingPriceError,
 )
 import probatio
 
@@ -281,6 +282,12 @@ async def _async_order_medication(call: ServiceCall) -> ServiceResponse:
             ),
             call.data.get(FarmadServiceArgument.COMMENT),
         )
+    except FarmadMissingPriceError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="price_unavailable",
+            translation_placeholders={"product": cnk},
+        ) from err
     except FarmadError as err:
         if isinstance(err, FarmadAuthenticationError):
             entry.async_start_reauth(call.hass)
