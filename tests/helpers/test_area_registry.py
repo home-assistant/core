@@ -9,12 +9,7 @@ import pytest
 from pytest_homeassistant.common import ANY, async_capture_events, flush_store
 
 from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_UNIT_OF_MEASUREMENT,
-    PERCENTAGE,
-    UnitOfTemperature,
-)
+from homeassistant.const import PERCENTAGE, EntityStateAttribute, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
@@ -32,16 +27,16 @@ async def mock_temperature_humidity_entity(hass: HomeAssistant) -> None:
         "sensor.mock_temperature",
         "20",
         {
-            ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
-            ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
+            EntityStateAttribute.DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
+            EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
         },
     )
     hass.states.async_set(
         "sensor.mock_humidity",
         "50",
         {
-            ATTR_DEVICE_CLASS: SensorDeviceClass.HUMIDITY,
-            ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
+            EntityStateAttribute.DEVICE_CLASS: SensorDeviceClass.HUMIDITY,
+            EntityStateAttribute.UNIT_OF_MEASUREMENT: PERCENTAGE,
         },
     )
 
@@ -744,7 +739,9 @@ async def test_entity_renamed(
 ) -> None:
     """Test area sensor references follow entity_id renames."""
     entry = entity_registry.async_get_or_create("sensor", "test", "1234")
-    hass.states.async_set(entry.entity_id, "20", {ATTR_DEVICE_CLASS: device_class})
+    hass.states.async_set(
+        entry.entity_id, "20", {EntityStateAttribute.DEVICE_CLASS: device_class}
+    )
     kitchen = area_registry.async_create("Kitchen", **{attribute: entry.entity_id})
     bedroom = area_registry.async_create("Bedroom")
     update_events = async_capture_events(hass, ar.EVENT_AREA_REGISTRY_UPDATED)
@@ -772,7 +769,7 @@ async def test_entity_removed_or_unrelated_entity_renamed(
     hass.states.async_set(
         referenced.entity_id,
         "20",
-        {ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE},
+        {EntityStateAttribute.DEVICE_CLASS: SensorDeviceClass.TEMPERATURE},
     )
     kitchen = area_registry.async_create(
         "Kitchen", temperature_entity_id=referenced.entity_id

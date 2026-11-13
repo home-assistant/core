@@ -48,9 +48,26 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "call_for_heat": {
+        "name": "Call for heat"
+      },
+      "schedule_override_active": {
+        "name": "Schedule override active"
+      },
+      "summer_mode": {
+        "name": "Heating break"
+      },
+      "ventilation_mode": {
+        "name": "Sustainable ventilation"
+      }
+    },
     "button": {
       "reset_tamper": {
         "name": "Reset tamper"
+      },
+      "siren_test_alarm": {
+        "name": "Test alarm"
       },
       "smoke_test": {
         "name": "Start self-test"
@@ -70,6 +87,11 @@
             }
           }
         }
+      }
+    },
+    "light": {
+      "motion_light": {
+        "name": "Orientation light"
       }
     },
     "number": {
@@ -148,6 +170,13 @@
           "high": "[%key:common::state::high%]",
           "low": "[%key:common::state::low%]",
           "middle": "[%key:common::state::medium%]"
+        }
+      },
+      "orientation_light_response_time": {
+        "name": "Orientation light response time",
+        "state": {
+          "long": "Long",
+          "short": "Short"
         }
       },
       "output_mode": {

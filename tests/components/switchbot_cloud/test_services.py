@@ -6,10 +6,8 @@ import probatio
 import pytest
 from switchbot_api import SwitchBotAPI
 
-from homeassistant.components.switchbot_cloud.const import (
-    AI_ART_FRAME_UPLOAD_IMAGE_SERVICE,
-    DOMAIN,
-)
+from homeassistant.components.switchbot_cloud.const import DOMAIN
+from homeassistant.components.switchbot_cloud.services import SwitchBotCloudService
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -54,7 +52,7 @@ async def test_upload_image_success(
     ):
         await hass.services.async_call(
             DOMAIN,
-            AI_ART_FRAME_UPLOAD_IMAGE_SERVICE,
+            SwitchBotCloudService.UPLOAD_ART_FRAME_IMAGE,
             {"device_id": device.id, "image_url": "https://example.com/img.jpg"},
             blocking=True,
         )
@@ -77,7 +75,7 @@ async def test_upload_image_no_device_id_raises(
     with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
-            AI_ART_FRAME_UPLOAD_IMAGE_SERVICE,
+            SwitchBotCloudService.UPLOAD_ART_FRAME_IMAGE,
             {"image_url": "https://example.com/img.jpg"},
             blocking=True,
         )
@@ -102,7 +100,7 @@ async def test_device_not_in_registry_raises(
     ):
         await hass.services.async_call(
             DOMAIN,
-            AI_ART_FRAME_UPLOAD_IMAGE_SERVICE,
+            SwitchBotCloudService.UPLOAD_ART_FRAME_IMAGE,
             {
                 "device_id": "nonexistent-device-id",
                 "image_url": "https://example.com/img.jpg",
@@ -131,7 +129,7 @@ async def test_device_without_mac_raises_service_validation_error(
     with pytest.raises(ServiceValidationError, match="No valid MAC address obtained"):
         await hass.services.async_call(
             DOMAIN,
-            AI_ART_FRAME_UPLOAD_IMAGE_SERVICE,
+            SwitchBotCloudService.UPLOAD_ART_FRAME_IMAGE,
             {
                 "device_id": [device_no_mac.id],
                 "image_url": "https://example.com/img.jpg",

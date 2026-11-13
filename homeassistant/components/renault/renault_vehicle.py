@@ -16,12 +16,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 
+from .const import DOMAIN
+from .coordinator import RenaultDataUpdateCoordinator
+
 if TYPE_CHECKING:
     from . import RenaultConfigEntry
     from .renault_hub import RenaultHub
-
-from .const import DOMAIN
-from .coordinator import RenaultDataUpdateCoordinator
 
 LOGGER = logging.getLogger(__name__)
 

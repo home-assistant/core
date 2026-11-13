@@ -11,10 +11,10 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.select import (
-    ATTR_OPTION,
     ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
 from homeassistant.components.xiaomi_miio import UPDATE_INTERVAL
 from homeassistant.components.xiaomi_miio.const import (
@@ -23,12 +23,12 @@ from homeassistant.components.xiaomi_miio.const import (
     MODEL_AIRFRESH_T2017,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_DEVICE,
     CONF_HOST,
     CONF_MAC,
     CONF_MODEL,
     CONF_TOKEN,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -85,8 +85,11 @@ async def test_select_bad_attr(hass: HomeAssistant) -> None:
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             "select",
-            SERVICE_SELECT_OPTION,
-            {ATTR_OPTION: "up", ATTR_ENTITY_ID: entity_id + "_display_orientation"},
+            SelectService.SELECT_OPTION,
+            {
+                SelectServiceArgument.OPTION: "up",
+                CommonServiceArgument.ENTITY_ID: entity_id + "_display_orientation",
+            },
             blocking=True,
         )
     await hass.async_block_till_done()
@@ -108,8 +111,11 @@ async def test_select_option(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         "select",
-        SERVICE_SELECT_OPTION,
-        {ATTR_OPTION: "left", ATTR_ENTITY_ID: entity_id + "_display_orientation"},
+        SelectService.SELECT_OPTION,
+        {
+            SelectServiceArgument.OPTION: "left",
+            CommonServiceArgument.ENTITY_ID: entity_id + "_display_orientation",
+        },
         blocking=True,
     )
     await hass.async_block_till_done()

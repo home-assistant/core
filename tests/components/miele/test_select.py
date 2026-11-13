@@ -7,13 +7,12 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_OPTION,
-    SERVICE_SELECT_OPTION,
-    Platform,
+from homeassistant.components.select import (
+    DOMAIN as SELECT_DOMAIN,
+    SelectService,
+    SelectServiceArgument,
 )
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -49,8 +48,11 @@ async def test_selecting(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_OPTION: "sabbath"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+            SelectServiceArgument.OPTION: "sabbath",
+        },
         blocking=True,
     )
     mock_miele_client.send_action.assert_called_once()
@@ -69,8 +71,11 @@ async def test_api_failure(
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_OPTION: "sabbath"},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+                SelectServiceArgument.OPTION: "sabbath",
+            },
             blocking=True,
         )
     mock_miele_client.send_action.assert_called_once()
@@ -89,8 +94,11 @@ async def test_invalid_option(
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_OPTION: "normal"},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+                SelectServiceArgument.OPTION: "normal",
+            },
             blocking=True,
         )
     mock_miele_client.send_action.assert_not_called()

@@ -1,23 +1,37 @@
 """The NZBGet integration."""
 
+from enum import StrEnum
+
 import probatio
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 
-from .const import (
-    ATTR_SPEED,
-    DEFAULT_SPEED_LIMIT,
-    DOMAIN,
-    SERVICE_PAUSE,
-    SERVICE_RESUME,
-    SERVICE_SET_SPEED,
-)
+from .const import DEFAULT_SPEED_LIMIT, DOMAIN
 from .coordinator import NZBGetDataUpdateCoordinator
 
+
+class NZBGetService(StrEnum):
+    """Store keys for NZBGet services."""
+
+    PAUSE = "pause"
+    RESUME = "resume"
+    SET_SPEED = "set_speed"
+
+
+class NZBGetServiceArgument(StrEnum):
+    """Store keys for NZBGet service arguments."""
+
+    SPEED = "speed"
+
+
 SPEED_LIMIT_SCHEMA = probatio.Schema(
-    {probatio.Optional(ATTR_SPEED, default=DEFAULT_SPEED_LIMIT): cv.positive_int}
+    {
+        probatio.Optional(
+            NZBGetServiceArgument.SPEED, default=DEFAULT_SPEED_LIMIT
+        ): cv.positive_int
+    }
 )
 
 
@@ -44,7 +58,7 @@ def resume(call: ServiceCall) -> None:
 
 def set_speed(call: ServiceCall) -> None:
     """Service call to rate limit speeds in NZBGet."""
-    _get_coordinator(call).nzbget.rate(call.data[ATTR_SPEED])
+    _get_coordinator(call).nzbget.rate(call.data[NZBGetServiceArgument.SPEED])
 
 
 @callback
@@ -52,11 +66,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
     """Register integration-level services."""
 
     hass.services.async_register(
-        DOMAIN, SERVICE_PAUSE, pause, schema=probatio.Schema({})
+        DOMAIN, NZBGetService.PAUSE, pause, schema=probatio.Schema({})
     )
     hass.services.async_register(
-        DOMAIN, SERVICE_RESUME, resume, schema=probatio.Schema({})
+        DOMAIN, NZBGetService.RESUME, resume, schema=probatio.Schema({})
     )
     hass.services.async_register(
-        DOMAIN, SERVICE_SET_SPEED, set_speed, schema=SPEED_LIMIT_SCHEMA
+        DOMAIN, NZBGetService.SET_SPEED, set_speed, schema=SPEED_LIMIT_SCHEMA
     )

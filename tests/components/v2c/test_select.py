@@ -7,11 +7,11 @@ from pytrydan.models.trydan import ChargeMode
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
-    ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -43,10 +43,10 @@ async def test_select_option(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: "select.evse_1_1_1_1_charge_mode",
-            ATTR_OPTION: "mixed",
+            CommonServiceArgument.ENTITY_ID: "select.evse_1_1_1_1_charge_mode",
+            SelectServiceArgument.OPTION: "mixed",
         },
         blocking=True,
     )

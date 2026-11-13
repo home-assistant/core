@@ -265,7 +265,7 @@ class ProtectDeviceNFCEventEntity(EventEntityMixin, ProtectDeviceEntity, EventEn
         super()._async_update_device_from_protect(device)
         if event := description.get_event_obj(device):
             self._event = event
-            self._event_end = event.end if event else None
+            self._event_end = event.end
 
         if (
             event
@@ -310,7 +310,7 @@ class ProtectDeviceFingerprintEventEntity(
         super()._async_update_device_from_protect(device)
         if event := description.get_event_obj(device):
             self._event = event
-            self._event_end = event.end if event else None
+            self._event_end = event.end
 
         if (
             event
@@ -479,7 +479,7 @@ class ProtectDeviceVehicleEventEntity(
         super()._async_update_device_from_protect(device)
         if event := description.get_event_obj(device):
             self._event = event
-            self._event_end = event.end if event else None
+            self._event_end = event.end
 
         # Process vehicle detection events with thumbnails
         if (

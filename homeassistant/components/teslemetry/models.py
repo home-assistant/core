@@ -29,6 +29,8 @@ from .coordinator import (
     TeslemetryWallConnectorTotalsCoordinator,
 )
 
+type TeslemetryConfigEntry = ConfigEntry[TeslemetryData]
+
 STORAGE_VERSION = 1
 
 
@@ -49,7 +51,7 @@ class TeslemetryVehicleData:
     """Data for a vehicle in the Teslemetry integration."""
 
     api: Vehicle | VehicleRouter
-    config_entry: ConfigEntry
+    config_entry: TeslemetryConfigEntry
     coordinator: TeslemetryVehicleDataCoordinator
     poll: bool
     stream: TeslemetryStream
