@@ -1,6 +1,7 @@
 {
   "domain": "gentex_place",
   "name": "Place",
+  "categories": ["security_safety.smoke_co_alarms"],
   "codeowners": ["@niaexa", "@andrewtran-gentex"],
   "config_flow": true,
   "dependencies": ["application_credentials"],
@@ -8,5 +9,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_push",
   "quality_scale": "bronze",
-  "requirements": ["place-integration-api==0.2.7"]
+  "requirements": ["place-integration-api==0.2.8"]
 }

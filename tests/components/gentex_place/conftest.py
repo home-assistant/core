@@ -1,6 +1,7 @@
 """Fixtures for Gentex Place tests."""
 
 from collections.abc import Generator
+from dataclasses import replace
 from http import HTTPStatus
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -90,6 +91,21 @@ def mock_discover_device() -> DiscoverDevice:
 
 
 @pytest.fixture
+def mock_discover_devices(mock_discover_device: DiscoverDevice) -> list[DiscoverDevice]:
+    """Return four discovered devices without initial shadows."""
+    return [
+        replace(
+            mock_discover_device,
+            location=f"Room {number}",
+            thing_name=f"thing-{number:03}",
+            device_id=f"device-{number:03}",
+            shadow={},
+        )
+        for number in range(1, 5)
+    ]
+
+
+@pytest.fixture
 def mock_credentials() -> Credentials:
     """Mock AWS IoT Credentials."""
     return Credentials(
@@ -121,16 +137,6 @@ def mock_mqtt_client() -> Generator[MagicMock]:
         # Provide a mock _client for loop_start/loop_stop
         instance._client = MagicMock()
         yield instance
-
-
-@pytest.fixture
-def mock_place_messages() -> Generator[MagicMock]:
-    """Mock the PlaceMessages wrapper used by the coordinator."""
-    with patch(
-        "homeassistant.components.gentex_place.coordinator.PlaceMessages",
-        autospec=True,
-    ) as mock_cls:
-        yield mock_cls.return_value
 
 
 @pytest.fixture

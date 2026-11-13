@@ -90,9 +90,8 @@ class PlaceCoordinator(DataUpdateCoordinator[dict[str, PlaceDeviceShadow]]):
         """Subscribe to shadow topics for all discovered devices."""
         for device in self.devices:
             if device.thing_name:
-                self.messages.subscribe_shadow(device.thing_name)
-                self.messages.publish_shadow_get(device.thing_name)
-                _LOGGER.debug("Subscribed to shadow for %s", device.thing_name)
+                self.messages.subscribe_shadow_and_get(device.thing_name)
+                _LOGGER.debug("Requested shadow subscription for %s", device.thing_name)
 
     def _on_mqtt_message(self, topic: str, raw: bytes) -> None:
         """Handle incoming MQTT messages (called from paho thread)."""

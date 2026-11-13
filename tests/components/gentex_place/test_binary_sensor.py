@@ -11,7 +11,7 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
-from . import setup_integration, trigger_shadow_callback
+from . import setup_integration, trigger_mqtt_connect, trigger_shadow_callback
 
 
 @pytest.mark.usefixtures(
@@ -225,3 +225,36 @@ async def test_binary_sensor_late_shadow_adds_entity(
     # co/heat still absent — the payload didn't confirm them
     assert hass.states.get("binary_sensor.hallway_heat_alarm") is None
     assert hass.states.get("binary_sensor.hallway_carbon_monoxide") is None
+
+
+@pytest.mark.usefixtures("aioclient_mock_fixture", "mock_get_iot_credentials")
+async def test_multiple_devices_receive_initial_shadows(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_provider: AsyncMock,
+    mock_discover_devices: list[DiscoverDevice],
+    mock_mqtt_client: MagicMock,
+) -> None:
+    """Test initial shadow responses create alarm entities for every device."""
+    mock_provider.discover.return_value = mock_discover_devices
+    await setup_integration(hass, mock_config_entry)
+
+    for number in range(1, 5):
+        assert hass.states.get(f"binary_sensor.room_{number}_smoke") is None
+
+    trigger_mqtt_connect(mock_mqtt_client)
+    for subscription in reversed(mock_mqtt_client.subscribe.call_args_list):
+        subscription.kwargs["on_subscribe"]()
+    payload = json.dumps(
+        {"state": {"reported": {"smokeAlarmStatus": int(AlarmStatus.ALARM)}}}
+    ).encode()
+    for number in (3, 1, 4, 2):
+        trigger_shadow_callback(
+            mock_mqtt_client,
+            f"$aws/things/thing-{number:03}/shadow/get/accepted",
+            payload,
+        )
+    await hass.async_block_till_done()
+
+    for number in range(1, 5):
+        assert hass.states.get(f"binary_sensor.room_{number}_smoke").state == STATE_ON

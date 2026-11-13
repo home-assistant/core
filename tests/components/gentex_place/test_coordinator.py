@@ -1,9 +1,10 @@
 """Tests for the Place coordinator."""
 
 import json
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock, call
 
 from place.models.device_shadow import AlarmStatus
+from place.models.discover_device import DiscoverDevice
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -168,24 +169,50 @@ async def test_listener_unsubscribe(
 
 @pytest.mark.usefixtures(
     "aioclient_mock_fixture",
-    "mock_provider",
     "mock_get_iot_credentials",
 )
 async def test_mqtt_subscribes_on_connect(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_provider: AsyncMock,
+    mock_discover_devices: list[DiscoverDevice],
     mock_mqtt_client: MagicMock,
-    mock_place_messages: MagicMock,
 ) -> None:
-    """Test that shadow subscriptions are set up when MQTT connects."""
+    """Test every shadow is requested after subscription on connect and reconnect."""
+    mock_provider.discover.return_value = mock_discover_devices
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     trigger_mqtt_connect(mock_mqtt_client)
 
-    mock_place_messages.subscribe_shadow.assert_called_once_with("thing-001")
-    mock_place_messages.publish_shadow_get.assert_called_once_with("thing-001")
+    subscriptions = mock_mqtt_client.subscribe.call_args_list
+    assert [args.args[0] for args in subscriptions] == [
+        f"$aws/things/thing-{number:03}/shadow/#" for number in range(1, 5)
+    ]
+    mock_mqtt_client.publish.assert_not_called()
+    for subscription in reversed(subscriptions):
+        subscription.kwargs["on_subscribe"]()
+    assert mock_mqtt_client.publish.call_args_list == [
+        call(f"$aws/things/thing-{number:03}/shadow/get", qos=1)
+        for number in range(4, 0, -1)
+    ]
+
+    mock_mqtt_client.subscribe.reset_mock()
+    mock_mqtt_client.publish.reset_mock()
+    trigger_mqtt_connect(mock_mqtt_client)
+
+    subscriptions = mock_mqtt_client.subscribe.call_args_list
+    assert [args.args[0] for args in subscriptions] == [
+        f"$aws/things/thing-{number:03}/shadow/#" for number in range(1, 5)
+    ]
+    mock_mqtt_client.publish.assert_not_called()
+    for subscription in subscriptions:
+        subscription.kwargs["on_subscribe"]()
+    assert mock_mqtt_client.publish.call_args_list == [
+        call(f"$aws/things/thing-{number:03}/shadow/get", qos=1)
+        for number in range(1, 5)
+    ]
 
 
 @pytest.mark.usefixtures(
