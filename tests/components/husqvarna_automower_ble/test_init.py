@@ -99,28 +99,40 @@ async def test_setup_failed_connect(
     )
 
 
+@pytest.mark.parametrize(
+    ("scanner_devices", "ble_device"),
+    [
+        pytest.param([], Mock(), id="only_in_history"),
+        pytest.param([Mock()], None, id="unknown"),
+    ],
+)
 async def test_setup_device_not_found(
     hass: HomeAssistant,
+    mock_automower_client: Mock,
     mock_config_entry: MockConfigEntry,
+    scanner_devices: list[Mock],
+    ble_device: Mock | None,
 ) -> None:
-    """Test setup retries when the device is not found by any scanner."""
+    """Test setup retries without connecting when no scanner sees the device."""
     mock_config_entry.add_to_hass(hass)
 
     with (
         patch(
             "homeassistant.components.husqvarna_automower_ble.bluetooth."
-            "async_ble_device_from_address",
-            return_value=None,
+            "async_scanner_devices_by_address",
+            return_value=scanner_devices,
         ),
         patch(
-            "homeassistant.components.husqvarna_automower_ble.get_device",
-            return_value=None,
+            "homeassistant.components.husqvarna_automower_ble.bluetooth."
+            "async_ble_device_from_address",
+            return_value=ble_device,
         ),
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    mock_automower_client.connect.assert_not_called()
 
 
 async def test_setup_unknown_error(
