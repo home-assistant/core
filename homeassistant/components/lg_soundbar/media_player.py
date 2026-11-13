@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-import temescal
+import lg_bartalk as soundbar_client
 
 from homeassistant.components.media_player import (
     MediaPlayerEntity,
@@ -10,7 +10,6 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -29,8 +28,8 @@ EQUIVALENT_FUNCTIONS = (
 def _display_name(names: list[str], index: int) -> str:
     """Return the display name for an index.
 
-    The temescal name tables stopped being maintained when the library was
-    archived in 2023, so newer models report indices past the end of them.
+    The inherited Temescal name tables do not cover every newer model, so some
+    devices report indices past the end of them.
     Naming those keeps them selectable instead of silently dropping them.
     """
     if index < len(names):
@@ -61,25 +60,21 @@ def _offered_equivalent(function: str, offered: list[int]) -> str | None:
     """Return an offered function from the same group as the given one."""
     group = next((names for names in EQUIVALENT_FUNCTIONS if function in names), ())
     return next(
-        (name for name in group if temescal.functions.index(name) in offered), None
+        (name for name in group if soundbar_client.functions.index(name) in offered),
+        None,
     )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: LGSoundbarConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up media_player from a config entry created in the integrations UI."""
-    async_add_entities(
-        [
-            LGDevice(
-                config_entry.data[CONF_HOST],
-                config_entry.data[CONF_PORT],
-                config_entry.unique_id or config_entry.entry_id,
-            )
-        ]
-    )
+    async_add_entities([config_entry.runtime_data])
+
+
+type LGSoundbarConfigEntry = ConfigEntry[LGDevice]
 
 
 class LGDevice(MediaPlayerEntity):
@@ -133,22 +128,36 @@ class LGDevice(MediaPlayerEntity):
             identifiers={(DOMAIN, unique_id)}, name=host
         )
 
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Register the callback after hass is ready for it."""
-        await self.hass.async_add_executor_job(self._connect)
-
-    def _connect(self) -> None:
-        """Perform the actual devices setup."""
-        self._device = temescal.temescal(
+    def connect(self) -> None:
+        """Connect to the device and request its initial state."""
+        self._device = soundbar_client.LGSoundbarClient(
             self._host, port=self._port, callback=self.handle_event
         )
-        self._device.get_product_info()
-        self._device.get_mac_info()
-        self.update()
+        try:
+            self._device.get_product_info()
+            self._device.get_mac_info()
+            self.update()
+        except OSError:
+            self._device.close()
+            raise
+
+    def close(self) -> None:
+        """Stop the listener and close the connection."""
+        if self._device is not None:
+            self._device.close()
 
     def handle_event(self, response):
         """Handle responses from the speakers."""
+        try:
+            self._process_response(response)
+        finally:
+            # Publish what was received even if a follow-up request failed
+            # Responses can arrive before the entity is added to Home Assistant
+            if self.hass is not None:
+                self.schedule_update_ha_state()
+
+    def _process_response(self, response):
+        """Apply a response from the speakers."""
         data = response.get("data") or {}
         if response["msg"] == "EQ_VIEW_INFO":
             self._update_equalisers(data)
@@ -164,11 +173,7 @@ class LGDevice(MediaPlayerEntity):
             if "i_curr_func" in data:
                 self._function = data["i_curr_func"]
             if "b_powerstatus" in data:
-                self._device_on = data["b_powerstatus"]
-                if data["b_powerstatus"]:
-                    self._attr_state = MediaPlayerState.ON
-                else:
-                    self._attr_state = MediaPlayerState.OFF
+                self._update_power(data["b_powerstatus"])
         elif response["msg"] == "FUNC_VIEW_INFO":
             if "i_curr_func" in data:
                 self._function = data["i_curr_func"]
@@ -194,7 +199,17 @@ class LGDevice(MediaPlayerEntity):
         elif response["msg"] == "PLAY_INFO":
             self._update_playinfo(data)
 
-        self.schedule_update_ha_state()
+    def _update_power(self, powered_on: bool) -> None:
+        """Update the power state from a power status report."""
+        self._device_on = powered_on
+        if not powered_on:
+            self._attr_state = MediaPlayerState.OFF
+            return
+        if self._attr_state not in (MediaPlayerState.PLAYING, MediaPlayerState.PAUSED):
+            self._attr_state = MediaPlayerState.ON
+        if self._device is not None:
+            # The cached playback state may be stale after a resync
+            self._device.get_play()
 
     def _update_equalisers(self, data: dict[str, Any]) -> None:
         """Update the equalisers."""
@@ -270,13 +285,13 @@ class LGDevice(MediaPlayerEntity):
         """Return the current sound mode."""
         if self._equaliser == -1:
             return None
-        return _display_name(temescal.equalisers, self._equaliser)
+        return _display_name(soundbar_client.equalisers, self._equaliser)
 
     @property
     @override
     def sound_mode_list(self):
         """Return the available sound modes."""
-        return _offered_names(temescal.equalisers, self._equalisers)
+        return _offered_names(soundbar_client.equalisers, self._equalisers)
 
     @property
     @override
@@ -284,7 +299,7 @@ class LGDevice(MediaPlayerEntity):
         """Return the current input source."""
         if self._function == -1:
             return None
-        function = _display_name(temescal.functions, self._function)
+        function = _display_name(soundbar_client.functions, self._function)
         if self._function in self._functions:
             return function
         return _offered_equivalent(function, self._functions) or function
@@ -293,7 +308,7 @@ class LGDevice(MediaPlayerEntity):
     @override
     def source_list(self):
         """List of available input sources."""
-        return _offered_names(temescal.functions, self._functions)
+        return _offered_names(soundbar_client.functions, self._functions)
 
     @override
     def set_volume_level(self, volume: float) -> None:
@@ -310,14 +325,14 @@ class LGDevice(MediaPlayerEntity):
     def select_source(self, source: str) -> None:
         """Select input source."""
         self._device.set_func(
-            _index_for_name(temescal.functions, self._functions, source)
+            _index_for_name(soundbar_client.functions, self._functions, source)
         )
 
     @override
     def select_sound_mode(self, sound_mode: str) -> None:
         """Set Sound Mode for Receiver.."""
         self._device.set_eq(
-            _index_for_name(temescal.equalisers, self._equalisers, sound_mode)
+            _index_for_name(soundbar_client.equalisers, self._equalisers, sound_mode)
         )
 
     @override

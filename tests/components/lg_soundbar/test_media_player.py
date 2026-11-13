@@ -1,10 +1,12 @@
 """Test the lg_soundbar media player."""
 
+from datetime import timedelta
 from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
+import lg_bartalk as soundbar_client
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
-import temescal
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
@@ -16,6 +18,7 @@ from homeassistant.components.media_player import (
     SERVICE_SELECT_SOURCE,
     MediaPlayerState,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
@@ -24,11 +27,11 @@ from . import find_update_callback, setup_integration
 ENTITY_ID = "media_player.127_0_0_1"
 
 AVAILABLE_FUNCTIONS = [
-    temescal.functions.index("Wi-Fi"),
-    temescal.functions.index("Bluetooth"),
-    temescal.functions.index("Optical/HDMI ARC"),
-    temescal.functions.index("HDMI"),
-    temescal.functions.index("USB2"),
+    soundbar_client.functions.index("Wi-Fi"),
+    soundbar_client.functions.index("Bluetooth"),
+    soundbar_client.functions.index("Optical/HDMI ARC"),
+    soundbar_client.functions.index("HDMI"),
+    soundbar_client.functions.index("USB2"),
 ]
 
 
@@ -38,7 +41,7 @@ def send_func_view_info(callback: MagicMock, current_function: str) -> None:
         {
             "msg": "FUNC_VIEW_INFO",
             "data": {
-                "i_curr_func": temescal.functions.index(current_function),
+                "i_curr_func": soundbar_client.functions.index(current_function),
                 "ai_func_list": AVAILABLE_FUNCTIONS,
             },
         }
@@ -47,13 +50,13 @@ def send_func_view_info(callback: MagicMock, current_function: str) -> None:
 
 async def test_source_reported_as_is_when_available(
     hass: HomeAssistant,
-    mock_temescal: MagicMock,
+    mock_soundbar_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that a function offered by the device is reported unchanged."""
     await setup_integration(hass, mock_config_entry)
 
-    send_func_view_info(find_update_callback(mock_temescal), "Bluetooth")
+    send_func_view_info(find_update_callback(mock_soundbar_client), "Bluetooth")
     await hass.async_block_till_done()
 
     assert hass.states.get(ENTITY_ID).attributes["source"] == "Bluetooth"
@@ -61,7 +64,7 @@ async def test_source_reported_as_is_when_available(
 
 async def test_source_falls_back_to_available_equivalent(
     hass: HomeAssistant,
-    mock_temescal: MagicMock,
+    mock_soundbar_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that a function missing from the list falls back to an equivalent one.
@@ -70,7 +73,7 @@ async def test_source_falls_back_to_available_equivalent(
     ai_func_list, which leaves the current source outside of source_list.
     """
     await setup_integration(hass, mock_config_entry)
-    callback = find_update_callback(mock_temescal)
+    callback = find_update_callback(mock_soundbar_client)
 
     send_func_view_info(callback, "E-ARC")
     await hass.async_block_till_done()
@@ -91,13 +94,13 @@ async def test_source_falls_back_to_available_equivalent(
 
 async def test_source_kept_when_no_equivalent_is_available(
     hass: HomeAssistant,
-    mock_temescal: MagicMock,
+    mock_soundbar_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that a function without an available equivalent is reported as is."""
     await setup_integration(hass, mock_config_entry)
 
-    send_func_view_info(find_update_callback(mock_temescal), "Aux")
+    send_func_view_info(find_update_callback(mock_soundbar_client), "Aux")
     await hass.async_block_till_done()
 
     assert hass.states.get(ENTITY_ID).attributes["source"] == "Aux"
@@ -105,13 +108,13 @@ async def test_source_kept_when_no_equivalent_is_available(
 
 async def test_source_list_only_contains_offered_functions(
     hass: HomeAssistant,
-    mock_temescal: MagicMock,
+    mock_soundbar_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that the source list is not extended by the fallback."""
     await setup_integration(hass, mock_config_entry)
 
-    send_func_view_info(find_update_callback(mock_temescal), "E-ARC")
+    send_func_view_info(find_update_callback(mock_soundbar_client), "E-ARC")
     await hass.async_block_till_done()
 
     assert hass.states.get(ENTITY_ID).attributes[ATTR_INPUT_SOURCE_LIST] == [
@@ -125,7 +128,7 @@ async def test_source_list_only_contains_offered_functions(
 
 async def test_source_unknown_before_any_response(
     hass: HomeAssistant,
-    mock_temescal: MagicMock,
+    mock_soundbar_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that no source is reported before the device answers."""
@@ -139,8 +142,8 @@ async def test_source_unknown_before_any_response(
 UNMAPPED_EQUALISERS = [23, 24, 25, 26]
 
 AVAILABLE_EQUALISERS = [
-    temescal.equalisers.index("Standard"),
-    temescal.equalisers.index("Cinema"),
+    soundbar_client.equalisers.index("Standard"),
+    soundbar_client.equalisers.index("Cinema"),
     *UNMAPPED_EQUALISERS,
 ]
 
@@ -160,13 +163,13 @@ def send_eq_view_info(callback: MagicMock, current_equaliser: int) -> None:
 
 async def test_sound_modes_beyond_the_library_table_are_offered(
     hass: HomeAssistant,
-    mock_temescal: MagicMock,
+    mock_soundbar_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that equalisers the library cannot name are still offered."""
     await setup_integration(hass, mock_config_entry)
 
-    send_eq_view_info(find_update_callback(mock_temescal), 23)
+    send_eq_view_info(find_update_callback(mock_soundbar_client), 23)
     await hass.async_block_till_done()
 
     assert (state := hass.states.get(ENTITY_ID))
@@ -183,13 +186,13 @@ async def test_sound_modes_beyond_the_library_table_are_offered(
 
 async def test_selecting_a_sound_mode_beyond_the_library_table(
     hass: HomeAssistant,
-    mock_temescal: MagicMock,
+    mock_soundbar_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that an equaliser the library cannot name can be selected."""
     await setup_integration(hass, mock_config_entry)
 
-    send_eq_view_info(find_update_callback(mock_temescal), 0)
+    send_eq_view_info(find_update_callback(mock_soundbar_client), 0)
     await hass.async_block_till_done()
 
     await hass.services.async_call(
@@ -199,18 +202,18 @@ async def test_selecting_a_sound_mode_beyond_the_library_table(
         blocking=True,
     )
 
-    mock_temescal.return_value.set_eq.assert_called_once_with(25)
+    mock_soundbar_client.return_value.set_eq.assert_called_once_with(25)
 
 
 async def test_selecting_a_named_sound_mode(
     hass: HomeAssistant,
-    mock_temescal: MagicMock,
+    mock_soundbar_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that an equaliser the library can name is still selectable."""
     await setup_integration(hass, mock_config_entry)
 
-    send_eq_view_info(find_update_callback(mock_temescal), 0)
+    send_eq_view_info(find_update_callback(mock_soundbar_client), 0)
     await hass.async_block_till_done()
 
     await hass.services.async_call(
@@ -220,20 +223,20 @@ async def test_selecting_a_named_sound_mode(
         blocking=True,
     )
 
-    mock_temescal.return_value.set_eq.assert_called_once_with(
-        temescal.equalisers.index("Cinema")
+    mock_soundbar_client.return_value.set_eq.assert_called_once_with(
+        soundbar_client.equalisers.index("Cinema")
     )
 
 
 async def test_selecting_a_source_the_device_does_not_offer(
     hass: HomeAssistant,
-    mock_temescal: MagicMock,
+    mock_soundbar_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that a known function outside of ai_func_list stays selectable."""
     await setup_integration(hass, mock_config_entry)
 
-    send_func_view_info(find_update_callback(mock_temescal), "Bluetooth")
+    send_func_view_info(find_update_callback(mock_soundbar_client), "Bluetooth")
     await hass.async_block_till_done()
 
     assert "E-ARC" not in hass.states.get(ENTITY_ID).attributes[ATTR_INPUT_SOURCE_LIST]
@@ -245,8 +248,8 @@ async def test_selecting_a_source_the_device_does_not_offer(
         blocking=True,
     )
 
-    mock_temescal.return_value.set_func.assert_called_once_with(
-        temescal.functions.index("E-ARC")
+    mock_soundbar_client.return_value.set_func.assert_called_once_with(
+        soundbar_client.functions.index("E-ARC")
     )
 
 
@@ -262,7 +265,7 @@ def send_power_status(callback: MagicMock, powered_on: bool) -> None:
 
 async def test_state_stays_on_without_a_reported_power_status(
     hass: HomeAssistant,
-    mock_temescal: MagicMock,
+    mock_soundbar_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that a soundbar that never reports a power status stays on.
@@ -272,7 +275,7 @@ async def test_state_stays_on_without_a_reported_power_status(
     """
     await setup_integration(hass, mock_config_entry)
 
-    send_play_info(find_update_callback(mock_temescal), 0)
+    send_play_info(find_update_callback(mock_soundbar_client), 0)
     await hass.async_block_till_done()
 
     assert hass.states.get(ENTITY_ID).state == MediaPlayerState.ON
@@ -287,7 +290,7 @@ async def test_state_stays_on_without_a_reported_power_status(
 )
 async def test_state_follows_a_reported_power_status(
     hass: HomeAssistant,
-    mock_temescal: MagicMock,
+    mock_soundbar_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     powered_on: bool,
     expected_state: MediaPlayerState,
@@ -295,9 +298,166 @@ async def test_state_follows_a_reported_power_status(
     """Test that a reported power status decides the state of a soundbar."""
     await setup_integration(hass, mock_config_entry)
 
-    callback = find_update_callback(mock_temescal)
+    callback = find_update_callback(mock_soundbar_client)
     send_power_status(callback, powered_on)
     send_play_info(callback, 0)
     await hass.async_block_till_done()
 
     assert hass.states.get(ENTITY_ID).state == expected_state
+
+
+async def test_external_power_cycle(
+    hass: HomeAssistant,
+    mock_soundbar_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test external power reports remain authoritative across cycles."""
+    await setup_integration(hass, mock_config_entry)
+    callback = find_update_callback(mock_soundbar_client)
+
+    send_power_status(callback, False)
+    send_play_info(callback, 0)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == MediaPlayerState.OFF
+
+    send_power_status(callback, True)
+    send_play_info(callback, 0)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == MediaPlayerState.ON
+
+    send_power_status(callback, False)
+    send_play_info(callback, 0)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == MediaPlayerState.OFF
+
+
+async def test_powered_on_report_refreshes_playback_info(
+    hass: HomeAssistant,
+    mock_soundbar_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a powered-on report requests playback info, an off report does not."""
+    await setup_integration(hass, mock_config_entry)
+    callback = find_update_callback(mock_soundbar_client)
+    client = mock_soundbar_client.return_value
+    client.get_play.reset_mock()
+
+    send_power_status(callback, False)
+    await hass.async_block_till_done()
+    client.get_play.assert_not_called()
+
+    send_power_status(callback, True)
+    await hass.async_block_till_done()
+    client.get_play.assert_called_once_with()
+
+
+async def test_power_state_published_when_playback_refresh_fails(
+    hass: HomeAssistant,
+    mock_soundbar_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a failed playback refresh still publishes the reported power state."""
+    await setup_integration(hass, mock_config_entry)
+    callback = find_update_callback(mock_soundbar_client)
+    send_power_status(callback, False)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == MediaPlayerState.OFF
+
+    mock_soundbar_client.return_value.get_play.side_effect = OSError("Refresh failed")
+    with pytest.raises(OSError, match="Refresh failed"):
+        send_power_status(callback, True)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == MediaPlayerState.ON
+
+
+async def test_unload_closes_listener(
+    hass: HomeAssistant,
+    mock_soundbar_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test unloading stops the client's background listener."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_soundbar_client.return_value.close.assert_called_once_with()
+    assert hass.states.get(ENTITY_ID).state == "unavailable"
+
+
+@pytest.mark.parametrize(
+    ("play_control", "expected_state"),
+    [
+        pytest.param(0, MediaPlayerState.PLAYING, id="playing"),
+        pytest.param(1, MediaPlayerState.PAUSED, id="paused"),
+    ],
+)
+async def test_power_resync_preserves_playback_state(
+    hass: HomeAssistant,
+    mock_soundbar_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    play_control: int,
+    expected_state: MediaPlayerState,
+) -> None:
+    """Test repeated power reports preserve playback until a real shutdown."""
+    await setup_integration(hass, mock_config_entry)
+    callback = find_update_callback(mock_soundbar_client)
+    callback(
+        {
+            "msg": "PLAY_INFO",
+            "data": {"i_stream_type": 1, "i_play_ctrl": play_control},
+        }
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == expected_state
+
+    send_power_status(callback, True)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == expected_state
+
+    send_power_status(callback, False)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == MediaPlayerState.OFF
+
+    send_power_status(callback, True)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == MediaPlayerState.ON
+
+
+@pytest.mark.parametrize(
+    "request_method",
+    [
+        "get_product_info",
+        "get_mac_info",
+        "get_eq",
+        "get_info",
+        "get_func",
+        "get_settings",
+        "get_play",
+    ],
+)
+async def test_failed_initial_request_retries_setup(
+    hass: HomeAssistant,
+    mock_soundbar_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    request_method: str,
+) -> None:
+    """Test a failed initial request closes the client and retries setup."""
+    client = mock_soundbar_client.return_value
+    getattr(client, request_method).side_effect = OSError("Initial request failed")
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    client.close.assert_called_once_with()
+    assert hass.states.get(ENTITY_ID) is None
+
+    getattr(client, request_method).side_effect = None
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get(ENTITY_ID) is not None
