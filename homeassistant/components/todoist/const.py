@@ -37,17 +37,6 @@ DUE_DATE_VALID_LANGS: Final = [
     "es",
     "nl",
 ]
-# Service Call: The reminder location direction option that triggers on entering
-REMINDER_LOCATION_DIRECTION_ENTER: Final = "on_enter"
-# Service Call: The reminder location direction option that triggers on leaving
-REMINDER_LOCATION_DIRECTION_LEAVE: Final = "on_leave"
-# Service Call: The available options of the reminder location direction
-REMINDER_LOCATION_VALID_DIRECTIONS: Final = [
-    REMINDER_LOCATION_DIRECTION_ENTER,
-    REMINDER_LOCATION_DIRECTION_LEAVE,
-]
-# The largest radius, in meters, the Todoist API accepts for a location reminder
-MAX_REMINDER_RADIUS: Final = 5000
 # Attribute: Is this task due today?
 DUE_TODAY: Final = "due_today"
 # Calendar Platform: When a calendar event ends

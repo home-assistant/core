@@ -17,16 +17,19 @@ from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import dt as dt_util
 
-from .const import (
-    DOMAIN,
-    DUE_DATE_VALID_LANGS,
-    MAX_REMINDER_RADIUS,
-    REMINDER_LOCATION_DIRECTION_ENTER,
-    REMINDER_LOCATION_VALID_DIRECTIONS,
-)
+from .const import DOMAIN, DUE_DATE_VALID_LANGS
 from .coordinator import TodoistConfigEntry, TodoistCoordinator, flatten_async_pages
 
 _LOGGER = logging.getLogger(__name__)
+
+REMINDER_LOCATION_DIRECTION_ENTER = "on_enter"
+REMINDER_LOCATION_DIRECTION_LEAVE = "on_leave"
+REMINDER_LOCATION_VALID_DIRECTIONS = [
+    REMINDER_LOCATION_DIRECTION_ENTER,
+    REMINDER_LOCATION_DIRECTION_LEAVE,
+]
+# The largest radius, in meters, the Todoist API accepts for a location reminder
+MAX_REMINDER_RADIUS = 5000
 
 
 class TodoistService(StrEnum):
@@ -157,7 +160,7 @@ def _get_reminder_due(call: ServiceCall) -> dict[str, Any]:
 
 
 def _get_reminder_location(call: ServiceCall) -> dict[str, Any] | None:
-    """Return the Sync API location arguments for the requested reminder, if any."""
+    """Return the location reminder arguments for the request, if any."""
     if zone_entity_id := call.data.get(TodoistServiceArgument.REMINDER_ZONE):
         if (zone := call.hass.states.get(zone_entity_id)) is None:
             raise ServiceValidationError(
@@ -190,40 +193,12 @@ def _get_reminder_location(call: ServiceCall) -> dict[str, Any] | None:
         return None
 
     return {
-        "type": "location",
         "name": name,
         "loc_lat": str(latitude),
         "loc_long": str(longitude),
         "loc_trigger": call.data[TodoistServiceArgument.REMINDER_LOCATION_DIRECTION],
         "radius": radius,
     }
-
-
-async def _async_add_reminders(
-    hass: HomeAssistant, token: str, reminders: list[dict[str, Any]]
-) -> None:
-    """Add reminders to a task.
-
-    The REST API doesn't support reminders, so we use the Sync API directly
-    to maintain functional parity with the component.
-    https://developer.todoist.com/api/v1/#tag/Sync/Reminders/Add-a-reminder
-    """
-    commands = [
-        {
-            "type": "reminder_add",
-            "temp_id": str(uuid.uuid1()),
-            "uuid": str(uuid.uuid1()),
-            "args": args,
-        }
-        for args in reminders
-    ]
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json",
-    }
-    await async_get_clientsession(hass).post(
-        SYNC_URL, headers=headers, json={"commands": commands}
-    )
 
 
 def _async_get_coordinator(hass: HomeAssistant) -> TodoistCoordinator:
@@ -326,23 +301,40 @@ async def handle_new_task(call: ServiceCall) -> None:
         data["due_datetime"] = dt_util.as_utc(due_date)
 
     # Resolve reminders first so an invalid one doesn't leave a task behind.
-    reminders: list[dict[str, Any]] = []
-
-    if reminder_due := _get_reminder_due(call):
-        reminders.append({"type": "absolute", "due": reminder_due})
-
-    if location := _get_reminder_location(call):
-        reminders.append(location)
+    reminder_due = _get_reminder_due(call)
+    reminder_location = _get_reminder_location(call)
 
     api_task = await coordinator.api.add_task(content, **data)
     await coordinator.async_refresh()
 
-    if reminders:
-        await _async_add_reminders(
-            call.hass,
-            coordinator.token,
-            [{"item_id": api_task.id, **reminder} for reminder in reminders],
+    # The REST API doesn't support reminders, so we use the Sync API directly
+    # to maintain functional parity with the component.
+    # https://developer.todoist.com/api/v1/#tag/Sync/Reminders/Add-a-reminder
+    if reminder_due:
+        reminder_data = {
+            "commands": [
+                {
+                    "type": "reminder_add",
+                    "temp_id": str(uuid.uuid1()),
+                    "uuid": str(uuid.uuid1()),
+                    "args": {
+                        "item_id": api_task.id,
+                        "type": "absolute",
+                        "due": reminder_due,
+                    },
+                }
+            ]
+        }
+        headers = {
+            "Authorization": f"Bearer {coordinator.token}",
+            "Content-Type": "application/json",
+        }
+        await async_get_clientsession(call.hass).post(
+            SYNC_URL, headers=headers, json=reminder_data
         )
+
+    if reminder_location:
+        await coordinator.api.add_location_reminder(api_task.id, **reminder_location)
 
     _LOGGER.debug("Created Todoist task: %s", call.data[TodoistServiceArgument.CONTENT])
 
