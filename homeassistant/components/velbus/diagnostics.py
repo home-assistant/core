@@ -36,7 +36,7 @@ async def _build_module_diagnostics_info(module: VelbusModule) -> dict[str, Any]
 
 
 def _build_channels_diagnostics_info(
-    channels: dict[str, VelbusChannel],
+    channels: dict[int, VelbusChannel],
 ) -> dict[str, Any]:
     """Build diagnostics info for all channels."""
     data: dict[str, Any] = {}

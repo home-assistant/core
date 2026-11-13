@@ -1,6 +1,7 @@
 """Services for the HDMI CEC integration."""
 
 from dataclasses import dataclass
+from enum import StrEnum
 from functools import reduce
 import logging
 
@@ -24,59 +25,70 @@ from .const import DATA_HDMI_CEC, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-CMD_UP = "up"
-CMD_DOWN = "down"
-CMD_MUTE = "mute"
 CMD_PRESS = "press"
 CMD_RELEASE = "release"
 
-ATTR_DEVICE = "device"
-ATTR_SRC = "src"
-ATTR_DST = "dst"
-ATTR_CMD = "cmd"
-ATTR_ATT = "att"
-ATTR_RAW = "raw"
-ATTR_ON = "on"
-ATTR_OFF = "off"
-ATTR_TOGGLE = "toggle"
+MUTE_ON = "on"
+MUTE_OFF = "off"
+MUTE_TOGGLE = "toggle"
+
+
+class HdmiCecService(StrEnum):
+    """Store keys for HDMI CEC services."""
+
+    POWER_ON = "power_on"
+    SELECT_DEVICE = "select_device"
+    SEND_COMMAND = "send_command"
+    STANDBY = "standby"
+    UPDATE = "update"
+    VOLUME = "volume"
+
+
+class HdmiCecServiceArgument(StrEnum):
+    """Store keys for HDMI CEC service arguments."""
+
+    DEVICE = "device"
+    ATT = "att"
+    CMD = "cmd"
+    DST = "dst"
+    RAW = "raw"
+    SRC = "src"
+    DOWN = "down"
+    MUTE = "mute"
+    UP = "up"
+
 
 _VOL_HEX = probatio.Any(probatio.Coerce(int), lambda x: int(x, 16))
 
-SERVICE_SEND_COMMAND = "send_command"
 SERVICE_SEND_COMMAND_SCHEMA = probatio.Schema(
     {
-        probatio.Optional(ATTR_CMD): _VOL_HEX,
-        probatio.Optional(ATTR_SRC): _VOL_HEX,
-        probatio.Optional(ATTR_DST): _VOL_HEX,
-        probatio.Optional(ATTR_ATT): _VOL_HEX,
-        probatio.Optional(ATTR_RAW): probatio.Coerce(str),
+        probatio.Optional(HdmiCecServiceArgument.CMD): _VOL_HEX,
+        probatio.Optional(HdmiCecServiceArgument.SRC): _VOL_HEX,
+        probatio.Optional(HdmiCecServiceArgument.DST): _VOL_HEX,
+        probatio.Optional(HdmiCecServiceArgument.ATT): _VOL_HEX,
+        probatio.Optional(HdmiCecServiceArgument.RAW): probatio.Coerce(str),
     },
     extra=probatio.PREVENT_EXTRA,
 )
 
-SERVICE_VOLUME = "volume"
 SERVICE_VOLUME_SCHEMA = probatio.Schema(
     {
-        probatio.Optional(CMD_UP): probatio.Any(
+        probatio.Optional(HdmiCecServiceArgument.UP): probatio.Any(
             CMD_PRESS, CMD_RELEASE, probatio.Coerce(int)
         ),
-        probatio.Optional(CMD_DOWN): probatio.Any(
+        probatio.Optional(HdmiCecServiceArgument.DOWN): probatio.Any(
             CMD_PRESS, CMD_RELEASE, probatio.Coerce(int)
         ),
-        probatio.Optional(CMD_MUTE): probatio.Any(ATTR_ON, ATTR_OFF, ATTR_TOGGLE),
+        probatio.Optional(HdmiCecServiceArgument.MUTE): probatio.Any(
+            MUTE_ON, MUTE_OFF, MUTE_TOGGLE
+        ),
     },
     extra=probatio.PREVENT_EXTRA,
 )
 
-SERVICE_UPDATE_DEVICES = "update"
 SERVICE_UPDATE_DEVICES_SCHEMA = probatio.Schema(
     {DOMAIN: probatio.Schema({})}, extra=probatio.PREVENT_EXTRA
 )
-
-SERVICE_SELECT_DEVICE = "select_device"
-
-SERVICE_POWER_ON = "power_on"
-SERVICE_STANDBY = "standby"
 
 
 @dataclass(frozen=True, slots=True)
@@ -91,16 +103,16 @@ def _volume(call: ServiceCall) -> None:
     """Increase/decrease volume and mute/unmute system."""
     hdmi_network = call.hass.data[DATA_HDMI_CEC].hdmi_network
     mute_key_mapping = {
-        ATTR_TOGGLE: KEY_MUTE_TOGGLE,
-        ATTR_ON: KEY_MUTE_ON,
-        ATTR_OFF: KEY_MUTE_OFF,
+        MUTE_TOGGLE: KEY_MUTE_TOGGLE,
+        MUTE_ON: KEY_MUTE_ON,
+        MUTE_OFF: KEY_MUTE_OFF,
     }
     for cmd, att in call.data.items():
-        if cmd == CMD_UP:
+        if cmd == HdmiCecServiceArgument.UP:
             _process_volume(hdmi_network, KEY_VOLUME_UP, att)
-        elif cmd == CMD_DOWN:
+        elif cmd == HdmiCecServiceArgument.DOWN:
             _process_volume(hdmi_network, KEY_VOLUME_DOWN, att)
-        elif cmd == CMD_MUTE:
+        elif cmd == HdmiCecServiceArgument.MUTE:
             hdmi_network.send_command(
                 KeyPressCommand(mute_key_mapping[att], dst=ADDR_AUDIOSYSTEM)
             )
@@ -127,21 +139,23 @@ def _process_volume(hdmi_network: HDMINetwork, cmd, att):
 def _tx(call: ServiceCall) -> None:
     """Send CEC command."""
     data = call.data
-    if ATTR_RAW in data:
-        command = CecCommand(data[ATTR_RAW])
+    if HdmiCecServiceArgument.RAW in data:
+        command = CecCommand(data[HdmiCecServiceArgument.RAW])
     else:
-        src = data.get(ATTR_SRC, ADDR_UNREGISTERED)
-        dst = data.get(ATTR_DST, ADDR_BROADCAST)
-        if ATTR_CMD in data:
-            cmd = data[ATTR_CMD]
+        src = data.get(HdmiCecServiceArgument.SRC, ADDR_UNREGISTERED)
+        dst = data.get(HdmiCecServiceArgument.DST, ADDR_BROADCAST)
+        if HdmiCecServiceArgument.CMD in data:
+            cmd = data[HdmiCecServiceArgument.CMD]
         else:
             _LOGGER.error("Attribute 'cmd' is missing")
             return
-        if ATTR_ATT in data:
-            if isinstance(data[ATTR_ATT], (list,)):
-                att = data[ATTR_ATT]
+        if HdmiCecServiceArgument.ATT in data:
+            if isinstance(data[HdmiCecServiceArgument.ATT], (list,)):
+                att = data[HdmiCecServiceArgument.ATT]
             else:
-                att = reduce(lambda x, y: f"{x}:{y:x}", data[ATTR_ATT])
+                att = reduce(
+                    lambda x, y: f"{x}:{y:x}", data[HdmiCecServiceArgument.ATT]
+                )
         else:
             att = ""
         command = CecCommand(cmd, dst, src, att)
@@ -159,8 +173,8 @@ def _power_on(call: ServiceCall) -> None:
 def _select_device(call: ServiceCall) -> None:
     """Select the active device."""
     data = call.hass.data[DATA_HDMI_CEC]
-    if not (addr := call.data[ATTR_DEVICE]):
-        _LOGGER.error("Device not found: %s", call.data[ATTR_DEVICE])
+    if not (addr := call.data[HdmiCecServiceArgument.DEVICE]):
+        _LOGGER.error("Device not found: %s", call.data[HdmiCecServiceArgument.DEVICE])
         return
     if addr in data.device_aliases:
         addr = data.device_aliases[addr]
@@ -172,13 +186,14 @@ def _select_device(call: ServiceCall) -> None:
             _LOGGER.debug("Address acquired: %s", addr)
             if addr is None:
                 _LOGGER.error(
-                    "Device %s has not physical address", call.data[ATTR_DEVICE]
+                    "Device %s has not physical address",
+                    call.data[HdmiCecServiceArgument.DEVICE],
                 )
                 return
     if not isinstance(addr, (PhysicalAddress,)):
         addr = PhysicalAddress(addr)
     data.hdmi_network.active_source(addr)
-    _LOGGER.debug("Selected %s (%s)", call.data[ATTR_DEVICE], addr)
+    _LOGGER.debug("Selected %s (%s)", call.data[HdmiCecServiceArgument.DEVICE], addr)
 
 
 def _update(call: ServiceCall) -> None:
@@ -192,17 +207,17 @@ def _update(call: ServiceCall) -> None:
 def setup_services(hass: HomeAssistant) -> None:
     """Register the HDMI CEC services."""
     hass.services.register(
-        DOMAIN, SERVICE_SEND_COMMAND, _tx, SERVICE_SEND_COMMAND_SCHEMA
+        DOMAIN, HdmiCecService.SEND_COMMAND, _tx, SERVICE_SEND_COMMAND_SCHEMA
     )
     hass.services.register(
-        DOMAIN, SERVICE_VOLUME, _volume, schema=SERVICE_VOLUME_SCHEMA
+        DOMAIN, HdmiCecService.VOLUME, _volume, schema=SERVICE_VOLUME_SCHEMA
     )
     hass.services.register(
         DOMAIN,
-        SERVICE_UPDATE_DEVICES,
+        HdmiCecService.UPDATE,
         _update,
         schema=SERVICE_UPDATE_DEVICES_SCHEMA,
     )
-    hass.services.register(DOMAIN, SERVICE_POWER_ON, _power_on)
-    hass.services.register(DOMAIN, SERVICE_STANDBY, _standby)
-    hass.services.register(DOMAIN, SERVICE_SELECT_DEVICE, _select_device)
+    hass.services.register(DOMAIN, HdmiCecService.POWER_ON, _power_on)
+    hass.services.register(DOMAIN, HdmiCecService.STANDBY, _standby)
+    hass.services.register(DOMAIN, HdmiCecService.SELECT_DEVICE, _select_device)

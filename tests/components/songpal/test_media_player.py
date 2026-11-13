@@ -19,7 +19,7 @@ from songpal.notification import SettingChange
 from homeassistant.components import media_player, songpal
 from homeassistant.components.media_player import MediaPlayerEntityFeature
 from homeassistant.components.songpal.const import ERROR_REQUEST_RETRY
-from homeassistant.components.songpal.services import SET_SOUND_SETTING
+from homeassistant.components.songpal.services import SongpalService
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     STATE_OFF,
@@ -317,7 +317,7 @@ async def test_services(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         songpal.DOMAIN,
-        SET_SOUND_SETTING,
+        SongpalService.SET_SOUND_SETTING,
         {"entity_id": ENTITY_ID, "name": "name", "value": "value"},
         blocking=True,
     )
@@ -335,7 +335,7 @@ async def test_services(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         songpal.DOMAIN,
-        SET_SOUND_SETTING,
+        SongpalService.SET_SOUND_SETTING,
         {"entity_id": "all", "name": "name", "value": "value"},
         blocking=True,
     )
@@ -355,7 +355,7 @@ async def test_services(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         songpal.DOMAIN,
-        SET_SOUND_SETTING,
+        SongpalService.SET_SOUND_SETTING,
         {"entity_id": "all", "name": "name", "value": "value"},
         blocking=True,
     )

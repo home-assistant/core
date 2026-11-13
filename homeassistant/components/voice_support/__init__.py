@@ -117,6 +117,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def _async_preview_feature_updated(event_data: EventLabsUpdatedData) -> None:
         if event_data["enabled"]:
             _async_provision(hass)
+        else:
+            for entry in hass.config_entries.async_entries(DOMAIN):
+                if entry.data.get(CONF_INTEGRATION_CREATED_APP):
+                    await hass.config_entries.async_remove(entry.entry_id)
         _async_wake_words_changed(hass)
 
     async_subscribe_preview_feature(
@@ -132,8 +136,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Connect to the app at the entry's address."""
     client = VoiceSupportClient(hass, entry.data[CONF_HOST], entry.data[CONF_PORT])
-    if entry.data.get(CONF_INTEGRATION_CREATED_APP):
-        get_app_manager(hass).async_schedule_update_addon(catch_error=True)
     try:
         await client.async_update_info()
     except CLIENT_ERRORS as err:
@@ -153,10 +155,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
                 "supported_api_version": str(API_VERSION),
             },
         ) from err
-
-    async def _async_refresh_info(_now: datetime) -> None:
+    finally:
         if entry.data.get(CONF_INTEGRATION_CREATED_APP):
             get_app_manager(hass).async_schedule_update_addon(catch_error=True)
+
+    async def _async_refresh_info(_now: datetime) -> None:
         try:
             await client.async_update_info()
         except (*CLIENT_ERRORS, UnsupportedVersionError) as err:

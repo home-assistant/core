@@ -9,12 +9,8 @@ from zoneinfo import ZoneInfo
 import pytest
 
 from homeassistant.components.ecobee.switch import DATE_FORMAT
-from homeassistant.components.switch import (
-    DOMAIN as SWITCH_DOMAIN,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-)
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -97,8 +93,8 @@ async def test_turn_on_20min_ventilator(hass: HomeAssistant) -> None:
 
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: VENTILATOR_20MIN_ID},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: VENTILATOR_20MIN_ID},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -115,8 +111,8 @@ async def test_turn_off_20min_ventilator(hass: HomeAssistant) -> None:
 
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: VENTILATOR_20MIN_ID},
+            SwitchService.TURN_OFF,
+            {CommonServiceArgument.ENTITY_ID: VENTILATOR_20MIN_ID},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -133,8 +129,8 @@ async def test_aux_heat_only_turn_on(hass: HomeAssistant) -> None:
 
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: DEVICE_ID},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: DEVICE_ID},
             blocking=True,
         )
         mock_turn_on.assert_called_once_with(1, "auxHeatOnly")
@@ -147,8 +143,8 @@ async def test_aux_heat_only_turn_off(hass: HomeAssistant) -> None:
 
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: DEVICE_ID},
+            SwitchService.TURN_OFF,
+            {CommonServiceArgument.ENTITY_ID: DEVICE_ID},
             blocking=True,
         )
         mock_turn_off.assert_called_once_with(1, "auto")

@@ -32,17 +32,12 @@ async def async_get_config_entry_diagnostics(
         },
     }
 
-    # Add coordinator data if available
-    if coordinator.data:
-        data_dict = asdict(coordinator.data)
-        diagnostics_data["coordinator_data"] = data_dict
-
-        # Add alarm summary
-        alarm_fields = [
-            key
-            for key, value in data_dict.items()
-            if key.startswith("alarm_") and value is True
-        ]
-        diagnostics_data["active_alarms"] = alarm_fields
+    data_dict = asdict(coordinator.data)
+    diagnostics_data["coordinator_data"] = data_dict
+    diagnostics_data["active_alarms"] = [
+        key
+        for key, value in data_dict.items()
+        if key.startswith("alarm_") and value is True
+    ]
 
     return diagnostics_data

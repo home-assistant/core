@@ -23,7 +23,7 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_SUNNY,
     DOMAIN as WEATHER_DOMAIN,
-    SERVICE_GET_FORECASTS,
+    WeatherService,
 )
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
@@ -356,7 +356,7 @@ async def test_new_config_entry(
 @pytest.mark.parametrize(
     ("service"),
     [
-        SERVICE_GET_FORECASTS,
+        WeatherService.GET_FORECASTS,
     ],
 )
 async def test_forecast_service(

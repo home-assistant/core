@@ -270,6 +270,14 @@
     'entry': dict({
       'data': dict({
         'login_data': dict({
+          'account_customer_id': '**REDACTED**',
+          'customer_info': dict({
+            'given_name': '**REDACTED**',
+            'user_id': '**REDACTED**',
+          }),
+          'device_info': dict({
+            'device_serial_number': '**REDACTED**',
+          }),
           'session': 'test-session',
           'site': 'https://www.amazon.com',
         }),
@@ -289,7 +297,7 @@
       'subentries': list([
       ]),
       'title': '**REDACTED**',
-      'unique_id': 'amzn1.account.fake_user_id',
+      'unique_id': '**REDACTED**',
       'version': 1,
     }),
   })

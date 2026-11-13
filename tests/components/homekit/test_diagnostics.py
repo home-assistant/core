@@ -8,8 +8,13 @@ from pytest_homeassistant.components.diagnostics import get_diagnostics_for_conf
 from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.homekit.const import (
+    CAMERA_MODE_SECURE_VIDEO,
+    CONF_CAMERA_MODE,
     CONF_DEVICES,
+    CONF_ENTITY_CONFIG,
     CONF_HOMEKIT_MODE,
+    CONF_LINKED_MOTION_SENSOR,
+    CONF_STREAM_SOURCE,
     DOMAIN,
     HOMEKIT_MODE_ACCESSORY,
 )
@@ -647,6 +652,58 @@ async def test_config_entry_with_trigger_accessory(
         "status": 1,
     }
 
+    with (
+        patch("pyhap.accessory_driver.AccessoryDriver.async_start"),
+        patch("homeassistant.components.homekit.HomeKit.async_stop"),
+        patch("homeassistant.components.homekit.async_port_is_available"),
+    ):
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("mock_async_zeroconf", "hk_driver", "recording_transport")
+async def test_config_entry_secure_video_camera(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test diagnostics of a camera that records to HomeKit Secure Video."""
+    hass.states.async_set("camera.front", "idle")
+    hass.states.async_set("binary_sensor.motion", "off")
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_NAME: "mock_name",
+            CONF_PORT: 12345,
+            CONF_HOMEKIT_MODE: HOMEKIT_MODE_ACCESSORY,
+            "filter": {
+                "exclude_domains": [],
+                "exclude_entities": [],
+                "include_domains": [],
+                "include_entities": ["camera.front"],
+            },
+        },
+        options={
+            CONF_ENTITY_CONFIG: {
+                "camera.front": {
+                    CONF_STREAM_SOURCE: "rtsp://cam",
+                    CONF_LINKED_MOTION_SENSOR: "binary_sensor.motion",
+                    CONF_CAMERA_MODE: CAMERA_MODE_SECURE_VIDEO,
+                }
+            }
+        },
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+    diag = await get_diagnostics_for_config_entry(hass, hass_client, entry)
+    assert diag["accessory"]["secure_video"] == {
+        "active": False,
+        "audio_active": False,
+        "homekit_camera_active": True,
+        "selected_configuration": None,
+        "transport_port": None,
+        "connections": 0,
+    }
     with (
         patch("pyhap.accessory_driver.AccessoryDriver.async_start"),
         patch("homeassistant.components.homekit.HomeKit.async_stop"),

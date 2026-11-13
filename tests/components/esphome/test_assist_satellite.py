@@ -53,12 +53,9 @@ from homeassistant.components.assist_satellite.entity import (
 )
 from homeassistant.components.esphome.assist_satellite import VoiceAssistantUDPServer
 from homeassistant.components.esphome.const import NO_WAKE_WORD
-from homeassistant.components.select import (
-    DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
-)
+from homeassistant.components.select import DOMAIN as SELECT_DOMAIN, SelectService
 from homeassistant.components.tts import TextToSpeechCommonOption
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, intent as intent_helper
 from homeassistant.helpers.network import get_url
@@ -2012,8 +2009,11 @@ async def test_wake_word_select(
     # Changing the select should set the active wake word
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.test_wake_word", "option": "Okay Nabu"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: "select.test_wake_word",
+            "option": "Okay Nabu",
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -2037,8 +2037,11 @@ async def test_wake_word_select(
     # Changing the secondary select should add an active wake word
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.test_wake_word_2", "option": "Hey Jarvis"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: "select.test_wake_word_2",
+            "option": "Hey Jarvis",
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -2060,8 +2063,11 @@ async def test_wake_word_select(
     # Remove the secondary wake word
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.test_wake_word_2", "option": NO_WAKE_WORD},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: "select.test_wake_word_2",
+            "option": NO_WAKE_WORD,
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -2075,8 +2081,11 @@ async def test_wake_word_select(
     # Remove the primary wake word
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.test_wake_word", "option": NO_WAKE_WORD},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: "select.test_wake_word",
+            "option": NO_WAKE_WORD,
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -2151,27 +2160,36 @@ async def test_secondary_pipeline(
     # Set primary/secondary wake words and assistants
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.test_wake_word", "option": "Okay Nabu"},
-        blocking=True,
-    )
-    await hass.services.async_call(
-        SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.test_assistant", "option": "Primary Pipeline"},
-        blocking=True,
-    )
-    await hass.services.async_call(
-        SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.test_wake_word_2", "option": "Hey Jarvis"},
-        blocking=True,
-    )
-    await hass.services.async_call(
-        SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: "select.test_assistant_2",
+            CommonServiceArgument.ENTITY_ID: "select.test_wake_word",
+            "option": "Okay Nabu",
+        },
+        blocking=True,
+    )
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: "select.test_assistant",
+            "option": "Primary Pipeline",
+        },
+        blocking=True,
+    )
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: "select.test_wake_word_2",
+            "option": "Hey Jarvis",
+        },
+        blocking=True,
+    )
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: "select.test_assistant_2",
             "option": "Secondary Pipeline",
         },
         blocking=True,
@@ -2269,27 +2287,36 @@ async def test_pipeline_start_missing_wake_word_entity_state(
     # Set primary/secondary wake words and assistants
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.test_wake_word", "option": "Okay Nabu"},
-        blocking=True,
-    )
-    await hass.services.async_call(
-        SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.test_assistant", "option": "Primary Pipeline"},
-        blocking=True,
-    )
-    await hass.services.async_call(
-        SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.test_wake_word_2", "option": "Hey Jarvis"},
-        blocking=True,
-    )
-    await hass.services.async_call(
-        SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: "select.test_assistant_2",
+            CommonServiceArgument.ENTITY_ID: "select.test_wake_word",
+            "option": "Okay Nabu",
+        },
+        blocking=True,
+    )
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: "select.test_assistant",
+            "option": "Primary Pipeline",
+        },
+        blocking=True,
+    )
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: "select.test_wake_word_2",
+            "option": "Hey Jarvis",
+        },
+        blocking=True,
+    )
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: "select.test_assistant_2",
             "option": "Secondary Pipeline",
         },
         blocking=True,
