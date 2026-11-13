@@ -82,9 +82,11 @@ def create_mcp_httpx_client(
     managed clients. Reuses the shared SSL context instead of loading
     certificates for every client.
     """
-    kwargs: dict[str, Any] = {}
-    if timeout is not None:
-        kwargs["timeout"] = timeout
+    kwargs: dict[str, Any] = {
+        "timeout": timeout
+        if timeout is not None
+        else httpx2.Timeout(TIMEOUT, read=300)
+    }
     return httpx2.AsyncClient(
         verify=client_context(SSLCipherList.PYTHON_DEFAULT, SSL_ALPN_HTTP11),
         follow_redirects=True,
