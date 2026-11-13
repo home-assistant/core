@@ -1,12 +1,21 @@
 """Test the songpal integration."""
 
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry
 from songpal import SongpalException
 from songpal.containers import Sysinfo
+from songpal.group import GroupState
 
-from homeassistant.components.songpal.const import CONF_ENDPOINT
+from homeassistant.components.songpal.const import CONF_ENDPOINT, DOMAIN
 from homeassistant.const import CONF_NAME
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_UDN,
+    SsdpServiceInfo,
+)
 
 FRIENDLY_NAME = "name"
 ENTITY_ID = f"media_player.{FRIENDLY_NAME}"
@@ -24,9 +33,14 @@ CONF_DATA = {
 
 
 def _create_mocked_device(
-    throw_exception=False, wired_mac=MAC, wireless_mac=None, no_soundfield=False
+    throw_exception=False,
+    wired_mac=MAC,
+    wireless_mac=None,
+    no_soundfield=False,
+    endpoint=ENDPOINT,
 ):
     mocked_device = MagicMock()
+    mocked_device.endpoint = endpoint
 
     type(mocked_device).get_supported_methods = AsyncMock(
         side_effect=SongpalException("Unable to do POST request: ")
@@ -141,3 +155,81 @@ def _patch_media_player_device(mocked_device):
         "homeassistant.components.songpal.media_player.Device",
         return_value=mocked_device,
     )
+
+
+LEADER_ENTITY_ID = "media_player.leader"
+MEMBER_ENTITY_ID = "media_player.member"
+LEADER_ENDPOINT = "http://10.0.0.1:10000/sony"
+MEMBER_ENDPOINT = "http://10.0.0.2:10000/sony"
+LEADER_LOCATION = "http://10.0.0.1:54380/leader.xml"
+MEMBER_LOCATION = "http://10.0.0.2:54380/member.xml"
+LEADER_UDN = "uuid:00000000-0000-1010-8000-000000000001"
+MEMBER_UDN = "uuid:00000000-0000-1010-8000-000000000002"
+
+
+def _group_state(
+    mode: str = "IDLE", leader_udn: str = "", member_udns: str = "", session: int = 0
+) -> GroupState:
+    return GroupState(
+        Discoverable="YES",
+        GroupMode=mode,
+        GroupName="leader" if mode == "GROUP" else "",
+        GroupSong="PUBLIC",
+        GroupState="IDLE",
+        MasterSessionID=0,
+        MasterUUID=leader_udn,
+        NumberOfSlaves=len(member_udns.split(",")) if member_udns else 0,
+        PlayingState="STOPPED",
+        PowerState="ON",
+        RSSIValue=-50,
+        SessionID=session,
+        SlaveList=member_udns,
+        SlaveNetworkState="",
+        WiredLinkSpeed=0,
+        WiredState="DOWN",
+        WirelessLinkSpeed=100,
+        WirelessState="UP",
+        WirelessType="802.11bgn",
+    )
+
+
+def _create_mocked_group_control(state: GroupState) -> MagicMock:
+    group_control = MagicMock()
+    group_control.connect = AsyncMock(return_value=True)
+    group_control.state = AsyncMock(return_value=state)
+    group_control.add = AsyncMock()
+    group_control.remove = AsyncMock()
+    group_control.abort = AsyncMock()
+    group_control.call = AsyncMock()
+    group_control.set_group_name = AsyncMock()
+    return group_control
+
+
+def _ssdp_info(
+    location: str,
+    udn: str,
+    friendly_name: str | None = None,
+    base_url: str | None = None,
+) -> SsdpServiceInfo:
+    upnp: dict[str, Any] = {ATTR_UPNP_UDN: udn}
+    if friendly_name:
+        upnp[ATTR_UPNP_FRIENDLY_NAME] = friendly_name
+    if base_url:
+        upnp["X_ScalarWebAPI_DeviceInfo"] = {"X_ScalarWebAPI_BaseURL": base_url}
+    return SsdpServiceInfo(
+        ssdp_usn=f"{udn}::urn:schemas-sony-com:service:ScalarWebAPI:1",
+        ssdp_st="urn:schemas-sony-com:service:ScalarWebAPI:1",
+        ssdp_location=location,
+        upnp=upnp,
+    )
+
+
+async def _setup_songpal(
+    hass: HomeAssistant, name: str = FRIENDLY_NAME, endpoint: str = ENDPOINT
+) -> None:
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_NAME: name, CONF_ENDPOINT: endpoint}
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)

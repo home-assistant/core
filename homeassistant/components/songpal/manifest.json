@@ -1,6 +1,7 @@
 {
   "domain": "songpal",
   "name": "Sony Songpal",
+  "after_dependencies": ["ssdp"],
   "categories": ["media_entertainment.speakers_audio"],
   "codeowners": ["@rytilahti", "@shenxn"],
   "config_flow": true,
