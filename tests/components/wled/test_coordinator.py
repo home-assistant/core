@@ -20,15 +20,19 @@ from wled import (
     WLEDUnsupportedVersionError,
 )
 
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.wled.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     EVENT_HOMEASSISTANT_STOP,
+    SERVICE_TURN_OFF,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 
 async def test_not_supporting_websocket(
@@ -160,6 +164,69 @@ async def test_websocket(
     state = hass.states.get("light.wled_websocket")
     assert state
     assert state.state == STATE_OFF
+
+
+@pytest.mark.parametrize("device_fixture", ["rgb_websocket"])
+async def test_websocket_command_connection_error_recovers(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_wled: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a failed command doesn't leave the device unavailable.
+
+    While the WebSocket is connected, polling is suspended, and the device
+    only pushes an update when its state changes. A command that fails to
+    reach the device marks it unavailable, so polling resumes to find out
+    when it answers again, and is suspended again once it does.
+    """
+    connection_connected = asyncio.Future()
+    connection_finished = asyncio.Future()
+
+    async def connect(callback: Callable[[WLEDDevice], None]):
+        connection_connected.set_result(callback)
+        await connection_finished
+
+    mock_wled.listen.side_effect = connect
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await connection_connected
+    mock_wled.connected = True
+    await hass.async_block_till_done()
+
+    mock_wled.master.side_effect = WLEDConnectionError
+    mock_wled.segment.side_effect = WLEDConnectionError
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "light.wled_websocket"},
+            blocking=True,
+        )
+
+    assert (state := hass.states.get("light.wled_websocket"))
+    assert state.state == STATE_UNAVAILABLE
+
+    # The device answers the next poll, so it's available again
+    num_updates = mock_wled.update.call_count
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_wled.update.call_count == num_updates + 1
+    assert (state := hass.states.get("light.wled_websocket"))
+    assert state.state == STATE_ON
+
+    # The WebSocket is still connected, so polling is suspended again
+    for _scans in range(4):
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+    assert mock_wled.update.call_count == num_updates + 1
+
+    connection_finished.set_exception(WLEDConnectionClosedError)
+    await hass.async_block_till_done()
 
 
 @pytest.mark.parametrize("device_fixture", ["rgb_websocket"])

@@ -173,6 +173,21 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
         self._async_reload_on_setup_change(device)
         self.async_set_updated_data(device)
 
+    @callback
+    def async_handle_command_error(self) -> None:
+        """Mark the device unavailable after a command failed, and poll it.
+
+        While the WebSocket is connected the coordinator doesn't poll, so
+        nothing would mark the device available again until it pushes an
+        update, which it only does when its state changes. Polling again
+        finds out when it answers, and stops once it does.
+        """
+        self.last_update_success = False
+        self.async_update_listeners()
+        if self.update_interval is None:
+            self.update_interval = SCAN_INTERVAL
+            self._schedule_refresh()
+
     @property
     def has_main_light(self) -> bool:
         """Return if the coordinated device has a main light."""
@@ -278,6 +293,11 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
             self._remember_setup(device)
         else:
             self._async_reload_on_setup_change(device)
+
+        # The WebSocket pushes updates while it's connected, so stop polling
+        # again, like after polling resumed because a command failed.
+        if self.wled.connected:
+            self.update_interval = None
 
         # If the device supports a WebSocket, try activating it.
         if (

@@ -26,8 +26,7 @@ def wled_exception_handler[_WLEDEntityT: WLEDEntity, **_P](
             self.coordinator.async_update_listeners()
 
         except WLEDConnectionError as error:
-            self.coordinator.last_update_success = False
-            self.coordinator.async_update_listeners()
+            self.coordinator.async_handle_command_error()
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="connection_error",
