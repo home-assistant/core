@@ -987,7 +987,7 @@ energieleser==0.1.7
 energyflip-api-client==0.3.0
 
 # homeassistant.components.energyid
-energyid-webhooks==0.0.16
+energyid-webhooks==0.0.17
 
 # homeassistant.components.energyzero
 energyzero==5.1.1
