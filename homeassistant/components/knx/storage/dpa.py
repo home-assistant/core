@@ -169,6 +169,32 @@ class FB372(StrEnum):
     ACT_CURR_FAN_SPEED = "372.55"
 
 
+class FB398(StrEnum):
+    """FB 398 Room Temperature Setpoint Manager."""
+
+    HVAC_MODE_USER = "398.53"
+    TEMP_ROOM_SETP_USER_ABS = "398.56"
+    HVAC_MODE_EFF = "398.80"
+    TEMP_ROOM_SETP_USER_ABS_EFF = "398.84"
+
+
+class FB399(StrEnum):
+    """FB 399 Room Temperature Controller."""
+
+    TEMP_ROOM = "399.56"
+    CHANGE_OVER_STATUS = "399.64"
+    CONTR_MODE = "399.65"
+    FAN_SPEED_USER = "399.74"
+    FAN_STEP_USER = "399.75"
+    HVAC_MODE_ACT = "399.100"
+    TEMP_ROOM_SETP_ACT = "399.101"
+    ACT_TARGET_POS_HEAT_STAGE_A = "399.102"
+    ACT_TARGET_POS_COOL_STAGE_A = "399.104"
+    HEAT_COOL_MODE_ACT = "399.109"
+    CONTR_MODE_ACT = "399.111"
+    ACT_TARGET_FAN_SPEED = "399.112"
+
+
 class FB409(StrEnum):
     """FB 409 Indoor Brightness Sensor."""
 
