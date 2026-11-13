@@ -11,9 +11,7 @@ from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.labs import async_update_preview_feature
-from homeassistant.components.voice_support import (
-    PREVIEW_FEATURE_WAKE_WORD_VERIFICATION,
-)
+from homeassistant.components.voice_support import PREVIEW_FEATURE_NEXT_GENERATION_VOICE
 from homeassistant.components.voice_support.app import APP_SLUG
 from homeassistant.components.voice_support.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -21,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 HOST = "192.168.1.5"
-PORT = 10800
+PORT = 10900
 APP_HOST = "core-voice"
 INFO_URL = f"http://{HOST}:{PORT}/info"
 APP_INFO_URL = f"http://{APP_HOST}:{PORT}/info"
@@ -68,7 +66,7 @@ async def labs(hass: HomeAssistant) -> None:
 async def preview_feature_enabled(hass: HomeAssistant, labs: None) -> None:
     """Turn on the Labs feature."""
     await async_update_preview_feature(
-        hass, DOMAIN, PREVIEW_FEATURE_WAKE_WORD_VERIFICATION, True
+        hass, DOMAIN, PREVIEW_FEATURE_NEXT_GENERATION_VOICE, True
     )
 
 

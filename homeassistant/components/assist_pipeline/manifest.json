@@ -1,9 +1,9 @@
 {
   "domain": "assist_pipeline",
   "name": "Assist pipeline",
-  "after_dependencies": ["repairs", "voice_support"],
+  "after_dependencies": ["repairs"],
   "codeowners": ["@synesthesiam", "@arturpragacz"],
-  "dependencies": ["conversation", "stt", "tts", "wake_word"],
+  "dependencies": ["conversation", "stt", "tts", "wake_word", "voice_support"],
   "documentation": "https://www.home-assistant.io/integrations/assist_pipeline",
   "integration_type": "system",
   "iot_class": "local_push",

@@ -18,14 +18,12 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import async_is_enabled
 from .app import get_app_manager
-from .client import CONNECT_ERRORS, AppInfo, UnsupportedVersionError, VoiceSupportClient
+from .client import CLIENT_ERRORS, AppInfo, UnsupportedVersionError, VoiceSupportClient
 from .const import CONF_INTEGRATION_CREATED_APP, DOMAIN
 
 CONF_USE_APP = "use_app"
 
-# TODO: fill in the app's real port before merging, and the zeroconf service
-# type it advertises in the manifest
-DEFAULT_PORT = 10800
+DEFAULT_PORT = 10900
 
 APP_START_INTERVAL = 5
 APP_START_ROUNDS = 40
@@ -100,7 +98,7 @@ class VoiceSupportConfigFlow(ConfigFlow, domain=DOMAIN):
             port: int = user_input[CONF_PORT]
             try:
                 self._info = await _async_get_info(self.hass, host, port)
-            except CONNECT_ERRORS:
+            except CLIENT_ERRORS:
                 errors["base"] = "cannot_connect"
             except UnsupportedVersionError:
                 errors["base"] = "unsupported_version"
@@ -205,7 +203,7 @@ class VoiceSupportConfigFlow(ConfigFlow, domain=DOMAIN):
             except AddonError as err:
                 _LOGGER.error(err)
                 return self._async_fail("app_get_discovery_info_failed")
-            except CONNECT_ERRORS:
+            except CLIENT_ERRORS:
                 return self._async_fail("cannot_connect")
             except UnsupportedVersionError as err:
                 _LOGGER.error(err)
@@ -260,7 +258,7 @@ class VoiceSupportConfigFlow(ConfigFlow, domain=DOMAIN):
             await asyncio.sleep(APP_START_INTERVAL)
             try:
                 await self._async_connect_app()
-            except (AddonError, *CONNECT_ERRORS) as err:
+            except (AddonError, *CLIENT_ERRORS) as err:
                 _LOGGER.debug(
                     "App not ready yet, waiting %s seconds: %s",
                     APP_START_INTERVAL,
@@ -297,7 +295,7 @@ class VoiceSupportConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             self._info = await _async_get_info(self.hass, host, port)
-        except CONNECT_ERRORS:
+        except CLIENT_ERRORS:
             return self.async_abort(reason="cannot_connect")
         except UnsupportedVersionError:
             return self.async_abort(reason="unsupported_version")
@@ -325,7 +323,7 @@ class VoiceSupportConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             self._info = await _async_get_info(self.hass, host, port)
-        except CONNECT_ERRORS:
+        except CLIENT_ERRORS:
             return self.async_abort(reason="cannot_connect")
         except UnsupportedVersionError:
             return self.async_abort(reason="unsupported_version")
