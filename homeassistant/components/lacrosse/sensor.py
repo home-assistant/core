@@ -6,7 +6,6 @@ from typing import Any, override
 
 import probatio
 import pylacrosse
-from serial import SerialException
 
 from homeassistant.components.sensor import (
     ENTITY_ID_FORMAT,
@@ -15,39 +14,48 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_DEVICE,
     CONF_ID,
     CONF_NAME,
     CONF_SENSORS,
     CONF_TYPE,
-    EVENT_HOMEASSISTANT_STOP,
     PERCENTAGE,
     UnitOfTemperature,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import async_generate_entity_id
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
+from . import LaCrosseConfigEntry
+from .const import (
+    CONF_BAUD,
+    CONF_DATARATE,
+    CONF_DISABLED_BY_DEFAULT,
+    CONF_EXPIRE_AFTER,
+    CONF_FREQUENCY,
+    CONF_JEELINK_LED,
+    CONF_LEGACY_CONFIGURED_TYPES,
+    CONF_LEGACY_ENTITY_KEYS,
+    CONF_TOGGLE_INTERVAL,
+    CONF_TOGGLE_MASK,
+    DEFAULT_BAUD,
+    DOMAIN,
+    TYPES,
+    LaCrosseSensorType,
+    sensor_entity_key,
+)
+
 _LOGGER = logging.getLogger(__name__)
-
-CONF_BAUD = "baud"
-CONF_DATARATE = "datarate"
-CONF_EXPIRE_AFTER = "expire_after"
-CONF_FREQUENCY = "frequency"
-CONF_JEELINK_LED = "led"
-CONF_TOGGLE_INTERVAL = "toggle_interval"
-CONF_TOGGLE_MASK = "toggle_mask"
-
-DEFAULT_DEVICE = "/dev/ttyUSB0"
-DEFAULT_BAUD = 57600
-DEFAULT_EXPIRE_AFTER = 300
-
-TYPES = ["battery", "humidity", "temperature"]
 
 SENSOR_SCHEMA = probatio.Schema(
     {
@@ -63,7 +71,7 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
         probatio.Required(CONF_SENSORS): cv.schema_with_slug_keys(SENSOR_SCHEMA),
         probatio.Optional(CONF_BAUD, default=DEFAULT_BAUD): cv.positive_int,
         probatio.Optional(CONF_DATARATE): cv.positive_int,
-        probatio.Optional(CONF_DEVICE, default=DEFAULT_DEVICE): cv.string,
+        probatio.Optional(CONF_DEVICE): cv.string,
         probatio.Optional(CONF_FREQUENCY): cv.positive_int,
         probatio.Optional(CONF_JEELINK_LED): cv.boolean,
         probatio.Optional(CONF_TOGGLE_INTERVAL): cv.positive_int,
@@ -72,54 +80,99 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
 )
 
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: LaCrosseConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up LaCrosse sensors from a config entry."""
+    for subentry in entry.subentries.values():
+        legacy_entity_keys = subentry.data.get(CONF_LEGACY_ENTITY_KEYS, {})
+        legacy_configured_types = subentry.data.get(CONF_LEGACY_CONFIGURED_TYPES)
+        sensors = {
+            entity_key: {
+                CONF_ID: subentry.data[CONF_ID],
+                CONF_TYPE: sensor_type.key,
+                **(
+                    {CONF_DISABLED_BY_DEFAULT: True}
+                    if legacy_configured_types is not None
+                    and sensor_type.key not in legacy_configured_types
+                    else {}
+                ),
+                **(
+                    {CONF_NAME: subentry.data[CONF_NAME]}
+                    if CONF_NAME in subentry.data
+                    else {}
+                ),
+            }
+            for sensor_type in LaCrosseSensorType
+            for entity_key in legacy_entity_keys.get(
+                sensor_type.key,
+                [sensor_entity_key(subentry.subentry_id, sensor_type.key)],
+            )
+        }
+        _add_sensors(
+            hass,
+            entry.runtime_data,
+            entry.entry_id,
+            {**entry.data, **subentry.data, CONF_SENSORS: sensors},
+            lambda entities, subentry_id=subentry.subentry_id: async_add_entities(
+                entities, config_subentry_id=subentry_id
+            ),
+        )
+
+
 def setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the LaCrosse sensors."""
-    usb_device: str = config[CONF_DEVICE]
-    baud: int = config[CONF_BAUD]
-    expire_after: int | None = config.get(CONF_EXPIRE_AFTER)
+    """Set up the LaCrosse sensors through the legacy YAML import flow."""
+    hass.add_job(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+    )
 
-    _LOGGER.debug("%s %s", usb_device, baud)
 
-    try:
-        lacrosse = pylacrosse.LaCrosse(usb_device, baud)
-        lacrosse.open()
-    except SerialException as exc:
-        _LOGGER.warning("Unable to open serial port: %s", exc)
-        return
-
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, lambda event: lacrosse.close())
-
-    if CONF_JEELINK_LED in config:
-        lacrosse.led_mode_state(config.get(CONF_JEELINK_LED))
-    if CONF_FREQUENCY in config:
-        lacrosse.set_frequency(config.get(CONF_FREQUENCY))
-    if CONF_DATARATE in config:
-        lacrosse.set_datarate(config.get(CONF_DATARATE))
-    if CONF_TOGGLE_INTERVAL in config:
-        lacrosse.set_toggle_interval(config.get(CONF_TOGGLE_INTERVAL))
-    if CONF_TOGGLE_MASK in config:
-        lacrosse.set_toggle_mask(config.get(CONF_TOGGLE_MASK))
-
-    lacrosse.start_scan()
-
+def _add_sensors(
+    hass: HomeAssistant,
+    lacrosse: pylacrosse.LaCrosse,
+    receiver_entry_id: str,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+) -> None:
+    """Create entities for the configured LaCrosse sensors."""
     sensors: list[LaCrosseSensor] = []
     for device, device_config in config[CONF_SENSORS].items():
         _LOGGER.debug("%s %s", device, device_config)
 
         typ: str = device_config[CONF_TYPE]
         sensor_class = TYPE_CLASSES[typ]
-        name: str = device_config.get(CONF_NAME, device)
-
+        name = typ.capitalize()
+        expire_after: int | None = device_config.get(CONF_EXPIRE_AFTER)
         sensors.append(
-            sensor_class(hass, lacrosse, device, name, expire_after, device_config)
+            sensor_class(
+                hass,
+                lacrosse,
+                receiver_entry_id,
+                config[CONF_DEVICE],
+                device,
+                name,
+                expire_after,
+                device_config,
+            )
         )
 
     add_entities(sensors)
+
+
+def sensor_device_name(config: ConfigType) -> str:
+    """Return the configured or default sensor device name."""
+    if isinstance(name := config.get(CONF_NAME), str) and name.strip():
+        return name
+    return f"LaCrosse sensor {config[CONF_ID]}"
 
 
 class LaCrosseSensor(SensorEntity):
@@ -129,11 +182,14 @@ class LaCrosseSensor(SensorEntity):
     _humidity: int | None = None
     _low_battery: bool | None = None
     _new_battery: bool | None = None
+    _attr_has_entity_name = True
 
     def __init__(
         self,
         hass: HomeAssistant,
         lacrosse: pylacrosse.LaCrosse,
+        receiver_entry_id: str,
+        receiver_device: str,
         device_id: str,
         name: str,
         expire_after: int | None,
@@ -145,13 +201,31 @@ class LaCrosseSensor(SensorEntity):
             ENTITY_ID_FORMAT, device_id, hass=hass
         )
         self._config = config
+        self._attr_entity_registry_enabled_default = not config.get(
+            CONF_DISABLED_BY_DEFAULT, False
+        )
         self._expire_after = expire_after
         self._expiration_trigger: CALLBACK_TYPE | None = None
         self._attr_name = name
+        self._attr_unique_id = f"{receiver_entry_id}_{device_id}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{receiver_device}_{config[CONF_ID]}")},
+            manufacturer="LaCrosse",
+            model=f"Sensor ID {config[CONF_ID]}",
+            name=sensor_device_name(config),
+        )
 
         lacrosse.register_callback(
             int(self._config[CONF_ID]), self._callback_lacrosse, None
         )
+
+    @override
+    async def async_will_remove_from_hass(self) -> None:
+        """Cancel the expiration trigger when removed from Home Assistant."""
+        if self._expiration_trigger:
+            self._expiration_trigger()
+            self._expiration_trigger = None
+        await super().async_will_remove_from_hass()
 
     @property
     @override
