@@ -1,0 +1,5 @@
+{
+  "domain": "daikin",
+  "name": "Daikin",
+  "integrations": ["daikin", "daikin_infrared"]
+}
