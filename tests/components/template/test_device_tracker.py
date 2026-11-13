@@ -296,28 +296,32 @@ async def test_in_zones(
             "{{ ['sensor.something'] }}",
             STATE_NOT_HOME,
             "Received invalid device_tracker in_zones: "
-            "['sensor.something'] for entity device_tracker.template_device_tracker, "
+            "['sensor.something'] for entity device_tracker.template_device_tracker"
+            " from template '{{ ['sensor.something'] }}', "
             "expected a list of zone entity_ids",
         ),
         (
             "{{ ['not_an_entity_id'] }}",
             STATE_NOT_HOME,
             "Received invalid device_tracker in_zones: "
-            "['not_an_entity_id'] for entity device_tracker.template_device_tracker, "
+            "['not_an_entity_id'] for entity device_tracker.template_device_tracker"
+            " from template '{{ ['not_an_entity_id'] }}', "
             "expected a list of zone entity_ids",
         ),
         (
             "{{ -110 }}",
             STATE_UNKNOWN,
             "Received invalid device_tracker in_zones: "
-            "-110 for entity device_tracker.template_device_tracker, "
+            "-110 for entity device_tracker.template_device_tracker"
+            " from template '{{ -110 }}', "
             "expected a list of zone entity_ids",
         ),
         (
             "{{ 'on' }}",
             STATE_UNKNOWN,
             "Received invalid device_tracker in_zones: "
-            "on for entity device_tracker.template_device_tracker, "
+            "on for entity device_tracker.template_device_tracker"
+            " from template '{{ 'on' }}', "
             "expected a list of zone entity_ids",
         ),
     ],

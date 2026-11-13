@@ -979,7 +979,8 @@ async def test_template_icon_validation_error(
 
     assert len(caplog.records) == 1
     assert caplog.records[0].message.startswith(
-        "Error validating template result 'invalid_icon' from template"
+        "Received invalid binary_sensor _attr_icon: invalid_icon for entity "
+        f"{TEST_BINARY_SENSOR.entity_id} from template"
     )
 
     state = hass.states.get(TEST_BINARY_SENSOR.entity_id)

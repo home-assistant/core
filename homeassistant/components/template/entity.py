@@ -284,6 +284,12 @@ class AbstractTemplateEntity(Entity):
 
         return None
 
+    def get_template(self, option: str) -> Template | None:
+        """Return the template registered for an option."""
+        if entity_template := self._templates.get(option):
+            return entity_template.template
+        return None
+
     def add_script(
         self,
         script_id: str,
