@@ -76,7 +76,7 @@ class QbusFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="discovery_confirm",
             description_placeholders={
-                CONF_SERIAL_NUMBER: self._device.serial_number,
+                "serial": self._device.serial_number,
             },
         )
 
@@ -152,7 +152,7 @@ class QbusFlowHandler(ConfigFlow, domain=DOMAIN):
         self.context.update(
             {
                 "title_placeholders": {
-                    CONF_SERIAL_NUMBER: self._device.serial_number,
+                    "serial": self._device.serial_number,
                 }
             }
         )

@@ -82,6 +82,7 @@ class BlinkSwitch(CoordinatorEntity[BlinkUpdateCoordinator], SwitchEntity):
             self.coordinator.config_entry.async_start_reauth(self.hass)
             raise ConfigEntryAuthFailed("Blink authorization failed") from er
 
+        self._camera.motion_enabled = True
         await self.coordinator.async_refresh()
 
     @override
@@ -99,6 +100,7 @@ class BlinkSwitch(CoordinatorEntity[BlinkUpdateCoordinator], SwitchEntity):
             self.coordinator.config_entry.async_start_reauth(self.hass)
             raise ConfigEntryAuthFailed("Blink authorization failed") from er
 
+        self._camera.motion_enabled = False
         await self.coordinator.async_refresh()
 
     @property

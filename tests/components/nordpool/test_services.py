@@ -16,52 +16,47 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.nordpool.const import DOMAIN
 from homeassistant.components.nordpool.services import (
-    ATTR_AREAS,
-    ATTR_CONFIG_ENTRY,
-    ATTR_CURRENCY,
-    ATTR_RESOLUTION,
-    SERVICE_GET_PRICE_INDICES_FOR_DATE,
-    SERVICE_GET_PRICES_FOR_DATE,
+    NordPoolService,
+    NordPoolServiceArgument,
 )
-from homeassistant.const import ATTR_DATE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
 TEST_SERVICE_DATA = {
-    ATTR_CONFIG_ENTRY: "to_replace",
-    ATTR_DATE: "2025-10-01",
-    ATTR_AREAS: "SE3",
-    ATTR_CURRENCY: "EUR",
+    NordPoolServiceArgument.CONFIG_ENTRY: "to_replace",
+    NordPoolServiceArgument.DATE: "2025-10-01",
+    NordPoolServiceArgument.AREAS: "SE3",
+    NordPoolServiceArgument.CURRENCY: "EUR",
 }
 TEST_SERVICE_DATA2 = {
-    ATTR_CONFIG_ENTRY: "to_replace",
-    ATTR_DATE: "2025-10-01",
-    ATTR_AREAS: "se3",
-    ATTR_CURRENCY: "eur",
+    NordPoolServiceArgument.CONFIG_ENTRY: "to_replace",
+    NordPoolServiceArgument.DATE: "2025-10-01",
+    NordPoolServiceArgument.AREAS: "se3",
+    NordPoolServiceArgument.CURRENCY: "eur",
 }
 TEST_SERVICE_DATA3 = {
-    ATTR_CONFIG_ENTRY: "to_replace",
-    ATTR_DATE: "2025-10-01",
-    ATTR_AREAS: ["SE3", "SE4"],
-    ATTR_CURRENCY: "EUR",
+    NordPoolServiceArgument.CONFIG_ENTRY: "to_replace",
+    NordPoolServiceArgument.DATE: "2025-10-01",
+    NordPoolServiceArgument.AREAS: ["SE3", "SE4"],
+    NordPoolServiceArgument.CURRENCY: "EUR",
 }
 TEST_SERVICE_DATA_USE_DEFAULTS = {
-    ATTR_CONFIG_ENTRY: "to_replace",
-    ATTR_DATE: "2025-10-01",
+    NordPoolServiceArgument.CONFIG_ENTRY: "to_replace",
+    NordPoolServiceArgument.DATE: "2025-10-01",
 }
 TEST_SERVICE_INDICES_DATA_60 = {
-    ATTR_CONFIG_ENTRY: "to_replace",
-    ATTR_DATE: "2025-10-01",
-    ATTR_AREAS: "SE3",
-    ATTR_CURRENCY: "SEK",
-    ATTR_RESOLUTION: 60,
+    NordPoolServiceArgument.CONFIG_ENTRY: "to_replace",
+    NordPoolServiceArgument.DATE: "2025-10-01",
+    NordPoolServiceArgument.AREAS: "SE3",
+    NordPoolServiceArgument.CURRENCY: "SEK",
+    NordPoolServiceArgument.RESOLUTION: 60,
 }
 TEST_SERVICE_INDICES_DATA_15 = {
-    ATTR_CONFIG_ENTRY: "to_replace",
-    ATTR_DATE: "2025-10-01",
-    ATTR_AREAS: "SE3",
-    ATTR_CURRENCY: "SEK",
-    ATTR_RESOLUTION: 15,
+    NordPoolServiceArgument.CONFIG_ENTRY: "to_replace",
+    NordPoolServiceArgument.DATE: "2025-10-01",
+    NordPoolServiceArgument.AREAS: "SE3",
+    NordPoolServiceArgument.CURRENCY: "SEK",
+    NordPoolServiceArgument.RESOLUTION: 15,
 }
 
 
@@ -88,16 +83,73 @@ async def test_service_call(
     """Test get_prices_for_date service call."""
 
     service_data = test_config.copy()
-    service_data[ATTR_CONFIG_ENTRY] = load_int.entry_id
+    service_data[NordPoolServiceArgument.CONFIG_ENTRY] = load_int.entry_id
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_PRICES_FOR_DATE,
+        NordPoolService.GET_PRICES_FOR_DATE,
         service_data,
         blocking=True,
         return_response=True,
     )
 
     assert response == snapshot
+
+
+@pytest.mark.parametrize(
+    ("service_data", "api_calls"),
+    [
+        pytest.param(
+            {
+                NordPoolServiceArgument.DATE: "2025-09-30",
+                NordPoolServiceArgument.AREAS: ["SE3", "SE4"],
+            },
+            0,
+            id="yesterday",
+        ),
+        pytest.param(
+            {NordPoolServiceArgument.DATE: "2025-10-01"}, 0, id="today_use_defaults"
+        ),
+        pytest.param(
+            {
+                NordPoolServiceArgument.DATE: "2025-10-02",
+                NordPoolServiceArgument.AREAS: "SE4",
+            },
+            0,
+            id="tomorrow",
+        ),
+        pytest.param(
+            {
+                NordPoolServiceArgument.DATE: "2025-10-01",
+                NordPoolServiceArgument.CURRENCY: "EUR",
+            },
+            1,
+            id="other_currency",
+        ),
+        pytest.param(
+            {NordPoolServiceArgument.DATE: "2025-10-03"}, 1, id="date_not_stored"
+        ),
+    ],
+)
+@pytest.mark.freeze_time("2025-10-01T18:00:00+00:00")
+async def test_service_call_uses_stored_data(
+    hass: HomeAssistant,
+    load_int: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    service_data: dict[str, Any],
+    api_calls: int,
+) -> None:
+    """Test get_prices_for_date only calls the API when data is not stored."""
+    call_count = aioclient_mock.call_count
+
+    await hass.services.async_call(
+        DOMAIN,
+        NordPoolService.GET_PRICES_FOR_DATE,
+        {NordPoolServiceArgument.CONFIG_ENTRY: load_int.entry_id, **service_data},
+        blocking=True,
+        return_response=True,
+    )
+
+    assert aioclient_mock.call_count == call_count + api_calls
 
 
 @pytest.mark.freeze_time("2025-10-01T18:00:00+00:00")
@@ -109,10 +161,10 @@ async def test_service_call_use_defaults(
     """Test get_prices_for_date service call using default values."""
 
     service_data = TEST_SERVICE_DATA_USE_DEFAULTS.copy()
-    service_data[ATTR_CONFIG_ENTRY] = load_int.entry_id
+    service_data[NordPoolServiceArgument.CONFIG_ENTRY] = load_int.entry_id
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_PRICES_FOR_DATE,
+        NordPoolService.GET_PRICES_FOR_DATE,
         service_data,
         blocking=True,
         return_response=True,
@@ -138,7 +190,7 @@ async def test_service_call_failures(
 ) -> None:
     """Test get_prices_for_date service call when it fails."""
     service_data = TEST_SERVICE_DATA.copy()
-    service_data[ATTR_CONFIG_ENTRY] = load_int.entry_id
+    service_data[NordPoolServiceArgument.CONFIG_ENTRY] = load_int.entry_id
 
     with (
         patch(
@@ -149,7 +201,7 @@ async def test_service_call_failures(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_PRICES_FOR_DATE,
+            NordPoolService.GET_PRICES_FOR_DATE,
             service_data,
             blocking=True,
             return_response=True,
@@ -165,7 +217,7 @@ async def test_empty_response_returns_empty_list(
 ) -> None:
     """Test get_prices_for_date service call return empty list for empty response."""
     service_data = TEST_SERVICE_DATA.copy()
-    service_data[ATTR_CONFIG_ENTRY] = load_int.entry_id
+    service_data[NordPoolServiceArgument.CONFIG_ENTRY] = load_int.entry_id
 
     with (
         patch(
@@ -175,7 +227,7 @@ async def test_empty_response_returns_empty_list(
     ):
         response = await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_PRICES_FOR_DATE,
+            NordPoolService.GET_PRICES_FOR_DATE,
             service_data,
             blocking=True,
             return_response=True,
@@ -194,7 +246,7 @@ async def test_service_call_config_entry_bad_state(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_PRICES_FOR_DATE,
+            NordPoolService.GET_PRICES_FOR_DATE,
             TEST_SERVICE_DATA,
             blocking=True,
             return_response=True,
@@ -202,14 +254,14 @@ async def test_service_call_config_entry_bad_state(
     assert err.value.translation_key == "service_config_entry_not_found"
 
     service_data = TEST_SERVICE_DATA.copy()
-    service_data[ATTR_CONFIG_ENTRY] = load_int.entry_id
+    service_data[NordPoolServiceArgument.CONFIG_ENTRY] = load_int.entry_id
     await hass.config_entries.async_unload(load_int.entry_id)
     await hass.async_block_till_done()
 
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_PRICES_FOR_DATE,
+            NordPoolService.GET_PRICES_FOR_DATE,
             service_data,
             blocking=True,
             return_response=True,
@@ -256,10 +308,10 @@ async def test_service_call_for_price_indices(
     )
 
     service_data = TEST_SERVICE_INDICES_DATA_60.copy()
-    service_data[ATTR_CONFIG_ENTRY] = load_int.entry_id
+    service_data[NordPoolServiceArgument.CONFIG_ENTRY] = load_int.entry_id
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_PRICE_INDICES_FOR_DATE,
+        NordPoolService.GET_PRICE_INDICES_FOR_DATE,
         service_data,
         blocking=True,
         return_response=True,
@@ -268,10 +320,10 @@ async def test_service_call_for_price_indices(
     assert response == snapshot(name="get_price_indices_for_date_60")
 
     service_data = TEST_SERVICE_INDICES_DATA_15.copy()
-    service_data[ATTR_CONFIG_ENTRY] = load_int.entry_id
+    service_data[NordPoolServiceArgument.CONFIG_ENTRY] = load_int.entry_id
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_PRICE_INDICES_FOR_DATE,
+        NordPoolService.GET_PRICE_INDICES_FOR_DATE,
         service_data,
         blocking=True,
         return_response=True,

@@ -9,6 +9,7 @@ from lighthouse_ble import (
     DeviceInfo,
     LighthouseConnectionError,
     PowerState,
+    UnsupportedError,
     parse_advertisement,
 )
 
@@ -83,6 +84,11 @@ class SteamVRBaseStationCoordinator(PassiveBluetoothDataUpdateCoordinator):
         await self._async_run_command(self.station.set_power(target))
         self.async_update_listeners()
 
+    async def async_set_channel(self, channel: int) -> None:
+        """Move the station to another channel and show it right away."""
+        await self._async_run_command(self.station.set_channel(channel))
+        self.async_update_listeners()
+
     async def async_identify(self) -> None:
         """Blink the station's LED."""
         await self._async_run_command(self.station.identify())
@@ -94,5 +100,11 @@ class SteamVRBaseStationCoordinator(PassiveBluetoothDataUpdateCoordinator):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
+                translation_placeholders={"name": self.entry.title},
+            ) from err
+        except UnsupportedError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="not_supported",
                 translation_placeholders={"name": self.entry.title},
             ) from err

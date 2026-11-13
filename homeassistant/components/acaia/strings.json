@@ -42,5 +42,17 @@
         "name": "Tare"
       }
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "idle_timeout": "Idle disconnect timeout"
+        },
+        "data_description": {
+          "idle_timeout": "Disconnect from the scale once its weight has not changed for this long, so that it can turn itself off. Home Assistant reconnects when the scale is turned back on after being off for more than 30 seconds. Set to 0 to stay connected."
+        }
+      }
+    }
   }
 }

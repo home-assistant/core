@@ -10,7 +10,6 @@ import probatio
 from tenacity import RetryError
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -27,6 +26,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
+from . import NextDnsConfigEntry
 from .const import CONF_PROFILE_ID, DOMAIN, SUBENTRY_TYPE_PROFILE
 
 AUTH_SCHEMA = probatio.Schema({probatio.Required(probatio.Secret(CONF_API_KEY)): str})
@@ -218,7 +218,7 @@ class NextDnsFlowHandler(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: NextDnsConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         return {SUBENTRY_TYPE_PROFILE: ProfileSubentryFlowHandler}

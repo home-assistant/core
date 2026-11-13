@@ -1,8 +1,10 @@
 """Test the Lutron Caseta config flow."""
 
+from collections.abc import Callable, Generator
 from ipaddress import ip_address
 from pathlib import Path
 import ssl
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from pylutron_caseta.pairing import PAIR_CA, PAIR_CERT, PAIR_KEY
@@ -19,8 +21,6 @@ from homeassistant.components.lutron_caseta.const import (
     CONF_CA_CERTS,
     CONF_CERTFILE,
     CONF_KEYFILE,
-    ERROR_CANNOT_CONNECT,
-    STEP_IMPORT_FAILED,
 )
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
@@ -84,79 +84,37 @@ async def test_bridge_import_flow(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_bridge_cannot_connect(hass: HomeAssistant) -> None:
-    """Test checking for connection and cannot_connect error."""
-
-    entry_mock_data = {
-        CONF_HOST: "not.a.valid.host",
-        CONF_KEYFILE: "",
-        CONF_CERTFILE: "",
-        CONF_CA_CERTS: "",
-    }
-
-    with patch.object(Smartbridge, "create_tls") as create_tls:
-        create_tls.return_value = MockBridge(can_connect=False)
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=entry_mock_data,
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == STEP_IMPORT_FAILED
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
-    assert result["errors"] == {"base": ERROR_CANNOT_CONNECT}
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == CasetaConfigFlow.ABORT_REASON_CANNOT_CONNECT
+def _mock_bridge_timeout() -> MockBridge:
+    """Return a mock bridge that times out while connecting."""
+    bridge = MockBridge()
+    bridge.connect = AsyncMock(side_effect=TimeoutError)
+    return bridge
 
 
-async def test_bridge_cannot_connect_unknown_error(hass: HomeAssistant) -> None:
-    """Test checking for connection and encountering an unknown error."""
+@pytest.mark.parametrize(
+    "create_tls_kwargs",
+    [
+        pytest.param(
+            {"return_value": MockBridge(can_connect=False)}, id="cannot_connect"
+        ),
+        pytest.param({"return_value": _mock_bridge_timeout()}, id="timeout"),
+        pytest.param({"side_effect": ssl.SSLError}, id="invalid_ssl"),
+    ],
+)
+async def test_bridge_import_cannot_connect(
+    hass: HomeAssistant, create_tls_kwargs: dict[str, Any]
+) -> None:
+    """Test the import flow aborts when it cannot connect to the bridge."""
 
-    with patch.object(Smartbridge, "create_tls") as create_tls:
-        mock_bridge = MockBridge()
-        mock_bridge.connect = AsyncMock(side_effect=TimeoutError)
-        create_tls.return_value = mock_bridge
+    with patch.object(Smartbridge, "create_tls", **create_tls_kwargs):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
             data=EMPTY_MOCK_CONFIG_ENTRY,
         )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == STEP_IMPORT_FAILED
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
-    assert result["errors"] == {"base": ERROR_CANNOT_CONNECT}
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == CasetaConfigFlow.ABORT_REASON_CANNOT_CONNECT
-
-
-async def test_bridge_invalid_ssl_error(hass: HomeAssistant) -> None:
-    """Test checking for connection and encountering invalid ssl certs."""
-
-    with patch.object(Smartbridge, "create_tls", side_effect=ssl.SSLError):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=EMPTY_MOCK_CONFIG_ENTRY,
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == STEP_IMPORT_FAILED
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
-    assert result["errors"] == {"base": ERROR_CANNOT_CONNECT}
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == CasetaConfigFlow.ABORT_REASON_CANNOT_CONNECT
+    assert result["reason"] == "cannot_connect"
 
 
 async def test_duplicate_bridge_import(hass: HomeAssistant) -> None:
@@ -571,3 +529,163 @@ async def test_zeroconf(hass: HomeAssistant, source, tmp_path: Path) -> None:
     assert result2["result"].unique_id == "abc"
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+def _bridge_cannot_connect(**kwargs: Any) -> MockBridge:
+    """Return a bridge that does not connect."""
+    return MockBridge(can_connect=False)
+
+
+def _bridge_connect_timeout(**kwargs: Any) -> MockBridge:
+    """Return a bridge that times out on connect."""
+    bridge = MockBridge()
+    bridge.connect = AsyncMock(side_effect=TimeoutError)
+    return bridge
+
+
+@pytest.fixture
+def mock_reconfigure_entry(hass: HomeAssistant) -> MockConfigEntry:
+    """Return a config entry to reconfigure."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "1.1.1.1",
+            CONF_KEYFILE: "lutron_caseta-1.1.1.1-key.pem",
+            CONF_CERTFILE: "lutron_caseta-1.1.1.1-cert.pem",
+            CONF_CA_CERTS: "lutron_caseta-1.1.1.1-ca.pem",
+        },
+        unique_id="000004d2",
+    )
+    entry.add_to_hass(hass)
+    return entry
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Mock setting up a config entry."""
+    with patch(
+        "homeassistant.components.lutron_caseta.async_setup_entry",
+        return_value=None,
+    ) as mock_setup:
+        yield mock_setup
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure(
+    hass: HomeAssistant, mock_reconfigure_entry: MockConfigEntry
+) -> None:
+    """Test reconfiguring the bridge host."""
+    result = await mock_reconfigure_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    with patch.object(Smartbridge, "create_tls", return_value=MockBridge()):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "2.2.2.2"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_reconfigure_entry.data == {
+        CONF_HOST: "2.2.2.2",
+        CONF_KEYFILE: "lutron_caseta-1.1.1.1-key.pem",
+        CONF_CERTFILE: "lutron_caseta-1.1.1.1-cert.pem",
+        CONF_CA_CERTS: "lutron_caseta-1.1.1.1-ca.pem",
+    }
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize(
+    "create_tls_side_effect",
+    [
+        pytest.param(_bridge_cannot_connect, id="not_connected"),
+        pytest.param(_bridge_connect_timeout, id="timeout"),
+        pytest.param(ssl.SSLError, id="ssl_error"),
+    ],
+)
+async def test_reconfigure_errors(
+    hass: HomeAssistant,
+    mock_reconfigure_entry: MockConfigEntry,
+    create_tls_side_effect: Callable[..., MockBridge] | type[Exception],
+) -> None:
+    """Test errors during reconfigure and recovery."""
+    result = await mock_reconfigure_entry.start_reconfigure_flow(hass)
+
+    with patch.object(Smartbridge, "create_tls", side_effect=create_tls_side_effect):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "2.2.2.2"}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    with patch.object(Smartbridge, "create_tls", return_value=MockBridge()):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "2.2.2.2"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_reconfigure_entry.data[CONF_HOST] == "2.2.2.2"
+
+
+async def test_reconfigure_unique_id_mismatch(hass: HomeAssistant) -> None:
+    """Test reconfigure aborts when the host points to another bridge."""
+    entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_MOCK_DATA, unique_id="abcdef00")
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    with patch.object(Smartbridge, "create_tls", return_value=MockBridge()):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "2.2.2.2"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert entry.data[CONF_HOST] == "1.1.1.1"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_entry_without_unique_id(hass: HomeAssistant) -> None:
+    """Test reconfiguring an entry that never got a unique ID stores it."""
+    entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_MOCK_DATA, unique_id=None)
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    with patch.object(Smartbridge, "create_tls", return_value=MockBridge()):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "2.2.2.2"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_HOST] == "2.2.2.2"
+    assert entry.unique_id == "000004d2"
+
+
+async def test_reconfigure_entry_without_unique_id_already_configured(
+    hass: HomeAssistant,
+) -> None:
+    """Test reconfiguring an entry without unique ID to another entry's bridge."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={**ENTRY_MOCK_DATA, CONF_HOST: "2.2.2.2"},
+        unique_id="000004d2",
+    ).add_to_hass(hass)
+    entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_MOCK_DATA, unique_id=None)
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    with patch.object(Smartbridge, "create_tls", return_value=MockBridge()):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "2.2.2.2"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_HOST] == "1.1.1.1"
+    assert entry.unique_id is None

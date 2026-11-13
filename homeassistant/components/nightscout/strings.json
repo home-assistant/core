@@ -21,5 +21,10 @@
         "title": "Enter your Nightscout server information."
       }
     }
+  },
+  "exceptions": {
+    "update_error": {
+      "message": "Error communicating with the Nightscout server: {error}"
+    }
   }
 }

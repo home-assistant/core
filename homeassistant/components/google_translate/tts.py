@@ -114,7 +114,10 @@ class GoogleTTSEntity(TextToSpeechEntity):
             _LOGGER.debug(
                 "Error during processing of TTS request %s", exc, exc_info=True
             )
-            raise HomeAssistantError(exc) from exc
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="tts_error",
+            ) from exc
 
         return "mp3", mp3_data.getvalue()
 

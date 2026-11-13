@@ -1,17 +1,19 @@
 """Backup platform for the Backblaze B2 integration."""
 
 import asyncio
-from collections.abc import AsyncIterator, Callable, Coroutine
+from collections.abc import AsyncIterator, Callable, Coroutine, Iterator
 from contextlib import suppress
 import functools
 import json
 import logging
 import mimetypes
+import threading
 from time import time
 from typing import Any, override
 
 from b2sdk.v2 import AbstractProgressListener, FileVersion
 from b2sdk.v2.exception import B2Error
+from requests import Response
 
 from homeassistant.components.backup import (
     AgentBackup,
@@ -23,7 +25,7 @@ from homeassistant.components.backup import (
 )
 from homeassistant.const import CONF_PREFIX
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.util.async_iterator import AsyncIteratorReader
+from homeassistant.util.async_iterator import AsyncIteratorReader, ResourceChunkIterator
 
 from . import BackblazeConfigEntry
 from .const import (
@@ -45,6 +47,8 @@ UPLOAD_TIMEOUT = 43200  # 12 hours (matches B2 HTTP timeout)
 # Timeout for metadata download operations (in seconds)
 # This prevents the backup system from hanging when B2 connections fail
 METADATA_DOWNLOAD_TIMEOUT = 60
+
+DOWNLOAD_CHUNK_SIZE = 1024 * 1024
 
 
 def suggested_filenames(backup: AgentBackup) -> tuple[str, str]:
@@ -101,6 +105,19 @@ def _create_backup_from_metadata(
     metadata = metadata_content["backup_metadata"]
     metadata["size"] = backup_file.size
     return AgentBackup.from_dict(metadata)
+
+
+def _read_chunk(lock: threading.Lock, chunks: Iterator[bytes]) -> bytes:
+    """Read the next chunk of a download."""
+    with lock:
+        return next(chunks, b"")
+
+
+def _close_response(lock: threading.Lock, response: Response, file_name: str) -> None:
+    """Close a download response once no read is running."""
+    with lock:
+        response.close()
+    _LOGGER.debug("Finished streaming download for %s", file_name)
 
 
 def handle_b2_errors[T](
@@ -248,22 +265,23 @@ class BackblazeBackupAgent(BackupAgent):
 
         downloaded_file = await self._hass.async_add_executor_job(file.download)
         response = downloaded_file.response
-
-        async def stream_response() -> AsyncIterator[bytes]:
-            """Stream the response into an AsyncIterator."""
-            try:
-                iterator = response.iter_content(chunk_size=1024 * 1024)
-                while True:
-                    chunk = await self._hass.async_add_executor_job(
-                        next, iterator, None
-                    )
-                    if chunk is None:
-                        break
-                    yield chunk
-            finally:
-                _LOGGER.debug("Finished streaming download for %s", file.file_name)
-
-        return stream_response()
+        chunks = response.iter_content(chunk_size=DOWNLOAD_CHUNK_SIZE)
+        # Reads and closing run in the executor, closing waits for a running read
+        lock = threading.Lock()
+        close = functools.partial(
+            self._hass.async_add_executor_job,
+            _close_response,
+            lock,
+            response,
+            file.file_name,
+        )
+        return ResourceChunkIterator(
+            functools.partial(
+                self._hass.async_add_executor_job, _read_chunk, lock, chunks
+            ),
+            close=close,
+            aclose=close,
+        )
 
     @handle_b2_errors
     @override

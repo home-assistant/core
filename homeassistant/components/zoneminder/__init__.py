@@ -3,7 +3,10 @@
 import logging
 
 import probatio
-from requests.exceptions import ConnectionError as RequestsConnectionError
+from requests.exceptions import (
+    ConnectionError as RequestsConnectionError,
+    Timeout as RequestsTimeout,
+)
 from zoneminder.zm import ZoneMinder
 
 from homeassistant.const import (
@@ -75,7 +78,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         try:
             success = await hass.async_add_executor_job(zm_client.login) and success
-        except RequestsConnectionError as ex:
+        except (RequestsConnectionError, RequestsTimeout) as ex:
             _LOGGER.error(
                 "ZoneMinder connection failure to %s: %s",
                 host_name,

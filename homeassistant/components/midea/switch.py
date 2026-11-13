@@ -101,7 +101,7 @@ SWITCHES: list[MideaSwitchEntityDescription] = [
     MideaSwitchEntityDescription(
         key="anion",
         translation_key="anion",
-        models=[DeviceType.AC],
+        models=[DeviceType.AC, DeviceType.A1],
         entity_category=EntityCategory.CONFIG,
     ),
     MideaSwitchEntityDescription(
@@ -148,7 +148,7 @@ SWITCHES: list[MideaSwitchEntityDescription] = [
     MideaSwitchEntityDescription(
         key="power",
         translation_key="power",
-        models=[DeviceType.DA, DeviceType.DB, DeviceType.DC],
+        models=[DeviceType.DA, DeviceType.DB, DeviceType.DC, DeviceType.FC],
         device_class=SwitchDeviceClass.SWITCH,
     ),
     MideaSwitchEntityDescription(

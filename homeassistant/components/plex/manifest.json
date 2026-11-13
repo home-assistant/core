@@ -4,6 +4,7 @@
   "categories": ["media_entertainment.tv_streaming"],
   "codeowners": ["@jjlawren"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["http"],
   "documentation": "https://www.home-assistant.io/integrations/plex",
   "integration_type": "service",
@@ -12,7 +13,7 @@
   "requirements": [
     "PlexAPI==4.18.2",
     "plexauth==0.0.6",
-    "plexwebsocket==0.0.14"
+    "plexwebsocket==0.1.0"
   ],
   "zeroconf": ["_plexmediasvr._tcp.local."]
 }

@@ -9,17 +9,10 @@ from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant import setup
 from homeassistant.components import device_tracker, zone
-from homeassistant.components.zone import ATTR_RADIUS, DOMAIN
+from homeassistant.components.zone import DOMAIN
 from homeassistant.components.zone.const import ZoneEntityStateAttribute
-from homeassistant.const import (
-    ATTR_EDITABLE,
-    ATTR_FRIENDLY_NAME,
-    ATTR_ICON,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    ATTR_NAME,
-    SERVICE_RELOAD,
-)
+from homeassistant.components.zone.services import ZoneService
+from homeassistant.const import CONF_NAME, EntityStateAttribute
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import entity_registry as er
@@ -397,13 +390,13 @@ async def test_reload(
         with pytest.raises(Unauthorized):
             await hass.services.async_call(
                 DOMAIN,
-                SERVICE_RELOAD,
+                ZoneService.RELOAD,
                 blocking=True,
                 context=Context(user_id=hass_read_only_user.id),
             )
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_RELOAD,
+            ZoneService.RELOAD,
             blocking=True,
             context=Context(user_id=hass_admin_user.id),
         )
@@ -430,7 +423,7 @@ async def test_load_from_storage(hass: HomeAssistant, storage_setup) -> None:
     state = hass.states.get(f"{DOMAIN}.from_storage")
     assert state.state == "0"
     assert state.name == "from storage"
-    assert state.attributes.get(ATTR_EDITABLE)
+    assert state.attributes.get(ZoneEntityStateAttribute.EDITABLE)
 
 
 async def test_editable_state_attribute(hass: HomeAssistant, storage_setup) -> None:
@@ -441,12 +434,12 @@ async def test_editable_state_attribute(hass: HomeAssistant, storage_setup) -> N
 
     state = hass.states.get(f"{DOMAIN}.from_storage")
     assert state.state == "0"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "from storage"
-    assert state.attributes.get(ATTR_EDITABLE)
+    assert state.attributes.get(EntityStateAttribute.FRIENDLY_NAME) == "from storage"
+    assert state.attributes.get(ZoneEntityStateAttribute.EDITABLE)
 
     state = hass.states.get(f"{DOMAIN}.yaml_option")
     assert state.state == "0"
-    assert not state.attributes.get(ATTR_EDITABLE)
+    assert not state.attributes.get(ZoneEntityStateAttribute.EDITABLE)
 
 
 async def test_ws_list(
@@ -470,7 +463,7 @@ async def test_ws_list(
     assert len(result) == 1
     assert storage_ent in result
     assert yaml_ent not in result
-    assert result[storage_ent][ATTR_NAME] == "from storage"
+    assert result[storage_ent][CONF_NAME] == "from storage"
 
 
 async def test_ws_delete(
@@ -609,11 +602,11 @@ async def test_import_config_entry(hass: HomeAssistant) -> None:
 
     state = hass.states.get("zone.from_config_entry")
     assert state is not None
-    assert state.attributes[ATTR_LATITUDE] == 1
-    assert state.attributes[ATTR_LONGITUDE] == 2
+    assert state.attributes[EntityStateAttribute.LATITUDE] == 1
+    assert state.attributes[EntityStateAttribute.LONGITUDE] == 2
     assert state.attributes[zone.ATTR_RADIUS] == 3
     assert state.attributes[zone.ATTR_PASSIVE] is False
-    assert state.attributes[ATTR_ICON] == "mdi:from-config-entry"
+    assert state.attributes[EntityStateAttribute.ICON] == "mdi:from-config-entry"
 
 
 async def test_zone_empty_setup(hass: HomeAssistant) -> None:
@@ -830,10 +823,10 @@ async def test_async_get_enclosing_zones_skips_unavailable_other(
         "zone.bigger",
         "unavailable",
         {
-            ATTR_LATITUDE: latitude,
-            ATTR_LONGITUDE: longitude,
-            ATTR_RADIUS: 1000,
-            "restored": True,
+            EntityStateAttribute.LATITUDE: latitude,
+            EntityStateAttribute.LONGITUDE: longitude,
+            ZoneEntityStateAttribute.RADIUS: 1000,
+            EntityStateAttribute.RESTORED: True,
         },
     )
 

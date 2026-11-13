@@ -2,9 +2,10 @@
 
 import json
 from typing import Any
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, Mock, patch
 
 import httpx2
+from mcp import MCPError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
@@ -20,7 +21,7 @@ from homeassistant.components.mcp.const import (
     CONF_TOKEN_URL,
     DOMAIN,
 )
-from homeassistant.const import CONF_TOKEN, CONF_URL
+from homeassistant.const import CONF_API_TOKEN, CONF_TOKEN, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -72,6 +73,13 @@ OAUTH_CODE = "abcd"
 ADDON_NAME = "Example MCP Server"
 ADDON_DISCOVERY_INFO = HassioServiceInfo(
     config={"addon": ADDON_NAME, CONF_URL: MCP_SERVER_URL},
+    name=ADDON_NAME,
+    slug="example_mcp_server",
+    uuid="1234",
+)
+ADDON_TOKEN = "test-addon-token"
+ADDON_DISCOVERY_INFO_WITH_TOKEN = HassioServiceInfo(
+    config={"addon": ADDON_NAME, CONF_URL: MCP_SERVER_URL, CONF_TOKEN: ADDON_TOKEN},
     name=ADDON_NAME,
     slug="example_mcp_server",
     uuid="1234",
@@ -139,6 +147,7 @@ async def test_form(
             "cannot_connect",
         ),
         (httpx2.HTTPError("Some HTTP error"), "cannot_connect"),
+        (MCPError(-32603, "Internal error"), "cannot_connect"),
         (Exception, "unknown"),
     ],
 )
@@ -734,6 +743,7 @@ async def test_oauth_discovery_failure(
             "cannot_connect",
         ),
         (httpx2.HTTPError("Some HTTP error"), "cannot_connect"),
+        (MCPError(-32603, "Internal error"), "cannot_connect"),
         (Exception, "unknown"),
     ],
 )
@@ -1109,14 +1119,41 @@ async def test_reauth_flow_missing_implementation(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.parametrize(
+    ("discovery_info", "expected_data", "expected_authorization"),
+    [
+        pytest.param(
+            ADDON_DISCOVERY_INFO,
+            {CONF_URL: MCP_SERVER_URL, CONF_SLUG: ADDON_DISCOVERY_INFO.slug},
+            None,
+            id="no_token",
+        ),
+        pytest.param(
+            ADDON_DISCOVERY_INFO_WITH_TOKEN,
+            {
+                CONF_URL: MCP_SERVER_URL,
+                CONF_API_TOKEN: ADDON_TOKEN,
+                CONF_SLUG: ADDON_DISCOVERY_INFO.slug,
+            },
+            f"Bearer {ADDON_TOKEN}",
+            id="token",
+        ),
+    ],
+)
 async def test_hassio_discovery_flow(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_mcp_client: Mock
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_mcp_client: Mock,
+    mock_http_streamable_client: Mock,
+    discovery_info: HassioServiceInfo,
+    expected_data: dict[str, str],
+    expected_authorization: str | None,
 ) -> None:
     """Test the discovery flow for an MCP server provided by an app."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
-        data=ADDON_DISCOVERY_INFO,
+        data=discovery_info,
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "hassio_confirm"
@@ -1132,10 +1169,9 @@ async def test_hassio_discovery_flow(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_API_NAME
-    assert result["data"] == {
-        CONF_URL: MCP_SERVER_URL,
-        CONF_SLUG: ADDON_DISCOVERY_INFO.slug,
-    }
+    assert result["data"] == expected_data
+    http_client = mock_http_streamable_client.call_args.kwargs["http_client"]
+    assert http_client.headers.get("Authorization") == expected_authorization
     # The discovery uuid lets Supervisor remove the entry with the app
     assert result["result"]
     assert result["result"].unique_id == ADDON_DISCOVERY_INFO.uuid
@@ -1171,21 +1207,171 @@ async def test_hassio_discovery_invalid_url(
 
 
 @pytest.mark.parametrize(
-    "entry_url",
+    ("entry_data", "discovery_info", "expected_data"),
     [
-        pytest.param("http://1.1.1.1:9999/mcp", id="app_moved"),
-        pytest.param(MCP_SERVER_URL, id="app_restarted"),
+        pytest.param(
+            {CONF_URL: "http://1.1.1.1:9999/mcp"},
+            ADDON_DISCOVERY_INFO,
+            {CONF_URL: MCP_SERVER_URL},
+            id="app_moved",
+        ),
+        pytest.param(
+            {CONF_URL: MCP_SERVER_URL},
+            ADDON_DISCOVERY_INFO,
+            {CONF_URL: MCP_SERVER_URL},
+            id="app_restarted",
+        ),
+        pytest.param(
+            {CONF_URL: MCP_SERVER_URL},
+            ADDON_DISCOVERY_INFO_WITH_TOKEN,
+            {CONF_URL: MCP_SERVER_URL, CONF_API_TOKEN: ADDON_TOKEN},
+            id="token_added",
+        ),
+        pytest.param(
+            {CONF_URL: MCP_SERVER_URL, CONF_API_TOKEN: "old-token"},
+            ADDON_DISCOVERY_INFO_WITH_TOKEN,
+            {CONF_URL: MCP_SERVER_URL, CONF_API_TOKEN: ADDON_TOKEN},
+            id="token_changed",
+        ),
     ],
 )
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_hassio_discovery_updates_url(
-    hass: HomeAssistant, entry_url: str
+async def test_hassio_discovery_updates_entry(
+    hass: HomeAssistant,
+    entry_data: dict[str, str],
+    discovery_info: HassioServiceInfo,
+    expected_data: dict[str, str],
 ) -> None:
     """Test discovery of an already configured app keeps its entry up to date."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=ADDON_DISCOVERY_INFO.uuid,
-        data={CONF_URL: entry_url},
+        data=entry_data,
+        title=TEST_API_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_HASSIO},
+        data=discovery_info,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert config_entry.data == expected_data
+
+
+@pytest.mark.parametrize(
+    "unique_id",
+    [
+        pytest.param(ADDON_DISCOVERY_INFO.uuid, id="same_uuid"),
+        pytest.param("old-uuid", id="new_uuid"),
+    ],
+)
+@pytest.mark.parametrize(
+    "state",
+    [
+        config_entries.ConfigEntryState.LOADED,
+        config_entries.ConfigEntryState.SETUP_RETRY,
+        config_entries.ConfigEntryState.SETUP_ERROR,
+        config_entries.ConfigEntryState.SETUP_IN_PROGRESS,
+    ],
+)
+async def test_hassio_discovery_new_token_reloads_entry(
+    hass: HomeAssistant, state: config_entries.ConfigEntryState, unique_id: str
+) -> None:
+    """Test a new token from the app reloads the entry so it gets used."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=config_entries.SOURCE_HASSIO,
+        unique_id=unique_id,
+        data={
+            CONF_URL: MCP_SERVER_URL,
+            CONF_API_TOKEN: "old-token",
+            CONF_SLUG: ADDON_DISCOVERY_INFO.slug,
+        },
+        title=TEST_API_NAME,
+        state=state,
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_HASSIO},
+            data=ADDON_DISCOVERY_INFO_WITH_TOKEN,
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert config_entry.unique_id == ADDON_DISCOVERY_INFO.uuid
+    assert config_entry.data[CONF_API_TOKEN] == ADDON_TOKEN
+    mock_reload.assert_called_once_with(config_entry.entry_id)
+
+
+@pytest.mark.parametrize(
+    ("entry_data", "discovery_info", "expected_data"),
+    [
+        pytest.param(
+            {
+                CONF_URL: "http://1.1.1.1:8080/mcp/secret",
+                CONF_API_TOKEN: "old-token",
+                CONF_SLUG: ADDON_DISCOVERY_INFO.slug,
+            },
+            ADDON_DISCOVERY_INFO_WITH_TOKEN,
+            {
+                CONF_URL: MCP_SERVER_URL,
+                CONF_API_TOKEN: ADDON_TOKEN,
+                CONF_SLUG: ADDON_DISCOVERY_INFO.slug,
+            },
+            id="app_moved",
+        ),
+        pytest.param(
+            {CONF_URL: MCP_SERVER_URL, CONF_SLUG: ADDON_DISCOVERY_INFO.slug},
+            ADDON_DISCOVERY_INFO,
+            {CONF_URL: MCP_SERVER_URL, CONF_SLUG: ADDON_DISCOVERY_INFO.slug},
+            id="unchanged",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_hassio_discovery_new_uuid_updates_entry(
+    hass: HomeAssistant,
+    entry_data: dict[str, str],
+    discovery_info: HassioServiceInfo,
+    expected_data: dict[str, str],
+) -> None:
+    """Test an app that sends its discovery again with a new uuid keeps its entry."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=config_entries.SOURCE_HASSIO,
+        unique_id="old-uuid",
+        data=entry_data,
+        title=TEST_API_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_HASSIO},
+        data=discovery_info,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert config_entry.unique_id == ADDON_DISCOVERY_INFO.uuid
+    assert config_entry.data == expected_data
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_hassio_discovery_other_app(hass: HomeAssistant) -> None:
+    """Test discovery of another app leaves the existing app entry alone."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=config_entries.SOURCE_HASSIO,
+        unique_id="5678",
+        data={CONF_URL: "http://1.1.1.1:9999/mcp", CONF_SLUG: "other_mcp_server"},
         title=TEST_API_NAME,
     )
     config_entry.add_to_hass(hass)
@@ -1196,9 +1382,9 @@ async def test_hassio_discovery_updates_url(
         data=ADDON_DISCOVERY_INFO,
     )
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-    assert config_entry.data == {CONF_URL: MCP_SERVER_URL}
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "hassio_confirm"
+    assert config_entry.unique_id == "5678"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -1230,6 +1416,7 @@ async def test_hassio_discovery_already_configured(hass: HomeAssistant) -> None:
             "cannot_connect",
         ),
         (httpx2.HTTPError("Some HTTP error"), "cannot_connect"),
+        (MCPError(-32603, "Internal error"), "cannot_connect"),
         (Exception, "unknown"),
     ],
 )
@@ -1275,16 +1462,31 @@ async def test_hassio_discovery_missing_capabilities(
     assert result["reason"] == "missing_capabilities"
 
 
+@pytest.mark.parametrize(
+    ("discovery_info", "expected_authorization"),
+    [
+        pytest.param(ADDON_DISCOVERY_INFO, None, id="no_token"),
+        pytest.param(
+            ADDON_DISCOVERY_INFO_WITH_TOKEN,
+            f"Bearer {ADDON_TOKEN}",
+            id="token_rejected",
+        ),
+    ],
+)
 @respx.mock
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_hassio_discovery_requires_authentication(
-    hass: HomeAssistant, mock_mcp_client: Mock
+    hass: HomeAssistant,
+    mock_mcp_client: Mock,
+    mock_http_streamable_client: Mock,
+    discovery_info: HassioServiceInfo,
+    expected_authorization: str | None,
 ) -> None:
     """Test the discovered MCP server continues into the OAuth flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
-        data=ADDON_DISCOVERY_INFO,
+        data=discovery_info,
     )
     mock_mcp_client.side_effect = httpx2.HTTPStatusError(
         "Authentication required", request=None, response=httpx2.Response(401)
@@ -1295,6 +1497,8 @@ async def test_hassio_discovery_requires_authentication(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
+    http_client = mock_http_streamable_client.call_args.kwargs["http_client"]
+    assert http_client.headers.get("Authorization") == expected_authorization
     # The user is taken to the application credentials UI to enter credentials.
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "missing_credentials"
