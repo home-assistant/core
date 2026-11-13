@@ -1,535 +1,293 @@
 """Test the lg_soundbar config flow."""
 
-from collections.abc import Callable, Generator
-from contextlib import contextmanager
-import socket
+from ipaddress import ip_address
 from typing import Any
-from unittest.mock import DEFAULT, MagicMock, patch
+from unittest.mock import AsyncMock
 
+from aiotemescal import TemescalConnectionError, TemescalTimeoutError
+import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant import config_entries
 from homeassistant.components.lg_soundbar.const import DEFAULT_PORT, DOMAIN
+from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
+
+from . import set_answers
+
+USER_INPUT = {CONF_HOST: "1.1.1.1"}
+
+ZEROCONF_UUID = "6ae736a7-4781-42fe-b096-47279619fb9d"
 
 
-def setup_mock_temescal(
-    hass: HomeAssistant,
-    mock_temescal: MagicMock,
-    mac_info_dev: dict[str, Any] | None = None,
-    product_info: dict[str, Any] | None = None,
-    info: dict[str, Any] | None = None,
+def zeroconf_info(host: str = "1.1.1.1") -> ZeroconfServiceInfo:
+    """Return the announcement of a soundbar."""
+    return ZeroconfServiceInfo(
+        ip_address=ip_address(host),
+        ip_addresses=[ip_address(host)],
+        hostname="audiocast.local.",
+        name=f"LG_SMART_AUDIO-{ZEROCONF_UUID}._lg-smart-device._tcp.local.",
+        port=DEFAULT_PORT,
+        type="_lg-smart-device._tcp.local.",
+        properties={"PROTO_VER": "1.0", "UUID": ZEROCONF_UUID, "ipv4": host},
+    )
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize(
+    "answers",
+    [
+        pytest.param(
+            {
+                "SPK_LIST_VIEW_INFO": {"s_user_name": "name"},
+                "MAC_INFO_DEV": {"s_uuid": "uuid"},
+            },
+            id="uuid_in_mac_info",
+        ),
+        pytest.param(
+            {
+                "SPK_LIST_VIEW_INFO": {"s_user_name": "name"},
+                "PRODUCT_INFO": {"s_uuid": "uuid"},
+            },
+            id="no_mac_info",
+        ),
+        pytest.param(
+            {
+                "SPK_LIST_VIEW_INFO": {"s_user_name": "name"},
+                "MAC_INFO_DEV": {},
+                "PRODUCT_INFO": {"s_uuid": "uuid"},
+            },
+            id="uuid_missing_from_mac_info",
+        ),
+    ],
+)
+async def test_user_flow(
+    hass: HomeAssistant, mock_client: AsyncMock, answers: dict[str, Any]
 ) -> None:
-    """Set up a mock of the temescal object to craft our expected responses."""
-    tmock = mock_temescal.temescal
-    instance = tmock.return_value
-
-    def create_temescal_response(msg: str, data: dict | None = None) -> dict[str, Any]:
-        response: dict[str, Any] = {"msg": msg}
-        if data is not None:
-            response["data"] = data
-        return response
-
-    def temescal_side_effect(
-        addr: str, port: int, callback: Callable[[dict[str, Any]], None]
-    ):
-        mac_info_response = create_temescal_response(
-            msg="MAC_INFO_DEV", data=mac_info_dev
-        )
-        product_info_response = create_temescal_response(
-            msg="PRODUCT_INFO", data=product_info
-        )
-        info_response = create_temescal_response(msg="SPK_LIST_VIEW_INFO", data=info)
-
-        instance.get_mac_info.side_effect = lambda: hass.add_job(
-            callback, mac_info_response
-        )
-        instance.get_product_info.side_effect = lambda: hass.add_job(
-            callback, product_info_response
-        )
-        instance.get_info.side_effect = lambda: hass.add_job(callback, info_response)
-
-        return DEFAULT
-
-    tmock.side_effect = temescal_side_effect
-
-
-@contextmanager
-def _patch_success(hass: HomeAssistant) -> Generator[None]:
-    """Patch temescal to answer with a valid device and skip entry setup."""
-    with (
-        patch(
-            "homeassistant.components.lg_soundbar.config_flow.temescal"
-        ) as mock_temescal,
-        patch(
-            "homeassistant.components.lg_soundbar.async_setup_entry", return_value=None
-        ),
-    ):
-        setup_mock_temescal(
-            hass=hass,
-            mock_temescal=mock_temescal,
-            mac_info_dev={"s_uuid": "uuid"},
-            info={"s_user_name": "name"},
-        )
-        yield
-
-
-async def test_form(hass: HomeAssistant) -> None:
-    """Test we get the form."""
+    """Test creating an entry, wherever the device reports its uuid."""
+    set_answers(mock_client, answers)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    with (
-        patch(
-            "homeassistant.components.lg_soundbar.config_flow.temescal"
-        ) as mock_temescal,
-        patch(
-            "homeassistant.components.lg_soundbar.async_setup_entry", return_value=None
-        ) as mock_setup_entry,
-    ):
-        setup_mock_temescal(
-            hass=hass,
-            mock_temescal=mock_temescal,
-            mac_info_dev={"s_uuid": "uuid"},
-            info={"s_user_name": "name"},
-        )
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "name"
-    assert result2["result"].unique_id == "uuid"
-    assert result2["data"] == {
-        CONF_HOST: "1.1.1.1",
-        CONF_PORT: DEFAULT_PORT,
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_form_mac_info_response_empty(hass: HomeAssistant) -> None:
-    """Test form when initial get_mac_info response is empty."""
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
     )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {}
 
-    with (
-        patch(
-            "homeassistant.components.lg_soundbar.config_flow.temescal"
-        ) as mock_temescal,
-        patch(
-            "homeassistant.components.lg_soundbar.async_setup_entry", return_value=None
-        ) as mock_setup_entry,
-    ):
-        setup_mock_temescal(
-            hass=hass,
-            mock_temescal=mock_temescal,
-            mac_info_dev={"s_uuid": "uuid"},
-            info={"s_user_name": "name"},
-        )
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "name"
-    assert result2["result"].unique_id == "uuid"
-    assert result2["data"] == {
-        CONF_HOST: "1.1.1.1",
-        CONF_PORT: DEFAULT_PORT,
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "name"
+    assert result["result"].unique_id == "uuid"
+    assert result["data"] == {CONF_HOST: "1.1.1.1", CONF_PORT: DEFAULT_PORT}
 
 
-async def test_form_uuid_present_in_both_functions_uuid_q_empty(
-    hass: HomeAssistant,
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow_without_uuid(
+    hass: HomeAssistant, mock_client: AsyncMock
 ) -> None:
-    """Get the form, uuid present in both get_mac_info and get_product_info calls.
-
-    Value from get_mac_info is not added to uuid_q before get_product_info is run.
-    """
+    """Test creating an entry for a device that never reports its uuid."""
+    set_answers(mock_client, {"SPK_LIST_VIEW_INFO": {"s_user_name": "name"}})
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
 
-    with (
-        patch(
-            "homeassistant.components.lg_soundbar.config_flow.temescal"
-        ) as mock_temescal,
-        patch(
-            "homeassistant.components.lg_soundbar.async_setup_entry", return_value=None
-        ) as mock_setup_entry,
-    ):
-        setup_mock_temescal(
-            hass=hass,
-            mock_temescal=mock_temescal,
-            mac_info_dev={"s_uuid": "uuid"},
-            product_info={"s_uuid": "uuid"},
-            info={"s_user_name": "name"},
-        )
-
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "name"
-    assert result2["result"].unique_id == "uuid"
-    assert result2["data"] == {
-        CONF_HOST: "1.1.1.1",
-        CONF_PORT: DEFAULT_PORT,
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "name"
+    assert result["result"].unique_id is None
 
 
-async def test_form_uuid_present_in_both_functions_uuid_q_not_empty(
+@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize(
+    ("side_effect", "answers", "error"),
+    [
+        pytest.param(
+            TemescalConnectionError, {}, "cannot_connect", id="cannot_connect"
+        ),
+        pytest.param(TemescalTimeoutError, {}, "cannot_connect", id="connect_timeout"),
+        pytest.param(
+            None, {"MAC_INFO_DEV": {"s_uuid": "uuid"}}, "no_data", id="no_name"
+        ),
+    ],
+)
+async def test_user_flow_errors(
     hass: HomeAssistant,
+    mock_client: AsyncMock,
+    side_effect: type[Exception] | None,
+    answers: dict[str, Any],
+    error: str,
 ) -> None:
-    """Get the form, uuid present in both get_mac_info and get_product_info calls.
-
-    Value from get_mac_info is added to uuid_q before get_product_info is run.
-    """
+    """Test errors are reported and the flow can recover from them."""
+    mock_client.__aenter__.side_effect = side_effect
+    original_request = mock_client.request.side_effect
+    set_answers(mock_client, answers)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
 
-    with (
-        patch(
-            "homeassistant.components.lg_soundbar.config_flow.QUEUE_TIMEOUT",
-            new=0.1,
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+
+    mock_client.__aenter__.side_effect = None
+    mock_client.request.side_effect = original_request
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.parametrize(
+    ("unique_id", "answers"),
+    [
+        pytest.param(
+            "uuid",
+            {
+                "SPK_LIST_VIEW_INFO": {"s_user_name": "name"},
+                "MAC_INFO_DEV": {"s_uuid": "uuid"},
+            },
+            id="same_uuid",
         ),
-        patch(
-            "homeassistant.components.lg_soundbar.config_flow.temescal"
-        ) as mock_temescal,
-        patch(
-            "homeassistant.components.lg_soundbar.async_setup_entry", return_value=None
-        ) as mock_setup_entry,
-    ):
-        setup_mock_temescal(
-            hass=hass,
-            mock_temescal=mock_temescal,
-            mac_info_dev={"s_uuid": "uuid"},
-            product_info={"s_uuid": "uuid"},
-            info={"s_user_name": "name"},
-        )
-
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "name"
-    assert result2["result"].unique_id == "uuid"
-    assert result2["data"] == {
-        CONF_HOST: "1.1.1.1",
-        CONF_PORT: DEFAULT_PORT,
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_form_uuid_missing_from_mac_info(hass: HomeAssistant) -> None:
-    """Test form when uuid is missing from get_mac_info response."""
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {}
-
-    with (
-        patch(
-            "homeassistant.components.lg_soundbar.config_flow.temescal"
-        ) as mock_temescal,
-        patch(
-            "homeassistant.components.lg_soundbar.async_setup_entry", return_value=None
-        ) as mock_setup_entry,
-    ):
-        setup_mock_temescal(
-            hass=hass,
-            mock_temescal=mock_temescal,
-            product_info={"s_uuid": "uuid"},
-            info={"s_user_name": "name"},
-        )
-
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "name"
-    assert result2["result"].unique_id == "uuid"
-    assert result2["data"] == {
-        CONF_HOST: "1.1.1.1",
-        CONF_PORT: DEFAULT_PORT,
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_form_uuid_not_provided_by_api(hass: HomeAssistant) -> None:
-    """Test we get the form, but uuid is missing from the all API messages."""
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {}
-
-    with (
-        patch(
-            "homeassistant.components.lg_soundbar.config_flow.QUEUE_TIMEOUT",
-            new=0.1,
+        pytest.param(
+            None,
+            {"SPK_LIST_VIEW_INFO": {"s_user_name": "name"}},
+            id="same_host_without_uuid",
         ),
-        patch(
-            "homeassistant.components.lg_soundbar.config_flow.temescal"
-        ) as mock_temescal,
-        patch(
-            "homeassistant.components.lg_soundbar.async_setup_entry", return_value=None
-        ) as mock_setup_entry,
-    ):
-        setup_mock_temescal(
-            hass=hass,
-            mock_temescal=mock_temescal,
-            product_info={"i_model_no": "8", "i_model_type": 0},
-            info={"s_user_name": "name"},
-        )
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "name"
-    assert result2["result"].unique_id is None
-    assert result2["data"] == {
-        CONF_HOST: "1.1.1.1",
-        CONF_PORT: DEFAULT_PORT,
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_form_both_queues_empty(hass: HomeAssistant) -> None:
-    """Test we get the form, but none of the data we want is provided by the API."""
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {}
-
-    with (
-        patch(
-            "homeassistant.components.lg_soundbar.config_flow.QUEUE_TIMEOUT",
-            new=0.1,
-        ),
-        patch(
-            "homeassistant.components.lg_soundbar.config_flow.temescal"
-        ) as mock_temescal,
-        patch(
-            "homeassistant.components.lg_soundbar.async_setup_entry", return_value=None
-        ) as mock_setup_entry,
-    ):
-        setup_mock_temescal(hass=hass, mock_temescal=mock_temescal)
-
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "no_data"}
-    assert len(mock_setup_entry.mock_calls) == 0
-
-    with _patch_success(hass):
-        result3 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result3["type"] is FlowResultType.CREATE_ENTRY
-
-
-async def test_no_uuid_host_already_configured(hass: HomeAssistant) -> None:
-    """Test handling device with no UUID and already configured host."""
-
-    mock_entry = MockConfigEntry(
+    ],
+)
+async def test_already_configured(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    unique_id: str | None,
+    answers: dict[str, Any],
+) -> None:
+    """Test a device is not added twice."""
+    MockConfigEntry(
         domain=DOMAIN,
-        data={
-            CONF_HOST: "1.1.1.1",
-            CONF_PORT: DEFAULT_PORT,
-        },
-    )
-    mock_entry.add_to_hass(hass)
+        data={CONF_HOST: "1.1.1.1", CONF_PORT: DEFAULT_PORT},
+        unique_id=unique_id,
+    ).add_to_hass(hass)
+    set_answers(mock_client, answers)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
     )
 
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("mock_setup_entry", "mock_client")
+async def test_zeroconf_flow(hass: HomeAssistant) -> None:
+    """Test setting up an announced soundbar, identified by its reported uuid."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=zeroconf_info()
+    )
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {}
+    assert result["step_id"] == "zeroconf_confirm"
 
-    with (
-        patch(
-            "homeassistant.components.lg_soundbar.config_flow.QUEUE_TIMEOUT",
-            new=0.1,
-        ),
-        patch(
-            "homeassistant.components.lg_soundbar.config_flow.temescal"
-        ) as mock_temescal,
-    ):
-        setup_mock_temescal(
-            hass=hass, mock_temescal=mock_temescal, info={"s_user_name": "name"}
-        )
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-            },
-        )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "already_configured"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "name"
+    assert result["result"].unique_id == "uuid"
+    assert result["data"] == {CONF_HOST: "1.1.1.1", CONF_PORT: DEFAULT_PORT}
 
 
-async def test_form_socket_timeout(hass: HomeAssistant) -> None:
-    """Test we handle socket.timeout error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.lg_soundbar.config_flow.temescal"
-    ) as mock_temescal:
-        mock_temescal.temescal.side_effect = socket.timeout
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-            },
-        )
-
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
-
-    with _patch_success(hass):
-        result3 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result3["type"] is FlowResultType.CREATE_ENTRY
-
-
-async def test_form_os_error(hass: HomeAssistant) -> None:
-    """Test we handle OSError."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.lg_soundbar.config_flow.temescal"
-    ) as mock_temescal:
-        mock_temescal.temescal.side_effect = OSError
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-            },
-        )
-
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
-
-    with _patch_success(hass):
-        result3 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result3["type"] is FlowResultType.CREATE_ENTRY
-
-
-async def test_form_already_configured(hass: HomeAssistant) -> None:
-    """Test we handle already configured error."""
-    mock_entry = MockConfigEntry(
+@pytest.mark.usefixtures("mock_client")
+async def test_zeroconf_updates_host(hass: HomeAssistant) -> None:
+    """Test a configured soundbar announced at a new address is followed."""
+    entry = MockConfigEntry(
         domain=DOMAIN,
-        data={
-            CONF_HOST: "1.1.1.1",
-            CONF_PORT: 0000,
-        },
+        data={CONF_HOST: "1.1.1.1", CONF_PORT: DEFAULT_PORT},
         unique_id="uuid",
     )
-    mock_entry.add_to_hass(hass)
+    entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=zeroconf_info("2.2.2.2")
     )
 
-    with patch(
-        "homeassistant.components.lg_soundbar.config_flow.temescal"
-    ) as mock_temescal:
-        setup_mock_temescal(
-            hass=hass,
-            mock_temescal=mock_temescal,
-            mac_info_dev={"s_uuid": "uuid"},
-            info={"s_user_name": "name"},
-        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_HOST] == "2.2.2.2"
 
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-            },
-        )
 
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "already_configured"
+@pytest.mark.parametrize(
+    "unique_id",
+    [
+        pytest.param("uuid", id="with_uuid"),
+        pytest.param(None, id="without_uuid"),
+    ],
+)
+async def test_zeroconf_configured_host(
+    hass: HomeAssistant, mock_client: AsyncMock, unique_id: str | None
+) -> None:
+    """Test an announcement at a configured address leaves the entry alone."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "1.1.1.1", CONF_PORT: DEFAULT_PORT},
+        unique_id=unique_id,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=zeroconf_info()
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.unique_id == unique_id
+    # Rediscovering a configured soundbar does not connect to it
+    mock_client.__aenter__.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "answers", "reason"),
+    [
+        pytest.param(
+            TemescalConnectionError, {}, "cannot_connect", id="cannot_connect"
+        ),
+        pytest.param(
+            None, {"MAC_INFO_DEV": {"s_uuid": "uuid"}}, "no_data", id="no_name"
+        ),
+        pytest.param(
+            None,
+            {"SPK_LIST_VIEW_INFO": {"s_user_name": "name"}},
+            "not_supported",
+            id="no_uuid",
+        ),
+    ],
+)
+async def test_zeroconf_abort(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    side_effect: type[Exception] | None,
+    answers: dict[str, Any],
+    reason: str,
+) -> None:
+    """Test announcements that cannot be set up."""
+    mock_client.__aenter__.side_effect = side_effect
+    set_answers(mock_client, answers)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=zeroconf_info()
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
