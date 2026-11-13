@@ -461,7 +461,7 @@ async def test_consumption_series_can_be_shorter(
     mock_config_entry: MockConfigEntry,
     mock_vrm_client: AsyncMock,
 ) -> None:
-    """Return only the hours present in each series."""
+    """Return None for an hour missing from one series."""
     await hass.config.async_set_time_zone("UTC")
     consumption = mock_vrm_client.installations.stats.return_value["consumption"]
     consumption.records = consumption.records[:-1]
@@ -478,19 +478,19 @@ async def test_consumption_series_can_be_shorter(
     last_timestamp, last_watt_hours = tuple(_SOLAR_WH.items())[-1]
     assert response["forecast"] == [
         *shared,
-        {"datetime": last_timestamp, "solar": last_watt_hours},
+        {"datetime": last_timestamp, "solar": last_watt_hours, "consumption": None},
     ]
     state = hass.states.get(_SOLAR_TODAY)
     assert state is not None
     assert state.state == "4.2507"
 
 
-async def test_absent_consumption_returns_solar_only(
+async def test_absent_consumption_returns_none(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_vrm_client: AsyncMock,
 ) -> None:
-    """An absent consumption aggregation leaves the solar hours in the forecast."""
+    """An absent consumption aggregation returns None for every consumption hour."""
     await hass.config.async_set_time_zone("UTC")
     mock_vrm_client.installations.stats.return_value["consumption"] = None
     mock_config_entry.add_to_hass(hass)
@@ -502,7 +502,7 @@ async def test_absent_consumption_returns_solar_only(
     response = await _async_get_forecast(hass, mock_config_entry.entry_id)
 
     assert response["forecast"] == [
-        {"datetime": timestamp, "solar": watt_hours}
+        {"datetime": timestamp, "solar": watt_hours, "consumption": None}
         for timestamp, watt_hours in _SOLAR_WH.items()
     ]
     solar_state = hass.states.get(_SOLAR_TODAY)

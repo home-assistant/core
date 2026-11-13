@@ -60,7 +60,7 @@ def _forecast_hours(
     Local ISO offsets stay distinct when a civil hour repeats.
     """
     time_zone = dt_util.DEFAULT_TIME_ZONE
-    hours: dict[datetime, dict[str, float]] = {}
+    hours: dict[datetime, dict[str, float | None]] = {}
     for key, aggregation in (("solar", solar), ("consumption", consumption)):
         if aggregation is None:
             continue
@@ -70,7 +70,9 @@ def _forecast_hours(
                 continue
             if end is not None and instant >= end:
                 continue
-            hours.setdefault(instant, {})[key] = watt_hours
+            hours.setdefault(instant, {"solar": None, "consumption": None})[key] = (
+                watt_hours
+            )
 
     forecast: list[dict[str, JsonValueType]] = []
     for instant in sorted(hours):
