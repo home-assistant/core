@@ -98,7 +98,7 @@ rules:
     status: exempt
     comment: |
       The media player entity uses the default icons for its device class.
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: |
