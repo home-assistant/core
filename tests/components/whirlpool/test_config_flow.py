@@ -230,6 +230,7 @@ async def test_already_configured(
         "washers",
         "dryers",
         "ovens",
+        "microwaves",
         "refrigerators",
         "unsupported_appliances",
     ],
@@ -257,6 +258,7 @@ async def test_no_appliances_flow(
     mock_appliances_manager_api.return_value.washers = []
     mock_appliances_manager_api.return_value.dryers = []
     mock_appliances_manager_api.return_value.ovens = []
+    mock_appliances_manager_api.return_value.microwaves = []
     mock_appliances_manager_api.return_value.refrigerators = []
     mock_appliances_manager_api.return_value.unsupported_appliances = []
     result = await hass.config_entries.flow.async_configure(
