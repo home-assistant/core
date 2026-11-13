@@ -225,14 +225,19 @@ class AmazonClimateEntity(AmazonEntity, ClimateEntity):
         """Return the current running HVAC action."""
         cooler = self._sensor_value("hvac", "coolerStage")
         heater = self._sensor_value("hvac", "primaryHeaterStage")
-        if cooler is None and heater is None:
+        fan = self._sensor_value("hvac", "fanStage")
+        if cooler is None and heater is None and fan is None:
             return None
+        fan_running = fan not in (None, "OFF")
+        # the fan can run on its own while the thermostat is off
         if self.hvac_mode == HVACMode.OFF:
-            return HVACAction.OFF
+            return HVACAction.FAN if fan_running else HVACAction.OFF
         if cooler not in (None, "OFF"):
             return HVACAction.COOLING
         if heater not in (None, "OFF"):
             return HVACAction.HEATING
+        if fan_running:
+            return HVACAction.FAN
         return HVACAction.IDLE
 
     @property

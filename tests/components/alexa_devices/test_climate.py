@@ -525,33 +525,59 @@ async def test_partial_state(
     [
         pytest.param(
             "AUTO",
-            {"coolerStage": "OFF", "primaryHeaterStage": "OFF"},
+            {"coolerStage": "OFF", "primaryHeaterStage": "OFF", "fanStage": "OFF"},
             HVACAction.IDLE,
             id="idle",
         ),
         pytest.param(
             "COOL",
-            {"coolerStage": "ON", "primaryHeaterStage": "OFF"},
+            {
+                "coolerStage": "STAGE_1",
+                "primaryHeaterStage": "OFF",
+                "fanStage": "STAGE_1",
+            },
             HVACAction.COOLING,
             id="cooling",
         ),
         pytest.param(
             "HEAT",
-            {"coolerStage": "OFF", "primaryHeaterStage": "ON"},
+            {
+                "coolerStage": "OFF",
+                "primaryHeaterStage": "STAGE_1",
+                "fanStage": "STAGE_1",
+            },
             HVACAction.HEATING,
             id="heating",
         ),
         pytest.param(
+            "AUTO",
+            {"coolerStage": "OFF", "primaryHeaterStage": "OFF", "fanStage": "STAGE_1"},
+            HVACAction.FAN,
+            id="fan",
+        ),
+        pytest.param(
             "OFF",
-            {"coolerStage": "OFF", "primaryHeaterStage": "OFF"},
+            {"coolerStage": "OFF", "primaryHeaterStage": "OFF", "fanStage": "OFF"},
             HVACAction.OFF,
             id="off",
         ),
         pytest.param(
+            "OFF",
+            {"coolerStage": "OFF", "primaryHeaterStage": "OFF", "fanStage": "STAGE_1"},
+            HVACAction.FAN,
+            id="off_fan_running",
+        ),
+        pytest.param(
             "HEAT",
-            {"primaryHeaterStage": "ON"},
+            {"primaryHeaterStage": "STAGE_1"},
             HVACAction.HEATING,
             id="heater_only",
+        ),
+        pytest.param(
+            "OFF",
+            {"fanStage": "STAGE_1"},
+            HVACAction.FAN,
+            id="fan_only",
         ),
     ],
 )
@@ -563,10 +589,10 @@ async def test_hvac_action(
     stages: dict[str, str],
     expected_action: HVACAction,
 ) -> None:
-    """Test the HVAC action follows the cooler and heater stages."""
+    """Test the HVAC action follows the cooler, heater and fan stages."""
     sensors = mock_amazon_devices_client.sensors[TEST_DEVICE_THERMOSTAT_SN]
     sensors["thermostatMode"].value = mode
-    del sensors["coolerStage"], sensors["primaryHeaterStage"]
+    del sensors["coolerStage"], sensors["primaryHeaterStage"], sensors["fanStage"]
     sensors.update(
         {
             key: replace(TEST_DEVICE_THERMOSTAT_SENSORS[key], value=value)
