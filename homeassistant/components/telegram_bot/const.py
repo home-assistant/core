@@ -164,11 +164,8 @@ class TelegramBotChatAction(StrEnum):
     UPLOAD_VIDEO_NOTE = "upload_video_note"
 
 
-ATTR_CHAT_ID = "chat_id"
 ATTR_DISABLE_NOTIF = "disable_notification"
 ATTR_DISABLE_WEB_PREV = "disable_web_page_preview"
-ATTR_FILE_PATH = "file_path"
-ATTR_MESSAGE_ID = "message_id"
 ATTR_INLINE_MESSAGE_ID = "inline_message_id"
 ATTR_PARSER = "parse_mode"
 ATTR_REPLY_TO_MSGID = "reply_to_message_id"
