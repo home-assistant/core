@@ -1,7 +1,6 @@
 """Test the habitica module."""
 
 import datetime as dt
-import logging
 from unittest.mock import AsyncMock
 
 from aiohttp import ClientError
@@ -127,12 +126,11 @@ async def test_coordinator_rate_limited(
 
     habitica.get_user.side_effect = ERROR_TOO_MANY_REQUESTS
 
-    with caplog.at_level(logging.DEBUG):
-        freezer.tick(dt.timedelta(seconds=60))
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+    freezer.tick(dt.timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-        assert "Rate limit exceeded, will try again later" in caplog.text
+    assert "Rate limit exceeded, will try again later" in caplog.text
 
 
 async def test_remove_party_and_reload(
