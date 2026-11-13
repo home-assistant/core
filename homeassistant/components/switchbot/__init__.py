@@ -219,6 +219,11 @@ PLATFORMS_BY_TYPE = {
         Platform.LOCK,
         Platform.SENSOR,
     ],
+    SupportedModels.LOCK_NANO.value: [
+        Platform.BINARY_SENSOR,
+        Platform.LOCK,
+        Platform.SENSOR,
+    ],
     SupportedModels.LOCK_ULTRA_MAX.value: [
         Platform.BINARY_SENSOR,
         Platform.LOCK,
@@ -295,6 +300,7 @@ CLASS_BY_DEVICE = {
     SupportedModels.LOCK_VISION_PRO.value: switchbot.SwitchbotLock,
     SupportedModels.LOCK_VISION.value: switchbot.SwitchbotLock,
     SupportedModels.LOCK_PRO_WIFI.value: switchbot.SwitchbotLock,
+    SupportedModels.LOCK_NANO.value: switchbot.SwitchbotLock,
     SupportedModels.LOCK_ULTRA_MAX.value: switchbot.SwitchbotLock,
     SupportedModels.CANDLE_WARMER_LAMP.value: switchbot.SwitchbotCandleWarmerLamp,
     SupportedModels.RGBIC_NEON_ROPE_LIGHT.value: switchbot.SwitchbotRgbicNeonLight,
