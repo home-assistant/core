@@ -145,6 +145,7 @@ async def test_form_mcp_client_initialization_timeout(
     mock_mcp_client: Mock,
 ) -> None:
     """Test the config flow times out when MCP initialization stalls."""
+
     async def stalled_initialize() -> None:
         await asyncio.Event().wait()
 
@@ -160,6 +161,20 @@ async def test_form_mcp_client_initialization_timeout(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "timeout_connect"}
+
+    # Reset the error and make sure the config flow can resume successfully.
+    mock_mcp_client.return_value.initialize.side_effect = None
+    response = Mock()
+    response.server_info.name = TEST_API_NAME
+    mock_mcp_client.return_value.initialize.return_value = response
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_URL: MCP_SERVER_URL}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == TEST_API_NAME
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 @pytest.mark.parametrize(
