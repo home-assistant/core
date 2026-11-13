@@ -28,6 +28,7 @@ from homeassistant.util.json import JsonValueType
 from .bot import TelegramBotConfigEntry, TelegramNotificationService
 from .const import (
     ATTR_CHAT_ID,
+    CONF_CHAT_ID,
     DOMAIN,
     TelegramBotChatAction,
     TelegramBotParseMode,
@@ -575,7 +576,7 @@ def _build_targets(
         notify_config_subentry = notify_config_entry.subentries[
             entity_entry.config_subentry_id
         ]
-        notify_chat_id: int = notify_config_subentry.data[ATTR_CHAT_ID]
+        notify_chat_id: int = notify_config_subentry.data[CONF_CHAT_ID]
 
         targets.append((notify_config_entry, notify_chat_id, notify_entity_id))
 
@@ -628,7 +629,7 @@ def _build_targets(
                     },
                 )
 
-            default_chat_id: int = subentries[0].data[ATTR_CHAT_ID]
+            default_chat_id: int = subentries[0].data[CONF_CHAT_ID]
             _LOGGER.debug(
                 "Defaulting to chat ID %s for bot %s",
                 default_chat_id,
