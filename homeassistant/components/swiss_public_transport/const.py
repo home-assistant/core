@@ -8,6 +8,7 @@ CONF_DESTINATION: Final = "to"
 CONF_START: Final = "from"
 CONF_VIA: Final = "via"
 CONF_TRANSPORTATIONS: Final = "transportations"
+CONF_STATIONS: Final = "stations"
 CONF_TIME_STATION: Final = "time_station"
 CONF_TIME_MODE: Final = "time_mode"
 CONF_TIME_FIXED: Final = "time_fixed"
@@ -19,6 +20,7 @@ DEFAULT_TIME_STATION = "departure"
 DEFAULT_TIME_MODE = "now"
 
 MAX_VIA = 5
+MAX_STATIONS = 3
 CONNECTIONS_COUNT = 3
 CONNECTIONS_MAX = 15
 IS_ARRIVAL_OPTIONS = ["departure", "arrival"]

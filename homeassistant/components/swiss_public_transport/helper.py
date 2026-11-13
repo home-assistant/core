@@ -37,6 +37,11 @@ def dict_duration_to_str_duration(
     return f"{d['hours']:02d}:{d['minutes']:02d}:{d['seconds']:02d}"
 
 
+def unique_id_from_stations(stations: list[str]) -> str:
+    """Build a unique id for a stationboard config entry."""
+    return f"stationboard {', '.join(stations)}"
+
+
 def unique_id_from_config(config: Mapping[str, Any]) -> str:
     """Build a unique id from a config entry."""
     return (

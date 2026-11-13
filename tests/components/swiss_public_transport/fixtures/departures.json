@@ -1,0 +1,56 @@
+[
+  {
+    "departure": "2024-01-06T18:03:00+0100",
+    "delay": 0,
+    "platform": "4",
+    "name": "020445",
+    "category": "S",
+    "number": "24",
+    "to": "Zug"
+  },
+  {
+    "departure": "2024-01-06T18:04:00+0100",
+    "delay": 2,
+    "platform": "41/42",
+    "name": "020446",
+    "category": "S",
+    "number": "15",
+    "to": "Niederweningen"
+  },
+  {
+    "departure": "2024-01-06T18:05:00+0100",
+    "delay": null,
+    "platform": null,
+    "name": "020447",
+    "category": "B",
+    "number": "31",
+    "to": "Schlieren, Zentrum"
+  },
+  {
+    "departure": "2024-01-06T18:06:00+0100",
+    "delay": 0,
+    "platform": "43/44",
+    "name": "020448",
+    "category": "S",
+    "number": "5",
+    "to": "Pfäffikon SZ"
+  },
+  {
+    "departure": "2024-01-06T18:07:00+0100",
+    "delay": 1,
+    "platform": "7",
+    "name": "020449",
+    "category": "IC",
+    "number": "1",
+    "to": "Genève-Aéroport"
+  },
+  {
+    "departure": "2024-01-06T18:08:00+0100",
+    "delay": 0,
+    "platform": "9",
+    "name": "020450",
+    "category": "IR",
+    "number": null,
+    "to": "Luzern"
+  }
+]

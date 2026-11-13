@@ -9,11 +9,13 @@ from pytest_homeassistant.common import MockConfigEntry, load_json_array_fixture
 from homeassistant.components.swiss_public_transport.const import (
     CONF_DESTINATION,
     CONF_START,
+    CONF_STATIONS,
     DOMAIN,
 )
 
 START = "Zürich"
 DESTINATION = "Bern"
+STATIONS = ["Zürich HB"]
 
 
 @pytest.fixture
@@ -35,6 +37,38 @@ def mock_opendata_client() -> Generator[AsyncMock]:
         client.to_name = DESTINATION
         client.connections = load_json_array_fixture("connections.json", DOMAIN)[0:3]
         yield client
+
+
+@pytest.fixture
+def mock_stationboard_client() -> Generator[AsyncMock]:
+    """Mock a Opendata stationboard client."""
+    with (
+        patch(
+            "homeassistant.components.swiss_public_transport.OpendataTransportStationboard",
+            autospec=True,
+        ) as mock_client,
+        patch(
+            "homeassistant.components.swiss_public_transport.config_flow.OpendataTransportStationboard",
+            new=mock_client,
+        ),
+    ):
+        client = mock_client.return_value
+        client.async_get_data.return_value = None
+        client.journeys = load_json_array_fixture("departures.json", DOMAIN)
+        yield client
+
+
+@pytest.fixture
+def mock_stationboard_config_entry() -> MockConfigEntry:
+    """Mock a stationboard configuration entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_STATIONS: STATIONS},
+        title=", ".join(STATIONS),
+        unique_id=f"stationboard {', '.join(STATIONS)}",
+        entry_id="01JBVVVJ87F6G5V0QJX6HBC94U",
+        version=3,
+    )
 
 
 @pytest.fixture(name="swiss_public_transport_config_entry")

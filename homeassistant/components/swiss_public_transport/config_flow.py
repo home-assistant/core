@@ -3,7 +3,7 @@
 import logging
 from typing import Any, override
 
-from opendata_transport import OpendataTransport
+from opendata_transport import OpendataTransport, OpendataTransportStationboard
 from opendata_transport.exceptions import (
     OpendataTransportConnectionError,
     OpendataTransportError,
@@ -27,6 +27,7 @@ from homeassistant.helpers.selector import (
 from .const import (
     CONF_DESTINATION,
     CONF_START,
+    CONF_STATIONS,
     CONF_TIME_FIXED,
     CONF_TIME_MODE,
     CONF_TIME_OFFSET,
@@ -37,12 +38,13 @@ from .const import (
     DEFAULT_TIME_STATION,
     DOMAIN,
     IS_ARRIVAL_OPTIONS,
+    MAX_STATIONS,
     MAX_VIA,
     PLACEHOLDERS,
     TIME_MODE_OPTIONS,
     TRANSPORTATION_OPTIONS,
 )
-from .helper import offset_opendata, unique_id_from_config
+from .helper import offset_opendata, unique_id_from_config, unique_id_from_stations
 
 USER_DATA_SCHEMA = probatio.Schema(
     {
@@ -80,6 +82,16 @@ USER_DATA_SCHEMA = probatio.Schema(
         ),
     }
 )
+STATIONBOARD_DATA_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_STATIONS): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.TEXT,
+                multiple=True,
+            ),
+        ),
+    }
+)
 ADVANCED_TIME_DATA_SCHEMA = {probatio.Optional(CONF_TIME_FIXED): TimeSelector()}
 ADVANCED_TIME_OFFSET_DATA_SCHEMA = {
     probatio.Optional(CONF_TIME_OFFSET): DurationSelector()
@@ -101,7 +113,15 @@ class SwissPublicTransportConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Async user step to set up the connection."""
+        """Async user step to select what to set up."""
+        return self.async_show_menu(
+            step_id="user", menu_options=["connection", "stationboard"]
+        )
+
+    async def async_step_connection(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Async step to set up the connection."""
         errors: dict[str, str] = {}
         if user_input is not None:
             if CONF_VIA in user_input and len(user_input[CONF_VIA]) > MAX_VIA:
@@ -126,9 +146,38 @@ class SwissPublicTransportConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
 
         return self.async_show_form(
-            step_id="user",
+            step_id="connection",
             data_schema=self.add_suggested_values_to_schema(
                 data_schema=USER_DATA_SCHEMA,
+                suggested_values=user_input,
+            ),
+            errors=errors,
+            description_placeholders=PLACEHOLDERS,
+        )
+
+    async def async_step_stationboard(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Async step to set up the stationboard."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            stations: list[str] = user_input[CONF_STATIONS]
+            if len(stations) > MAX_STATIONS:
+                errors["base"] = "too_many_stations"
+            elif err := await self.fetch_departures(stations):
+                errors["base"] = err
+            else:
+                await self.async_set_unique_id(unique_id_from_stations(stations))
+                self._abort_if_unique_id_configured()
+                return self.async_create_entry(
+                    title=", ".join(stations),
+                    data=user_input,
+                )
+
+        return self.async_show_form(
+            step_id="stationboard",
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=STATIONBOARD_DATA_SCHEMA,
                 suggested_values=user_input,
             ),
             errors=errors,
@@ -209,4 +258,25 @@ class SwissPublicTransportConfigFlow(ConfigFlow, domain=DOMAIN):
         except Exception:
             _LOGGER.exception("Unknown error")
             return "unknown"
+        return None
+
+    async def fetch_departures(self, stations: list[str]) -> str | None:
+        """Fetch the departures of each station and return an error."""
+        if not stations:
+            return "bad_config"
+        session = async_get_clientsession(self.hass)
+        for station in stations:
+            opendata = OpendataTransportStationboard(station, session, limit=1)
+            try:
+                await opendata.async_get_data()
+            except OpendataTransportConnectionError:
+                return "cannot_connect"
+            except OpendataTransportError:
+                return "bad_config"
+            except Exception:
+                _LOGGER.exception("Unknown error")
+                return "unknown"
+            # Unknown stations return an empty stationboard
+            if not opendata.journeys:
+                return "bad_config"
         return None

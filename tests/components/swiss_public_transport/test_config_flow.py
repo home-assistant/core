@@ -1,6 +1,6 @@
 """Test the swiss_public_transport config flow."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from opendata_transport.exceptions import (
     OpendataTransportConnectionError,
@@ -13,6 +13,7 @@ from homeassistant.components.swiss_public_transport import config_flow
 from homeassistant.components.swiss_public_transport.const import (
     CONF_DESTINATION,
     CONF_START,
+    CONF_STATIONS,
     CONF_TIME_FIXED,
     CONF_TIME_MODE,
     CONF_TIME_OFFSET,
@@ -20,6 +21,7 @@ from homeassistant.components.swiss_public_transport.const import (
     CONF_TRANSPORTATIONS,
     CONF_VIA,
     DOMAIN,
+    MAX_STATIONS,
     MAX_VIA,
 )
 from homeassistant.components.swiss_public_transport.helper import unique_id_from_config
@@ -135,8 +137,13 @@ async def test_flow_user_init_data_success(
         DOMAIN, context={"source": "user"}
     )
 
+    assert result["type"] is FlowResultType.MENU
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "connection"}
+    )
+
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "connection"
     assert result["handler"] == "swiss_public_transport"
     assert result["data_schema"] == config_flow.USER_DATA_SCHEMA
 
@@ -183,6 +190,11 @@ async def test_flow_user_init_data_error_and_recover_on_step_1(
     """Test errors in user step."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "connection"}
     )
     with patch(
         "homeassistant.components.swiss_public_transport.config_flow.OpendataTransport.async_get_data",
@@ -231,8 +243,13 @@ async def test_flow_user_init_data_error_and_recover_on_step_2(
         DOMAIN, context={"source": "user"}
     )
 
+    assert result["type"] is FlowResultType.MENU
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "connection"}
+    )
+
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "connection"
     assert result["handler"] == "swiss_public_transport"
     assert result["data_schema"] == config_flow.USER_DATA_SCHEMA
 
@@ -292,6 +309,11 @@ async def test_flow_user_init_data_already_configured(hass: HomeAssistant) -> No
             DOMAIN, context={"source": "user"}
         )
 
+        assert result["type"] is FlowResultType.MENU
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"next_step_id": "connection"}
+        )
+
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=MOCK_USER_DATA_STEP,
@@ -299,3 +321,123 @@ async def test_flow_user_init_data_already_configured(hass: HomeAssistant) -> No
 
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize(
+    ("stations", "config_title"),
+    [
+        pytest.param(["Zürich HB"], "Zürich HB", id="single_station"),
+        pytest.param(
+            ["Kriens, Mattenhof", "Kriens Mattenhof"],
+            "Kriens, Mattenhof, Kriens Mattenhof",
+            id="multiple_stations",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_stationboard_client")
+async def test_flow_stationboard_success(
+    hass: HomeAssistant, stations: list[str], config_title: str
+) -> None:
+    """Test setting up a stationboard."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}
+    )
+    assert result["type"] is FlowResultType.MENU
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "stationboard"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "stationboard"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_STATIONS: stations}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].title == config_title
+    assert result["data"] == {CONF_STATIONS: stations}
+    assert result["result"].unique_id == f"stationboard {config_title}"
+
+
+@pytest.mark.parametrize(
+    ("raise_error", "journeys", "stations", "text_error"),
+    [
+        pytest.param(
+            OpendataTransportConnectionError(),
+            [],
+            ["Zürich HB"],
+            "cannot_connect",
+            id="cannot_connect",
+        ),
+        pytest.param(
+            OpendataTransportError(), [], ["Zürich HB"], "bad_config", id="bad_data"
+        ),
+        pytest.param(IndexError(), [], ["Zürich HB"], "unknown", id="unknown"),
+        pytest.param(None, [], ["Zürich HB"], "bad_config", id="unknown_station"),
+        pytest.param(None, [], [], "bad_config", id="no_station"),
+        pytest.param(
+            None,
+            [{"departure": "2024-01-06T18:03:00+0100"}],
+            ["Zürich HB"] * (MAX_STATIONS + 1),
+            "too_many_stations",
+            id="too_many_stations",
+        ),
+    ],
+)
+async def test_flow_stationboard_error_and_recover(
+    hass: HomeAssistant,
+    mock_stationboard_client: AsyncMock,
+    raise_error: Exception | None,
+    journeys: list[dict[str, str]],
+    stations: list[str],
+    text_error: str,
+) -> None:
+    """Test errors in the stationboard step."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "stationboard"}
+    )
+
+    valid_journeys = mock_stationboard_client.journeys
+    mock_stationboard_client.async_get_data.side_effect = raise_error
+    mock_stationboard_client.journeys = journeys
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_STATIONS: stations}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": text_error}
+
+    mock_stationboard_client.async_get_data.side_effect = None
+    mock_stationboard_client.journeys = valid_journeys
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_STATIONS: ["Zürich HB"]}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_STATIONS: ["Zürich HB"]}
+
+
+@pytest.mark.usefixtures("mock_stationboard_client")
+async def test_flow_stationboard_already_configured(
+    hass: HomeAssistant, mock_stationboard_config_entry: MockConfigEntry
+) -> None:
+    """Test we abort when the stationboard is already configured."""
+    mock_stationboard_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "stationboard"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=mock_stationboard_config_entry.data,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"

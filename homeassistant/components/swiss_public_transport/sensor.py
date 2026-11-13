@@ -21,8 +21,10 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import CONNECTIONS_COUNT, DOMAIN
 from .coordinator import (
     DataConnection,
+    DataDeparture,
     SwissPublicTransportConfigEntry,
     SwissPublicTransportDataUpdateCoordinator,
+    SwissPublicTransportStationboardDataUpdateCoordinator,
 )
 
 PARALLEL_UPDATES = 0
@@ -83,6 +85,53 @@ SENSORS: tuple[SwissPublicTransportSensorEntityDescription, ...] = (
 )
 
 
+@dataclass(kw_only=True, frozen=True)
+class SwissPublicTransportStationboardSensorEntityDescription(SensorEntityDescription):
+    """Describes swiss public transport stationboard sensor entity."""
+
+    value_fn: Callable[[DataDeparture], StateType | datetime]
+
+    index: int = 0
+
+
+STATIONBOARD_SENSORS: tuple[
+    SwissPublicTransportStationboardSensorEntityDescription, ...
+] = (
+    *[
+        SwissPublicTransportStationboardSensorEntityDescription(
+            key=f"departure{i or ''}",
+            translation_key=f"departure{i}",
+            device_class=SensorDeviceClass.TIMESTAMP,
+            value_fn=lambda departure: departure["departure"],
+            index=i,
+        )
+        for i in range(CONNECTIONS_COUNT)
+    ],
+    SwissPublicTransportStationboardSensorEntityDescription(
+        key="destination",
+        translation_key="destination",
+        value_fn=lambda departure: departure["destination"],
+    ),
+    SwissPublicTransportStationboardSensorEntityDescription(
+        key="platform",
+        translation_key="platform",
+        value_fn=lambda departure: departure["platform"],
+    ),
+    SwissPublicTransportStationboardSensorEntityDescription(
+        key="delay",
+        translation_key="delay",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        value_fn=lambda departure: departure["delay"],
+    ),
+    SwissPublicTransportStationboardSensorEntityDescription(
+        key="line",
+        translation_key="line",
+        value_fn=lambda departure: departure["line"],
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: SwissPublicTransportConfigEntry,
@@ -94,8 +143,16 @@ async def async_setup_entry(
     if TYPE_CHECKING:
         assert unique_id
 
+    coordinator = config_entry.runtime_data
+    if isinstance(coordinator, SwissPublicTransportStationboardDataUpdateCoordinator):
+        async_add_entities(
+            SwissPublicTransportStationboardSensor(coordinator, description, unique_id)
+            for description in STATIONBOARD_SENSORS
+        )
+        return
+
     async_add_entities(
-        SwissPublicTransportSensor(config_entry.runtime_data, description, unique_id)
+        SwissPublicTransportSensor(coordinator, description, unique_id)
         for description in SENSORS
     )
 
@@ -134,4 +191,42 @@ class SwissPublicTransportSensor(
             return None
         return self.entity_description.value_fn(
             connections[self.entity_description.index]
+        )
+
+
+class SwissPublicTransportStationboardSensor(
+    CoordinatorEntity[SwissPublicTransportStationboardDataUpdateCoordinator],
+    SensorEntity,
+):
+    """Implementation of a Swiss public transport stationboard sensor."""
+
+    entity_description: SwissPublicTransportStationboardSensorEntityDescription
+    _attr_attribution = "Data provided by transport.opendata.ch"
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: SwissPublicTransportStationboardDataUpdateCoordinator,
+        entity_description: SwissPublicTransportStationboardSensorEntityDescription,
+        unique_id: str,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self.entity_description = entity_description
+        self._attr_unique_id = f"{unique_id}_{entity_description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, unique_id)},
+            manufacturer="Opendata.ch",
+            entry_type=DeviceEntryType.SERVICE,
+        )
+
+    @property
+    @override
+    def native_value(self) -> StateType | datetime:
+        """Return the state of the sensor."""
+        departures = self.coordinator.data
+        if self.entity_description.index >= len(departures):
+            return None
+        return self.entity_description.value_fn(
+            departures[self.entity_description.index]
         )
