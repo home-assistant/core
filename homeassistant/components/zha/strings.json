@@ -861,6 +861,9 @@
       "max_heat_setpoint_limit": {
         "name": "Max heat setpoint limit"
       },
+      "max_liquid_depth": {
+        "name": "Maximum liquid depth"
+      },
       "max_moisture": {
         "name": "Max moisture"
       },
