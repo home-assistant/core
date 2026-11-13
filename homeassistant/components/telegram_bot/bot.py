@@ -31,7 +31,7 @@ from telegram import (
     Update,
     User,
 )
-from telegram.constants import InputMediaType, ParseMode
+from telegram.constants import ChatAction, InputMediaType, ParseMode
 from telegram.error import TelegramError
 from telegram.ext import CallbackContext, filters
 from telegram.request import HTTPXRequest
@@ -91,15 +91,9 @@ from .const import (
     CONF_PROXY_URL,
     DEFAULT_TIMEOUT_SECONDS,
     DOMAIN,
-    EVENT_TELEGRAM_ATTACHMENT,
-    EVENT_TELEGRAM_CALLBACK,
-    EVENT_TELEGRAM_COMMAND,
-    EVENT_TELEGRAM_SENT,
-    EVENT_TELEGRAM_TEXT,
-    PARSER_HTML,
-    PARSER_MD,
-    PARSER_MD2,
-    PARSER_PLAIN_TEXT,
+    TelegramBotChatAction,
+    TelegramBotEvent,
+    TelegramBotParseMode,
     TelegramBotService,
     TelegramBotServiceArgument,
 )
@@ -107,6 +101,20 @@ from .helpers import signal
 
 _FILE_TYPES = ("animation", "document", "photo", "sticker", "video", "voice")
 _LOGGER = logging.getLogger(__name__)
+
+_CHAT_ACTIONS: dict[str, ChatAction] = {
+    TelegramBotChatAction.TYPING: ChatAction.TYPING,
+    TelegramBotChatAction.UPLOAD_PHOTO: ChatAction.UPLOAD_PHOTO,
+    TelegramBotChatAction.RECORD_VIDEO: ChatAction.RECORD_VIDEO,
+    TelegramBotChatAction.UPLOAD_VIDEO: ChatAction.UPLOAD_VIDEO,
+    TelegramBotChatAction.RECORD_VOICE: ChatAction.RECORD_VOICE,
+    TelegramBotChatAction.UPLOAD_VOICE: ChatAction.UPLOAD_VOICE,
+    TelegramBotChatAction.UPLOAD_DOCUMENT: ChatAction.UPLOAD_DOCUMENT,
+    TelegramBotChatAction.CHOOSE_STICKER: ChatAction.CHOOSE_STICKER,
+    TelegramBotChatAction.FIND_LOCATION: ChatAction.FIND_LOCATION,
+    TelegramBotChatAction.RECORD_VIDEO_NOTE: ChatAction.RECORD_VIDEO_NOTE,
+    TelegramBotChatAction.UPLOAD_VIDEO_NOTE: ChatAction.UPLOAD_VIDEO_NOTE,
+}
 
 # Telegram keeps this per bot, server side, and keeps whatever it was told last
 # when the setting is omitted, so a bot narrowed by an earlier consumer of the
@@ -209,14 +217,14 @@ class BaseTelegramBot:
         if filters.COMMAND.filter(message):
             # This is a command message - set event type
             # to command and split data into command and args
-            event_type = EVENT_TELEGRAM_COMMAND
+            event_type = TelegramBotEvent.COMMAND
             event_data.update(self._get_command_event_data(message.text))
         elif filters.ATTACHMENT.filter(message):
-            event_type = EVENT_TELEGRAM_ATTACHMENT
+            event_type = TelegramBotEvent.ATTACHMENT
             event_data[ATTR_TEXT] = message.caption
             event_data.update(self._get_file_id_event_data(message))
         else:
-            event_type = EVENT_TELEGRAM_TEXT
+            event_type = TelegramBotEvent.TEXT
             event_data[ATTR_TEXT] = message.text
 
         if message.from_user:
@@ -254,7 +262,7 @@ class BaseTelegramBot:
     def _get_callback_query_event_data(
         self, callback_query: CallbackQuery
     ) -> tuple[str, dict[str, Any]]:
-        event_type = EVENT_TELEGRAM_CALLBACK
+        event_type = TelegramBotEvent.CALLBACK
         event_data: dict[str, Any] = {
             ATTR_MSGID: callback_query.id,
             ATTR_CHAT_INSTANCE: callback_query.chat_instance,
@@ -311,10 +319,10 @@ class TelegramNotificationService:
         self.config = config
         self.old_config_data = config.data.copy()
         self._parsers: dict[str, str | None] = {
-            PARSER_HTML: ParseMode.HTML,
-            PARSER_MD: ParseMode.MARKDOWN,
-            PARSER_MD2: ParseMode.MARKDOWN_V2,
-            PARSER_PLAIN_TEXT: None,
+            TelegramBotParseMode.HTML: ParseMode.HTML,
+            TelegramBotParseMode.MARKDOWN: ParseMode.MARKDOWN,
+            TelegramBotParseMode.MARKDOWN_V2: ParseMode.MARKDOWN_V2,
+            TelegramBotParseMode.PLAIN_TEXT: None,
         }
         self.parse_mode = self._parsers[parser]
         self.bot = bot
@@ -449,7 +457,7 @@ class TelegramNotificationService:
                 params[ATTR_REPLYMARKUP] = InlineKeyboardMarkup(
                     [_make_row_inline_keyboard(row) for row in keys]
                 )
-        if params[ATTR_PARSER] == PARSER_PLAIN_TEXT:
+        if params[ATTR_PARSER] == TelegramBotParseMode.PLAIN_TEXT:
             params[ATTR_PARSER] = None
         return params
 
@@ -518,9 +526,9 @@ class TelegramNotificationService:
 
             event_data["bot"] = _get_bot_info(self.bot, self.config)
 
-            self.hass.bus.async_fire(EVENT_TELEGRAM_SENT, event_data, context=context)
+            self.hass.bus.async_fire(TelegramBotEvent.SENT, event_data, context=context)
             async_dispatcher_send(
-                self.hass, signal(self.bot), EVENT_TELEGRAM_SENT, event_data
+                self.hass, signal(self.bot), TelegramBotEvent.SENT, event_data
             )
 
         return out
@@ -794,7 +802,7 @@ class TelegramNotificationService:
             self.bot.send_chat_action,
             None,
             chat_id=chat_id,
-            action=chat_action,
+            action=_CHAT_ACTIONS[chat_action],
             message_thread_id=kwargs.get(TelegramBotServiceArgument.MESSAGE_THREAD_ID),
             context=context,
         )
