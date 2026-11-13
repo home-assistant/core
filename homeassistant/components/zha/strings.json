@@ -838,7 +838,7 @@
         "name": "Limit position"
       },
       "liquid_depth_max": {
-        "name": "Height from sensor to liquid level"
+        "name": "Maximum liquid depth"
       },
       "load_level_indicator_timeout": {
         "name": "Load level indicator timeout"
