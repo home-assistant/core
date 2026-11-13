@@ -71,7 +71,7 @@
   "preview_features": {
     "next_generation_voice": {
       "description": "Enables the next generation voice stack in Home Assistant. On a Home Assistant OS or Supervised system the app is installed for you when this feature is enabled.",
-      "disable_confirmation": "Next-generation voice will be turned off. The Voice app stays installed.",
+      "disable_confirmation": "Next-generation voice will be turned off. If Home Assistant installed the Voice app, it will back up and uninstall the app and remove its integration entry.",
       "enable_confirmation": "This feature is still in development and may change. On a Home Assistant OS or Supervised system the Voice app will be installed when this feature is enabled.",
       "name": "Next-generation voice"
     }

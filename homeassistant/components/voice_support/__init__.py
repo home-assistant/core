@@ -53,6 +53,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def _async_preview_feature_updated(event_data: EventLabsUpdatedData) -> None:
         if event_data["enabled"]:
             _async_provision(hass)
+        else:
+            for entry in hass.config_entries.async_entries(DOMAIN):
+                if entry.data.get(CONF_INTEGRATION_CREATED_APP):
+                    await hass.config_entries.async_remove(entry.entry_id)
 
     async_subscribe_preview_feature(
         hass,

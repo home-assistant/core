@@ -255,6 +255,65 @@ async def test_enabling_the_feature_asks_for_the_app(hass: HomeAssistant) -> Non
         assert create_flow.call_count == 2
 
 
+@pytest.mark.parametrize(
+    ("owned", "expected_removals", "expected_refreshes"),
+    [
+        pytest.param(True, 1, 0, id="managed"),
+        pytest.param(False, 0, 1, id="manual"),
+    ],
+)
+@pytest.mark.usefixtures(
+    "supervisor", "addon_running", "preview_feature_enabled", "app_info"
+)
+async def test_disabling_removes_managed_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    stop_addon: AsyncMock,
+    create_backup: AsyncMock,
+    uninstall_addon: AsyncMock,
+    owned: bool,
+    expected_removals: int,
+    expected_refreshes: int,
+) -> None:
+    """Test disabling removes only entries and apps created by the integration."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={**mock_config_entry.data, CONF_INTEGRATION_CREATED_APP: owned},
+    )
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await async_update_preview_feature(
+        hass, DOMAIN, PREVIEW_FEATURE_NEXT_GENERATION_VOICE, False
+    )
+    await hass.async_block_till_done()
+
+    assert (
+        hass.config_entries.async_get_entry(mock_config_entry.entry_id) is None
+    ) == owned
+    assert (DATA_CLIENT not in hass.data) == owned
+    assert stop_addon.call_count == expected_removals
+    assert create_backup.call_count == expected_removals
+    assert uninstall_addon.call_count == expected_removals
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(INFO_URL, json=INFO)
+    async_fire_time_changed(hass, dt_util.utcnow() + INFO_REFRESH_INTERVAL)
+    await hass.async_block_till_done()
+    assert aioclient_mock.call_count == expected_refreshes
+
+    with patch(
+        "homeassistant.components.voice_support.discovery_flow.async_create_flow"
+    ) as create_flow:
+        await async_update_preview_feature(
+            hass, DOMAIN, PREVIEW_FEATURE_NEXT_GENERATION_VOICE, True
+        )
+        await hass.async_block_till_done()
+        assert create_flow.call_count == expected_removals
+
+
 @pytest.mark.parametrize("component", ["assist_pipeline", "assist_satellite"])
 async def test_voice_component_loads_the_integration(
     hass: HomeAssistant, component: str
