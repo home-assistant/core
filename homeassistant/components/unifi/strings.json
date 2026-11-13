@@ -79,6 +79,18 @@
         "name": "LED"
       }
     },
+    "select": {
+      "firewall_policy_schedule_mode": {
+        "name": "{policy_name} schedule",
+        "state": {
+          "always": "Always",
+          "custom": "Custom",
+          "every_day": "Every day",
+          "every_week": "Every week",
+          "one_time": "One time"
+        }
+      }
+    },
     "sensor": {
       "client_bandwidth_rx": {
         "name": "RX"
@@ -202,6 +214,9 @@
     "action_request_failed": {
       "message": "Failed to send action request to UniFi Network"
     },
+    "action_request_rejected": {
+      "message": "UniFi Network rejected the change: {reason}"
+    },
     "reconnect_client_device_not_found": {
       "message": "Unable to reconnect client: device not found"
     },
@@ -213,6 +228,9 @@
     },
     "remove_clients_request_failed": {
       "message": "Failed to remove clients from UniFi Network"
+    },
+    "schedule_mode_not_supported": {
+      "message": "This schedule mode can only be set in UniFi Network"
     },
     "site_not_found": {
       "message": "The configured UniFi Network site no longer exists"
