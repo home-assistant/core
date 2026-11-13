@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from typing import cast, override
 
 from pyoverkiz.enums import OverkizAttribute, OverkizState, UIWidget
@@ -27,10 +28,11 @@ from homeassistant.const import (
     UnitOfVolume,
     UnitOfVolumeFlowRate,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.util import dt as dt_util
 
 from . import OverkizDataConfigEntry
 from .const import (
@@ -542,6 +544,12 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
 
 SUPPORTED_STATES = {description.key: description for description in SENSOR_DESCRIPTIONS}
 
+END_TIME_DESCRIPTION = OverkizSensorDescription(
+    key=OverkizState.CORE_REMAINING_TIME,
+    name="End time",
+    device_class=SensorDeviceClass.TIMESTAMP,
+)
+
 
 PARALLEL_UPDATES = 0
 
@@ -579,6 +587,16 @@ async def async_setup_entry(
             for state in device.definition.states
             if (description := SUPPORTED_STATES.get(state))
         )
+
+        if (
+            OverkizState.CORE_RUNNING_TIMER in device.definition.states
+            and OverkizState.CORE_REMAINING_TIME in device.definition.states
+        ):
+            entities.append(
+                OverkizEndTimeSensor(
+                    device.device_url, data.coordinator, END_TIME_DESCRIPTION
+                )
+            )
 
     async_add_entities(entities)
 
@@ -641,6 +659,46 @@ class OverkizStateSensor(OverkizDescriptiveEntity, SensorEntity):
         if (valid_units := DEVICE_CLASS_UNITS.get(device_class)) is None:
             return True
         return unit in valid_units
+
+
+class OverkizEndTimeSensor(OverkizDescriptiveEntity, SensorEntity):
+    """End of the running timer.
+
+    The remaining time is only pushed when the timer starts or its duration
+    changes, so the end time is computed when a new report is received.
+    """
+
+    def __init__(
+        self,
+        device_url: str,
+        coordinator: OverkizDataUpdateCoordinator,
+        description: OverkizSensorDescription,
+    ) -> None:
+        """Initialize the end time sensor."""
+        super().__init__(device_url, coordinator, description)
+        self._attr_native_value: datetime | None = None
+        self._device = self.device
+        self._report = self.device.states.get(OverkizState.CORE_REMAINING_TIME)
+
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Update the end time when a new remaining time is reported."""
+        device = self.device
+        report = device.states.get(OverkizState.CORE_REMAINING_TIME)
+        if (
+            device.states.get_value(OverkizState.CORE_RUNNING_TIMER) is not True
+            or report is None
+            or not isinstance(report.value, int)
+        ):
+            self._attr_native_value = None
+        elif device is not self._device:
+            if self._report is None or report.value != self._report.value:
+                self._attr_native_value = None
+        elif report is not self._report:
+            self._attr_native_value = dt_util.utcnow() + timedelta(seconds=report.value)
+        self._device, self._report = device, report
+        super()._handle_coordinator_update()
 
 
 class OverkizHomeKitSetupCodeSensor(OverkizEntity, SensorEntity):
