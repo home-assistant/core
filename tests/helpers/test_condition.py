@@ -57,6 +57,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     EntityCategory,
     EntityStateAttribute,
+    TargetKey,
     UnitOfTemperature,
 )
 from homeassistant.core import CoreState, HomeAssistant, State
@@ -7019,8 +7020,8 @@ async def test_state_condition_target_exclude_registry_update(
     test = await _setup_state_condition(
         hass,
         target_config={
-            CONF_ENTITY_ID: [_INCLUDED_ENTITY_ID, _EXCLUDED_ENTITY_ID],
-            CONF_EXCLUDE: {ATTR_LABEL_ID: excluded_label.label_id},
+            TargetKey.ENTITY_ID: [_INCLUDED_ENTITY_ID, _EXCLUDED_ENTITY_ID],
+            TargetKey.EXCLUDE: {TargetKey.LABEL_ID: excluded_label.label_id},
         },
         states=STATE_ON,
         condition_options={ATTR_BEHAVIOR: BEHAVIOR_ALL},
