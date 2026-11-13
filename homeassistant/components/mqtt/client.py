@@ -1040,7 +1040,10 @@ class MQTT:
         so the subscription may be tracked by another instance.
         """
         mqtt_data = self._mqtt_data
-        mqtt_data.subscriptions_to_restore.discard(subscription)
+        if subscription in mqtt_data.subscriptions_to_restore:
+            # Not restored on the current client yet
+            mqtt_data.subscriptions_to_restore.remove(subscription)
+            return
         client: MQTT = mqtt_data.client
         client._async_remove_tracked_subscription(subscription)
 
