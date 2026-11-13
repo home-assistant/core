@@ -385,3 +385,24 @@ async def test_abort_when_token_cannot_be_revoked(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("current_request_with_host", "mock_trmnl_client")
+async def test_revoke_refused_is_logged(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a revoke TRMNL refuses is logged."""
+    mock_config_entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    aioclient_mock.post(OAUTH2_REVOKE, status=HTTPStatus.BAD_REQUEST)
+
+    await complete_oauth_flow(hass, hass_client_no_auth, aioclient_mock, result)
+
+    assert "Could not revoke an unused TRMNL token" in caplog.text
+
