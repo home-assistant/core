@@ -1,7 +1,9 @@
 """Tests for the SolarEdge config flow."""
 
-from unittest.mock import AsyncMock
+from http import HTTPStatus
+from unittest.mock import AsyncMock, Mock
 
+from aiohttp import ClientError, ClientResponseError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
@@ -9,7 +11,13 @@ from pytest_homeassistant.typing import ClientSessionGenerator
 from yarl import URL
 
 from homeassistant.components.recorder import Recorder
+from homeassistant.components.solaredge.api import (
+    SolarEdgeApiError,
+    SolarEdgeAuthError,
+    SolarEdgeNotFoundError,
+)
 from homeassistant.components.solaredge.const import (
+    API_BASE_URL,
     CONF_SECTION_WEB_AUTH,
     CONF_SITE_ID,
     DOMAIN,
@@ -17,7 +25,12 @@ from homeassistant.components.solaredge.const import (
     OAUTH2_CALLBACK_PATH,
     OAUTH2_TOKEN,
 )
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER, ConfigEntryDisabler
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    SOURCE_USER,
+    ConfigEntryDisabler,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -31,7 +44,7 @@ async def _complete_oauth(
     aioclient_mock: AiohttpClientMocker,
     flow_id: str,
     authorize_url: str,
-) -> dict:
+) -> ConfigFlowResult:
     """Complete the external OAuth callback."""
     client = await hass_client_no_auth()
     response = await client.get(URL(authorize_url).path_qs, allow_redirects=False)
@@ -120,6 +133,77 @@ async def test_duplicate_legacy_site_is_rejected(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.parametrize(
+    ("error", "flow_error"),
+    [
+        pytest.param(
+            ClientResponseError(Mock(), (), status=HTTPStatus.UNAUTHORIZED),
+            "invalid_auth",
+            id="invalid-auth",
+        ),
+        pytest.param(
+            ClientResponseError(Mock(), (), status=HTTPStatus.INTERNAL_SERVER_ERROR),
+            "cannot_connect",
+            id="response-error",
+        ),
+        pytest.param(ClientError(), "cannot_connect", id="connection-error"),
+    ],
+)
+async def test_user_web_auth_errors(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    setup_credentials: None,
+    solaredge_web_api: AsyncMock,
+    error: Exception,
+    flow_error: str,
+) -> None:
+    """Test errors while validating optional web credentials."""
+    solaredge_web_api.async_get_equipment.side_effect = error
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_SITE_ID: SITE_ID,
+            CONF_SECTION_WEB_AUTH: {
+                CONF_USERNAME: "user",
+                CONF_PASSWORD: "password",
+            },
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": flow_error}
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_user_web_auth_is_preserved(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    setup_credentials: None,
+    solaredge_web_api: AsyncMock,
+) -> None:
+    """Test valid optional web credentials are preserved for entry creation."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_SITE_ID: SITE_ID,
+            CONF_SECTION_WEB_AUTH: {
+                CONF_USERNAME: "user",
+                CONF_PASSWORD: "password",
+            },
+        },
+    )
+
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    solaredge_web_api.async_get_equipment.assert_awaited_once()
+
+
 @pytest.mark.usefixtures("current_request_with_host")
 async def test_site_not_active(
     recorder_mock: Recorder,
@@ -149,6 +233,78 @@ async def test_site_not_active(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "site_not_active"
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_oauth_uses_access_token_for_site_validation(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    setup_credentials: None,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test the OAuth access token is used to validate the selected site."""
+    aioclient_mock.get(
+        f"{API_BASE_URL}/sites/{SITE_ID}",
+        json={"site": {"siteId": SITE_ID, "activationStatus": "Active"}},
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_SITE_ID: SITE_ID}
+    )
+    result = await _complete_oauth(
+        hass,
+        hass_client_no_auth,
+        aioclient_mock,
+        result["flow_id"],
+        result["url"],
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.parametrize(
+    ("error", "reason"),
+    [
+        pytest.param(SolarEdgeAuthError(), "oauth_unauthorized", id="unauthorized"),
+        pytest.param(SolarEdgeNotFoundError(), "cannot_connect", id="site-not-found"),
+        pytest.param(SolarEdgeApiError(), "cannot_connect", id="api-error"),
+        pytest.param(KeyError(), "cannot_connect", id="missing-details"),
+    ],
+)
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_oauth_site_validation_errors(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    setup_credentials: None,
+    mock_setup_entry: AsyncMock,
+    solaredge_api: AsyncMock,
+    error: Exception,
+    reason: str,
+) -> None:
+    """Test OAuth site validation errors abort setup."""
+    solaredge_api.get_details.side_effect = error
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_SITE_ID: SITE_ID}
+    )
+    result = await _complete_oauth(
+        hass,
+        hass_client_no_auth,
+        aioclient_mock,
+        result["flow_id"],
+        result["url"],
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -342,6 +498,34 @@ async def test_reconfigure_keeps_only_legacy_auth(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert entry.data[CONF_USERNAME] == "new-user"
+
+
+async def test_reconfigure_web_auth_error(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    solaredge_web_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test invalid optional web credentials do not update the entry."""
+    solaredge_web_api.async_get_equipment.side_effect = ClientResponseError(
+        Mock(), (), status=HTTPStatus.UNAUTHORIZED
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_SECTION_WEB_AUTH: {
+                CONF_USERNAME: "user",
+                CONF_PASSWORD: "password",
+            }
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_auth"}
+    assert CONF_USERNAME not in mock_config_entry.data
 
 
 async def test_migration_starts_reauth(
