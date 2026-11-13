@@ -639,9 +639,6 @@ asyncsleepiq==1.8.0
 # homeassistant.components.sftp_storage
 asyncssh==2.24.0
 
-# homeassistant.components.atomberg
-atomberg-api==0.1.1
-
 # homeassistant.components.aurora
 auroranoaa==0.0.5
 
@@ -1272,6 +1269,9 @@ guppy3==3.2.0
 
 # homeassistant.components.iaqualink
 h2==4.4.1
+
+# homeassistant.components.atomberg
+ha-atomberg-integration==1.1.1
 
 # homeassistant.components.ffmpeg
 ha-ffmpeg==3.2.2

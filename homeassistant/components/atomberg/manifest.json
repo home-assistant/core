@@ -9,5 +9,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",
-  "requirements": ["atomberg-api==0.1.1"]
+  "requirements": ["ha-atomberg-integration==1.1.1"]
 }
