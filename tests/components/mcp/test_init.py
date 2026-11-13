@@ -1120,6 +1120,7 @@ async def test_streamable_http_client_closed(
     assert len(created_clients) == 1
     http_client = created_clients[0]
     assert http_client.headers["User-Agent"] == SERVER_SOFTWARE
+    assert http_client.timeout.read == 300
     assert http_client.is_closed
 
 
