@@ -4,6 +4,7 @@ aiodhcpwatcher==1.2.7
 aiodiscover==3.3.2
 aiodns==4.0.4
 aiogithubapi==26.0.0
+aiohasupervisor==0.11.0
 aiohttp-asyncmdnsresolver==0.2.0
 aiohttp-fast-zlib==0.3.0
 aiohttp==3.14.5
@@ -46,6 +47,8 @@ httpx2==2.14.0
 ifaddr==0.2.0
 Jinja2==3.1.6
 lru-dict==1.4.1
+matter-ble-proxy==0.7.1
+matter-python-client==1.5.5
 mutagen==1.48.1
 openai==3.26.0
 orjson==3.13.0
