@@ -416,7 +416,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     adapter = await manager.async_get_adapter_from_address_or_recover(address)
     if adapter is None:
         raise ConfigEntryNotReady(
-            f"Bluetooth adapter {adapter} with address {address} not found"
+            translation_domain=DOMAIN,
+            translation_key="adapter_not_found",
+            translation_placeholders={"address": address},
         )
     adapters = await manager.async_get_bluetooth_adapters()
     details = adapters[adapter]
