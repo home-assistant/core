@@ -172,6 +172,7 @@ def build_snapshot(hass: HomeAssistant, entity_ids: list[str]) -> dict[str, Any]
     devices = dr.async_get(hass)
     entities = er.async_get(hass)
     grouped: dict[str, dict[str, Any]] = {}
+    used_area_names: dict[str, str] = {}
     for entity_id in entity_ids:
         state = hass.states.get(entity_id)
         if state is None or not (capabilities := capabilities_of(state)):
@@ -183,6 +184,8 @@ def build_snapshot(hass: HomeAssistant, entity_ids: list[str]) -> dict[str, Any]
         area_id = (entry.area_id if entry else None) or (
             device.area_id if device else None
         )
+        if area_id and area_id in area_names:
+            used_area_names[area_id] = area_names[area_id]
         record = grouped.setdefault(
             device.id if device else state.entity_id,
             {
@@ -212,7 +215,7 @@ def build_snapshot(hass: HomeAssistant, entity_ids: list[str]) -> dict[str, Any]
         )
     return {
         "source": "home_assistant",
-        "zone_names": area_names,
+        "zone_names": used_area_names,
         "devices": list(grouped.values()),
     }
 

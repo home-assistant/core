@@ -95,10 +95,11 @@ async def test_snapshot_groups_entities_by_device_and_area(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test entities of one device become one TRMNL device in its area."""
+    """Test entities of one device become one TRMNL device, naming only its area."""
     entry = MockConfigEntry(domain="test")
     entry.add_to_hass(hass)
     kitchen = area_registry.async_create("Kitchen")
+    area_registry.async_create("Bedroom")
     device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id, identifiers={("test", "1")}, name="Thermostat"
     )
