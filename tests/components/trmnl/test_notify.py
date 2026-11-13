@@ -1,5 +1,7 @@
 """Tests for the TRMNL notify platform."""
 
+import asyncio
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -209,3 +211,63 @@ async def test_failed_setup_of_new_plugin_is_resumed(
     assert mock_trmnl_client.write_markup.await_count == 2
     assert mock_trmnl_client.update_plugin_setting_data.await_args.args[0] == 7
     assert mock_config_entry.options == READY_PLUGIN
+
+
+async def test_remove_during_first_message_deletes_the_new_plugin(
+    hass: HomeAssistant,
+    mock_trmnl_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test removal waits for a message that is creating its plugin, then deletes it."""
+    created = asyncio.Event()
+
+    async def create_plugin_setting(*_: Any) -> PluginSetting:
+        await created.wait()
+        return PluginSetting(
+            identifier=7, name="Home Assistant messages", plugin_id=PRIVATE_PLUGIN_ID
+        )
+
+    mock_trmnl_client.create_plugin_setting.side_effect = create_plugin_setting
+    with patch("homeassistant.components.trmnl.PLATFORMS", [Platform.NOTIFY]):
+        await setup_integration(hass, mock_config_entry)
+    message = hass.async_create_task(send(hass))
+    while not mock_trmnl_client.create_plugin_setting.await_count:
+        await asyncio.sleep(0)
+    wait = asyncio.wait
+
+    async def give_up_at_once(tasks: Any, timeout: float | None = None) -> Any:
+        # Only the config entry's 10 second wait for its tasks gives up at once.
+        return await wait(tasks, timeout=0 if timeout == 10 else timeout)
+
+    with patch("homeassistant.config_entries.asyncio.wait", give_up_at_once):
+        remove = hass.async_create_task(
+            hass.config_entries.async_remove(mock_config_entry.entry_id)
+        )
+        for _ in range(20):
+            await asyncio.sleep(0)
+        assert not remove.done()
+        created.set()
+        await remove
+    await message
+
+    mock_trmnl_client.delete_plugin_setting.assert_awaited_once_with(7)
+
+
+async def test_no_message_starts_while_the_entity_is_removed(
+    hass: HomeAssistant,
+    mock_trmnl_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a message that reaches the entity while it is being removed is refused."""
+    with patch("homeassistant.components.trmnl.PLATFORMS", [Platform.NOTIFY]):
+        await setup_integration(hass, mock_config_entry)
+    entity = hass.data["entity_components"][NOTIFY_DOMAIN].get_entity(
+        "notify.trmnl_message"
+    )
+    await entity.async_will_remove_from_hass()
+
+    with pytest.raises(HomeAssistantError) as error:
+        await entity.async_send_message("Hi")
+
+    assert error.value.translation_key == "unloading"
+    mock_trmnl_client.create_plugin_setting.assert_not_called()

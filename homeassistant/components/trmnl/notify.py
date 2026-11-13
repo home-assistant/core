@@ -1,5 +1,6 @@
 """Support for sending messages to TRMNL."""
 
+import asyncio
 from typing import Any, NoReturn, override
 
 from trmnl.exceptions import TRMNLError, TRMNLForbiddenError, TRMNLNotFoundError
@@ -50,6 +51,8 @@ class TRMNLNotifyEntity(NotifyEntity):
     def __init__(self, entry: TRMNLConfigEntry) -> None:
         """Initialize the entity."""
         self._entry = entry
+        self._sends: set[asyncio.Task[None]] = set()
+        self._removing = False
         self._attr_unique_id = f"{entry.unique_id}_message"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"account_{entry.unique_id}")},
@@ -60,7 +63,26 @@ class TRMNLNotifyEntity(NotifyEntity):
 
     @override
     async def async_send_message(self, message: str, title: str | None = None) -> None:
-        """Push the message to the messages plugin."""
+        """Push the message, as a task the entity's removal waits for."""
+        if self._removing:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="unloading"
+            )
+        send = self._entry.async_create_task(
+            self.hass, self._async_send(message, title), "trmnl_message"
+        )
+        self._sends.add(send)
+        send.add_done_callback(self._sends.discard)
+        await send
+
+    @override
+    async def async_will_remove_from_hass(self) -> None:
+        """Refuse new messages and wait for any under way, so their plugin id is saved."""
+        self._removing = True
+        if self._sends:
+            await asyncio.wait(self._sends)
+
+    async def _async_send(self, message: str, title: str | None) -> None:
         if not scope_granted(self._entry, "content"):
             self._raise_content_not_granted()
         await self._entry.runtime_data.async_ensure_token_valid()
