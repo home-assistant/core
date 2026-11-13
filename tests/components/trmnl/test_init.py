@@ -210,6 +210,26 @@ async def test_migrate_account_already_signed_in(
     assert mock_api_key_config_entry.unique_id == "30561"
 
 
+async def test_newer_minor_version_is_not_migrated(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_trmnl_client: AsyncMock,
+) -> None:
+    """Test an OAuth entry from a newer minor version loads without the API key migration."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=2,
+        minor_version=99,
+        unique_id=ACCOUNT_SUBJECT,
+        data=mock_config_entry.data,
+    )
+
+    await setup_integration(hass, entry)
+
+    assert entry.state is ConfigEntryState.LOADED
+    mock_trmnl_client.migrate_to_oauth.assert_not_called()
+
+
 @pytest.mark.parametrize("expires_at", [time() - 60])
 async def test_expired_token_refreshed(
     hass: HomeAssistant,

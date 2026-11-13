@@ -60,6 +60,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: TRMNLConfigEntry) -> No
 
 async def async_migrate_entry(hass: HomeAssistant, entry: TRMNLConfigEntry) -> None:
     """Trade the account API key of a version 1 entry for an OAuth token."""
+    # Core also calls this for a newer minor version, which is already OAuth.
+    if entry.version != 1:
+        return
     client = TRMNLClient(
         token=entry.data[CONF_API_KEY], session=async_get_clientsession(hass)
     )
