@@ -786,6 +786,11 @@ ZEROCONF = {
             "name": "gateway*",
         },
     ],
+    "_lanbon._tcp.local.": [
+        {
+            "domain": "lanbon",
+        },
+    ],
     "_lifx._udp.local.": [
         {
             "domain": "lifx",
