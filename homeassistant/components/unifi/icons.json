@@ -5,6 +5,14 @@
         "default": "mdi:form-textbox-password"
       }
     },
+    "date": {
+      "firewall_policy_schedule_end_date": {
+        "default": "mdi:calendar-end"
+      },
+      "firewall_policy_schedule_start_date": {
+        "default": "mdi:calendar-start"
+      }
+    },
     "image": {
       "wlan_qr_code": {
         "default": "mdi:qrcode"

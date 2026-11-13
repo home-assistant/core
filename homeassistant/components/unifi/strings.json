@@ -69,6 +69,14 @@
         "name": "Regenerate password"
       }
     },
+    "date": {
+      "firewall_policy_schedule_end_date": {
+        "name": "{policy_name} schedule end date"
+      },
+      "firewall_policy_schedule_start_date": {
+        "name": "{policy_name} schedule start date"
+      }
+    },
     "image": {
       "wlan_qr_code": {
         "name": "QR code"
@@ -236,6 +244,9 @@
     },
     "remove_clients_request_failed": {
       "message": "Failed to remove clients from UniFi Network"
+    },
+    "schedule_dates_out_of_order": {
+      "message": "The schedule's start date must be before its end date"
     },
     "schedule_mode_not_supported": {
       "message": "This schedule mode can only be set in UniFi Network"
