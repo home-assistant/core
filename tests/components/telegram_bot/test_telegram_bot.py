@@ -37,8 +37,6 @@ from homeassistant.components.telegram_bot.bot import (
     _read_file_as_bytesio,
 )
 from homeassistant.components.telegram_bot.const import (
-    ATTR_CHAT_ID,
-    ATTR_MESSAGE_ID,
     ATTR_MESSAGE_THREAD_ID,
     ATTR_PARSER,
     ATTR_REPLY_TO_MSGID,
@@ -49,6 +47,7 @@ from homeassistant.components.telegram_bot.const import (
     TelegramBotParseMode,
     TelegramBotService,
     TelegramBotServiceArgument,
+    TelegramBotServiceResponse,
 )
 from homeassistant.components.telegram_bot.webhooks import TELEGRAM_WEBHOOK_URL
 from homeassistant.config_entries import ConfigEntryState
@@ -237,11 +236,11 @@ async def test_send_message(
     assert events[0].data["bot"]["username"] == "mock_bot"
 
     assert response == {
-        "chats": [
+        TelegramBotServiceResponse.CHATS: [
             {
-                ATTR_CHAT_ID: 12345678,
-                ATTR_MESSAGE_ID: 12345,
-                ATTR_ENTITY_ID: "notify.mock_chat",
+                TelegramBotServiceResponse.CHAT_ID: 12345678,
+                TelegramBotServiceResponse.MESSAGE_ID: 12345,
+                TelegramBotServiceResponse.ENTITY_ID: "notify.mock_chat",
             }
         ]
     }
@@ -334,11 +333,11 @@ async def test_send_message_with_inline_keyboard(
     assert events[0].context == context
 
     assert response == {
-        "chats": [
+        TelegramBotServiceResponse.CHATS: [
             {
-                ATTR_CHAT_ID: 12345678,
-                ATTR_MESSAGE_ID: 12345,
-                ATTR_ENTITY_ID: "notify.mock_chat",
+                TelegramBotServiceResponse.CHAT_ID: 12345678,
+                TelegramBotServiceResponse.MESSAGE_ID: 12345,
+                TelegramBotServiceResponse.ENTITY_ID: "notify.mock_chat",
             }
         ]
     }
@@ -533,8 +532,8 @@ def _assert_download_file_response(
     """Assert download file response."""
     assert response is not None
     assert len(response.keys()) == 1
-    assert "file_path" in response
-    assert response["file_path"] == expected_path
+    assert TelegramBotServiceResponse.FILE_PATH in response
+    assert response[TelegramBotServiceResponse.FILE_PATH] == expected_path
 
 
 async def test_send_chat_action(
@@ -610,11 +609,11 @@ async def test_send_file(hass: HomeAssistant, webhook_bot, service: str) -> None
     assert events[0].context == context
 
     assert response == {
-        "chats": [
+        TelegramBotServiceResponse.CHATS: [
             {
-                ATTR_CHAT_ID: 12345678,
-                ATTR_MESSAGE_ID: 12345,
-                ATTR_ENTITY_ID: "notify.mock_chat",
+                TelegramBotServiceResponse.CHAT_ID: 12345678,
+                TelegramBotServiceResponse.MESSAGE_ID: 12345,
+                TelegramBotServiceResponse.ENTITY_ID: "notify.mock_chat",
             }
         ]
     }
@@ -1172,11 +1171,11 @@ async def test_send_message_with_config_entry(
     )
 
     assert response == {
-        "chats": [
+        TelegramBotServiceResponse.CHATS: [
             {
-                ATTR_CHAT_ID: 123456,
-                ATTR_MESSAGE_ID: 12345,
-                ATTR_ENTITY_ID: "notify.mock_chat_1",
+                TelegramBotServiceResponse.CHAT_ID: 123456,
+                TelegramBotServiceResponse.MESSAGE_ID: 12345,
+                TelegramBotServiceResponse.ENTITY_ID: "notify.mock_chat_1",
             }
         ]
     }
@@ -1319,11 +1318,11 @@ async def test_delete_message(
         return_response=True,
     )
     assert response == {
-        "chats": [
+        TelegramBotServiceResponse.CHATS: [
             {
-                ATTR_CHAT_ID: 123456,
-                ATTR_MESSAGE_ID: 12345,
-                ATTR_ENTITY_ID: "notify.mock_chat_1",
+                TelegramBotServiceResponse.CHAT_ID: 123456,
+                TelegramBotServiceResponse.MESSAGE_ID: 12345,
+                TelegramBotServiceResponse.ENTITY_ID: "notify.mock_chat_1",
             }
         ]
     }
@@ -1783,11 +1782,11 @@ async def test_send_video(
 
     await hass.async_block_till_done()
     assert response == {
-        "chats": [
+        TelegramBotServiceResponse.CHATS: [
             {
-                ATTR_CHAT_ID: 123456,
-                ATTR_MESSAGE_ID: 12345,
-                ATTR_ENTITY_ID: "notify.mock_chat_1",
+                TelegramBotServiceResponse.CHAT_ID: 123456,
+                TelegramBotServiceResponse.MESSAGE_ID: 12345,
+                TelegramBotServiceResponse.ENTITY_ID: "notify.mock_chat_1",
             }
         ]
     }
@@ -1815,11 +1814,11 @@ async def test_send_video(
     await hass.async_block_till_done()
     assert mock_get.call_count > 0
     assert response == {
-        "chats": [
+        TelegramBotServiceResponse.CHATS: [
             {
-                ATTR_CHAT_ID: 123456,
-                ATTR_MESSAGE_ID: 12345,
-                ATTR_ENTITY_ID: "notify.mock_chat_1",
+                TelegramBotServiceResponse.CHAT_ID: 123456,
+                TelegramBotServiceResponse.MESSAGE_ID: 12345,
+                TelegramBotServiceResponse.ENTITY_ID: "notify.mock_chat_1",
             }
         ]
     }
@@ -2002,11 +2001,11 @@ async def test_send_message_multi_target(
 
     await hass.async_block_till_done()
     assert response == {
-        "chats": [
+        TelegramBotServiceResponse.CHATS: [
             {
-                ATTR_CHAT_ID: 654321,
-                ATTR_MESSAGE_ID: 12345,
-                ATTR_ENTITY_ID: "notify.mock_chat_2",
+                TelegramBotServiceResponse.CHAT_ID: 654321,
+                TelegramBotServiceResponse.MESSAGE_ID: 12345,
+                TelegramBotServiceResponse.ENTITY_ID: "notify.mock_chat_2",
             }
         ]
     }
@@ -2035,11 +2034,11 @@ async def test_notify_entity_send_message(
     )
 
     assert response == {
-        "chats": [
+        TelegramBotServiceResponse.CHATS: [
             {
-                ATTR_CHAT_ID: 654321,
-                ATTR_MESSAGE_ID: 12345,
-                ATTR_ENTITY_ID: "notify.mock_chat_2",
+                TelegramBotServiceResponse.CHAT_ID: 654321,
+                TelegramBotServiceResponse.MESSAGE_ID: 12345,
+                TelegramBotServiceResponse.ENTITY_ID: "notify.mock_chat_2",
             }
         ]
     }
@@ -2684,11 +2683,11 @@ async def test_send_media_group(
         )
 
     assert response == {
-        "chats": [
+        TelegramBotServiceResponse.CHATS: [
             {
-                ATTR_CHAT_ID: 123456,
-                ATTR_ENTITY_ID: "notify.mock_chat_1",
-                ATTR_MESSAGE_ID: [12345, 12346, 12347, 12348],
+                TelegramBotServiceResponse.CHAT_ID: 123456,
+                TelegramBotServiceResponse.ENTITY_ID: "notify.mock_chat_1",
+                TelegramBotServiceResponse.MESSAGE_ID: [12345, 12346, 12347, 12348],
             }
         ]
     }

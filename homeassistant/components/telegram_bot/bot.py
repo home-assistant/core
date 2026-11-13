@@ -54,7 +54,6 @@ from homeassistant.util.json import JsonValueType
 from .const import (
     ATTR_DISABLE_NOTIF,
     ATTR_DISABLE_WEB_PREV,
-    ATTR_FILE_PATH,
     ATTR_INLINE_MESSAGE_ID,
     ATTR_MESSAGE_TAG,
     ATTR_MESSAGE_THREAD_ID,
@@ -72,6 +71,7 @@ from .const import (
     TelegramBotParseMode,
     TelegramBotService,
     TelegramBotServiceArgument,
+    TelegramBotServiceResponse,
 )
 from .helpers import signal
 
@@ -1122,7 +1122,7 @@ class TelegramNotificationService:
             )
         except OSError as err:
             raise os_write_error(err, custom_path) from err
-        return {ATTR_FILE_PATH: custom_path}
+        return {TelegramBotServiceResponse.FILE_PATH: custom_path}
 
     @staticmethod
     def _prepare_download_directory(directory_path: str) -> None:

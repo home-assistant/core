@@ -269,3 +269,13 @@ ATTR_OPEN_PERIOD = "open_period"
 ATTR_IS_ANONYMOUS = "is_anonymous"
 ATTR_ALLOWS_MULTIPLE_ANSWERS = "allows_multiple_answers"
 ATTR_MESSAGE_THREAD_ID = "message_thread_id"
+
+
+class TelegramBotServiceResponse(StrEnum):
+    """Keys of the Telegram bot action responses."""
+
+    CHATS = "chats"
+    CHAT_ID = "chat_id"
+    MESSAGE_ID = "message_id"
+    ENTITY_ID = "entity_id"
+    FILE_PATH = "file_path"
