@@ -103,6 +103,16 @@ async def test_user_flow_requires_hvac_mode(hass: HomeAssistant) -> None:
 
     assert err.value.schema_errors == {CONF_HVAC_MODES: "no_hvac_modes"}
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_INFRARED_EMITTER_ENTITY_ID: mock_infrared_emitter_entity_id,
+            CONF_HVAC_MODES: [HVACMode.COOL, HVACMode.DRY],
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.usefixtures("mock_infrared_emitter_entity")
 async def test_user_flow_already_configured(
@@ -375,6 +385,17 @@ async def test_reconfigure_flow_requires_hvac_mode(
         )
 
     assert err.value.schema_errors == {CONF_HVAC_MODES: "no_hvac_modes"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_INFRARED_EMITTER_ENTITY_ID: mock_infrared_emitter_entity_id,
+            CONF_HVAC_MODES: [HVACMode.COOL, HVACMode.DRY],
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
 
 @pytest.mark.usefixtures("mock_infrared_receiver_entity")

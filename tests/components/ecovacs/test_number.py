@@ -6,10 +6,12 @@ from deebot_client.command import Command
 from deebot_client.commands.json import (
     SetCleanCount,
     SetCutDirection,
+    SetMopAutoWashFrequency,
     SetVolume,
     SetWaterInfo,
 )
 from deebot_client.events import CleanCountEvent, CutDirectionEvent, Event, VolumeEvent
+from deebot_client.events.mop_auto_wash_frequency import MopAutoWashFrequencyEvent
 from deebot_client.events.water_info import WaterCustomAmountEvent
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -17,11 +19,11 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.ecovacs.const import DOMAIN
 from homeassistant.components.ecovacs.controller import EcovacsController
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -100,8 +102,41 @@ class NumberTestCase:
                 ),
             ],
         ),
+        (
+            "twunby",
+            [
+                NumberTestCase(
+                    "number.t90_pro_omni_clean_count",
+                    CleanCountEvent(1),
+                    "1",
+                    2,
+                    SetCleanCount(2),
+                ),
+                NumberTestCase(
+                    "number.t90_pro_omni_mop_wash_interval",
+                    MopAutoWashFrequencyEvent(15),
+                    "15",
+                    25,
+                    SetMopAutoWashFrequency(25),
+                ),
+                NumberTestCase(
+                    "number.t90_pro_omni_volume",
+                    VolumeEvent(5, 11),
+                    "5",
+                    10,
+                    SetVolume(10),
+                ),
+                NumberTestCase(
+                    "number.t90_pro_omni_water_flow_level",
+                    WaterCustomAmountEvent(14),
+                    "14",
+                    7,
+                    SetWaterInfo(custom_amount=7),
+                ),
+            ],
+        ),
     ],
-    ids=["yna5x1", "5xu9h3", "n0vyif"],
+    ids=["yna5x1", "5xu9h3", "n0vyif", "twunby"],
 )
 async def test_number_entities(
     hass: HomeAssistant,
@@ -140,8 +175,11 @@ async def test_number_entities(
         device._execute_command.reset_mock()
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: test_case.set_value},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: entity_id,
+                NumberServiceArgument.VALUE: test_case.set_value,
+            },
             blocking=True,
         )
         device._execute_command.assert_called_with(test_case.command)
@@ -158,8 +196,12 @@ async def test_number_entities(
             "5xu9h3",
             ["number.goat_g1_cut_direction", "number.goat_g1_volume"],
         ),
+        (
+            "twunby",
+            ["number.t90_pro_omni_mop_wash_interval"],
+        ),
     ],
-    ids=["yna5x1", "5xu9h3"],
+    ids=["yna5x1", "5xu9h3", "twunby"],
 )
 async def test_disabled_by_default_number_entities(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, entity_ids: list[str]

@@ -3,7 +3,7 @@
 from collections.abc import Generator
 import logging
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 from freezegun import freeze_time
 import pytest
@@ -44,7 +44,9 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     RepeatMode,
 )
+from homeassistant.components.media_source import PlayMedia
 from homeassistant.components.sonos.const import (
+    ATTR_QUEUE_POSITION,
     DOMAIN,
     MEDIA_TYPE_DIRECTORY,
     SOURCE_LINEIN,
@@ -54,21 +56,10 @@ from homeassistant.components.sonos.media_player import (
     LONG_SERVICE_TIMEOUT,
     VOLUME_INCREMENT,
 )
-from homeassistant.components.sonos.services import (
-    ATTR_ALARM_ID,
-    ATTR_ENABLED,
-    ATTR_INCLUDE_LINKED_ZONES,
-    ATTR_QUEUE_POSITION,
-    ATTR_VOLUME,
-    SERVICE_GET_QUEUE,
-    SERVICE_RESTORE,
-    SERVICE_SNAPSHOT,
-    SERVICE_UPDATE_ALARM,
-)
+from homeassistant.components.sonos.services import SonosService, SonosServiceArgument
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_ENTITY_PICTURE,
-    ATTR_TIME,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
@@ -79,6 +70,7 @@ from homeassistant.const import (
     SERVICE_VOLUME_DOWN,
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
+    CommonServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -498,6 +490,135 @@ async def test_play_media_lib_track_add(
         == LONG_SERVICE_TIMEOUT
     )
     assert soco_mock.play_from_queue.call_count == 0
+
+
+@pytest.mark.parametrize(
+    (
+        "enqueue",
+        "expected_play_uri_calls",
+        "expected_add_uri_calls",
+        "expected_play_from_queue_calls",
+    ),
+    [
+        pytest.param(
+            MediaPlayerEnqueue.REPLACE,
+            [
+                call(
+                    "http://example.com/audio/stream",
+                    force_radio=False,
+                    mime_type="audio/mpeg",
+                )
+            ],
+            [],
+            [],
+            id="replace",
+        ),
+        pytest.param(
+            MediaPlayerEnqueue.ADD,
+            [],
+            [
+                call(
+                    "http://example.com/audio/stream",
+                    timeout=LONG_SERVICE_TIMEOUT,
+                    mime_type="audio/mpeg",
+                )
+            ],
+            [],
+            id="add",
+        ),
+        pytest.param(
+            MediaPlayerEnqueue.NEXT,
+            [],
+            [
+                call(
+                    "http://example.com/audio/stream",
+                    position=1,
+                    timeout=LONG_SERVICE_TIMEOUT,
+                    mime_type="audio/mpeg",
+                )
+            ],
+            [],
+            id="next",
+        ),
+        pytest.param(
+            MediaPlayerEnqueue.PLAY,
+            [],
+            [
+                call(
+                    "http://example.com/audio/stream",
+                    position=1,
+                    timeout=LONG_SERVICE_TIMEOUT,
+                    mime_type="audio/mpeg",
+                )
+            ],
+            [call(9)],
+            id="play",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("async_autosetup_sonos")
+async def test_play_media_source_passes_mime_type(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+    enqueue: MediaPlayerEnqueue,
+    expected_play_uri_calls: list[Any],
+    expected_add_uri_calls: list[Any],
+    expected_play_from_queue_calls: list[Any],
+) -> None:
+    """Test media source MIME type is passed to SoCo."""
+    soco_mock = soco_factory.mock_list.get("192.168.42.2")
+
+    with patch(
+        "homeassistant.components.sonos.media_player.media_source.async_resolve_media",
+        return_value=PlayMedia(
+            url="http://example.com/audio/stream", mime_type="audio/mpeg"
+        ),
+    ):
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.zone_a",
+                ATTR_MEDIA_CONTENT_TYPE: "music",
+                ATTR_MEDIA_CONTENT_ID: "media-source://test/audio",
+                ATTR_MEDIA_ENQUEUE: enqueue,
+            },
+            blocking=True,
+        )
+
+    assert soco_mock.play_uri.call_args_list == expected_play_uri_calls
+    assert soco_mock.add_uri_to_queue.call_args_list == expected_add_uri_calls
+    assert soco_mock.play_from_queue.call_args_list == expected_play_from_queue_calls
+
+
+@pytest.mark.usefixtures("async_autosetup_sonos")
+async def test_play_radio_media_source_does_not_pass_mime_type(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+) -> None:
+    """Test radio media source MIME type is not passed to SoCo."""
+    soco_mock = soco_factory.mock_list.get("192.168.42.2")
+
+    with patch(
+        "homeassistant.components.sonos.media_player.media_source.async_resolve_media",
+        return_value=PlayMedia(
+            url="http://example.com/audio/stream", mime_type="audio/mpeg"
+        ),
+    ):
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.zone_a",
+                ATTR_MEDIA_CONTENT_TYPE: "music",
+                ATTR_MEDIA_CONTENT_ID: "media-source://radio_browser/station",
+            },
+            blocking=True,
+        )
+
+    soco_mock.play_uri.assert_called_once_with(
+        "http://example.com/audio/stream", force_radio=True
+    )
 
 
 _share_link: str = "spotify:playlist:abcdefghij0123456789XY"
@@ -1220,9 +1341,12 @@ async def test_service_snapshot_restore(
     ) as mock_snapshot:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SNAPSHOT,
+            SonosService.SNAPSHOT,
             {
-                ATTR_ENTITY_ID: ["media_player.living_room", "media_player.bedroom"],
+                CommonServiceArgument.ENTITY_ID: [
+                    "media_player.living_room",
+                    "media_player.bedroom",
+                ],
             },
             blocking=True,
         )
@@ -1233,9 +1357,12 @@ async def test_service_snapshot_restore(
     ) as mock_restore:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_RESTORE,
+            SonosService.RESTORE,
             {
-                ATTR_ENTITY_ID: ["media_player.living_room", "media_player.bedroom"],
+                CommonServiceArgument.ENTITY_ID: [
+                    "media_player.living_room",
+                    "media_player.bedroom",
+                ],
             },
             blocking=True,
         )
@@ -1380,7 +1507,8 @@ async def test_play_media_announce(
     sonos_websocket.play_clip.reset_mock()
     sonos_websocket.play_clip.side_effect = SonosWebsocketError("Error Message")
     with pytest.raises(
-        HomeAssistantError, match="Error when calling Sonos websocket: Error Message"
+        HomeAssistantError,
+        match="An error occurred while communicating with the Sonos speaker",
     ):
         await hass.services.async_call(
             MP_DOMAIN,
@@ -1505,9 +1633,9 @@ async def test_media_get_queue(
     soco_mock = soco_factory.mock_list.get("192.168.42.2")
     result = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_QUEUE,
+        SonosService.GET_QUEUE,
         {
-            ATTR_ENTITY_ID: "media_player.zone_a",
+            CommonServiceArgument.ENTITY_ID: "media_player.zone_a",
         },
         blocking=True,
         return_response=True,
@@ -1617,14 +1745,14 @@ async def test_service_update_alarm(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_UPDATE_ALARM,
+        SonosService.UPDATE_ALARM,
         {
-            ATTR_ENTITY_ID: "media_player.zone_a",
-            ATTR_ALARM_ID: 14,
-            ATTR_TIME: "07:15:00",
-            ATTR_VOLUME: 0.25,
-            ATTR_INCLUDE_LINKED_ZONES: True,
-            ATTR_ENABLED: True,
+            CommonServiceArgument.ENTITY_ID: "media_player.zone_a",
+            SonosServiceArgument.ALARM_ID: 14,
+            SonosServiceArgument.TIME: "07:15:00",
+            SonosServiceArgument.VOLUME: 0.25,
+            SonosServiceArgument.INCLUDE_LINKED_ZONES: True,
+            SonosServiceArgument.ENABLED: True,
         },
         blocking=True,
     )
@@ -1658,14 +1786,14 @@ async def test_service_update_alarm_dne(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_UPDATE_ALARM,
+            SonosService.UPDATE_ALARM,
             {
-                ATTR_ENTITY_ID: "media_player.zone_a",
-                ATTR_ALARM_ID: 99,
-                ATTR_TIME: "07:15:00",
-                ATTR_VOLUME: 0.25,
-                ATTR_INCLUDE_LINKED_ZONES: True,
-                ATTR_ENABLED: True,
+                CommonServiceArgument.ENTITY_ID: "media_player.zone_a",
+                SonosServiceArgument.ALARM_ID: 99,
+                SonosServiceArgument.TIME: "07:15:00",
+                SonosServiceArgument.VOLUME: 0.25,
+                SonosServiceArgument.INCLUDE_LINKED_ZONES: True,
+                SonosServiceArgument.ENABLED: True,
             },
             blocking=True,
         )

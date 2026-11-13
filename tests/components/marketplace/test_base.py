@@ -1,8 +1,11 @@
 """Tests for the Marketplace base object."""
 
 from http import HTTPStatus
+import logging
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from aiogithubapi import GitHubConnectionException, GitHubException
 from aiohttp import ClientError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, MockUser
@@ -22,14 +25,15 @@ from homeassistant.components.marketplace.const import (
 from homeassistant.components.marketplace.enums import (
     DisabledReason,
     MarketplaceSignal,
+    MarketplaceStage,
     RepositoryCategory,
 )
 from homeassistant.components.marketplace.exceptions import (
     ExecutionInProgressError,
     ExpectedError,
-    MarketplaceError,
 )
 from homeassistant.components.marketplace.repositories.base import Repository
+from homeassistant.components.marketplace.utils.url import github_raw_file
 from homeassistant.core import HomeAssistant
 
 from . import mocked_response
@@ -37,6 +41,9 @@ from .conftest import MarketplaceResponses
 from .const import DEFAULT_CATEGORIES, REPOSITORY_INTEGRATION, REPOSITORY_PLUGIN
 
 DOWNLOAD_URL = "https://raw.githubusercontent.com/owner/repository/main/file.txt"
+DOWNLOAD_FILE = github_raw_file(
+    repository="owner/repository", ref="main", path="file.txt"
+)
 SLEEP = "homeassistant.components.marketplace.base.asyncio.sleep"
 
 
@@ -190,6 +197,101 @@ async def test_catalog_keeps_the_domain_of_an_installed_integration(
 
     assert repository.data.manifest_name == "Example"
     assert repository.data.domain == "example"
+
+
+@pytest.mark.parametrize(
+    ("categories", "expected"),
+    [
+        pytest.param(["energy.ev_charging"], ["energy.ev_charging"], id="categories"),
+        pytest.param(None, [], id="removed"),
+        pytest.param("energy", [], id="not-a-list"),
+        pytest.param([1], [], id="not-strings"),
+    ],
+)
+@pytest.mark.parametrize("newer", [True, False], ids=["newer", "same-entry"])
+async def test_catalog_integration_categories(
+    marketplace: MarketplaceManager,
+    categories: Any,
+    expected: list[str],
+    newer: bool,
+) -> None:
+    """Test the catalog sets the categories of an integration.
+
+    The catalog calls them categories, a broken value only loses them. They
+    don't wait for a newer entry: storage from before they existed has none.
+    """
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository.data.integration_categories = ["lighting"]
+
+    entry = {
+        "domain": repository.data.domain,
+        "full_name": repository.data.full_name,
+        "last_fetched": repository.data.last_fetched.timestamp() + int(newer),
+        "manifest": {},
+        "manifest_name": "Example",
+    }
+    if categories is not None:
+        entry["categories"] = categories
+    feed = {repository.data.id: entry}
+    with patch.object(marketplace.data_client, "async_get_category", return_value=feed):
+        await marketplace.async_get_category_repositories_from_catalog(
+            RepositoryCategory.INTEGRATION
+        )
+
+    assert repository.data.integration_categories == expected
+
+
+OTHER_INTEGRATION_FEED = {
+    "99": {
+        "full_name": "owner/other-integration",
+        "last_fetched": 0,
+        "manifest": {},
+    }
+}
+
+
+@pytest.mark.parametrize(
+    ("stage", "feed", "default"),
+    [
+        pytest.param(
+            MarketplaceStage.STARTUP,
+            OTHER_INTEGRATION_FEED,
+            False,
+            id="no_longer_listed",
+        ),
+        pytest.param(MarketplaceStage.STARTUP, {}, True, id="empty_answer"),
+        pytest.param(
+            MarketplaceStage.RUNNING,
+            OTHER_INTEGRATION_FEED,
+            True,
+            id="dropped_while_running",
+        ),
+    ],
+)
+async def test_catalog_unmarks_what_it_no_longer_lists(
+    marketplace: MarketplaceManager,
+    stage: MarketplaceStage,
+    feed: dict[str, Any],
+    default: bool,
+) -> None:
+    """Test a repository the catalog drops stops being default, in its category only.
+
+    Restored from storage, a default would otherwise stay default for good.
+    While running it stays default until a restart, as it stays registered.
+    """
+    integration = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    plugin = marketplace.repositories.get_by_full_name(REPOSITORY_PLUGIN)
+    assert marketplace.repositories.is_default(integration.data.id)
+    assert marketplace.repositories.is_default(plugin.data.id)
+    marketplace.stage = stage
+
+    with patch.object(marketplace.data_client, "async_get_category", return_value=feed):
+        await marketplace.async_get_category_repositories_from_catalog(
+            RepositoryCategory.INTEGRATION
+        )
+
+    assert marketplace.repositories.is_default(integration.data.id) is default
+    assert marketplace.repositories.is_default(plugin.data.id)
 
 
 async def test_custom_repository_listed_by_the_catalog_is_default(
@@ -365,18 +467,41 @@ async def test_rate_limit_decides_how_much_can_update(
     assert marketplace.system.disabled_reason == reason
 
 
+@pytest.mark.parametrize(
+    ("exception", "level", "has_traceback"),
+    [
+        pytest.param(
+            GitHubConnectionException("Timeout while contacting DNS servers"),
+            logging.DEBUG,
+            False,
+            id="connection_error",
+        ),
+        pytest.param(
+            GitHubException("Something broke"),
+            logging.ERROR,
+            True,
+            id="github_error",
+        ),
+    ],
+)
 async def test_rate_limit_that_can_not_be_read_updates_nothing(
     marketplace: MarketplaceManager,
+    caplog: pytest.LogCaptureFixture,
+    exception: GitHubException,
+    level: int,
+    has_traceback: bool,
 ) -> None:
     """Test an unknown rate limit is treated as none left."""
+    caplog.set_level(logging.DEBUG, logger="homeassistant.components.marketplace")
     with patch.object(
-        marketplace,
-        "async_github_api_method",
-        AsyncMock(side_effect=MarketplaceError("no route to host")),
+        marketplace.githubapi, "rate_limit", AsyncMock(side_effect=exception)
     ):
         assert await marketplace.async_can_update() == 0
 
     assert not marketplace.system.disabled
+    [record] = [r for r in caplog.records if "rate limit" in r.getMessage()]
+    assert record.levelno == level
+    assert bool(record.exc_info) is has_traceback
 
 
 @pytest.mark.parametrize(
@@ -490,7 +615,7 @@ async def test_download_gives_up_after_five_timeouts(
     )
 
     with patch(SLEEP) as sleep:
-        assert await marketplace.async_download_file(DOWNLOAD_URL) is None
+        assert await marketplace.async_download_file(DOWNLOAD_FILE) is None
 
     assert sleep.call_count == 5
 
@@ -527,7 +652,7 @@ async def test_download_waits_out_a_rate_limit(
 
     with patch(SLEEP, wait):
         content = await marketplace.async_download_file(
-            DOWNLOAD_URL, handle_rate_limit=True
+            DOWNLOAD_FILE, handle_rate_limit=True
         )
 
     assert content == b"ok"
@@ -555,7 +680,7 @@ async def test_download_that_fails_gives_nothing(
     response_mocker.add(DOWNLOAD_URL, response)
 
     with patch(SLEEP) as sleep:
-        assert await marketplace.async_download_file(DOWNLOAD_URL) is None
+        assert await marketplace.async_download_file(DOWNLOAD_FILE) is None
 
     sleep.assert_not_called()
 

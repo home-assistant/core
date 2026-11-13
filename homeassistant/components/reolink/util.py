@@ -46,7 +46,7 @@ class ReolinkData:
     firmware_coordinator: ReolinkFirmwareCoordinator
 
 
-def is_connected(hass: HomeAssistant, config_entry: config_entries.ConfigEntry) -> bool:
+def is_connected(hass: HomeAssistant, config_entry: ReolinkConfigEntry) -> bool:
     """Check if an existing entry has a proper connection."""
     return (
         hasattr(config_entry, "runtime_data")
@@ -60,7 +60,7 @@ def get_host(hass: HomeAssistant, config_entry_id: str) -> ReolinkHost:
     config_entry: ReolinkConfigEntry | None = hass.config_entries.async_get_entry(
         config_entry_id
     )
-    if config_entry is None:
+    if config_entry is None or config_entry.domain != DOMAIN:
         raise Unresolvable(
             translation_domain=DOMAIN,
             translation_key="config_entry_not_found",

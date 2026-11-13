@@ -16,17 +16,13 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fritz import switch as fritz_switch
 from homeassistant.components.fritz.const import DOMAIN, SCAN_INTERVAL
-from homeassistant.components.switch import (
-    DOMAIN as SWITCH_DOMAIN,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-)
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -758,11 +754,19 @@ async def test_switch_device_wan_access(
     assert state.state == expected_state
 
 
+@pytest.mark.parametrize(
+    "ip_address",
+    [
+        pytest.param("", id="empty"),
+        pytest.param(None, id="none"),
+    ],
+)
 async def test_switch_device_no_ip_address(
     hass: HomeAssistant,
     fc_class_mock,
     fh_class_mock,
     fs_class_mock,
+    ip_address: str | None,
 ) -> None:
     """Test Fritz!Tools switches when device has no IP address."""
 
@@ -772,7 +776,7 @@ async def test_switch_device_no_ip_address(
     entry.add_to_hass(hass)
 
     attributes = deepcopy(MOCK_HOST_ATTRIBUTES_DATA)
-    attributes[0]["IPAddress"] = ""
+    attributes[0]["IPAddress"] = ip_address
 
     fh_class_mock.get_hosts_attributes = MagicMock(return_value=attributes)
 
@@ -837,8 +841,8 @@ async def test_switch_turn_on_off(
     ) as mock_set_action:
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: entity_id},
+            SwitchService.TURN_OFF,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
         mock_set_action.assert_called_once()
@@ -851,8 +855,8 @@ async def test_switch_turn_on_off(
     ) as mock_set_action_2:
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_id},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
         mock_set_action_2.assert_called_once()

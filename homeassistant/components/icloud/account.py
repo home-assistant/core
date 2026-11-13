@@ -42,6 +42,9 @@ from .const import (
     ATTR_DEVICE_STATUS,
     ATTR_LOW_POWER_MODE,
     ATTR_OWNER_NAME,
+    DEVICE_ACTION_STATUS_CODE,
+    DEVICE_ACTION_STATUS_PENDING,
+    DEVICE_ACTIVATION_LOCKED,
     DEVICE_BATTERY_LEVEL,
     DEVICE_BATTERY_STATUS,
     DEVICE_CLASS,
@@ -49,24 +52,31 @@ from .const import (
     DEVICE_FEATURE_LOCK,
     DEVICE_FEATURES,
     DEVICE_ID,
+    DEVICE_IS_LOCATING,
     DEVICE_LOCATION,
     DEVICE_LOCATION_ALTITUDE,
+    DEVICE_LOCATION_ENABLED,
     DEVICE_LOCATION_FLOOR_LEVEL,
     DEVICE_LOCATION_HORIZONTAL_ACCURACY,
+    DEVICE_LOCATION_IS_INACCURATE,
+    DEVICE_LOCATION_IS_OLD,
     DEVICE_LOCATION_LATITUDE,
     DEVICE_LOCATION_LONGITUDE,
     DEVICE_LOCATION_POSITION_TYPE,
     DEVICE_LOCATION_TIMESTAMP,
     DEVICE_LOCKED_TIMESTAMP,
     DEVICE_LOST_MODE_CAPABLE,
+    DEVICE_LOST_MODE_ENABLED,
     DEVICE_LOST_TIMESTAMP,
     DEVICE_LOW_POWER_MODE,
     DEVICE_NAME,
     DEVICE_PERSON_ID,
     DEVICE_RAW_DEVICE_MODEL,
+    DEVICE_REMOTE_LOCK,
     DEVICE_STATUS,
     DEVICE_STATUS_CODES,
     DEVICE_STATUS_SET,
+    DEVICE_WIPE_IN_PROGRESS,
     DEVICE_WIPED_TIMESTAMP,
     DOMAIN,
 )
@@ -828,6 +838,11 @@ class IcloudAccount:
         return self._fetch_interval
 
     @property
+    def max_interval(self) -> int:
+        """Return the longest interval between two fetches, in minutes."""
+        return self._max_interval
+
+    @property
     def devices(self) -> dict[str, IcloudDevice]:
         """Return the account devices."""
         return self._devices
@@ -912,12 +927,58 @@ class IcloudDevice:
         # Deliberately not nested under the battery block above: a device
         # iCloud reports no battery for still has a location worth reading.
         location = self._status.get(DEVICE_LOCATION)
-        if location and _is_usable_location(location):
+        if location and _is_usable_location(location) and not self._is_stale(location):
             announce = announce or self._location is None
             self._location = location
         else:
+            # Without a location the tracker reports "unknown" rather than the
+            # place the device has since left.
             self._location = None
         return announce
+
+    def _is_stale(self, location: dict[str, Any]) -> bool:
+        """Return whether a location fix is too old to be trusted.
+
+        Both signals are needed, because neither is sufficient alone:
+
+        `isOld` says iCloud served a cached fix rather than a fresh one, but
+        not why. A device that was briefly unreachable looks exactly like one
+        that has genuinely moved away, so acting on the flag by itself would
+        drop locations that are still perfectly good.
+
+        The age of the fix alone is no better: a device sitting still keeps
+        reporting the same old timestamp while iCloud still considers that fix
+        current, and discarding those would throw away the only location such
+        a device ever reports.
+
+        Requiring both means a fix is only discarded once iCloud has marked it
+        cached *and* it is older than the longest gap between two fetches - by
+        which point a fresher one should already have superseded it. The half
+        interval of headroom keeps a fix that merely lands late from being
+        treated as stale.
+
+        The configured maximum is used rather than the current fetch interval,
+        which is recomputed after this runs and drops as low as fifteen
+        seconds while devices are still pending - a threshold that short would
+        discard every cached fix there is.
+        """
+        if not location.get(DEVICE_LOCATION_IS_OLD):
+            return False
+
+        timestamp = location.get(DEVICE_LOCATION_TIMESTAMP)
+        if isinstance(timestamp, bool) or not isinstance(timestamp, int | float):
+            # Without a time there is nothing to judge the fix by, and one that
+            # is not a number cannot be read as one.
+            return False
+
+        try:
+            # iCloud reports the fix time in milliseconds.
+            fixed_at = datetime.fromtimestamp(timestamp / 1000, tz=UTC)
+        except OverflowError, OSError, ValueError:
+            # NaN, infinity and values outside the range of a date.
+            return False
+        age = utcnow() - fixed_at
+        return age.total_seconds() > self._account.max_interval * 60 * 1.5
 
     def play_sound(self) -> None:
         """Play sound on the device."""
@@ -1069,6 +1130,85 @@ class IcloudDevice:
     def lost_mode_available(self) -> bool:
         """Return whether the device supports lost mode."""
         return self._device.lost_mode_available
+
+    @property
+    def sound_available(self) -> bool:
+        """Return whether the device can play a sound."""
+        return self._device.sound_available
+
+    @property
+    def location_is_old(self) -> bool:
+        """Return whether Apple flagged the reported location fix as old."""
+        # The flag describes the payload Apple just sent, which can differ from
+        # the fix this integration stores.
+        location = self._status[DEVICE_LOCATION]
+        if location is None:
+            return False
+        return bool(location.get(DEVICE_LOCATION_IS_OLD, False))
+
+    @property
+    def location_is_inaccurate(self) -> bool:
+        """Return whether Apple flagged the reported location fix as inaccurate."""
+        location = self._status[DEVICE_LOCATION]
+        if location is None:
+            return False
+        return bool(location.get(DEVICE_LOCATION_IS_INACCURATE, False))
+
+    @property
+    def is_online(self) -> bool:
+        """Return whether the device is online."""
+        return self.device_status == "online"
+
+    @property
+    def low_power_mode(self) -> bool:
+        """Return whether low power mode is enabled on the device."""
+        return bool(self._status.get(DEVICE_LOW_POWER_MODE, False))
+
+    @property
+    def activation_locked(self) -> bool:
+        """Return whether activation lock is enabled on the device."""
+        return bool(self._status.get(DEVICE_ACTIVATION_LOCKED, False))
+
+    @property
+    def is_locating(self) -> bool:
+        """Return whether the device is being located right now."""
+        return bool(self._status.get(DEVICE_IS_LOCATING, False))
+
+    @property
+    def location_services_enabled(self) -> bool:
+        """Return whether location services are enabled on the device."""
+        return bool(self._status.get(DEVICE_LOCATION_ENABLED, False))
+
+    @property
+    def wipe_in_progress(self) -> bool:
+        """Return whether a wipe is in progress on the device."""
+        return bool(self._status.get(DEVICE_WIPE_IN_PROGRESS, False))
+
+    @property
+    def remote_lock_pending(self) -> bool:
+        """Return whether a remote lock is pending on the device."""
+        remote_lock = self._status.get(DEVICE_REMOTE_LOCK)
+        if not isinstance(remote_lock, dict):
+            return False
+        return (
+            remote_lock.get(DEVICE_ACTION_STATUS_CODE) == DEVICE_ACTION_STATUS_PENDING
+        )
+
+    @property
+    def lost_mode_enabled(self) -> bool:
+        """Return whether lost mode is currently enabled on the device."""
+        return bool(self._status.get(DEVICE_LOST_MODE_ENABLED, False))
+
+    @property
+    def raw_status(self) -> dict[str, Any]:
+        """Return the raw device data reported by Apple."""
+        # update() stores the fetch interval in the status dict, which is
+        # account state rather than device data.
+        return {
+            key: value
+            for key, value in self._status.items()
+            if key != ATTR_ACCOUNT_FETCH_INTERVAL
+        }
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

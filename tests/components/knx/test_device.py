@@ -248,7 +248,10 @@ async def test_yaml_device_name_updates_on_reload(
         patch(
             "xknx.xknx.knx_interface_factory",
             return_value=Mock(
-                start=AsyncMock(), stop=AsyncMock(), gateway_info=AsyncMock()
+                start=AsyncMock(),
+                stop=AsyncMock(),
+                stop_reconnect=AsyncMock(),
+                gateway_info=AsyncMock(),
             ),
         ),
     ):

@@ -1,6 +1,7 @@
 """Test init of Logitch Harmony Hub integration."""
 
-from unittest.mock import AsyncMock
+from pathlib import Path
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from aioharmony.exceptions import TimeOut
 import pytest
@@ -10,11 +11,15 @@ from pytest_homeassistant.common import (
     mock_registry,
 )
 
+from homeassistant.components.harmony import async_setup_entry
 from homeassistant.components.harmony.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_SSDP, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
+from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.setup import async_setup_component
 
 from .conftest import FakeHarmonyClient
@@ -28,6 +33,9 @@ from .const import (
     PLAY_MUSIC_ACTIVITY_ID,
     WATCH_TV_ACTIVITY_ID,
 )
+
+OLD_CONFIG_FILE = "harmony_123.conf"
+NEW_CONFIG_FILE = f"{STORAGE_DIR}/{DOMAIN}/harmony_123.conf"
 
 
 async def test_unique_id_migration(
@@ -111,3 +119,130 @@ async def test_connect_timeout_retries_setup(
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
     harmony_client.close.assert_awaited_once()
+
+
+@pytest.mark.usefixtures("mock_hc", "mock_write_config")
+async def test_reconfigure_loaded_entry(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test reconfiguring a loaded entry reloads it once with the new host."""
+    mock_config_entry.add_to_hass(hass)
+    harmonyapi = MagicMock(connect=AsyncMock(return_value=True), close=AsyncMock())
+    harmonyapi.hub_id = 123
+    with (
+        patch(
+            "homeassistant.components.harmony.async_setup_entry",
+            wraps=async_setup_entry,
+        ) as mock_setup_entry,
+        patch(
+            "homeassistant.components.harmony.util.HarmonyAPI",
+            return_value=harmonyapi,
+        ),
+    ):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        result = await mock_config_entry.start_reconfigure_flow(hass)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "192.0.2.1"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.runtime_data.address == "192.0.2.1"
+    # Initial setup plus a single reload by the update listener
+    assert mock_setup_entry.await_count == 2
+
+
+@pytest.mark.usefixtures("mock_hc", "mock_write_config")
+async def test_ssdp_host_change_reloads_loaded_entry(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test discovering a loaded hub on a new host reloads it once."""
+    mock_config_entry.add_to_hass(hass)
+    with (
+        patch(
+            "homeassistant.components.harmony.async_setup_entry",
+            wraps=async_setup_entry,
+        ) as mock_setup_entry,
+        patch(
+            "homeassistant.components.harmony.config_flow.HubConnector.get_remote_id",
+            return_value=123,
+        ),
+    ):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_SSDP},
+            data=SsdpServiceInfo(
+                ssdp_usn="mock_usn",
+                ssdp_st="mock_st",
+                ssdp_location="http://192.0.2.1:8088/description",
+                upnp={"friendlyName": HUB_NAME},
+            ),
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.runtime_data.address == "192.0.2.1"
+    assert mock_setup_entry.await_count == 2
+
+
+async def test_remove_entry_removes_config_file(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, tmp_path: Path
+) -> None:
+    """Test removing the entry removes the hub configuration file."""
+    hass.config.config_dir = str(tmp_path)
+    config_file = tmp_path / NEW_CONFIG_FILE
+    config_file.parent.mkdir(parents=True)
+    config_file.write_text("{}")
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert not config_file.exists()
+
+
+@pytest.mark.usefixtures("mock_hc", "mock_write_config")
+async def test_migrate_config_file_to_storage(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, tmp_path: Path
+) -> None:
+    """Test the hub configuration file is moved from the config root into .storage."""
+    hass.config.config_dir = str(tmp_path)
+    (tmp_path / OLD_CONFIG_FILE).write_text("{}")
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=mock_config_entry.unique_id,
+        data=mock_config_entry.data,
+        minor_version=1,
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.minor_version == 2
+    assert not (tmp_path / OLD_CONFIG_FILE).exists()
+    assert (tmp_path / NEW_CONFIG_FILE).read_text() == "{}"
+
+
+@pytest.mark.usefixtures("mock_hc")
+async def test_config_file_written_to_storage(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, tmp_path: Path
+) -> None:
+    """Test the hub configuration file is written into .storage."""
+    hass.config.config_dir = str(tmp_path)
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (tmp_path / NEW_CONFIG_FILE).exists()
+    assert not (tmp_path / OLD_CONFIG_FILE).exists()

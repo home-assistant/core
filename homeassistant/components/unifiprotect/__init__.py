@@ -39,6 +39,7 @@ from .const import (
 )
 from .data import ProtectData, UFPConfigEntry
 from .migrate import (
+    async_deprecate_camera_setting_mirrors,
     async_deprecate_light_setting_mirrors,
     async_deprecate_private_only_entities,
     async_deprecate_ring_and_motion_sensors,
@@ -93,7 +94,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> None:
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, data_service.async_stop)
     )
 
+    cloud_user_issue_id = f"cloud_user_{entry.entry_id}"
     if protect.is_public_only:
+        # An entry switched to API-key-only no longer signs in as the cloud user
+        ir.async_delete_issue(hass, DOMAIN, cloud_user_issue_id)
         await _async_setup_public_only_entry(hass, entry, data_service)
         return
 
@@ -137,7 +141,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> None:
         ir.async_create_issue(
             hass,
             DOMAIN,
-            "cloud_user",
+            cloud_user_issue_id,
+            config_entry_id=entry.entry_id,
             is_fixable=True,
             is_persistent=False,
             learn_more_url="https://www.home-assistant.io/integrations/unifiprotect/#full-access",
@@ -145,6 +150,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> None:
             translation_key="cloud_user",
             data={"entry_id": entry.entry_id},
         )
+    else:
+        ir.async_delete_issue(hass, DOMAIN, cloud_user_issue_id)
 
     if nvr_info.version < MIN_REQUIRED_PROTECT_V:
         raise ConfigEntryError(
@@ -325,6 +332,7 @@ async def _async_setup_entry(
         hass, entry, {sensor.mac for sensor in bootstrap.sensors.values()}
     )
     async_deprecate_light_setting_mirrors(hass, entry, bootstrap)
+    async_deprecate_camera_setting_mirrors(hass, entry, bootstrap)
     async_deprecate_private_only_entities(hass, entry, bootstrap)
     async_deprecate_ring_and_motion_sensors(hass, entry, bootstrap)
     hass.http.register_view(ThumbnailProxyView(hass))

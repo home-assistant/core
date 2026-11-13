@@ -9,7 +9,6 @@ import probatio
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -17,6 +16,7 @@ from homeassistant.config_entries import (
     SubentryFlowResult,
 )
 from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_TOKEN, CONF_USERNAME
+from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     TextSelector,
@@ -25,7 +25,7 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import CONF_LIST_ID, CONF_SHARED_SECRET, DOMAIN, LOGGER, SUBENTRY_TYPE_LIST
-from .coordinator import RememberTheMilkData
+from .coordinator import RememberTheMilkConfigEntry, RememberTheMilkData
 
 TOKEN_TIMEOUT_SEC = 30
 
@@ -47,9 +47,10 @@ class RTMConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     @classmethod
+    @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: RememberTheMilkConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         return {SUBENTRY_TYPE_LIST: ListSubentryFlowHandler}

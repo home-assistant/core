@@ -1,8 +1,18 @@
 """Tests for the Danish Fuelprices integration."""
 
+from unittest.mock import Mock
+
+from aiohttp import ClientResponseError
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.core import HomeAssistant
+
+
+def client_error(status: int) -> ClientResponseError:
+    """Create an HTTP response error."""
+    return ClientResponseError(
+        request_info=Mock(), history=(), status=status, message="error", headers=None
+    )
 
 
 async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:

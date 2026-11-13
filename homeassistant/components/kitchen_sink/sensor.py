@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import ChildDeviceInfo, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import UNDEFINED, StateType, UndefinedType
+from homeassistant.helpers.typing import StateType, Undefined
 
 from .const import DOMAIN
 from .device import async_create_device
@@ -42,7 +42,7 @@ async def async_setup_entry(
                 device_unique_id="outlet_1",
                 unique_id="outlet_1_power",
                 device_name="Outlet 1",
-                entity_name=UNDEFINED,
+                entity_name=Undefined,
                 state=50,
                 device_class=SensorDeviceClass.POWER,
                 state_class=SensorStateClass.MEASUREMENT,
@@ -53,7 +53,7 @@ async def async_setup_entry(
                 device_unique_id="outlet_2",
                 unique_id="outlet_2_power",
                 device_name="Outlet 2",
-                entity_name=UNDEFINED,
+                entity_name=Undefined,
                 state=1500,
                 device_class=SensorDeviceClass.POWER,
                 state_class=SensorStateClass.MEASUREMENT,
@@ -136,7 +136,7 @@ class DemoSensor(SensorEntity):
         device_unique_id: str,
         unique_id: str,
         device_name: str,
-        entity_name: str | UndefinedType | None,
+        entity_name: str | Undefined | None,
         state: StateType,
         device_class: SensorDeviceClass | None,
         state_class: SensorStateClass | None,
@@ -145,7 +145,7 @@ class DemoSensor(SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         self._attr_device_class = device_class
-        if entity_name is not UNDEFINED:
+        if entity_name is not Undefined:
             self._attr_name = entity_name
         self._attr_native_unit_of_measurement = unit_of_measurement
         self._attr_native_value = state

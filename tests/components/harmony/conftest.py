@@ -107,7 +107,18 @@ class FakeHarmonyClient:
     @property
     def json_config(self):
         """Return the json config as a dict."""
-        return {}
+        return {
+            "Activities": {
+                activity["id"]: activity["label"]
+                for activity in self.config["activity"]
+            },
+            "Devices": {
+                TV_DEVICE_NAME: {
+                    "id": TV_DEVICE_ID,
+                    "commands": ["PowerOn", "PowerOff", "VolumeUp", "VolumeDown"],
+                }
+            },
+        }
 
     @property
     def hub_config(self):
@@ -187,4 +198,5 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         unique_id="123",
         data={CONF_HOST: "192.0.2.0", CONF_NAME: HUB_NAME},
+        minor_version=2,
     )

@@ -147,6 +147,12 @@ def _mock_preset_write(
     matter_client.write_attribute = AsyncMock(return_value=None)
 
 
+@pytest.fixture
+def platform() -> Platform:
+    """Return the platform under test."""
+    return Platform.CLIMATE
+
+
 @pytest.mark.usefixtures("matter_devices")
 async def test_climates(
     hass: HomeAssistant,

@@ -103,6 +103,14 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
                 pool_maxsize=30,
                 redact_debug_log=True,
             )
+            # Credentials are only checked by the first TR-064 call
+            self._model = connection.call_action("DeviceInfo:1", "GetInfo")[
+                "NewModelName"
+            ]
+            upnp_disabled = (
+                "X_AVM-DE_UPnP1" in connection.services
+                and not connection.call_action("X_AVM-DE_UPnP1", "GetInfo")["NewEnable"]
+            )
         except FRITZ_AUTH_EXCEPTIONS:
             return ERROR_AUTH_INVALID
         except FritzConnectionException:
@@ -111,12 +119,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
             LOGGER.exception("Unexpected exception")
             return ERROR_UNKNOWN
 
-        self._model = connection.call_action("DeviceInfo:1", "GetInfo")["NewModelName"]
-
-        if (
-            "X_AVM-DE_UPnP1" in connection.services
-            and not connection.call_action("X_AVM-DE_UPnP1", "GetInfo")["NewEnable"]
-        ):
+        if upnp_disabled:
             return ERROR_UPNP_NOT_CONFIGURED
 
         return None
