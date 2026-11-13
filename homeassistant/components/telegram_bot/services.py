@@ -27,16 +27,8 @@ from homeassistant.util.json import JsonValueType
 
 from .bot import TelegramBotConfigEntry, TelegramNotificationService
 from .const import (
-    ATTR_AUTHENTICATION,
-    ATTR_CAPTION,
     ATTR_CHAT_ID,
-    ATTR_FILE,
-    ATTR_MEDIA_TYPE,
     ATTR_MESSAGE_ID,
-    ATTR_PASSWORD,
-    ATTR_URL,
-    ATTR_USERNAME,
-    ATTR_VERIFY_SSL,
     DOMAIN,
     TelegramBotChatAction,
     TelegramBotParseMode,
@@ -157,7 +149,9 @@ SERVICE_SCHEMA_SEND_MEDIA_GROUP = probatio.Schema(
             [
                 probatio.Schema(
                     {
-                        probatio.Required(ATTR_MEDIA_TYPE): probatio.In(
+                        probatio.Required(
+                            TelegramBotServiceArgument.MEDIA_TYPE
+                        ): probatio.In(
                             (
                                 str(InputMediaType.AUDIO),
                                 str(InputMediaType.VIDEO),
@@ -165,13 +159,23 @@ SERVICE_SCHEMA_SEND_MEDIA_GROUP = probatio.Schema(
                                 str(InputMediaType.PHOTO),
                             )
                         ),
-                        probatio.Optional(ATTR_URL): cv.string,
-                        probatio.Optional(ATTR_FILE): cv.string,
-                        probatio.Optional(ATTR_CAPTION): cv.string,
-                        probatio.Optional(ATTR_USERNAME): cv.string,
-                        probatio.Optional(ATTR_PASSWORD): cv.string,
-                        probatio.Optional(ATTR_AUTHENTICATION): cv.string,
-                        probatio.Optional(ATTR_VERIFY_SSL, default=True): cv.boolean,
+                        probatio.Optional(TelegramBotServiceArgument.URL): cv.string,
+                        probatio.Optional(TelegramBotServiceArgument.FILE): cv.string,
+                        probatio.Optional(
+                            TelegramBotServiceArgument.CAPTION
+                        ): cv.string,
+                        probatio.Optional(
+                            TelegramBotServiceArgument.USERNAME
+                        ): cv.string,
+                        probatio.Optional(
+                            TelegramBotServiceArgument.PASSWORD
+                        ): cv.string,
+                        probatio.Optional(
+                            TelegramBotServiceArgument.AUTHENTICATION
+                        ): cv.string,
+                        probatio.Optional(
+                            TelegramBotServiceArgument.VERIFY_SSL, default=True
+                        ): cv.boolean,
                     }
                 )
             ],
