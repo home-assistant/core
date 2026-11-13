@@ -1093,3 +1093,60 @@ async def test_group_setup_skipped_when_removed_while_connecting(
 
     new_group_control.connect.assert_called_once()
     assert LEADER_UDN not in hass.data[GROUP_ENTITIES]
+
+
+async def test_settling_ends_when_initiator_removed(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+    mock_group,
+) -> None:
+    """Test members are polled again if the entity that grouped them is removed."""
+    _, member = mock_group
+    await _join(hass, LEADER_ENTITY_ID, [MEMBER_ENTITY_ID])
+    # Removing the leader also cancels its check of the group change
+    entity_registry.async_remove(LEADER_ENTITY_ID)
+    await hass.async_block_till_done()
+    member.state.reset_mock()
+
+    freezer.tick(timedelta(seconds=31))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    member.state.assert_called_once()
+
+
+@pytest.mark.parametrize("leader_state", [LEADER_GROUP])
+@pytest.mark.parametrize("member_state", [MEMBER_GROUP])
+async def test_group_members_updated_when_member_removed(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_group
+) -> None:
+    """Test a removed member disappears from the group members right away."""
+    assert _group_members(hass, LEADER_ENTITY_ID) == GROUPED
+
+    entity_registry.async_remove(MEMBER_ENTITY_ID)
+    await hass.async_block_till_done()
+
+    assert _group_members(hass, LEADER_ENTITY_ID) == [LEADER_ENTITY_ID]
+
+
+async def test_group_control_rediscovery_retried_after_reconnect(
+    hass: HomeAssistant,
+    mock_devices: dict[str, MagicMock],
+    mock_group_controls: dict[str, MagicMock],
+    mock_ssdp: list[SsdpServiceInfo],
+) -> None:
+    """Test the group service is looked up with the polls until it's found again."""
+    mock_ssdp.append(_ssdp_info(DMR_LOCATION, LEADER_UDN, base_url=ENDPOINT))
+    await _setup_songpal(hass)
+
+    # The device isn't discovered again right after reconnecting
+    mock_ssdp.clear()
+    await _disconnect(hass, mock_devices[ENDPOINT])
+    assert OTHER_LOCATION not in mock_group_controls
+
+    mock_ssdp.append(_ssdp_info(OTHER_LOCATION, LEADER_UDN, base_url=ENDPOINT))
+    await _fire_poll(hass)
+
+    mock_group_controls[OTHER_LOCATION].connect.assert_called_once()
+    mock_group_controls[OTHER_LOCATION].state.assert_called_once()

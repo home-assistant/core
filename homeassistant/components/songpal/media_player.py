@@ -161,7 +161,9 @@ class SongpalEntity(MediaPlayerEntity):
         self._group_state: GroupState | None = None
         self._udn: str | None = None
         self._friendly_name: str = name
-        self._group_settling = False
+        # Polling is paused until a group change settled, see GROUP_SETTLE_DELAY
+        self._group_settling_until = 0.0
+        self._group_control_outdated = False
         self._removed = False
         self._cancel_group_refresh: CALLBACK_TYPE | None = None
 
@@ -295,7 +297,9 @@ class SongpalEntity(MediaPlayerEntity):
             _LOGGER.warning(
                 "[%s(%s)] Connection reestablished", self.name, self._dev.endpoint
             )
-            # The UPnP location may have changed while the device was gone
+            # The UPnP location may have changed while the device was gone,
+            # keep looking it up with the polls until that succeeds
+            self._group_control_outdated = True
             await self._async_setup_group_control()
 
         self._dev.on_notification(VolumeChange, _volume_changed)
@@ -582,6 +586,7 @@ class SongpalEntity(MediaPlayerEntity):
 
         udn = info.upnp[ATTR_UPNP_UDN]
         self._group_control = group_control
+        self._group_control_outdated = False
         self._udn = udn
         self._friendly_name = info.upnp.get(ATTR_UPNP_FRIENDLY_NAME) or self._name
         self._attr_supported_features |= MediaPlayerEntityFeature.GROUPING
@@ -594,18 +599,26 @@ class SongpalEntity(MediaPlayerEntity):
             def _unregister() -> None:
                 if entities.get(udn) is self:
                     del entities[udn]
+                    # Their group members may have included this device
+                    for entity in entities.values():
+                        entity.async_write_ha_state()
 
             self.async_on_remove(_unregister)
         self.async_write_ha_state()
 
+    @property
+    def _is_group_settling(self) -> bool:
+        """Return whether a group change of the device is still settling."""
+        return self.hass.loop.time() < self._group_settling_until
+
     async def _async_poll_group_state(self, _now: Any) -> None:
         """Poll the group state, unless a group change is still settling."""
-        if not self._group_settling:
+        if not self._is_group_settling:
             await self._async_update_group_state()
 
     async def _async_update_group_state(self) -> None:
         """Fetch the group state and update the entities whose groups changed."""
-        if self._group_control is None:
+        if self._group_control is None or self._group_control_outdated:
             await self._async_setup_group_control()
             if self._group_control is None:
                 return
@@ -635,7 +648,7 @@ class SongpalEntity(MediaPlayerEntity):
         self._cancel_group_refresh = None
         entities = list(self.hass.data[GROUP_ENTITIES].values())
         for entity in entities:
-            entity._group_settling = False  # noqa: SLF001
+            entity._group_settling_until = 0  # noqa: SLF001
         await asyncio.gather(
             *(entity._async_update_group_state() for entity in entities)  # noqa: SLF001
         )
@@ -645,9 +658,11 @@ class SongpalEntity(MediaPlayerEntity):
         self, expected: dict[SongpalEntity, GroupState]
     ) -> None:
         """Show the expected group states and verify them once the devices settled."""
+        # Ends by itself in case the refresh below is cancelled with this entity
+        settling_until = self.hass.loop.time() + GROUP_SETTLE_DELAY
         for entity, state in expected.items():
             entity._group_state = state  # noqa: SLF001
-            entity._group_settling = True  # noqa: SLF001
+            entity._group_settling_until = settling_until  # noqa: SLF001
         for entity in self.hass.data[GROUP_ENTITIES].values():
             entity.async_write_ha_state()
 
