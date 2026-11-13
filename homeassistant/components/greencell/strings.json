@@ -61,6 +61,16 @@
       "voltage_l3": {
         "name": "Voltage phase L3"
       }
+    },
+    "switch": {
+      "charging": {
+        "name": "[%key:common::state::charging%]"
+      }
+    }
+  },
+  "exceptions": {
+    "execute_not_allowed": {
+      "message": "The device does not allow Home Assistant to execute commands. Enable it in the device settings."
     }
   }
 }

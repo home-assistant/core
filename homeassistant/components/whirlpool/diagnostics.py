@@ -10,8 +10,14 @@ from homeassistant.core import HomeAssistant
 from . import WhirlpoolConfigEntry
 
 TO_REDACT = {
+    "APPLIANCE_ID",
+    "DEVICE_ID",
+    "LOCATION_ID",
+    "MACHINE_ID",
     "MAC_Address",
+    "NEST_THERMOSTAT_ID",
     "SAID",
+    "SERIAL",
     "SERIAL_NUMBER",
     "Serial",
     "SerialNumber",
@@ -22,12 +28,15 @@ TO_REDACT = {
     "XCat_PersistentInfoSaid",
     "_id",
     "applianceId",
+    "defaultClientId",
     "macaddress",
     "password",
     "said",
     "serial",
     "serialNumber",
     "serial_number",
+    "thingArn",
+    "thingId",
     "thingName",
     "token",
     "unique_id",
@@ -49,6 +58,7 @@ async def async_get_config_entry_diagnostics(
             "category": appliance.appliance_info.category,
             "model_number": appliance.appliance_info.model_number,
             "raw": appliance.get_raw_data(),
+            "raw_info": appliance.appliance_info.raw_info,
         }
 
     appliances_manager = config_entry.runtime_data
@@ -71,6 +81,10 @@ async def async_get_config_entry_diagnostics(
         "refrigerators": {
             refrigerator.name: get_appliance_diagnostics(refrigerator)
             for refrigerator in appliances_manager.refrigerators
+        },
+        "unsupported": {
+            appliance.name: get_appliance_diagnostics(appliance)
+            for appliance in appliances_manager.unsupported_appliances
         },
     }
 

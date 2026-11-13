@@ -1,0 +1,118 @@
+rules:
+  # Bronze
+  action-setup:
+    status: todo
+    comment: kodi.add_to_playlist raises RuntimeError or ValueError for invalid input, and a name that matches nothing adds the first item of the library or only logs a warning, instead of raising ServiceValidationError.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage:
+    status: todo
+    comment: The user flow sets no unique ID, so its tests do not check one, and no test checks that the user flow rejects a Kodi that is already configured.
+  config-flow:
+    status: todo
+    comment: Only the host field has a data_description, and the notify platform can only be set up in YAML.
+  dependency-transparency: done
+  docs-actions: done
+  docs-conditions:
+    status: exempt
+    comment: The integration does not provide conditions.
+  docs-high-level-description: done
+  docs-installation-instructions:
+    status: todo
+    comment: There is no prerequisites section. The page only mentions the web interface, for discovery, and not the Kodi settings Allow remote control via HTTP and Allow remote control from applications on other systems.
+  docs-removal-instructions: todo
+  docs-triggers: done
+  entity-event-setup:
+    status: todo
+    comment: The media player does not remove its WebSocket callbacks and its start listener.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup:
+    status: todo
+    comment: Setup does not check the credentials, over HTTP connect() sends no request and the WebSocket server of Kodi does not check credentials.
+  unique-config-entry:
+    status: todo
+    comment: The user flow sets no unique ID and does not check the host, so any Kodi can be added again by hand, and one added by hand is offered again by discovery.
+
+  # Silver
+  action-exceptions:
+    status: todo
+    comment: Failed entity commands and kodi.call_method are logged instead of raised, kodi.add_to_playlist lets library errors through, the notify service lets ProtocolError through, and invalid input or a missing player raises RuntimeError or ValueError instead of ServiceValidationError.
+  config-entry-unloading:
+    status: todo
+    comment: The start listener of the media player is not removed, so an entry that is unloaded before Home Assistant has started connects again once it starts and keeps its 10 second watchdog running.
+  docs-configuration-parameters:
+    status: exempt
+    comment: The integration has no options flow.
+  docs-installation-parameters: todo
+  entity-unavailable:
+    status: todo
+    comment: The media player reports off when Kodi cannot be reached, also when no turn on automation exists.
+  integration-owner: done
+  log-when-unavailable:
+    status: todo
+    comment: Over WebSocket a lost connection is logged once as a warning and the reconnection is not logged, over HTTP neither is logged.
+  parallel-updates:
+    status: todo
+    comment: The media_player and notify platforms do not set PARALLEL_UPDATES.
+  reauthentication-flow:
+    status: todo
+    comment: The reauthentication flow exists, but nothing starts it, because connect() of pykodi never raises InvalidAuthError.
+  test-coverage:
+    status: todo
+    comment: The tests cover browse_media.py, media_player.py and notify.py for less than 95 percent.
+
+  # Gold
+  devices:
+    status: todo
+    comment: The software version is only set when the WebSocket connects.
+  diagnostics: done
+  discovery-update-info:
+    status: todo
+    comment: Discovery only updates entries that have the Kodi UUID as unique ID, and the user flow sets none, so a Kodi added by hand keeps its old host.
+  discovery: done
+  docs-data-update: todo
+  docs-examples: done
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices:
+    status: exempt
+    comment: Each config entry has a single, fixed device.
+  entity-category:
+    status: exempt
+    comment: The only entity is the primary media player.
+  entity-device-class:
+    status: todo
+    comment: The media player sets no device class.
+  entity-disabled-by-default:
+    status: exempt
+    comment: The only entity is the primary media player.
+  entity-translations:
+    status: exempt
+    comment: The media player uses the name of its device.
+  exception-translations:
+    status: todo
+    comment: The errors of media browsing and of invalid action input are not translated.
+  icon-translations:
+    status: exempt
+    comment: The media player has no icon of its own.
+  reconfiguration-flow: todo
+  repair-issues:
+    status: exempt
+    comment: The integration has no situation where a repair issue is needed.
+  stale-devices:
+    status: exempt
+    comment: Each config entry has a single, fixed device.
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing:
+    status: todo
+    comment: The integration is not fully typed and not in .strict-typing, and pykodi does not ship a py.typed file.

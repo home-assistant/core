@@ -11,8 +11,8 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -46,7 +46,10 @@ async def test_empty_trash(
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
-        BUTTON_DOMAIN, SERVICE_PRESS, {ATTR_ENTITY_ID: EMPTY_TRASH}, blocking=True
+        BUTTON_DOMAIN,
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: EMPTY_TRASH},
+        blocking=True,
     )
 
     mock_seafile_client.clean_library_trash.assert_awaited_once_with(LIBRARY_ID)
@@ -73,6 +76,9 @@ async def test_empty_trash_errors(
 
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
-            BUTTON_DOMAIN, SERVICE_PRESS, {ATTR_ENTITY_ID: EMPTY_TRASH}, blocking=True
+            BUTTON_DOMAIN,
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: EMPTY_TRASH},
+            blocking=True,
         )
     assert exc_info.value.translation_key == translation_key

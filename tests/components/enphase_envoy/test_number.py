@@ -9,11 +9,11 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.enphase_envoy.const import Platform
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -89,10 +89,10 @@ async def test_number_operation_storage(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: test_entity,
-            ATTR_VALUE: test_value,
+            CommonServiceArgument.ENTITY_ID: test_entity,
+            NumberServiceArgument.VALUE: test_value,
         },
         blocking=True,
     )
@@ -128,10 +128,10 @@ async def test_number_operation_storage_with_error(
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: test_entity,
-                ATTR_VALUE: test_value,
+                CommonServiceArgument.ENTITY_ID: test_entity,
+                NumberServiceArgument.VALUE: test_value,
             },
             blocking=True,
         )
@@ -173,10 +173,10 @@ async def test_number_operation_relays(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: test_entity,
-            ATTR_VALUE: test_value,
+            CommonServiceArgument.ENTITY_ID: test_entity,
+            NumberServiceArgument.VALUE: test_value,
         },
         blocking=True,
     )
@@ -217,10 +217,10 @@ async def test_number_operation_relays_with_error(
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: test_entity,
-                ATTR_VALUE: test_value,
+                CommonServiceArgument.ENTITY_ID: test_entity,
+                NumberServiceArgument.VALUE: test_value,
             },
             blocking=True,
         )

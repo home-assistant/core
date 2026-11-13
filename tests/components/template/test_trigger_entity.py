@@ -310,6 +310,53 @@ async def test_trigger_variables(
     assert "Error rendering trigger variables" not in caplog.text
 
 
+async def test_no_update_when_actions_already_running(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test entities are not updated when the actions refuse to start."""
+    with assert_setup_component(1, DOMAIN):
+        assert await async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                "template": {
+                    "triggers": {"trigger": "event", "event_type": "my_event"},
+                    "actions": [
+                        {"delay": {"seconds": 5}},
+                        {"variables": {"fetched": "{{ trigger.event.data.value }}"}},
+                    ],
+                    "sensor": {"name": "test", "state": "{{ fetched }}"},
+                },
+            },
+        )
+    await hass.async_block_till_done()
+
+    # Yield instead of blocking, the first run waits in its delay.
+    hass.bus.async_fire("my_event", {"value": "first"})
+    await asyncio.sleep(0)
+
+    # The actions run in single mode, so this run is refused while the first
+    # run is still in its delay.
+    hass.bus.async_fire("my_event", {"value": "second"})
+    await asyncio.sleep(0)
+
+    assert "Already running" in caplog.text
+    assert "'fetched' is undefined" not in caplog.text
+    state = hass.states.get("sensor.test")
+    assert state
+    assert state.state == STATE_UNKNOWN
+
+    freezer.tick(5)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test")
+    assert state
+    assert state.state == "first"
+
+
 @pytest.mark.parametrize(
     "actions",
     [

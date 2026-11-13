@@ -36,7 +36,7 @@ from pytest_homeassistant.typing import MqttMockHAClientGenerator, MqttMockPahoC
 
 from homeassistant.components import scene
 from homeassistant.components.mqtt.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON, STATE_UNKNOWN
+from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument
 from homeassistant.core import HomeAssistant, State
 
 DEFAULT_CONFIG = {
@@ -76,8 +76,10 @@ async def test_sending_mqtt_commands(
     state = hass.states.get("scene.test")
     assert state.state == STATE_UNKNOWN
 
-    data = {ATTR_ENTITY_ID: "scene.test"}
-    await hass.services.async_call(scene.DOMAIN, SERVICE_TURN_ON, data, blocking=True)
+    data = {CommonServiceArgument.ENTITY_ID: "scene.test"}
+    await hass.services.async_call(
+        scene.DOMAIN, scene.SceneService.TURN_ON, data, blocking=True
+    )
 
     mqtt_mock.async_publish.assert_called_once_with(
         "command-topic", "beer on", 0, False, message_expiry_interval=None

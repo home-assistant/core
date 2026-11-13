@@ -22,14 +22,7 @@ from homeassistant.components.hdmi_cec import (
     PhysicalAddress,
     parse_mapping,
 )
-from homeassistant.components.hdmi_cec.services import (
-    SERVICE_POWER_ON,
-    SERVICE_SELECT_DEVICE,
-    SERVICE_SEND_COMMAND,
-    SERVICE_STANDBY,
-    SERVICE_UPDATE_DEVICES,
-    SERVICE_VOLUME,
-)
+from homeassistant.components.hdmi_cec.services import HdmiCecService
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -131,12 +124,12 @@ async def test_setup_cec_adapter(
 @pytest.mark.parametrize(
     "service",
     [
-        SERVICE_POWER_ON,
-        SERVICE_SELECT_DEVICE,
-        SERVICE_SEND_COMMAND,
-        SERVICE_STANDBY,
-        SERVICE_UPDATE_DEVICES,
-        SERVICE_VOLUME,
+        HdmiCecService.POWER_ON,
+        HdmiCecService.SELECT_DEVICE,
+        HdmiCecService.SEND_COMMAND,
+        HdmiCecService.STANDBY,
+        HdmiCecService.UPDATE,
+        HdmiCecService.VOLUME,
     ],
 )
 async def test_services_registered_during_setup(
@@ -194,7 +187,7 @@ async def test_service_power_on(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_POWER_ON,
+        HdmiCecService.POWER_ON,
         {},
         blocking=True,
     )
@@ -210,7 +203,7 @@ async def test_service_standby(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_STANDBY,
+        HdmiCecService.STANDBY,
         {},
         blocking=True,
     )
@@ -228,7 +221,7 @@ async def test_service_select_device_alias(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SELECT_DEVICE,
+        HdmiCecService.SELECT_DEVICE,
         {"device": "Chromecast"},
         blocking=True,
     )
@@ -261,7 +254,7 @@ async def test_service_select_device_entity(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SELECT_DEVICE,
+        HdmiCecService.SELECT_DEVICE,
         {"device": "test_domain.hdmi_3"},
         blocking=True,
     )
@@ -280,7 +273,7 @@ async def test_service_select_device_physical_address(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SELECT_DEVICE,
+        HdmiCecService.SELECT_DEVICE,
         {"device": "1.1.0.0"},
         blocking=True,
     )
@@ -299,7 +292,7 @@ async def test_service_update_devices(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_UPDATE_DEVICES,
+        HdmiCecService.UPDATE,
         {},
         blocking=True,
     )
@@ -340,7 +333,7 @@ async def test_service_volume_x_times(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_VOLUME,
+        HdmiCecService.VOLUME,
         {direction: count},
         blocking=True,
     )
@@ -364,7 +357,7 @@ async def test_service_volume_press(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_VOLUME,
+        HdmiCecService.VOLUME,
         {direction: "press"},
         blocking=True,
     )
@@ -388,7 +381,7 @@ async def test_service_volume_release(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_VOLUME,
+        HdmiCecService.VOLUME,
         {direction: "release"},
         blocking=True,
     )
@@ -427,7 +420,7 @@ async def test_service_volume_mute(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_VOLUME,
+        HdmiCecService.VOLUME,
         {"mute": attr},
         blocking=True,
     )
@@ -516,7 +509,7 @@ async def test_service_send_command(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SEND_COMMAND,
+        HdmiCecService.SEND_COMMAND,
         data,
         blocking=True,
     )

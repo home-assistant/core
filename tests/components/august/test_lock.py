@@ -11,15 +11,8 @@ from syrupy.assertion import SnapshotAssertion
 from yalexs.manager.activity import INITIAL_LOCK_RESYNC_TIME
 from yalexs.pubnub_async import AugustPubNub
 
-from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockState
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_LOCK,
-    SERVICE_OPEN,
-    SERVICE_UNLOCK,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-)
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockService, LockState
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceNotSupported
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -131,7 +124,7 @@ async def test_one_lock_operation(
     data = {
         ATTR_ENTITY_ID: "lock.online_with_doorsense_name_online_with_doorsense_name"
     }
-    await hass.services.async_call(LOCK_DOMAIN, SERVICE_UNLOCK, data, blocking=True)
+    await hass.services.async_call(LOCK_DOMAIN, LockService.UNLOCK, data, blocking=True)
 
     lock_state = states.get(
         "lock.online_with_doorsense_name_online_with_doorsense_name"
@@ -141,7 +134,7 @@ async def test_one_lock_operation(
     assert lock_state.attributes["battery_level"] == 92
     assert lock_state.attributes["friendly_name"] == "online_with_doorsense Name"
 
-    await hass.services.async_call(LOCK_DOMAIN, SERVICE_LOCK, data, blocking=True)
+    await hass.services.async_call(LOCK_DOMAIN, LockService.LOCK, data, blocking=True)
 
     assert (
         states.get("lock.online_with_doorsense_name_online_with_doorsense_name").state
@@ -172,7 +165,7 @@ async def test_open_lock_operation(hass: HomeAssistant) -> None:
     assert lock_online_with_unlatch_name.state == LockState.LOCKED
 
     data = {ATTR_ENTITY_ID: "lock.online_with_unlatch_name_online_with_unlatch_name"}
-    await hass.services.async_call(LOCK_DOMAIN, SERVICE_OPEN, data, blocking=True)
+    await hass.services.async_call(LOCK_DOMAIN, LockService.OPEN, data, blocking=True)
 
     lock_online_with_unlatch_name = hass.states.get(
         "lock.online_with_unlatch_name_online_with_unlatch_name"
@@ -199,7 +192,7 @@ async def test_open_lock_operation_pubnub_connected(
     )
 
     data = {ATTR_ENTITY_ID: "lock.online_with_unlatch_name_online_with_unlatch_name"}
-    await hass.services.async_call(LOCK_DOMAIN, SERVICE_OPEN, data, blocking=True)
+    await hass.services.async_call(LOCK_DOMAIN, LockService.OPEN, data, blocking=True)
 
     pubnub.message(
         pubnub,
@@ -246,7 +239,7 @@ async def test_one_lock_operation_pubnub_connected(
     data = {
         ATTR_ENTITY_ID: "lock.online_with_doorsense_name_online_with_doorsense_name"
     }
-    await hass.services.async_call(LOCK_DOMAIN, SERVICE_UNLOCK, data, blocking=True)
+    await hass.services.async_call(LOCK_DOMAIN, LockService.UNLOCK, data, blocking=True)
 
     pubnub.message(
         pubnub,
@@ -269,7 +262,7 @@ async def test_one_lock_operation_pubnub_connected(
     assert lock_state.attributes["battery_level"] == 92
     assert lock_state.attributes["friendly_name"] == "online_with_doorsense Name"
 
-    await hass.services.async_call(LOCK_DOMAIN, SERVICE_LOCK, data, blocking=True)
+    await hass.services.async_call(LOCK_DOMAIN, LockService.LOCK, data, blocking=True)
 
     pubnub.message(
         pubnub,
@@ -348,7 +341,7 @@ async def test_lock_jammed(hass: HomeAssistant) -> None:
     data = {
         ATTR_ENTITY_ID: "lock.online_with_doorsense_name_online_with_doorsense_name"
     }
-    await hass.services.async_call(LOCK_DOMAIN, SERVICE_UNLOCK, data, blocking=True)
+    await hass.services.async_call(LOCK_DOMAIN, LockService.UNLOCK, data, blocking=True)
 
     lock_state = hass.states.get(
         "lock.online_with_doorsense_name_online_with_doorsense_name"
@@ -386,7 +379,9 @@ async def test_lock_throws_exception_on_unknown_status_code(
         ATTR_ENTITY_ID: "lock.online_with_doorsense_name_online_with_doorsense_name"
     }
     with pytest.raises(ClientResponseError):
-        await hass.services.async_call(LOCK_DOMAIN, SERVICE_UNLOCK, data, blocking=True)
+        await hass.services.async_call(
+            LOCK_DOMAIN, LockService.UNLOCK, data, blocking=True
+        )
 
 
 async def test_one_lock_unknown_state(hass: HomeAssistant) -> None:
@@ -555,4 +550,6 @@ async def test_open_throws_hass_service_not_supported_error(
         ATTR_ENTITY_ID: "lock.a6697750d607098bae8d6baa11ef8063_name_a6697750d607098bae8d6baa11ef8063_name"
     }
     with pytest.raises(ServiceNotSupported, match="does not support action"):
-        await hass.services.async_call(LOCK_DOMAIN, SERVICE_OPEN, data, blocking=True)
+        await hass.services.async_call(
+            LOCK_DOMAIN, LockService.OPEN, data, blocking=True
+        )
