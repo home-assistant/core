@@ -1,5 +1,6 @@
 """Test setting up Voice support and asking for the app."""
 
+import asyncio
 from typing import Any
 from unittest.mock import ANY, AsyncMock, call, patch
 
@@ -15,6 +16,7 @@ from homeassistant.components.voice_support import (
     INFO_REFRESH_INTERVAL,
     PREVIEW_FEATURE_NEXT_GENERATION_VOICE,
 )
+from homeassistant.components.voice_support.client import AppInfo
 from homeassistant.components.voice_support.const import (
     CONF_INTEGRATION_CREATED_APP,
     DOMAIN,
@@ -348,33 +350,64 @@ async def test_setup_updates_compatible_app(
     assert update_addon.call_count == expected_updates
 
 
-@pytest.mark.parametrize(
-    ("owned", "update_available", "expected_updates"),
-    [(True, True, 1), (True, False, 0), (False, True, 0)],
-)
 @pytest.mark.usefixtures("supervisor", "addon_running", "app_info")
-async def test_refresh_updates_managed_app(
+async def test_refresh_does_not_update_managed_app(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     addon_info: AsyncMock,
     update_addon: AsyncMock,
-    owned: bool,
-    update_available: bool,
-    expected_updates: int,
 ) -> None:
-    """Test refresh checks for updates without needing an incompatible API version."""
+    """Test periodic info refreshes do not update the app."""
     addon_info.return_value.update_available = False
     mock_config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
         mock_config_entry,
-        data={**mock_config_entry.data, CONF_INTEGRATION_CREATED_APP: owned},
+        data={**mock_config_entry.data, CONF_INTEGRATION_CREATED_APP: True},
     )
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     update_addon.assert_not_called()
 
-    addon_info.return_value.update_available = update_available
+    addon_info.return_value.update_available = True
     async_fire_time_changed(hass, dt_util.utcnow() + INFO_REFRESH_INTERVAL)
     await hass.async_block_till_done()
 
-    assert update_addon.call_count == expected_updates
+    update_addon.assert_not_called()
+
+
+async def test_setup_waits_for_info_before_update(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the app cannot update while the initial info request is pending."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={**mock_config_entry.data, CONF_INTEGRATION_CREATED_APP: True},
+    )
+    info_requested = asyncio.Event()
+    info: asyncio.Future[AppInfo] = asyncio.Future()
+
+    async def async_read_info() -> AppInfo:
+        info_requested.set()
+        return await info
+
+    with (
+        patch(
+            "homeassistant.components.voice_support.VoiceSupportClient.async_update_info",
+            side_effect=async_read_info,
+        ),
+        patch("homeassistant.components.voice_support.get_app_manager") as app_manager,
+    ):
+        setup_task = hass.async_create_task(
+            hass.config_entries.async_setup(mock_config_entry.entry_id)
+        )
+        await info_requested.wait()
+        app_manager.assert_not_called()
+
+        info.set_result(AppInfo.from_json(INFO))
+        assert await setup_task
+
+    app_manager.return_value.async_schedule_update_addon.assert_called_once_with(
+        catch_error=True
+    )
