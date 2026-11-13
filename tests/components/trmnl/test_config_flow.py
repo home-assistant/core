@@ -406,3 +406,25 @@ async def test_revoke_refused_is_logged(
 
     assert "Could not revoke an unused TRMNL token" in caplog.text
 
+
+@pytest.mark.usefixtures("current_request_with_host", "mock_trmnl_client")
+async def test_abort_keeps_shared_translation(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test an abort raised by core keeps the translation domain core gave it."""
+    await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER, "unique_id": ACCOUNT_SUBJECT}
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await complete_oauth_flow(
+        hass, hass_client_no_auth, aioclient_mock, result
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_in_progress"
+    assert result["translation_domain"] == "homeassistant"
