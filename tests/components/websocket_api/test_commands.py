@@ -4008,7 +4008,7 @@ async def test_validate_config_works(
     msg = await websocket_client.receive_json()
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
-    assert msg["result"] == {key: {"valid": True, "error": None}}
+    assert msg["result"] == {key: {"valid": True, "error": None, "errors": []}}
 
 
 @pytest.mark.parametrize(
@@ -4043,7 +4043,7 @@ async def test_validate_config_works(
         pytest.param(
             "triggers",
             {"triggers": [{"platform": "event", "event_type": "a"}, {"platform": "x"}]},
-            "Invalid trigger 'x' specified at '[1]'",
+            "Invalid trigger 'x' specified at 'triggers[1]'",
             id="single_trigger_sublist",
         ),
         pytest.param(
@@ -4068,13 +4068,13 @@ async def test_validate_config_works(
                     "state": "on",
                 },
             },
-            f"Unknown entity registry entry {'abcd' * 8} at 'conditions[0]'",
+            f"Unknown entity registry entry {'abcd' * 8} at 'conditions'",
             id="single_condition_nested_single_condition",
         ),
         pytest.param(
             "actions",
             {"wait_for_trigger": {"platform": "non_existing"}},
-            "Invalid trigger 'non_existing' specified at 'wait_for_trigger[0]'",
+            "Invalid trigger 'non_existing' specified at 'wait_for_trigger'",
             id="single_action_nested_single_trigger",
         ),
         pytest.param(
@@ -4126,7 +4126,146 @@ async def test_validate_config_invalid(
     msg = await websocket_client.receive_json()
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
-    assert msg["result"] == {key: {"valid": False, "error": error}}
+    assert msg["result"] == {key: {"valid": False, "error": error, "errors": ANY}}
+
+
+_UNKNOWN_DEVICE_CONDITION = {
+    "condition": "device",
+    "device_id": "a51a57e5af051eb403d56eb9e6fd691c",
+    "domain": "sensor",
+    "entity_id": "7d18a157b7c00adbf2982ea7de0d0362",
+    "type": "is_carbon_dioxide",
+    "above": 50,
+}
+_UNKNOWN_DEVICE_ACTION = {
+    "device_id": "a51a57e5af051eb403d56eb9e6fd691c",
+    "domain": "light",
+    "entity_id": "7d18a157b7c00adbf2982ea7de0d0362",
+    "type": "turn_on",
+}
+_UNKNOWN_TRIGGER = {"platform": "non_existing"}
+_VALID_TRIGGER = {"platform": "event", "event_type": "hello"}
+_VALID_ACTION = {"delay": 1}
+
+
+@pytest.mark.parametrize(
+    "config",
+    [
+        pytest.param(
+            {"actions": [_VALID_ACTION, {"delay": 1, "bogus": 2}, {"delay": "abc"}]},
+            id="schema_errors",
+        ),
+        pytest.param(
+            {
+                "triggers": [
+                    _VALID_TRIGGER,
+                    {"platform": "state"},
+                    _UNKNOWN_TRIGGER,
+                ]
+            },
+            id="platform_errors",
+        ),
+        pytest.param(
+            {"conditions": [_UNKNOWN_DEVICE_CONDITION]},
+            id="home_assistant_error",
+        ),
+        pytest.param(
+            {
+                "actions": [
+                    {
+                        "if": [_UNKNOWN_DEVICE_CONDITION],
+                        "then": [{"wait_for_trigger": [_UNKNOWN_TRIGGER]}],
+                        "else": [
+                            {
+                                "choose": [
+                                    {
+                                        "conditions": [_UNKNOWN_DEVICE_CONDITION],
+                                        "sequence": [
+                                            _VALID_ACTION,
+                                            _UNKNOWN_DEVICE_ACTION,
+                                        ],
+                                    }
+                                ],
+                                "default": [_UNKNOWN_DEVICE_ACTION],
+                            }
+                        ],
+                    }
+                ]
+            },
+            id="nested_blocks",
+        ),
+        pytest.param(
+            {"triggers": {"platform": "state"}},
+            id="single_item",
+        ),
+        pytest.param(
+            {"actions": {"repeat": {"count": 2, "sequence": _UNKNOWN_DEVICE_ACTION}}},
+            id="nested_single_items",
+        ),
+        pytest.param(
+            {
+                "conditions": [
+                    {"or": [_UNKNOWN_DEVICE_CONDITION]},
+                    {"not": _UNKNOWN_DEVICE_CONDITION},
+                ]
+            },
+            id="condition_shorthand",
+        ),
+        pytest.param(
+            {
+                "triggers": [
+                    _VALID_TRIGGER,
+                    {"triggers": [_VALID_TRIGGER, _UNKNOWN_TRIGGER]},
+                ]
+            },
+            id="trigger_sublist",
+        ),
+        pytest.param(
+            {
+                "actions": [
+                    {
+                        "parallel": [
+                            _UNKNOWN_DEVICE_ACTION,
+                            [_VALID_ACTION, _UNKNOWN_DEVICE_ACTION],
+                            {"sequence": [_UNKNOWN_DEVICE_ACTION]},
+                        ]
+                    }
+                ]
+            },
+            id="parallel",
+        ),
+        pytest.param(
+            {
+                "actions": [
+                    {"delay": 1, "bogus": 2},
+                    _UNKNOWN_DEVICE_ACTION,
+                    {"wait_for_trigger": [_UNKNOWN_TRIGGER]},
+                ]
+            },
+            id="schema_and_platform_errors",
+        ),
+        pytest.param(
+            {
+                "triggers": [_UNKNOWN_TRIGGER],
+                "conditions": [_UNKNOWN_DEVICE_CONDITION],
+                "actions": [_VALID_ACTION],
+            },
+            id="errors_in_two_keys",
+        ),
+    ],
+)
+async def test_validate_config_errors(
+    websocket_client: MockHAClientWebSocket,
+    snapshot: SnapshotAssertion,
+    config: dict[str, Any],
+) -> None:
+    """Test all errors of each key are returned, with their paths."""
+    await websocket_client.send_json_auto_id({"type": "validate_config", **config})
+
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"] == snapshot
 
 
 async def test_message_coalescing(
