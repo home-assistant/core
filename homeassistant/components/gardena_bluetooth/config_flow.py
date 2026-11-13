@@ -10,12 +10,18 @@ from gardena_bluetooth.parse import ManufacturerData, ProductType
 import probatio
 
 from homeassistant.components.bluetooth import BluetoothServiceInfo
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_ADDRESS
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
 
 from . import async_get_product, async_get_products, get_connection
-from .const import CONF_PRODUCT_TYPE, DOMAIN
+from .const import CONF_PERSISTENT_CONNECTION, CONF_PRODUCT_TYPE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,6 +37,15 @@ _SUPPORTED_PRODUCT_TYPES = {
 
 class GardenaBluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Gardena Bluetooth."""
+
+    @staticmethod
+    @callback
+    @override
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> GardenaBluetoothOptionsFlow:
+        """Return connection options."""
+        return GardenaBluetoothOptionsFlow()
 
     VERSION = 1
     MINOR_VERSION = 2
@@ -139,5 +154,29 @@ class GardenaBluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
                 {
                     probatio.Required(CONF_ADDRESS): probatio.In(devices),
                 },
+            ),
+        )
+
+
+class GardenaBluetoothOptionsFlow(OptionsFlow):
+    """Configure connection behavior."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage connection options."""
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+        return self.async_show_form(
+            step_id="init",
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(
+                        CONF_PERSISTENT_CONNECTION,
+                        default=self.config_entry.options.get(
+                            CONF_PERSISTENT_CONNECTION, False
+                        ),
+                    ): bool,
+                }
             ),
         )
