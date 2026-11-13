@@ -208,6 +208,55 @@ def _without(data: dict[str, Any], key: str) -> dict[str, Any]:
     return {k: v for k, v in data.items() if k != key}
 
 
+def _with_semantics(data: dict[str, Any]) -> dict[str, Any]:
+    """Return the fixture project data as xknxproject 3.9 and later gives it."""
+    return {
+        **data,
+        "info": {**data["info"], "xknxproject_version": "3.10.0"},
+        "devices": {
+            address: {
+                **device,
+                "channels": {
+                    "CH-1": {
+                        "identifier": "CH-1",
+                        "name": "",
+                        "communication_object_ids": device["communication_object_ids"],
+                        "functional_blocks": None,
+                    }
+                },
+            }
+            for address, device in data["devices"].items()
+        },
+        "communication_objects": {
+            object_id: {**com_object, "dpas": None}
+            for object_id, com_object in data["communication_objects"].items()
+        },
+    }
+
+
+def _functional_blocks_not_a_list(data: dict[str, Any]) -> dict[str, Any]:
+    semantics = _with_semantics(data)
+    for device in semantics["devices"].values():
+        device["channels"]["CH-1"]["functional_blocks"] = "FB-1"
+    return semantics
+
+
+@pytest.mark.usefixtures("load_knxproj")
+async def test_set_project_with_semantics(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    project_data: dict[str, Any],
+    hass_storage: dict[str, Any],
+) -> None:
+    """Data of xknxproject 3.9 and later is taken with its semantics."""
+    await knx.setup_integration()
+    new_data = _with_semantics(project_data)
+
+    await async_set_project(hass, new_data)
+
+    assert hass_storage[KNX_PROJECT_STORAGE_KEY]["data"] == new_data
+
+
 @pytest.mark.parametrize(
     ("change", "translation_key"),
     [
@@ -249,6 +298,22 @@ def _without(data: dict[str, Any], key: str) -> dict[str, Any]:
                 **data,
                 "devices": {"1.0.0": _without(data["devices"]["1.0.0"], "name")},
             },
+            "project_data_invalid",
+        ),
+        (
+            # semantics are read from data of xknxproject 3.9 and later
+            lambda data: {**_with_semantics(data), "devices": data["devices"]},
+            "project_data_invalid",
+        ),
+        (
+            lambda data: {
+                **_with_semantics(data),
+                "communication_objects": data["communication_objects"],
+            },
+            "project_data_invalid",
+        ),
+        (
+            _functional_blocks_not_a_list,
             "project_data_invalid",
         ),
         (

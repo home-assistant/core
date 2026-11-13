@@ -30,6 +30,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.storage import Store
 
 from .const import DOMAIN, KNX_MODULE_KEY
+from .storage.entity_suggestions.functional_blocks import MIN_SEMANTICS_PARSER_VERSION
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -102,6 +103,51 @@ PROJECT_DATA_SCHEMA: Final = probatio.Schema(
     extra=probatio.ALLOW_EXTRA,
 )
 
+# The semantics entity suggestions read from data of xknxproject versions that
+# provide it: device channels with their functional blocks, and the data point
+# types of communication objects.
+SEMANTICS_DATA_SCHEMA: Final = probatio.Schema(
+    {
+        probatio.Required("devices"): {
+            str: probatio.Schema(
+                {
+                    probatio.Required("channels"): {
+                        str: probatio.Schema(
+                            {
+                                probatio.Required("name"): str,
+                                probatio.Required("communication_object_ids"): [str],
+                                probatio.Required("functional_blocks"): probatio.Maybe(
+                                    [str]
+                                ),
+                            },
+                            extra=probatio.ALLOW_EXTRA,
+                        )
+                    },
+                },
+                extra=probatio.ALLOW_EXTRA,
+            )
+        },
+        probatio.Required("communication_objects"): {
+            str: probatio.Schema(
+                {
+                    probatio.Required("group_address_links"): [str],
+                    probatio.Required("dpas"): probatio.Maybe([str]),
+                },
+                extra=probatio.ALLOW_EXTRA,
+            )
+        },
+    },
+    extra=probatio.ALLOW_EXTRA,
+)
+
+
+def _invalid_project_data(err: probatio.Invalid) -> HomeAssistantError:
+    return HomeAssistantError(
+        translation_domain=DOMAIN,
+        translation_key="project_data_invalid",
+        translation_placeholders={"error": str(err)},
+    )
+
 
 def validate_project_data(project: Any) -> KNXProjectModel:
     """Validate project data in the format of xknxproject from another source.
@@ -112,16 +158,11 @@ def validate_project_data(project: Any) -> KNXProjectModel:
     try:
         data = PROJECT_DATA_SCHEMA(project)
     except probatio.Invalid as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="project_data_invalid",
-            translation_placeholders={"error": str(err)},
-        ) from err
+        raise _invalid_project_data(err) from err
     version = data["info"]["xknxproject_version"]
     try:
-        compatible = (
-            AwesomeVersion(version).major == AwesomeVersion(XKNXPROJECT_VERSION).major
-        )
+        parser_version = AwesomeVersion(version)
+        compatible = parser_version.major == AwesomeVersion(XKNXPROJECT_VERSION).major
     except AwesomeVersionException:
         compatible = False
     if not compatible:
@@ -133,6 +174,11 @@ def validate_project_data(project: Any) -> KNXProjectModel:
                 "installed_version": XKNXPROJECT_VERSION,
             },
         )
+    if parser_version >= MIN_SEMANTICS_PARSER_VERSION:
+        try:
+            SEMANTICS_DATA_SCHEMA(data)
+        except probatio.Invalid as err:
+            raise _invalid_project_data(err) from err
     return cast(KNXProjectModel, data)
 
 
