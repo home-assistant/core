@@ -68,7 +68,6 @@ class TRMNLConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
     @override
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create the entry, or update it after reauth."""
-        # The ID token comes straight from the token endpoint over TLS, so its signature needs no check.
         try:
             subject = jwt.decode(
                 data["token"]["id_token"], options={"verify_signature": False}

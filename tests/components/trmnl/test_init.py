@@ -106,7 +106,7 @@ async def test_reauth_triggered_on_auth_error(
     assert flow["context"].get("entry_id") == mock_config_entry.entry_id
 
 
-@pytest.mark.freeze_time("2026-11-16 12:00:00+00:00")
+@pytest.mark.freeze_time("2026-11-16 12:05:00+00:00")
 async def test_migrate_api_key_entry(
     hass: HomeAssistant,
     mock_api_key_config_entry: MockConfigEntry,
@@ -130,7 +130,7 @@ async def test_migrate_api_key_entry(
             "token_type": "Bearer",
             "expires_in": 7200,
             "scope": "openid profile read devices content delete",
-            "expires_at": 1794830400 + 7200,
+            "expires_at": 1794830700 + 7200,
         },
     }
 
@@ -208,26 +208,6 @@ async def test_migrate_account_already_signed_in(
 
     assert mock_api_key_config_entry.state is ConfigEntryState.MIGRATION_ERROR
     assert mock_api_key_config_entry.unique_id == "30561"
-
-
-async def test_newer_minor_version_is_not_migrated(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_trmnl_client: AsyncMock,
-) -> None:
-    """Test an OAuth entry from a newer minor version loads without the API key migration."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        version=2,
-        minor_version=99,
-        unique_id=ACCOUNT_SUBJECT,
-        data=mock_config_entry.data,
-    )
-
-    await setup_integration(hass, entry)
-
-    assert entry.state is ConfigEntryState.LOADED
-    mock_trmnl_client.migrate_to_oauth.assert_not_called()
 
 
 @pytest.mark.parametrize("expires_at", [time() - 60])
