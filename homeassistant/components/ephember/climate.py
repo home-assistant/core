@@ -7,7 +7,6 @@ from typing import Any, override
 
 import probatio
 from pyephember2.pyephember2 import (
-    EphEmber,
     ZoneMode,
     boiler_state,
     zone_current_temperature,
@@ -24,19 +23,30 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_PASSWORD,
     CONF_USERNAME,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from . import EphEmberConfigEntry
+from .const import DOMAIN
+
 _LOGGER = logging.getLogger(__name__)
+
+INTEGRATION_TITLE = "EPH Controls"
 
 # Return cached results if last scan was less then this time ago
 SCAN_INTERVAL = timedelta(seconds=120)
@@ -68,30 +78,77 @@ class EPHBoilerStates(IntEnum):
 HA_STATE_TO_EPH = {value: key for key, value in EPH_TO_HA_STATE.items()}
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the ephember thermostat."""
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
+    """Import the YAML configuration into a config entry."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={
+            CONF_USERNAME: config[CONF_USERNAME],
+            CONF_PASSWORD: config[CONF_PASSWORD],
+        },
+    )
 
-    try:
-        ember = EphEmber(username, password)
-        homes = ember.get_zones()
-    except RuntimeError as err:
-        raise PlatformNotReady(f"Cannot connect to EphEmber: {err}") from err
+    if (
+        result["type"] is FlowResultType.ABORT
+        and (reason := result["reason"]) != "already_configured"
+    ):
+        async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{reason}",
+            breaks_in_ha_version="2027.7.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key=f"deprecated_yaml_import_issue_{reason}",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": INTEGRATION_TITLE,
+            },
+        )
+        return
 
-    add_entities(
-        EphEmberThermostat(ember, zone) for home in homes for zone in home["zones"]
+    async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2027.7.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": INTEGRATION_TITLE,
+        },
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: EphEmberConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up a climate entity for each zone."""
+    data = entry.runtime_data
+    async_add_entities(
+        EphEmberThermostat(data.ember, zone)
+        for home in data.homes
+        for zone in home["zones"]
     )
 
 
 class EphEmberThermostat(ClimateEntity):
     """Representation of a EphEmber thermostat."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
     _attr_hvac_modes = OPERATION_LIST
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
@@ -101,11 +158,15 @@ class EphEmberThermostat(ClimateEntity):
         self._zone_name = zone_name(zone)
         self._zone = zone
         self._attr_unique_id = zone["zoneid"]
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, zone["zoneid"])},
+            manufacturer="EPH Controls",
+            model=zone.get("systemType"),
+            name=self._zone_name,
+        )
 
         # hot water = true, is immersive device without target temperature control.
         self._hot_water = zone_is_hotwater(zone)
-
-        self._attr_name = self._zone_name
 
         if self._hot_water:
             self._attr_target_temperature_step = None
