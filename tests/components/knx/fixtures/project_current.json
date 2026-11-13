@@ -1,0 +1,116 @@
+{
+  "info": {
+    "project_id": "P-0123",
+    "name": "Current",
+    "last_modified": "2026-11-13T10:00:00.0000000Z",
+    "group_address_style": "ThreeLevel",
+    "guid": "0b1e1d7a-3c40-4a5e-9a51-0e3c8a2a6f10",
+    "created_by": "XKNX Editor",
+    "schema_version": "23",
+    "tool_version": "0.13.0",
+    "xknxproject_version": "3.10.0",
+    "language_code": "de-DE"
+  },
+  "communication_objects": {
+    "1.1.1/O-0_R-1": {
+      "name": "Switching",
+      "number": 0,
+      "text": "Switching",
+      "function_text": "Channel A",
+      "description": "",
+      "device_address": "1.1.1",
+      "device_application": "M-0083_A-00B0-32-0DFC",
+      "module": null,
+      "channel": "CH-1",
+      "dpts": [{ "main": 1, "sub": 1 }],
+      "object_size": "1 Bit",
+      "group_address_links": ["0/0/1"],
+      "flags": {
+        "read": false,
+        "write": true,
+        "communication": true,
+        "transmit": false,
+        "update": false,
+        "read_on_init": false
+      },
+      "dpas": null
+    },
+    "1.1.1/O-1_R-2": {
+      "name": "Status",
+      "number": 1,
+      "text": "Status",
+      "function_text": "Channel A",
+      "description": "",
+      "device_address": "1.1.1",
+      "device_application": "M-0083_A-00B0-32-0DFC",
+      "module": {
+        "definition": "M-0083_A-00B0-32-0DFC_MD-1",
+        "root_number": 0
+      },
+      "channel": "CH-1",
+      "dpts": [{ "main": 1, "sub": 1 }],
+      "object_size": "1 Bit",
+      "group_address_links": ["0/0/2"],
+      "flags": {
+        "read": true,
+        "write": false,
+        "communication": true,
+        "transmit": true,
+        "update": false,
+        "read_on_init": false
+      },
+      "dpas": null
+    }
+  },
+  "devices": {
+    "1.1.1": {
+      "name": "Switch actuator",
+      "hardware_name": "AKS-0416.03",
+      "order_number": "AKS-0416.03",
+      "description": "",
+      "manufacturer_name": "MDT technologies",
+      "individual_address": "1.1.1",
+      "application": "M-0083_A-00B0-32-0DFC",
+      "project_uid": 7,
+      "communication_object_ids": ["1.1.1/O-0_R-1", "1.1.1/O-1_R-2"],
+      "channels": {
+        "CH-1": {
+          "identifier": "CH-1",
+          "name": "Channel A",
+          "communication_object_ids": ["1.1.1/O-0_R-1", "1.1.1/O-1_R-2"],
+          "functional_blocks": null
+        }
+      }
+    }
+  },
+  "topology": {},
+  "locations": {},
+  "group_addresses": {
+    "0/0/1": {
+      "name": "Light",
+      "identifier": "GA-1",
+      "raw_address": 1,
+      "address": "0/0/1",
+      "project_uid": 10,
+      "dpt": { "main": 1, "sub": 1 },
+      "data_secure": false,
+      "communication_object_ids": ["1.1.1/O-0_R-1"],
+      "description": "",
+      "comment": ""
+    },
+    "0/0/2": {
+      "name": "Light status",
+      "identifier": "GA-2",
+      "raw_address": 2,
+      "address": "0/0/2",
+      "project_uid": 11,
+      "dpt": { "main": 1, "sub": 1 },
+      "data_secure": false,
+      "communication_object_ids": ["1.1.1/O-1_R-2"],
+      "description": "",
+      "comment": ""
+    }
+  },
+  "group_ranges": {},
+  "functions": {}
+}

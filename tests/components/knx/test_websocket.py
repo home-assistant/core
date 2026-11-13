@@ -181,7 +181,7 @@ async def test_knx_set_project(
     knx: KNXTestKit,
     hass_ws_client: WebSocketGenerator,
     hass_storage: dict[str, Any],
-    project_data: dict[str, Any],
+    current_project_data: dict[str, Any],
 ) -> None:
     """Test knx/set_knx_project command for storing and loading project data."""
     await knx.setup_integration()
@@ -189,13 +189,13 @@ async def test_knx_set_project(
     assert not hass.data[KNX_MODULE_KEY].project.loaded
 
     await client.send_json_auto_id(
-        {"type": "knx/set_knx_project", "project": project_data}
+        {"type": "knx/set_knx_project", "project": current_project_data}
     )
     res = await client.receive_json()
 
     assert res["success"], res
     assert hass.data[KNX_MODULE_KEY].project.loaded
-    assert hass_storage[KNX_PROJECT_STORAGE_KEY]["data"] == project_data
+    assert hass_storage[KNX_PROJECT_STORAGE_KEY]["data"] == current_project_data
 
 
 async def test_knx_set_project_invalid(
@@ -203,7 +203,7 @@ async def test_knx_set_project_invalid(
     knx: KNXTestKit,
     hass_ws_client: WebSocketGenerator,
     hass_storage: dict[str, Any],
-    project_data: dict[str, Any],
+    current_project_data: dict[str, Any],
 ) -> None:
     """Test knx/set_knx_project refuses invalid project data."""
     await knx.setup_integration()
@@ -212,7 +212,7 @@ async def test_knx_set_project_invalid(
     await client.send_json_auto_id(
         {
             "type": "knx/set_knx_project",
-            "project": {**project_data, "group_addresses": None},
+            "project": {**current_project_data, "group_addresses": None},
         }
     )
     res = await client.receive_json()
@@ -228,7 +228,7 @@ async def test_knx_set_project_not_loaded(
     hass: HomeAssistant,
     knx: KNXTestKit,
     hass_ws_client: WebSocketGenerator,
-    project_data: dict[str, Any],
+    current_project_data: dict[str, Any],
 ) -> None:
     """Test knx/set_knx_project when the config entry is unloaded."""
     await knx.setup_integration()
@@ -236,7 +236,7 @@ async def test_knx_set_project_not_loaded(
     client = await hass_ws_client(hass)
 
     await client.send_json_auto_id(
-        {"type": "knx/set_knx_project", "project": project_data}
+        {"type": "knx/set_knx_project", "project": current_project_data}
     )
     res = await client.receive_json()
 

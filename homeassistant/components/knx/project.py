@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Mapping
 from dataclasses import dataclass
 import logging
-from typing import Any, Final, cast
+from typing import Any, Final
 
 from awesomeversion import AwesomeVersion, AwesomeVersionException
 import probatio
@@ -30,7 +30,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.storage import Store
 
 from .const import DOMAIN, KNX_MODULE_KEY
-from .storage.entity_suggestions.functional_blocks import MIN_SEMANTICS_PARSER_VERSION
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,144 +37,48 @@ STORAGE_VERSION: Final = 1
 STORAGE_KEY: Final = f"{DOMAIN}/knx_project.json"
 
 
-def _group_address(value: Any) -> str:
-    """Validate a group address of project data."""
-    if not isinstance(value, str):
-        raise probatio.Invalid("expected a group address as string")
-    try:
-        GroupAddress(value)
-    except CouldNotParseAddress as err:
-        raise probatio.Invalid(f"invalid group address `{value}`") from err
-    return value
-
-
-def _keyed_by_address(value: dict[str, Any]) -> dict[str, Any]:
-    """Validate that group addresses are keyed by their address."""
+def _group_addresses(value: dict[str, Any]) -> dict[str, Any]:
+    """Validate group addresses beyond their types."""
     for key, group_address in value.items():
-        if key != group_address["address"]:
-            raise probatio.Invalid(
-                f"group address `{group_address['address']}` is keyed as `{key}`"
-            )
+        address = group_address["address"]
+        try:
+            GroupAddress(address)
+        except CouldNotParseAddress as err:
+            raise probatio.Invalid(f"invalid group address `{address}`") from err
+        if key != address:
+            raise probatio.Invalid(f"group address `{address}` is keyed as `{key}`")
     return value
 
 
-_DPT_SCHEMA = probatio.Schema(
-    {
-        probatio.Required("main"): int,
-        probatio.Required("sub"): probatio.Maybe(int),
-    },
-    extra=probatio.ALLOW_EXTRA,
-)
-
-# The parts of project data the integration reads itself, in the format of
-# xknxproject. Anything else is passed on as it is, eg. to the KNX panel.
-PROJECT_DATA_SCHEMA: Final = probatio.Schema(
-    {
-        probatio.Required("info"): probatio.Schema(
-            {
-                probatio.Required("name"): str,
-                probatio.Required("last_modified"): probatio.Maybe(str),
-                probatio.Required("group_address_style"): probatio.In(
-                    [style.value for style in XknxProjectGroupAddressStyle]
-                ),
-                probatio.Required("tool_version"): str,
-                probatio.Required("xknxproject_version"): str,
-            },
-            extra=probatio.ALLOW_EXTRA,
-        ),
-        probatio.Required("devices"): {
-            str: probatio.Schema(
-                {
-                    probatio.Required("name"): str,
-                    probatio.Required("manufacturer_name"): str,
-                },
-                extra=probatio.ALLOW_EXTRA,
-            )
-        },
-        probatio.Required("group_addresses"): probatio.All(
-            {
-                str: probatio.Schema(
-                    {
-                        probatio.Required("address"): _group_address,
-                        probatio.Required("name"): str,
-                        probatio.Required("description"): str,
-                        probatio.Required("dpt"): probatio.Maybe(_DPT_SCHEMA),
-                    },
-                    extra=probatio.ALLOW_EXTRA,
-                )
-            },
-            _keyed_by_address,
-        ),
-        probatio.Required("communication_objects"): dict,
-        probatio.Required("topology"): dict,
-        probatio.Required("locations"): dict,
-        # Not in data of xknxproject versions before 3.3.
-        probatio.Optional("group_ranges"): dict,
-        probatio.Optional("functions"): dict,
-    },
-    extra=probatio.ALLOW_EXTRA,
-)
-
-# The semantics entity suggestions read from data of xknxproject versions that
-# provide it: device channels with their functional blocks, and the data point
-# types of communication objects.
-SEMANTICS_DATA_SCHEMA: Final = probatio.Schema(
-    {
-        probatio.Required("devices"): {
-            str: probatio.Schema(
-                {
-                    probatio.Required("channels"): {
-                        str: probatio.Schema(
-                            {
-                                probatio.Required("name"): str,
-                                probatio.Required("communication_object_ids"): [str],
-                                probatio.Required("functional_blocks"): probatio.Maybe(
-                                    [str]
-                                ),
-                            },
-                            extra=probatio.ALLOW_EXTRA,
-                        )
-                    },
-                },
-                extra=probatio.ALLOW_EXTRA,
-            )
-        },
-        probatio.Required("communication_objects"): {
-            str: probatio.Schema(
-                {
-                    probatio.Required("group_address_links"): [str],
-                    probatio.Required("dpas"): probatio.Maybe([str]),
-                },
-                extra=probatio.ALLOW_EXTRA,
-            )
-        },
-    },
-    extra=probatio.ALLOW_EXTRA,
-)
-
-
-def _invalid_project_data(err: probatio.Invalid) -> HomeAssistantError:
-    return HomeAssistantError(
-        translation_domain=DOMAIN,
-        translation_key="project_data_invalid",
-        translation_placeholders={"error": str(err)},
+def _info(value: dict[str, Any]) -> dict[str, Any]:
+    """Validate the project info beyond its types."""
+    probatio.In([style.value for style in XknxProjectGroupAddressStyle])(
+        value["group_address_style"]
     )
+    return value
 
 
-def validate_project_data(project: Any) -> KNXProjectModel:
-    """Validate project data in the format of xknxproject from another source.
+# Project data in the format of the installed xknxproject, built from its types.
+PROJECT_DATA_SCHEMA: Final = probatio.TypedDictSchema(
+    KNXProjectModel,
+    {"group_addresses": _group_addresses, "info": _info},
+    extra=probatio.ALLOW_EXTRA,
+)
 
-    Raises HomeAssistantError when the data is invalid, or was created for a
-    major version of xknxproject other than the installed one.
+
+def _check_parser_version(project: Any) -> None:
+    """Refuse data of a major version of xknxproject other than the installed one.
+
+    Data without a version is left to the schema to report.
     """
+    info = project.get("info") if isinstance(project, Mapping) else None
+    version = info.get("xknxproject_version") if isinstance(info, Mapping) else None
+    if not isinstance(version, str):
+        return
     try:
-        data = PROJECT_DATA_SCHEMA(project)
-    except probatio.Invalid as err:
-        raise _invalid_project_data(err) from err
-    version = data["info"]["xknxproject_version"]
-    try:
-        parser_version = AwesomeVersion(version)
-        compatible = parser_version.major == AwesomeVersion(XKNXPROJECT_VERSION).major
+        compatible = (
+            AwesomeVersion(version).major == AwesomeVersion(XKNXPROJECT_VERSION).major
+        )
     except AwesomeVersionException:
         compatible = False
     if not compatible:
@@ -187,12 +90,23 @@ def validate_project_data(project: Any) -> KNXProjectModel:
                 "installed_version": XKNXPROJECT_VERSION,
             },
         )
-    if parser_version >= MIN_SEMANTICS_PARSER_VERSION:
-        try:
-            SEMANTICS_DATA_SCHEMA(data)
-        except probatio.Invalid as err:
-            raise _invalid_project_data(err) from err
-    return cast(KNXProjectModel, data)
+
+
+def validate_project_data(project: Any) -> KNXProjectModel:
+    """Validate project data in the format of the installed xknxproject.
+
+    Raises HomeAssistantError when the data was created for another major
+    version of xknxproject, or doesn't have its format.
+    """
+    _check_parser_version(project)
+    try:
+        return PROJECT_DATA_SCHEMA(project)
+    except probatio.Invalid as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="project_data_invalid",
+            translation_placeholders={"error": str(err)},
+        ) from err
 
 
 async def async_set_project(hass: HomeAssistant, project: Mapping[str, Any]) -> None:

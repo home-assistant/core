@@ -151,7 +151,7 @@ async def test_new_project_replaces_group_addresses(
 async def test_set_project(
     hass: HomeAssistant,
     knx: KNXTestKit,
-    project_data: dict[str, Any],
+    current_project_data: dict[str, Any],
     hass_storage: dict[str, Any],
 ) -> None:
     """Project data from another source is stored and loaded like an upload."""
@@ -159,42 +159,42 @@ async def test_set_project(
     project = hass.data[KNX_MODULE_KEY].project
     xknx = hass.data[KNX_MODULE_KEY].xknx
     assert await project.get_knxproject() is not None
+    assert "0/0/3" in project.group_addresses
 
     new_data = {
-        **project_data,
-        "info": {**project_data["info"], "name": "Provided"},
+        **current_project_data,
         "group_addresses": {
             address: ga
-            for address, ga in project_data["group_addresses"].items()
-            if address != "0/0/1"
+            for address, ga in current_project_data["group_addresses"].items()
+            if address != "0/0/2"
         },
     }
     await async_set_project(hass, new_data)
 
     assert project.info is not None
-    assert project.info["name"] == "Provided"
-    assert "0/0/1" not in project.group_addresses
-    assert xknx.group_address_dpt.get(GroupAddress("0/0/1")) is None
+    assert project.info["name"] == "Current"
+    assert set(project.group_addresses) == {"0/0/1"}
+    assert xknx.group_address_dpt.get(GroupAddress("0/0/3")) is None
     assert hass_storage[KNX_PROJECT_STORAGE_KEY]["data"] == new_data
     knxproject = await project.get_knxproject()
     assert knxproject is not None
-    assert knxproject["info"]["name"] == "Provided"
+    assert knxproject["info"]["name"] == "Current"
 
 
 async def test_set_project_keeps_unknown_data(
     hass: HomeAssistant,
     knx: KNXTestKit,
-    project_data: dict[str, Any],
+    current_project_data: dict[str, Any],
     hass_storage: dict[str, Any],
 ) -> None:
-    """Data the integration doesn't read itself is stored as it is."""
+    """Data the installed xknxproject doesn't know is stored as it is."""
     await knx.setup_integration()
     new_data = {
-        **project_data,
-        "trades": [],
+        **current_project_data,
+        "trades": {},
         "group_addresses": {
-            address: {**ga, "comment": "kept"}
-            for address, ga in project_data["group_addresses"].items()
+            address: {**ga, "new_key": "kept"}
+            for address, ga in current_project_data["group_addresses"].items()
         },
     }
 
@@ -208,136 +208,79 @@ def _without(data: dict[str, Any], key: str) -> dict[str, Any]:
     return {k: v for k, v in data.items() if k != key}
 
 
-def _with_semantics(data: dict[str, Any]) -> dict[str, Any]:
-    """Return the fixture project data as xknxproject 3.9 and later gives it."""
-    return {
-        **data,
-        "info": {**data["info"], "xknxproject_version": "3.10.0"},
-        "devices": {
-            address: {
-                **device,
-                "channels": {
-                    "CH-1": {
-                        "identifier": "CH-1",
-                        "name": "",
-                        "communication_object_ids": device["communication_object_ids"],
-                        "functional_blocks": None,
-                    }
-                },
-            }
-            for address, device in data["devices"].items()
-        },
-        "communication_objects": {
-            object_id: {**com_object, "dpas": None}
-            for object_id, com_object in data["communication_objects"].items()
-        },
-    }
+def _with_group_address(data: dict[str, Any], **changes: Any) -> dict[str, Any]:
+    group_address = data["group_addresses"]["0/0/1"]
+    return {**data, "group_addresses": {"0/0/1": {**group_address, **changes}}}
 
 
-def _functional_blocks_not_a_list(data: dict[str, Any]) -> dict[str, Any]:
-    semantics = _with_semantics(data)
-    for device in semantics["devices"].values():
-        device["channels"]["CH-1"]["functional_blocks"] = "FB-1"
-    return semantics
+def _with_device(data: dict[str, Any], device: dict[str, Any]) -> dict[str, Any]:
+    return {**data, "devices": {"1.1.1": device}}
 
 
-@pytest.mark.usefixtures("load_knxproj")
-async def test_set_project_with_semantics(
-    hass: HomeAssistant,
-    knx: KNXTestKit,
-    project_data: dict[str, Any],
-    hass_storage: dict[str, Any],
-) -> None:
-    """Data of xknxproject 3.9 and later is taken with its semantics."""
-    await knx.setup_integration()
-    new_data = _with_semantics(project_data)
+def _with_channel(data: dict[str, Any], **changes: Any) -> dict[str, Any]:
+    device = data["devices"]["1.1.1"]
+    channel = device["channels"]["CH-1"]
+    return _with_device(data, {**device, "channels": {"CH-1": {**channel, **changes}}})
 
-    await async_set_project(hass, new_data)
 
-    assert hass_storage[KNX_PROJECT_STORAGE_KEY]["data"] == new_data
+def _with_info(data: dict[str, Any], **changes: Any) -> dict[str, Any]:
+    return {**data, "info": {**data["info"], **changes}}
 
 
 @pytest.mark.parametrize(
     ("change", "translation_key"),
     [
         (lambda data: _without(data, "devices"), "project_data_invalid"),
+        (lambda data: _without(data, "functions"), "project_data_invalid"),
         (
             lambda data: {**data, "info": _without(data["info"], "name")},
             "project_data_invalid",
         ),
         (
-            lambda data: {
-                **data,
-                "info": {**data["info"], "group_address_style": "FourLevel"},
-            },
+            lambda data: _with_info(data, group_address_style="FourLevel"),
             "project_data_invalid",
         ),
-        (
-            lambda data: {
-                **data,
-                "group_addresses": {
-                    "0/0/1": {**data["group_addresses"]["0/0/1"], "address": "x/y"}
-                },
-            },
-            "project_data_invalid",
-        ),
+        (lambda data: _with_group_address(data, address="x/y"), "project_data_invalid"),
         (
             # the address is read from the field, but links refer to the key
+            lambda data: _with_group_address(data, address="0/0/2"),
+            "project_data_invalid",
+        ),
+        (
+            lambda data: _with_group_address(data, dpt={"main": "1", "sub": None}),
+            "project_data_invalid",
+        ),
+        (
+            lambda data: _with_device(data, _without(data["devices"]["1.1.1"], "name")),
+            "project_data_invalid",
+        ),
+        (
+            # the semantics entity suggestions read
+            lambda data: _with_device(
+                data, _without(data["devices"]["1.1.1"], "channels")
+            ),
+            "project_data_invalid",
+        ),
+        (
+            lambda data: _with_channel(data, functional_blocks="FB-1"),
+            "project_data_invalid",
+        ),
+        (
             lambda data: {
                 **data,
-                "group_addresses": {
-                    "0/0/1": {**data["group_addresses"]["0/0/1"], "address": "0/0/2"}
+                "communication_objects": {
+                    object_id: _without(com_object, "dpas")
+                    for object_id, com_object in data["communication_objects"].items()
                 },
             },
             "project_data_invalid",
         ),
         (
-            lambda data: {
-                **data,
-                "group_addresses": {
-                    "0/0/1": {
-                        **data["group_addresses"]["0/0/1"],
-                        "dpt": {"main": "1", "sub": None},
-                    }
-                },
-            },
-            "project_data_invalid",
-        ),
-        (
-            lambda data: {
-                **data,
-                "devices": {"1.0.0": _without(data["devices"]["1.0.0"], "name")},
-            },
-            "project_data_invalid",
-        ),
-        (
-            # semantics are read from data of xknxproject 3.9 and later
-            lambda data: {**_with_semantics(data), "devices": data["devices"]},
-            "project_data_invalid",
-        ),
-        (
-            lambda data: {
-                **_with_semantics(data),
-                "communication_objects": data["communication_objects"],
-            },
-            "project_data_invalid",
-        ),
-        (
-            _functional_blocks_not_a_list,
-            "project_data_invalid",
-        ),
-        (
-            lambda data: {
-                **data,
-                "info": {**data["info"], "xknxproject_version": "99.0.0"},
-            },
+            lambda data: _with_info(data, xknxproject_version="99.0.0"),
             "project_data_incompatible",
         ),
         (
-            lambda data: {
-                **data,
-                "info": {**data["info"], "xknxproject_version": "unknown"},
-            },
+            lambda data: _with_info(data, xknxproject_version="unknown"),
             "project_data_incompatible",
         ),
     ],
@@ -347,6 +290,7 @@ async def test_set_project_invalid_data(
     hass: HomeAssistant,
     knx: KNXTestKit,
     project_data: dict[str, Any],
+    current_project_data: dict[str, Any],
     hass_storage: dict[str, Any],
     change: Callable[[dict[str, Any]], dict[str, Any]],
     translation_key: str,
@@ -357,19 +301,19 @@ async def test_set_project_invalid_data(
     stored = hass_storage[KNX_PROJECT_STORAGE_KEY]
 
     with pytest.raises(HomeAssistantError) as exc_info:
-        await async_set_project(hass, change(project_data))
+        await async_set_project(hass, change(current_project_data))
 
     assert exc_info.value.translation_key == translation_key
     assert hass_storage[KNX_PROJECT_STORAGE_KEY] is stored
     assert project.info == project_data["info"]
-    assert "0/0/1" in project.group_addresses
+    assert "0/0/3" in project.group_addresses
 
 
 async def test_set_project_not_loaded(
-    hass: HomeAssistant, project_data: dict[str, Any]
+    hass: HomeAssistant, current_project_data: dict[str, Any]
 ) -> None:
     """Project data needs a loaded KNX integration."""
     with pytest.raises(HomeAssistantError) as exc_info:
-        await async_set_project(hass, project_data)
+        await async_set_project(hass, current_project_data)
 
     assert exc_info.value.translation_key == "integration_not_loaded"
