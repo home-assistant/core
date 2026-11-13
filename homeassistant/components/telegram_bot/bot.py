@@ -54,7 +54,6 @@ from homeassistant.util.json import JsonValueType
 from .const import (
     ATTR_AUTHENTICATION,
     ATTR_CAPTION,
-    ATTR_CHAT_ID,
     ATTR_DISABLE_NOTIF,
     ATTR_DISABLE_WEB_PREV,
     ATTR_FILE,
@@ -464,7 +463,7 @@ class TelegramNotificationService:
 
         :return: dict with chat_id keys and message_id values for successful sends
         """
-        chat_id: int = kwargs_msg.pop(ATTR_CHAT_ID)
+        chat_id: int = kwargs_msg.pop(TelegramBotServiceArgument.CHAT_ID)
         _LOGGER.debug("%s to chat ID %s", func_send.__name__, chat_id)
 
         response: Message | tuple[Message, ...] = await self._send_msg(
@@ -512,9 +511,9 @@ class TelegramNotificationService:
             }
             if message_tag is not None:
                 event_data[TelegramBotEventData.MESSAGE_TAG] = message_tag
-            if kwargs_msg.get(ATTR_MESSAGE_THREAD_ID) is not None:
+            if kwargs_msg.get(TelegramBotServiceArgument.MESSAGE_THREAD_ID) is not None:
                 event_data[TelegramBotEventData.MESSAGE_THREAD_ID] = kwargs_msg[
-                    ATTR_MESSAGE_THREAD_ID
+                    TelegramBotServiceArgument.MESSAGE_THREAD_ID
                 ]
 
             event_data[TelegramBotEventData.BOT] = _get_bot_info(self.bot, self.config)
