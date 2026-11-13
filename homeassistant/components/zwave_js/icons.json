@@ -136,6 +136,9 @@
     "event": {
       "trigger": "mdi:z-wave"
     },
+    "node_status": {
+      "trigger": "mdi:heart-pulse"
+    },
     "value_updated": {
       "trigger": "mdi:update"
     }
