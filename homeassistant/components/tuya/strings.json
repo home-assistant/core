@@ -63,6 +63,9 @@
       "fall": {
         "name": "Fall"
       },
+      "feed_blocked": {
+        "name": "Feed blocked"
+      },
       "feeding": {
         "name": "Feeding"
       },
@@ -71,6 +74,9 @@
       },
       "fire": {
         "name": "Fire"
+      },
+      "food_stuck": {
+        "name": "Food stuck"
       },
       "formaldehyde": {
         "name": "Formaldehyde"
