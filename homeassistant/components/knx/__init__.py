@@ -41,7 +41,10 @@ from .const import (
 from .expose import create_combined_knx_exposure
 from .knx_module import KNXModule
 from .llm_api import async_register_llm_api
-from .project import STORAGE_KEY as PROJECT_STORAGE_KEY
+from .project import (
+    STORAGE_KEY as PROJECT_STORAGE_KEY,
+    async_set_project as async_set_project,  # for other integrations
+)
 from .schema import (
     BinarySensorSchema,
     ButtonSchema,

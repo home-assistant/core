@@ -1,14 +1,19 @@
 """Handle KNX project data."""
 
 import asyncio
+from collections.abc import Mapping
 from dataclasses import dataclass
 import logging
-from typing import Final
+from typing import Any, Final, cast
 
+from awesomeversion import AwesomeVersion, AwesomeVersionException
+import probatio
 from xknx import XKNX
 from xknx.dpt import DPTBase
+from xknx.exceptions import CouldNotParseAddress
 from xknx.telegram.address import DeviceAddressableType, GroupAddress, GroupAddressType
 from xknxproject import XKNXProj
+from xknxproject.__version__ import __version__ as XKNXPROJECT_VERSION
 from xknxproject.models import (
     Device,
     DPTType,
@@ -21,14 +26,133 @@ from xknxproject.models import (
 from homeassistant.components.file_upload import process_uploaded_file
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.storage import Store
 
-from .const import DOMAIN
+from .const import DOMAIN, KNX_MODULE_KEY
 
 _LOGGER = logging.getLogger(__name__)
 
 STORAGE_VERSION: Final = 1
 STORAGE_KEY: Final = f"{DOMAIN}/knx_project.json"
+
+
+def _group_address(value: Any) -> str:
+    """Validate a group address of project data."""
+    if not isinstance(value, str):
+        raise probatio.Invalid("expected a group address as string")
+    try:
+        GroupAddress(value)
+    except CouldNotParseAddress as err:
+        raise probatio.Invalid(f"invalid group address `{value}`") from err
+    return value
+
+
+_DPT_SCHEMA = probatio.Schema(
+    {
+        probatio.Required("main"): int,
+        probatio.Required("sub"): probatio.Maybe(int),
+    },
+    extra=probatio.ALLOW_EXTRA,
+)
+
+# The parts of project data the integration reads itself, in the format of
+# xknxproject. Anything else is passed on as it is, eg. to the KNX panel.
+PROJECT_DATA_SCHEMA: Final = probatio.Schema(
+    {
+        probatio.Required("info"): probatio.Schema(
+            {
+                probatio.Required("name"): str,
+                probatio.Required("last_modified"): probatio.Maybe(str),
+                probatio.Required("group_address_style"): probatio.In(
+                    [style.value for style in XknxProjectGroupAddressStyle]
+                ),
+                probatio.Required("tool_version"): str,
+                probatio.Required("xknxproject_version"): str,
+            },
+            extra=probatio.ALLOW_EXTRA,
+        ),
+        probatio.Required("devices"): {
+            str: probatio.Schema(
+                {
+                    probatio.Required("name"): str,
+                    probatio.Required("manufacturer_name"): str,
+                },
+                extra=probatio.ALLOW_EXTRA,
+            )
+        },
+        probatio.Required("group_addresses"): {
+            str: probatio.Schema(
+                {
+                    probatio.Required("address"): _group_address,
+                    probatio.Required("name"): str,
+                    probatio.Required("description"): str,
+                    probatio.Required("dpt"): probatio.Maybe(_DPT_SCHEMA),
+                },
+                extra=probatio.ALLOW_EXTRA,
+            )
+        },
+        probatio.Required("communication_objects"): dict,
+        probatio.Required("topology"): dict,
+        probatio.Required("locations"): dict,
+        # Not in data of xknxproject versions before 3.3.
+        probatio.Optional("group_ranges"): dict,
+        probatio.Optional("functions"): dict,
+    },
+    extra=probatio.ALLOW_EXTRA,
+)
+
+
+def validate_project_data(project: Any) -> KNXProjectModel:
+    """Validate project data in the format of xknxproject from another source.
+
+    Raises HomeAssistantError when the data is invalid, or was created for a
+    major version of xknxproject other than the installed one.
+    """
+    try:
+        data = PROJECT_DATA_SCHEMA(project)
+    except probatio.Invalid as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="project_data_invalid",
+            translation_placeholders={"error": str(err)},
+        ) from err
+    version = data["info"]["xknxproject_version"]
+    try:
+        compatible = (
+            AwesomeVersion(version).major == AwesomeVersion(XKNXPROJECT_VERSION).major
+        )
+    except AwesomeVersionException:
+        compatible = False
+    if not compatible:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="project_data_incompatible",
+            translation_placeholders={
+                "version": version,
+                "installed_version": XKNXPROJECT_VERSION,
+            },
+        )
+    return cast(KNXProjectModel, data)
+
+
+async def async_set_project(hass: HomeAssistant, project: Mapping[str, Any]) -> None:
+    """Replace the KNX project with project data in the format of xknxproject.
+
+    For integrations and tools that provide project data from another source
+    than a project file, eg. a project editor keeping it up to date while it is
+    edited. The data is validated first; it is stored and loaded as an uploaded
+    project file is.
+
+    Raises HomeAssistantError when the KNX integration is not loaded, or the
+    data is invalid or incompatible. The current project is kept then.
+    """
+    if (knx_module := hass.data.get(KNX_MODULE_KEY)) is None:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN, translation_key="integration_not_loaded"
+        )
+    data = validate_project_data(project)
+    await knx_module.project.async_store_project(knx_module.xknx, data)
 
 
 @dataclass
@@ -131,15 +255,10 @@ class KNXProject:
                 return xknxproj.parse()
 
         project = await self.hass.async_add_executor_job(_parse_project)
-        await self.async_set_project(xknx, project)
+        await self.async_store_project(xknx, project)
 
-    async def async_set_project(self, xknx: XKNX, project: KNXProjectModel) -> None:
-        """Store and load parsed project data, replacing the current project.
-
-        Used for an uploaded project file, and by integrations providing project
-        data in the format of xknxproject from another source - eg. a project
-        editor keeping the project up to date while it is edited.
-        """
+    async def async_store_project(self, xknx: XKNX, project: KNXProjectModel) -> None:
+        """Store and load parsed project data, replacing the current project."""
         async with self._project_lock:
             await self._store.async_save(project)
             # Invalidate rather than populate: whether the full project is held

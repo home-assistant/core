@@ -23,6 +23,7 @@ from homeassistant.components.frontend import async_panel_exists
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.const import CONF_ENTITY_ID, CONF_PLATFORM, Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import Undefined
@@ -39,6 +40,7 @@ from .const import (
     UI_DEVICE_ID_PREFIX,
 )
 from .dpt import get_supported_dpts
+from .project import async_set_project
 from .storage.config_store import ConfigStoreException
 from .storage.const import CONF_DATA
 from .storage.entity_store_schema import (
@@ -76,6 +78,7 @@ async def register_panel(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_query_telegrams)
     websocket_api.async_register_command(hass, ws_subscribe_telegram)
     websocket_api.async_register_command(hass, ws_get_knx_project)
+    websocket_api.async_register_command(hass, ws_set_knx_project)
     websocket_api.async_register_command(hass, ws_get_entity_suggestions)
     websocket_api.async_register_command(hass, ws_validate_entity)
     websocket_api.async_register_command(hass, ws_create_entity)
@@ -258,6 +261,28 @@ async def ws_get_knx_project(
         msg["id"],
         knxproject,
     )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        probatio.Required("type"): "knx/set_knx_project",
+        probatio.Required("project"): dict,
+    }
+)
+@websocket_api.async_response
+async def ws_set_knx_project(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+) -> None:
+    """Replace the KNX project with project data in the format of xknxproject."""
+    try:
+        await async_set_project(hass, msg["project"])
+    except HomeAssistantError as err:
+        connection.async_handle_exception(msg, err)
+        return
+    connection.send_result(msg["id"])
 
 
 @websocket_api.require_admin

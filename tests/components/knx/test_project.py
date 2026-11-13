@@ -9,6 +9,7 @@ left to whoever asks for it, so setup does not populate the cache.
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from typing import Any
 from unittest.mock import patch
 
@@ -16,9 +17,11 @@ import pytest
 from pytest_homeassistant.typing import WebSocketGenerator
 from xknx.telegram.address import GroupAddress
 
+from homeassistant.components.knx import async_set_project
 from homeassistant.components.knx.const import KNX_MODULE_KEY
 from homeassistant.components.knx.project import STORAGE_KEY as KNX_PROJECT_STORAGE_KEY
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from .conftest import KNXTestKit
 
@@ -145,7 +148,7 @@ async def test_new_project_replaces_group_addresses(
 
 
 @pytest.mark.usefixtures("load_knxproj")
-async def test_set_project_stores_and_loads(
+async def test_set_project(
     hass: HomeAssistant,
     knx: KNXTestKit,
     project_data: dict[str, Any],
@@ -154,12 +157,144 @@ async def test_set_project_stores_and_loads(
     """Project data from another source is stored and loaded like an upload."""
     await knx.setup_integration()
     project = hass.data[KNX_MODULE_KEY].project
+    xknx = hass.data[KNX_MODULE_KEY].xknx
     assert await project.get_knxproject() is not None
 
-    new_data = {**project_data, "info": {**project_data["info"], "name": "Provided"}}
-    await project.async_set_project(hass.data[KNX_MODULE_KEY].xknx, new_data)
+    new_data = {
+        **project_data,
+        "info": {**project_data["info"], "name": "Provided"},
+        "group_addresses": {
+            address: ga
+            for address, ga in project_data["group_addresses"].items()
+            if address != "0/0/1"
+        },
+    }
+    await async_set_project(hass, new_data)
 
+    assert project.info is not None
     assert project.info["name"] == "Provided"
-    assert hass_storage[KNX_PROJECT_STORAGE_KEY]["data"]["info"]["name"] == "Provided"
+    assert "0/0/1" not in project.group_addresses
+    assert xknx.group_address_dpt.get(GroupAddress("0/0/1")) is None
+    assert hass_storage[KNX_PROJECT_STORAGE_KEY]["data"] == new_data
     knxproject = await project.get_knxproject()
+    assert knxproject is not None
     assert knxproject["info"]["name"] == "Provided"
+
+
+async def test_set_project_keeps_unknown_data(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    project_data: dict[str, Any],
+    hass_storage: dict[str, Any],
+) -> None:
+    """Data the integration doesn't read itself is stored as it is."""
+    await knx.setup_integration()
+    new_data = {
+        **project_data,
+        "trades": [],
+        "group_addresses": {
+            address: {**ga, "comment": "kept"}
+            for address, ga in project_data["group_addresses"].items()
+        },
+    }
+
+    await async_set_project(hass, new_data)
+
+    assert hass.data[KNX_MODULE_KEY].project.loaded
+    assert hass_storage[KNX_PROJECT_STORAGE_KEY]["data"] == new_data
+
+
+def _without(data: dict[str, Any], key: str) -> dict[str, Any]:
+    return {k: v for k, v in data.items() if k != key}
+
+
+@pytest.mark.parametrize(
+    ("change", "translation_key"),
+    [
+        (lambda data: _without(data, "devices"), "project_data_invalid"),
+        (
+            lambda data: {**data, "info": _without(data["info"], "name")},
+            "project_data_invalid",
+        ),
+        (
+            lambda data: {
+                **data,
+                "info": {**data["info"], "group_address_style": "FourLevel"},
+            },
+            "project_data_invalid",
+        ),
+        (
+            lambda data: {
+                **data,
+                "group_addresses": {
+                    "0/0/1": {**data["group_addresses"]["0/0/1"], "address": "x/y"}
+                },
+            },
+            "project_data_invalid",
+        ),
+        (
+            lambda data: {
+                **data,
+                "group_addresses": {
+                    "0/0/1": {
+                        **data["group_addresses"]["0/0/1"],
+                        "dpt": {"main": "1", "sub": None},
+                    }
+                },
+            },
+            "project_data_invalid",
+        ),
+        (
+            lambda data: {
+                **data,
+                "devices": {"1.0.0": _without(data["devices"]["1.0.0"], "name")},
+            },
+            "project_data_invalid",
+        ),
+        (
+            lambda data: {
+                **data,
+                "info": {**data["info"], "xknxproject_version": "99.0.0"},
+            },
+            "project_data_incompatible",
+        ),
+        (
+            lambda data: {
+                **data,
+                "info": {**data["info"], "xknxproject_version": "unknown"},
+            },
+            "project_data_incompatible",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("load_knxproj")
+async def test_set_project_invalid_data(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    project_data: dict[str, Any],
+    hass_storage: dict[str, Any],
+    change: Callable[[dict[str, Any]], dict[str, Any]],
+    translation_key: str,
+) -> None:
+    """Invalid or incompatible data is refused and the project is kept."""
+    await knx.setup_integration()
+    project = hass.data[KNX_MODULE_KEY].project
+    stored = hass_storage[KNX_PROJECT_STORAGE_KEY]
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await async_set_project(hass, change(project_data))
+
+    assert exc_info.value.translation_key == translation_key
+    assert hass_storage[KNX_PROJECT_STORAGE_KEY] is stored
+    assert project.info == project_data["info"]
+    assert "0/0/1" in project.group_addresses
+
+
+async def test_set_project_not_loaded(
+    hass: HomeAssistant, project_data: dict[str, Any]
+) -> None:
+    """Project data needs a loaded KNX integration."""
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await async_set_project(hass, project_data)
+
+    assert exc_info.value.translation_key == "integration_not_loaded"

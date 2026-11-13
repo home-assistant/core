@@ -1639,6 +1639,12 @@
     "llm_tool_failed": {
       "message": "KNX tool call failed: {error}"
     },
+    "project_data_incompatible": {
+      "message": "The KNX project data is for xknxproject {version}, which is not compatible with the installed xknxproject {installed_version}."
+    },
+    "project_data_invalid": {
+      "message": "Invalid KNX project data: {error}"
+    },
     "service_event_register_ga_not_found": {
       "message": "Could not find registered event for `{group_addresses}` to remove."
     },

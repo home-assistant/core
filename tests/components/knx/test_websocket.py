@@ -176,6 +176,75 @@ async def test_knx_project_file_process_error(
     assert not hass.data[KNX_MODULE_KEY].project.loaded
 
 
+async def test_knx_set_project(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+    project_data: dict[str, Any],
+) -> None:
+    """Test knx/set_knx_project command for storing and loading project data."""
+    await knx.setup_integration()
+    client = await hass_ws_client(hass)
+    assert not hass.data[KNX_MODULE_KEY].project.loaded
+
+    await client.send_json_auto_id(
+        {"type": "knx/set_knx_project", "project": project_data}
+    )
+    res = await client.receive_json()
+
+    assert res["success"], res
+    assert hass.data[KNX_MODULE_KEY].project.loaded
+    assert hass_storage[KNX_PROJECT_STORAGE_KEY]["data"] == project_data
+
+
+async def test_knx_set_project_invalid(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+    project_data: dict[str, Any],
+) -> None:
+    """Test knx/set_knx_project refuses invalid project data."""
+    await knx.setup_integration()
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "knx/set_knx_project",
+            "project": {**project_data, "group_addresses": None},
+        }
+    )
+    res = await client.receive_json()
+
+    assert not res["success"]
+    assert res["error"]["code"] == "home_assistant_error"
+    assert res["error"]["translation_key"] == "project_data_invalid"
+    assert not hass.data[KNX_MODULE_KEY].project.loaded
+    assert KNX_PROJECT_STORAGE_KEY not in hass_storage
+
+
+async def test_knx_set_project_not_loaded(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+    project_data: dict[str, Any],
+) -> None:
+    """Test knx/set_knx_project when the config entry is unloaded."""
+    await knx.setup_integration()
+    await hass.config_entries.async_unload(knx.mock_config_entry.entry_id)
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {"type": "knx/set_knx_project", "project": project_data}
+    )
+    res = await client.receive_json()
+
+    assert not res["success"]
+    assert res["error"]["code"] == "home_assistant_error"
+    assert res["error"]["translation_key"] == "integration_not_loaded"
+
+
 @pytest.mark.usefixtures("load_knxproj")
 async def test_knx_project_file_remove(
     hass: HomeAssistant,
