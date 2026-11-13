@@ -42,6 +42,13 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     if isinstance(coordinator.device, switchbot.SwitchbotAirPurifier):
         async_add_entities([SwitchbotAirPurifierLightEntity(coordinator)])
+    elif isinstance(coordinator.device, switchbot.SwitchbotModernCeilingFan):
+        async_add_entities(
+            [
+                SwitchbotModernCeilingFanLight(coordinator, white=True),
+                SwitchbotModernCeilingFanLight(coordinator, white=False),
+            ]
+        )
     elif isinstance(coordinator.device, switchbot.SwitchbotCirculatorFanPro):
         async_add_entities([SwitchbotCirculatorFanProLightEntity(coordinator)])
     else:
@@ -283,3 +290,79 @@ class SwitchbotCirculatorFanProLightEntity(SwitchbotEntity, LightEntity):
         """Turn the night light off."""
         _LOGGER.debug("Turning off night light %s, address %s", kwargs, self._address)
         await self._device.turn_off_light()
+
+
+class SwitchbotModernCeilingFanLight(SwitchbotEntity, LightEntity):
+    """A white or RGB light channel belonging to a Modern Ceiling Fan."""
+
+    _device: switchbot.SwitchbotModernCeilingFan
+    _attr_min_color_temp_kelvin = 2700
+    _attr_max_color_temp_kelvin = 6500
+
+    def __init__(
+        self, coordinator: SwitchbotDataUpdateCoordinator, *, white: bool
+    ) -> None:
+        """Initialize an independent lighting channel."""
+        super().__init__(coordinator)
+        self._white = white
+        channel = "white" if white else "color"
+        self._attr_unique_id = f"{coordinator.base_unique_id}_{channel}"
+        self._attr_translation_key = f"modern_ceiling_fan_{channel}"
+        self._attr_color_mode = ColorMode.COLOR_TEMP if white else ColorMode.RGB
+        self._attr_supported_color_modes = {self._attr_color_mode}
+
+    @property
+    @override
+    def is_on(self) -> bool | None:
+        return (
+            self._device.main_light_is_on
+            if self._white
+            else self._device.color_light_is_on
+        )
+
+    @property
+    @override
+    def brightness(self) -> int | None:
+        value = (
+            self._device.main_light_brightness
+            if self._white
+            else self._device.color_light_brightness
+        )
+        return round(value * 255 / 100) if value is not None else None
+
+    @property
+    @override
+    def color_temp_kelvin(self) -> int | None:
+        return self._device.main_light_color_temp if self._white else None
+
+    @property
+    @override
+    def rgb_color(self) -> tuple[int, int, int] | None:
+        return None if self._white else self._device.color_light_rgb
+
+    @exception_handler
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        brightness = (
+            max(1, round(kwargs[ATTR_BRIGHTNESS] * 100 / 255))
+            if ATTR_BRIGHTNESS in kwargs
+            else None
+        )
+        if self._white:
+            await self._device.set_main_light(
+                True,
+                brightness=brightness,
+                color_temp=kwargs.get(ATTR_COLOR_TEMP_KELVIN),
+            )
+        else:
+            await self._device.set_color_light(
+                True, brightness=brightness, rgb=kwargs.get(ATTR_RGB_COLOR)
+            )
+
+    @exception_handler
+    @override
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        if self._white:
+            await self._device.set_main_light(False)
+        else:
+            await self._device.set_color_light(False)
