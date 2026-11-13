@@ -2,7 +2,7 @@
 
 from dataclasses import replace
 from datetime import timedelta
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, call, patch
 
 from adguardhome import AdGuardHomeError, AvailableUpdate
 from awesomeversion import AwesomeVersion
@@ -15,12 +15,13 @@ from pytest_homeassistant.common import (
 )
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.adguard.const import DOMAIN
 from homeassistant.components.update import ATTR_INSTALLED_VERSION, ATTR_LATEST_VERSION
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 
 @pytest.fixture
@@ -44,7 +45,6 @@ async def test_update_disabled(
     hass: HomeAssistant,
     mock_adguard: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the adguard update is disabled."""
     mock_adguard.update.get.return_value = AvailableUpdate(
@@ -57,13 +57,6 @@ async def test_update_disabled(
         await hass.async_block_till_done()
 
     assert not hass.states.async_all()
-    mock_adguard.status.assert_awaited_once()
-    mock_adguard.reset_mock()
-    freezer.tick(timedelta(minutes=5))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-    mock_adguard.status.assert_not_awaited()
-    mock_adguard.update.get.assert_not_awaited()
 
 
 async def test_update_no_new_version(
@@ -89,8 +82,9 @@ async def test_update_check_failed(
     mock_adguard: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test a failing update check does not keep AdGuard Home from setting up."""
+    """Test setup after a failed update check and version refresh without switches."""
     mock_adguard.update.get.side_effect = AdGuardHomeError("No internet")
 
     mock_config_entry.add_to_hass(hass)
@@ -110,14 +104,23 @@ async def test_update_check_failed(
     mock_adguard.status.return_value = replace(
         mock_adguard.status.return_value, version=AwesomeVersion("v0.107.51")
     )
-    freezer.tick(timedelta(minutes=5))
+    freezer.tick(timedelta(seconds=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
-    mock_adguard.status.assert_awaited_once()
-    mock_adguard.update.get.assert_awaited_once()
-    state = hass.states.get("update.adguard_home")
-    assert state.state != STATE_UNAVAILABLE
-    assert state.attributes[ATTR_INSTALLED_VERSION] == "v0.107.51"
+    assert mock_adguard.mock_calls == []
+
+    freezer.tick(timedelta(seconds=290))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert mock_adguard.mock_calls == [call.status(), call.update.get()]
+    assert (
+        hass.states.get("update.adguard_home").attributes[ATTR_INSTALLED_VERSION]
+        == "v0.107.51"
+    )
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
+    )
+    assert device.sw_version == "v0.107.51"
 
 
 @pytest.mark.usefixtures("init_integration")
