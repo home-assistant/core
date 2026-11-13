@@ -181,6 +181,39 @@ async def test_snapshot_names_a_nameless_device_after_its_entity(
     assert build_snapshot(hass, ["light.lamp"])["devices"][0]["name"] == "Desk lamp"
 
 
+async def test_snapshot_puts_a_child_device_in_its_parent_area(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test an entity on a child device with no area of its own takes the parent's area."""
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+    kitchen = area_registry.async_create("Kitchen")
+    parent = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id, identifiers={("test", "hub")}, name="Hub"
+    )
+    device_registry.async_update_device(parent.id, area_id=kitchen.id)
+    child = device_registry.async_get_or_create_child(
+        config_entry_id=entry.entry_id,
+        identifiers={("test", "lamp")},
+        name="Lamp",
+        parent_device_id=parent.id,
+    )
+    entity_registry.async_get_or_create(
+        "light", "test", "lamp", device_id=child.id, suggested_object_id="lamp"
+    )
+    hass.states.async_set("light.lamp", "on")
+
+    snapshot = build_snapshot(hass, ["light.lamp"])
+
+    assert (snapshot["zone_names"], snapshot["devices"][0]["zone"]) == (
+        {kitchen.id: "Kitchen"},
+        "Kitchen",
+    )
+
+
 @pytest.fixture
 def home_entry(mock_config_entry: MockConfigEntry) -> MockConfigEntry:
     """Config entry that shows one lamp on TRMNL."""
