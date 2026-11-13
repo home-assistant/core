@@ -94,7 +94,11 @@ class TRMNLConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             return await self._async_create_or_update_entry(data)
         except AbortFlow as abort:
             await async_revoke_token(self.hass, data["token"]["access_token"])
-            return self.async_abort(reason=abort.reason)
+            return self.async_abort(
+                reason=abort.reason,
+                description_placeholders=abort.description_placeholders,
+                translation_domain=abort.translation_domain,
+            )
 
     async def _async_create_or_update_entry(
         self, data: dict[str, Any]
