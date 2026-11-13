@@ -1,0 +1,6 @@
+{
+  "domain": "poolstar_neopool",
+  "name": "Poolstar",
+  "integration_type": "virtual",
+  "supported_by": "neopool"
+}

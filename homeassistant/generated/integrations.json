@@ -11588,6 +11588,17 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "poolstar_neopool": {
+      "name": "Poolstar",
+      "integration_type": "virtual",
+      "categories": [
+        "water.pools_spas"
+      ],
+      "connectivity": [
+        "modbus"
+      ],
+      "supported_by": "neopool"
+    },
     "portainer": {
       "name": "Portainer",
       "integration_type": "service",
