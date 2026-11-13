@@ -1,9 +1,10 @@
 """Climate entities for NuHeat thermostats."""
 
 from asyncio import Lock, Task, current_task, gather, timeout
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Awaitable
 from contextlib import asynccontextmanager
 from math import ceil
+from time import monotonic
 from typing import Any, override
 
 from chemelex_nuheat import (
@@ -43,6 +44,7 @@ from .const import DOMAIN, PRESET_MODES
 from .coordinator import NuHeatCoordinator
 
 CONTROL_OPERATION_TIMEOUT = 30.0
+COMMAND_TARGET_MAX_AGE = 30.0
 
 
 async def async_setup_entry(
@@ -81,6 +83,37 @@ class NuHeatClimateEntity(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
         self._control_tasks: set[Task[Any]] = set()
         self._controls_unloading = False
         self._attr_unique_id = serial_number
+        # Command construction only; entity properties always use cloud data.
+        self._successful_target: tuple[float, float, Thermostat] | None = None
+        self._target_outcome_unknown = False
+
+    async def _async_write(
+        self,
+        request: Awaitable[Any],
+        *,
+        target: float | None = None,
+        clear_target: bool = False,
+    ) -> None:
+        """Keep command safety separate from displayed thermostat state."""
+        sample = self.thermostat
+        try:
+            await request
+        except (NuHeatRateLimitError, NuHeatPermissionError) as err:
+            if err.write_applied:
+                self._successful_target = None
+                self._target_outcome_unknown = True
+            raise
+        except BaseException:
+            # Includes cancellation after invoking the SDK. The outcome is unknown.
+            self._successful_target = None
+            self._target_outcome_unknown = True
+            raise
+        if clear_target:
+            self._successful_target = None
+            self._target_outcome_unknown = False
+        elif target is not None:
+            self._successful_target = (target, monotonic(), sample)
+            self._target_outcome_unknown = False
 
     def _check_control_available(self) -> None:
         if self._controls_unloading or self.coordinator.shutdown_requested:
@@ -142,6 +175,8 @@ class NuHeatClimateEntity(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
             task.cancel()
         if tasks:
             await gather(*tasks, return_exceptions=True)
+        self._successful_target = None
+        self._target_outcome_unknown = False
         await super().async_will_remove_from_hass()
 
     @property
@@ -187,6 +222,24 @@ class NuHeatClimateEntity(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
 
     def _command_temperature(self) -> float:
         temperature = self.thermostat.target_temperature
+        if self._successful_target is not None and not self._target_outcome_unknown:
+            target, written_at, previous_sample = self._successful_target
+            if (
+                self.coordinator.is_thermostat_available(self._serial_number)
+                and self.thermostat is not previous_sample
+                and temperature is not None
+                and round(temperature, 2) == round(target, 2)
+            ):
+                self._successful_target = None
+            elif (
+                self.coordinator.is_thermostat_available(self._serial_number)
+                and monotonic() - written_at < COMMAND_TARGET_MAX_AGE
+            ):
+                temperature = target
+            else:
+                temperature = None
+        if self._target_outcome_unknown:
+            temperature = None
         if (
             temperature is None
             or not DEFAULT_MIN_TEMP <= temperature <= DEFAULT_MAX_TEMP
@@ -203,7 +256,10 @@ class NuHeatClimateEntity(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
         async with self._control_operation():
             requested_mode = kwargs.get(ATTR_HVAC_MODE)
             if requested_mode is HVACMode.OFF:
-                await self.coordinator.api.set_standby(self._serial_number)
+                await self._async_write(
+                    self.coordinator.api.set_standby(self._serial_number),
+                    clear_target=True,
+                )
                 return
             if self.hvac_mode is HVACMode.OFF and requested_mode is None:
                 requested_mode = HVACMode.HEAT
@@ -223,23 +279,34 @@ class NuHeatClimateEntity(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
                 and self.thermostat.hold_until is not None
             ):
                 command["hold_until"] = self.thermostat.hold_until
-            await self.coordinator.api.set_target_temperature(
-                self._serial_number, float(temperature), **command
+            await self._async_write(
+                self.coordinator.api.set_target_temperature(
+                    self._serial_number, float(temperature), **command
+                ),
+                target=float(temperature),
             )
 
     async def _async_set_mode(self, mode: ScheduleMode) -> None:
         if mode is ScheduleMode.AUTO:
-            await self.coordinator.api.set_schedule_mode(self._serial_number, mode)
+            await self._async_write(
+                self.coordinator.api.set_schedule_mode(self._serial_number, mode),
+                clear_target=True,
+            )
         else:
-            await self.coordinator.api.set_schedule_mode(
-                self._serial_number, mode, temperature=self._command_temperature()
+            await self._async_write(
+                self.coordinator.api.set_schedule_mode(
+                    self._serial_number, mode, temperature=self._command_temperature()
+                )
             )
 
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         async with self._control_operation():
             if hvac_mode is HVACMode.OFF:
-                await self.coordinator.api.set_standby(self._serial_number)
+                await self._async_write(
+                    self.coordinator.api.set_standby(self._serial_number),
+                    clear_target=True,
+                )
             else:
                 await self._async_set_mode(api_mode_for_hvac_mode(hvac_mode))
 
