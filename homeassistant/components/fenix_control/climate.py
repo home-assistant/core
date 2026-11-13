@@ -1,0 +1,377 @@
+"""Climate platform for the FENIX Control integration."""
+
+import dataclasses
+import math
+from typing import Any, override
+
+from pyfenixcontrol import FenixControlError, HolidayMode, HvacState, PresetMode
+
+from homeassistant.components.climate import (
+    ATTR_HVAC_MODE,
+    PRESET_BOOST,
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
+)
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from .const import DOMAIN
+from .coordinator import FenixControlConfigEntry, FenixControlCoordinator
+from .entity import FenixControlEntity
+
+# Commands go to the cloud; send them one at a time
+PARALLEL_UPDATES = 1
+
+HVAC_MODE_TO_PRESET_MODE: dict[HVACMode, PresetMode] = {
+    HVACMode.OFF: PresetMode.OFF,
+    HVACMode.AUTO: PresetMode.PROGRAM,
+    HVACMode.HEAT: PresetMode.MANUAL,
+}
+
+# Presets are named like the modes in the FENIX Control app
+PRESET_PROGRAM = "program"
+PRESET_DEFROST = "defrost"
+
+PRESET_TO_PRESET_MODE: dict[str, PresetMode] = {
+    PRESET_PROGRAM: PresetMode.PROGRAM,
+    PRESET_DEFROST: PresetMode.DEFROST,
+    PRESET_BOOST: PresetMode.BOOST,
+}
+PRESET_MODE_TO_PRESET: dict[int, str] = {
+    mode: preset for preset, mode in PRESET_TO_PRESET_MODE.items()
+}
+
+# Modes that regulate to a target temperature
+TARGET_PRESET_MODES: frozenset[int] = frozenset(
+    {PresetMode.MANUAL, PresetMode.PROGRAM, PresetMode.DEFROST, PresetMode.BOOST}
+)
+# Device fields with the setpoint of the modes that keep their mode when it changes;
+# in the other modes a new target sets the manual target
+OWN_SETPOINT_FIELDS: dict[int, str] = {
+    PresetMode.DEFROST: "defrost_temperature",
+    PresetMode.BOOST: "boost_temperature",
+}
+
+DEFAULT_MIN_TEMP = 5.0
+DEFAULT_MAX_TEMP = 35.0
+TEMPERATURE_STEP = 0.5
+
+HVAC_STATE_TO_HVAC_ACTION: dict[HvacState, HVACAction] = {
+    HvacState.IDLE: HVACAction.IDLE,
+    HvacState.HEATING: HVACAction.HEATING,
+    # Thermostats also report "off" when they're on but not heating, e.g. when
+    # the target is reached; the device is only off in the off mode
+    HvacState.OFF: HVACAction.IDLE,
+}
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: FenixControlConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up FENIX Control climate entities."""
+    coordinator = entry.runtime_data
+    async_add_entities(
+        FenixControlClimate(coordinator, device_id)
+        for device_id in coordinator.data.devices
+    )
+
+
+class FenixControlClimate(FenixControlEntity, ClimateEntity):
+    """A FENIX TFT Wi-Fi thermostat."""
+
+    _attr_name = None
+    _attr_translation_key = "thermostat"
+    _attr_hvac_modes = list(HVAC_MODE_TO_PRESET_MODE)
+    _attr_preset_modes = list(PRESET_TO_PRESET_MODE)
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+
+    def __init__(self, coordinator: FenixControlCoordinator, device_id: str) -> None:
+        """Initialize the thermostat."""
+        super().__init__(coordinator, device_id)
+        self._attr_unique_id = device_id
+        self._last_on_mode = HVACMode.AUTO
+        self._remember_on_mode()
+
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Track the last HVAC mode in which the thermostat was on."""
+        super()._handle_coordinator_update()
+        self._remember_on_mode()
+
+    def _remember_on_mode(self) -> None:
+        if (mode := self.hvac_mode) not in (None, HVACMode.OFF):
+            self._last_on_mode = mode
+
+    @property
+    @override
+    def target_temperature_step(self) -> float:
+        """Return the step the UI uses to change the target.
+
+        Home Assistant doesn't convert the step: in Fahrenheit, 0.5 °F would be
+        rounded back to the same 0.5 °C target, so whole degrees are used.
+        """
+        if self.hass.config.units.temperature_unit == UnitOfTemperature.CELSIUS:
+            return TEMPERATURE_STEP
+        return 1.0
+
+    @property
+    @override
+    def native_current_temperature(self) -> float | None:
+        """Return the room temperature."""
+        return self.device.room_temperature
+
+    @property
+    @override
+    def native_target_temperature(self) -> float | None:
+        """Return the temperature the thermostat regulates to.
+
+        Manual, defrost and boost have their own setpoints; the program reports
+        the setpoint it currently uses. Off regulates to no target.
+        """
+        match self.device.preset_mode:
+            case PresetMode.DEFROST:
+                return self.device.defrost_temperature
+            case PresetMode.BOOST:
+                return self.device.boost_temperature
+            case PresetMode.PROGRAM:
+                return self.device.active_target_temperature
+            case PresetMode.MANUAL:
+                return self.device.target_temperature
+        return None
+
+    def _setpoint_range(self, mode: int | None) -> tuple[float, float]:
+        """Return the range the device accepts for the setpoint of a mode.
+
+        Defrost and boost have their own ranges; in the other modes a change sets
+        the manual target. The bounds are rounded inwards to the step.
+        """
+        match mode:
+            case PresetMode.DEFROST:
+                device_range = self.device.defrost_temperature_range
+            case PresetMode.BOOST:
+                device_range = self.device.boost_temperature_range
+            case _:
+                device_range = self.device.target_temperature_range
+        if device_range is None:
+            return DEFAULT_MIN_TEMP, DEFAULT_MAX_TEMP
+        # Round first: the Fahrenheit conversion leaves tiny errors (10.000001)
+        low = math.ceil(round(device_range[0], 2) / TEMPERATURE_STEP) * TEMPERATURE_STEP
+        high = (
+            math.floor(round(device_range[1], 2) / TEMPERATURE_STEP) * TEMPERATURE_STEP
+        )
+        if low > high:
+            return DEFAULT_MIN_TEMP, DEFAULT_MAX_TEMP
+        return low, high
+
+    @property
+    @override
+    def min_temp(self) -> float:
+        """Return the lowest target the device accepts in the current mode."""
+        return self._setpoint_range(self.device.preset_mode)[0]
+
+    @property
+    @override
+    def max_temp(self) -> float:
+        """Return the highest target the device accepts in the current mode."""
+        return self._setpoint_range(self.device.preset_mode)[1]
+
+    @property
+    @override
+    def hvac_mode(self) -> HVACMode | None:
+        """Return the HVAC mode; holiday, defrost and boost follow the program."""
+        if self.device.holiday_active:
+            # The mode a thermostat reports during a holiday depends on the
+            # device type and on what the holiday does; some values are unknown
+            if (
+                self.device.holiday_mode == HolidayMode.OFF
+                or self.device.preset_mode == PresetMode.OFF
+            ):
+                return HVACMode.OFF
+            return HVACMode.AUTO
+        match self.device.preset_mode:
+            case PresetMode.OFF:
+                return HVACMode.OFF
+            case PresetMode.MANUAL:
+                return HVACMode.HEAT
+            case (
+                PresetMode.PROGRAM
+                | PresetMode.HOLIDAYS
+                | PresetMode.DEFROST
+                | PresetMode.BOOST
+            ):
+                return HVACMode.AUTO
+        return None
+
+    @property
+    @override
+    def hvac_modes(self) -> list[HVACMode]:
+        """Return the selectable HVAC modes; none can be chosen during a holiday."""
+        if self.device.holiday_active:
+            return [mode] if (mode := self.hvac_mode) is not None else []
+        return self._attr_hvac_modes
+
+    @property
+    @override
+    def hvac_action(self) -> HVACAction | None:
+        """Return whether the thermostat is heating, also during a holiday."""
+        if self.hvac_mode is HVACMode.OFF:
+            return HVACAction.OFF
+        if self.device.hvac_state is None:
+            return None
+        try:
+            return HVAC_STATE_TO_HVAC_ACTION[HvacState(self.device.hvac_state)]
+        except ValueError:
+            return None
+
+    @property
+    @override
+    def preset_mode(self) -> str | None:
+        """Return the preset, if the thermostat is in one."""
+        if self.device.preset_mode is None:
+            return None
+        return PRESET_MODE_TO_PRESET.get(self.device.preset_mode)
+
+    @property
+    @override
+    def supported_features(self) -> ClimateEntityFeature:
+        """Return the features available in the current mode."""
+        if self.device.holiday_active:
+            # A holiday is set for the whole installation and locks the controls
+            return ClimateEntityFeature(0)
+        # Also while off: Home Assistant rejects a target sent together with an
+        # HVAC mode if the feature is missing
+        return (
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.PRESET_MODE
+            | ClimateEntityFeature.TURN_ON
+            | ClimateEntityFeature.TURN_OFF
+        )
+
+    @override
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        """Set the target temperature.
+
+        Defrost and boost keep their mode and get a new setpoint; in the other
+        modes, or with an HVAC mode given, the thermostat switches to manual.
+        """
+        temperature: float = kwargs[ATTR_TEMPERATURE]
+        hvac_mode: HVACMode | None = kwargs.get(ATTR_HVAC_MODE)
+        if hvac_mode is not None and hvac_mode not in self.hvac_modes:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_hvac_mode",
+                translation_placeholders={"hvac_mode": hvac_mode},
+            )
+        # Home Assistant only checks the range; an odd value would be written
+        # and shown as a target the thermostat itself can't select
+        steps = temperature / TEMPERATURE_STEP
+        if self.hass.config.units.temperature_unit != UnitOfTemperature.CELSIUS:
+            # Converted from Fahrenheit, so 72 °F arrives as 22.22 °C
+            temperature = round(steps) * TEMPERATURE_STEP
+        elif not math.isclose(steps, round(steps)):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="temperature_step_invalid",
+                translation_placeholders={
+                    "temperature": str(temperature),
+                    "step": str(TEMPERATURE_STEP),
+                },
+            )
+        mode = self.device.preset_mode
+        if hvac_mode is None and mode not in TARGET_PRESET_MODES:
+            # A target alone must not turn on a thermostat that is off
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="no_target_mode"
+            )
+        if hvac_mode is not None or mode not in OWN_SETPOINT_FIELDS:
+            mode = int(PresetMode.MANUAL)
+        # Home Assistant checks the range of the current mode; leaving defrost or
+        # boost sets the manual target, which has its own range
+        low, high = self._setpoint_range(mode)
+        if not low <= temperature <= high:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="temperature_out_of_range",
+                translation_placeholders={
+                    "temperature": str(temperature),
+                    "min_temp": str(low),
+                    "max_temp": str(high),
+                },
+            )
+        try:
+            await self.coordinator.client.set_setpoint(
+                self._device_id, PresetMode(mode), temperature
+            )
+        except FenixControlError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_temperature_failed",
+            ) from err
+        field = OWN_SETPOINT_FIELDS.get(mode, "target_temperature")
+        self._update_device(**{field: temperature, "preset_mode": mode})
+        # The temperature command already selects manual (heat) mode
+        if hvac_mode is not None and hvac_mode != HVACMode.HEAT:
+            await self.async_set_hvac_mode(hvac_mode)
+
+    @override
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set the HVAC mode."""
+        await self._async_set_preset_mode(
+            HVAC_MODE_TO_PRESET_MODE[hvac_mode], "set_hvac_mode_failed"
+        )
+
+    @override
+    async def async_turn_on(self) -> None:
+        """Turn on in the last used HVAC mode, the weekly program if unknown."""
+        await self.async_set_hvac_mode(self._last_on_mode)
+
+    @override
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set the preset."""
+        await self._async_set_preset_mode(
+            PRESET_TO_PRESET_MODE[preset_mode], "set_preset_mode_failed"
+        )
+
+    def _raise_if_holiday(self) -> None:
+        """Reject a command while a holiday locks the controls.
+
+        Home Assistant doesn't offer the controls then, but it lets the current
+        HVAC mode be selected again, and a mode or preset command may already
+        be waiting when a poll finds a new holiday. A waiting temperature
+        command is rejected by Home Assistant itself.
+        """
+        if self.device.holiday_active:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="holiday_active"
+            )
+
+    async def _async_set_preset_mode(
+        self, mode: PresetMode, translation_key: str
+    ) -> None:
+        self._raise_if_holiday()
+        try:
+            await self.coordinator.client.set_preset_mode(self._device_id, mode)
+        except FenixControlError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key=translation_key
+            ) from err
+        self._update_device(preset_mode=int(mode))
+
+    def _update_device(self, **changes: Any) -> None:
+        """Show the commanded state until the next poll confirms it."""
+        # The cloud reports a change only after the thermostat has applied it,
+        # so an immediate refresh would show the old state
+        if changes.get("preset_mode", self.device.preset_mode) != (
+            self.device.preset_mode
+        ):
+            # The setpoint the new mode regulates to is only known after the
+            # next poll; the old one would show as the new mode's target
+            changes.setdefault("active_target_temperature", None)
+        self.coordinator.async_set_device(dataclasses.replace(self.device, **changes))
