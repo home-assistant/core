@@ -203,9 +203,8 @@ class BSBLanWaterHeaterDeviceEntity(BSBLanDualCoordinatorEntity):
     def _dhw_config(self) -> HotWaterConfig | None:
         """Return the slow-coordinator DHW config.
 
-        It may still be pending when the platform is set up.
+        Coordinator data may still be None during the initial background fetch.
         """
-        # Coordinator data is None until the initial background fetch completes.
         return (
             self.slow_coordinator.data.dhw_config
             if self.slow_coordinator.data
