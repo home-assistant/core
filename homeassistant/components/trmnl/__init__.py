@@ -65,7 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TRMNLConfigEntry) -> Non
 
     if entity_ids := entry.options.get(CONF_HOME_ENTITIES):
         entry.async_on_unload(
-            HomePusher(hass, entity_ids, _home_push(hass, entry)).async_start()
+            HomePusher(hass, entry, entity_ids, _home_push(hass, entry)).async_start()
         )
 
 

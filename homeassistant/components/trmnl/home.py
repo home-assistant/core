@@ -1,14 +1,17 @@
 """Send a snapshot of the home to a TRMNL plugin setting."""
 
-from collections.abc import Callable
+import asyncio
+from collections.abc import Callable, Coroutine
 from datetime import datetime, timedelta
 import json
 from typing import Any
 
 from trmnl.exceptions import TRMNLError, TRMNLForbiddenError
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import (
+    CALLBACK_TYPE,
     Event,
     EventStateChangedData,
     HomeAssistant,
@@ -20,8 +23,8 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.event import (
+    async_call_later,
     async_track_state_change_event,
     async_track_time_interval,
 )
@@ -29,7 +32,7 @@ from homeassistant.helpers.event import (
 from .const import LOGGER
 
 PUSH_INTERVAL = timedelta(minutes=5)
-CHANGE_PUSH_COOLDOWN_SECONDS = 60
+PUSH_COOLDOWN_SECONDS = 60
 
 SENSOR_CAPABILITIES = {
     "temperature": "measure_temperature",
@@ -221,70 +224,93 @@ def build_snapshot(hass: HomeAssistant, entity_ids: list[str]) -> dict[str, Any]
 
 
 class HomePusher:
-    """Push the picked entities on a timer and soon after they change, skipping unchanged pushes."""
+    """Push the picked entities on start, on a timer and after they change.
+
+    All three share one cooldown, so TRMNL gets at most one push a minute.
+    """
 
     def __init__(
         self,
         hass: HomeAssistant,
+        entry: ConfigEntry,
         entity_ids: list[str],
-        push: Callable[[dict[str, Any]], Any],
+        push: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
     ) -> None:
         """Initialize the pusher."""
         self._hass = hass
+        self._entry = entry
         self._entity_ids = entity_ids
         self._push = push
+        self._lock = asyncio.Lock()
         self._last_body: str | None = None
-        self._debouncer = Debouncer(
-            hass,
-            LOGGER,
-            cooldown=CHANGE_PUSH_COOLDOWN_SECONDS,
-            immediate=False,
-            function=self.async_push,
-        )
+        self._cancel_cooldown: CALLBACK_TYPE | None = None
+        self._push_pending = False
 
-    async def async_push(self) -> None:
+    @callback
+    def async_request_push(self) -> None:
+        """Push now, or when the cooldown ends; requests made meanwhile share that push."""
+        if self._cancel_cooldown is not None:
+            self._push_pending = True
+            return
+        self._push_pending = False
+        self._cancel_cooldown = async_call_later(
+            self._hass, PUSH_COOLDOWN_SECONDS, self._async_cooldown_ended
+        )
+        # An entry task, so unloading the entry waits for a push that is under way.
+        self._entry.async_create_task(self._hass, self._async_push(), "trmnl_home_push")
+
+    @callback
+    def _async_cooldown_ended(self, _now: datetime) -> None:
+        self._cancel_cooldown = None
+        if self._push_pending:
+            self.async_request_push()
+
+    async def _async_push(self) -> None:
         """Push the snapshot if it changed since the last push."""
-        snapshot = build_snapshot(self._hass, self._entity_ids)
-        body = json.dumps(snapshot, sort_keys=True)
-        if body == self._last_body:
-            return
-        try:
-            await self._push(snapshot)
-        except TRMNLForbiddenError as err:
-            LOGGER.warning(
-                'TRMNL refused the home: %s. Sign in again with "Change your markup,'
-                ' plugin settings, playlists and mashups" ticked',
-                err,
-            )
-            return
-        except TRMNLError as err:
-            LOGGER.warning("Could not send the home to TRMNL: %s", err)
-            return
-        self._last_body = body
-        LOGGER.debug("Pushed %s devices to TRMNL", len(snapshot["devices"]))
+        async with self._lock:
+            snapshot = build_snapshot(self._hass, self._entity_ids)
+            body = json.dumps(snapshot, sort_keys=True)
+            if body == self._last_body:
+                return
+            try:
+                await self._push(snapshot)
+            except TRMNLForbiddenError as err:
+                LOGGER.warning(
+                    'TRMNL refused the home: %s. Sign in again with "Change your'
+                    ' markup, plugin settings, playlists and mashups" ticked',
+                    err,
+                )
+                return
+            except TRMNLError as err:
+                LOGGER.warning("Could not send the home to TRMNL: %s", err)
+                return
+            self._last_body = body
+            LOGGER.debug("Pushed %s devices to TRMNL", len(snapshot["devices"]))
 
     @callback
     def async_start(self) -> Callable[[], None]:
         """Start pushing; return a callback that stops."""
         cancel_timer = async_track_time_interval(
-            self._hass, self._async_timer_push, PUSH_INTERVAL
+            self._hass, self._async_timer_fired, PUSH_INTERVAL
         )
         cancel_listener = async_track_state_change_event(
             self._hass, self._entity_ids, self._async_state_changed
         )
-        self._hass.async_create_task(self.async_push())
+        self.async_request_push()
 
         @callback
         def stop() -> None:
             cancel_timer()
             cancel_listener()
-            self._debouncer.async_cancel()
+            if self._cancel_cooldown is not None:
+                self._cancel_cooldown()
 
         return stop
 
-    async def _async_timer_push(self, _now: datetime) -> None:
-        await self.async_push()
+    @callback
+    def _async_timer_fired(self, _now: datetime) -> None:
+        self.async_request_push()
 
     @callback
     def _async_state_changed(self, _event: Event[EventStateChangedData]) -> None:
-        self._hass.async_create_task(self._debouncer.async_call())
+        self.async_request_push()
