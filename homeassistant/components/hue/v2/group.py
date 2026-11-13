@@ -173,7 +173,9 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
         brightness = normalize_hue_brightness(kwargs.get(ATTR_BRIGHTNESS))
         flash = kwargs.get(ATTR_FLASH)
 
-        if self._restore_brightness and brightness is None:
+        restore_brightness = self._restore_brightness
+        self._restore_brightness = None
+        if restore_brightness and brightness is None:
             # The Hue bridge sets the brightness to 1% when turning on a bulb
             # when a transition was used to turn off the bulb.
             # This issue has been reported on the Hue forum several times:
@@ -182,8 +184,7 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
             # https://developers.meethue.com/forum/t/using-transitiontime-with-on-false-resets-bri-to-1/4585
             # https://developers.meethue.com/forum/t/bri-value-changing-in-switching-lights-on-off/6323
             # https://developers.meethue.com/forum/t/fade-in-fade-out/6673
-            brightness = self._restore_brightness
-            self._restore_brightness = None
+            brightness = restore_brightness
 
         if flash is not None:
             await self.async_set_flash(flash)
