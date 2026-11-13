@@ -3,8 +3,9 @@
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
@@ -13,26 +14,13 @@ from pytest_homeassistant.common import (
 )
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.dvla.const import CONF_REG_NUMBER, DOMAIN
+from homeassistant.components.dvla.const import DOMAIN
 from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.const import UnitOfVolume
+from homeassistant.const import STATE_UNKNOWN, UnitOfVolume
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import STATE_UNKNOWN
-from homeassistant.util import dt as dt_util
-
-MOCK_VEHICLE_DATA: dict[str, Any] = {
-    "registrationNumber": "AB12CDE",
-    "taxStatus": "Taxed",
-    "taxDueDate": "2026-03-01",
-    "engineCapacity": 1998,
-    "co2Emissions": 150,
-    "monthOfFirstRegistration": "2024-05",
-    "markedForExport": False,
-    "make": "FORD",
-    "yearOfManufacture": 2020,
-}
+from homeassistant.util.json import JsonObjectType
 
 
 def get_entity_id(entity_registry: er.EntityRegistry, key: str) -> str:
@@ -59,23 +47,33 @@ def get_state(
     return state
 
 
-async def test_unknown_enum_sensor_value_is_unknown(
+@pytest.mark.parametrize(
+    ("key", "data"),
+    [
+        pytest.param("taxStatus", {"taxStatus": "Unexpected"}, id="invalid-tax-status"),
+        pytest.param(
+            "revenueWeight", {"revenueWeight": "not-a-number"}, id="invalid-weight"
+        ),
+        pytest.param("taxDueDate", {"taxDueDate": "not-a-date"}, id="invalid-date"),
+        pytest.param("taxDueDate", {"taxDueDate": 123}, id="non-string-date"),
+        pytest.param(
+            "monthOfFirstRegistration",
+            {"monthOfFirstDvlaRegistration": "2024-05"},
+            id="dvla-registration-month-is-not-a-substitute",
+        ),
+    ],
+)
+async def test_unknown_sensor_value(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     setup_dvla_entry: Callable[[dict[str, Any] | None], Awaitable[MockConfigEntry]],
+    key: str,
+    data: dict[str, int | str],
 ) -> None:
-    """Test unknown enum sensor values are exposed as unknown."""
-    await setup_dvla_entry(
-        {
-            "registrationNumber": "AB12CDE",
-            "make": "FORD",
-            "taxStatus": "Unexpected",
-        },
-    )
+    """Test absent or invalid values are exposed as unknown."""
+    await setup_dvla_entry({"registrationNumber": "AB12CDE", "make": "FORD", **data})
 
-    state = get_state(hass, entity_registry, "taxStatus")
-
-    assert state.state == STATE_UNKNOWN
+    assert get_state(hass, entity_registry, key).state == STATE_UNKNOWN
 
 
 async def test_sensor_platform(
@@ -93,22 +91,25 @@ async def test_sensor_platform(
     await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
 
-async def test_boolean_fields_are_not_sensor_entities(
+async def test_no_engine_capacity_for_electric_vehicle(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     setup_dvla_entry: Callable[[dict[str, Any] | None], Awaitable[MockConfigEntry]],
 ) -> None:
-    """Test boolean fields are not created as normal sensors."""
-    await setup_dvla_entry()
+    """Test an electric vehicle without engine capacity does not get that sensor."""
+    await setup_dvla_entry(
+        {"registrationNumber": "AB12CDE", "make": "FORD", "fuelType": "ELECTRICITY"}
+    )
 
     assert (
         entity_registry.async_get_entity_id(
             "sensor",
             DOMAIN,
-            "AB12CDE-markedForExport",
+            "AB12CDE-engineCapacity",
         )
         is None
     )
+    assert get_state(hass, entity_registry, "fuelType").state == "ELECTRICITY"
 
 
 async def test_engine_capacity_unit_conversion(
@@ -152,123 +153,41 @@ async def test_revenue_weight_sensor_is_numeric(
     assert state.attributes["device_class"] == SensorDeviceClass.WEIGHT
 
 
-async def test_revenue_weight_sensor_is_unknown_for_invalid_value(
+async def test_sensor_updates_after_weekly_refresh(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    mock_dvla_client: AsyncMock,
     setup_dvla_entry: Callable[[dict[str, Any] | None], Awaitable[MockConfigEntry]],
+    vehicle_data: JsonObjectType,
 ) -> None:
-    """Test revenue weight is unknown when DVLA returns a non-numeric value."""
-    await setup_dvla_entry(
-        {
-            "registrationNumber": "AB12CDE",
-            "make": "FORD",
-            "revenueWeight": "not-a-number",
-        },
-    )
+    """Test weekly polling updates sensors, including newly returned values."""
+    initial_data = vehicle_data.copy()
+    initial_data.pop("motExpiryDate")
+    mock_dvla_client.side_effect = [
+        initial_data,
+        {**vehicle_data, "taxStatus": "Untaxed"},
+    ]
+    await setup_dvla_entry()
 
-    state = get_state(hass, entity_registry, "revenueWeight")
+    assert get_state(hass, entity_registry, "taxStatus").state == "taxed"
+    assert get_state(hass, entity_registry, "motExpiryDate").state == STATE_UNKNOWN
 
-    assert state is not None
-    assert state.state == "unknown"
+    freezer.tick(timedelta(days=6))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    mock_dvla_client.assert_awaited_once()
 
+    freezer.tick(timedelta(days=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-async def test_sensor_updates_after_scheduled_refresh(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
-) -> None:
-    """Test sensor updates after a scheduled refresh."""
-    updated_vehicle_data = {
-        **MOCK_VEHICLE_DATA,
-        "taxStatus": "Untaxed",
-    }
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="AB12CDE",
-        data={CONF_REG_NUMBER: "AB12CDE"},
-    )
-    entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.dvla.coordinator.DVLAClient.async_get_vehicle",
-        side_effect=[MOCK_VEHICLE_DATA, updated_vehicle_data],
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-        state = get_state(hass, entity_registry, "taxStatus")
-        assert state.state == "taxed"
-
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(days=1, seconds=1))
-        await hass.async_block_till_done()
-
-    state = get_state(hass, entity_registry, "taxStatus")
-    assert state.state == "untaxed"
-
-
-async def test_invalid_date_sensor_value_is_unknown(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    setup_dvla_entry: Callable[[dict[str, Any] | None], Awaitable[MockConfigEntry]],
-) -> None:
-    """Test invalid date sensor values are exposed as unknown."""
-    await setup_dvla_entry(
-        {
-            "registrationNumber": "AB12CDE",
-            "make": "FORD",
-            "taxDueDate": "not-a-date",
-        },
-    )
-
-    state = get_state(hass, entity_registry, "taxDueDate")
-
-    assert state is not None
-    assert state.state == "unknown"
-
-
-async def test_month_of_first_registration_is_not_substituted(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    setup_dvla_entry: Callable[[dict[str, Any] | None], Awaitable[MockConfigEntry]],
-) -> None:
-    """Test first registration month is not substituted from DVLA registration month."""
-    await setup_dvla_entry(
-        {
-            "registrationNumber": "AB12CDE",
-            "make": "FORD",
-            "monthOfFirstDvlaRegistration": "2024-05",
-        },
-    )
-
-    first_registration = get_state(hass, entity_registry, "monthOfFirstRegistration")
-
-    assert first_registration.state == STATE_UNKNOWN
+    assert mock_dvla_client.await_count == 2
+    assert get_state(hass, entity_registry, "taxStatus").state == "untaxed"
     assert (
-        entity_registry.async_get_entity_id(
-            "sensor",
-            DOMAIN,
-            "AB12CDE-monthOfFirstDvlaRegistration",
-        )
-        is None
+        get_state(hass, entity_registry, "motExpiryDate").state
+        == vehicle_data["motExpiryDate"]
     )
-
-
-async def test_missing_mot_expiry_date_is_unknown(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    setup_dvla_entry: Callable[[dict[str, Any] | None], Awaitable[MockConfigEntry]],
-) -> None:
-    """Test MOT expiry date is unknown when omitted by DVLA."""  # codespell:ignore
-
-    await setup_dvla_entry(
-        {
-            "registrationNumber": "AB12CDE",
-            "make": "FORD",
-        },
-    )
-
-    state = get_state(hass, entity_registry, "motExpiryDate")
-
-    assert state.state == STATE_UNKNOWN
 
 
 async def test_device_entry_type(
@@ -277,9 +196,7 @@ async def test_device_entry_type(
     setup_dvla_entry: Callable[[dict[str, Any] | None], Awaitable[MockConfigEntry]],
 ) -> None:
     """Test DVLA device is marked as a service."""
-    await setup_dvla_entry()
-
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    entry = await setup_dvla_entry()
 
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, "AB12CDE"),
@@ -290,22 +207,3 @@ async def test_device_entry_type(
     assert device.entry_type is DeviceEntryType.SERVICE
     assert device.manufacturer == "FORD"
     assert device.model is None
-
-
-async def test_date_sensor_non_string_value_is_unknown(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    setup_dvla_entry: Callable[[dict[str, Any] | None], Awaitable[MockConfigEntry]],
-) -> None:
-    """Test non-string date sensor values are exposed as unknown."""
-    await setup_dvla_entry(
-        {
-            "registrationNumber": "AB12CDE",
-            "make": "FORD",
-            "taxDueDate": 123,
-        },
-    )
-
-    state = get_state(hass, entity_registry, "taxDueDate")
-
-    assert state.state == STATE_UNKNOWN

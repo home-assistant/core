@@ -1,28 +1,74 @@
-"""Tests for the DVLA data update coordinator through config entry setup."""
+"""Tests for the DVLA data update coordinator."""
 
+from collections.abc import Awaitable, Callable
+from datetime import timedelta
+from typing import Any
 from unittest.mock import AsyncMock
 
-from pytest_homeassistant.common import MockConfigEntry
+from aio_dvla_vehicle_enquiry import (
+    DVLAAuthError,
+    DVLAError,
+    DVLAInvalidRegistrationError,
+    DVLARateLimitError,
+)
+from freezegun.api import FrozenDateTimeFactory
+import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
-from homeassistant.components.dvla.const import CONF_REG_NUMBER
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 
-async def test_setup_entry_normalizes_registration_number(
+@pytest.mark.parametrize(
+    ("error", "retry_delay"),
+    [
+        pytest.param(
+            DVLAError("Connection failed"), timedelta(hours=1), id="connection"
+        ),
+        pytest.param(
+            DVLARateLimitError("Too many requests"), timedelta(hours=1), id="rate_limit"
+        ),
+        pytest.param(DVLAAuthError("Invalid key"), timedelta(weeks=1), id="auth"),
+        pytest.param(
+            DVLAInvalidRegistrationError("Vehicle not found"),
+            timedelta(weeks=1),
+            id="registration",
+        ),
+    ],
+)
+async def test_refresh_failure_and_recovery(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    setup_dvla_entry: Callable[[dict[str, Any] | None], Awaitable[MockConfigEntry]],
     mock_dvla_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    error: DVLAError,
+    retry_delay: timedelta,
 ) -> None:
-    """Test setup normalizes the registration number before fetching data."""
-    mock_config_entry.add_to_hass(hass)
-    hass.config_entries.async_update_entry(
-        mock_config_entry,
-        data={CONF_REG_NUMBER: "ab12 cde"},
-    )
+    """Test scheduled refresh failures retry at the appropriate cadence."""
+    entry = await setup_dvla_entry()
+    entity_id = "sensor.ab12cde_tax_status"
 
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    mock_dvla_client.side_effect = error
+    freezer.tick(timedelta(weeks=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-    mock_dvla_client.assert_awaited_once_with("AB12CDE")
+    assert entry.state is ConfigEntryState.LOADED
+    assert not hass.config_entries.flow.async_progress()
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+    assert mock_dvla_client.await_count == 2
+
+    mock_dvla_client.side_effect = None
+    freezer.tick(retry_delay - timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_dvla_client.await_count == 2
+
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(entity_id).state == "taxed"
+    assert mock_dvla_client.await_count == 3

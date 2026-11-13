@@ -2,7 +2,12 @@
 
 from unittest.mock import AsyncMock
 
-from aio_dvla_vehicle_enquiry import DVLAError, DVLAInvalidRegistrationError
+from aio_dvla_vehicle_enquiry import (
+    DVLAAuthError,
+    DVLAError,
+    DVLAInvalidRegistrationError,
+    DVLARateLimitError,
+)
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -10,42 +15,6 @@ from homeassistant import config_entries
 from homeassistant.components.dvla.const import CONF_REG_NUMBER, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-
-async def assert_error_recovers(
-    hass: HomeAssistant,
-    mock_dvla_client: AsyncMock,
-    error: Exception,
-    error_key: str,
-    invalid_reg_number: str = "INVALID",
-) -> None:
-    """Test a config flow error can recover with valid input."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-    )
-
-    mock_dvla_client.side_effect = error
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={CONF_REG_NUMBER: invalid_reg_number},
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": error_key}
-
-    mock_dvla_client.side_effect = None
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={CONF_REG_NUMBER: "AB12CDE"},
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "AB12CDE"
-    assert result["data"] == {CONF_REG_NUMBER: "AB12CDE"}
-    assert result["result"].unique_id == "AB12CDE"
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -88,7 +57,7 @@ async def test_form_success(hass: HomeAssistant) -> None:
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_REG_NUMBER: "ab12 cde"},
+        user_input={CONF_REG_NUMBER: " ab12\tcde\n"},
     )
     await hass.async_block_till_done()
 
@@ -98,56 +67,97 @@ async def test_form_success(hass: HomeAssistant) -> None:
     assert result["result"].unique_id == "AB12CDE"
 
 
-async def test_form_invalid_registration_recovers(
+@pytest.mark.parametrize(
+    "reg_number",
+    [
+        pytest.param("", id="empty"),
+        pytest.param(" \t\n", id="whitespace"),
+        pytest.param("AB12-CDE", id="punctuation"),
+        pytest.param("AB12ß", id="non_ascii"),
+    ],
+)
+async def test_form_rejects_malformed_registration(
     hass: HomeAssistant,
     mock_dvla_client: AsyncMock,
+    reg_number: str,
 ) -> None:
-    """Test invalid registration error can recover."""
-    await assert_error_recovers(
-        hass,
-        mock_dvla_client,
-        DVLAInvalidRegistrationError("Invalid registration number"),
-        "invalid_registration",
+    """Test malformed input never reaches DVLA or sets a unique ID."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_REG_NUMBER: reg_number},
     )
 
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_REG_NUMBER: "invalid_registration"}
+    flow = hass.config_entries.flow.async_get(result["flow_id"])
+    assert flow["context"].get("unique_id") is None
+    mock_dvla_client.assert_not_called()
 
-async def test_form_cannot_connect_recovers(
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_REG_NUMBER: "AB12CDE"},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "AB12CDE"
+
+
+@pytest.mark.parametrize(
+    ("error", "error_key"),
+    [
+        pytest.param(
+            DVLAInvalidRegistrationError("Invalid registration number"),
+            "invalid_registration",
+            id="invalid_registration",
+        ),
+        pytest.param(
+            DVLAInvalidRegistrationError("Vehicle not found"),
+            "invalid_registration",
+            id="vehicle_not_found",
+        ),
+        pytest.param(DVLAAuthError("Invalid key"), "auth_failed", id="auth"),
+        pytest.param(
+            DVLARateLimitError("Too many requests"), "rate_limited", id="rate"
+        ),
+        pytest.param(DVLAError("DVLA unavailable"), "cannot_connect", id="connection"),
+        pytest.param(Exception("Unexpected error"), "unknown", id="unexpected"),
+    ],
+)
+async def test_form_error_recovers(
     hass: HomeAssistant,
     mock_dvla_client: AsyncMock,
+    error: Exception,
+    error_key: str,
 ) -> None:
-    """Test connection error can recover."""
-    await assert_error_recovers(
-        hass,
-        mock_dvla_client,
-        DVLAError("DVLA unavailable"),
-        "cannot_connect",
-        invalid_reg_number="AB12CDE",
+    """Test a config flow error can recover with a valid registration."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
     )
 
-
-async def test_form_unknown_error_recovers(
-    hass: HomeAssistant,
-    mock_dvla_client: AsyncMock,
-) -> None:
-    """Test unknown error can recover."""
-    await assert_error_recovers(
-        hass,
-        mock_dvla_client,
-        Exception("Unexpected error"),
-        "unknown",
-        invalid_reg_number="AB12CDE",
+    mock_dvla_client.side_effect = error
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_REG_NUMBER: "UNKNOWN"},
     )
 
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": error_key}
 
-async def test_form_vehicle_not_found_recovers(
-    hass: HomeAssistant,
-    mock_dvla_client: AsyncMock,
-) -> None:
-    """Test vehicle not found error can recover."""
-    await assert_error_recovers(
-        hass,
-        mock_dvla_client,
-        DVLAInvalidRegistrationError("Vehicle not found"),
-        "invalid_registration",
-        invalid_reg_number="UNKNOWN",
+    mock_dvla_client.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_REG_NUMBER: "AB12CDE"},
     )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "AB12CDE"
+    assert result["data"] == {CONF_REG_NUMBER: "AB12CDE"}
+    assert result["result"].unique_id == "AB12CDE"

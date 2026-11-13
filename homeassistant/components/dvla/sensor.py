@@ -81,6 +81,7 @@ def date_value(value: Any) -> StateType | date:
 class DVLASensorEntityDescription(SensorEntityDescription):
     """Describe a DVLA sensor."""
 
+    exists_fn: Callable[[Mapping[str, Any]], bool] = lambda _: True
     value_fn: Callable[[Any], StateType | date] = raw_value
 
 
@@ -116,6 +117,9 @@ SENSOR_DESCRIPTIONS: tuple[DVLASensorEntityDescription, ...] = (
         translation_key="engine_capacity",
         device_class=SensorDeviceClass.VOLUME,
         native_unit_of_measurement=UnitOfVolume.MILLILITERS,
+        exists_fn=lambda data: (
+            "engineCapacity" in data or data.get("fuelType") != "ELECTRICITY"
+        ),
         value_fn=int_value,
     ),
     DVLASensorEntityDescription(
@@ -187,6 +191,7 @@ async def async_setup_entry(
     async_add_entities(
         DVLASensor(coordinator, reg_number, description)
         for description in SENSOR_DESCRIPTIONS
+        if description.exists_fn(coordinator.data)
     )
 
 

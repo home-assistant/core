@@ -3,7 +3,13 @@
 import logging
 from typing import Any, override
 
-from aio_dvla_vehicle_enquiry import DVLAClient, DVLAError, DVLAInvalidRegistrationError
+from aio_dvla_vehicle_enquiry import (
+    DVLAAuthError,
+    DVLAClient,
+    DVLAError,
+    DVLAInvalidRegistrationError,
+    DVLARateLimitError,
+)
 import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -33,29 +39,35 @@ class DVLAConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            reg_number = user_input[CONF_REG_NUMBER].replace(" ", "").upper()
-            user_input[CONF_REG_NUMBER] = reg_number
-
-            await self.async_set_unique_id(reg_number)
-            self._abort_if_unique_id_configured()
-
-            session = async_get_clientsession(self.hass)
-            client = DVLAClient(session, API_KEY)
-
-            try:
-                await client.async_get_vehicle(reg_number)
-            except DVLAInvalidRegistrationError:
-                errors["base"] = "invalid_registration"
-            except DVLAError:
-                errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+            reg_number = "".join(user_input[CONF_REG_NUMBER].split())
+            if not reg_number.isascii() or not reg_number.isalnum():
+                errors[CONF_REG_NUMBER] = "invalid_registration"
             else:
-                return self.async_create_entry(
-                    title=reg_number,
-                    data={CONF_REG_NUMBER: reg_number},
-                )
+                reg_number = reg_number.upper()
+                await self.async_set_unique_id(reg_number)
+                self._abort_if_unique_id_configured()
+
+                session = async_get_clientsession(self.hass)
+                client = DVLAClient(session, API_KEY)
+
+                try:
+                    await client.async_get_vehicle(reg_number)
+                except DVLAInvalidRegistrationError:
+                    errors["base"] = "invalid_registration"
+                except DVLAAuthError:
+                    errors["base"] = "auth_failed"
+                except DVLARateLimitError:
+                    errors["base"] = "rate_limited"
+                except DVLAError:
+                    errors["base"] = "cannot_connect"
+                except Exception:
+                    _LOGGER.exception("Unexpected error requesting DVLA vehicle data")
+                    errors["base"] = "unknown"
+                else:
+                    return self.async_create_entry(
+                        title=reg_number,
+                        data={CONF_REG_NUMBER: reg_number},
+                    )
 
         return self.async_show_form(
             step_id="user",

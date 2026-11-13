@@ -5,29 +5,19 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 
 from homeassistant.components.dvla.const import CONF_REG_NUMBER, DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.util.json import JsonObjectType
 
 MOCK_REG_NUMBER = "AB12CDE"
 
-MOCK_VEHICLE_DATA: dict[str, Any] = {
-    "registrationNumber": MOCK_REG_NUMBER,
-    "taxStatus": "Taxed",
-    "taxDueDate": "2026-03-01",
-    "engineCapacity": 1998,
-    "co2Emissions": 150,
-    "fuelType": "PETROL",
-    "markedForExport": False,
-    "make": "FORD",
-    "motStatus": "Valid",
-    "motExpiryDate": "2026-11-30",
-    "monthOfFirstRegistration": "2024-05",
-    "typeApproval": "M1",
-    "wheelplan": "2 AXLE RIGID BODY",
-    "yearOfManufacture": 2020,
-}
+
+@pytest.fixture
+async def vehicle_data(hass: HomeAssistant) -> JsonObjectType:
+    """Load synthetic vehicle data based on DVLA's published test responses."""
+    return await async_load_json_object_fixture(hass, "vehicle.json", DOMAIN)
 
 
 @pytest.fixture
@@ -42,11 +32,11 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_dvla_client() -> Generator[AsyncMock]:
+def mock_dvla_client(vehicle_data: JsonObjectType) -> Generator[AsyncMock]:
     """Mock the DVLA client vehicle lookup."""
     with patch(
         "homeassistant.components.dvla.coordinator.DVLAClient.async_get_vehicle",
-        return_value=MOCK_VEHICLE_DATA,
+        return_value=vehicle_data,
     ) as mock_get_vehicle:
         yield mock_get_vehicle
 

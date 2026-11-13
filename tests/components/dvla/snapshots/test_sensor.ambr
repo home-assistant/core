@@ -148,7 +148,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'SILVER',
   })
 # ---
 # name: test_sensor_platform[sensor.ab12cde_date_of_last_v5c_issued-entry]
@@ -199,7 +199,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2024-05-18',
   })
 # ---
 # name: test_sensor_platform[sensor.ab12cde_engine_capacity-entry]
@@ -304,7 +304,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'EURO6',
   })
 # ---
 # name: test_sensor_platform[sensor.ab12cde_first_registration_month-entry]
@@ -574,7 +574,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '1500',
   })
 # ---
 # name: test_sensor_platform[sensor.ab12cde_tax_due_date-entry]

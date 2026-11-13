@@ -4,8 +4,10 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
+      "auth_failed": "The DVLA service rejected the integration's API key",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_registration": "Invalid or unknown vehicle registration number",
+      "rate_limited": "The DVLA service is receiving too many requests. Try again later",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
@@ -81,6 +83,20 @@
       "year_of_manufacture": {
         "name": "Year of manufacture"
       }
+    }
+  },
+  "exceptions": {
+    "auth_failed": {
+      "message": "[%key:component::dvla::config::error::auth_failed%]"
+    },
+    "rate_limited": {
+      "message": "[%key:component::dvla::config::error::rate_limited%]"
+    },
+    "update_failed": {
+      "message": "Unable to update vehicle information from the DVLA service"
+    },
+    "vehicle_not_found": {
+      "message": "The DVLA service could not find a vehicle with registration {reg_number}"
     }
   }
 }
