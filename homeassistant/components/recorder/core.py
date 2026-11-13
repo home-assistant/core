@@ -768,17 +768,9 @@ class Recorder(threading.Thread):
         self.thread_id = thread_id
         self.recorder_and_worker_thread_ids.add(thread_id)
 
-        setup_result = self._setup_recorder()
-
-        if not setup_result:
-            _LOGGER.error("Recorder setup failed, recorder shutting down")
-            # Give up if we could not connect
-            return
-
-        schema_status = migration.validate_db_schema(self.hass, self, self.get_session)
+        schema_status = self._setup_recorder_and_validate_schema()
         if schema_status is None:
-            # Give up if we could not validate the schema
-            _LOGGER.error("Failed to validate schema, recorder shutting down")
+            _LOGGER.error("Recorder setup failed, recorder shutting down")
             return
         if schema_status.current_version > SCHEMA_VERSION:
             _LOGGER.error(
@@ -972,12 +964,40 @@ class Recorder(threading.Thread):
 
     def _setup_recorder(self) -> bool:
         """Create a connection to the database."""
+        return self._setup_connection_with_retry(lambda: True) is not None
+
+    def _setup_recorder_and_validate_schema(
+        self,
+    ) -> migration.SchemaValidationStatus | None:
+        """Create a connection to the database and validate its schema."""
+        return self._setup_connection_with_retry(
+            lambda: migration.validate_db_schema(self.hass, self, self.get_session)
+        )
+
+    def _setup_connection_with_retry[_T](
+        self, after_setup: Callable[[], _T | None]
+    ) -> _T | None:
+        """Connect, initialize the database and run after_setup, with retries.
+
+        The whole sequence is retried on a fresh connection, since a database
+        restarting while we start up can fail any step of it.
+        """
         tries = 1
 
         while tries <= self.db_max_retries:
             try:
                 self._setup_connection()
-                return migration.initialize_database(self.get_session)
+                result = (
+                    after_setup()
+                    if migration.initialize_database(self.get_session)
+                    else None
+                )
+                if result is not None:
+                    return result
+                _LOGGER.error(
+                    "Error during database setup: (retrying in %s seconds)",
+                    self.db_retry_wait,
+                )
             except UnsupportedDialect:
                 break
             except Exception:
@@ -991,7 +1011,7 @@ class Recorder(threading.Thread):
                 self._close_connection()
                 time.sleep(self.db_retry_wait)
 
-        return False
+        return None
 
     def _migrate_data_offline(
         self, schema_status: migration.SchemaValidationStatus
