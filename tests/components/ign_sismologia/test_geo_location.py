@@ -8,7 +8,7 @@ from georss_ign_sismologia_client import IgnSismologiaFeed
 from pytest_homeassistant.common import assert_setup_component, async_fire_time_changed
 
 from homeassistant.components import geo_location
-from homeassistant.components.geo_location import ATTR_SOURCE
+from homeassistant.components.geo_location import GeolocationEntityStateAttribute
 from homeassistant.components.ign_sismologia.geo_location import (
     ATTR_EXTERNAL_ID,
     ATTR_IMAGE_URL,
@@ -19,16 +19,11 @@ from homeassistant.components.ign_sismologia.geo_location import (
     SCAN_INTERVAL,
 )
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    ATTR_FRIENDLY_NAME,
-    ATTR_ICON,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_RADIUS,
     EVENT_HOMEASSISTANT_START,
+    EntityStateAttribute,
     UnitOfLength,
 )
 from homeassistant.core import HomeAssistant
@@ -120,18 +115,18 @@ async def test_setup(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> Non
             assert state.name == "M 5.7 - Region 1"
             assert state.attributes == {
                 ATTR_EXTERNAL_ID: "1234",
-                ATTR_LATITUDE: 38.0,
-                ATTR_LONGITUDE: -3.0,
-                ATTR_FRIENDLY_NAME: "M 5.7 - Region 1",
+                EntityStateAttribute.LATITUDE: 38.0,
+                EntityStateAttribute.LONGITUDE: -3.0,
+                EntityStateAttribute.FRIENDLY_NAME: "M 5.7 - Region 1",
                 ATTR_TITLE: "Title 1",
                 ATTR_REGION: "Region 1",
-                ATTR_ATTRIBUTION: "Attribution 1",
+                EntityStateAttribute.ATTRIBUTION: "Attribution 1",
                 ATTR_PUBLICATION_DATE: dt.datetime(2018, 9, 22, 8, 0, tzinfo=dt.UTC),
                 ATTR_IMAGE_URL: "http://image.url/map.jpg",
                 ATTR_MAGNITUDE: 5.7,
-                ATTR_UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
-                ATTR_SOURCE: "ign_sismologia",
-                ATTR_ICON: "mdi:pulse",
+                EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
+                GeolocationEntityStateAttribute.SOURCE: "ign_sismologia",
+                EntityStateAttribute.ICON: "mdi:pulse",
             }
             assert float(state.state) == 15.5
 
@@ -140,14 +135,14 @@ async def test_setup(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> Non
             assert state.name == "M 4.6"
             assert state.attributes == {
                 ATTR_EXTERNAL_ID: "2345",
-                ATTR_LATITUDE: 38.1,
-                ATTR_LONGITUDE: -3.1,
-                ATTR_FRIENDLY_NAME: "M 4.6",
+                EntityStateAttribute.LATITUDE: 38.1,
+                EntityStateAttribute.LONGITUDE: -3.1,
+                EntityStateAttribute.FRIENDLY_NAME: "M 4.6",
                 ATTR_TITLE: "Title 2",
                 ATTR_MAGNITUDE: 4.6,
-                ATTR_UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
-                ATTR_SOURCE: "ign_sismologia",
-                ATTR_ICON: "mdi:pulse",
+                EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
+                GeolocationEntityStateAttribute.SOURCE: "ign_sismologia",
+                EntityStateAttribute.ICON: "mdi:pulse",
             }
             assert float(state.state) == 20.5
 
@@ -156,14 +151,14 @@ async def test_setup(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> Non
             assert state.name == "Region 3"
             assert state.attributes == {
                 ATTR_EXTERNAL_ID: "3456",
-                ATTR_LATITUDE: 38.2,
-                ATTR_LONGITUDE: -3.2,
-                ATTR_FRIENDLY_NAME: "Region 3",
+                EntityStateAttribute.LATITUDE: 38.2,
+                EntityStateAttribute.LONGITUDE: -3.2,
+                EntityStateAttribute.FRIENDLY_NAME: "Region 3",
                 ATTR_TITLE: "Title 3",
                 ATTR_REGION: "Region 3",
-                ATTR_UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
-                ATTR_SOURCE: "ign_sismologia",
-                ATTR_ICON: "mdi:pulse",
+                EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
+                GeolocationEntityStateAttribute.SOURCE: "ign_sismologia",
+                EntityStateAttribute.ICON: "mdi:pulse",
             }
             assert float(state.state) == 25.5
 

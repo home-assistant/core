@@ -19,6 +19,7 @@ MAX_CHANNEL_IDS_PER_REQUEST = 50
 LOGGER = logging.getLogger(__package__)
 
 ATTR_TITLE = "title"
+ATTR_ICON = "icon"
 ATTR_TOTAL_VIEWS = "total_views"
 ATTR_LATEST_VIDEO = "latest_video"
 ATTR_SUBSCRIBER_COUNT = "subscriber_count"

@@ -141,7 +141,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> No
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, config[CONF_PROJECT_ID])},
         manufacturer="Google",
-        model="Google Assistant",
+        model="Google Home",
         name=config[CONF_PROJECT_ID],
         entry_type=dr.DeviceEntryType.SERVICE,
     )

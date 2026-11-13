@@ -1,5 +1,6 @@
 """Test init of Logitch Harmony Hub integration."""
 
+from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aioharmony.exceptions import TimeOut
@@ -187,3 +188,18 @@ async def test_ssdp_host_change_reloads_loaded_entry(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert mock_config_entry.runtime_data.address == "192.0.2.1"
     assert mock_setup_entry.await_count == 2
+
+
+async def test_remove_entry_removes_config_file(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, tmp_path: Path
+) -> None:
+    """Test removing the entry removes the hub configuration file."""
+    hass.config.config_dir = str(tmp_path)
+    config_file = tmp_path / "harmony_123.conf"
+    config_file.write_text("{}")
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert not config_file.exists()

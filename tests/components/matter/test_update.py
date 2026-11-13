@@ -22,11 +22,16 @@ from homeassistant.components.homeassistant import (
 )
 from homeassistant.components.matter.update import SCAN_INTERVAL
 from homeassistant.components.update import (
-    ATTR_VERSION,
     DOMAIN as UPDATE_DOMAIN,
-    SERVICE_INSTALL,
+    UpdateService,
+    UpdateServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_OFF,
+    STATE_ON,
+    CommonServiceArgument,
+)
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
@@ -304,9 +309,9 @@ async def test_update_install(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
+        UpdateService.INSTALL,
         {
-            ATTR_ENTITY_ID: "update.mock_dimmable_light_firmware",
+            CommonServiceArgument.ENTITY_ID: "update.mock_dimmable_light_firmware",
         },
         blocking=True,
     )
@@ -411,10 +416,10 @@ async def test_update_install_failure(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
+            UpdateService.INSTALL,
             {
-                ATTR_ENTITY_ID: "update.mock_dimmable_light_firmware",
-                ATTR_VERSION: "v3.0",
+                CommonServiceArgument.ENTITY_ID: "update.mock_dimmable_light_firmware",
+                UpdateServiceArgument.VERSION: "v3.0",
             },
             blocking=True,
         )
@@ -424,10 +429,10 @@ async def test_update_install_failure(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
+            UpdateService.INSTALL,
             {
-                ATTR_ENTITY_ID: "update.mock_dimmable_light_firmware",
-                ATTR_VERSION: "v3.0",
+                CommonServiceArgument.ENTITY_ID: "update.mock_dimmable_light_firmware",
+                UpdateServiceArgument.VERSION: "v3.0",
             },
             blocking=True,
         )
@@ -522,9 +527,9 @@ async def test_update_state_restore(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
+        UpdateService.INSTALL,
         {
-            ATTR_ENTITY_ID: "update.mock_dimmable_light_firmware",
+            CommonServiceArgument.ENTITY_ID: "update.mock_dimmable_light_firmware",
         },
         blocking=True,
     )

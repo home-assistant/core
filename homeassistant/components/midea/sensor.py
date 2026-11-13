@@ -45,6 +45,8 @@ class MideaSensorEntityDescription(SensorEntityDescription):
 
     attribute: str | None = None
     models: list[DeviceType] | None = None
+    # Create the entity even if the device has not reported a value yet.
+    create_unset: bool = False
 
 
 SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
@@ -274,6 +276,115 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         models=[DeviceType.B1],
         device_class=SensorDeviceClass.ENUM,
         options=["standby", "idle", "working", "finished", "delay", "paused"],
+    ),
+    MideaSensorEntityDescription(
+        key="status",
+        translation_key="status",
+        models=[DeviceType.B0],
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "cancel",
+            "cloud",
+            "delay",
+            "finished",
+            "heat",
+            "idle",
+            "order",
+            "pause_cancel",
+            "paused",
+            "reaction",
+            "save_power",
+            "three",
+            "working",
+        ],
+    ),
+    MideaSensorEntityDescription(
+        key="mode",
+        translation_key="cooking_mode",
+        models=[DeviceType.B0],
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "above_tube",
+            "auto",
+            "baby_egg",
+            "baby_fruit",
+            "baby_milk",
+            "bake_cake",
+            "bake_cookies",
+            "bake_ribs",
+            "bake_shrimp",
+            "bake_swing",
+            "baking",
+            "brittle",
+            "bun",
+            "carrots",
+            "chicken_block",
+            "chicken_soup",
+            "coconut_sogo",
+            "code_to_hot",
+            "coix_bean",
+            "dumplings",
+            "egg",
+            "fans_scallops",
+            "fast_hot",
+            "fast_soup",
+            "fast_steam",
+            "ferment",
+            "frozen_food",
+            "hot_steam",
+            "humidity_auto",
+            "instant_noodle",
+            "jujube_longan",
+            "kebab",
+            "lotus_seed",
+            "meat",
+            "meat_eggplant",
+            "meat_tofu",
+            "metal_sterilize",
+            "microwave",
+            "milk_coffee",
+            "none",
+            "papaya_milk",
+            "pearl_meat",
+            "popcorn",
+            "porridge",
+            "pre_hot",
+            "pumpkin",
+            "pure_steam",
+            "pure_steam_fish",
+            "remove_odor",
+            "rice",
+            "roast",
+            "sauerkraut_fish",
+            "sausage",
+            "sauted_meat",
+            "scale_clean",
+            "sirloin",
+            "smart_clean",
+            "smart_steam_fish",
+            "snow_pear",
+            "spicy_sausage",
+            "spicy_tofu",
+            "steam_bun",
+            "steam_corn",
+            "steam_ribs",
+            "steam_seafood",
+            "sweet_potato",
+            "time_unfreeze",
+            "tofu",
+            "unfreeze",
+            "vegetable",
+            "warm",
+            "wing",
+        ],
+    ),
+    MideaSensorEntityDescription(
+        key="fire_power",
+        translation_key="fire_power",
+        models=[DeviceType.B0],
+        device_class=SensorDeviceClass.ENUM,
+        options=["low", "medium_low", "medium", "medium_high", "high"],
+        create_unset=True,
     ),
     MideaSensorEntityDescription(
         key="mode",
@@ -1025,7 +1136,10 @@ async def async_setup_entry(
     sensors: list[MideaSensor] = [
         MideaSensor(device, description)
         for description in SENSOR_ENTITIES
-        if device.attributes.get(description.attribute or description.key) is not None
+        if (
+            device.attributes.get(description.attribute or description.key) is not None
+            or (description.create_unset and description.key in device.attributes)
+        )
         and (not description.models or device.device_type in description.models)
     ]
 
@@ -1052,6 +1166,9 @@ class MideaSensor(MideaEntity, SensorEntity):
                 "temperature",
                 "water_level",
                 "program",
+                "status",
+                "mode",
+                "fire_power",
             )
             and value == "default"
         ):

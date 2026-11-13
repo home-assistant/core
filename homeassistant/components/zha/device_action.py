@@ -13,9 +13,8 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from .const import DOMAIN
+from .const import DOMAIN, ZHAService
 from .helpers import async_get_zha_device_proxy, convert_zha_error_to_ha_error
-from .services import SERVICE_WARNING_DEVICE_SQUAWK, SERVICE_WARNING_DEVICE_WARN
 
 # mypy: disallow-any-generics
 
@@ -126,8 +125,8 @@ DEVICE_ACTION_SCHEMAS = {
 }
 
 SERVICE_NAMES = {
-    ACTION_SQUAWK: SERVICE_WARNING_DEVICE_SQUAWK,
-    ACTION_WARN: SERVICE_WARNING_DEVICE_WARN,
+    ACTION_SQUAWK: ZHAService.WARNING_DEVICE_SQUAWK,
+    ACTION_WARN: ZHAService.WARNING_DEVICE_WARN,
 }
 
 
