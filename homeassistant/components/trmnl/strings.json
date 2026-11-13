@@ -63,7 +63,10 @@
       "message": "Authentication failed. Please sign in to TRMNL again."
     },
     "content_not_granted": {
-      "message": "Your TRMNL sign in does not let Home Assistant change plugin settings. Sign in again with \"Change your markup, plugin settings, playlists and mashups\" ticked."
+      "message": "Your TRMNL sign in does not let Home Assistant change plugin settings. Home Assistant has started a new sign in: finish it from the TRMNL integration with \"Change your markup, plugin settings, playlists and mashups\" ticked."
+    },
+    "message_error": {
+      "message": "Could not send the message to TRMNL. Try again later."
     },
     "migration_connection_error": {
       "message": "Could not reach TRMNL to move this entry from the API key to signing in. Home Assistant will try again."
