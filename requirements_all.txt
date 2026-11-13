@@ -112,7 +112,7 @@ RestrictedPython==8.5
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-SQLAlchemy==2.1.6
+SQLAlchemy==2.1.8
 
 # homeassistant.components.tami4
 Tami4EdgeAPI==3.0
@@ -496,7 +496,7 @@ aiothreema==0.3.0
 aiotractive==2.1.0
 
 # homeassistant.components.unifi
-aiounifi==98
+aiounifi==99
 
 # homeassistant.components.usb
 aiousbwatcher==1.1.2
@@ -847,7 +847,7 @@ cookidoo-api==0.18.4
 
 # homeassistant.components.backup
 # homeassistant.components.utility_meter
-cronsim==2.7
+cronsim==2.8
 
 # homeassistant.components.data_grand_lyon
 data-grand-lyon-ha==0.9.0
@@ -2931,7 +2931,7 @@ pytouchlinesl==0.6.0
 pytraccar==3.0.0
 
 # homeassistant.components.tradfri
-pytradfri[async]==14.0.0
+pytradfri[async]==15.0.0
 
 # homeassistant.components.trafikverket_camera
 # homeassistant.components.trafikverket_ferry
