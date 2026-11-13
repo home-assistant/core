@@ -245,10 +245,14 @@ class HomePusher:
         self._last_body: str | None = None
         self._cancel_cooldown: CALLBACK_TYPE | None = None
         self._push_pending = False
+        # Set when TRMNL refuses for a missing scope; the reauth reload makes a new pusher.
+        self._refused_for_scope = False
 
     @callback
     def async_request_push(self) -> None:
         """Push now, or when the cooldown ends; requests made meanwhile share that push."""
+        if self._refused_for_scope:
+            return
         if self._cancel_cooldown is not None:
             self._push_pending = True
             return
@@ -275,6 +279,8 @@ class HomePusher:
             try:
                 await self._push(snapshot)
             except TRMNLForbiddenError as err:
+                self._refused_for_scope = True
+                self._entry.async_start_reauth(self._hass)
                 LOGGER.warning(
                     'TRMNL refused the home: %s. Sign in again with "Change your'
                     ' markup, plugin settings, playlists and mashups" ticked',

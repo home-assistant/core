@@ -20,6 +20,7 @@ from homeassistant.components.trmnl.const import (
     OAUTH2_TOKEN,
 )
 from homeassistant.components.trmnl.home import build_snapshot, capabilities_of
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import (
     area_registry as ar,
@@ -382,13 +383,14 @@ async def test_deleted_plugin_setting_is_made_again(
     assert mock_trmnl_client.update_plugin_setting_data.await_args.args[0] == 43
 
 
-async def test_push_without_content_scope_explains_it(
+async def test_push_refused_for_scope_starts_reauth_once_and_stops(
     hass: HomeAssistant,
     mock_trmnl_client: AsyncMock,
     home_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test TRMNL refusing the push for a missing scope tells the user to sign in again."""
+    """Test a push refused for a revoked content scope starts reauth once and stops pushing."""
     home_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
         home_entry, options={**home_entry.options, CONF_HOME_PLUGIN_SETTING_ID: 42}
@@ -397,11 +399,19 @@ async def test_push_without_content_scope_explains_it(
         "Missing capability: content"
     )
     hass.states.async_set("light.lamp", "on")
-
     await setup_integration(hass, home_entry)
 
-    assert "Missing capability: content" in caplog.text
-    assert "Sign in again" in caplog.text
+    for state in ("off", "on"):
+        hass.states.async_set("light.lamp", state)
+        freezer.tick(timedelta(minutes=5))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert mock_trmnl_client.update_plugin_setting_data.await_count == 1
+    assert [
+        flow["context"]["source"] for flow in hass.config_entries.flow.async_progress()
+    ] == [SOURCE_REAUTH]
+    assert caplog.text.count("Missing capability: content") == 1
 
 
 @pytest.mark.parametrize(
