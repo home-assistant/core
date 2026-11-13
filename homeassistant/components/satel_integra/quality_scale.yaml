@@ -3,9 +3,7 @@ rules:
   action-setup:
     status: exempt
     comment: This integration does not provide any service actions.
-  appropriate-polling:
-    status: exempt
-    comment: This integration does not poll.
+  appropriate-polling: done
   brands: done
   common-modules: done
   config-flow-test-coverage: done
@@ -32,20 +30,20 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions: todo
-  config-entry-unloading: todo
-  docs-configuration-parameters: todo
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters: done
   docs-installation-parameters: todo
-  entity-unavailable: todo
-  integration-owner: todo
+  entity-unavailable: done
+  integration-owner: done
   log-when-unavailable: done
-  parallel-updates: todo
+  parallel-updates: done
   reauthentication-flow: todo
-  test-coverage: todo
+  test-coverage: done
 
   # Gold
-  devices: todo
-  diagnostics: todo
+  devices: done
+  diagnostics: done
   discovery-update-info: todo
   discovery: todo
   docs-data-update: todo
@@ -56,7 +54,7 @@ rules:
   docs-troubleshooting: todo
   docs-use-cases: todo
   dynamic-devices: todo
-  entity-category: todo
+  entity-category: done
   entity-device-class: todo
   entity-disabled-by-default: todo
   entity-translations: todo
