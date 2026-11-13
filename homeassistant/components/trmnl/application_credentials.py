@@ -45,7 +45,7 @@ async def async_revoke_token(hass: HomeAssistant, access_token: str) -> None:
     try:
         async with async_get_clientsession(hass).post(
             OAUTH2_REVOKE, data={"token": access_token, "client_id": CLIENT_ID}
-        ):
-            pass
+        ) as response:
+            response.raise_for_status()
     except ClientError, TimeoutError:
         LOGGER.warning("Could not revoke an unused TRMNL token")
