@@ -434,6 +434,28 @@ async def test_push_refused_for_scope_starts_reauth_once_and_stops(
     assert caplog.text.count("Missing capability: content") == 1
 
 
+async def test_last_entity_removed_clears_the_plugin(
+    hass: HomeAssistant,
+    mock_trmnl_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test unpicking every entity sends an empty home to the plugin it made."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=2,
+        unique_id=mock_config_entry.unique_id,
+        data=mock_config_entry.data,
+        options={CONF_HOME_ENTITIES: [], CONF_HOME_PLUGIN_SETTING_ID: 42},
+    )
+
+    await setup_integration(hass, entry)
+
+    plugin_setting_id, snapshot = (
+        mock_trmnl_client.update_plugin_setting_data.await_args.args
+    )
+    assert (plugin_setting_id, snapshot["devices"]) == (42, [])
+
+
 @pytest.mark.parametrize(
     ("scope", "deleted"),
     [("openid read devices content delete", True), ("openid read devices", False)],

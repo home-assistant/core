@@ -63,7 +63,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: TRMNLConfigEntry) -> Non
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    if entity_ids := entry.options.get(CONF_HOME_ENTITIES):
+    entity_ids = entry.options.get(CONF_HOME_ENTITIES, [])
+    # With no entities left, one empty push clears the plugin the integration made.
+    if entity_ids or (
+        CONF_HOME_PLUGIN_SETTING_ID in entry.options and scope_granted(entry, "content")
+    ):
         entry.async_on_unload(
             HomePusher(hass, entry, entity_ids, _home_push(hass, entry)).async_start()
         )
