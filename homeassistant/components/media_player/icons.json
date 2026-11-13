@@ -97,6 +97,9 @@
     "media_stop": {
       "service": "mdi:stop"
     },
+    "navigate": {
+      "service": "mdi:remote"
+    },
     "play_media": {
       "service": "mdi:play"
     },

@@ -11,6 +11,7 @@ from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerNavigation,
     MediaPlayerState,
     MediaType,
 )
@@ -18,7 +19,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_APP_ICON, CONF_APP_NAME, DOMAIN
+from .const import CONF_APP_ICON, CONF_APP_NAME, DOMAIN, NAVIGATION_KEY_CODES
 from .entity import AndroidTVRemoteBaseEntity
 from .helpers import AndroidTVRemoteConfigEntry
 
@@ -52,7 +53,9 @@ class AndroidTVRemoteMediaPlayerEntity(AndroidTVRemoteBaseEntity, MediaPlayerEnt
         | MediaPlayerEntityFeature.STOP
         | MediaPlayerEntityFeature.PLAY_MEDIA
         | MediaPlayerEntityFeature.BROWSE_MEDIA
+        | MediaPlayerEntityFeature.NAVIGATE
     )
+    _attr_supported_navigation = list(MediaPlayerNavigation)
 
     def __init__(
         self, api: AndroidTVRemote, config_entry: AndroidTVRemoteConfigEntry
@@ -180,6 +183,11 @@ class AndroidTVRemoteMediaPlayerEntity(AndroidTVRemoteBaseEntity, MediaPlayerEnt
     async def async_media_next_track(self) -> None:
         """Send next track command."""
         self._send_key_command("MEDIA_NEXT")
+
+    @override
+    async def async_navigate(self, direction: MediaPlayerNavigation) -> None:
+        """Send a navigation (d-pad) action."""
+        self._send_key_command(NAVIGATION_KEY_CODES[direction])
 
     @override
     async def async_play_media(

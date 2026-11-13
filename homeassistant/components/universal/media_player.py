@@ -14,6 +14,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityCapabilityAttribute,
     MediaPlayerEntityFeature,
     MediaPlayerEntityStateAttribute,
+    MediaPlayerNavigation,
     MediaPlayerService,
     MediaPlayerServiceArgument,
     MediaPlayerState,
@@ -452,6 +453,17 @@ class UniversalMediaPlayer(MediaPlayerEntity):
 
     @property
     @override
+    def supported_navigation(self) -> list[MediaPlayerNavigation]:
+        """List of navigation actions the active child supports."""
+        directions = self._child_attr(
+            MediaPlayerEntityCapabilityAttribute.SUPPORTED_NAVIGATION
+        )
+        if directions is None:
+            return list(MediaPlayerNavigation)
+        return [MediaPlayerNavigation(direction) for direction in directions]
+
+    @property
+    @override
     def repeat(self):
         """Boolean if repeating is enabled."""
         return self._override_or_child_attr(
@@ -681,6 +693,12 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         await self._async_call_service(
             MediaPlayerService.SELECT_SOURCE, data, allow_override=True
         )
+
+    @override
+    async def async_navigate(self, direction: MediaPlayerNavigation) -> None:
+        """Send a navigation action to the active child."""
+        data = {MediaPlayerServiceArgument.DIRECTION: direction}
+        await self._async_call_service(MediaPlayerService.NAVIGATE, data)
 
     @override
     async def async_clear_playlist(self) -> None:

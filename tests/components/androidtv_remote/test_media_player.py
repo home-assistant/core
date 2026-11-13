@@ -1,16 +1,21 @@
 """Tests for the Android TV Remote remote platform."""
 
-from unittest.mock import MagicMock, call
+from unittest.mock import MagicMock, call, patch
 
 from androidtvremote2 import ConnectionClosed
+import probatio
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.typing import WebSocketGenerator
 
+from homeassistant.components.androidtv_remote.media_player import (
+    AndroidTVRemoteMediaPlayerEntity,
+)
+from homeassistant.components.media_player import MediaPlayerNavigation
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 MEDIA_PLAYER_ENTITY = "media_player.my_android_tv"
 
@@ -212,6 +217,115 @@ async def test_media_player_controls(
     )
 
     mock_api.send_key_command.assert_called_with("MEDIA_NEXT", "SHORT")
+
+
+@pytest.mark.parametrize(
+    ("direction", "key_code"),
+    [
+        ("up", "DPAD_UP"),
+        ("down", "DPAD_DOWN"),
+        ("left", "DPAD_LEFT"),
+        ("right", "DPAD_RIGHT"),
+        ("select", "DPAD_CENTER"),
+        ("back", "BACK"),
+        ("home", "HOME"),
+        ("menu", "MENU"),
+    ],
+)
+async def test_media_player_navigate(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api: MagicMock,
+    direction: str,
+    key_code: str,
+) -> None:
+    """Test media_player.navigate service."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    await hass.services.async_call(
+        "media_player",
+        "navigate",
+        {"entity_id": MEDIA_PLAYER_ENTITY, "direction": direction},
+        blocking=True,
+    )
+    mock_api.send_key_command.assert_called_once_with(key_code, "SHORT")
+
+
+async def test_media_player_supported_navigation_attribute(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: MagicMock
+) -> None:
+    """Test the media player exposes the navigation actions it supports."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get(MEDIA_PLAYER_ENTITY)
+    assert state is not None
+    assert state.attributes["supported_navigation"] == [
+        "up",
+        "down",
+        "left",
+        "right",
+        "select",
+        "back",
+        "home",
+        "menu",
+    ]
+
+
+async def test_media_player_navigate_unsupported_direction(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: MagicMock
+) -> None:
+    """Test media_player.navigate rejects a direction the player does not support."""
+    mock_config_entry.add_to_hass(hass)
+    with patch.object(
+        AndroidTVRemoteMediaPlayerEntity,
+        "_attr_supported_navigation",
+        [MediaPlayerNavigation.UP, MediaPlayerNavigation.SELECT],
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get(MEDIA_PLAYER_ENTITY)
+    assert state is not None
+    assert state.attributes["supported_navigation"] == ["up", "select"]
+
+    with pytest.raises(ServiceValidationError, match="does not support"):
+        await hass.services.async_call(
+            "media_player",
+            "navigate",
+            {"entity_id": MEDIA_PLAYER_ENTITY, "direction": "home"},
+            blocking=True,
+        )
+    mock_api.send_key_command.assert_not_called()
+
+    await hass.services.async_call(
+        "media_player",
+        "navigate",
+        {"entity_id": MEDIA_PLAYER_ENTITY, "direction": "up"},
+        blocking=True,
+    )
+    mock_api.send_key_command.assert_called_once_with("DPAD_UP", "SHORT")
+
+
+async def test_media_player_navigate_invalid_direction(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: MagicMock
+) -> None:
+    """Test media_player.navigate rejects an unknown direction."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    with pytest.raises(probatio.MultipleInvalid):
+        await hass.services.async_call(
+            "media_player",
+            "navigate",
+            {"entity_id": MEDIA_PLAYER_ENTITY, "direction": "diagonal"},
+            blocking=True,
+        )
+    mock_api.send_key_command.assert_not_called()
 
 
 async def test_media_player_play_media(
