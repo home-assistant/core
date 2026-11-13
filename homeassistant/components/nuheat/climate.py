@@ -86,6 +86,7 @@ class NuHeatClimateEntity(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
         # Command construction only; entity properties always use cloud data.
         self._successful_target: tuple[float, float, Thermostat] | None = None
         self._target_outcome_unknown = False
+        self._uncertain_target: tuple[float, Thermostat] | None = None
 
     async def _async_write(
         self,
@@ -102,18 +103,24 @@ class NuHeatClimateEntity(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
             if err.write_applied:
                 self._successful_target = None
                 self._target_outcome_unknown = True
+                self._uncertain_target = (
+                    (target, sample) if target is not None else None
+                )
             raise
         except BaseException:
             # Includes cancellation after invoking the SDK. The outcome is unknown.
             self._successful_target = None
             self._target_outcome_unknown = True
+            self._uncertain_target = (target, sample) if target is not None else None
             raise
         if clear_target:
             self._successful_target = None
             self._target_outcome_unknown = False
+            self._uncertain_target = None
         elif target is not None:
             self._successful_target = (target, monotonic(), sample)
             self._target_outcome_unknown = False
+            self._uncertain_target = None
 
     def _check_control_available(self) -> None:
         if self._controls_unloading or self.coordinator.shutdown_requested:
@@ -177,6 +184,7 @@ class NuHeatClimateEntity(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
             await gather(*tasks, return_exceptions=True)
         self._successful_target = None
         self._target_outcome_unknown = False
+        self._uncertain_target = None
         await super().async_will_remove_from_hass()
 
     @property
@@ -222,13 +230,28 @@ class NuHeatClimateEntity(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
 
     def _command_temperature(self) -> float:
         temperature = self.thermostat.target_temperature
+        available = self.coordinator.is_thermostat_available(self._serial_number)
+        if self._target_outcome_unknown and self._uncertain_target is not None:
+            target, previous_sample = self._uncertain_target
+            if (
+                available
+                and self.thermostat is not previous_sample
+                and temperature is not None
+                and round(temperature, 2) == round(target, 2)
+            ):
+                self._target_outcome_unknown = False
+                self._uncertain_target = None
         if self._successful_target is not None and not self._target_outcome_unknown:
             target, written_at, previous_sample = self._successful_target
             if (
                 self.coordinator.is_thermostat_available(self._serial_number)
                 and self.thermostat is not previous_sample
                 and temperature is not None
-                and round(temperature, 2) == round(target, 2)
+                and DEFAULT_MIN_TEMP <= temperature <= DEFAULT_MAX_TEMP
+                and (
+                    round(temperature, 2) == round(target, 2)
+                    or monotonic() - written_at >= COMMAND_TARGET_MAX_AGE
+                )
             ):
                 self._successful_target = None
             elif (

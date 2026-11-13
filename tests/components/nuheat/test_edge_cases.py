@@ -267,7 +267,7 @@ def test_registry_snapshot_rejects_unrelated_records() -> None:
 
 
 @pytest.mark.parametrize(
-    "case", ["entity_id", "entity_owner", "device_id", "device_owner"]
+    "case", ["unchanged", "entity_id", "entity_owner", "device_id", "device_owner"]
 )
 def test_validate_registry_snapshot_changes(case: str) -> None:
     """Test every registry preflight mutation is detected."""
@@ -279,7 +279,7 @@ def test_validate_registry_snapshot_changes(case: str) -> None:
     entity_registry.async_get.return_value = SimpleNamespace(
         config_entry_id="changed" if case == "entity_owner" else "legacy"
     )
-    device_registry.async_get_device_by_identifier.return_value = SimpleNamespace(
+    device_registry.async_get.return_value = SimpleNamespace(
         id="changed" if case == "device_id" else "device",
         config_entry_id="changed" if case == "device_owner" else "legacy",
     )
@@ -288,8 +288,45 @@ def test_validate_registry_snapshot_changes(case: str) -> None:
         "SERIAL", "device", "legacy", frozenset({"legacy"})
     )
     hass, entity_patch, device_patch = _registry_hass(entity_registry, device_registry)
-    with entity_patch, device_patch, pytest.raises(RegistryMigrationError):
-        validate_registry_snapshots(hass, (entity,), (device,))
+    with entity_patch, device_patch:
+        if case == "unchanged":
+            validate_registry_snapshots(hass, (entity,), (device,))
+        else:
+            with pytest.raises(RegistryMigrationError):
+                validate_registry_snapshots(hass, (entity,), (device,))
+
+
+@pytest.mark.parametrize("conflicting", [False, True])
+def test_registry_snapshot_multiple_device_candidates(conflicting: bool) -> None:
+    """Distinct devices must not be selected by arbitrary owner iteration order."""
+    entity_registry = MagicMock()
+    entity_registry.async_get_entity_id.return_value = None
+    device_registry = MagicMock()
+
+    def lookup(identifier: tuple[str, str], entry_id: str) -> SimpleNamespace:
+        return SimpleNamespace(
+            id=entry_id if conflicting else "shared",
+            identifiers={identifier},
+            config_entry_id=entry_id,
+        )
+
+    device_registry.async_get_device_by_identifier.side_effect = lookup
+    hass, entity_patch, device_patch = _registry_hass(entity_registry, device_registry)
+    with entity_patch, device_patch:
+        if conflicting:
+            with pytest.raises(RegistryMigrationError, match="conflicting device"):
+                build_registry_snapshots(
+                    hass,
+                    serial_entry_ids=(("SERIAL", "legacy"),),
+                    anchor_entry_id="anchor",
+                )
+        else:
+            _, devices = build_registry_snapshots(
+                hass,
+                serial_entry_ids=(("SERIAL", "legacy"),),
+                anchor_entry_id="anchor",
+            )
+            assert devices[0].device_id == "shared"
 
 
 @pytest.mark.parametrize(

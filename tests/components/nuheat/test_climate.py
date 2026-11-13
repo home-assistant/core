@@ -345,6 +345,53 @@ async def test_command_target_expires_without_renewal(hass: HomeAssistant) -> No
     await coordinator.async_shutdown()
 
 
+@pytest.mark.parametrize("fresh", [False, True])
+async def test_expired_target_requires_new_sample(
+    hass: HomeAssistant, fresh: bool
+) -> None:
+    """Expiry accepts newer external targets, but not the pre-write sample."""
+    coordinator, api, _ = await coordinator_with(hass, permanent())
+    entity = NuHeatClimateEntity(coordinator, "ABC123")
+    with patch("homeassistant.components.nuheat.climate.monotonic") as clock:
+        clock.return_value = 100
+        await entity.async_set_temperature(temperature=24)
+        clock.return_value = 131
+        if fresh:
+            coordinator.async_set_updated_data({"ABC123": permanent(target=2500)})
+            await entity.async_set_hvac_mode(HVACMode.HEAT)
+            assert api.set_schedule_mode.await_args.kwargs["temperature"] == 25
+        else:
+            with pytest.raises(ServiceValidationError):
+                await entity.async_set_hvac_mode(HVACMode.HEAT)
+            api.set_schedule_mode.assert_not_awaited()
+    await coordinator.async_shutdown()
+
+
+@pytest.mark.parametrize("target", [2400, 2500])
+@pytest.mark.parametrize("available", [False, True])
+async def test_uncertain_target_readback(
+    hass: HomeAssistant, target: int, available: bool
+) -> None:
+    """Only available matching newer readback resolves an uncertain setpoint."""
+    coordinator, api, _ = await coordinator_with(hass, permanent())
+    entity = NuHeatClimateEntity(coordinator, "ABC123")
+    api.set_target_temperature.side_effect = NuHeatApiError("synthetic lost response")
+    with pytest.raises(HomeAssistantError):
+        await entity.async_set_temperature(temperature=25)
+    with pytest.raises(ServiceValidationError):
+        await entity.async_set_hvac_mode(HVACMode.HEAT)
+    coordinator.async_set_updated_data({"ABC123": permanent(target=target)})
+    with patch.object(coordinator, "is_thermostat_available", return_value=available):
+        if available and target == 2500:
+            await entity.async_set_hvac_mode(HVACMode.HEAT)
+            assert api.set_schedule_mode.await_args.kwargs["temperature"] == 25
+        else:
+            with pytest.raises(ServiceValidationError):
+                await entity.async_set_hvac_mode(HVACMode.HEAT)
+            api.set_schedule_mode.assert_not_awaited()
+    await coordinator.async_shutdown()
+
+
 async def test_matching_readback_releases_command_target(hass: HomeAssistant) -> None:
     """After confirmation, a later external target is authoritative again."""
     coordinator, api, _ = await coordinator_with(hass, permanent())

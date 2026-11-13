@@ -68,19 +68,21 @@ def build_registry_snapshots(
             )
         )
 
-        device = next(
-            (
-                candidate
-                for entry_id in allowed_entry_ids
-                if (
-                    candidate := device_registry.async_get_device_by_identifier(
-                        (DOMAIN, serial_number), entry_id
-                    )
+        devices = {
+            candidate.id: candidate
+            for entry_id in allowed_entry_ids
+            if (
+                candidate := device_registry.async_get_device_by_identifier(
+                    (DOMAIN, serial_number), entry_id
                 )
-                is not None
-            ),
-            None,
-        )
+            )
+            is not None
+        }
+        if len(devices) > 1:
+            raise RegistryMigrationError(
+                "NuHeat serial has conflicting device registry records"
+            )
+        device = next(iter(devices.values()), None)
         if device is not None:
             if (DOMAIN, serial_number) not in device.identifiers:
                 raise RegistryMigrationError(
