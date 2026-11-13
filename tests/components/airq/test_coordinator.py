@@ -1,6 +1,5 @@
 """Test the air-Q coordinator."""
 
-import logging
 from unittest.mock import AsyncMock
 
 import pytest
@@ -10,7 +9,7 @@ from homeassistant.components.airq import AirQCoordinator
 from homeassistant.components.airq.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.typing import Undefined
 
 from .common import TEST_DEVICE_DATA, TEST_DEVICE_INFO
 
@@ -42,11 +41,10 @@ async def test_logging_in_coordinator_first_update_data(
     which is actually necessary is 'name', and its absence is checked and logged,
     as well as its being set.
     """
-    caplog.set_level(logging.DEBUG)
     coordinator = AirQCoordinator(hass, MOCKED_ENTRY)
 
     # check that the name _is_ missing
-    assert "name" not in coordinator.device_info
+    assert coordinator.device_info.name is Undefined
 
     # First call: fetch missing device info
     await coordinator._async_update_data()
@@ -57,7 +55,7 @@ async def test_logging_in_coordinator_first_update_data(
         in caplog.text
     )
     # ...and fixed
-    assert coordinator.device_info.get("name") == TEST_DEVICE_INFO["name"]
+    assert coordinator.device_info.name == TEST_DEVICE_INFO["name"]
     assert (
         f"Updated AirQCoordinator.device_info for 'name' {TEST_DEVICE_INFO['name']}"
         in caplog.text
@@ -78,20 +76,15 @@ async def test_logging_in_coordinator_subsequent_update_data(
     instead of actually calling the _async_update_data, which would populate the log
     with the messages we want to see not being repeated.
     """
-    caplog.set_level(logging.DEBUG)
     coordinator = AirQCoordinator(hass, MOCKED_ENTRY)
-    coordinator.device_info.update(
-        DeviceInfo(
-            name=TEST_DEVICE_INFO["name"],
-            model=TEST_DEVICE_INFO["model"],
-            sw_version=TEST_DEVICE_INFO["sw_version"],
-            hw_version=TEST_DEVICE_INFO["hw_version"],
-        )
-    )
+    coordinator.device_info.name = TEST_DEVICE_INFO["name"]
+    coordinator.device_info.model = TEST_DEVICE_INFO["model"]
+    coordinator.device_info.sw_version = TEST_DEVICE_INFO["sw_version"]
+    coordinator.device_info.hw_version = TEST_DEVICE_INFO["hw_version"]
 
     await coordinator._async_update_data()
     # check that the name _is not_ missing
-    assert "name" in coordinator.device_info
+    assert coordinator.device_info.name is not Undefined
     # and that nothing of the kind is logged
     assert (
         "'name' not found in AirQCoordinator.device_info, fetching from the device"
@@ -109,7 +102,6 @@ async def test_logging_when_warming_up_sensor_present(
     mock_airq: AsyncMock,
 ) -> None:
     """Test that warming up sensors are logged."""
-    caplog.set_level(logging.DEBUG)
     coordinator = AirQCoordinator(hass, MOCKED_ENTRY)
     mock_airq.get_latest_data.return_value = TEST_DEVICE_DATA | {
         "Status": STATUS_WARMUP

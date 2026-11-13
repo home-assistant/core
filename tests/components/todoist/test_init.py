@@ -6,13 +6,10 @@ from unittest.mock import AsyncMock
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.todoist.const import (
-    ASSIGNEE,
-    CONTENT,
-    DOMAIN,
-    LABELS,
-    PROJECT_NAME,
-    SERVICE_NEW_TASK,
+from homeassistant.components.todoist.const import DOMAIN
+from homeassistant.components.todoist.services import (
+    TodoistService,
+    TodoistServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -43,8 +40,13 @@ async def test_new_task_service_uses_config_entry(
     """Test the new_task service reaches the config entry coordinator."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_NEW_TASK,
-        {ASSIGNEE: "user", CONTENT: "task", LABELS: ["Label1"], PROJECT_NAME: "Name"},
+        TodoistService.NEW_TASK,
+        {
+            TodoistServiceArgument.ASSIGNEE: "user",
+            TodoistServiceArgument.CONTENT: "task",
+            TodoistServiceArgument.LABELS: ["Label1"],
+            TodoistServiceArgument.PROJECT: "Name",
+        },
         blocking=True,
     )
 
