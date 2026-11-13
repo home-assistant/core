@@ -194,9 +194,7 @@ def build_snapshot(hass: HomeAssistant, entity_ids: list[str]) -> dict[str, Any]
         device = (
             devices.async_get(entry.device_id) if entry and entry.device_id else None
         )
-        area_id = (entry.area_id if entry else None) or (
-            device.area_id if device else None
-        )
+        area_id = er.async_get_effective_area_id(hass, entry) if entry else None
         if area_id and area_id in area_names:
             used_area_names[area_id] = area_names[area_id]
         record = grouped.setdefault(
