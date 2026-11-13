@@ -9,11 +9,11 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -122,8 +122,11 @@ async def test_set_tool_temp(
 
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: entity.entity_id, ATTR_VALUE: 200.4},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: entity.entity_id,
+                NumberServiceArgument.VALUE: 200.4,
+            },
             blocking=True,
         )
         assert len(mock_set_tool_temp.mock_calls) == 1
@@ -158,8 +161,11 @@ async def test_set_bed_temp(
 
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: entity.entity_id, ATTR_VALUE: 80.6},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: entity.entity_id,
+                NumberServiceArgument.VALUE: 80.6,
+            },
             blocking=True,
         )
 
@@ -200,8 +206,11 @@ async def test_set_tool_n_temp(
 
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: entity.entity_id, ATTR_VALUE: 41.0},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: entity.entity_id,
+                NumberServiceArgument.VALUE: 41.0,
+            },
             blocking=True,
         )
         assert len(mock_set_tool_temp.mock_calls) == 1

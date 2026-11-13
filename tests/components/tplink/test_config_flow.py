@@ -1,6 +1,5 @@
 """Test the tplink config flow."""
 
-import logging
 from unittest.mock import ANY, AsyncMock, patch
 
 from kasa import Module, TimeoutError
@@ -1830,7 +1829,6 @@ async def test_reauth_update_with_encryption_change(
         await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
-    caplog.set_level(logging.DEBUG)
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
     [result] = flows

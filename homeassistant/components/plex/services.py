@@ -1,6 +1,7 @@
 """Services for the Plex integration."""
 
 from datetime import timedelta
+from enum import StrEnum
 import json
 import logging
 from typing import Any
@@ -20,13 +21,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.template import result_as_boolean
 
-from .const import (
-    DOMAIN,
-    PLEX_URI_SCHEME,
-    SERVICE_ON_DECK,
-    SERVICE_REFRESH_LIBRARY,
-    SERVICE_SEARCH,
-)
+from .const import DOMAIN, PLEX_URI_SCHEME
 from .errors import MediaNotFound
 from .helpers import get_plex_servers
 from .media_browser import get_proxy_image_url
@@ -34,34 +29,71 @@ from .media_search import search_media
 from .models import PlexMediaSearchResult
 from .server import PlexServer
 
+
+class PlexService(StrEnum):
+    """Store keys for Plex services."""
+
+    REFRESH_LIBRARY = "refresh_library"
+    ON_DECK = "on_deck"
+    SEARCH = "search"
+
+
+class PlexServiceArgument(StrEnum):
+    """Store keys for Plex service arguments."""
+
+    SERVER_NAME = "server_name"
+    LIBRARY_NAME = "library_name"
+    USERNAME = "username"
+    QUERY = "query"
+    PLEX_KEY = "plex_key"
+    PLAYLIST_NAME = "playlist_name"
+    MEDIA_TYPE = "media_type"
+    TITLE = "title"
+    SHOW_NAME = "show_name"
+    SEASON_NUMBER = "season_number"
+    EPISODE_NAME = "episode_name"
+    EPISODE_NUMBER = "episode_number"
+    ARTIST_NAME = "artist_name"
+    ALBUM_NAME = "album_name"
+    TRACK_NAME = "track_name"
+    TRACK_NUMBER = "track_number"
+    YEAR = "year"
+    FILTERS = "filters"
+    INCLUDE_ON_DECK = "include_on_deck"
+    LIMIT = "limit"
+
+
 REFRESH_LIBRARY_SCHEMA = probatio.Schema(
-    {probatio.Optional("server_name"): str, probatio.Required("library_name"): str}
+    {
+        probatio.Optional(PlexServiceArgument.SERVER_NAME): str,
+        probatio.Required(PlexServiceArgument.LIBRARY_NAME): str,
+    }
 )
 
 SEARCH_FILTER_KEYS = (
-    "title",
-    "show_name",
-    "season_number",
-    "episode_name",
-    "episode_number",
-    "artist_name",
-    "album_name",
-    "track_name",
-    "track_number",
-    "year",
-    "filters",
+    PlexServiceArgument.TITLE,
+    PlexServiceArgument.SHOW_NAME,
+    PlexServiceArgument.SEASON_NUMBER,
+    PlexServiceArgument.EPISODE_NAME,
+    PlexServiceArgument.EPISODE_NUMBER,
+    PlexServiceArgument.ARTIST_NAME,
+    PlexServiceArgument.ALBUM_NAME,
+    PlexServiceArgument.TRACK_NAME,
+    PlexServiceArgument.TRACK_NUMBER,
+    PlexServiceArgument.YEAR,
+    PlexServiceArgument.FILTERS,
 )
 
 SEARCH_SCHEMA = probatio.All(
     probatio.Schema(
         {
-            probatio.Optional("server_name"): str,
-            probatio.Optional("username"): str,
-            probatio.Optional("query"): str,
-            probatio.Optional("plex_key"): int,
-            probatio.Optional("playlist_name"): str,
-            probatio.Optional("library_name"): str,
-            probatio.Optional("media_type"): probatio.In(
+            probatio.Optional(PlexServiceArgument.SERVER_NAME): str,
+            probatio.Optional(PlexServiceArgument.USERNAME): str,
+            probatio.Optional(PlexServiceArgument.QUERY): str,
+            probatio.Optional(PlexServiceArgument.PLEX_KEY): int,
+            probatio.Optional(PlexServiceArgument.PLAYLIST_NAME): str,
+            probatio.Optional(PlexServiceArgument.LIBRARY_NAME): str,
+            probatio.Optional(PlexServiceArgument.MEDIA_TYPE): probatio.In(
                 [
                     "movie",
                     "show",
@@ -73,30 +105,37 @@ SEARCH_SCHEMA = probatio.All(
                     "playlist",
                 ]
             ),
-            probatio.Optional("title"): str,
-            probatio.Optional("show_name"): str,
-            probatio.Optional("season_number"): int,
-            probatio.Optional("episode_name"): str,
-            probatio.Optional("episode_number"): int,
-            probatio.Optional("artist_name"): str,
-            probatio.Optional("album_name"): str,
-            probatio.Optional("track_name"): str,
-            probatio.Optional("track_number"): int,
-            probatio.Optional("year"): int,
-            probatio.Optional("filters"): dict,
-            probatio.Optional("include_on_deck", default=False): bool,
+            probatio.Optional(PlexServiceArgument.TITLE): str,
+            probatio.Optional(PlexServiceArgument.SHOW_NAME): str,
+            probatio.Optional(PlexServiceArgument.SEASON_NUMBER): int,
+            probatio.Optional(PlexServiceArgument.EPISODE_NAME): str,
+            probatio.Optional(PlexServiceArgument.EPISODE_NUMBER): int,
+            probatio.Optional(PlexServiceArgument.ARTIST_NAME): str,
+            probatio.Optional(PlexServiceArgument.ALBUM_NAME): str,
+            probatio.Optional(PlexServiceArgument.TRACK_NAME): str,
+            probatio.Optional(PlexServiceArgument.TRACK_NUMBER): int,
+            probatio.Optional(PlexServiceArgument.YEAR): int,
+            probatio.Optional(PlexServiceArgument.FILTERS): dict,
+            probatio.Optional(PlexServiceArgument.INCLUDE_ON_DECK, default=False): bool,
         }
     ),
-    probatio.AtLeastOne("query", "plex_key", "playlist_name", *SEARCH_FILTER_KEYS),
+    probatio.AtLeastOne(
+        PlexServiceArgument.QUERY,
+        PlexServiceArgument.PLEX_KEY,
+        PlexServiceArgument.PLAYLIST_NAME,
+        *SEARCH_FILTER_KEYS,
+    ),
 )
 
 ON_DECK_SCHEMA = probatio.Schema(
     {
-        probatio.Optional("server_name"): str,
-        probatio.Optional("username"): str,
-        probatio.Optional("library_name"): str,
-        probatio.Optional("media_type"): probatio.In(["movie", "episode"]),
-        probatio.Optional("limit", default=20): probatio.All(
+        probatio.Optional(PlexServiceArgument.SERVER_NAME): str,
+        probatio.Optional(PlexServiceArgument.USERNAME): str,
+        probatio.Optional(PlexServiceArgument.LIBRARY_NAME): str,
+        probatio.Optional(PlexServiceArgument.MEDIA_TYPE): probatio.In(
+            ["movie", "episode"]
+        ),
+        probatio.Optional(PlexServiceArgument.LIMIT, default=20): probatio.All(
             int, probatio.Range(min=1, max=100)
         ),
     }
@@ -117,7 +156,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_REFRESH_LIBRARY,
+        PlexService.REFRESH_LIBRARY,
         async_refresh_library_service,
         schema=REFRESH_LIBRARY_SCHEMA,
     )
@@ -138,7 +177,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_ON_DECK,
+        PlexService.ON_DECK,
         async_on_deck_service,
         schema=ON_DECK_SCHEMA,
         supports_response=SupportsResponse.ONLY,
@@ -146,7 +185,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_SEARCH,
+        PlexService.SEARCH,
         async_search_service,
         schema=SEARCH_SCHEMA,
         supports_response=SupportsResponse.ONLY,
@@ -155,8 +194,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
 def refresh_library(hass: HomeAssistant, service_call: ServiceCall) -> None:
     """Scan a Plex library for new and updated media."""
-    plex_server_name = service_call.data.get("server_name")
-    library_name = service_call.data["library_name"]
+    plex_server_name = service_call.data.get(PlexServiceArgument.SERVER_NAME)
+    library_name = service_call.data[PlexServiceArgument.LIBRARY_NAME]
 
     plex_server = get_plex_server(hass, plex_server_name)
 
@@ -177,18 +216,18 @@ def refresh_library(hass: HomeAssistant, service_call: ServiceCall) -> None:
 def search_plex_media(hass: HomeAssistant, service_call: ServiceCall) -> dict[str, Any]:
     """Look up Plex media, accepting the same criteria as play_media."""
     data = dict(service_call.data)
-    plex_server = get_plex_server(hass, data.pop("server_name", None))
+    plex_server = get_plex_server(hass, data.pop(PlexServiceArgument.SERVER_NAME, None))
 
-    if username := data.pop("username", None):
+    if username := data.pop(PlexServiceArgument.USERNAME, None):
         plex_server = _switch_user(plex_server, username)
 
-    media_type = data.pop("media_type", None)
-    library_name = data.pop("library_name", None)
-    query = data.pop("query", None)
-    plex_key = data.pop("plex_key", None)
-    playlist_name = data.pop("playlist_name", None)
-    include_on_deck = data.pop("include_on_deck", False)
-    advanced_filters = data.pop("filters", None)
+    media_type = data.pop(PlexServiceArgument.MEDIA_TYPE, None)
+    library_name = data.pop(PlexServiceArgument.LIBRARY_NAME, None)
+    query = data.pop(PlexServiceArgument.QUERY, None)
+    plex_key = data.pop(PlexServiceArgument.PLEX_KEY, None)
+    playlist_name = data.pop(PlexServiceArgument.PLAYLIST_NAME, None)
+    include_on_deck = data.pop(PlexServiceArgument.INCLUDE_ON_DECK, False)
+    advanced_filters = data.pop(PlexServiceArgument.FILTERS, None)
     filters = data
 
     results: list[Any]
@@ -232,20 +271,21 @@ def search_plex_media(hass: HomeAssistant, service_call: ServiceCall) -> dict[st
 def get_on_deck_media(hass: HomeAssistant, service_call: ServiceCall) -> dict[str, Any]:
     """Return unfinished and next up media from the Continue Watching hub."""
     data = service_call.data
-    plex_server = get_plex_server(hass, data.get("server_name"))
+    plex_server = get_plex_server(hass, data.get(PlexServiceArgument.SERVER_NAME))
 
-    if username := data.get("username"):
+    if username := data.get(PlexServiceArgument.USERNAME):
         plex_server = _switch_user(plex_server, username)
 
     items = plex_server.continue_watching()
-    if library_name := data.get("library_name"):
+    if library_name := data.get(PlexServiceArgument.LIBRARY_NAME):
         items = [x for x in items if x.librarySectionTitle == library_name]
-    if media_type := data.get("media_type"):
+    if media_type := data.get(PlexServiceArgument.MEDIA_TYPE):
         items = [x for x in items if x.type == media_type]
 
     return {
         "results": [
-            _media_result_info(item, plex_server) for item in items[: data["limit"]]
+            _media_result_info(item, plex_server)
+            for item in items[: data[PlexServiceArgument.LIMIT]]
         ]
     }
 

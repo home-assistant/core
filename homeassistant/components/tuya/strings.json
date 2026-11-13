@@ -51,6 +51,9 @@
       "cover_off": {
         "name": "Cover off"
       },
+      "current_unbalance": {
+        "name": "Current imbalance"
+      },
       "defrost": {
         "name": "Defrost"
       },
@@ -66,11 +69,29 @@
       "filter_cleaning": {
         "name": "Filter cleaning"
       },
+      "fire": {
+        "name": "Fire"
+      },
       "formaldehyde": {
         "name": "Formaldehyde"
       },
+      "high_power": {
+        "name": "High power"
+      },
       "high_temp": {
         "name": "High temperature"
+      },
+      "high_temperature_early_warning": {
+        "name": "High temperature early warning"
+      },
+      "leakage_current_alarm": {
+        "name": "Leakage current alarm"
+      },
+      "leakage_current_early_warning": {
+        "name": "Leakage current early warning"
+      },
+      "low_credit": {
+        "name": "Low credit"
       },
       "low_humidity": {
         "name": "Low humidity"
@@ -78,17 +99,56 @@
       "low_temp": {
         "name": "Low temperature"
       },
+      "magnetic_interference": {
+        "name": "Magnetic interference"
+      },
       "methane": {
         "name": "Methane"
       },
       "motor_fault": {
         "name": "Motor fault"
       },
+      "no_credit": {
+        "name": "No credit"
+      },
+      "overcurrent": {
+        "name": "Overcurrent"
+      },
+      "overcurrent_early_warning": {
+        "name": "Overcurrent early warning"
+      },
+      "overload": {
+        "name": "Overload"
+      },
+      "overpower_early_warning": {
+        "name": "Overpower early warning"
+      },
+      "overvoltage": {
+        "name": "Overvoltage"
+      },
+      "overvoltage_early_warning": {
+        "name": "Overvoltage early warning"
+      },
+      "phase_loss": {
+        "name": "Phase loss"
+      },
       "pm25": {
         "name": "PM2.5"
       },
+      "power_outage": {
+        "name": "Power outage"
+      },
       "pressure": {
         "name": "Pressure"
+      },
+      "self_test": {
+        "name": "Self-test"
+      },
+      "short_circuit": {
+        "name": "Short circuit"
+      },
+      "surge": {
+        "name": "Surge"
       },
       "tankfull": {
         "name": "Tank full"
@@ -96,8 +156,17 @@
       "temp_error": {
         "name": "Temperature error"
       },
+      "temperature_difference": {
+        "name": "Temperature difference fault"
+      },
       "tilt": {
         "name": "Tilt"
+      },
+      "undervoltage": {
+        "name": "Undervoltage"
+      },
+      "undervoltage_early_warning": {
+        "name": "Undervoltage early warning"
       },
       "valve": {
         "name": "Valve"
@@ -552,6 +621,17 @@
           "smart": "Smart"
         }
       },
+      "power_on_behavior": {
+        "name": "Power-on behavior",
+        "state": {
+          "last": "Previous state",
+          "memory": "[%key:component::tuya::entity::select::power_on_behavior::state::last%]",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]",
+          "power_off": "[%key:common::state::off%]",
+          "power_on": "[%key:common::state::on%]"
+        }
+      },
       "pump_mode": {
         "name": "Mode"
       },
@@ -570,17 +650,6 @@
         "state": {
           "1": "Record events only",
           "2": "Continuous recording"
-        }
-      },
-      "relay_status": {
-        "name": "Power-on behavior",
-        "state": {
-          "last": "Previous state",
-          "memory": "[%key:component::tuya::entity::select::relay_status::state::last%]",
-          "off": "[%key:common::state::off%]",
-          "on": "[%key:common::state::on%]",
-          "power_off": "[%key:common::state::off%]",
-          "power_on": "[%key:common::state::on%]"
         }
       },
       "siren_mode": {
@@ -836,6 +905,9 @@
       },
       "last_watering_time": {
         "name": "Last watering time"
+      },
+      "leakage_current": {
+        "name": "Leakage current"
       },
       "lifetime_battery_charge_energy": {
         "name": "Lifetime battery charge energy"

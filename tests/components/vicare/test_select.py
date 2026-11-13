@@ -9,12 +9,12 @@ from PyViCare.PyViCareUtils import PyViCareRateLimitError
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
-    ATTR_OPTION,
     ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
@@ -129,10 +129,10 @@ async def test_circuit_operating_mode(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: "select.model0_operating_mode",
-            ATTR_OPTION: "dhw_and_heating",
+            CommonServiceArgument.ENTITY_ID: "select.model0_operating_mode",
+            SelectServiceArgument.OPTION: "dhw_and_heating",
         },
         blocking=True,
     )

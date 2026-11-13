@@ -774,6 +774,7 @@ class DPCode(StrEnum):
     IPC_CONTRAST = "ipc_contrast"
     IPC_SHARP = "ipc_sharp"
     IPC_WORK_MODE = "ipc_work_mode"
+    LEAKAGE_CURRENT = "leakage_current"
     LED_TYPE_1 = "led_type_1"
     LED_TYPE_2 = "led_type_2"
     LED_TYPE_3 = "led_type_3"

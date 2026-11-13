@@ -49,10 +49,6 @@ X_PLEX_PLATFORM = "Home Assistant"
 X_PLEX_PRODUCT = "Home Assistant"
 X_PLEX_VERSION = __version__
 
-SERVICE_REFRESH_LIBRARY = "refresh_library"
-SERVICE_ON_DECK = "on_deck"
-SERVICE_SEARCH = "search"
-
 PLEX_URI_SCHEME = "plex://"
 
 INVALID_TOKEN_MESSAGE = "Invalid token"

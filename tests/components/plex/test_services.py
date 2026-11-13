@@ -20,11 +20,9 @@ from homeassistant.components.plex.const import (
     DOMAIN,
     PLEX_SERVER_CONFIG,
     PLEX_URI_SCHEME,
-    SERVICE_ON_DECK,
-    SERVICE_REFRESH_LIBRARY,
-    SERVICE_SEARCH,
 )
 from homeassistant.components.plex.services import (
+    PlexService,
     _media_result_info,
     process_plex_payload,
 )
@@ -54,7 +52,7 @@ async def test_refresh_library(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_REFRESH_LIBRARY,
+            PlexService.REFRESH_LIBRARY,
             {"server_name": "Not a Server", "library_name": "Movies"},
             True,
         )
@@ -63,7 +61,7 @@ async def test_refresh_library(
     # Test with non-existent library
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_REFRESH_LIBRARY,
+        PlexService.REFRESH_LIBRARY,
         {"library_name": "Not a Library"},
         True,
     )
@@ -72,7 +70,7 @@ async def test_refresh_library(
     # Test with valid library
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_REFRESH_LIBRARY,
+        PlexService.REFRESH_LIBRARY,
         {"library_name": "Movies"},
         True,
     )
@@ -105,7 +103,7 @@ async def test_refresh_library(
     with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_REFRESH_LIBRARY,
+            PlexService.REFRESH_LIBRARY,
             {"library_name": "Movies"},
             True,
         )
@@ -128,7 +126,7 @@ async def test_search_service(
     # Test server-wide search across media types
     result = await hass.services.async_call(
         DOMAIN,
-        SERVICE_SEARCH,
+        PlexService.SEARCH,
         {"query": "Movie 1"},
         blocking=True,
         return_response=True,
@@ -174,7 +172,7 @@ async def test_search_service(
     with patch.object(plexapi.video.Show, "onDeck", return_value=on_deck_episode):
         result = await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEARCH,
+            PlexService.SEARCH,
             {"query": "TV Show", "media_type": "show", "include_on_deck": True},
             blocking=True,
             return_response=True,
@@ -185,7 +183,7 @@ async def test_search_service(
     # Test search scoped to a specific media type
     result = await hass.services.async_call(
         DOMAIN,
-        SERVICE_SEARCH,
+        PlexService.SEARCH,
         {"query": "Movie 1", "media_type": "movie"},
         blocking=True,
         return_response=True,
@@ -196,7 +194,7 @@ async def test_search_service(
     # Test search scoped to a specific library
     result = await hass.services.async_call(
         DOMAIN,
-        SERVICE_SEARCH,
+        PlexService.SEARCH,
         {"query": "Movie 1", "library_name": "Movies"},
         blocking=True,
         return_response=True,
@@ -208,7 +206,7 @@ async def test_search_service(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEARCH,
+            PlexService.SEARCH,
             {"query": "Movie 1", "library_name": "Not a Library"},
             blocking=True,
             return_response=True,
@@ -221,7 +219,7 @@ async def test_search_service(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEARCH,
+            PlexService.SEARCH,
             {"query": "Movie 1", "server_name": "Not a Server"},
             blocking=True,
             return_response=True,
@@ -230,7 +228,7 @@ async def test_search_service(
     # Test lookup by Plex key
     result = await hass.services.async_call(
         DOMAIN,
-        SERVICE_SEARCH,
+        PlexService.SEARCH,
         {"plex_key": 1},
         blocking=True,
         return_response=True,
@@ -241,7 +239,7 @@ async def test_search_service(
     requests_mock.get(f"{url}/library/metadata/999", status_code=HTTPStatus.NOT_FOUND)
     result = await hass.services.async_call(
         DOMAIN,
-        SERVICE_SEARCH,
+        PlexService.SEARCH,
         {"plex_key": 999},
         blocking=True,
         return_response=True,
@@ -251,7 +249,7 @@ async def test_search_service(
     # Test playlist lookup
     result = await hass.services.async_call(
         DOMAIN,
-        SERVICE_SEARCH,
+        PlexService.SEARCH,
         {"playlist_name": "Playlist 1"},
         blocking=True,
         return_response=True,
@@ -262,7 +260,7 @@ async def test_search_service(
     # Test play_media compatible filters in a library
     result = await hass.services.async_call(
         DOMAIN,
-        SERVICE_SEARCH,
+        PlexService.SEARCH,
         {"library_name": "TV Shows", "show_name": "TV Show", "media_type": "show"},
         blocking=True,
         return_response=True,
@@ -274,7 +272,7 @@ async def test_search_service(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEARCH,
+            PlexService.SEARCH,
             {"year": 2000},
             blocking=True,
             return_response=True,
@@ -285,7 +283,7 @@ async def test_search_service(
     with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEARCH,
+            PlexService.SEARCH,
             {"library_name": "Movies"},
             blocking=True,
             return_response=True,
@@ -452,7 +450,7 @@ async def test_on_deck_service(
     requests_mock.get(f"{url}/hubs/continueWatching/items", text=library_movies_all)
 
     result = await hass.services.async_call(
-        DOMAIN, SERVICE_ON_DECK, {}, blocking=True, return_response=True
+        DOMAIN, PlexService.ON_DECK, {}, blocking=True, return_response=True
     )
     assert len(result["results"]) == 5
     first = result["results"][0]
@@ -464,7 +462,7 @@ async def test_on_deck_service(
 
     result = await hass.services.async_call(
         DOMAIN,
-        SERVICE_ON_DECK,
+        PlexService.ON_DECK,
         {"limit": 2, "library_name": "Movies", "media_type": "movie"},
         blocking=True,
         return_response=True,
@@ -473,7 +471,7 @@ async def test_on_deck_service(
 
     result = await hass.services.async_call(
         DOMAIN,
-        SERVICE_ON_DECK,
+        PlexService.ON_DECK,
         {"media_type": "episode"},
         blocking=True,
         return_response=True,
@@ -482,7 +480,7 @@ async def test_on_deck_service(
 
     result = await hass.services.async_call(
         DOMAIN,
-        SERVICE_ON_DECK,
+        PlexService.ON_DECK,
         {"library_name": "TV Shows"},
         blocking=True,
         return_response=True,
@@ -496,7 +494,7 @@ async def test_search_service_library_filters(
     """Test a library search with a field filter and a media type."""
     result = await hass.services.async_call(
         DOMAIN,
-        SERVICE_SEARCH,
+        PlexService.SEARCH,
         {"library_name": "Movies", "year": 2000, "media_type": "movie"},
         blocking=True,
         return_response=True,
@@ -516,7 +514,7 @@ async def test_search_service_advanced_filters(
     ) as search:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEARCH,
+            PlexService.SEARCH,
             {
                 "library_name": "Movies",
                 "year": 2000,
@@ -609,7 +607,7 @@ async def test_search_service_season_zero(
     ) as search:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEARCH,
+            PlexService.SEARCH,
             {
                 "library_name": "TV Shows",
                 "show_name": "TV Show",
@@ -627,8 +625,8 @@ async def test_search_service_season_zero(
 @pytest.mark.parametrize(
     ("service", "data"),
     [
-        (SERVICE_SEARCH, {"query": "Movie 1", "username": "unknown"}),
-        (SERVICE_ON_DECK, {"username": "unknown"}),
+        (PlexService.SEARCH, {"query": "Movie 1", "username": "unknown"}),
+        (PlexService.ON_DECK, {"username": "unknown"}),
     ],
 )
 async def test_unknown_username(

@@ -32,6 +32,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from homeassistant.components.device_automation import (
     DOMAIN as DEVICE_AUTOMATION_DOMAIN,
+    InvalidDeviceAutomationConfig,
 )
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.recorder import Recorder, get_instance, history
@@ -216,6 +217,176 @@ async def test_unknown_condition(hass: HomeAssistant, config: dict, error: str) 
     config = cv.CONDITION_SCHEMA(config)
     with pytest.raises(HomeAssistantError, match=error):
         await condition.async_from_config(hass, config)
+
+
+_VALID_CONDITION = {"condition": "state", "entity_id": "light.kitchen", "state": "on"}
+_INVALID_CONDITION = {
+    "condition": "state",
+    "entity_id": "0123456789abcdef0123456789abcdef",
+    "state": "on",
+}
+_INVALID_CONDITION_ERROR = (
+    "Unknown entity registry entry 0123456789abcdef0123456789abcdef"
+)
+
+
+@pytest.mark.parametrize(
+    ("conditions", "expected_exception", "expected_error", "expected_path"),
+    [
+        pytest.param(
+            [_VALID_CONDITION, _INVALID_CONDITION],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [1],
+            id="condition_list",
+        ),
+        pytest.param(
+            [
+                {
+                    "condition": "and",
+                    "conditions": [_VALID_CONDITION, _INVALID_CONDITION],
+                }
+            ],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [0, "conditions", 1],
+            id="and",
+        ),
+        pytest.param(
+            [{"condition": "or", "conditions": [_VALID_CONDITION, _INVALID_CONDITION]}],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [0, "conditions", 1],
+            id="or",
+        ),
+        pytest.param(
+            [
+                {
+                    "condition": "not",
+                    "conditions": [_VALID_CONDITION, _INVALID_CONDITION],
+                }
+            ],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [0, "conditions", 1],
+            id="not",
+        ),
+        pytest.param(
+            [_VALID_CONDITION, {"and": [_VALID_CONDITION, _INVALID_CONDITION]}],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [1, "conditions", 1],
+            id="and_shorthand",
+        ),
+        pytest.param(
+            [{"condition": [_VALID_CONDITION, _INVALID_CONDITION]}],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [0, "conditions", 1],
+            id="list_shorthand",
+        ),
+        pytest.param(
+            [
+                {
+                    "condition": "or",
+                    "conditions": [
+                        {
+                            "condition": "and",
+                            "conditions": [
+                                _VALID_CONDITION,
+                                {
+                                    "condition": "not",
+                                    "conditions": [_INVALID_CONDITION],
+                                },
+                            ],
+                        }
+                    ],
+                }
+            ],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [0, "conditions", 0, "conditions", 1, "conditions", 0],
+            id="nested",
+        ),
+        pytest.param(
+            [_VALID_CONDITION, {"condition": "sun"}],
+            probatio.MultipleInvalid,
+            "at least one of ['before', 'after'] is required",
+            [1, "options"],
+            id="platform_path",
+        ),
+    ],
+)
+async def test_validate_conditions_config_error_path(
+    hass: HomeAssistant,
+    conditions: list[ConfigType],
+    expected_exception: type[probatio.Invalid],
+    expected_error: str,
+    expected_path: list[str | int],
+) -> None:
+    """Test a probatio.Invalid error is located in the validated conditions."""
+    config = cv.CONDITIONS_SCHEMA(conditions)
+
+    with pytest.raises(probatio.Invalid) as exc_info:
+        await condition.async_validate_conditions_config(hass, config)
+
+    assert type(exc_info.value) is expected_exception
+    assert exc_info.value.error_message == expected_error
+    assert exc_info.value.path == expected_path
+
+
+async def test_validate_condition_config_error_path(hass: HomeAssistant) -> None:
+    """Test a probatio.Invalid error is located in a validated condition."""
+    config = cv.CONDITION_SCHEMA(
+        {"condition": "or", "conditions": [_VALID_CONDITION, _INVALID_CONDITION]}
+    )
+
+    with pytest.raises(probatio.Invalid) as exc_info:
+        await condition.async_validate_condition_config(hass, config)
+
+    assert type(exc_info.value) is probatio.Invalid
+    assert exc_info.value.error_message == _INVALID_CONDITION_ERROR
+    assert exc_info.value.path == ["conditions", 1]
+
+
+@pytest.mark.parametrize(
+    ("conditions", "expected_exception", "expected_error"),
+    [
+        pytest.param(
+            [_VALID_CONDITION, {"condition": "non_existing"}],
+            HomeAssistantError,
+            'Invalid condition "non_existing" specified',
+            id="condition_list",
+        ),
+        pytest.param(
+            [
+                {
+                    "condition": "and",
+                    "conditions": [
+                        {"condition": "device", "domain": "light", "device_id": "abc"}
+                    ],
+                }
+            ],
+            InvalidDeviceAutomationConfig,
+            "Unknown device 'abc'",
+            id="nested",
+        ),
+    ],
+)
+async def test_validate_conditions_config_homeassistant_error(
+    hass: HomeAssistant,
+    conditions: list[ConfigType],
+    expected_exception: type[HomeAssistantError],
+    expected_error: str,
+) -> None:
+    """Test a HomeAssistantError keeps its type and message."""
+    config = cv.CONDITIONS_SCHEMA(conditions)
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await condition.async_validate_conditions_config(hass, config)
+
+    assert type(exc_info.value) is expected_exception
+    assert str(exc_info.value) == expected_error
 
 
 async def test_and_condition(hass: HomeAssistant) -> None:
