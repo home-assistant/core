@@ -1444,6 +1444,250 @@ async def test_fetch_options_for_selected_program_when_active_program_finishes(
 
 
 @pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
+async def test_option_values_kept_when_options_fetch_fails(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+) -> None:
+    """Test a failed option definitions fetch keeps live option values.
+
+    A transient error must not be treated as an empty option set, otherwise
+    cached values would be pruned and defaults would replace them on recovery.
+    """
+    appliance_ha_id = appliance.ha_id
+    entity_id = "switch.dishwasher_half_load"
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            ProgramKey.DISHCARE_DISHWASHER_AUTO_1,
+            options=[
+                ProgramDefinitionOption(
+                    OptionKey.DISHCARE_DISHWASHER_HALF_LOAD,
+                    "Boolean",
+                    constraints=ProgramDefinitionConstraints(default=False),
+                )
+            ],
+        )
+    )
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    await client.add_events(
+        [
+            EventMessage(
+                appliance_ha_id,
+                EventType.NOTIFY,
+                data=ArrayOfEvents(
+                    [
+                        Event(
+                            key=EventKey.DISHCARE_DISHWASHER_OPTION_HALF_LOAD,
+                            raw_key=EventKey.DISHCARE_DISHWASHER_OPTION_HALF_LOAD.value,
+                            timestamp=0,
+                            level="",
+                            handling="",
+                            value=True,
+                        ),
+                    ]
+                ),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.is_state(entity_id, "on")
+
+    client.get_available_program = AsyncMock(
+        side_effect=HomeConnectError("error.key", "error description")
+    )
+    program_event = EventMessage(
+        appliance_ha_id,
+        EventType.NOTIFY,
+        data=ArrayOfEvents(
+            [
+                Event(
+                    key=EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
+                    raw_key=EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM.value,
+                    timestamp=0,
+                    level="",
+                    handling="",
+                    value=ProgramKey.DISHCARE_DISHWASHER_ECO_50.value,
+                ),
+            ]
+        ),
+    )
+    await client.add_events([program_event])
+    await hass.async_block_till_done()
+
+    assert hass.states.is_state(entity_id, "on")
+
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            ProgramKey.DISHCARE_DISHWASHER_ECO_50,
+            options=[],
+        )
+    )
+    await client.add_events([program_event])
+    await hass.async_block_till_done()
+
+    assert hass.states.is_state(entity_id, STATE_UNAVAILABLE)
+
+
+@pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
+async def test_option_event_in_program_change_message_is_kept(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+) -> None:
+    """Test option events are not pruned by the update they arrived with.
+
+    All NOTIFY items are stored before the program options are refreshed, so
+    pruning must not remove an option value received in the same message.
+    """
+    appliance_ha_id = appliance.ha_id
+    entity_id = "switch.dishwasher_half_load"
+    client.get_available_program = AsyncMock(
+        side_effect=[
+            ProgramDefinition(
+                ProgramKey.DISHCARE_DISHWASHER_AUTO_1,
+                options=[
+                    ProgramDefinitionOption(
+                        OptionKey.DISHCARE_DISHWASHER_HALF_LOAD,
+                        "Boolean",
+                        constraints=ProgramDefinitionConstraints(default=False),
+                    )
+                ],
+            ),
+            ProgramDefinition(
+                ProgramKey.DISHCARE_DISHWASHER_ECO_50,
+                options=[],
+            ),
+        ]
+    )
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    assert not hass.states.is_state(entity_id, "on")
+
+    await client.add_events(
+        [
+            EventMessage(
+                appliance_ha_id,
+                EventType.NOTIFY,
+                data=ArrayOfEvents(
+                    [
+                        Event(
+                            key=EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
+                            raw_key=EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM.value,
+                            timestamp=0,
+                            level="",
+                            handling="",
+                            value=ProgramKey.DISHCARE_DISHWASHER_ECO_50.value,
+                        ),
+                        Event(
+                            key=EventKey.DISHCARE_DISHWASHER_OPTION_HALF_LOAD,
+                            raw_key=EventKey.DISHCARE_DISHWASHER_OPTION_HALF_LOAD.value,
+                            timestamp=0,
+                            level="",
+                            handling="",
+                            value=True,
+                        ),
+                    ]
+                ),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.is_state(entity_id, "on")
+
+
+@pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
+async def test_stale_option_events_pruned_on_refresh(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+) -> None:
+    """Test stale option events are dropped when a refresh replaces the program.
+
+    Events are merged on refresh, so without pruning an option removed while
+    the appliance was unreachable would stay available with a stale value.
+    """
+    entity_id = "switch.dishwasher_half_load"
+    client.get_available_program = AsyncMock(
+        side_effect=[
+            ProgramDefinition(
+                ProgramKey.DISHCARE_DISHWASHER_AUTO_1,
+                options=[
+                    ProgramDefinitionOption(
+                        OptionKey.DISHCARE_DISHWASHER_HALF_LOAD,
+                        "Boolean",
+                        constraints=ProgramDefinitionConstraints(default=False),
+                    )
+                ],
+            ),
+            ProgramDefinition(
+                ProgramKey.DISHCARE_DISHWASHER_ECO_50,
+                options=[],
+            ),
+        ]
+    )
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    await client.add_events(
+        [
+            EventMessage(
+                appliance.ha_id,
+                EventType.NOTIFY,
+                data=ArrayOfEvents(
+                    [
+                        Event(
+                            key=EventKey.DISHCARE_DISHWASHER_OPTION_HALF_LOAD,
+                            raw_key=EventKey.DISHCARE_DISHWASHER_OPTION_HALF_LOAD.value,
+                            timestamp=0,
+                            level="",
+                            handling="",
+                            value=True,
+                        ),
+                    ]
+                ),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.is_state(entity_id, "on")
+
+    client.get_all_programs = AsyncMock(
+        return_value=ArrayOfPrograms(
+            [
+                EnumerateProgram(
+                    ProgramKey.DISHCARE_DISHWASHER_ECO_50,
+                    ProgramKey.DISHCARE_DISHWASHER_ECO_50.value,
+                )
+            ],
+            Program(
+                key=ProgramKey.DISHCARE_DISHWASHER_ECO_50,
+            ),
+            None,
+        )
+    )
+
+    await async_setup_component(hass, HA_DOMAIN, {})
+    await hass.services.async_call(
+        HA_DOMAIN, SERVICE_UPDATE_ENTITY, {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.is_state(entity_id, STATE_UNAVAILABLE)
+
+
+@pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
 @pytest.mark.parametrize(
     "event_key",
     [
