@@ -26,6 +26,7 @@ from homeassistant.components.vacuum import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_STATE, CONF_UNIQUE_ID, Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -242,7 +243,7 @@ def validate_clean_area_passes(
     """Validate the list returned by a cleaning passes template."""
 
     def parse(result: Any) -> list[int] | None:
-        if result is None:
+        if result is None or isinstance(result, TemplateError):
             return None
         if not isinstance(result, list) or any(
             type(value) is not int or value < 1 for value in result
@@ -359,6 +360,7 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity, RestoreE
                 "_attr_clean_area_passes",
                 validate_clean_area_passes(self, CONF_CLEAN_AREA_PASSES),
                 self._update_clean_area_passes,
+                none_on_template_error=False,
             )
 
     @property
@@ -368,9 +370,11 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity, RestoreE
         return self._attr_clean_area_passes
 
     @callback
-    def _update_clean_area_passes(self, result: list[int] | None) -> None:
+    def _update_clean_area_passes(
+        self, result: list[int] | TemplateError | None
+    ) -> None:
         """Update supported counts and capability from a rendered template."""
-        self._attr_clean_area_passes = result or []
+        self._attr_clean_area_passes = result if isinstance(result, list) else []
         if self._attr_clean_area_passes and (
             VacuumEntityFeature.CLEAN_AREA in self._attr_supported_features
         ):
