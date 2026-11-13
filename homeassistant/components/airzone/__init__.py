@@ -23,6 +23,7 @@ from aioairzone.mqtt import AirzoneMqttUpdate
 from homeassistant.components import mqtt
 from homeassistant.const import CONF_HOST, CONF_ID, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import (
     aiohttp_client,
     device_registry as dr,
@@ -100,7 +101,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) -> N
 
     # Subscribe to MQTT updates when MQTT is configured.
     mqtt_topic = entry.options.get(CONF_MQTT_TOPIC, "")
-    if len(mqtt_topic) > 0 and await mqtt.async_wait_for_mqtt_client(hass):
+    if len(mqtt_topic) > 0:
 
         async def _async_mqtt_message(
             message: mqtt.ReceiveMessage,
@@ -123,24 +124,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) -> N
 
             await coordinator.async_mqtt_update(update)
 
-        entry.async_on_unload(
-            await mqtt.async_subscribe(
-                hass,
-                f"{mqtt_topic}/#",
-                _async_mqtt_message,
-                encoding=None,
-            )
-        )
-        await airzone.mqtt.await_event_online()
+        if not await mqtt.async_wait_for_mqtt_client(hass):
+            raise ConfigEntryNotReady("MQTT client is not available")
 
-        cmd_topic, cmd_data = airzone.mqtt.cmd_get_status(mqtt_topic)
-        await mqtt.async_publish(
-            hass,
-            cmd_topic,
-            json.dumps(cmd_data),
-            qos=2,
-        )
-        await airzone.mqtt.await_event_status()
+        try:
+            entry.async_on_unload(
+                await mqtt.async_subscribe(
+                    hass,
+                    f"{mqtt_topic}/#",
+                    _async_mqtt_message,
+                    encoding=None,
+                )
+            )
+            await airzone.mqtt.await_event_online()
+
+            cmd_topic, cmd_data = airzone.mqtt.cmd_get_status(mqtt_topic)
+            await mqtt.async_publish(
+                hass,
+                cmd_topic,
+                json.dumps(cmd_data),
+                qos=2,
+            )
+            await airzone.mqtt.await_event_status()
+        except (HomeAssistantError, TimeoutError) as err:
+            raise ConfigEntryNotReady("Failed to initialize Airzone MQTT") from err
 
     device_registry = dr.async_get(hass)
 

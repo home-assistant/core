@@ -8,6 +8,7 @@ from aioairzone.exceptions import AirzoneError, InvalidSystem
 from aioairzone.localapi import AirzoneLocalApi, ConnectionOptions
 import probatio
 
+from homeassistant.components import mqtt
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_ID, CONF_PORT
 from homeassistant.core import callback
@@ -39,7 +40,7 @@ SYSTEM_ID_SCHEMA = CONFIG_SCHEMA.extend(
 
 OPTIONS_SCHEMA = probatio.Schema(
     {
-        probatio.Optional(CONF_MQTT_TOPIC): str,
+        probatio.Optional(CONF_MQTT_TOPIC): probatio.Any("", mqtt.valid_publish_topic),
     }
 )
 OPTIONS_FLOW = {
