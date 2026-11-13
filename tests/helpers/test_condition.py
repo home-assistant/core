@@ -2421,6 +2421,10 @@ async def test_extract_entities(hass: HomeAssistant) -> None:
                             "entity_id": "sensor.temperature_4",
                             "below": 110,
                         },
+                        {
+                            "condition": "test.modern",
+                            "options": {"entity_id": "sensor.options_not"},
+                        },
                     ],
                 },
                 {
@@ -2476,6 +2480,18 @@ async def test_extract_entities(hass: HomeAssistant) -> None:
                     "condition": "time",
                     "after": "08:00:00",
                 },
+                {
+                    "condition": "test.modern",
+                    "options": {"entity_id": ["sensor.options_1", "sensor.options_2"]},
+                },
+                {
+                    "condition": "test.modern",
+                    "options": {"entity_id": "sensor.options_single"},
+                },
+                {
+                    "condition": "test.modern",
+                    "options": {},
+                },
                 Template("{{ is_state('light.example', 'on') }}", hass),
             ],
         }
@@ -2485,6 +2501,10 @@ async def test_extract_entities(hass: HomeAssistant) -> None:
         "input_datetime.start",
         "person.paulus",
         "sensor.end",
+        "sensor.options_1",
+        "sensor.options_2",
+        "sensor.options_not",
+        "sensor.options_single",
         "sensor.temperature",
         "sensor.temperature_2",
         "sensor.temperature_3",
@@ -2535,6 +2555,10 @@ async def test_extract_devices(hass: HomeAssistant) -> None:
                     "state": "100",
                 },
                 {
+                    "condition": "test.modern",
+                    "options": {"device_id": ["abcd_options", "qwer_options"]},
+                },
+                {
                     "condition": "not",
                     "conditions": [
                         {
@@ -2546,6 +2570,10 @@ async def test_extract_devices(hass: HomeAssistant) -> None:
                             "condition": "device",
                             "device_id": "qwer_not",
                             "domain": "switch",
+                        },
+                        {
+                            "condition": "test.modern",
+                            "options": {"device_id": "abcd_not_options"},
                         },
                     ],
                 },
@@ -2567,7 +2595,17 @@ async def test_extract_devices(hass: HomeAssistant) -> None:
                 Template("{{ is_state('light.example', 'on') }}", hass),
             ],
         }
-    ) == {"abcd", "qwer", "abcd_not", "qwer_not", "abcd_or", "qwer_or"}
+    ) == {
+        "abcd",
+        "qwer",
+        "abcd_not",
+        "qwer_not",
+        "abcd_or",
+        "qwer_or",
+        "abcd_options",
+        "qwer_options",
+        "abcd_not_options",
+    }
 
 
 async def test_condition_template_error(hass: HomeAssistant) -> None:
