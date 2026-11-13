@@ -1,4 +1,22 @@
 {
+  "common": {
+    "condition_behavior_name": "Condition passes if",
+    "condition_for_name": "For at least"
+  },
+  "conditions": {
+    "is_being_held": {
+      "description": "Tests if one or more buttons are being held.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::button::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::button::common::condition_for_name%]"
+        }
+      },
+      "name": "Button is being held"
+    }
+  },
   "device_automation": {
     "action_type": {
       "press": "Press {entity_name} button"
