@@ -93,7 +93,6 @@ PLATFORM_WEBHOOKS = "webhooks"
 SECTION_ADDITIONAL_SETTINGS = "additional_settings"
 SUBENTRY_TYPE_ALLOWED_CHAT_IDS = "allowed_chat_ids"
 
-CONF_ALLOWED_CHAT_IDS = "allowed_chat_ids"
 
 CONF_API_ENDPOINT = "api_endpoint"
 CONF_PROXY_URL = "proxy_url"
@@ -109,7 +108,6 @@ DEFAULT_TIMEOUT_SECONDS = 1800  # 30 minutes
 DEFAULT_API_ENDPOINT = "https://api.telegram.org"
 DEFAULT_TRUSTED_NETWORKS = [ip_network("149.154.160.0/20"), ip_network("91.108.4.0/22")]
 
-SERVICE_SEND_MESSAGE = "send_message"
 
 SIGNAL_UPDATE_EVENT = "telegram_bot_update_event"
 
@@ -147,10 +145,6 @@ class TelegramBotEventData(StrEnum):
     USER_ID = "user_id"
     FROM_FIRST = "from_first"
     FROM_LAST = "from_last"
-
-
-ATTR_MESSAGE = "message"
-ATTR_TITLE = "title"
 
 
 class TelegramBotChatAction(StrEnum):
