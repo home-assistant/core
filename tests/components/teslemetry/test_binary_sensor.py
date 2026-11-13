@@ -7,7 +7,6 @@ import time
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from aiopowerwall import PowerwallConnectionError
 from freezegun.api import FrozenDateTimeFactory
 from habluetooth import CONNECTABLE_FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
 import pytest
@@ -20,6 +19,7 @@ from pytest_homeassistant.components.bluetooth import (
     patch_bluetooth_time,
 )
 from syrupy.assertion import SnapshotAssertion
+from tesla_fleet_api.tesla.powerwall import PowerwallConnectionError
 from tesla_fleet_api.tesla.vehicle.bluetooth import VehicleBluetooth
 from teslemetry_stream import Signal
 
