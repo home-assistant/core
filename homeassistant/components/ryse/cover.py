@@ -30,7 +30,7 @@ from . import RyseConfigEntry, _async_unpair
 from .const import DOMAIN, MANUFACTURER_NAME
 from .helpers import async_best_local_scanner_device
 
-PARALLEL_UPDATES = 1  # one BLE connection at a time
+PARALLEL_UPDATES = 1
 _RECONNECT_COOLDOWN = 5.0
 _RECONNECT_COOLDOWN_MAX = 300.0
 # A reset shade on Home Assistant OS fails start_notify as a transport error,
@@ -127,11 +127,7 @@ class RyseCoverEntity(CoverEntity):
         await super().async_will_remove_from_hass()
 
     def _clear_callback(self) -> None:
-        """Restore the constructor default so ryseble will not await this entity.
-
-        Assign ``None`` rather than deleting the attribute: the library object
-        is constructed with ``update_callback = None``.
-        """
+        """Drop this entity's callbacks so a removed entity is not awaited."""
         if self._device.update_callback == self._update_position:
             self._device.update_callback = None
         if self._device.disconnected_callback == self._on_ble_disconnect:
