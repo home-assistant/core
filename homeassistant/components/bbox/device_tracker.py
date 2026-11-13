@@ -1,9 +1,11 @@
 """Support for French FAI Bouygues Bbox routers."""
 
+from datetime import datetime
 import logging
 from typing import override
 
-from bbox_api import Host
+from aiohttp import CookieJar
+from bbox_api import BboxApiError, BboxClient, Host
 import probatio
 
 from homeassistant.components.device_tracker import (
@@ -13,29 +15,38 @@ from homeassistant.components.device_tracker import (
     SourceType,
 )
 from homeassistant.components.device_tracker.const import (
+    ATTR_IP,
     CONF_CONSIDER_HOME,
     CONF_NEW_DEVICE_DEFAULTS,
     CONF_SCAN_INTERVAL,
     CONF_TRACK_NEW,
 )
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_VERIFY_SSL
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_VERIFY_SSL,
+    EVENT_HOMEASSISTANT_STOP,
+)
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util.dt import utcnow
 
-from .const import DEFAULT_HOST, DOMAIN, INTEGRATION_TITLE
+from .const import DEFAULT_HOST, DOMAIN, INTEGRATION_TITLE, SCAN_INTERVAL
 from .coordinator import BboxConfigEntry, BboxCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-# The legacy YAML structure is kept as-is: it is imported into a config
-# entry by async_setup_scanner below, new options live in the config flow.
-# host/password/verify_ssl stay accepted so a YAML written for them still
-# imports into the entry instead of failing schema validation.
+# The legacy YAML scanner keeps working until 2027.5 (see the
+# migrate_device_tracker repair): it is deliberately not imported into a
+# config entry, because the known_devices.yaml trackers still claim their
+# entity ids while the platform is configured. host/password/verify_ssl
+# stay accepted so an existing YAML keeps validating.
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         probatio.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
@@ -44,7 +55,7 @@ PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     }
 )
 
-# The coordinator polls the Bbox.
+# All entities consume coordinator data, so they never poll independently.
 PARALLEL_UPDATES = 0
 
 
@@ -54,7 +65,14 @@ async def async_setup_scanner(
     async_see: AsyncSeeCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> bool:
-    """Import the legacy YAML device tracker configuration."""
+    """Run the legacy YAML scanner until 2027.5.
+
+    The configuration is not imported into a config entry: while the YAML
+    platform is configured, the known_devices.yaml trackers keep claiming
+    their entity ids, so automatically created replacement entities could
+    get suffixed ids. The migrate_device_tracker repair explains the manual
+    migration instead.
+    """
     dropped = [
         key
         for key in (
@@ -71,25 +89,68 @@ async def async_setup_scanner(
             " and were not imported; remove them from the YAML configuration",
             ", ".join(dropped),
         )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-        )
-    )
     ir.async_create_issue(
         hass,
-        HOMEASSISTANT_DOMAIN,
-        f"deprecated_yaml_{DOMAIN}",
-        breaks_in_ha_version="2027.2.0",
+        DOMAIN,
+        f"migrate_device_tracker_{DOMAIN}",
+        breaks_in_ha_version="2027.5.0",
         is_fixable=False,
         issue_domain=DOMAIN,
         severity=ir.IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
+        translation_key="migrate_device_tracker",
         translation_placeholders={
             "domain": DOMAIN,
             "integration_title": INTEGRATION_TITLE,
         },
     )
+    password = config[CONF_PASSWORD]
+    if not password:
+        _LOGGER.error(
+            "The bbox device_tracker YAML platform needs the admin password"
+            " (`password`); set it in the platform configuration or migrate"
+            " to the UI integration"
+        )
+        return False
+    verify_ssl = config[CONF_VERIFY_SSL]
+    session = async_create_clientsession(
+        hass, verify_ssl=verify_ssl, cookie_jar=CookieJar(unsafe=True)
+    )
+    client = BboxClient(
+        password,
+        config[CONF_HOST],
+        use_tls=True,
+        verify_ssl=verify_ssl,
+        session=session,
+    )
+
+    async def _async_scan(_now: datetime) -> None:
+        """Report the hosts currently active on the box."""
+        try:
+            hosts = await client.get_hosts()
+        except BboxApiError as err:
+            _LOGGER.warning("Error fetching the Bbox device list: %s", err)
+            return
+        for device in hosts:
+            if device.active and device.macaddress:
+                await async_see(
+                    mac=device.macaddress,
+                    host_name=device.hostname,
+                    source_type=SourceType.ROUTER,
+                    attributes={ATTR_IP: device.ipaddress},
+                )
+
+    cancel_scan = async_track_time_interval(
+        hass, _async_scan, SCAN_INTERVAL, cancel_on_shutdown=True
+    )
+
+    @callback
+    def _async_close(_event: Event) -> None:
+        cancel_scan()
+        # Detach the client; the HA-managed session is closed at shutdown.
+        hass.async_create_task(client.close())
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_close)
+    await _async_scan(utcnow())
     return True
 
 
@@ -126,9 +187,8 @@ class BboxDeviceTracker(CoordinatorEntity[BboxCoordinator], ScannerEntity):
     # Keep the legacy entity ids (device_tracker.<hostname>, not prefixed
     # with the router name).
     _attr_has_entity_name = False
-    # The legacy scanner entities were enabled by default; keep that so an
-    # imported YAML configuration keeps tracking without manual enabling.
-    _attr_entity_registry_enabled_default = True
+    # New trackers stay disabled by default (ScannerEntity default): users
+    # enable per device, e.g. after migrating from known_devices.yaml.
 
     def __init__(self, coordinator: BboxCoordinator, mac: str) -> None:
         """Initialize the tracker."""

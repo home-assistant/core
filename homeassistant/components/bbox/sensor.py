@@ -102,7 +102,7 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     }
 )
 
-# The coordinator polls the Bbox.
+# All entities consume coordinator data, so they never poll independently.
 PARALLEL_UPDATES = 0
 
 

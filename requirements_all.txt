@@ -698,7 +698,7 @@ base36==0.1.1
 batinfo==0.4.2
 
 # homeassistant.components.bbox
-bbox-api==0.1.0
+bbox-api==0.1.2
 
 # homeassistant.components.scrape
 beautifulsoup4==4.15.0

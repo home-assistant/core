@@ -12,5 +12,5 @@
   "integration_type": "hub",
   "iot_class": "local_polling",
   "quality_scale": "legacy",
-  "requirements": ["bbox-api==0.1.0"]
+  "requirements": ["bbox-api==0.1.2"]
 }

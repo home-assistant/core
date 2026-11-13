@@ -1,9 +1,9 @@
 """Tests for the Bbox sensor platform."""
 
 from datetime import timedelta
-from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.bbox.const import DOMAIN
@@ -31,13 +31,15 @@ EXPECTED_STATES = {
     "sensor.bbox_maximum_upload_bandwidth": "1000.0",
     "sensor.bbox_currently_used_download_bandwidth": "17.95",
     "sensor.bbox_currently_used_upload_bandwidth": "3.46",
+    # The reboot sensor keeps its legacy name so the entity id stays
+    # sensor.bbox_number_of_reboot across the migration.
     "sensor.bbox_number_of_reboot": "40",
 }
 
 
+@pytest.mark.usefixtures("mock_bbox_client")
 async def test_sensors(
     hass: HomeAssistant,
-    mock_bbox_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
@@ -61,9 +63,9 @@ async def test_sensors(
     assert hass.states.get("sensor.bbox_uptime").state == expected_uptime
 
 
+@pytest.mark.usefixtures("mock_bbox_client")
 async def test_sensors_monitored_variables_subset(
     hass: HomeAssistant,
-    mock_bbox_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test only the monitored variables become entities."""
@@ -79,9 +81,9 @@ async def test_sensors_monitored_variables_subset(
     assert hass.states.get("sensor.bbox_number_of_reboot") is None
 
 
+@pytest.mark.usefixtures("mock_bbox_client")
 async def test_yaml_import(
     hass: HomeAssistant,
-    mock_bbox_client: MagicMock,
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test the legacy sensor YAML platform is imported into a config entry."""
@@ -101,11 +103,8 @@ async def test_yaml_import(
     )
 
 
-async def test_yaml_import_keeps_connection_options(
-    hass: HomeAssistant,
-    mock_bbox_client: MagicMock,
-    issue_registry: ir.IssueRegistry,
-) -> None:
+@pytest.mark.usefixtures("mock_bbox_client")
+async def test_yaml_import_keeps_connection_options(hass: HomeAssistant) -> None:
     """Test host/password/verify_ssl in the sensor YAML import into the entry."""
     assert await async_setup_component(
         hass,

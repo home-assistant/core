@@ -4,12 +4,23 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, patch_yaml_files
 
 from homeassistant.components.bbox.const import DOMAIN
+from homeassistant.components.device_tracker.legacy import YAML_DEVICES
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_VERIFY_SSL
 
 from .const import DEVICE, HOST, HOSTS, PASSWORD, STATS
+
+
+@pytest.fixture(autouse=True)
+def _isolated_known_devices_yaml() -> Generator[None]:
+    """Isolate bbox tests from known_devices.yaml: no disk read or write."""
+    with (
+        patch_yaml_files({YAML_DEVICES: ""}),
+        patch("homeassistant.components.device_tracker.legacy.update_config"),
+    ):
+        yield
 
 
 @pytest.fixture
@@ -33,6 +44,7 @@ def mock_bbox_client() -> Generator[MagicMock]:
     with (
         patch("homeassistant.components.bbox.BboxClient") as client_class,
         patch("homeassistant.components.bbox.config_flow.BboxClient", client_class),
+        patch("homeassistant.components.bbox.device_tracker.BboxClient", client_class),
     ):
         client = client_class.return_value
         client.get_device = AsyncMock(return_value=DEVICE)

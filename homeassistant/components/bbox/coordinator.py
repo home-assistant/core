@@ -74,12 +74,12 @@ class BboxCoordinator(DataUpdateCoordinator[BboxData]):
             result = err.exceptions[0]
             if isinstance(result, BboxAuthenticationError):
                 raise ConfigEntryAuthFailed(
-                    f"Authentication with the Bbox failed: {result}"
+                    "Authentication with the Bbox failed"
                 ) from result
             if isinstance(result, (BboxConnectionError, BboxTimeoutError)):
-                raise UpdateFailed(f"Cannot reach the Bbox: {result}") from result
+                raise UpdateFailed("Cannot reach the Bbox") from result
             if isinstance(result, BboxApiError):
-                raise UpdateFailed(f"Bbox API error: {result}") from result
+                raise UpdateFailed("Bbox API error") from result
             raise result from None
         return BboxData(
             device=device_task.result(),

@@ -15,7 +15,12 @@ from bbox_api import (
 )
 import probatio
 
-from homeassistant.config_entries import ConfigEntryState, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigEntryState,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_MONITORED_VARIABLES,
@@ -107,6 +112,17 @@ class BboxConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    def _async_entry_for_host(self, host: str) -> ConfigEntry | None:
+        """Return the current entry configured for a host, if any."""
+        return next(
+            (
+                entry
+                for entry in self._async_current_entries()
+                if entry.data[CONF_HOST] == host
+            ),
+            None,
+        )
+
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -121,11 +137,18 @@ class BboxConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_PASSWORD],
                 user_input[CONF_VERIFY_SSL],
             )
+            if not errors and device is not None and not device.serialnumber:
+                # Without a serial number no stable unique ID is available.
+                errors["base"] = "unknown"
             if not errors and device is not None and device.serialnumber:
                 # The serial number is stable when the box gets a new IP
                 # address, unlike the host.
                 await self.async_set_unique_id(device.serialnumber)
                 self._abort_if_unique_id_configured()
+                if self._async_entry_for_host(host) is not None:
+                    # An entry imported from YAML (host-based unique ID)
+                    # already covers this box.
+                    return self.async_abort(reason="already_configured")
                 return self.async_create_entry(
                     title=host, data={**user_input, CONF_HOST: host}
                 )
@@ -139,18 +162,19 @@ class BboxConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the import of a legacy YAML platform configuration.
 
         The sensor and the device_tracker platforms of one box import into
-        the same entry (unique id = host): merge into the existing entry
-        when the other platform was imported first.
+        the same entry: merge into the existing entry matched by host when
+        the other platform was imported first or the box was set up through
+        the UI (unique id = serial number).
         """
-        host = import_data.get(CONF_HOST, DEFAULT_HOST).rstrip("/")
+        host = import_data[CONF_HOST].rstrip("/")
         # Imported YAML entries carry no password, so the serial number
         # cannot be fetched here; the host is the only identifier available.
         # pylint: disable-next=home-assistant-unique-id-ip-based
         await self.async_set_unique_id(host)
         entry_data: dict[str, Any] = {
             CONF_HOST: host,
-            CONF_PASSWORD: import_data.get(CONF_PASSWORD, ""),
-            CONF_VERIFY_SSL: import_data.get(CONF_VERIFY_SSL, True),
+            CONF_PASSWORD: import_data[CONF_PASSWORD],
+            CONF_VERIFY_SSL: import_data[CONF_VERIFY_SSL],
         }
         if CONF_MONITORED_VARIABLES in import_data:
             entry_data[CONF_NAME] = import_data.get(CONF_NAME, DEFAULT_NAME)
@@ -158,10 +182,20 @@ class BboxConfigFlow(ConfigFlow, domain=DOMAIN):
                 import_data[CONF_MONITORED_VARIABLES]
             )
         for entry in self._async_current_entries():
-            if entry.unique_id == host:
-                self.hass.config_entries.async_update_entry(
-                    entry, data={**entry.data, **entry_data}
-                )
+            # Match both imported entries (unique ID = host) and entries
+            # created through the UI or a reconfiguration (unique ID =
+            # serial number): one box must stay one entry.
+            if host in (entry.unique_id, entry.data[CONF_HOST]):
+                merged_data = {**entry.data, **entry_data}
+                if entry.data[CONF_PASSWORD]:
+                    # The platform schemas insert password="" when it is
+                    # omitted: keep the password saved on the entry (user
+                    # flow or reauthentication).
+                    merged_data[CONF_PASSWORD] = entry.data[CONF_PASSWORD]
+                # Same for verify_ssl: the schema default True must not
+                # override a saved False.
+                merged_data[CONF_VERIFY_SSL] = entry.data[CONF_VERIFY_SSL]
+                self.hass.config_entries.async_update_entry(entry, data=merged_data)
                 if entry.state is ConfigEntryState.LOADED:
                     # The newly imported platform is only forwarded on reload.
                     self.hass.config_entries.async_schedule_reload(entry.entry_id)
@@ -182,6 +216,9 @@ class BboxConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_PASSWORD],
                 user_input[CONF_VERIFY_SSL],
             )
+            if not errors and device is not None and not device.serialnumber:
+                # Without a serial number no stable unique ID is available.
+                errors["base"] = "unknown"
             if not errors and device is not None and device.serialnumber:
                 # The serial number is stable when the box gets a new IP
                 # address, unlike the host.
@@ -195,6 +232,16 @@ class BboxConfigFlow(ConfigFlow, domain=DOMAIN):
                     # The new host points to a box already configured on
                     # another entry.
                     return self.async_abort(reason="already_configured")
+                if (
+                    reconfigure_entry.unique_id is not None
+                    and reconfigure_entry.unique_id != reconfigure_entry.data[CONF_HOST]
+                    and reconfigure_entry.unique_id != device.serialnumber
+                ):
+                    # The entry already has a serial-based identity: pointing
+                    # it at another box would re-attribute its entities and
+                    # history to a different router. Host-based YAML entries
+                    # migrate to the serial number instead.
+                    return self.async_abort(reason="different_device")
                 return self.async_update_reload_and_abort(
                     reconfigure_entry,
                     unique_id=device.serialnumber,
@@ -224,21 +271,18 @@ class BboxConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         reauth_entry = self._get_reauth_entry()
         if user_input is not None:
-            verify_ssl = user_input.get(
-                CONF_VERIFY_SSL, reauth_entry.data.get(CONF_VERIFY_SSL, True)
-            )
             errors, _ = await _async_validate(
                 self.hass,
                 reauth_entry.data[CONF_HOST],
                 user_input[CONF_PASSWORD],
-                verify_ssl,
+                user_input[CONF_VERIFY_SSL],
             )
             if not errors:
                 return self.async_update_reload_and_abort(
                     reauth_entry,
                     data_updates={
                         CONF_PASSWORD: user_input[CONF_PASSWORD],
-                        CONF_VERIFY_SSL: verify_ssl,
+                        CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
                     },
                 )
         return self.async_show_form(

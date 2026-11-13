@@ -12,7 +12,7 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant.components.bbox.const import DOMAIN
 from homeassistant.components.bbox.coordinator import BboxCoordinator
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, CONF_VERIFY_SSL
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 
 from .const import DEVICE, HOST, HOSTS, STATS
@@ -37,6 +37,8 @@ async def test_setup_and_unload(
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    # The client is closed on unload so reloads do not leak sessions.
+    mock_bbox_client.return_value.close.assert_awaited_once()
 
 
 async def test_setup_without_password_triggers_reauth(hass: HomeAssistant) -> None:
@@ -44,7 +46,7 @@ async def test_setup_without_password_triggers_reauth(hass: HomeAssistant) -> No
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=HOST,
-        data={CONF_HOST: HOST, CONF_VERIFY_SSL: True},
+        data={CONF_HOST: HOST, CONF_PASSWORD: "", CONF_VERIFY_SSL: True},
     )
     entry.add_to_hass(hass)
     assert not await hass.config_entries.async_setup(entry.entry_id)
