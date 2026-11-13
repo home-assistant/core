@@ -88,6 +88,7 @@ class StatesManager:
         """
         self._last_committed_id.clear()
         self._pending.clear()
+        self._last_reported.clear()
         # _oldest_ts is a database aggregate, not session state.
 
     def load_from_db(self, session: Session) -> None:
