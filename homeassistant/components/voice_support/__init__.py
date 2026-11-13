@@ -1,7 +1,7 @@
 """The Voice support integration."""
 
 from collections.abc import AsyncIterable
-from functools import partial
+from datetime import datetime, timedelta
 import logging
 
 from homeassistant.components.hassio import AddonError
@@ -15,6 +15,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, discovery_flow
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
@@ -43,7 +44,9 @@ __all__ = [
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-PREVIEW_FEATURE_WAKE_WORD_VERIFICATION = "wake_word_verification"
+INFO_REFRESH_INTERVAL = timedelta(minutes=5)
+
+PREVIEW_FEATURE_NEXT_GENERATION_VOICE = "next_generation_voice"
 
 DATA_CLIENT: HassKey[VoiceSupportClient] = HassKey(DOMAIN)
 
@@ -54,7 +57,7 @@ _LOGGER = logging.getLogger(__name__)
 def async_is_enabled(hass: HomeAssistant) -> bool:
     """Whether the person has turned voice support on."""
     return async_is_preview_feature_enabled(
-        hass, DOMAIN, PREVIEW_FEATURE_WAKE_WORD_VERIFICATION
+        hass, DOMAIN, PREVIEW_FEATURE_NEXT_GENERATION_VOICE
     )
 
 
@@ -68,7 +71,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async_subscribe_preview_feature(
         hass,
         DOMAIN,
-        PREVIEW_FEATURE_WAKE_WORD_VERIFICATION,
+        PREVIEW_FEATURE_NEXT_GENERATION_VOICE,
         _async_preview_feature_updated,
     )
     _async_provision(hass)
@@ -78,10 +81,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Connect to the app at the entry's address."""
     client = VoiceSupportClient(hass, entry.data[CONF_HOST], entry.data[CONF_PORT])
+    if entry.data.get(CONF_INTEGRATION_CREATED_APP):
+        get_app_manager(hass).async_schedule_update_addon(catch_error=True)
     try:
-        await client.async_connect(
-            partial(hass.config_entries.async_schedule_reload, entry.entry_id)
-        )
+        await client.async_update_info()
     except CLIENT_ERRORS as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
@@ -89,11 +92,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
             translation_placeholders={"url": str(client.url)},
         ) from err
     except UnsupportedVersionError as err:
-        if (
-            entry.data.get(CONF_INTEGRATION_CREATED_APP)
-            and err.info.api_version < API_VERSION
-        ):
-            get_app_manager(hass).async_schedule_update_addon(catch_error=True)
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="unsupported_version",
@@ -105,12 +103,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
             },
         ) from err
 
+    async def _async_refresh_info(_now: datetime) -> None:
+        if entry.data.get(CONF_INTEGRATION_CREATED_APP):
+            get_app_manager(hass).async_schedule_update_addon(catch_error=True)
+        try:
+            await client.async_update_info()
+        except (*CLIENT_ERRORS, UnsupportedVersionError) as err:
+            _LOGGER.debug("Cannot use the app at %s (%r)", client.url, err)
+            hass.config_entries.async_schedule_reload(entry.entry_id)
+
+    entry.async_on_unload(
+        async_track_time_interval(hass, _async_refresh_info, INFO_REFRESH_INTERVAL)
+    )
     hass.data[DATA_CLIENT] = client
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload the entry."""
-    hass.data.pop(DATA_CLIENT).async_close()
+    hass.data.pop(DATA_CLIENT)
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:

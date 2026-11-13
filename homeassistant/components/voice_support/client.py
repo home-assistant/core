@@ -3,23 +3,62 @@
 import asyncio
 from collections.abc import AsyncGenerator, AsyncIterable, Awaitable, Callable
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from json import JSONDecodeError
 import logging
 from typing import Any
 
 import aiohttp
+import probatio
 from yarl import URL
 
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.event import async_track_time_interval
 
 API_VERSION = 1
 INFO_TIMEOUT = 10
 RUN_TIMEOUT = 1
 SEND_TIMEOUT = 1
 WAKE_WORD_VERDICT_SECONDS = 2.0
-INFO_REFRESH_INTERVAL = timedelta(minutes=5)
+
+INFO_SCHEMA = probatio.Schema(
+    {
+        "name": str,
+        "version": str,
+        "api_version": probatio.All(
+            int,
+            probatio.Check(
+                lambda value: not isinstance(value, bool), "expected integer"
+            ),
+        ),
+        "wake_words": [
+            {
+                "id": str,
+                probatio.Optional("phrase"): probatio.Any(str, None),
+            }
+        ],
+    },
+    required=True,
+    extra=probatio.ALLOW_EXTRA,
+)
+
+TIMESTAMP_SCHEMA = probatio.All(
+    int,
+    probatio.Check(lambda value: not isinstance(value, bool), "expected integer"),
+    probatio.Range(min=0),
+)
+EVENT_SCHEMA = probatio.Schema({"type": str}, required=True, extra=probatio.ALLOW_EXTRA)
+EVENT_SCHEMAS = {
+    event_type: probatio.Schema(schema, required=True, extra=probatio.ALLOW_EXTRA)
+    for event_type, schema in {
+        "wake-word-end": {"wake_word_output": {"wake_word_audio_ms": TIMESTAMP_SCHEMA}},
+        "wake-word-rejected": {
+            "wake_word_output": {probatio.Optional("reason"): probatio.Any(str, None)}
+        },
+        "stt-vad-start": {"timestamp": TIMESTAMP_SCHEMA},
+        "stt-vad-end": {"timestamp": TIMESTAMP_SCHEMA},
+        "error": {"code": str, "message": str},
+    }.items()
+}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,6 +95,7 @@ class AppInfo:
     @staticmethod
     def from_json(data: dict[str, Any]) -> AppInfo:
         """Read an /info response."""
+        data = INFO_SCHEMA(data)
         return AppInfo(
             name=data["name"],
             version=data["version"],
@@ -103,13 +143,6 @@ class WakeWordRejected:
 
     reason: str | None = None
     """In the app's own words, for logs only."""
-
-
-def _ms(value: Any) -> int:
-    """Validate a timestamp in milliseconds."""
-    if isinstance(value, bool) or (not isinstance(value, int)) or (value < 0):
-        raise ValueError(f"not a point in the audio: {value!r}")
-    return value
 
 
 class AudioRun:
@@ -199,9 +232,13 @@ class AudioRun:
                 if message.type != aiohttp.WSMsgType.TEXT:
                     continue
                 try:
-                    self._async_handle(message.json())
-                except (AttributeError, KeyError, TypeError, ValueError) as err:
+                    event = EVENT_SCHEMA(message.json())
+                    if schema := EVENT_SCHEMAS.get(event["type"]):
+                        event = schema(event)
+                except (JSONDecodeError, probatio.Invalid) as err:
                     _LOGGER.warning("The app said something odd (%r)", err)
+                    continue
+                self._async_handle(event)
         except aiohttp.ClientError as err:
             _LOGGER.debug("The app went away mid-run (%r)", err)
         finally:
@@ -215,16 +252,16 @@ class AudioRun:
 
         if event_type == "wake-word-end":
             output = event["wake_word_output"]
-            self.wake_word = WakeWordAccepted(_ms(output["wake_word_audio_ms"]))
+            self.wake_word = WakeWordAccepted(output["wake_word_audio_ms"])
             self._wake_word_known.set()
         elif event_type == "wake-word-rejected":
             output = event["wake_word_output"]
             self.wake_word = WakeWordRejected(output.get("reason"))
             self._wake_word_known.set()
         elif event_type == "stt-vad-start":
-            self.speech_started_ms = _ms(event["timestamp"])
+            self.speech_started_ms = event["timestamp"]
         elif event_type == "stt-vad-end":
-            self.speech_ended_ms = _ms(event["timestamp"])
+            self.speech_ended_ms = event["timestamp"]
         elif event_type == "error":
             _LOGGER.warning(
                 "The app could not handle the run (%s): %s",
@@ -250,35 +287,6 @@ class VoiceSupportClient:
         self.hass = hass
         self.url = URL.build(scheme="http", host=host, port=port)
         self.info: AppInfo | None = None
-        self._stop_refresh: CALLBACK_TYPE | None = None
-        self._on_disconnect: CALLBACK_TYPE | None = None
-
-    async def async_connect(self, on_disconnect: CALLBACK_TYPE) -> None:
-        """Ask the app what it is, and keep asking now and then.
-
-        An app that is updated, or that goes away and comes back, is only
-        noticed by asking again.
-        """
-        await self.async_update_info()
-        self._on_disconnect = on_disconnect
-        self._stop_refresh = async_track_time_interval(
-            self.hass, self._async_refresh_info, INFO_REFRESH_INTERVAL
-        )
-
-    @callback
-    def async_close(self) -> None:
-        """Stop following the app."""
-        if self._stop_refresh is not None:
-            self._stop_refresh()
-            self._stop_refresh = None
-
-    async def _async_refresh_info(self, _now: datetime | None = None) -> None:
-        try:
-            await self.async_update_info()
-        except (*CLIENT_ERRORS, UnsupportedVersionError) as err:
-            _LOGGER.debug("Cannot use the app at %s (%r)", self.url, err)
-            if self._on_disconnect is not None:
-                self._on_disconnect()
 
     async def async_update_info(self) -> AppInfo:
         """Ask the app what it is and what it can verify.
@@ -294,13 +302,13 @@ class VoiceSupportClient:
                 response.raise_for_status()
                 try:
                     data = await response.json()
-                except ValueError as err:
+                except JSONDecodeError as err:
                     raise InvalidResponseError(
                         "Invalid JSON from the Voice app"
                     ) from err
                 try:
                     info = AppInfo.from_json(data)
-                except (AttributeError, KeyError, TypeError, ValueError) as err:
+                except probatio.Invalid as err:
                     raise InvalidResponseError(
                         "Invalid info from the Voice app"
                     ) from err
@@ -353,8 +361,6 @@ class VoiceSupportClient:
         except (aiohttp.ClientError, TimeoutError) as err:
             _LOGGER.debug("Cannot reach the app (%r): running without it", err)
             self.info = None
-            if self._on_disconnect is not None:
-                self._on_disconnect()
             return None
 
         try:
@@ -371,8 +377,6 @@ class VoiceSupportClient:
         except (aiohttp.ClientError, TimeoutError) as err:
             _LOGGER.debug("The app would not take a run (%r): running without it", err)
             self.info = None
-            if self._on_disconnect is not None:
-                self._on_disconnect()
             await websocket.close()
             return None
         except asyncio.CancelledError:

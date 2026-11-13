@@ -13,11 +13,11 @@ from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from homeassistant.components.labs import async_update_preview_feature
 from homeassistant.components.voice_support import (
     DATA_CLIENT,
-    PREVIEW_FEATURE_WAKE_WORD_VERIFICATION,
+    INFO_REFRESH_INTERVAL,
+    PREVIEW_FEATURE_NEXT_GENERATION_VOICE,
     AudioRunRequest,
     async_start_run,
 )
-from homeassistant.components.voice_support.client import INFO_REFRESH_INTERVAL
 from homeassistant.components.voice_support.const import (
     CONF_INTEGRATION_CREATED_APP,
     DOMAIN,
@@ -139,7 +139,7 @@ async def test_info_refresh_reloads_unusable_app(
         pytest.param(True, 0, True, None, 1, id="owned_outdated"),
         pytest.param(True, 0, False, None, 0, id="no_update"),
         pytest.param(False, 0, True, None, 0, id="external"),
-        pytest.param(True, 2, True, None, 0, id="newer_protocol"),
+        pytest.param(True, 2, True, None, 1, id="newer_protocol"),
         pytest.param(True, 0, True, SupervisorError("busy"), 1, id="update_failed"),
     ],
 )
@@ -157,7 +157,7 @@ async def test_setup_updates_owned_app(
     update_error: Exception | None,
     expected_updates: int,
 ) -> None:
-    """Test setup updates an outdated app only when the integration installed it."""
+    """Test setup updates an incompatible app only when the integration installed it."""
     addon_info.return_value.update_available = update_available
     update_addon.side_effect = update_error
     mock_config_entry.add_to_hass(hass)
@@ -196,7 +196,7 @@ async def test_loading_provisions(
     """Test loading asks for the app, on a Supervised system with the feature on."""
     hass.config.components.update(components)
     await async_update_preview_feature(
-        hass, DOMAIN, PREVIEW_FEATURE_WAKE_WORD_VERIFICATION, feature
+        hass, DOMAIN, PREVIEW_FEATURE_NEXT_GENERATION_VOICE, feature
     )
 
     with patch(
@@ -225,10 +225,10 @@ async def test_provision_once(
             hass.config_entries.flow.async_abort(flow["flow_id"])
         mock_config_entry.add_to_hass(hass)
         await async_update_preview_feature(
-            hass, DOMAIN, PREVIEW_FEATURE_WAKE_WORD_VERIFICATION, False
+            hass, DOMAIN, PREVIEW_FEATURE_NEXT_GENERATION_VOICE, False
         )
         await async_update_preview_feature(
-            hass, DOMAIN, PREVIEW_FEATURE_WAKE_WORD_VERIFICATION, True
+            hass, DOMAIN, PREVIEW_FEATURE_NEXT_GENERATION_VOICE, True
         )
         await hass.async_block_till_done()
         assert create_flow.call_count == 0
@@ -244,13 +244,13 @@ async def test_enabling_the_feature_asks_for_the_app(hass: HomeAssistant) -> Non
         assert create_flow.call_count == 1
 
         await async_update_preview_feature(
-            hass, DOMAIN, PREVIEW_FEATURE_WAKE_WORD_VERIFICATION, False
+            hass, DOMAIN, PREVIEW_FEATURE_NEXT_GENERATION_VOICE, False
         )
         await hass.async_block_till_done()
         assert create_flow.call_count == 1
 
         await async_update_preview_feature(
-            hass, DOMAIN, PREVIEW_FEATURE_WAKE_WORD_VERIFICATION, True
+            hass, DOMAIN, PREVIEW_FEATURE_NEXT_GENERATION_VOICE, True
         )
         await hass.async_block_till_done()
         assert create_flow.call_count == 2
@@ -352,8 +352,68 @@ async def test_start_run_gated_by_preview_feature(
         assert start_run.call_count == 0
 
         await async_update_preview_feature(
-            hass, DOMAIN, PREVIEW_FEATURE_WAKE_WORD_VERIFICATION, True
+            hass, DOMAIN, PREVIEW_FEATURE_NEXT_GENERATION_VOICE, True
         )
         audio = _no_audio()
         assert await async_start_run(hass, request, audio) == "run"
         assert start_run.call_args[0] == (request, audio)
+
+
+@pytest.mark.parametrize(
+    ("owned", "update_available", "expected_updates"),
+    [(True, True, 1), (True, False, 0), (False, True, 0)],
+)
+@pytest.mark.usefixtures("supervisor", "addon_running", "app_info")
+async def test_setup_updates_compatible_app(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    addon_info: AsyncMock,
+    update_addon: AsyncMock,
+    owned: bool,
+    update_available: bool,
+    expected_updates: int,
+) -> None:
+    """Test compatible managed apps are also updated when an update is available."""
+    addon_info.return_value.update_available = update_available
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={**mock_config_entry.data, CONF_INTEGRATION_CREATED_APP: owned},
+    )
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert update_addon.call_count == expected_updates
+
+
+@pytest.mark.parametrize(
+    ("owned", "update_available", "expected_updates"),
+    [(True, True, 1), (True, False, 0), (False, True, 0)],
+)
+@pytest.mark.usefixtures("supervisor", "addon_running", "app_info")
+async def test_refresh_updates_managed_app(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    addon_info: AsyncMock,
+    update_addon: AsyncMock,
+    owned: bool,
+    update_available: bool,
+    expected_updates: int,
+) -> None:
+    """Test refresh checks for updates without needing an incompatible API version."""
+    addon_info.return_value.update_available = False
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={**mock_config_entry.data, CONF_INTEGRATION_CREATED_APP: owned},
+    )
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    update_addon.assert_not_called()
+
+    addon_info.return_value.update_available = update_available
+    async_fire_time_changed(hass, dt_util.utcnow() + INFO_REFRESH_INTERVAL)
+    await hass.async_block_till_done()
+
+    assert update_addon.call_count == expected_updates

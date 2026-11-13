@@ -120,6 +120,19 @@ async def test_update_info_wrong_api_version(
             InvalidResponseError,
             id="wake_word_id_not_text",
         ),
+        *[
+            pytest.param(
+                {"json": {**INFO, field: value}}, InvalidResponseError, id=name
+            )
+            for field, value, name in (
+                ("name", None, "invalid_name"),
+                ("version", 1, "invalid_version"),
+                ("api_version", "1", "invalid_api_version"),
+                ("api_version", True, "boolean_api_version"),
+                ("wake_words", [None], "invalid_wake_word"),
+                ("wake_words", [{"id": "okay_nabu", "phrase": 42}], "invalid_phrase"),
+            )
+        ],
         pytest.param(
             {"json": {**INFO, "wake_words": "okay nabu"}},
             InvalidResponseError,
@@ -205,19 +218,16 @@ async def test_start_run_unreachable(
     aioclient_mock: AiohttpClientMocker,
     request_: AudioRunRequest,
 ) -> None:
-    """Test a failed connection requests a reload and falls back to local processing."""
+    """Test a failed connection clears app info and falls back to local processing."""
     client = VoiceSupportClient(hass, HOST, PORT)
-    on_disconnect = Mock()
-    await client.async_connect(on_disconnect)
+    await client.async_update_info()
     aioclient_mock.clear_requests()
     aioclient_mock.get(f"http://{HOST}:{PORT}/run", exc=aiohttp.ClientError)
 
     assert await client.async_start_run(request_, _no_audio()) is None
     assert await client.async_start_run(request_, _no_audio()) is None
     assert client.info is None
-    on_disconnect.assert_called_once_with()
     assert aioclient_mock.call_count == 1
-    client.async_close()
 
 
 @pytest.mark.parametrize(
@@ -281,10 +291,9 @@ async def test_start_run(
 async def test_start_run_refused(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Test a refused run closes its websocket and requests a reload."""
+    """Test a refused run closes its websocket and clears app info."""
     client = VoiceSupportClient(hass, HOST, PORT)
-    on_disconnect = Mock()
-    await client.async_connect(on_disconnect)
+    await client.async_update_info()
     aioclient_mock.clear_requests()
     aioclient_mock.get(INFO_URL, json=INFO)
     websocket = FakeWebsocket()
@@ -305,8 +314,6 @@ async def test_start_run_refused(
     await hass.async_block_till_done(wait_background_tasks=True)
     assert aioclient_mock.call_count == 0
     assert client.info is None
-    on_disconnect.assert_called_once_with()
-    client.async_close()
 
 
 @pytest.mark.usefixtures("app_info")
@@ -568,6 +575,25 @@ async def test_run_error_ends_the_run(
         pytest.param(
             accepted(True), None, None, None, "said something odd", id="boolean"
         ),
+        *[
+            pytest.param(answer, None, None, None, "said something odd", id=name)
+            for name, answer in (
+                ("missing_type", {}),
+                ("invalid_type", {"type": []}),
+                ("missing_output", {"type": "wake-word-end"}),
+                ("missing_boundary", {"type": "wake-word-end", "wake_word_output": {}}),
+                (
+                    "invalid_reason",
+                    {"type": "wake-word-rejected", "wake_word_output": {"reason": 42}},
+                ),
+                ("invalid_error", {"type": "error", "code": 42, "message": "busy"}),
+                ("invalid_json", aiohttp.WSMessage(aiohttp.WSMsgType.TEXT, "{", None)),
+                (
+                    "invalid_event",
+                    aiohttp.WSMessage(aiohttp.WSMsgType.TEXT, "[]", None),
+                ),
+            )
+        ],
         pytest.param(
             {"type": "unknown"}, None, None, None, "Ignoring unknown", id="unknown"
         ),
@@ -601,3 +627,22 @@ async def test_run_answers(
     assert run.speech_ended_ms == speech_ended_ms
     assert logged in caplog.text
     assert run.listening
+
+
+@pytest.mark.parametrize(
+    "wake_word", [{"id": "okay_nabu"}, {"id": "okay_nabu", "phrase": None}]
+)
+async def test_update_info_optional_phrase(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    wake_word: dict[str, str | None],
+) -> None:
+    """Test optional phrases and extra response fields are accepted."""
+    aioclient_mock.get(
+        INFO_URL, json={**INFO, "wake_words": [wake_word], "extra": True}
+    )
+    client = VoiceSupportClient(hass, HOST, PORT)
+
+    info = await client.async_update_info()
+
+    assert info.wake_words == {"okay_nabu": None}
