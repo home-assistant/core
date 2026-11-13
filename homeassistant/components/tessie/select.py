@@ -13,7 +13,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import TessieConfigEntry
 from .const import TessieSeatCoolerOptions, TessieSeatHeaterOptions
 from .entity import TessieEnergyEntity, TessieEntity
-from .helpers import handle_command, handle_fleet_command
+from .helpers import handle_command, handle_fleet_command, handle_tessie_command
 from .models import TessieEnergyData, TessieVehicleData
 
 SEAT_HEATERS = {
@@ -156,14 +156,14 @@ class TessieSteeringWheelHeaterSelectEntity(TessieEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         level = STEERING_WHEEL_HEAT_LEVELS[option]
+        name = getattr(self, "name", self.entity_id)
         # The vehicle rejects steering wheel heat while climate is off
         if level and not self.get("climate_state_is_climate_on"):
-            await self.run(self.api.start_climate())
+            await handle_tessie_command(self.api.start_climate(), name=name)
             self.set(("climate_state_is_climate_on", True))
         # Tessie has no level endpoint, so this goes through its Fleet API proxy
         await handle_fleet_command(
-            self.api.remote_steering_wheel_heat_level_request(level),
-            name=getattr(self, "name", self.entity_id),
+            self.api.remote_steering_wheel_heat_level_request(level), name=name
         )
         self.set((self.key, level))
 

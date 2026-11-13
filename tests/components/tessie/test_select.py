@@ -312,6 +312,33 @@ async def test_steering_wheel_heater_rejected(
     assert entity_state.state == TessieSeatHeaterOptions.OFF
 
 
+async def test_steering_wheel_heater_climate_rejected(
+    hass: HomeAssistant,
+    mock_request: AsyncMock,
+) -> None:
+    """Test the steering wheel heat level is not sent when climate fails to start."""
+    await setup_platform(hass, [Platform.SELECT])
+    mock_request.reset_mock()
+    mock_request.return_value = {"result": False, "reason": "vehicle_offline"}
+
+    with pytest.raises(HomeAssistantError) as error:
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: STEERING_WHEEL_ENTITY_ID,
+                SelectServiceArgument.OPTION: TessieSeatHeaterOptions.LOW,
+            },
+            blocking=True,
+        )
+
+    assert error.value.translation_domain == "tessie"
+    assert error.value.translation_key == "command_failed"
+    assert mock_request.call_args_list == [START_CLIMATE]
+    assert (entity_state := hass.states.get(STEERING_WHEEL_ENTITY_ID))
+    assert entity_state.state == TessieSeatHeaterOptions.OFF
+
+
 async def test_steering_wheel_heater_already_set(
     hass: HomeAssistant,
     mock_get_state_of_all_vehicles: AsyncMock,
