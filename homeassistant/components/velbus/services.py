@@ -13,10 +13,10 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, selector, service
 from homeassistant.helpers.storage import STORAGE_DIR
 
+from .const import DOMAIN
+
 if TYPE_CHECKING:
     from . import VelbusConfigEntry
-
-from .const import DOMAIN
 
 
 class VelbusService(StrEnum):

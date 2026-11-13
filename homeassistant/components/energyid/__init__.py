@@ -160,8 +160,13 @@ async def config_entry_update_listener(
     hass: HomeAssistant, entry: EnergyIDConfigEntry
 ) -> None:
     """Handle config entry updates, including subentry changes."""
-    if entry.runtime_data.directive_coordinator.directives_enabled != (
-        async_directives_enabled(entry)
+    runtime_data = entry.runtime_data
+    if (
+        runtime_data.directive_coordinator.directives_enabled
+        != async_directives_enabled(entry)
+        or runtime_data.client.provisioning_key != entry.data[CONF_PROVISIONING_KEY]
+        or runtime_data.client.provisioning_secret
+        != entry.data[CONF_PROVISIONING_SECRET]
     ):
         await hass.config_entries.async_reload(entry.entry_id)
         return

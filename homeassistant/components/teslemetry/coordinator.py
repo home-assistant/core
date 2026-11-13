@@ -36,11 +36,11 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-if TYPE_CHECKING:
-    from .models import TeslemetryConfigEntry
-
 from .const import DOMAIN, LOGGER
 from .helpers import async_update_device_sw_version, flatten, gateway_issue_id
+
+if TYPE_CHECKING:
+    from .models import TeslemetryConfigEntry
 
 RETRY_EXCEPTIONS = (
     InvalidResponse,

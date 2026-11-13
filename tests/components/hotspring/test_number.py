@@ -8,11 +8,11 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -62,10 +62,10 @@ async def test_set_target_temperature(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_VALUE: 38,
+            CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+            NumberServiceArgument.VALUE: 38,
         },
         blocking=True,
     )
@@ -99,10 +99,10 @@ async def test_set_target_temperature_error(
     with pytest.raises(HomeAssistantError, match=match):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_VALUE: 38,
+                CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+                NumberServiceArgument.VALUE: 38,
             },
             blocking=True,
         )
@@ -130,10 +130,10 @@ async def test_set_target_temperature_celsius(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_VALUE: 37.5,
+            CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+            NumberServiceArgument.VALUE: 37.5,
         },
         blocking=True,
     )
@@ -170,10 +170,10 @@ async def test_set_salt_output_level(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: SALT_OUTPUT_LEVEL_ENTITY_ID,
-            ATTR_VALUE: value,
+            CommonServiceArgument.ENTITY_ID: SALT_OUTPUT_LEVEL_ENTITY_ID,
+            NumberServiceArgument.VALUE: value,
         },
         blocking=True,
     )
@@ -207,10 +207,10 @@ async def test_set_salt_output_level_error(
     with pytest.raises(HomeAssistantError, match=match):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: SALT_OUTPUT_LEVEL_ENTITY_ID,
-                ATTR_VALUE: 3.0,
+                CommonServiceArgument.ENTITY_ID: SALT_OUTPUT_LEVEL_ENTITY_ID,
+                NumberServiceArgument.VALUE: 3.0,
             },
             blocking=True,
         )

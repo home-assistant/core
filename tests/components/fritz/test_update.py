@@ -7,6 +7,7 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fritz.const import DOMAIN
+from homeassistant.components.update import ATTR_LATEST_VERSION
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -104,3 +105,45 @@ async def test_available_update_can_be_installed(
             blocking=True,
         )
         mocked_update_call.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("latest_version", "expected_version"),
+    [
+        pytest.param("256.07.50", "7.50", id="leading_zero"),
+        pytest.param("256.10.01", "10.01", id="no_leading_zero"),
+        pytest.param("256.08.03-123456", "8.03-123456", id="labor_build"),
+        pytest.param("8.50", "8.50", id="already_normalized"),
+        pytest.param(None, "7.29", id="not_matching"),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "fh_class_mock")
+async def test_update_available_version_normalized(
+    hass: HomeAssistant,
+    fc_class_mock,
+    latest_version: str,
+    expected_version: str,
+) -> None:
+    """Test the latest version reported by the FRITZ!Box is normalized."""
+
+    fc_class_mock().override_services(
+        {
+            **MOCK_FB_SERVICES,
+            "UserInterface1": {
+                "GetInfo": {
+                    "NewX_AVM-DE_Version": latest_version,
+                    "NewX_AVM-DE_InfoURL": MOCK_FIRMWARE_RELEASE_URL,
+                },
+            },
+        }
+    )
+
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.fritz.PLATFORMS", [Platform.UPDATE]):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert (state := hass.states.get("update.mock_title_fritz_os"))
+    assert state.attributes[ATTR_LATEST_VERSION] == expected_version

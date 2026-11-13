@@ -7,11 +7,11 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.foscam.const import DOMAIN
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -51,10 +51,10 @@ async def test_setting_number(hass: HomeAssistant) -> None:
 
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: "number.mock_title_device_volume",
-                ATTR_VALUE: 42,
+                CommonServiceArgument.ENTITY_ID: "number.mock_title_device_volume",
+                NumberServiceArgument.VALUE: 42,
             },
             blocking=True,
         )
