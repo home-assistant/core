@@ -192,7 +192,7 @@ def build_snapshot(hass: HomeAssistant, entity_ids: list[str]) -> dict[str, Any]
         record = grouped.setdefault(
             device.id if device else state.entity_id,
             {
-                "name": (device.name_by_user or device.name) if device else state.name,
+                "name": (device and (device.name_by_user or device.name)) or state.name,
                 "zone": area_names.get(area_id or "", "Unzoned"),
                 "domains": [],
                 "available": True,

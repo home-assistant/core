@@ -159,6 +159,26 @@ async def test_snapshot_sends_only_picked_entities(hass: HomeAssistant) -> None:
     assert names == ["picked"]
 
 
+async def test_snapshot_names_a_nameless_device_after_its_entity(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test an entity on a device with no name is sent with the entity's name."""
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id, identifiers={("test", "1")}
+    )
+    device_registry.async_update_device(device.id, name=None)
+    entity_registry.async_get_or_create(
+        "light", "test", "lamp", device_id=device.id, suggested_object_id="lamp"
+    )
+    hass.states.async_set("light.lamp", "on", {"friendly_name": "Desk lamp"})
+
+    assert build_snapshot(hass, ["light.lamp"])["devices"][0]["name"] == "Desk lamp"
+
+
 @pytest.fixture
 def home_entry(mock_config_entry: MockConfigEntry) -> MockConfigEntry:
     """Config entry that shows one lamp on TRMNL."""
