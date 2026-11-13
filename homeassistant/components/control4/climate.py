@@ -90,7 +90,7 @@ async def async_setup_entry(
                 for parent_item in items_of_category:
                     if parent_item["id"] == item_parent_id:
                         item_manufacturer = parent_item.get("manufacturer")
-                        item_device_name = parent_item.get("name")
+                        item_device_name = parent_item.get("roomName")
                         item_model = parent_item.get("model")
             else:
                 continue
