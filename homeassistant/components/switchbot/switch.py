@@ -3,25 +3,32 @@
 import abc
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from datetime import timedelta
 import logging
 from typing import Any, override
 
 import switchbot
+from switchbot import SwitchbotModel
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.const import STATE_ON
+from homeassistant.const import STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import AIRPURIFIER_BASIC_MODELS, AIRPURIFIER_TABLE_MODELS, DOMAIN
 from .coordinator import SwitchbotConfigEntry, SwitchbotDataUpdateCoordinator
-from .entity import SwitchbotSwitchedEntity, exception_handler
+from .entity import (
+    SwitchbotConnectionPolledEntity,
+    SwitchbotSwitchedEntity,
+    exception_handler,
+)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -68,6 +75,8 @@ CIRCULATOR_FAN_PRO_SWITCHES: tuple[SwitchbotSwitchEntityDescription, ...] = (
 )
 
 PARALLEL_UPDATES = 0
+# Only connection-polled entities poll; all others are push updated.
+SCAN_INTERVAL = timedelta(days=7)
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -111,6 +120,8 @@ async def async_setup_entry(
             SwitchbotGenericSwitch(coordinator, desc)
             for desc in CIRCULATOR_FAN_PRO_SWITCHES
         )
+    elif coordinator.model is SwitchbotModel.LOCK_ULTRA:
+        async_add_entities([SwitchBotLockQuickKeySwitch(coordinator)])
     else:
         async_add_entities([SwitchBotSwitch(coordinator)])
 
@@ -336,3 +347,43 @@ class SwitchbotFanVerticalOscillationSwitch(SwitchbotFanOscillationSwitch):
         """Disable vertical oscillation."""
         await self._device.set_vertical_oscillation(False)
         self.async_write_ha_state()
+
+
+class SwitchBotLockQuickKeySwitch(SwitchbotConnectionPolledEntity, SwitchEntity):
+    """Switch entity to enable or disable the Lock Ultra Quick Key."""
+
+    _device: switchbot.SwitchbotLockUltra
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_translation_key = "quick_key"
+
+    def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
+        """Initialize the switch entity."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.base_unique_id}_quick_key"
+
+    @exception_handler
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Enable the Quick Key."""
+        await self._async_set_enabled(True)
+
+    @exception_handler
+    @override
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Disable the Quick Key."""
+        await self._async_set_enabled(False)
+
+    async def _async_set_enabled(self, enabled: bool) -> None:
+        """Write the Quick Key enable bit."""
+        if not await self._device.set_quick_key(enabled=enabled):
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="quick_key_not_applied"
+            )
+        self._attr_is_on = enabled
+        self.async_write_ha_state()
+
+    @override
+    async def _async_read_value(self) -> None:
+        """Fetch the Quick Key enable bit from the lock."""
+        if (settings := await self._device.get_quick_key()) is not None:
+            self._attr_is_on = settings["enabled"]

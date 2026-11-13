@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from datetime import timedelta
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from bleak_retry_connector import BleakConnectionError
@@ -11,7 +12,7 @@ from pytest_homeassistant.components.bluetooth import (
     inject_bluetooth_service_info,
     inject_bluetooth_service_info_bleak,
 )
-from switchbot import NightLightState
+from switchbot import NightLightState, QuickKeyFunction
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.select import (
@@ -25,14 +26,18 @@ from homeassistant.const import (
     CommonServiceArgument,
 )
 from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from . import (
     DOMAIN,
+    LOCK_ULTRA_QUICK_KEY_SETTINGS,
+    LOCK_ULTRA_SERVICE_INFO,
     STANDING_FAN_SERVICE_INFO,
     WOMETERTHPC_SERVICE_INFO,
     WOMETERTHPC_SERVICE_INFO_NOT_CONNECTABLE,
+    patch_lock_ultra_quick_key,
 )
 
 TIME_FORMAT_ENTITY_ID = "select.test_name_time_format"
@@ -330,3 +335,195 @@ async def test_standing_fan_night_light_select(
         )
 
         mocked_set.assert_awaited_once_with(expected_state)
+
+
+QUICK_KEY_FUNCTION_ENTITY_ID = "select.test_name_quick_key_function"
+QUICK_KEY_TRIGGER_ENTITY_ID = "select.test_name_quick_key_trigger"
+
+
+@pytest.mark.parametrize(
+    ("settings", "function_state", "trigger_state"),
+    [
+        pytest.param(
+            LOCK_ULTRA_QUICK_KEY_SETTINGS,
+            "lock_and_unlock",
+            "single_press",
+            id="toggle",
+        ),
+        pytest.param(
+            LOCK_ULTRA_QUICK_KEY_SETTINGS
+            | {"function": QuickKeyFunction.UNLOCK_ONLY, "double_press": True},
+            "unlock_only",
+            "double_press",
+            id="unlock_only_double_press",
+        ),
+        pytest.param(
+            LOCK_ULTRA_QUICK_KEY_SETTINGS | {"function": None},
+            STATE_UNKNOWN,
+            "single_press",
+            id="undefined_function",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_quick_key_selects_initial_state(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+    settings: dict[str, Any],
+    function_state: str,
+    trigger_state: str,
+) -> None:
+    """Test the Quick Key selects show what the lock reports."""
+    inject_bluetooth_service_info(hass, LOCK_ULTRA_SERVICE_INFO)
+    entry = mock_entry_encrypted_factory("lock_ultra")
+    entry.add_to_hass(hass)
+
+    patcher, _ = patch_lock_ultra_quick_key(settings)
+    with patcher:
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(QUICK_KEY_FUNCTION_ENTITY_ID).state == function_state
+    assert hass.states.get(QUICK_KEY_TRIGGER_ENTITY_ID).state == trigger_state
+
+
+async def test_quick_key_selects_disabled_by_default(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+) -> None:
+    """Test the Quick Key entities do not connect to the lock while disabled."""
+    inject_bluetooth_service_info(hass, LOCK_ULTRA_SERVICE_INFO)
+    entry = mock_entry_encrypted_factory("lock_ultra")
+    entry.add_to_hass(hass)
+
+    mock_get_quick_key = AsyncMock(return_value=LOCK_ULTRA_QUICK_KEY_SETTINGS)
+    with patch.multiple(
+        "switchbot.SwitchbotLockUltra",
+        update=AsyncMock(return_value=None),
+        get_quick_key=mock_get_quick_key,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_get_quick_key.assert_not_awaited()
+    assert hass.states.get(QUICK_KEY_FUNCTION_ENTITY_ID) is None
+    assert hass.states.get(QUICK_KEY_TRIGGER_ENTITY_ID) is None
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "option", "expected_kwargs"),
+    [
+        pytest.param(
+            QUICK_KEY_FUNCTION_ENTITY_ID,
+            "unlock_only",
+            {"function": QuickKeyFunction.UNLOCK_ONLY},
+            id="function",
+        ),
+        pytest.param(
+            QUICK_KEY_TRIGGER_ENTITY_ID,
+            "double_press",
+            {"double_press": True},
+            id="trigger",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_quick_key_select_option(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+    entity_id: str,
+    option: str,
+    expected_kwargs: dict[str, Any],
+) -> None:
+    """Test selecting a Quick Key option writes only that setting."""
+    inject_bluetooth_service_info(hass, LOCK_ULTRA_SERVICE_INFO)
+    entry = mock_entry_encrypted_factory("lock_ultra")
+    entry.add_to_hass(hass)
+
+    patcher, mock_set_quick_key = patch_lock_ultra_quick_key(
+        LOCK_ULTRA_QUICK_KEY_SETTINGS
+    )
+    with patcher:
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: entity_id,
+                SelectServiceArgument.OPTION: option,
+            },
+            blocking=True,
+        )
+
+    mock_set_quick_key.assert_awaited_once_with(**expected_kwargs)
+    assert hass.states.get(entity_id).state == option
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "option", "initial_state"),
+    [
+        pytest.param(
+            QUICK_KEY_FUNCTION_ENTITY_ID, "lock_only", "lock_and_unlock", id="function"
+        ),
+        pytest.param(
+            QUICK_KEY_TRIGGER_ENTITY_ID, "double_press", "single_press", id="trigger"
+        ),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_quick_key_select_option_not_applied(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+    entity_id: str,
+    option: str,
+    initial_state: str,
+) -> None:
+    """Test a write the lock does not confirm raises and keeps the old state."""
+    inject_bluetooth_service_info(hass, LOCK_ULTRA_SERVICE_INFO)
+    entry = mock_entry_encrypted_factory("lock_ultra")
+    entry.add_to_hass(hass)
+
+    patcher, _ = patch_lock_ultra_quick_key(
+        LOCK_ULTRA_QUICK_KEY_SETTINGS, write_result=False
+    )
+    with patcher:
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        with pytest.raises(HomeAssistantError) as exc_info:
+            await hass.services.async_call(
+                SELECT_DOMAIN,
+                SelectService.SELECT_OPTION,
+                {
+                    CommonServiceArgument.ENTITY_ID: entity_id,
+                    SelectServiceArgument.OPTION: option,
+                },
+                blocking=True,
+            )
+
+    assert exc_info.value.translation_key == "quick_key_not_applied"
+    assert hass.states.get(entity_id).state == initial_state
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_quick_key_selects_unknown_without_answer(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+) -> None:
+    """Test the Quick Key selects stay unknown when the lock rejects the read."""
+    inject_bluetooth_service_info(hass, LOCK_ULTRA_SERVICE_INFO)
+    entry = mock_entry_encrypted_factory("lock_ultra")
+    entry.add_to_hass(hass)
+
+    with patch.multiple(
+        "switchbot.SwitchbotLockUltra",
+        update=AsyncMock(return_value=None),
+        get_quick_key=AsyncMock(return_value=None),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(QUICK_KEY_FUNCTION_ENTITY_ID).state == STATE_UNKNOWN
+    assert hass.states.get(QUICK_KEY_TRIGGER_ENTITY_ID).state == STATE_UNKNOWN
