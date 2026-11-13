@@ -13,6 +13,7 @@ from aiofarmad import (
     FarmadCommunicationError,
     FarmadError,
     FarmadMissingPriceError,
+    FarmadPriceLookupError,
 )
 import probatio
 
@@ -229,6 +230,9 @@ async def _async_place_order(
             basket_id = await data.client.async_submit_basket(
                 apb, draft_id, products=products, comment=comment
             )
+        except FarmadPriceLookupError:
+            await _async_clear_draft(data, apb)
+            raise
         except FarmadCommunicationError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
