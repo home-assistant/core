@@ -131,6 +131,17 @@ EVENT_TELEGRAM_TEXT = "telegram_text"
 EVENT_TELEGRAM_ATTACHMENT = "telegram_attachment"
 EVENT_TELEGRAM_SENT = "telegram_sent"
 
+
+class TelegramBotEvent(StrEnum):
+    """Event types fired by the Telegram bot."""
+
+    CALLBACK = "telegram_callback"
+    COMMAND = "telegram_command"
+    TEXT = "telegram_text"
+    ATTACHMENT = "telegram_attachment"
+    SENT = "telegram_sent"
+
+
 PARSER_HTML = "html"
 PARSER_MD = "markdown"
 PARSER_MD2 = "markdownv2"
