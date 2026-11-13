@@ -3,6 +3,7 @@
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
+from homeassistant.components.edl21 import config_flow
 from homeassistant.components.edl21.const import (
     CONF_LIMIT_INTERVAL,
     CONF_SERIAL_PORT,
@@ -174,3 +175,94 @@ async def test_options_flow_defaults_to_data_value(hass: HomeAssistant) -> None:
     assert marker.description == {"suggested_value": True}
     marker = next(m for m in result["data_schema"].schema if m == CONF_UPDATE_INTERVAL)
     assert marker.description == {"suggested_value": 10}
+
+
+async def test_options_flow_backend_guard_shows_errors(hass: HomeAssistant) -> None:
+    """Test the backend guard when an API client bypasses the form schema."""
+    entry = MockConfigEntry(domain=DOMAIN, data=VALID_CONFIG)
+    entry.add_to_hass(hass)
+
+    flow = config_flow.EDL21ConfigFlow.async_get_options_flow(entry)
+    flow.hass = hass
+    flow.handler = entry.entry_id
+
+    result = await flow.async_step_init(
+        user_input={CONF_LIMIT_INTERVAL: True, CONF_UPDATE_INTERVAL: "abc"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_UPDATE_INTERVAL: "invalid_update_interval"}
+    schema = result["data_schema"]
+    marker = next(m for m in schema.schema if m == CONF_LIMIT_INTERVAL)
+    assert marker.description == {"suggested_value": True}
+    marker = next(m for m in schema.schema if m == CONF_UPDATE_INTERVAL)
+    assert marker.description == {"suggested_value": "abc"}
+
+    result = await flow.async_step_init(
+        user_input={CONF_LIMIT_INTERVAL: True, CONF_UPDATE_INTERVAL: 30}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_UPDATE_INTERVAL: 30}
+
+
+async def test_options_flow_backend_guard_rejects_zero(hass: HomeAssistant) -> None:
+    """Test that 0 stays invalid when the limit checkbox is on."""
+    entry = MockConfigEntry(domain=DOMAIN, data=VALID_CONFIG)
+    entry.add_to_hass(hass)
+
+    flow = config_flow.EDL21ConfigFlow.async_get_options_flow(entry)
+    flow.hass = hass
+    flow.handler = entry.entry_id
+
+    result = await flow.async_step_init(
+        user_input={CONF_LIMIT_INTERVAL: True, CONF_UPDATE_INTERVAL: 0}
+    )
+
+    assert result["errors"] == {CONF_UPDATE_INTERVAL: "invalid_update_interval"}
+    assert entry.options == {}
+
+    result = await flow.async_step_init(
+        user_input={CONF_LIMIT_INTERVAL: True, CONF_UPDATE_INTERVAL: 30}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_UPDATE_INTERVAL: 30}
+
+
+async def test_config_flow_backend_guard_shows_errors(hass: HomeAssistant) -> None:
+    """Test the config flow guard when an API client bypasses the form schema."""
+    flow = config_flow.EDL21ConfigFlow()
+    flow.hass = hass
+    flow.context = {"source": SOURCE_USER}
+
+    result = await flow.async_step_user(
+        user_input={
+            CONF_SERIAL_PORT: "/dev/ttyUSB1",
+            CONF_LIMIT_INTERVAL: True,
+            CONF_UPDATE_INTERVAL: 5000,
+        }
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {CONF_UPDATE_INTERVAL: "invalid_update_interval"}
+    schema = result["data_schema"]
+    marker = next(m for m in schema.schema if m == CONF_SERIAL_PORT)
+    assert marker.description == {"suggested_value": "/dev/ttyUSB1"}
+    marker = next(m for m in schema.schema if m == CONF_UPDATE_INTERVAL)
+    assert marker.description == {"suggested_value": 5000}
+
+    result = await flow.async_step_user(
+        user_input={
+            CONF_SERIAL_PORT: "/dev/ttyUSB1",
+            CONF_LIMIT_INTERVAL: True,
+            CONF_UPDATE_INTERVAL: 10,
+        }
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_SERIAL_PORT: "/dev/ttyUSB1",
+        CONF_UPDATE_INTERVAL: 10,
+    }
