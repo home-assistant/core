@@ -1993,6 +1993,7 @@ NO_QUALITY_SCALE = [
     "trace",
     "usage_prediction",
     "vibration",
+    "voice_support",
     "web_rtc",
     "webhook",
     "websocket_api",
