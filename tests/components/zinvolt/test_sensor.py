@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
+import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
     async_load_fixture,
@@ -11,7 +12,7 @@ from syrupy.assertion import SnapshotAssertion
 from zinvolt.models import BatteryState
 
 from homeassistant.components.zinvolt.const import DOMAIN
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -45,3 +46,33 @@ async def test_offline_battery_sensors_unknown(
 
     assert hass.states.get("sensor.zinvolt_batterij_battery").state == STATE_UNAVAILABLE
     assert hass.states.get("sensor.zinvolt_batterij_power").state == STATE_UNAVAILABLE
+
+    pv_state = hass.states.get("sensor.zinvolt_batterij_photovoltaic_power")
+    assert pv_state is not None
+    assert pv_state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    ("pv_power", "expected_state"),
+    [
+        pytest.param(325, "325", id="producing"),
+        pytest.param(0, "0", id="zero"),
+        pytest.param(None, STATE_UNKNOWN, id="missing"),
+    ],
+)
+async def test_photovoltaic_power(
+    hass: HomeAssistant,
+    mock_zinvolt_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    pv_power: int | None,
+    expected_state: str,
+) -> None:
+    """Test photovoltaic power readings, including missing telemetry."""
+    mock_zinvolt_client.get_battery_status.return_value.current_power.photovoltaic_power = pv_power
+
+    with patch("homeassistant.components.zinvolt._PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("sensor.zinvolt_batterij_photovoltaic_power")
+    assert state is not None
+    assert state.state == expected_state

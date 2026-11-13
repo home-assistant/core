@@ -46,6 +46,14 @@ SENSORS: tuple[ZinvoltBatteryStateDescription, ...] = (
             )
         ),
     ),
+    ZinvoltBatteryStateDescription(
+        key="photovoltaic_power",
+        translation_key="photovoltaic_power",
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        value_fn=lambda state: state.battery.current_power.photovoltaic_power,
+    ),
 )
 
 
