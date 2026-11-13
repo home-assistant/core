@@ -227,6 +227,27 @@ def _with_info(data: dict[str, Any], **changes: Any) -> dict[str, Any]:
     return {**data, "info": {**data["info"], **changes}}
 
 
+async def test_set_project_two_level(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    current_project_data: dict[str, Any],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Group addresses written in the style of the project are taken."""
+    # loading sets the address format of xknx for the whole process
+    monkeypatch.setattr(GroupAddress, "address_format", GroupAddress.address_format)
+    await knx.setup_integration()
+    group_address = current_project_data["group_addresses"]["0/0/1"]
+    new_data = {
+        **_with_info(current_project_data, group_address_style="TwoLevel"),
+        "group_addresses": {"0/1": {**group_address, "address": "0/1"}},
+    }
+
+    await async_set_project(hass, new_data)
+
+    assert set(hass.data[KNX_MODULE_KEY].project.group_addresses) == {"0/1"}
+
+
 @pytest.mark.parametrize(
     ("change", "translation_key"),
     [
@@ -241,6 +262,15 @@ def _with_info(data: dict[str, Any], **changes: Any) -> dict[str, Any]:
             "project_data_invalid",
         ),
         (lambda data: _with_group_address(data, address="x/y"), "project_data_invalid"),
+        (
+            # xknx shows the addresses of a two level project as "0/1"
+            lambda data: _with_info(data, group_address_style="TwoLevel"),
+            "project_data_invalid",
+        ),
+        (
+            lambda data: _with_info(data, group_address_style="Free"),
+            "project_data_invalid",
+        ),
         (
             # the address is read from the field, but links refer to the key
             lambda data: _with_group_address(data, address="0/0/2"),

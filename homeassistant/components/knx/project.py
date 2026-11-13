@@ -66,6 +66,32 @@ PROJECT_DATA_SCHEMA: Final = probatio.TypedDictSchema(
 )
 
 
+def _address_in_style(raw: int, style: str) -> str:
+    """Return a group address as xknx shows it in a project of `style`."""
+    if style == XknxProjectGroupAddressStyle.FREE.value:
+        return str(raw)
+    main = (raw >> 11) & GroupAddress.MAX_MAIN
+    if style == XknxProjectGroupAddressStyle.TWOLEVEL.value:
+        return f"{main}/{raw & GroupAddress.MAX_SUB_SHORT}"
+    middle = (raw >> 8) & GroupAddress.MAX_MIDDLE
+    return f"{main}/{middle}/{raw & GroupAddress.MAX_SUB_LONG}"
+
+
+def _check_address_style(project: KNXProjectModel) -> None:
+    """Validate that the group addresses are written in the project's style.
+
+    The integration looks addresses up as xknx shows them in that style.
+    """
+    style = project["info"]["group_address_style"]
+    for key, group_address in project["group_addresses"].items():
+        address = group_address["address"]
+        if _address_in_style(GroupAddress(address).raw, style) != address:
+            raise probatio.Invalid(
+                f"group address `{address}` is not written in the {style} style "
+                f"at 'group_addresses['{key}'].address'"
+            )
+
+
 def _check_parser_version(project: Any) -> None:
     """Refuse data of a major version of xknxproject other than the installed one.
 
@@ -100,13 +126,15 @@ def validate_project_data(project: Any) -> KNXProjectModel:
     """
     _check_parser_version(project)
     try:
-        return PROJECT_DATA_SCHEMA(project)
+        data = PROJECT_DATA_SCHEMA(project)
+        _check_address_style(data)
     except probatio.Invalid as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="project_data_invalid",
             translation_placeholders={"error": str(err)},
         ) from err
+    return data
 
 
 async def async_set_project(hass: HomeAssistant, project: Mapping[str, Any]) -> None:
