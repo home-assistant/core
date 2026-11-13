@@ -13,10 +13,11 @@ from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 from voip_utils import CallInfo
 
-from homeassistant.components import assist_pipeline, assist_satellite, tts, voip
+from homeassistant.components import assist_pipeline, assist_satellite, voip
 
 # pylint: disable-next=home-assistant-component-root-import
 from homeassistant.components.assist_satellite.entity import AssistSatelliteState
+from homeassistant.components.tts import TextToSpeechCommonOption
 from homeassistant.components.voip import DOMAIN, HassVoipDatagramProtocol
 from homeassistant.components.voip.assist_satellite import Tones, VoipAssistSatellite
 from homeassistant.components.voip.devices import VoIPDevice, VoIPDevices
@@ -202,10 +203,10 @@ async def test_pipeline(
 
         # voip can only stream WAV
         assert tts_audio_output == {
-            tts.ATTR_PREFERRED_FORMAT: "wav",
-            tts.ATTR_PREFERRED_SAMPLE_RATE: 16000,
-            tts.ATTR_PREFERRED_SAMPLE_CHANNELS: 1,
-            tts.ATTR_PREFERRED_SAMPLE_BYTES: 2,
+            TextToSpeechCommonOption.PREFERRED_FORMAT: "wav",
+            TextToSpeechCommonOption.PREFERRED_SAMPLE_RATE: 16000,
+            TextToSpeechCommonOption.PREFERRED_SAMPLE_CHANNELS: 1,
+            TextToSpeechCommonOption.PREFERRED_SAMPLE_BYTES: 2,
         }
 
         stt_stream = kwargs["stt_stream"]

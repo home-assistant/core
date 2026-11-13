@@ -1,209 +1,74 @@
-"""Test fitbit component."""
+"""Tests for the Fitbit integration."""
 
-from collections.abc import Awaitable, Callable
-from http import HTTPStatus
-from unittest.mock import patch
-
-import pytest
 from pytest_homeassistant.common import MockConfigEntry
-from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
-from homeassistant.components.fitbit.const import (
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
-    OAUTH2_TOKEN,
+from homeassistant.components.fitbit import DOMAIN
+from homeassistant.config_entries import (
+    SOURCE_IGNORE,
+    ConfigEntryDisabler,
+    ConfigEntryState,
 )
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.config_entry_oauth2_flow import (
-    ImplementationUnavailableError,
-)
-
-from .conftest import (
-    CLIENT_ID,
-    CLIENT_SECRET,
-    DEVICES_API_URL,
-    FAKE_ACCESS_TOKEN,
-    FAKE_REFRESH_TOKEN,
-    SERVER_ACCESS_TOKEN,
-)
+from homeassistant.helpers import issue_registry as ir
 
 
-async def test_oauth_implementation_not_available(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
+async def test_fitbit_repair_issue(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
-    """Test that unavailable OAuth implementation raises ConfigEntryNotReady."""
-    config_entry.add_to_hass(hass)
+    """Test the Fitbit config entry loading/unloading handles repair."""
+    config_entry_1 = MockConfigEntry(
+        title="Example 1",
+        domain=DOMAIN,
+    )
+    config_entry_1.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry_1.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry_1.state is ConfigEntryState.LOADED
 
-    with patch(
-        "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
-        side_effect=ImplementationUnavailableError,
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_setup(
-    hass: HomeAssistant,
-    integration_setup: Callable[[], Awaitable[bool]],
-    config_entry: MockConfigEntry,
-    setup_credentials: None,
-) -> None:
-    """Test setting up the integration."""
-    assert config_entry.state is ConfigEntryState.NOT_LOADED
-
-    assert await integration_setup()
-    assert config_entry.state is ConfigEntryState.LOADED
-
-    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    config_entry_2 = MockConfigEntry(
+        title="Example 2",
+        domain=DOMAIN,
+    )
+    config_entry_2.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry_2.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state is ConfigEntryState.NOT_LOADED
+    assert config_entry_2.state is ConfigEntryState.LOADED
+    issue = issue_registry.async_get_issue(DOMAIN, DOMAIN)
+    assert issue is not None
+    assert issue.severity is ir.IssueSeverity.ERROR
+    assert issue.translation_key == "integration_removed"
 
-
-@pytest.mark.parametrize(
-    ("token_expiration_time", "server_status"),
-    [
-        (12345, HTTPStatus.INTERNAL_SERVER_ERROR),
-        (12345, HTTPStatus.FORBIDDEN),
-        (12345, HTTPStatus.NOT_FOUND),
-    ],
-)
-async def test_token_refresh_failure(
-    integration_setup: Callable[[], Awaitable[bool]],
-    config_entry: MockConfigEntry,
-    aioclient_mock: AiohttpClientMocker,
-    setup_credentials: None,
-    server_status: HTTPStatus,
-) -> None:
-    """Test where token is expired and the refresh attempt fails and will be retried."""
-
-    aioclient_mock.post(
-        OAUTH2_TOKEN,
-        status=server_status,
+    config_entry_3 = MockConfigEntry(
+        source=SOURCE_IGNORE,
+        domain=DOMAIN,
     )
+    config_entry_3.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry_3.entry_id)
+    await hass.async_block_till_done()
 
-    assert not await integration_setup()
-    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert config_entry_3.state is ConfigEntryState.NOT_LOADED
 
-
-@pytest.mark.parametrize("token_expiration_time", [12345])
-async def test_token_refresh_success(
-    integration_setup: Callable[[], Awaitable[bool]],
-    config_entry: MockConfigEntry,
-    aioclient_mock: AiohttpClientMocker,
-    setup_credentials: None,
-) -> None:
-    """Test where token is expired and the refresh attempt succeeds."""
-
-    assert config_entry.data["token"]["access_token"] == FAKE_ACCESS_TOKEN
-
-    aioclient_mock.post(
-        OAUTH2_TOKEN,
-        json=SERVER_ACCESS_TOKEN,
+    config_entry_4 = MockConfigEntry(
+        disabled_by=ConfigEntryDisabler.USER,
+        domain=DOMAIN,
     )
+    config_entry_4.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry_4.entry_id)
+    await hass.async_block_till_done()
 
-    assert await integration_setup()
-    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry_4.state is ConfigEntryState.NOT_LOADED
 
-    # Verify token request and that the device API is called with new token
-    assert len(aioclient_mock.mock_calls) == 2
-    assert aioclient_mock.mock_calls[0][2] == {
-        CONF_CLIENT_ID: CLIENT_ID,
-        CONF_CLIENT_SECRET: CLIENT_SECRET,
-        "grant_type": "refresh_token",
-        "refresh_token": FAKE_REFRESH_TOKEN,
-    }
-    assert str(aioclient_mock.mock_calls[1][1]) == DEVICES_API_URL
-    assert aioclient_mock.mock_calls[1][3].get("Authorization") == (
-        "Bearer server-access-token"
-    )
+    await hass.config_entries.async_remove(config_entry_1.entry_id)
+    await hass.async_block_till_done()
 
-    # Verify updated token
-    assert (
-        config_entry.data["token"]["access_token"]
-        == SERVER_ACCESS_TOKEN["access_token"]
-    )
+    assert hass.config_entries.async_get_entry(config_entry_1.entry_id) is None
+    assert config_entry_2.state is ConfigEntryState.LOADED
+    assert issue_registry.async_get_issue(DOMAIN, DOMAIN) is not None
 
+    await hass.config_entries.async_remove(config_entry_2.entry_id)
+    await hass.async_block_till_done()
 
-@pytest.mark.parametrize(
-    ("token_expiration_time", "server_status"),
-    [
-        (12345, HTTPStatus.UNAUTHORIZED),
-        (12345, HTTPStatus.BAD_REQUEST),
-    ],
-)
-@pytest.mark.parametrize("closing", [True, False])
-async def test_token_requires_reauth(
-    hass: HomeAssistant,
-    integration_setup: Callable[[], Awaitable[bool]],
-    config_entry: MockConfigEntry,
-    aioclient_mock: AiohttpClientMocker,
-    setup_credentials: None,
-    server_status: HTTPStatus,
-    closing: bool,
-) -> None:
-    """Test where token is expired and the refresh attempt requires reauth."""
-
-    aioclient_mock.post(
-        OAUTH2_TOKEN,
-        status=server_status,
-        closing=closing,
-    )
-
-    assert not await integration_setup()
-    assert config_entry.state is ConfigEntryState.SETUP_ERROR
-
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    assert flows[0]["step_id"] == "reauth_confirm"
-
-
-async def test_device_update_coordinator_failure(
-    hass: HomeAssistant,
-    integration_setup: Callable[[], Awaitable[bool]],
-    config_entry: MockConfigEntry,
-    setup_credentials: None,
-    aioclient_mock: AiohttpClientMocker,
-) -> None:
-    """Test case where the device update coordinator fails on the first request."""
-    assert config_entry.state is ConfigEntryState.NOT_LOADED
-
-    aioclient_mock.clear_requests()
-    aioclient_mock.get(
-        DEVICES_API_URL,
-        status=HTTPStatus.INTERNAL_SERVER_ERROR,
-    )
-
-    assert not await integration_setup()
-    assert config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_device_update_coordinator_reauth(
-    hass: HomeAssistant,
-    integration_setup: Callable[[], Awaitable[bool]],
-    config_entry: MockConfigEntry,
-    setup_credentials: None,
-    aioclient_mock: AiohttpClientMocker,
-) -> None:
-    """Test case where the device update coordinator fails on the first request."""
-    assert config_entry.state is ConfigEntryState.NOT_LOADED
-
-    aioclient_mock.clear_requests()
-    aioclient_mock.get(
-        DEVICES_API_URL,
-        status=HTTPStatus.UNAUTHORIZED,
-        json={
-            "errors": [{"errorType": "invalid_grant"}],
-        },
-    )
-
-    assert not await integration_setup()
-    assert config_entry.state is ConfigEntryState.SETUP_ERROR
-
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    assert flows[0]["step_id"] == "reauth_confirm"
+    assert hass.config_entries.async_get_entry(config_entry_2.entry_id) is None
+    assert issue_registry.async_get_issue(DOMAIN, DOMAIN) is None
+    assert not hass.config_entries.async_entries(DOMAIN)

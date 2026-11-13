@@ -4,12 +4,10 @@ import datetime as dt
 
 import pytest
 
-from homeassistant.components.jewish_calendar.const import (
-    ATTR_AFTER_SUNSET,
-    ATTR_NUSACH,
-    DOMAIN,
+from homeassistant.components.jewish_calendar.const import DOMAIN
+from homeassistant.components.jewish_calendar.services import (
+    JewishCalendarServiceArgument,
 )
-from homeassistant.const import ATTR_DATE, CONF_LANGUAGE
 from homeassistant.core import HomeAssistant
 
 
@@ -19,10 +17,10 @@ from homeassistant.core import HomeAssistant
         pytest.param(
             dt.datetime(2025, 3, 20, 21, 0),
             {
-                ATTR_DATE: dt.date(2025, 3, 20),
-                ATTR_NUSACH: "sfarad",
-                CONF_LANGUAGE: "he",
-                ATTR_AFTER_SUNSET: False,
+                JewishCalendarServiceArgument.DATE: dt.date(2025, 3, 20),
+                JewishCalendarServiceArgument.NUSACH: "sfarad",
+                JewishCalendarServiceArgument.LANGUAGE: "he",
+                JewishCalendarServiceArgument.AFTER_SUNSET: False,
             },
             "",
             id="no_blessing",
@@ -30,10 +28,10 @@ from homeassistant.core import HomeAssistant
         pytest.param(
             dt.datetime(2025, 3, 20, 21, 0),
             {
-                ATTR_DATE: dt.date(2025, 5, 20),
-                ATTR_NUSACH: "ashkenaz",
-                CONF_LANGUAGE: "he",
-                ATTR_AFTER_SUNSET: False,
+                JewishCalendarServiceArgument.DATE: dt.date(2025, 5, 20),
+                JewishCalendarServiceArgument.NUSACH: "ashkenaz",
+                JewishCalendarServiceArgument.LANGUAGE: "he",
+                JewishCalendarServiceArgument.AFTER_SUNSET: False,
             },
             "היום שבעה ושלושים יום שהם חמישה שבועות ושני ימים בעומר",
             id="ahskenaz-hebrew",
@@ -41,10 +39,10 @@ from homeassistant.core import HomeAssistant
         pytest.param(
             dt.datetime(2025, 3, 20, 21, 0),
             {
-                ATTR_DATE: dt.date(2025, 5, 20),
-                ATTR_NUSACH: "sfarad",
-                CONF_LANGUAGE: "en",
-                ATTR_AFTER_SUNSET: True,
+                JewishCalendarServiceArgument.DATE: dt.date(2025, 5, 20),
+                JewishCalendarServiceArgument.NUSACH: "sfarad",
+                JewishCalendarServiceArgument.LANGUAGE: "en",
+                JewishCalendarServiceArgument.AFTER_SUNSET: True,
             },
             (
                 "Today is the thirty-eighth day, which are"
@@ -55,10 +53,10 @@ from homeassistant.core import HomeAssistant
         pytest.param(
             dt.datetime(2025, 3, 20, 21, 0),
             {
-                ATTR_DATE: dt.date(2025, 5, 20),
-                ATTR_NUSACH: "sfarad",
-                CONF_LANGUAGE: "en",
-                ATTR_AFTER_SUNSET: False,
+                JewishCalendarServiceArgument.DATE: dt.date(2025, 5, 20),
+                JewishCalendarServiceArgument.NUSACH: "sfarad",
+                JewishCalendarServiceArgument.LANGUAGE: "en",
+                JewishCalendarServiceArgument.AFTER_SUNSET: False,
             },
             (
                 "Today is the thirty-seventh day, which are"
@@ -68,7 +66,10 @@ from homeassistant.core import HomeAssistant
         ),
         pytest.param(
             dt.datetime(2025, 5, 20, 21, 0),
-            {ATTR_NUSACH: "sfarad", CONF_LANGUAGE: "en"},
+            {
+                JewishCalendarServiceArgument.NUSACH: "sfarad",
+                JewishCalendarServiceArgument.LANGUAGE: "en",
+            },
             (
                 "Today is the thirty-eighth day, which are"
                 " five weeks and three days of the Omer"
@@ -77,7 +78,7 @@ from homeassistant.core import HomeAssistant
         ),
         pytest.param(
             dt.datetime(2025, 5, 20, 6, 0),
-            {ATTR_NUSACH: "sfarad"},
+            {JewishCalendarServiceArgument.NUSACH: "sfarad"},
             "היום שבעה ושלושים יום שהם חמישה שבועות ושני ימים לעומר",
             id="sefarad-english-before-sunset-without-date",
         ),

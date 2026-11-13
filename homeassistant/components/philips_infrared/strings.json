@@ -1,0 +1,20 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "A Philips TV has already been configured with this infrared emitter.",
+      "no_infrared_emitters": "[%key:common::config_flow::abort::no_infrared_emitters%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "infrared_entity_id": "[%key:common::config_flow::data::infrared_entity_id%]"
+        },
+        "data_description": {
+          "infrared_entity_id": "[%key:common::config_flow::data_description::infrared_entity_id%]"
+        },
+        "description": "Select the infrared emitter to use with your Philips TV.",
+        "title": "Set up Philips TV"
+      }
+    }
+  }
+}

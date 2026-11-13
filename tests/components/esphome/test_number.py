@@ -13,11 +13,15 @@ from aioesphomeapi import (
 import pytest
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    STATE_UNKNOWN,
+    CommonServiceArgument,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -55,8 +59,11 @@ async def test_generic_number_entity(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: "number.test_my_number", ATTR_VALUE: 50},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: "number.test_my_number",
+            NumberServiceArgument.VALUE: 50,
+        },
         blocking=True,
     )
     mock_client.number_command.assert_has_calls([call(1, 50, device_id=0)])
@@ -157,8 +164,11 @@ async def test_generic_number_entity_set_when_disconnected(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: "number.test_my_number", ATTR_VALUE: 20},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: "number.test_my_number",
+                NumberServiceArgument.VALUE: 20,
+            },
             blocking=True,
         )
     mock_client.number_command.reset_mock()

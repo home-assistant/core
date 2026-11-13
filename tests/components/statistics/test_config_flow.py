@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
@@ -356,6 +357,7 @@ async def test_config_flow_preview_success(
 
     # add state for the tests
     hass.states.async_set("sensor.test_monitored", "16")
+    await async_wait_recording_done(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -412,6 +414,7 @@ async def test_options_flow_preview(
 
     # add state for the tests
     hass.states.async_set("sensor.test_monitored", "16")
+    await async_wait_recording_done(hass)
 
     # Setup the config entry
     config_entry = MockConfigEntry(

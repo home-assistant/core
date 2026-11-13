@@ -1,7 +1,7 @@
 """Tests for gree component."""
 
 from datetime import timedelta
-from unittest.mock import DEFAULT as DEFAULT_MOCK, AsyncMock, patch
+from unittest.mock import DEFAULT as DEFAULT_MOCK, AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from greeclimate.device import (
@@ -10,16 +10,21 @@ from greeclimate.device import (
     TEMP_MIN,
     TEMP_MIN_F,
     HorizontalSwing,
+    TemperatureUnits,
     VerticalSwing,
 )
 from greeclimate.exceptions import DeviceNotBoundError, DeviceTimeoutError
+from greeclimate.network import Response
 import pytest
 from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
+    ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
     ATTR_HVAC_MODE,
+    ATTR_MAX_TEMP,
+    ATTR_MIN_TEMP,
     ATTR_PRESET_MODE,
     ATTR_SWING_HORIZONTAL_MODE,
     ATTR_SWING_MODE,
@@ -39,6 +44,7 @@ from homeassistant.components.climate import (
     SERVICE_SET_SWING_HORIZONTAL_MODE,
     SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
+    ClimateEntityStateAttribute,
     HVACMode,
 )
 from homeassistant.components.gree.climate import (
@@ -266,20 +272,24 @@ async def test_update_connection_failure(
 
 
 async def test_update_connection_send_failure_recovery(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, discovery, device
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    device: MagicMock,
 ) -> None:
     """Testing update hvac connection failure recovery."""
-    device().update_state.side_effect = [
+    fake_device = device()
+    fake_device.update_state.side_effect = [
         DeviceTimeoutError,
         DeviceTimeoutError,
-        DEFAULT_MOCK,
+        DeviceTimeoutError,
     ]
 
     await async_setup_gree(hass)  # Update 1
 
-    async def run_update():
+    async def run_update() -> None:
         freezer.tick(timedelta(seconds=UPDATE_INTERVAL))
         async_fire_time_changed(hass)
+        await hass.async_block_till_done()
 
     await hass.async_block_till_done()
 
@@ -289,6 +299,12 @@ async def test_update_connection_send_failure_recovery(
     assert state.state == STATE_UNAVAILABLE
 
     await run_update()  # Update 3
+    state = hass.states.get(ENTITY_ID)
+    assert state.name == "fake-device-1"
+    assert state.state == STATE_UNAVAILABLE
+
+    fake_device.callbacks[Response.RESULT]({})
+    await hass.async_block_till_done()
     state = hass.states.get(ENTITY_ID)
     assert state.name == "fake-device-1"
     assert state.state != STATE_UNAVAILABLE
@@ -345,12 +361,15 @@ async def test_send_command_device_timeout(
 
 
 async def test_unresponsive_device(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, discovery, device
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    device: MagicMock,
 ) -> None:
     """Test for unresponsive device."""
+    fake_device = device()
     await async_setup_gree(hass)
 
-    async def run_update():
+    async def run_update() -> None:
         freezer.tick(timedelta(seconds=MAX_EXPECTED_RESPONSE_TIME_INTERVAL))
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
@@ -369,9 +388,8 @@ async def test_unresponsive_device(
     assert state.name == "fake-device-1"
     assert state.state == STATE_UNAVAILABLE
 
-    # Receiving update from device will reset the state to available again
-    device().device_state_updated("test")
-    await run_update()
+    fake_device.callbacks[Response.RESULT]({})
+    await hass.async_block_till_done()
     state = hass.states.get(ENTITY_ID)
     assert state.name == "fake-device-1"
     assert state.state != STATE_UNAVAILABLE
@@ -1012,6 +1030,66 @@ async def test_coordinator_update_handler(
     assert entity.native_temperature_unit == UnitOfTemperature.CELSIUS
     assert entity.min_temp == TEMP_MIN
     assert entity.max_temp == TEMP_MAX
+
+
+@pytest.mark.parametrize(
+    "initial_state",
+    [
+        pytest.param((TemperatureUnits.F, 69, 68), id="cached-state"),
+        pytest.param((None, None, None), id="delayed-state"),
+    ],
+)
+@pytest.mark.parametrize("response", [Response.DATA, Response.RESULT])
+async def test_fahrenheit_temperature_unit_sync(
+    hass: HomeAssistant,
+    device: MagicMock,
+    initial_state: tuple[TemperatureUnits | None, int | None, int | None],
+    response: Response,
+) -> None:
+    """Synchronize cached and newly received units before temperature commands."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    fake_device = device()
+    (
+        fake_device.temperature_units,
+        fake_device.current_temperature,
+        fake_device.target_temperature,
+    ) = initial_state
+
+    await async_setup_gree(hass)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == initial_state[1]
+    assert state.attributes[ATTR_TEMPERATURE] == initial_state[2]
+
+    fake_device.temperature_units = TemperatureUnits.F
+    fake_device.current_temperature = 69
+    fake_device.target_temperature = 68
+    fake_device.callbacks[response]({"TemUn": 1})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes[ATTR_TEMPERATURE] == 68
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 69
+    assert state.attributes[ATTR_MIN_TEMP] == TEMP_MIN_F
+    assert state.attributes[ATTR_MAX_TEMP] == TEMP_MAX_F
+    assert (
+        state.attributes[ClimateEntityStateAttribute.TEMPERATURE_UNIT]
+        == UnitOfTemperature.FAHRENHEIT
+    )
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 70},
+        blocking=True,
+    )
+
+    assert fake_device.target_temperature == 70
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes[ATTR_TEMPERATURE] == 70
 
 
 @patch("homeassistant.components.gree.PLATFORMS", [CLIMATE_DOMAIN])

@@ -1,4 +1,4 @@
-"""Tests for the WattWächter Plus update platform."""
+"""Tests for the WattWächter update platform."""
 
 from dataclasses import replace
 from unittest.mock import AsyncMock, patch
@@ -10,9 +10,9 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN, SERVICE_INSTALL
+from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN, UpdateService
 from homeassistant.components.wattwaechter.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -50,8 +50,8 @@ async def test_install(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: entity_id},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -86,8 +86,8 @@ async def test_install_fails(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: entity_id},
+            UpdateService.INSTALL,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
 

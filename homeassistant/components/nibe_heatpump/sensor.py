@@ -109,6 +109,12 @@ UNIT_DESCRIPTIONS = {
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.MEGA_WATT_HOUR,
     ),
+    "hrs": SensorEntityDescription(
+        key="hrs",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+    ),
     "h": SensorEntityDescription(
         key="h",
         entity_category=EntityCategory.DIAGNOSTIC,

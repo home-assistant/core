@@ -709,6 +709,19 @@ class AuthManager:
         return refresh_token
 
     @callback
+    def async_log_access_token_usage(
+        self, refresh_token: models.RefreshToken, remote_ip: str | None = None
+    ) -> None:
+        """Log the usage of a validated access token.
+
+        Only long-lived access tokens are tracked here, other refresh tokens
+        log their usage when an access token is created from them.
+        """
+        if refresh_token.token_type != models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN:
+            return
+        self._store.async_log_long_lived_access_token_usage(refresh_token, remote_ip)
+
+    @callback
     def _async_get_auth_provider(
         self, credentials: models.Credentials
     ) -> AuthProvider | None:

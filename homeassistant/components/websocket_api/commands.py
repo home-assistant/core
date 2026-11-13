@@ -14,6 +14,7 @@ from homeassistant.auth.permissions.const import POLICY_READ
 from homeassistant.auth.permissions.events import SUBSCRIBE_ALLOWLIST
 from homeassistant.const import (
     CONF_EXTERNAL_URL,
+    CONF_TRIGGERS,
     EVENT_STATE_CHANGED,
     MATCH_ALL,
     SIGNAL_BOOTSTRAP_INTEGRATIONS,
@@ -116,6 +117,7 @@ def async_register_commands(
     async_reg(hass, handle_call_service)
     async_reg(hass, handle_entity_source)
     async_reg(hass, handle_execute_script)
+    async_reg(hass, handle_explain_target)
     async_reg(hass, handle_extract_from_target)
     async_reg(hass, handle_fire_event)
     async_reg(hass, handle_get_conditions_for_target)
@@ -966,6 +968,64 @@ def handle_extract_from_target(
     connection.send_result(msg["id"], extracted_dict)
 
 
+@callback
+@decorators.websocket_command(
+    {
+        probatio.Required("type"): "explain_target",
+        probatio.Required("target"): cv.ENTITY_SERVICE_FIELDS,
+        probatio.Optional("expand_group", default=True): bool,
+        probatio.Optional("primary_entities_only", default=True): bool,
+    }
+)
+def handle_explain_target(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle explain target command."""
+    explanation = target_helpers.async_explain_target(
+        hass,
+        target_helpers.TargetSelection(msg["target"]),
+        expand_group=msg["expand_group"],
+        primary_entities_only=msg["primary_entities_only"],
+    )
+
+    def _item(item: target_helpers.TargetItemEntities) -> dict[str, Any]:
+        return {
+            "type": item.type,
+            "id": item.id,
+            "entities": sorted(
+                entity_id
+                for entity_id in item.entities
+                if connection.user.permissions.check_entity(entity_id, POLICY_READ)
+            ),
+        }
+
+    connection.send_result(
+        msg["id"],
+        {
+            "includes": [
+                {
+                    **_item(include),
+                    "referenced_areas": sorted(include.referenced_areas),
+                    "referenced_devices": sorted(include.referenced_devices),
+                }
+                for include in explanation.includes
+            ],
+            "excludes": [
+                {
+                    "type": exclude.type,
+                    "id": exclude.id,
+                    "removed": [
+                        item
+                        for removed in exclude.removed
+                        if (item := _item(removed))["entities"]
+                    ],
+                }
+                for exclude in explanation.excludes
+            ],
+        },
+    )
+
+
 @decorators.websocket_command(
     {
         probatio.Required("type"): "get_triggers_for_target",
@@ -1054,6 +1114,7 @@ async def handle_subscribe_trigger(
     try:
         trigger_config = await async_validate_trigger_config(hass, msg["trigger"])
     except probatio.Invalid as err:
+        err.prepend(["trigger"])
         connection.send_error(msg["id"], const.ERR_INVALID_FORMAT, str(err))
         return
     except HomeAssistantError as err:
@@ -1120,6 +1181,7 @@ async def handle_test_condition(
         config = await async_validate_condition_config(hass, msg["condition"])
         condition = await async_condition_from_config(hass, config)
     except probatio.Invalid as err:
+        err.prepend(["condition"])
         connection.send_error(msg["id"], const.ERR_INVALID_FORMAT, str(err))
         return
     except HomeAssistantError as err:
@@ -1178,6 +1240,7 @@ async def handle_subscribe_condition(
         condition_config = await async_validate_condition_config(hass, msg["condition"])
         condition = await async_condition_from_config(hass, condition_config)
     except probatio.Invalid as err:
+        err.prepend(["condition"])
         connection.send_error(msg["id"], const.ERR_INVALID_FORMAT, str(err))
         return
     except HomeAssistantError as err:
@@ -1260,7 +1323,11 @@ async def handle_execute_script(
     # Circular dep
     from homeassistant.helpers.script import Script, async_validate_actions_config  # noqa: PLC0415
 
-    script_config = await async_validate_actions_config(hass, msg["sequence"])
+    try:
+        script_config = await async_validate_actions_config(hass, msg["sequence"])
+    except probatio.Invalid as err:
+        err.prepend(["sequence"])
+        raise
 
     context = connection.context(msg)
     script_obj = Script(hass, script_config, f"{const.DOMAIN} script", const.DOMAIN)
@@ -1310,6 +1377,23 @@ def handle_fire_event(
     connection.send_result(msg["id"], {"context": context})
 
 
+def _is_single_item(key: str, value: Any) -> bool:
+    """Return if a value of validate_config is a single item, not a list of items."""
+    if isinstance(value, list):
+        return False
+    # A dict with only a triggers key is a list of triggers
+    return key != CONF_TRIGGERS or value.keys() != {CONF_TRIGGERS}
+
+
+def _drop_list_index(err: probatio.Invalid) -> None:
+    """Drop the leading list index from the path of a validation error."""
+    if isinstance(err, probatio.MultipleInvalid):
+        for error in err.errors:
+            _drop_list_index(error)
+        return
+    del err.path[0]
+
+
 @decorators.websocket_command(
     {
         probatio.Required("type"): "validate_config",
@@ -1340,8 +1424,16 @@ async def handle_validate_config(
         if key not in msg:
             continue
 
+        value = msg[key]
         try:
-            await validator(hass, schema(msg[key]))
+            validated = schema(value)
+            try:
+                await validator(hass, validated)
+            except probatio.Invalid as err:
+                if _is_single_item(key, value):
+                    # The schema wrapped the item in a list
+                    _drop_list_index(err)
+                raise
         except (
             probatio.Invalid,
             HomeAssistantError,

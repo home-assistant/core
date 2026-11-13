@@ -63,7 +63,7 @@ async def test_motion_sensor(
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
-    entity_id = f"{Platform.BINARY_SENSOR}.{TEST_CAM_NAME}_lens_0_motion"
+    entity_id = f"{Platform.BINARY_SENSOR}.{TEST_NVR_NAME}_lens_0_motion"
     assert hass.states.get(entity_id).state == STATE_ON
 
     reolink_host.motion_detected.return_value = False
@@ -90,25 +90,25 @@ async def test_dual_lens_sub_devices(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test dual lens camera with separate sensors per lens uses lens sub-devices."""
+    """Test dual lens camera with separate sensors per lens uses lens child devices."""
     reolink_host.model = TEST_DUO_MODEL
     reolink_host.is_nvr = False
     reolink_host.is_dual_lens = True
     reolink_host.channels = [0, 1]
     reolink_host.stream_channels = [0, 1]
     # a Reolink Duo reports a junk name like "2" for the second channel,
-    # the lens sub-device names should be based on the channel 0 name
+    # which should not end up in the lens child device names
     reolink_host.camera_name.side_effect = lambda ch: (
         TEST_CAM_NAME if ch == 0 else str(ch + 1)
     )
 
     # an entity of a previous version attached to the host device
-    # should be moved to the lens sub-device, keeping its entity_id
+    # should be moved to the lens child device, keeping its entity_id
     host_device = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, TEST_UID)},
     )
-    # a lens sub-device of a previous run should be left untouched by migration
+    # a lens sub-device of a previous version should be converted to a child device
     old_lens_device = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, f"{TEST_UID}_lens0")},
@@ -121,20 +121,22 @@ async def test_dual_lens_sub_devices(
         config_entry=config_entry,
         device_id=host_device.id,
     )
+    # simulate the devices were registered by a previous run of the config entry
+    device_registry.async_config_entry_unloaded(config_entry.entry_id)
 
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.BINARY_SENSOR]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state is ConfigEntryState.LOADED
 
     for channel in (0, 1):
-        lens_device = device_registry.async_get_device_by_identifier(
+        lens_device = device_registry.async_get_child_device_by_identifier(
             (DOMAIN, f"{TEST_UID}_lens{channel}"), config_entry.entry_id
         )
         assert lens_device is not None
-        assert lens_device.name == f"{TEST_CAM_NAME} lens {channel}"
-        assert lens_device.via_device_id == host_device.id
+        assert lens_device.name == f"Lens {channel}"
+        assert lens_device.parent_device_id == host_device.id
 
-        entity_id = f"{Platform.BINARY_SENSOR}.{TEST_CAM_NAME}_lens_{channel}_person"
+        entity_id = f"{Platform.BINARY_SENSOR}.{TEST_NVR_NAME}_lens_{channel}_person"
         entity = entity_registry.async_get(entity_id)
         assert entity is not None
         assert entity.device_id == lens_device.id
@@ -147,7 +149,7 @@ async def test_dual_lens_sub_devices(
     assert entity.device_id == host_device.id
 
     # the pre-existing lens sub-device and entity should have been reused
-    lens_0_device = device_registry.async_get_device_by_identifier(
+    lens_0_device = device_registry.async_get_child_device_by_identifier(
         (DOMAIN, f"{TEST_UID}_lens0"), config_entry.entry_id
     )
     assert lens_0_device is not None
@@ -180,7 +182,7 @@ async def test_dual_lens_sub_devices_nvr(
     supported: Callable[[int | None, str], bool],
     parent_dev_id: str,
 ) -> None:
-    """Test lens sub-devices are connected to the camera device of a NVR-type host."""
+    """Test lens child devices are children of the camera device of a NVR host."""
     reolink_host.model = TEST_DUO_MODEL
     reolink_host.supported.side_effect = supported
 
@@ -192,11 +194,11 @@ async def test_dual_lens_sub_devices_nvr(
         (DOMAIN, parent_dev_id), config_entry.entry_id
     )
     assert parent_device is not None
-    lens_device = device_registry.async_get_device_by_identifier(
+    lens_device = device_registry.async_get_child_device_by_identifier(
         (DOMAIN, f"{TEST_UID}_lens0"), config_entry.entry_id
     )
     assert lens_device is not None
-    assert lens_device.via_device_id == parent_device.id
+    assert lens_device.parent_device_id == parent_device.id
 
 
 async def test_dual_lens_sub_devices_nvr_multi_channel(
@@ -205,7 +207,7 @@ async def test_dual_lens_sub_devices_nvr_multi_channel(
     reolink_host: MagicMock,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test a lens sub-device on channel >= 1 links to its camera device on a NVR host."""
+    """Test a lens child device on channel >= 1 is a child of its camera on a NVR host."""
     reolink_host.model = TEST_DUO_MODEL
     reolink_host.channels = [0, 1]
     reolink_host.stream_channels = [0, 1]
@@ -222,11 +224,11 @@ async def test_dual_lens_sub_devices_nvr_multi_channel(
         (DOMAIN, f"{TEST_UID}_ch1"), config_entry.entry_id
     )
     assert parent_device is not None
-    lens_device = device_registry.async_get_device_by_identifier(
+    lens_device = device_registry.async_get_child_device_by_identifier(
         (DOMAIN, f"{TEST_UID}_lens1"), config_entry.entry_id
     )
     assert lens_device is not None
-    assert lens_device.via_device_id == parent_device.id
+    assert lens_device.parent_device_id == parent_device.id
 
 
 async def test_smart_ai_sensor(

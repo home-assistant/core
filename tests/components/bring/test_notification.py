@@ -7,11 +7,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.bring.const import DOMAIN
-from homeassistant.components.bring.services import (
-    ATTR_ITEM_NAME,
-    ATTR_NOTIFICATION_TYPE,
-    SERVICE_PUSH_NOTIFICATION,
-)
+from homeassistant.components.bring.services import BringService, BringServiceArgument
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
@@ -33,9 +29,9 @@ async def test_send_notification(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_PUSH_NOTIFICATION,
+        BringService.SEND_MESSAGE,
         service_data={
-            ATTR_NOTIFICATION_TYPE: "GOING_SHOPPING",
+            BringServiceArgument.MESSAGE: "GOING_SHOPPING",
         },
         target={ATTR_ENTITY_ID: "todo.einkauf"},
         blocking=True,
@@ -64,9 +60,9 @@ async def test_send_notification_exception(
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_PUSH_NOTIFICATION,
+            BringService.SEND_MESSAGE,
             service_data={
-                ATTR_NOTIFICATION_TYPE: "GOING_SHOPPING",
+                BringServiceArgument.MESSAGE: "GOING_SHOPPING",
             },
             target={ATTR_ENTITY_ID: "todo.einkauf"},
             blocking=True,
@@ -90,8 +86,11 @@ async def test_send_notification_service_validation_error(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_PUSH_NOTIFICATION,
-            service_data={ATTR_NOTIFICATION_TYPE: "URGENT_MESSAGE", ATTR_ITEM_NAME: ""},
+            BringService.SEND_MESSAGE,
+            service_data={
+                BringServiceArgument.MESSAGE: "URGENT_MESSAGE",
+                BringServiceArgument.ITEM: "",
+            },
             target={ATTR_ENTITY_ID: "todo.einkauf"},
             blocking=True,
         )

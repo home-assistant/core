@@ -4,10 +4,11 @@
   "categories": ["computers_network.cloud_developer_tools"],
   "codeowners": ["@jpbede"],
   "config_flow": true,
+  "connectivity": ["cloud", "network"],
   "documentation": "https://www.home-assistant.io/integrations/webdav",
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["aiowebdav2"],
   "quality_scale": "bronze",
-  "requirements": ["aiowebdav2==0.6.2"]
+  "requirements": ["aiowebdav2==1.0.3"]
 }

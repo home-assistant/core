@@ -1,6 +1,8 @@
 """The tests for local file camera component."""
 
+import errno
 from http import HTTPStatus
+import os
 from typing import Any
 from unittest.mock import Mock, mock_open, patch
 
@@ -9,9 +11,13 @@ from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.camera import async_get_image
-from homeassistant.components.local_file.const import DOMAIN, SERVICE_UPDATE_FILE_PATH
+from homeassistant.components.local_file.const import DOMAIN
+from homeassistant.components.local_file.services import (
+    LocalFileService,
+    LocalFileServiceArgument,
+)
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import ATTR_ENTITY_ID, CONF_FILE_PATH
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
@@ -34,19 +40,32 @@ async def test_loading_file(
     assert body == "hello"
 
 
+@pytest.mark.parametrize(
+    ("error_no", "translation_key"),
+    [
+        pytest.param(errno.ENOENT, "os_read_not_found", id="not_found"),
+        pytest.param(errno.EACCES, "os_read_permission_denied", id="permission"),
+        pytest.param(errno.EISDIR, "os_read_is_directory", id="is_directory"),
+        pytest.param(errno.EIO, "os_read_error", id="fallback"),
+    ],
+)
 @pytest.mark.usefixtures("loaded_entry")
-async def test_file_not_readable_after_setup(hass: HomeAssistant) -> None:
+async def test_file_not_readable_after_setup(
+    hass: HomeAssistant, error_no: int, translation_key: str
+) -> None:
     """Test an error is raised when the file is not readable after setup."""
     with (
         patch(
             "homeassistant.components.local_file.camera.open",
-            side_effect=FileNotFoundError,
+            side_effect=OSError(error_no, os.strerror(error_no)),
         ),
         pytest.raises(HomeAssistantError) as exc_info,
     ):
         await async_get_image(hass, "camera.local_file")
 
-    assert exc_info.value.translation_key == "file_not_found"
+    assert exc_info.value.translation_domain == "homeassistant"
+    assert exc_info.value.translation_key == translation_key
+    assert exc_info.value.translation_placeholders == {"path": "mock.file"}
 
 
 @pytest.mark.parametrize(
@@ -162,7 +181,7 @@ async def test_update_file_path(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_UPDATE_FILE_PATH,
+            LocalFileService.UPDATE_FILE_PATH,
             service_data,
             blocking=True,
         )
@@ -178,15 +197,15 @@ async def test_update_file_path(
 
     # Assert it fails if file is not readable
     service_data = {
-        ATTR_ENTITY_ID: "camera.local_file",
-        CONF_FILE_PATH: "new/path2.jpg",
+        CommonServiceArgument.ENTITY_ID: "camera.local_file",
+        LocalFileServiceArgument.FILE_PATH: "new/path2.jpg",
     }
     with pytest.raises(
         ServiceValidationError, match="Path new/path2.jpg is not accessible"
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_UPDATE_FILE_PATH,
+            LocalFileService.UPDATE_FILE_PATH,
             service_data,
             blocking=True,
         )

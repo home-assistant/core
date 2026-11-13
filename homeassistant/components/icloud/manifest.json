@@ -8,6 +8,7 @@
   ],
   "codeowners": ["@Quentame", "@nzapponi", "@timlaing"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["http"],
   "documentation": "https://www.home-assistant.io/integrations/icloud",
   "integration_type": "hub",

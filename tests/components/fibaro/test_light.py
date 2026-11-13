@@ -39,7 +39,7 @@ async def test_light_setup(
         # Act
         await init_integration(hass, mock_config_entry)
         # Assert
-        entry = entity_registry.async_get("light.room_1_test_light_3")
+        entry = entity_registry.async_get("light.test_light_room_1_test_light")
         assert entry
         assert entry.unique_id == "hc2_111111.3"
         assert entry.original_name == "Room 1 Test light"
@@ -62,7 +62,7 @@ async def test_light_brightness(
         # Act
         await init_integration(hass, mock_config_entry)
         # Assert
-        state = hass.states.get("light.room_1_test_light_3")
+        state = hass.states.get("light.test_light_room_1_test_light")
         assert state.attributes["brightness"] == 51
         assert state.state == "on"
 
@@ -81,7 +81,7 @@ async def test_fgd212_light_brightness_without_setvalue_action(
 
     with patch("homeassistant.components.fibaro.PLATFORMS", [Platform.LIGHT]):
         await init_integration(hass, mock_config_entry)
-        state = hass.states.get("light.room_1_8_spots_116")
+        state = hass.states.get("light.my_fibaro_home_center_room_1_8_spots")
         assert state.attributes[ATTR_BRIGHTNESS] == 127
         assert state.attributes["color_mode"] == ColorMode.BRIGHTNESS
         assert state.state == "on"
@@ -101,7 +101,7 @@ async def test_dimming_via_multilevel_base_type_without_level_change(
 
     with patch("homeassistant.components.fibaro.PLATFORMS", [Platform.LIGHT]):
         await init_integration(hass, mock_config_entry)
-        state = hass.states.get("light.room_1_base_type_dimmer_42")
+        state = hass.states.get("light.base_type_dimmer_room_1_base_type_dimmer")
         assert state.attributes[ATTR_BRIGHTNESS] == 51
         assert state.attributes["color_mode"] == ColorMode.BRIGHTNESS
         assert state.state == "on"
@@ -124,7 +124,7 @@ async def test_zigbee_light_brightness(
         # Act
         await init_integration(hass, mock_config_entry)
         # Assert
-        state = hass.states.get("light.room_1_test_light_12")
+        state = hass.states.get("light.test_light_room_1_test_light")
         assert state.attributes["brightness"] == 51
         assert state.state == "on"
 
@@ -147,7 +147,7 @@ async def test_light_turn_off(
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "light.room_1_test_light_3"},
+            {ATTR_ENTITY_ID: "light.test_light_room_1_test_light"},
             blocking=True,
         )
         # Assert
@@ -172,7 +172,7 @@ async def test_light_set_brightness(
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON,
-            {ATTR_BRIGHTNESS: 98, ATTR_ENTITY_ID: "light.room_1_test_light_3"},
+            {ATTR_BRIGHTNESS: 98, ATTR_ENTITY_ID: "light.test_light_room_1_test_light"},
             blocking=True,
         )
         # Assert

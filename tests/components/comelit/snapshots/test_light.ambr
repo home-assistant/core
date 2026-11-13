@@ -11,7 +11,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('comelit', 'serial_bridge_config_entry_id-light-0')]>,
     'disabled_by': None,

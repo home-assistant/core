@@ -14,14 +14,10 @@ from pytest_homeassistant.typing import ClientSessionGenerator
 from todoist_api_python.models import Due
 
 from homeassistant import setup
-from homeassistant.components.todoist.const import (
-    ASSIGNEE,
-    CONTENT,
-    DOMAIN,
-    LABELS,
-    PROJECT_NAME,
-    SECTION_NAME,
-    SERVICE_NEW_TASK,
+from homeassistant.components.todoist.const import DOMAIN
+from homeassistant.components.todoist.services import (
+    TodoistService,
+    TodoistServiceArgument,
 )
 from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
@@ -329,8 +325,13 @@ async def test_create_task_service_call(hass: HomeAssistant, api: AsyncMock) -> 
     """Test api is called correctly after a new task service call."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_NEW_TASK,
-        {ASSIGNEE: "user", CONTENT: "task", LABELS: ["Label1"], PROJECT_NAME: "Name"},
+        TodoistService.NEW_TASK,
+        {
+            TodoistServiceArgument.ASSIGNEE: "user",
+            TodoistServiceArgument.CONTENT: "task",
+            TodoistServiceArgument.LABELS: ["Label1"],
+            TodoistServiceArgument.PROJECT: "Name",
+        },
     )
     await hass.async_block_till_done()
 
@@ -347,12 +348,12 @@ async def test_create_task_service_call_raises(
     with pytest.raises(ServiceValidationError) as exc:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_NEW_TASK,
+            TodoistService.NEW_TASK,
             {
-                ASSIGNEE: "user",
-                CONTENT: "task",
-                LABELS: ["Label1"],
-                PROJECT_NAME: "Missing Project",
+                TodoistServiceArgument.ASSIGNEE: "user",
+                TodoistServiceArgument.CONTENT: "task",
+                TodoistServiceArgument.LABELS: ["Label1"],
+                TodoistServiceArgument.PROJECT: "Missing Project",
             },
             blocking=True,
         )
@@ -365,13 +366,13 @@ async def test_create_task_service_call_with_section(
     """Test api is called correctly when section is included."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_NEW_TASK,
+        TodoistService.NEW_TASK,
         {
-            ASSIGNEE: "user",
-            CONTENT: "task",
-            LABELS: ["Label1"],
-            PROJECT_NAME: "Name",
-            SECTION_NAME: "Section Name",
+            TodoistServiceArgument.ASSIGNEE: "user",
+            TodoistServiceArgument.CONTENT: "task",
+            TodoistServiceArgument.LABELS: ["Label1"],
+            TodoistServiceArgument.PROJECT: "Name",
+            TodoistServiceArgument.SECTION: "Section Name",
         },
     )
     await hass.async_block_till_done()
@@ -383,6 +384,24 @@ async def test_create_task_service_call_with_section(
         labels=["Label1"],
         assignee_id="1",
     )
+
+
+async def test_create_task_service_call_with_none_section(
+    hass: HomeAssistant, api: AsyncMock
+) -> None:
+    """Test a `None` section is ignored rather than raising an error."""
+    await hass.services.async_call(
+        DOMAIN,
+        TodoistService.NEW_TASK,
+        {
+            TodoistServiceArgument.CONTENT: "task",
+            TodoistServiceArgument.PROJECT: "Name",
+            TodoistServiceArgument.SECTION: None,
+        },
+        blocking=True,
+    )
+
+    api.add_task.assert_called_with("task", project_id=PROJECT_ID)
 
 
 @pytest.mark.parametrize(

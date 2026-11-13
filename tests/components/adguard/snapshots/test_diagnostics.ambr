@@ -1,0 +1,70 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'blocklists': list([
+      dict({
+        'enabled': True,
+        'id': 1,
+        'last_updated': None,
+        'name': 'AdGuard DNS filter',
+        'rules_count': 100,
+      }),
+    ]),
+    'config_entry': dict({
+      'source': 'user',
+      'ssl': True,
+      'verify_ssl': True,
+    }),
+    'features': dict({
+      'filtering': dict({
+        'enabled': True,
+        'update_interval': '1 day, 0:00:00',
+      }),
+      'parental': True,
+      'query_log': dict({
+        'anonymize_client_ip': False,
+        'enabled': True,
+        'retention': '90 days, 0:00:00',
+      }),
+      'safe_browsing': True,
+      'safe_search': dict({
+        'bing': False,
+        'duckduckgo': False,
+        'ecosia': False,
+        'enabled': True,
+        'google': False,
+        'pixabay': False,
+        'yandex': False,
+        'youtube': False,
+      }),
+    }),
+    'statistics': dict({
+      'avg_processing_time': '0:00:00.031410',
+      'blocked_filtering': 1337,
+      'blocked_parental': 13,
+      'blocked_safebrowsing': 42,
+      'dns_queries': 666,
+      'enforced_safesearch': 18,
+      'time_unit': 'hours',
+    }),
+    'status': dict({
+      'dhcp_available': False,
+      'language': 'en',
+      'protection_enabled': True,
+      'protection_resumes_in': None,
+      'running': True,
+      'supported': False,
+      'version': 'v0.107.50',
+    }),
+    'update': dict({
+      'available': dict({
+        'announcement': 'AdGuard Home v0.107.59 is now available!',
+        'announcement_url': 'https://github.com/AdguardTeam/AdGuardHome/releases/tag/v0.107.59',
+        'can_autoupdate': True,
+        'disabled': False,
+        'new_version': 'v0.107.59',
+      }),
+      'last_update_success': True,
+    }),
+  })
+# ---

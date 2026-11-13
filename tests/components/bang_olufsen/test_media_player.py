@@ -1,7 +1,6 @@
 """Test the Bang & Olufsen media_player entity."""
 
 from contextlib import AbstractContextManager, nullcontext as does_not_raise
-import logging
 from unittest.mock import AsyncMock, patch
 
 from mozart_api.exceptions import NotFoundException
@@ -132,7 +131,6 @@ async def test_initialization(
 
     Checks _initialize, async_added_to_hass and __init__.
     """
-    caplog.set_level(logging.DEBUG)
 
     # Setup entity
     mock_config_entry.add_to_hass(hass)
