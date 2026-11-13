@@ -2,7 +2,6 @@
 
 import asyncio
 from datetime import timedelta
-import logging
 import time
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
@@ -298,9 +297,8 @@ async def test_unload_tolerates_library_cleanup_errors(
     mock_library.monitor.stop.side_effect = RuntimeError("stop failed")
     mock_library.connection.disconnect.side_effect = RuntimeError("disconnect failed")
 
-    with caplog.at_level(logging.DEBUG):
-        assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert "Error stopping telemetry monitor" in caplog.text
     assert "Error disconnecting" in caplog.text

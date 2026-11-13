@@ -146,7 +146,6 @@ async def test_esphome_device_subscribe_logs(
     ):
         assert device.current_log_level == LogLevel.LOG_LEVEL_VERY_VERBOSE
 
-        caplog.set_level(logging.DEBUG)
         device.mock_on_log_message(
             Mock(level=LogLevel.LOG_LEVEL_INFO, message=b"test_log_message")
         )

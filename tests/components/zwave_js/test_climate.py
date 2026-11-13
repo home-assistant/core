@@ -36,7 +36,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.zwave_js.climate import ATTR_FAN_STATE
-from homeassistant.components.zwave_js.const import DOMAIN, SERVICE_REFRESH_VALUE
+from homeassistant.components.zwave_js.const import DOMAIN, ZWaveJSService
 from homeassistant.components.zwave_js.helpers import ZwaveValueMatcher
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -44,6 +44,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    CommonServiceArgument,
     Platform,
     UnitOfTemperature,
 )
@@ -385,9 +386,9 @@ async def test_thermostat_v2(
     client.async_send_command.side_effect = FailedZWaveCommand("test", 1, "test")
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_REFRESH_VALUE,
+        ZWaveJSService.REFRESH_VALUE,
         {
-            ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
+            CommonServiceArgument.ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
         },
         blocking=True,
     )

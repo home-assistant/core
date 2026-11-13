@@ -20,9 +20,9 @@ from homeassistant.components.iron_os.const import (
     MIN_TEMP_F,
 )
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
@@ -215,8 +215,8 @@ async def test_set_value(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        service_data={ATTR_VALUE: value},
+        NumberService.SET_VALUE,
+        service_data={NumberServiceArgument.VALUE: value},
         target={ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
@@ -246,8 +246,8 @@ async def test_set_value_exception(
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            service_data={ATTR_VALUE: 300},
+            NumberService.SET_VALUE,
+            service_data={NumberServiceArgument.VALUE: 300},
             target={ATTR_ENTITY_ID: "number.pinecil_setpoint_temperature"},
             blocking=True,
         )

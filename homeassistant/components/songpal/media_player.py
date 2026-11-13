@@ -34,9 +34,6 @@ from .const import CONF_ENDPOINT, DOMAIN, ERROR_REQUEST_RETRY
 
 _LOGGER = logging.getLogger(__name__)
 
-PARAM_NAME = "name"
-PARAM_VALUE = "value"
-
 INITIAL_RETRY_DELAY = 10
 
 
