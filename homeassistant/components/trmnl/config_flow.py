@@ -33,7 +33,7 @@ from .const import (
     REQUIRED_SCOPES,
 )
 from .coordinator import TRMNLConfigEntry, scope_granted
-from .home import CAPABILITIES_BY_DOMAIN
+from .home import HOME_DOMAINS
 
 
 class TRMNLConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
@@ -150,9 +150,7 @@ class TRMNLOptionsFlow(OptionsFlowWithReload):
                     CONF_HOME_ENTITIES,
                     default=self.config_entry.options.get(CONF_HOME_ENTITIES, []),
                 ): EntitySelector(
-                    EntitySelectorConfig(
-                        domain=list(CAPABILITIES_BY_DOMAIN), multiple=True
-                    )
+                    EntitySelectorConfig(domain=HOME_DOMAINS, multiple=True)
                 )
             }
         )
