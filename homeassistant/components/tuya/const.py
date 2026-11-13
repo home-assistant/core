@@ -27,6 +27,7 @@ DOMAIN = "tuya"
 LOGGER = logging.getLogger(__package__)
 
 CONF_ENDPOINT = "endpoint"
+CONF_REFRESH_QR_CODE = "refresh_qr_code"
 CONF_TERMINAL_ID = "terminal_id"
 CONF_TOKEN_INFO = "token_info"
 CONF_USER_CODE = "user_code"
