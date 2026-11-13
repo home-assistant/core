@@ -3,8 +3,9 @@
 import asyncio
 from datetime import timedelta
 from typing import Any
-from unittest.mock import AsyncMock, call, patch
+from unittest.mock import AsyncMock, Mock, call, patch
 
+from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
@@ -24,7 +25,10 @@ from homeassistant.components.trmnl.home import build_snapshot, capabilities_of
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, State
-from homeassistant.exceptions import OAuth2TokenRequestConnectionError
+from homeassistant.exceptions import (
+    OAuth2TokenRequestConnectionError,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
@@ -527,6 +531,72 @@ async def test_failed_push_is_retried_on_the_next_tick(
 
     assert "status 429" in caplog.text
     assert mock_trmnl_client.update_plugin_setting_data.await_count == 2
+
+
+@pytest.mark.parametrize(
+    "error",
+    [OAuth2TokenRequestConnectionError(domain=DOMAIN), ClientError("Connection reset")],
+)
+async def test_token_refresh_failing_to_connect_is_retried_on_the_next_tick(
+    hass: HomeAssistant,
+    mock_trmnl_client: AsyncMock,
+    home_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    error: Exception,
+) -> None:
+    """Test a token refresh that cannot connect logs one warning and the next push retries."""
+    home_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        home_entry, options={**home_entry.options, CONF_HOME_PLUGIN_SETTING_ID: 42}
+    )
+    hass.states.async_set("light.lamp", "on")
+    await setup_integration(hass, home_entry)
+    mock_trmnl_client.update_plugin_setting_data.reset_mock()
+
+    with patch.object(
+        home_entry.runtime_data, "async_ensure_token_valid", side_effect=[error, None]
+    ):
+        hass.states.async_set("light.lamp", "off")
+        for _ in range(2):
+            freezer.tick(timedelta(minutes=5))
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done()
+
+    assert caplog.text.count("Could not send the home to TRMNL") == 1
+    assert mock_trmnl_client.update_plugin_setting_data.await_count == 1
+
+
+async def test_token_refresh_rejected_starts_reauth_once_and_stops(
+    hass: HomeAssistant,
+    mock_trmnl_client: AsyncMock,
+    home_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a rejected refresh token starts reauth once and stops pushing until reload."""
+    home_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        home_entry, options={**home_entry.options, CONF_HOME_PLUGIN_SETTING_ID: 42}
+    )
+    hass.states.async_set("light.lamp", "on")
+    await setup_integration(hass, home_entry)
+    rejected = OAuth2TokenRequestReauthError(
+        domain=DOMAIN, request_info=Mock(), status=400
+    )
+
+    with patch.object(
+        home_entry.runtime_data, "async_ensure_token_valid", side_effect=rejected
+    ) as ensure_token_valid:
+        for state in ("off", "on"):
+            hass.states.async_set("light.lamp", state)
+            freezer.tick(timedelta(minutes=5))
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done()
+
+    assert ensure_token_valid.await_count == 1
+    assert [
+        flow["context"]["source"] for flow in hass.config_entries.flow.async_progress()
+    ] == [SOURCE_REAUTH]
 
 
 async def test_deleted_plugin_setting_is_made_again(
