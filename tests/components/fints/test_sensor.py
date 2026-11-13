@@ -1,6 +1,5 @@
 """Tests for the FinTS sensor platform."""
 
-import logging
 from unittest.mock import MagicMock, patch
 
 from fints.client import BankIdentifier, FinTSOperations
@@ -76,7 +75,6 @@ async def test_setup_platform(
     hass: HomeAssistant, mock_bank: MagicMock, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Only configured accounts get a sensor, and the rest are skipped."""
-    caplog.set_level(logging.DEBUG)
 
     with patch(
         "homeassistant.components.fints.sensor.FinTS3PinTanClient",
@@ -97,7 +95,6 @@ async def test_account_identifiers_are_not_logged(
     hass: HomeAssistant, mock_bank: MagicMock, caplog: pytest.LogCaptureFixture
 ) -> None:
     """No IBAN or account number ends up in the log of this integration."""
-    caplog.set_level(logging.DEBUG)
 
     with patch(
         "homeassistant.components.fints.sensor.FinTS3PinTanClient",
