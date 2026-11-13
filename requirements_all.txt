@@ -1968,7 +1968,7 @@ plexauth==0.0.6
 plexwebsocket==0.1.0
 
 # homeassistant.components.plugwise
-plugwise==1.16.0
+plugwise==1.17.0
 
 # homeassistant.components.serial_pm
 pmsensor==0.4
