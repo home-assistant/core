@@ -457,6 +457,10 @@ async def test_command_without_local_adapter_does_not_start_reauth(
         assert not list(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
         state = hass.states.get(ENTITY_ID)
         assert state
+        assert state.state == STATE_UNAVAILABLE
+        await mock_device.update_callback(50)
+        state = hass.states.get(ENTITY_ID)
+        assert state
         assert state.state != STATE_UNAVAILABLE
     finally:
         cancel_local()
@@ -571,6 +575,12 @@ async def test_ble_error_while_polling_clears_cached_position(
     mock_device.send_get_position.assert_awaited_once()
     state = hass.states.get(ENTITY_ID)
     assert state
+    assert state.state == STATE_UNAVAILABLE
+    mock_device.is_valid_position.return_value = True
+    mock_device.get_real_position.return_value = 50
+    await mock_device.update_callback(50)
+    state = hass.states.get(ENTITY_ID)
+    assert state
     assert state.state != STATE_UNAVAILABLE
 
 
@@ -603,6 +613,10 @@ async def test_ble_error_while_polling_resets_connection(
 
     mock_device.pair.assert_awaited_once()
     mock_device.send_get_position.assert_awaited_once()
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+    await mock_device.update_callback(50)
     state = hass.states.get(ENTITY_ID)
     assert state
     assert state.state != STATE_UNAVAILABLE
@@ -820,6 +834,10 @@ async def test_static_advertisement_reconnects_after_disconnect(
     mock_device.send_get_position.assert_awaited_once()
     state = hass.states.get(ENTITY_ID)
     assert state
+    assert state.state == STATE_UNAVAILABLE
+    await mock_device.update_callback(50)
+    state = hass.states.get(ENTITY_ID)
+    assert state
     assert state.state != STATE_UNAVAILABLE
 
 
@@ -979,6 +997,10 @@ async def test_advertisement_reconnects_after_disconnect(
 
     mock_device.pair.assert_awaited_once()
     mock_device.send_get_position.assert_awaited_once()
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+    await mock_device.update_callback(50)
     state = hass.states.get(ENTITY_ID)
     assert state
     assert state.state != STATE_UNAVAILABLE

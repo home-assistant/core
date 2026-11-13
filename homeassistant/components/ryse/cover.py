@@ -235,7 +235,6 @@ class RyseCoverEntity(CoverEntity):
                 return
             self._note_reconnect_success()
             self._reconnect_when_seen = False
-            self._set_available(True)
         self.async_write_ha_state()
 
     def _note_reconnect_failure(self) -> None:
@@ -336,6 +335,7 @@ class RyseCoverEntity(CoverEntity):
             if self._removing:
                 return False
             self._reconnect_when_seen = True
+            self._clear_cached_position()
             self._set_available(
                 False, "no local adapter" if paired is None else "failed to pair"
             )
@@ -427,9 +427,9 @@ class RyseCoverEntity(CoverEntity):
 
             if self._attr_current_cover_position is None:
                 await self._device.send_get_position()
-
-            self._reconnect_when_seen = False
-            self._set_available(True)
+            else:
+                self._reconnect_when_seen = False
+                self._set_available(True)
 
         except (TimeoutError, OSError, EOFError, BleakError) as err:
             await self._async_drop_client(str(err))
