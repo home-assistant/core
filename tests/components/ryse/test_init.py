@@ -7,9 +7,9 @@ from bleak import BleakError
 from bleak.backends.device import BLEDevice
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
+from ryseble.device import RyseAuthenticationFailed
 
 from homeassistant.components.ryse.const import SERVICE_UUID
-from homeassistant.components.ryse.helpers import RyseAuthenticationFailed
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 

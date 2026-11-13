@@ -7,24 +7,20 @@ from typing import Any, override
 from bleak import BleakError
 import probatio
 from ryseble import is_pairing_mode
-from ryseble.device import RyseBLEDevice
+from ryseble.device import RyseAuthenticationFailed, RyseBLEDevice
 
 from homeassistant.components.bluetooth import (
     BluetoothScannerDevice,
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
 )
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 
 from . import _async_unpair
 from .const import DOMAIN, MANUFACTURER_ID, SERVICE_UUID
-from .helpers import (
-    RyseAuthenticationFailed,
-    async_local_scanner_devices,
-    best_local_scanner_device,
-)
+from .helpers import async_local_scanner_devices, best_local_scanner_device
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -83,18 +79,18 @@ class RyseBLEDeviceConfigFlow(ConfigFlow, domain=DOMAIN):
 
         device = RyseBLEDevice(local.ble_device)
         try:
-            # Reauth must delete the BlueZ device first. Bleak skips Pair when
-            # BlueZ already reports the shade as paired, so a reset shade would
-            # otherwise keep the stale bond.
-            if await device.pair(replace_bond=self.source == SOURCE_REAUTH):
+            # The shade is in pairing mode and the user intends to bond.
+            # Always drop a BlueZ bond first: Bleak skips Pair when BlueZ
+            # already reports the shade as paired.
+            if await device.pair(replace_bond=True):
                 return None
         except RyseAuthenticationFailed:
-            return "cannot_connect"
+            return "bond_rejected"
         except TimeoutError, OSError, EOFError, BleakError:
             return "cannot_connect"
         except Exception:
             _LOGGER.exception("Unexpected error during pairing")
-            return "unexpected_error"
+            return "unknown"
         finally:
             # Teardown errors must not override a successful pair or chosen error key.
             await _async_unpair(device)

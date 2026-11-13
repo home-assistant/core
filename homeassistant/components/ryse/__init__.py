@@ -5,7 +5,7 @@ import logging
 
 from bleak import BleakError
 from bleak.backends.device import BLEDevice
-from ryseble.device import RyseBLEDevice
+from ryseble.device import RyseAuthenticationFailed, RyseBLEDevice
 
 from homeassistant.components.bluetooth import (
     BluetoothCallbackMatcher,
@@ -19,7 +19,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
-from .helpers import RyseAuthenticationFailed, async_best_local_scanner_device
+from .helpers import async_best_local_scanner_device
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -12,10 +12,10 @@ from pytest_homeassistant.components.bluetooth import (
     generate_advertisement_data,
     generate_ble_device,
 )
+from ryseble.device import RyseAuthenticationFailed
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.ryse.const import DOMAIN, MANUFACTURER_ID
-from homeassistant.components.ryse.helpers import RyseAuthenticationFailed
 from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_USER
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
@@ -36,12 +36,12 @@ from . import (
 )
 
 PAIRING_ERRORS = [
-    (Exception("boom"), "unexpected_error"),
+    (Exception("boom"), "unknown"),
     (TimeoutError("timeout"), "cannot_connect"),
     (OSError("os error"), "cannot_connect"),
     (EOFError("eof"), "cannot_connect"),
     (BleakError("bleak error"), "cannot_connect"),
-    (RyseAuthenticationFailed("rejected"), "cannot_connect"),
+    (RyseAuthenticationFailed("rejected"), "bond_rejected"),
     (False, "cannot_connect"),
 ]
 
@@ -109,7 +109,7 @@ async def test_async_step_user_success(
     assert result["title"] == DEVICE_NAME
     assert result["data"] == {}
     assert result["result"].unique_id == DEVICE_ADDRESS
-    mock_device.pair.assert_awaited_once()
+    mock_device.pair.assert_awaited_once_with(replace_bond=True)
     mock_device.unpair.assert_awaited_once()
     cancel()
 
@@ -172,7 +172,7 @@ async def test_async_step_user_success_when_unpair_fails(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == DEVICE_ADDRESS
-    mock_device.pair.assert_awaited_once_with(replace_bond=False)
+    mock_device.pair.assert_awaited_once_with(replace_bond=True)
     mock_device.unpair.assert_awaited_once()
     cancel()
 
@@ -1004,24 +1004,25 @@ async def test_reauth_success(
     cancel()
 
 
-async def test_reauth_replaces_existing_bluez_bond(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_device: MagicMock,
+async def test_user_flow_replaces_existing_bluez_bond(
+    hass: HomeAssistant, mock_device: MagicMock
 ) -> None:
-    """Test reauth asks the library to remove a bond BlueZ already reports."""
-    mock_config_entry.add_to_hass(hass)
-    result = await mock_config_entry.start_reauth_flow(hass)
+    """Test a user pairing removes a bond BlueZ already reports."""
     device = make_ble_device(paired=True)
-    cancel = register_local_scanner(hass, device, make_advertisement())
+    advertisement = make_advertisement()
+    cancel = register_local_scanner(hass, device, advertisement)
+    inject_ryse(hass, device, advertisement, LOCAL_SOURCE)
     await _abort_bluetooth_flows(hass)
 
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
+        result["flow_id"], USER_INPUT
     )
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == DEVICE_ADDRESS
     mock_device.pair.assert_awaited_once_with(replace_bond=True)
     cancel()
 

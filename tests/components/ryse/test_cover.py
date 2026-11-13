@@ -11,6 +11,7 @@ from bleak.backends.device import BLEDevice
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from ryseble.device import RyseAuthenticationFailed
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
@@ -21,7 +22,6 @@ from homeassistant.components.cover import (
     CoverState,
 )
 from homeassistant.components.ryse.const import MANUFACTURER_NAME, SERVICE_UUID
-from homeassistant.components.ryse.helpers import RyseAuthenticationFailed
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -854,6 +854,56 @@ async def test_rejected_bond_starts_reauth(
     state = hass.states.get(ENTITY_ID)
     assert state
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_command_during_reauth_does_not_pair(
+    hass: HomeAssistant,
+    mock_device: MagicMock,
+    polled_cover: MockConfigEntry,
+) -> None:
+    """Test a command does not start a second pairing while reauth is open."""
+    await polled_cover.start_reauth_flow(hass)
+    mock_device.pair.reset_mock()
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER,
+            {ATTR_ENTITY_ID: ENTITY_ID},
+            blocking=True,
+        )
+
+    mock_device.pair.assert_not_awaited()
+
+
+async def test_unexpected_reconnect_error_backs_off(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    local_ryse_scanner: BLEDevice,
+    mock_device: MagicMock,
+    setup_integration: MockConfigEntry,
+) -> None:
+    """Test an unexpected reconnect error lengthens the next wait."""
+    assert setup_integration.state is ConfigEntryState.LOADED
+    client = mock_device.client
+    mock_device.pair.side_effect = RuntimeError("boom")
+    mock_device.pair.reset_mock()
+    _disconnect_callback(client)(client)
+    await hass.async_block_till_done()
+
+    await async_see_shade(hass, local_ryse_scanner)
+    assert mock_device.pair.await_count == 1
+
+    freezer.tick(5)
+    async_fire_time_changed(hass)
+    await async_see_shade(hass, local_ryse_scanner, token=b"\x02")
+    assert mock_device.pair.await_count == 2
+
+    mock_device.pair.reset_mock()
+    freezer.tick(5)
+    async_fire_time_changed(hass)
+    await async_see_shade(hass, local_ryse_scanner, token=b"\x03")
+    mock_device.pair.assert_not_awaited()
 
 
 async def test_reconnect_backs_off_after_repeated_failures(

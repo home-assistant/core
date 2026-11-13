@@ -11,16 +11,6 @@ from homeassistant.components.bluetooth import (
 )
 from homeassistant.core import HomeAssistant
 
-try:
-    from ryseble.device import RyseAuthenticationFailed as _RyseAuthenticationFailed
-except ImportError:  # ryseble < 1.16 reports every pair() failure as False
-
-    class _RyseAuthenticationFailed(Exception):  # type: ignore[no-redef]
-        """The shade rejected the bond."""
-
-
-RyseAuthenticationFailed = _RyseAuthenticationFailed
-
 
 def async_local_scanner_devices(
     hass: HomeAssistant, address: str

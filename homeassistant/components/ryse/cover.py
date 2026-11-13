@@ -7,7 +7,7 @@ import logging
 from typing import Any, override
 
 from bleak import BleakClient, BleakError
-from ryseble.device import RyseBLEDevice
+from ryseble.device import RyseAuthenticationFailed, RyseBLEDevice
 
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
@@ -26,8 +26,8 @@ from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceIn
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import RyseConfigEntry, _async_unpair
-from .const import MANUFACTURER_NAME
-from .helpers import RyseAuthenticationFailed, async_best_local_scanner_device
+from .const import DOMAIN, MANUFACTURER_NAME
+from .helpers import async_best_local_scanner_device
 
 PARALLEL_UPDATES = 1  # one BLE connection at a time
 _RECONNECT_COOLDOWN = 5.0
@@ -234,6 +234,17 @@ class RyseCoverEntity(CoverEntity):
                 return
             self._note_reconnect_failure()
             await self._async_drop_client(str(err))
+        except Exception:
+            if self._expected_disconnect:
+                return
+            # Swallow so the debouncer does not log a second traceback.
+            _LOGGER.debug(
+                "Unexpected error reconnecting to %s",
+                self._device.address,
+                exc_info=True,
+            )
+            self._note_reconnect_failure()
+            await self._async_drop_client("unexpected error")
         else:
             if self._expected_disconnect:
                 return
@@ -311,7 +322,8 @@ class RyseCoverEntity(CoverEntity):
             if self._is_connected():
                 self._async_attach_disconnect_callback()
                 return True
-            if await self._async_pair_on_local_adapter():
+            paired = await self._async_pair_on_local_adapter()
+            if paired:
                 if self._expected_disconnect:
                     await self._async_release_client()
                     return False
@@ -321,7 +333,9 @@ class RyseCoverEntity(CoverEntity):
             if self._expected_disconnect:
                 return False
             self._reconnect_when_seen = True
-            self._set_available(False, "failed to pair")
+            self._set_available(
+                False, "no local adapter" if paired is None else "failed to pair"
+            )
             return False
 
     async def _async_pair_on_local_adapter(self) -> bool | None:
@@ -330,8 +344,9 @@ class RyseCoverEntity(CoverEntity):
         A proxy-only sighting is refused because the BlueZ agent cannot pair
         through it. The Bluetooth stack still chooses the connection backend.
 
-        Returns True on success, False when pairing returned False, and None
-        when no local adapter currently sees the shade.
+        Returns True on success, None when no local adapter currently sees the
+        shade, and False only when the library has neither a device nor an
+        address. False is not a confirmed bond rejection.
         """
         scanner_device = async_best_local_scanner_device(
             self.hass, self._device.address
@@ -345,6 +360,11 @@ class RyseCoverEntity(CoverEntity):
         self, description: str, send: Callable[[], Coroutine[Any, Any, None]]
     ) -> None:
         """Send a cover command, reconnecting first if needed."""
+        if any(self._config_entry.async_get_active_flows(self.hass, {SOURCE_REAUTH})):
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="reauth_in_progress",
+            )
         try:
             if not await self._async_ensure_connected():
                 self._note_reconnect_failure()
