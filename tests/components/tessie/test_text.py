@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from .common import ERROR_UNKNOWN, assert_entities, setup_platform
+from .common import COMMAND_OK, ERROR_UNKNOWN, assert_entities, setup_platform
 
 NAVIGATION_ENTITY_ID = "text.test_navigation_destination"
 
@@ -36,6 +36,7 @@ async def test_set_navigation_destination(hass: HomeAssistant) -> None:
 
     with patch(
         "tesla_fleet_api.tessie.Vehicle.navigation_request",
+        return_value=COMMAND_OK,
     ) as mock_nav:
         await hass.services.async_call(
             TEXT_DOMAIN,
@@ -73,3 +74,29 @@ async def test_set_navigation_destination_error(hass: HomeAssistant) -> None:
     mock_nav.assert_called_once()
     assert error.value.translation_domain == "tessie"
     assert error.value.translation_key == "cannot_connect"
+
+
+async def test_set_navigation_destination_rejected(hass: HomeAssistant) -> None:
+    """Test that a navigation destination the vehicle rejects raises an error."""
+    await setup_platform(hass, [Platform.TEXT])
+
+    with (
+        patch(
+            "tesla_fleet_api.tessie.Vehicle.navigation_request",
+            return_value={"response": {"result": False, "reason": "vehicle_offline"}},
+        ) as mock_nav,
+        pytest.raises(HomeAssistantError) as error,
+    ):
+        await hass.services.async_call(
+            TEXT_DOMAIN,
+            SERVICE_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: NAVIGATION_ENTITY_ID,
+                ATTR_VALUE: "Times Square, New York",
+            },
+            blocking=True,
+        )
+
+    mock_nav.assert_called_once()
+    assert error.value.translation_domain == "tessie"
+    assert error.value.translation_key == "command_failed"

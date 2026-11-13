@@ -8,6 +8,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TessieConfigEntry
 from .entity import TessieEntity
+from .helpers import handle_fleet_command
 from .models import TessieVehicleData
 
 PARALLEL_UPDATES = 0
@@ -39,4 +40,7 @@ class TessieNavigationTextEntity(TessieEntity, TextEntity):
     @override
     async def async_set_value(self, value: str) -> None:
         """Send a navigation destination to the vehicle."""
-        await self.run(self.api.navigation_request(value))
+        await handle_fleet_command(
+            self.api.navigation_request(value),
+            name=getattr(self, "name", self.entity_id),
+        )
