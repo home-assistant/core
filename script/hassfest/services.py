@@ -13,6 +13,7 @@ from probatio.humanize import humanize_error
 from homeassistant.const import CONF_SELECTOR
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, selector, service
+from homeassistant.helpers.field_visibility import VISIBLE_SCHEMA
 from homeassistant.util.yaml import load_yaml_dict
 
 
@@ -40,6 +41,42 @@ def unique_field_validator(fields: Any) -> Any:
     return fields
 
 
+def visible_field_validator(fields: Any) -> Any:
+    """Validate visible conditions only refer to other fields of the service.
+
+    A section cannot depend on its own fields, it could never be shown again
+    once hidden.
+    """
+    names = set()
+    records: list[tuple[str, Any, set[str]]] = []
+    for key, value in fields.items():
+        if value and "fields" in value:
+            records.append((key, value.get("visible"), set(value["fields"])))
+            for field_key, field in value["fields"].items():
+                names.add(field_key)
+                records.append((field_key, (field or {}).get("visible"), {field_key}))
+        else:
+            names.add(key)
+            records.append((key, (value or {}).get("visible"), {key}))
+
+    for key, visible, own_fields in records:
+        if not isinstance(visible, (dict, list)):
+            continue
+        for condition in visible if isinstance(visible, list) else [visible]:
+            if condition["field"] in own_fields:
+                raise probatio.Invalid(
+                    f"Visible condition of {key} cannot refer to its own field"
+                    f" {condition['field']}."
+                )
+            if condition["field"] not in names:
+                raise probatio.Invalid(
+                    f"Visible condition of {key} refers to unknown field"
+                    f" {condition['field']}."
+                )
+
+    return fields
+
+
 CUSTOM_INTEGRATION_EXTRA_SCHEMA_DICT = {
     probatio.Optional("description"): str,
     probatio.Optional("name"): str,
@@ -52,6 +89,7 @@ CORE_INTEGRATION_NOT_TARGETED_FIELD_SCHEMA_DICT = {
     probatio.Optional("required"): bool,
     probatio.Optional("advanced"): bool,
     probatio.Optional(CONF_SELECTOR): selector.validate_selector,
+    probatio.Optional("visible"): VISIBLE_SCHEMA,
 }
 
 FIELD_FILTER_SCHEMA_DICT = {
@@ -88,6 +126,7 @@ def _section_schema(targeted: bool, custom: bool) -> probatio.Schema:
     """Return the section schema."""
     schema_dict = {
         probatio.Optional("collapsed"): bool,
+        probatio.Optional("visible"): VISIBLE_SCHEMA,
         probatio.Required("fields"): probatio.Schema(
             {
                 str: _field_schema(targeted, custom),
@@ -114,6 +153,7 @@ def _service_schema(targeted: bool, custom: bool) -> probatio.Schema:
                 }
             ),
             unique_field_validator,
+            visible_field_validator,
         )
     }
 
