@@ -100,7 +100,7 @@ class GdacsSensor(SensorEntity):
     async def async_update(self) -> None:
         """Update this entity from the data held in the feed manager."""
         _LOGGER.debug("Updating %s", self._config_entry_id)
-        if self._manager:
+        if self._manager:  # type: ignore[truthy-bool]
             status_info = self._manager.status_info()
             if status_info:
                 self._update_from_status_info(status_info)

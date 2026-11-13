@@ -1349,7 +1349,7 @@ class EntityPlatform:
                     # If the entity is removed from hass during the previous
                     # entity being updated, we need to skip updating the
                     # entity.
-                    if entity.should_poll and entity.hass:
+                    if entity.should_poll and entity.hass:  # type: ignore[truthy-bool]
                         await entity.async_update_ha_state(True)
                 return
 

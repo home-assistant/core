@@ -90,14 +90,14 @@ class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
     @property
     def media_state(self) -> AmazonMediaState | None:
         """Return the media state relating to device."""
-        if not self.coordinator or not self.coordinator.media_states:
+        if not self.coordinator or not self.coordinator.media_states:  # type: ignore[truthy-bool]
             return None
         return self.coordinator.media_states.get(self._serial_num)
 
     @property
     def volume_state(self) -> AmazonVolumeState | None:
         """Volume settings for device."""
-        if not self.coordinator or not self.coordinator.volume_states:
+        if not self.coordinator or not self.coordinator.volume_states:  # type: ignore[truthy-bool]
             return None
         return self.coordinator.volume_states.get(self._serial_num)
 

@@ -263,7 +263,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HyperionConfigEntry) -> 
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    assert hyperion_client
+    assert hyperion_client  # type: ignore[truthy-bool]
     if hyperion_client.instances is not None:
         await async_instances_to_clients_raw(hyperion_client.instances)
 

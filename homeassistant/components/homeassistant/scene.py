@@ -200,7 +200,7 @@ async def async_setup_platform(
             hass, config, integration
         )
 
-        if not (conf and platform):
+        if not (conf and platform):  # type: ignore[truthy-bool]
             return
 
         await platform.async_reset()

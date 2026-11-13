@@ -154,7 +154,7 @@ class BaseFirmwareUpdateEntity(
         )
 
         if (extra_data := await self.async_get_last_extra_data()) and (
-            hardware_extra_data := FirmwareUpdateExtraStoredData.from_dict(
+            hardware_extra_data := FirmwareUpdateExtraStoredData.from_dict(  # type: ignore[truthy-bool]
                 extra_data.as_dict()
             )
         ):

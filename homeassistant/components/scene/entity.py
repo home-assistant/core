@@ -58,7 +58,7 @@ class BaseScene(RestoreEntity):
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate scene. Try to get entities into requested state."""
         task = self.hass.async_add_executor_job(ft.partial(self.activate, **kwargs))
-        if task:
+        if task:  # type: ignore[truthy-bool]
             await task
 
 

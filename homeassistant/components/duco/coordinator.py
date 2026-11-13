@@ -227,16 +227,16 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
 
         # The overview only backs supplemental entities, so failures preserve
         # known values where possible without making primary entities unavailable.
-        rssi_wifi = self.data.rssi_wifi if self.data else None
+        rssi_wifi = self.data.rssi_wifi if self.data else None  # type: ignore[truthy-bool]
         diagnostics_were_available = (
             self.data is None or self.data.diagnostics_available
         )
         diagnostics_available = False
         diagnostics_error: DucoError | None = None
-        diagnostic_subsystems = self.data.diagnostic_subsystems if self.data else {}
+        diagnostic_subsystems = self.data.diagnostic_subsystems if self.data else {}  # type: ignore[truthy-bool]
         time_filter_remain = None
         ventilation_temperatures = (
-            self.data.ventilation_temperatures if self.data else None
+            self.data.ventilation_temperatures if self.data else None  # type: ignore[truthy-bool]
         )
         try:
             info_overview = await self.client.async_get_info_overview()

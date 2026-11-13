@@ -369,7 +369,7 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                             tool_name="web_search_call",
                             tool_args={
                                 "action": event.item.action.to_dict()
-                                if event.item.action
+                                if event.item.action  # type: ignore[truthy-bool]
                                 else None,
                             },
                             external=True,

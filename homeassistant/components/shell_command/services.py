@@ -95,7 +95,7 @@ def _make_handler(
             async with asyncio.timeout(COMMAND_TIMEOUT):
                 stdout_data, stderr_data = await process.communicate()
         except TimeoutError as err:
-            if process:
+            if process:  # type: ignore[truthy-bool]
                 with suppress(TypeError):
                     process.kill()
                     # https://bugs.python.org/issue43884

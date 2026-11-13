@@ -209,13 +209,13 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if auth_status is None:
             # Device has been claimed
-            if self._polling_task and not self._polling_task.done():
+            if self._polling_task and not self._polling_task.done():  # type: ignore[truthy-bool]
                 self._polling_task.cancel()
                 self._polling_task = None
             return self.async_external_step_done(next_step_id="create_entry")
 
         # Device not claimed yet, show the external step again
-        if self._polling_task and not self._polling_task.done():
+        if self._polling_task and not self._polling_task.done():  # type: ignore[truthy-bool]
             self._polling_task.cancel()
             self._polling_task = None
         return self.async_external_step(

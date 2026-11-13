@@ -116,7 +116,7 @@ async def async_setup_entry(
         for device_id in device_ids:
             device = manager.device_map[device_id]
             if (description := CLIMATE_DESCRIPTIONS.get(device.category)) and (
-                definition := get_default_definition(
+                definition := get_default_definition(  # type: ignore[truthy-bool]
                     device,
                     _HA_TO_TUYA_TEMPERATURE.get(
                         hass.config.units.temperature_unit,

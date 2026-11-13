@@ -154,7 +154,7 @@ class TodSensor(BinarySensorEntity):
     @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the sensor."""
-        if time_zone := dt_util.get_default_time_zone():
+        if time_zone := dt_util.get_default_time_zone():  # type: ignore[truthy-bool]
             return {
                 TodEntityStateAttribute.AFTER: self._time_after.astimezone(
                     time_zone

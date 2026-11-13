@@ -85,7 +85,7 @@ class CalendarSyncUpdateCoordinator(DataUpdateCoordinator[Timeline]):
         self, start_date: datetime, end_date: datetime
     ) -> Iterable[Event]:
         """Get all events in a specific time frame."""
-        if not self.data:
+        if not self.data:  # type: ignore[truthy-bool]
             raise HomeAssistantError(
                 "Unable to get events: Sync from server has not completed"
             )

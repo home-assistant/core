@@ -164,7 +164,7 @@ class PingDataSubProcess(PingData):
                 self._count + PING_TIMEOUT,
             )
 
-            if pinger:
+            if pinger:  # type: ignore[truthy-bool]
                 with suppress(TypeError, ProcessLookupError):
                     pinger.kill()
                 del pinger

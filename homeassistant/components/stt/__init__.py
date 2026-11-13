@@ -86,7 +86,7 @@ def async_default_engine(hass: HomeAssistant) -> str | None:
     default_entity_id: str | None = None
 
     for entity in hass.data[DATA_COMPONENT].entities:
-        if entity.platform and entity.platform.platform_name == "cloud":
+        if entity.platform and entity.platform.platform_name == "cloud":  # type: ignore[truthy-bool]
             return entity.entity_id
 
         if default_entity_id is None:

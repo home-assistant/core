@@ -48,7 +48,7 @@ class GeocachingFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
             session=async_get_clientsession(self.hass),
         )
         status = await api.update()
-        if not status.user or not status.user.username:
+        if not status.user or not status.user.username:  # type: ignore[truthy-bool]
             return self.async_abort(reason="oauth_error")
 
         if existing_entry := await self.async_set_unique_id(

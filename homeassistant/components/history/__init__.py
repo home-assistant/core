@@ -116,7 +116,7 @@ class HistoryPeriodView(HomeAssistantView):
             # has_states_before will return True if there are states older than
             # end_time. If it's false, we know there are no states in the
             # database up until end_time.
-            (end_time and not has_states_before(hass, end_time))
+            (end_time and not has_states_before(hass, end_time))  # type: ignore[truthy-bool]
             or (
                 not include_start_time_state
                 and entity_ids

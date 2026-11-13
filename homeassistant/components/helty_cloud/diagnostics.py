@@ -36,7 +36,7 @@ async def async_get_config_entry_diagnostics(
                     TO_REDACT_DEVICE,
                 ),
                 "last_update_success": coordinator.last_update_success,
-                "state": asdict(coordinator.data) if coordinator.data else None,
+                "state": asdict(coordinator.data) if coordinator.data else None,  # type: ignore[truthy-bool]
             }
             for coordinator in entry.runtime_data
         ],

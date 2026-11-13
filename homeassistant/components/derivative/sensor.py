@@ -445,7 +445,7 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
             if not self._handle_invalid_source_state(new_state):
                 return
 
-            assert new_state
+            assert new_state  # type: ignore[truthy-bool]
             if self._attr_native_value == Decimal(0):
                 # If the derivative is zero, and the source sensor hasn't
                 # changed state, then we know it will still be zero.

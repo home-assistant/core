@@ -1000,7 +1000,7 @@ class BackupManager:
             backup_id: error
             for backup_id, error_dict in zip(backup_ids, delete_results, strict=True)
             for error in error_dict.values()
-            if error and not isinstance(error, BackupNotFound)
+            if error and not isinstance(error, BackupNotFound)  # type: ignore[truthy-bool]
         }
         if agent_errors:
             LOGGER.error(

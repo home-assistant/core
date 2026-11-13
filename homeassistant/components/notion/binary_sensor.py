@@ -122,7 +122,7 @@ async def async_setup_entry(
             for listener_id, listener in coordinator.data.listeners.items()
             for description in BINARY_SENSOR_DESCRIPTIONS
             if description.listener_kind.value == listener.definition_id
-            and (sensor := coordinator.data.sensors[listener.sensor_id])
+            and (sensor := coordinator.data.sensors[listener.sensor_id])  # type: ignore[truthy-bool]
         ]
     )
 

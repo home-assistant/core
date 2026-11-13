@@ -60,7 +60,7 @@ async def async_get_config_entry_diagnostics(
                         data.last_changed.isoformat() if data.last_changed else None
                     ),
                     "last_updated": (
-                        data.last_updated.isoformat() if data.last_updated else None
+                        data.last_updated.isoformat() if data.last_updated else None  # type: ignore[truthy-bool]
                     ),
                 }
                 for data in coordinator.data.values()

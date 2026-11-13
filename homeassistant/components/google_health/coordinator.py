@@ -287,7 +287,7 @@ class GoogleHealthSleepCoordinator(
 
         # Find the first session with a sleep summary
         for data_point in sleep_result.data_points or ():
-            if data_point.data and data_point.data.summary:
+            if data_point.data and data_point.data.summary:  # type: ignore[truthy-bool]
                 return GoogleHealthSleepData(sleep=data_point.data)
 
         # No sessions or current session still in progress

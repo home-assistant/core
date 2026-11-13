@@ -209,7 +209,7 @@ class MatterUpdate(MatterEntity, UpdateEntity):
             )
 
         if (extra_data := await self.async_get_last_extra_data()) and (
-            matter_extra_data := MatterUpdateExtraStoredData.from_dict(
+            matter_extra_data := MatterUpdateExtraStoredData.from_dict(  # type: ignore[truthy-bool]
                 extra_data.as_dict()
             )
         ):

@@ -272,7 +272,7 @@ class ProxyCamera(Camera):
 
         self._last_image_time = now
         image = await async_get_image(self.hass, self._proxied_camera)
-        if not image:
+        if not image:  # type: ignore[truthy-bool]
             _LOGGER.error("Error getting original camera image")
             return self._last_image
 

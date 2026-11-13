@@ -116,7 +116,7 @@ class DemoManager:
         for _ in range(1, count + 1):
             if self._managed_devices:
                 device = random.choice(self._managed_devices)
-                if device:
+                if device:  # type: ignore[truthy-bool]
                     _LOGGER.debug("Removing %s", device)
                     self._managed_devices.remove(device)
                     self._hass.async_create_task(device.async_remove())

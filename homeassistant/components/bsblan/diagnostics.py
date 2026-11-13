@@ -35,7 +35,7 @@ async def async_get_config_entry_diagnostics(
     }
 
     # Add DHW config and schedule from slow coordinator if available
-    if data.slow_coordinator.data:
+    if data.slow_coordinator.data:  # type: ignore[truthy-bool]
         slow_data = {}
         if data.slow_coordinator.data.dhw_config:
             slow_data["dhw_config"] = data.slow_coordinator.data.dhw_config.model_dump()

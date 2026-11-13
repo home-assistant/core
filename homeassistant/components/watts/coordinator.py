@@ -231,7 +231,7 @@ class WattsVisionDeviceCoordinator(DataUpdateCoordinator[WattsVisionDeviceData])
                 translation_placeholders={"device_id": self.device_id},
             ) from err
 
-        if not device:
+        if not device:  # type: ignore[truthy-bool]
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="device_not_found",

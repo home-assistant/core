@@ -167,7 +167,7 @@ async def async_setup_entry(
 
         Update group states based on its sum of related lights.
         """
-        if (group := hub.api.groups[group_id]) and not group.lights:
+        if (group := hub.api.groups[group_id]) and not group.lights:  # type: ignore[truthy-bool]
             return
 
         lights = [

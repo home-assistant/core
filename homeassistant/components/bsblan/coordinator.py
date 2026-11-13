@@ -157,7 +157,7 @@ class BSBLanFastCoordinator(BSBLanCoordinator[BSBLanFastData]):
                     translation_placeholders={"host": host},
                 ) from err
             except BSBLANError:
-                sensor = self.data.sensor if self.data else Sensor()
+                sensor = self.data.sensor if self.data else Sensor()  # type: ignore[truthy-bool]
                 LOGGER.debug("Sensor data not available on device at %s", host)
 
         except BSBLANAuthError as err:
@@ -178,7 +178,7 @@ class BSBLanFastCoordinator(BSBLanCoordinator[BSBLanFastData]):
             dhw = await self.client.hot_water_state(include=DHW_STATE_INCLUDE)
         except BSBLANError:
             # Preserve last known DHW state if available (entity may depend on it)
-            if self.data:
+            if self.data:  # type: ignore[truthy-bool]
                 dhw = self.data.dhw
             LOGGER.debug(
                 "DHW (Domestic Hot Water) state not available on device at %s",
@@ -264,7 +264,7 @@ class BSBLanSlowCoordinator(BSBLanCoordinator[BSBLanSlowData]):
         write) to avoid extra serial-bus traffic on every interval, so they
         are carried over from the previous update.
         """
-        previous = self.data or BSBLanSlowData()
+        previous = self.data or BSBLanSlowData()  # type: ignore[truthy-bool]
         dhw_config: HotWaterConfig | None
         try:
             dhw_config = await self.client.hot_water_config(include=DHW_CONFIG_INCLUDE)

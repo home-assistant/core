@@ -261,7 +261,7 @@ async def async_setup_entry(
     entities.extend(
         EcovacsErrorSensor(device, capability)
         for device in controller.devices
-        if (capability := device.capabilities.error)
+        if (capability := device.capabilities.error)  # type: ignore[truthy-bool]
     )
 
     async_add_entities(entities)

@@ -162,7 +162,7 @@ class KeeneticOptionsFlowHandler(OptionsFlowWithReload):
         """Manage the options."""
         if (
             not hasattr(self.config_entry, "runtime_data")
-            or not self.config_entry.runtime_data
+            or not self.config_entry.runtime_data  # type: ignore[truthy-bool]
         ):
             return self.async_abort(reason="not_initialized")
 

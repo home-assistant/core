@@ -18,7 +18,7 @@ async def async_get_config_entry_diagnostics(
     coordinator = entry.runtime_data
 
     if TYPE_CHECKING:
-        assert coordinator.evse
+        assert coordinator.evse  # type: ignore[truthy-bool]
 
     coordinator_data = coordinator.evse.data
     evse_raw_data = cast(dict[str, Any], coordinator.evse.raw_data)

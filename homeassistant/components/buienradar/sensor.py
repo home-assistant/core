@@ -772,7 +772,7 @@ class BrSensor(SensorEntity):
     def data_updated(self, data: BrData):
         """Handle data update."""
         self._data = data
-        if not self.hass:
+        if not self.hass:  # type: ignore[truthy-bool]
             return
         self._update()
 

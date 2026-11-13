@@ -48,7 +48,7 @@ class SonicValve(WatergateEntity, ValveEntity):
         """Initialize the sensor."""
         super().__init__(coordinator, ENTITY_NAME)
         self._valve_state = (
-            coordinator.data.state.valve_state if coordinator.data.state else None
+            coordinator.data.state.valve_state if coordinator.data.state else None  # type: ignore[truthy-bool]
         )
 
     @property
@@ -76,7 +76,7 @@ class SonicValve(WatergateEntity, ValveEntity):
         self._attr_available = self.coordinator.data is not None
         self._valve_state = (
             self.coordinator.data.state.valve_state
-            if self.coordinator.data.state
+            if self.coordinator.data.state  # type: ignore[truthy-bool]
             else None
         )
         self.async_write_ha_state()
