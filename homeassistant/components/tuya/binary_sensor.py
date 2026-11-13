@@ -372,6 +372,14 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
         ),
         TAMPER_BINARY_SENSOR,
     ),
+    DeviceCategory.QCCDZ: (
+        TuyaBinarySensorEntityDescription(
+            key=f"{DPCode.WORK_STATE}_charging",
+            dpcode=DPCode.WORK_STATE,
+            device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
+            on_value={"charger_charging", "charing"},
+        ),
+    ),
     DeviceCategory.QXJ: (TAMPER_BINARY_SENSOR,),
     DeviceCategory.RQBJ: (
         TuyaBinarySensorEntityDescription(

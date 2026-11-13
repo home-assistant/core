@@ -799,8 +799,18 @@
           "charger_free_fault": "Fault while idle",
           "charger_insert": "Plugged in",
           "charger_pause": "[%key:common::state::paused%]",
-          "charger_wait": "Waiting"
+          "charger_wait": "Waiting",
+          "charing": "[%key:common::state::charging%]",
+          "connect": "Connected",
+          "error": "[%key:common::state::error%]",
+          "finish": "Finished",
+          "no_connet": "Ready",
+          "wait_charing": "Waiting to charge",
+          "wait_rfid": "Waiting for RFID"
         }
+      },
+      "charging_time": {
+        "name": "Charging time"
       },
       "cleaning_area": {
         "name": "Cleaning area"
