@@ -501,6 +501,7 @@ async def test_heiman_led_indicator(
         ),
         value=0,
     )
+    assert type(matter_client.write_attribute.call_args_list[0].kwargs["value"]) is int
     await hass.services.async_call(
         "switch",
         "turn_on",
@@ -516,6 +517,7 @@ async def test_heiman_led_indicator(
         ),
         value=1,
     )
+    assert type(matter_client.write_attribute.call_args_list[1].kwargs["value"]) is int
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
