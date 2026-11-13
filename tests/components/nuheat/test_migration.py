@@ -148,9 +148,10 @@ async def run_migration_flow(
     account: str = "Owner@Example.com",
     subject: str = ACCOUNT_SUBJECT,
     drain_deferred_cleanup: bool = True,
+    implementation: FakeOAuthImplementation | None = None,
 ):
     """Complete migration through the public reauthentication flow manager."""
-    implementation = FakeOAuthImplementation(
+    implementation = implementation or FakeOAuthImplementation(
         token=oauth_data(subject=subject)[CONF_TOKEN]
     )
     list_calls = 0
@@ -487,6 +488,70 @@ async def test_one_legacy_entry_becomes_oauth_account(
     assert CONF_USERNAME not in entry.data
     assert CONF_PASSWORD not in entry.data
     assert CONF_SERIAL_NUMBER not in entry.data
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("existing_account", [False, True])
+async def test_migration_keeps_token_rotated_during_restart(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    existing_account: bool,
+) -> None:
+    """Finalization keeps the real OAuth session's newest refresh token."""
+    legacy = add_legacy_entry(hass, "ABC123")
+    create_customized_registry_records(hass, legacy, "ABC123")
+    anchor = legacy
+    if existing_account:
+        anchor = MockConfigEntry(
+            domain=DOMAIN,
+            data=oauth_data(),
+            unique_id=ACCOUNT_SUBJECT,
+            version=OAUTH_CONFIG_ENTRY_VERSION,
+        )
+        anchor.add_to_hass(hass)
+    implementation = FakeOAuthImplementation(
+        token={
+            **oauth_data()[CONF_TOKEN],
+            "expires_in": -3600,
+            "expires_at": 0,
+        }
+    )
+    rotated = {
+        CONF_ACCESS_TOKEN: jwt_access_token(ACCOUNT_SUBJECT, marker="rotation-one"),
+        "refresh_token": "synthetic-rotation-one",
+        "expires_in": 3600,
+    }
+    second_rotation = {
+        **rotated,
+        "refresh_token": "synthetic-rotation-two",
+    }
+    with patch.object(
+        implementation,
+        "_async_refresh_token",
+        AsyncMock(side_effect=[rotated, second_rotation]),
+    ) as refresh:
+        result = await run_migration_flow(
+            hass,
+            hass_client_no_auth,
+            legacy,
+            [thermostat("ABC123")],
+            implementation=implementation,
+        )
+        assert result["reason"] == "migration_successful"
+        assert refresh.await_count == 1
+        assert anchor.data[CONF_TOKEN]["refresh_token"] == "synthetic-rotation-one"
+        assert CONF_USERNAME not in anchor.data
+        assert CONF_PASSWORD not in anchor.data
+        hass.config_entries.async_update_entry(
+            anchor,
+            data={
+                **anchor.data,
+                CONF_TOKEN: {**anchor.data[CONF_TOKEN], "expires_at": 0},
+            },
+        )
+        await anchor.runtime_data.oauth_session.async_ensure_token_valid()
+        assert refresh.await_args.args[0]["refresh_token"] == "synthetic-rotation-one"
+        assert anchor.data[CONF_TOKEN]["refresh_token"] == "synthetic-rotation-two"
 
 
 @pytest.mark.asyncio

@@ -526,9 +526,15 @@ def _finish_anchor_data(
     oauth_data: Mapping[str, Any],
     plan: MigrationPlan,
 ) -> None:
+    # Setup may rotate the refresh token while verifying the migrated account.
+    # Keep that token, but only retain the validated OAuth fields, not legacy data.
+    current_token = anchor.data.get(CONF_TOKEN)
+    if not isinstance(current_token, Mapping):
+        raise MigrationExecutionError("NuHeat account token is missing after setup")
+    final_data = {**oauth_data, CONF_TOKEN: dict(current_token)}
     hass.config_entries.async_update_entry(
         anchor,
-        data=_migration_marker_data(oauth_data, plan),
+        data=_migration_marker_data(final_data, plan),
         title=plan.account_title,
         unique_id=plan.account_unique_id,
         version=OAUTH_CONFIG_ENTRY_VERSION,
