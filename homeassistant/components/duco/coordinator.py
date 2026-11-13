@@ -179,6 +179,7 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
 
     async def _async_fetch_data(self) -> DucoData:
         """Fetch node data while holding the request lock."""
+        previous_data = cast(DucoData | None, self.data)
         try:
             nodes = await self.client.async_get_nodes()
         except DucoConnectionError as err:
@@ -211,7 +212,6 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
         try:
             node_actions = await self.client.async_get_node_actions()
         except DucoError as err:
-            previous_data = cast(DucoData | None, self.data)
             node_actions = (
                 previous_data.node_actions
                 if previous_data is not None
@@ -227,16 +227,20 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
 
         # The overview only backs supplemental entities, so failures preserve
         # known values where possible without making primary entities unavailable.
-        rssi_wifi = self.data.rssi_wifi if self.data else None
+        rssi_wifi = previous_data.rssi_wifi if previous_data is not None else None
         diagnostics_were_available = (
-            self.data is None or self.data.diagnostics_available
+            previous_data is None or previous_data.diagnostics_available
         )
         diagnostics_available = False
         diagnostics_error: DucoError | None = None
-        diagnostic_subsystems = self.data.diagnostic_subsystems if self.data else {}
+        diagnostic_subsystems = (
+            previous_data.diagnostic_subsystems if previous_data is not None else {}
+        )
         time_filter_remain = None
         ventilation_temperatures = (
-            self.data.ventilation_temperatures if self.data else None
+            previous_data.ventilation_temperatures
+            if previous_data is not None
+            else None
         )
         try:
             info_overview = await self.client.async_get_info_overview()
