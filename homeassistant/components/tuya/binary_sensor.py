@@ -408,14 +408,15 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
         ),
         TAMPER_BINARY_SENSOR,
     ),
-    # Pet feeders with a camera are reported as "sp"
     DeviceCategory.SP: (
         TuyaBinarySensorEntityDescription(
+            # Pet feeders with a camera are reported as "sp"
             key=DPCode.FEED_BLOCK_STATUS,
             translation_key="feed_blocked",
             device_class=BinarySensorDeviceClass.PROBLEM,
         ),
         TuyaBinarySensorEntityDescription(
+            # Pet feeders with a camera are reported as "sp"
             key=DPCode.FEED_STUCK_STATUS,
             translation_key="food_stuck",
             device_class=BinarySensorDeviceClass.PROBLEM,
