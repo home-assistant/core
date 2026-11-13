@@ -110,6 +110,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: NessAlarmConfigEntry) -
     await entry.runtime_data.close()
 
 
-async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_reload_entry(hass: HomeAssistant, entry: NessAlarmConfigEntry) -> None:
     """Reload config entry when options change."""
     await hass.config_entries.async_reload(entry.entry_id)

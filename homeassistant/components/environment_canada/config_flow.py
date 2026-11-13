@@ -10,7 +10,6 @@ from env_canada.ec_weather import get_ec_sites_list
 import probatio
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -69,6 +68,7 @@ from .const import (
     SECTION_RADAR,
     SECTION_TIME,
 )
+from .coordinator import ECConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -113,7 +113,7 @@ class EnvironmentCanadaConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: ECConfigEntry,
     ) -> OptionsFlowHandler:
         """Return the options flow handler."""
         return OptionsFlowHandler()

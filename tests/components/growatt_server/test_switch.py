@@ -93,7 +93,7 @@ async def test_switch_service_call_api_error(
     """Test handling API error when calling switch services."""
     # Mock API to raise error
     mock_growatt_v1_api.min_write_parameter.side_effect = GrowattV1ApiError(
-        message="API Error",
+        message="Error during writing parameter",
         error_code=GrowattV1ApiErrorCode.NO_PRIVILEGE,
         error_msg="API Error",
     )
@@ -106,8 +106,11 @@ async def test_switch_service_call_api_error(
             blocking=True,
         )
     assert excinfo.value.translation_domain == "growatt_server"
-    assert excinfo.value.translation_key == "api_error"
-    assert "error" in excinfo.value.translation_placeholders
+    assert excinfo.value.translation_key == "api_error_with_code"
+    assert excinfo.value.translation_placeholders == {
+        "error": "API Error",
+        "code": "10011",
+    }
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

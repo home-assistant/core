@@ -24,7 +24,11 @@ from .backup import backed_up_paths
 from .identity import one_stored_entry_per_name
 from .logger import LOGGER
 from .path import is_safe
-from .storage import async_load_from_storage, async_save_to_storage
+from .storage import (
+    async_load_from_storage,
+    async_save_to_storage,
+    corrupt_copy_of_missing_file,
+)
 
 if TYPE_CHECKING:
     from ..base import MarketplaceManager
@@ -178,6 +182,19 @@ class MarketplaceData:
 
         if data is None:
             return {}
+        # A corrupt file is renamed by the storage helper and loads as nothing,
+        # just like a missing one on a first setup. Taken as a first setup, the
+        # next save would make the empty state permanent.
+        if not data and (
+            corrupt_copy := await self.marketplace.hass.async_add_executor_job(
+                corrupt_copy_of_missing_file, path
+            )
+        ):
+            self._log_unreadable(
+                f"{path} could not be parsed and was moved to {corrupt_copy};"
+                " remove that copy to start without the stored data"
+            )
+            return None
         if not isinstance(data, dict):
             self._log_unreadable(f"{path} does not hold an object")
             return None

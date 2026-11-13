@@ -6,15 +6,12 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.cover import ATTR_POSITION, DOMAIN as COVER_DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_CLOSE_COVER,
-    SERVICE_OPEN_COVER,
-    SERVICE_SET_COVER_POSITION,
-    SERVICE_STOP_COVER,
-    Platform,
+from homeassistant.components.cover import (
+    DOMAIN as COVER_DOMAIN,
+    CoverService,
+    CoverServiceArgument,
 )
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -52,22 +49,22 @@ async def test_actions(
     entity = config_entry.runtime_data.controller.get_all_cover()[entity_num]
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.CLOSE,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
     entity.close.assert_called_once()
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.OPEN,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
     entity.open.assert_called_once()
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.STOP,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
     entity.stop.assert_called_once()
@@ -82,8 +79,11 @@ async def test_position(
     await init_integration(hass, config_entry)
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: "cover.basement_covername", ATTR_POSITION: 25},
+        CoverService.SET_POSITION,
+        {
+            CommonServiceArgument.ENTITY_ID: "cover.basement_covername",
+            CoverServiceArgument.POSITION: 25,
+        },
         blocking=True,
     )
     mock_cover.set_position.assert_called_once_with(75)

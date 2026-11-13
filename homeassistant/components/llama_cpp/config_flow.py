@@ -9,7 +9,6 @@ import probatio
 
 from homeassistant import data_entry_flow
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -31,6 +30,7 @@ from homeassistant.helpers.selector import (
     TemplateSelector,
 )
 
+from . import LlamaCppConfigEntry
 from .api import (
     async_create_client,
     async_list_models,
@@ -231,7 +231,7 @@ class LlamaCppConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: LlamaCppConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         return {
