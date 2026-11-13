@@ -52,6 +52,7 @@ from homeassistant.components.telegram_bot.const import (
     PARSER_PLAIN_TEXT,
     PLATFORM_BROADCAST,
     SECTION_ADDITIONAL_SETTINGS,
+    TelegramBotChatAction,
     TelegramBotService,
     TelegramBotServiceArgument,
 )
@@ -562,7 +563,7 @@ async def test_send_chat_action(
             {
                 CommonServiceArgument.CONFIG_ENTRY_ID: mock_broadcast_config_entry.entry_id,
                 TelegramBotServiceArgument.CHAT_ID: [123456],
-                TelegramBotServiceArgument.CHAT_ACTION: ChatAction.TYPING,
+                TelegramBotServiceArgument.CHAT_ACTION: TelegramBotChatAction.TYPING,
                 TelegramBotServiceArgument.MESSAGE_THREAD_ID: 123,
             },
             blocking=True,

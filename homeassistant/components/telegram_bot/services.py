@@ -3,7 +3,7 @@
 import logging
 
 import probatio
-from telegram.constants import ChatAction, InputMediaType
+from telegram.constants import InputMediaType
 from telegram.error import TelegramError
 
 from homeassistant.config_entries import ConfigEntryState
@@ -42,6 +42,7 @@ from .const import (
     PARSER_MD,
     PARSER_MD2,
     PARSER_PLAIN_TEXT,
+    TelegramBotChatAction,
     TelegramBotService,
     TelegramBotServiceArgument,
 )
@@ -121,8 +122,8 @@ SERVICE_SCHEMA_SEND_CHAT_ACTION = probatio.Schema(
         probatio.Optional(TelegramBotServiceArgument.CHAT_ID): probatio.All(
             probatio.EnsureList(), [probatio.Coerce(int)]
         ),
-        probatio.Required(TelegramBotServiceArgument.CHAT_ACTION): probatio.Coerce(
-            ChatAction
+        probatio.Required(TelegramBotServiceArgument.CHAT_ACTION): probatio.In(
+            list(TelegramBotChatAction)
         ),
         probatio.Optional(
             TelegramBotServiceArgument.MESSAGE_THREAD_ID
