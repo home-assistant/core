@@ -1,167 +1,105 @@
 """Tests for the Bbox device tracker platform."""
 
-from datetime import timedelta
+from unittest.mock import MagicMock
 
-from aiohttp import ClientConnectionError
 from freezegun.api import FrozenDateTimeFactory
-from probatio import Invalid
 import pytest
-from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
-from homeassistant.components.bbox.const import DEFAULT_HOST
-from homeassistant.components.bbox.device_tracker import (
-    PLATFORM_SCHEMA,
-    BboxDeviceScanner,
-)
+from homeassistant.components.bbox.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.components.device_tracker.const import (
-    DOMAIN as DEVICE_TRACKER_DOMAIN,
+    CONF_CONSIDER_HOME,
+    CONF_TRACK_NEW,
 )
-from homeassistant.const import CONF_HOST, CONF_VERIFY_SSL
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_HOST, STATE_HOME, STATE_NOT_HOME
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from .const import (
-    GUEST_NETWORK_HOSTS,
-    HOST,
-    HOSTS_RESPONSE,
-    HOSTS_URL,
-    MAIN_NETWORK_HOSTS,
-    PASSWORD,
-)
-
-ACTIVE_HOST = MAIN_NETWORK_HOSTS[0]
-ACTIVE_MAC = ACTIVE_HOST["macaddress"]
+from .const import HOST, HOSTS, NEW_HOST
 
 
-def test_platform_schema_requires_password() -> None:
-    """Test that the platform is not configurable without a password."""
-    with pytest.raises(Invalid):
-        PLATFORM_SCHEMA({"platform": "bbox"})
-
-
-def test_platform_schema_defaults() -> None:
-    """Test the platform defaults for host and verify_ssl."""
-    config = PLATFORM_SCHEMA({"platform": "bbox", "password": PASSWORD})
-    assert config[CONF_HOST] == DEFAULT_HOST
-    assert config[CONF_VERIFY_SSL] is True
-
-
-def test_platform_schema_verify_ssl_disabled() -> None:
-    """Test that verify_ssl can be disabled, e.g. for a numeric host."""
-    config = PLATFORM_SCHEMA(
-        {"platform": "bbox", "password": PASSWORD, "verify_ssl": False}
-    )
-    assert config[CONF_VERIFY_SSL] is False
-
-
-async def test_scanner(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test that the scanner tracks the active devices of the main network."""
-    aioclient_mock.get(HOSTS_URL, json=HOSTS_RESPONSE)
-    scanner = await hass.async_add_executor_job(BboxDeviceScanner, hass, HOST, PASSWORD)
-    assert scanner.success_init is True
-    devices = await hass.async_add_executor_job(scanner.scan_devices)
-    assert devices == [ACTIVE_MAC]
-    name = await hass.async_add_executor_job(scanner.get_device_name, ACTIVE_MAC)
-    assert name == ACTIVE_HOST["hostname"]
-    assert scanner.get_device_name("aa:bb:cc:dd:ee:99") is None
-
-
-async def test_scanner_skips_malformed_entries(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test that malformed device entries are skipped, not fatal."""
-    malformed_response = [
-        {
-            "hosts": {
-                "list": [
-                    {"hostname": "Ghost"},  # no active/macaddress
-                    {"active": 1},  # active but no macaddress
-                    ACTIVE_HOST,
-                ]
-            }
-        }
-    ]
-    aioclient_mock.get(HOSTS_URL, json=malformed_response)
-    scanner = await hass.async_add_executor_job(BboxDeviceScanner, hass, HOST, PASSWORD)
-    assert scanner.success_init is True
-    devices = await hass.async_add_executor_job(scanner.scan_devices)
-    assert devices == [ACTIVE_MAC]
-
-
-async def test_scanner_is_throttled(
+async def test_device_trackers(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
+    mock_bbox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the entry tracks the known hosts of the main network."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("device_tracker.mylaptop")
+    assert state is not None
+    assert state.state == STATE_HOME
+    state = hass.states.get("device_tracker.oldphone")
+    assert state is not None
+    assert state.state == STATE_NOT_HOME
+
+
+async def test_new_device_is_tracked(
+    hass: HomeAssistant,
+    mock_bbox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that the scanner repeats the fetch only after the throttle."""
-    freezer.move_to("2026-11-11T15:00:00+00:00")
-    aioclient_mock.get(HOSTS_URL, json=HOSTS_RESPONSE)
-    scanner = await hass.async_add_executor_job(BboxDeviceScanner, hass, HOST, PASSWORD)
-    assert aioclient_mock.call_count == 1
+    """Test a device appearing in a later poll gets its tracker entity."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get("device_tracker.newtablet") is None
 
-    await hass.async_add_executor_job(scanner.scan_devices)
-    assert aioclient_mock.call_count == 1
+    mock_bbox_client.return_value.get_hosts.return_value = [*HOSTS, NEW_HOST]
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-    freezer.tick(timedelta(seconds=61))
-    await hass.async_add_executor_job(scanner.scan_devices)
-    assert aioclient_mock.call_count == 2
+    state = hass.states.get("device_tracker.newtablet")
+    assert state is not None
+    assert state.state == STATE_HOME
 
 
-async def test_scanner_clears_cache_on_failure(
+async def test_yaml_import(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    freezer: FrozenDateTimeFactory,
+    mock_bbox_client: MagicMock,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test that a failed scan drops the cached list instead of replaying it."""
-    freezer.move_to("2026-11-11T15:00:00+00:00")
-    aioclient_mock.get(HOSTS_URL, json=HOSTS_RESPONSE)
-    scanner = await hass.async_add_executor_job(BboxDeviceScanner, hass, HOST, PASSWORD)
-    devices = await hass.async_add_executor_job(scanner.scan_devices)
-    assert devices == [ACTIVE_MAC]
-
-    aioclient_mock.clear_requests()
-    aioclient_mock.get(HOSTS_URL, exc=ClientConnectionError("boom"))
-    freezer.tick(timedelta(seconds=61))
-    devices = await hass.async_add_executor_job(scanner.scan_devices)
-    assert devices == []
-    assert scanner.get_device_name(ACTIVE_MAC) is None
-
-
-async def test_scanner_connection_error(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test that the scanner reports an unsuccessful init when unreachable."""
-    aioclient_mock.get(HOSTS_URL, exc=ClientConnectionError("boom"))
-    scanner = await hass.async_add_executor_job(BboxDeviceScanner, hass, HOST, PASSWORD)
-    assert scanner.success_init is False
-    assert scanner.last_results == []
-    assert scanner.get_device_name(ACTIVE_MAC) is None
-
-
-@pytest.mark.usefixtures("mock_device_tracker_conf")
-async def test_setup_platform(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test that the legacy platform sets up and sees the active devices."""
-    aioclient_mock.get(HOSTS_URL, json=HOSTS_RESPONSE)
+    """Test the legacy device_tracker YAML platform is imported."""
     assert await async_setup_component(
         hass,
-        DEVICE_TRACKER_DOMAIN,
-        {DEVICE_TRACKER_DOMAIN: {"platform": "bbox", "password": PASSWORD}},
+        "device_tracker",
+        {"device_tracker": {"platform": "bbox", CONF_HOST: HOST}},
     )
     await hass.async_block_till_done()
 
-    tracked_state = hass.states.get(f"device_tracker.{ACTIVE_HOST['hostname'].lower()}")
-    assert tracked_state is not None
-    assert tracked_state.state == "home"
-    # Inactive and guest network devices are not tracked.
-    assert (
-        hass.states.get(f"device_tracker.{MAIN_NETWORK_HOSTS[1]['hostname'].lower()}")
-        is None
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].data[CONF_HOST] == HOST
+    assert issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
     )
-    assert (
-        hass.states.get(f"device_tracker.{GUEST_NETWORK_HOSTS[0]['hostname'].lower()}")
-        is None
+
+
+async def test_yaml_import_warns_on_dropped_options(
+    hass: HomeAssistant,
+    mock_bbox_client: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test legacy options that are no longer supported raise a warning."""
+    assert await async_setup_component(
+        hass,
+        "device_tracker",
+        {
+            "device_tracker": {
+                "platform": "bbox",
+                CONF_HOST: HOST,
+                CONF_CONSIDER_HOME: 300,
+                CONF_TRACK_NEW: True,
+            }
+        },
     )
+    await hass.async_block_till_done()
+
+    assert "no longer supported" in caplog.text
+    assert CONF_CONSIDER_HOME in caplog.text
+    assert CONF_TRACK_NEW in caplog.text

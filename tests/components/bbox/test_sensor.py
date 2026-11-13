@@ -1,39 +1,29 @@
 """Tests for the Bbox sensor platform."""
 
 from datetime import timedelta
+from unittest.mock import MagicMock
 
-from aiohttp import ClientConnectionError
 from freezegun.api import FrozenDateTimeFactory
-import pytest
-from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.bbox.api import BboxConnectionError
-from homeassistant.components.bbox.const import DEFAULT_HOST
-from homeassistant.components.bbox.sensor import PLATFORM_SCHEMA, BboxData
-from homeassistant.const import CONF_HOST, CONF_VERIFY_SSL
-from homeassistant.core import HomeAssistant
+from homeassistant.components.bbox.const import DOMAIN
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_MONITORED_VARIABLES,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_VERIFY_SSL,
+)
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from .const import (
-    DEVICE_INFO_RESPONSE,
-    DEVICE_URL,
-    HOST,
-    UPTIME,
-    WAN_IP_STATS_RESPONSE,
-    WAN_IP_STATS_URL,
-)
+from .const import ALL_SENSORS, PASSWORD, UPTIME
 
 SENSOR_PLATFORM_CONFIG = {
     "platform": "bbox",
-    "monitored_variables": [
-        "down_max_bandwidth",
-        "up_max_bandwidth",
-        "current_down_bandwidth",
-        "current_up_bandwidth",
-        "number_of_reboots",
-        "uptime",
-    ],
+    "monitored_variables": ALL_SENSORS,
 }
 
 EXPECTED_STATES = {
@@ -45,33 +35,24 @@ EXPECTED_STATES = {
 }
 
 
-@pytest.fixture
-def mock_bbox(aioclient_mock: AiohttpClientMocker) -> AiohttpClientMocker:
-    """Register the standard Bbox answers for the sensor endpoints."""
-    aioclient_mock.get(WAN_IP_STATS_URL, json=WAN_IP_STATS_RESPONSE)
-    aioclient_mock.get(DEVICE_URL, json=DEVICE_INFO_RESPONSE)
-    return aioclient_mock
-
-
-def test_platform_schema_defaults() -> None:
-    """Test the sensor platform defaults for host and verify_ssl."""
-    config = PLATFORM_SCHEMA({**SENSOR_PLATFORM_CONFIG})
-    assert config[CONF_HOST] == DEFAULT_HOST
-    assert config[CONF_VERIFY_SSL] is True
-    config = PLATFORM_SCHEMA({**SENSOR_PLATFORM_CONFIG, "verify_ssl": False})
-    assert config[CONF_VERIFY_SSL] is False
-
-
 async def test_sensors(
     hass: HomeAssistant,
-    mock_bbox: AiohttpClientMocker,
+    mock_bbox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that the platform exposes the WAN stats and device info."""
+    """Test that the entry exposes the WAN stats and device info sensors."""
     freezer.move_to("2026-11-11T15:00:00+00:00")
-    assert await async_setup_component(
-        hass, "sensor", {"sensor": SENSOR_PLATFORM_CONFIG}
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={
+            **mock_config_entry.data,
+            CONF_NAME: "Bbox",
+            CONF_MONITORED_VARIABLES: ALL_SENSORS,
+        },
     )
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     expected_uptime = (utcnow() - timedelta(seconds=UPTIME)).isoformat()
@@ -80,57 +61,71 @@ async def test_sensors(
     assert hass.states.get("sensor.bbox_uptime").state == expected_uptime
 
 
-async def test_setup_platform_connection_error(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+async def test_sensors_monitored_variables_subset(
+    hass: HomeAssistant,
+    mock_bbox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that no entities are exposed when the Bbox is unreachable."""
-    aioclient_mock.get(WAN_IP_STATS_URL, exc=ClientConnectionError("boom"))
-    aioclient_mock.get(DEVICE_URL, exc=ClientConnectionError("boom"))
+    """Test only the monitored variables become entities."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={**mock_config_entry.data, CONF_MONITORED_VARIABLES: ["uptime"]},
+    )
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.bbox_uptime") is not None
+    assert hass.states.get("sensor.bbox_number_of_reboot") is None
+
+
+async def test_yaml_import(
+    hass: HomeAssistant,
+    mock_bbox_client: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the legacy sensor YAML platform is imported into a config entry."""
     assert await async_setup_component(
         hass, "sensor", {"sensor": SENSOR_PLATFORM_CONFIG}
     )
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.bbox_uptime") is None
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    entry = entries[0]
+    assert entry.data[CONF_HOST] == "mabbox.bytel.fr"
+    assert entry.data[CONF_MONITORED_VARIABLES] == ALL_SENSORS
+    assert entry.data[CONF_PASSWORD] == ""
+    assert issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
 
 
-async def test_bbox_data_is_throttled(
+async def test_yaml_import_keeps_connection_options(
     hass: HomeAssistant,
-    mock_bbox: AiohttpClientMocker,
-    freezer: FrozenDateTimeFactory,
+    mock_bbox_client: MagicMock,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test that the first update is repeated only after the throttle."""
-    freezer.move_to("2026-11-11T15:00:00+00:00")
-    bbox_data = BboxData(hass, HOST, "")
-    await hass.async_add_executor_job(bbox_data.update)
-    assert bbox_data.data == WAN_IP_STATS_RESPONSE[0]["wan"]["ip"]["stats"]
-    assert bbox_data.router_infos == DEVICE_INFO_RESPONSE[0]
-    assert mock_bbox.call_count == 2
+    """Test host/password/verify_ssl in the sensor YAML import into the entry."""
+    assert await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": {
+                "platform": "bbox",
+                "monitored_variables": ALL_SENSORS,
+                CONF_HOST: "192.168.1.1",
+                CONF_PASSWORD: PASSWORD,
+                CONF_VERIFY_SSL: False,
+            }
+        },
+    )
+    await hass.async_block_till_done()
 
-    await hass.async_add_executor_job(bbox_data.update)
-    assert mock_bbox.call_count == 2
-
-    freezer.tick(timedelta(seconds=61))
-    await hass.async_add_executor_job(bbox_data.update)
-    assert mock_bbox.call_count == 4
-
-
-async def test_update_raises_and_keeps_last_value_on_failure(
-    hass: HomeAssistant,
-    mock_bbox: AiohttpClientMocker,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test that a failed refresh raises and keeps the last known payloads."""
-    freezer.move_to("2026-11-11T15:00:00+00:00")
-    bbox_data = BboxData(hass, HOST, "")
-    await hass.async_add_executor_job(bbox_data.update)
-    assert bbox_data.data is not None
-
-    mock_bbox.clear_requests()
-    mock_bbox.get(WAN_IP_STATS_URL, exc=ClientConnectionError("boom"))
-    mock_bbox.get(DEVICE_URL, exc=ClientConnectionError("boom"))
-    freezer.tick(timedelta(seconds=61))
-    with pytest.raises(BboxConnectionError):
-        await hass.async_add_executor_job(bbox_data.update)
-    # The last known payloads are kept, not cleared.
-    assert bbox_data.data == WAN_IP_STATS_RESPONSE[0]["wan"]["ip"]["stats"]
-    assert bbox_data.router_infos == DEVICE_INFO_RESPONSE[0]
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    entry = entries[0]
+    assert entry.unique_id == "192.168.1.1"
+    assert entry.data[CONF_HOST] == "192.168.1.1"
+    assert entry.data[CONF_PASSWORD] == PASSWORD
+    assert entry.data[CONF_VERIFY_SSL] is False

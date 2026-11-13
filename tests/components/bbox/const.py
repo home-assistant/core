@@ -1,20 +1,8 @@
-"""Shared payloads and constants for bbox tests.
+"""Shared data for the bbox tests, mirroring a Bbox F@st5688b (fw 25.1.22)."""
 
-The payloads mirror the real answers of a Bbox F@st5688b running
-firmware 25.1.22: endpoint answers wrapped in a single-element array
-(device, wan/ip/stats), the hosts endpoint answering one entry per
-network (main, guest).
-"""
-
-from http import HTTPStatus
+from bbox_api import DeviceInfo, FirmwareVersion, Host, WANIPStats, WANStats
 
 HOST = "mabbox.bytel.fr"
-API_URL = f"https://{HOST}/api/v1"
-DEVICE_URL = f"{API_URL}/device"
-HOSTS_URL = f"{API_URL}/hosts"
-LOGIN_URL = f"{API_URL}/login"
-WAN_IP_STATS_URL = f"{API_URL}/wan/ip/stats"
-
 PASSWORD = "test-password"
 
 UPTIME = 4861258
@@ -23,64 +11,44 @@ RX_BANDWIDTH = 17951
 TX_BANDWIDTH = 3456
 MAX_BANDWIDTH = 1000000
 
-UNAUTHORIZED_BODY = {
-    "exception": {
-        "domain": "v1/hosts",
-        "code": str(HTTPStatus.UNAUTHORIZED),
-        "errors": [{"name": "", "reason": "Operation requires authentication"}],
-    }
-}
+DEVICE = DeviceInfo(
+    modelname="F@st5688b",
+    numberofboots=NUMBER_OF_BOOTS,
+    serialnumber="XK151000123456",
+    uptime=UPTIME,
+    running=FirmwareVersion(version="25.1.22"),
+)
 
-DEVICE_INFO_RESPONSE = [
-    {
-        "device": {
-            "modelname": "F@st5688b",
-            "numberofboots": NUMBER_OF_BOOTS,
-            "serialnumber": "XK151000123456",
-            "uptime": UPTIME,
-        }
-    }
-]
+STATS = WANIPStats(
+    rx=WANStats(bandwidth=RX_BANDWIDTH, max_bandwidth=MAX_BANDWIDTH),
+    tx=WANStats(bandwidth=TX_BANDWIDTH, max_bandwidth=MAX_BANDWIDTH),
+)
 
-WAN_IP_STATS_RESPONSE = [
-    {
-        "wan": {
-            "ip": {
-                "stats": {
-                    "rx": {"bandwidth": RX_BANDWIDTH, "maxBandwidth": MAX_BANDWIDTH},
-                    "tx": {"bandwidth": TX_BANDWIDTH, "maxBandwidth": MAX_BANDWIDTH},
-                }
-            }
-        }
-    }
-]
+ACTIVE_HOST = Host(
+    active=True,
+    hostname="mylaptop",
+    ipaddress="192.168.1.42",
+    macaddress="AA:BB:CC:DD:EE:01",
+)
+INACTIVE_HOST = Host(
+    active=False,
+    hostname="oldphone",
+    ipaddress="192.168.1.43",
+    macaddress="AA:BB:CC:DD:EE:02",
+)
+NEW_HOST = Host(
+    active=True,
+    hostname="newtablet",
+    ipaddress="192.168.1.44",
+    macaddress="AA:BB:CC:DD:EE:03",
+)
+HOSTS = [ACTIVE_HOST, INACTIVE_HOST]
 
-MAIN_NETWORK_HOSTS = [
-    {
-        "active": 1,
-        "hostname": "MyLaptop",
-        "ipaddress": "192.168.1.10",
-        "macaddress": "aa:bb:cc:dd:ee:01",
-    },
-    {
-        "active": 0,
-        "hostname": "OldPhone",
-        "ipaddress": "192.168.1.11",
-        "macaddress": "aa:bb:cc:dd:ee:02",
-    },
-]
-
-GUEST_NETWORK_HOSTS = [
-    {
-        "active": 1,
-        "guest": 1,
-        "hostname": "GuestPhone",
-        "ipaddress": "10.0.0.11",
-        "macaddress": "aa:bb:cc:dd:ee:03",
-    }
-]
-
-HOSTS_RESPONSE = [
-    {"hosts": {"list": MAIN_NETWORK_HOSTS}},
-    {"hosts": {"list": GUEST_NETWORK_HOSTS}},
+ALL_SENSORS = [
+    "down_max_bandwidth",
+    "up_max_bandwidth",
+    "current_down_bandwidth",
+    "current_up_bandwidth",
+    "number_of_reboots",
+    "uptime",
 ]

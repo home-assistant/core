@@ -1,0 +1,77 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "rate_limited": "Too many attempts on the Bbox, it temporarily blocks authentication. Wait a few minutes and try again.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "password": "The admin password of the Bbox web interface.",
+          "verify_ssl": "Disable only when connecting by IP address: the Bbox certificate is issued for mabbox.bytel.fr."
+        }
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Bbox (for example mabbox.bytel.fr or 192.168.1.1). Leave mabbox.bytel.fr if the box answers there; use its IP (e.g. 192.168.1.1 on recent models) and disable SSL verification otherwise.",
+          "password": "The admin password of the Bbox web interface.",
+          "verify_ssl": "Disable only when connecting by IP address: the Bbox certificate is issued for mabbox.bytel.fr."
+        }
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Bbox (for example mabbox.bytel.fr or 192.168.1.1).",
+          "password": "The admin password of the Bbox web interface.",
+          "verify_ssl": "Disable only when connecting by IP address: the Bbox certificate is issued for mabbox.bytel.fr."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "current_down_bandwidth": {
+        "name": "Currently Used Download Bandwidth"
+      },
+      "current_up_bandwidth": {
+        "name": "Currently Used Upload Bandwidth"
+      },
+      "down_max_bandwidth": {
+        "name": "Maximum Download Bandwidth"
+      },
+      "number_of_reboots": {
+        "name": "Number of reboots"
+      },
+      "up_max_bandwidth": {
+        "name": "Maximum Upload Bandwidth"
+      },
+      "uptime": {
+        "name": "Uptime"
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml": {
+      "description": "Configuring {integration_title} using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the `{domain}` platform configuration from the `sensor` and `device_tracker` sections of your configuration.yaml file and restart Home Assistant to fix this issue.",
+      "title": "The {integration_title} YAML configuration is being removed"
+    }
+  }
+}

@@ -5,9 +5,12 @@
     "computers_network.routers_network",
     "presence_location.network_presence"
   ],
-  "codeowners": [],
+  "codeowners": ["@rettelx"],
+  "config_flow": true,
   "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/bbox",
+  "integration_type": "hub",
   "iot_class": "local_polling",
-  "quality_scale": "legacy"
+  "quality_scale": "legacy",
+  "requirements": ["bbox-api==0.1.0"]
 }
