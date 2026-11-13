@@ -111,15 +111,15 @@ class VoiceSupportClient:
                     raise InvalidResponseError(
                         "Invalid JSON from the Voice app"
                     ) from err
-                try:
-                    info = AppInfo.from_json(data)
-                except probatio.Invalid as err:
-                    raise InvalidResponseError(
-                        "Invalid info from the Voice app"
-                    ) from err
         except CLIENT_ERRORS:
             self.info = None
             raise
+
+        try:
+            info = AppInfo.from_json(data)
+        except probatio.Invalid as err:
+            self.info = None
+            raise InvalidResponseError("Invalid info from the Voice app") from err
 
         if info.api_version != API_VERSION:
             self.info = None
