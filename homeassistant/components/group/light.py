@@ -184,7 +184,7 @@ class LightGroup(GroupEntity, LightEntity):
 
         _LOGGER.debug("Forwarded turn_on commands: %s", service_calls)
 
-        await asyncio.gather(
+        results = await asyncio.gather(
             *(
                 self.hass.services.async_call(
                     LIGHT_DOMAIN,
@@ -194,8 +194,13 @@ class LightGroup(GroupEntity, LightEntity):
                     context=self._context,
                 )
                 for service_call in service_calls
-            )
+            ),
+            return_exceptions=True,
         )
+
+        for result in results:
+            if isinstance(result, BaseException):
+                raise result
 
     @callback
     def _clamp_color_temp_kelvin(self, entity_id: str, kelvin: int) -> int:
