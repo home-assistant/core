@@ -143,13 +143,6 @@ class Control4Light(Control4Entity, LightEntity):
         """Create a pyControl4 device object with the current director token."""
         return C4Light(self.entry_data.director, self._idx)
 
-    @staticmethod
-    def _to_float(value: Any) -> float | None:
-        try:
-            return float(value)
-        except TypeError, ValueError:
-            return None
-
     @property
     @override
     def is_on(self) -> bool | None:
@@ -161,10 +154,8 @@ class Control4Light(Control4Entity, LightEntity):
             CONTROL4_LIGHT_STATE,
             CONTROL4_CURRENT_POWER,
         ):
-            if key in attrs:
-                value = self._to_float(attrs[key])
-                if value is not None:
-                    return value > 0
+            if attrs.get(key) is not None:
+                return attrs[key] > 0
         return None
 
     @property
@@ -172,18 +163,12 @@ class Control4Light(Control4Entity, LightEntity):
     def brightness(self) -> int | None:
         """Return brightness (0-255)."""
         attrs = self._extra_state_attributes
-        raw_level = None
-        if CONTROL4_LIGHT_LEVEL in attrs:
-            raw_level = attrs[CONTROL4_LIGHT_LEVEL]
-        elif CONTROL4_BRIGHTNESS_PERCENT in attrs:
-            raw_level = attrs[CONTROL4_BRIGHTNESS_PERCENT]
-        level = self._to_float(raw_level)
-        if level is None:
-            return None
-        if level <= 0:
-            return 0
-        level = min(level, 100)
-        return value_to_brightness(CONTROL4_BRIGHTNESS_SCALE, level)
+        for key in (CONTROL4_LIGHT_LEVEL, CONTROL4_BRIGHTNESS_PERCENT):
+            if (level := attrs.get(key)) is not None:
+                if level <= 0:
+                    return 0
+                return value_to_brightness(CONTROL4_BRIGHTNESS_SCALE, level)
+        return None
 
     @property
     @override
