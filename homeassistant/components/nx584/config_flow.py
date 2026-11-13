@@ -9,6 +9,7 @@ import requests
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
 )
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import callback
@@ -55,7 +56,7 @@ class NX584ConfigFlow(ConfigFlow, domain=DOMAIN):
         """Rename the alarm entity ID to the name, unless the user changed it."""
         entity_registry = er.async_get(self.hass)
         entity_id = entity_registry.async_get_entity_id(
-            ALARM_CONTROL_PANEL_DOMAIN, DOMAIN, entry.entry_id
+            ALARM_CONTROL_PANEL_DOMAIN, DOMAIN, f"{entry.entry_id}_alarm"
         )
         if entity_id is None:
             return
@@ -70,6 +71,18 @@ class NX584ConfigFlow(ConfigFlow, domain=DOMAIN):
                 ALARM_CONTROL_PANEL_DOMAIN, name, current_entity_id=entity_id
             ),
         )
+
+    @callback
+    def _async_disable_zones(self, entry: NX584ConfigEntry, zones: set[int]) -> None:
+        """Disable zone sensors registered before their zones were excluded."""
+        entity_registry = er.async_get(self.hass)
+        for zone in zones:
+            if entity_id := entity_registry.async_get_entity_id(
+                BINARY_SENSOR_DOMAIN, DOMAIN, f"{entry.entry_id}_{zone}"
+            ):
+                entity_registry.async_update_entity(
+                    entity_id, disabled_by=er.RegistryEntryDisabler.INTEGRATION
+                )
 
     async def _async_validate(self, host: str, port: int) -> None:
         """Connect to the server; raise if it cannot be reached."""
@@ -139,6 +152,11 @@ class NX584ConfigFlow(ConfigFlow, domain=DOMAIN):
         if entry := self._async_entry_for_server(host, port):
             if name and name != entry.title:
                 self._async_rename_alarm_entity(entry, name)
+            self._async_disable_zones(
+                entry,
+                set(options.get(CONF_EXCLUDE_ZONES, []))
+                - set(entry.options.get(CONF_EXCLUDE_ZONES, [])),
+            )
             # Each platform owns its keys; the other platform's keys are kept.
             return self.async_update_reload_and_abort(
                 entry,

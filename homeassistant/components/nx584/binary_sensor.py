@@ -9,14 +9,13 @@ import requests
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
-    DOMAIN as BINARY_SENSOR_DOMAIN,
     PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -24,13 +23,7 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import NX584ConfigEntry, async_import_yaml, create_client
-from .const import (
-    CONF_EXCLUDE_ZONES,
-    CONF_ZONE_TYPES,
-    DEFAULT_HOST,
-    DEFAULT_PORT,
-    DOMAIN,
-)
+from .const import CONF_EXCLUDE_ZONES, CONF_ZONE_TYPES, DEFAULT_HOST, DEFAULT_PORT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,19 +81,11 @@ async def async_setup_entry(
     exclude: list[int] = entry.options.get(CONF_EXCLUDE_ZONES, [])
     zone_types: dict[str, str] = entry.options.get(CONF_ZONE_TYPES, {})
 
-    entity_registry = er.async_get(hass)
-    for zone in exclude:
-        if entity_id := entity_registry.async_get_entity_id(
-            BINARY_SENSOR_DOMAIN, DOMAIN, f"{entry.entry_id}_{zone}"
-        ):
-            entity_registry.async_remove(entity_id)
-
     if [int(v) for v in data.version.split(".")] < [1, 1]:
         _LOGGER.error("NX584 is too old to use for sensors (>=0.2 required)")
         return
 
-    zones = [zone for zone in data.zones if zone["number"] not in exclude]
-    if zones:
+    if data.zones:
         # Sensors register themselves once added, so disabled zones stay out.
         zone_sensors: dict[int, NX584ZoneSensor] = {}
         async_add_entities(
@@ -111,8 +96,9 @@ async def async_setup_entry(
                 ),
                 entry.entry_id,
                 zone_sensors,
+                zone["number"] not in exclude,
             )
-            for zone in zones
+            for zone in data.zones
         )
         watcher = NX584Watcher(
             create_client(entry.data[CONF_HOST], entry.data[CONF_PORT]),
@@ -135,12 +121,14 @@ class NX584ZoneSensor(BinarySensorEntity):
         zone_type: BinarySensorDeviceClass,
         entry_id: str,
         zone_sensors: dict[int, NX584ZoneSensor],
+        enabled_default: bool = True,
     ) -> None:
         """Initialize the nx594 binary sensor."""
         self._zone = zone
         self._zone_sensors = zone_sensors
         self._attr_device_class = zone_type
         self._attr_unique_id = f"{entry_id}_{zone['number']}"
+        self._attr_entity_registry_enabled_default = enabled_default
 
     @override
     async def async_added_to_hass(self) -> None:

@@ -17,7 +17,7 @@ from homeassistant.components.nx584.const import (
     DOMAIN,
     REQUEST_TIMEOUT,
 )
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntryState
 from homeassistant.const import CONF_ENTITY_NAMESPACE, CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
@@ -280,7 +280,30 @@ async def test_import_both_platforms(
     assert hass.states.get("binary_sensor.inside").attributes["device_class"] == (
         "motion"
     )
-    assert entity_registry.async_get("binary_sensor.back") is None
+    back = entity_registry.async_get("binary_sensor.back")
+    assert back
+    assert back.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+
+@pytest.mark.usefixtures("mock_client", "mock_watcher", "mock_hass_config")
+@pytest.mark.parametrize("hass_config", [BOTH_YAML])
+async def test_import_keeps_enabled_excluded_zone(
+    hass: HomeAssistant, hass_config: ConfigType, entity_registry: er.EntityRegistry
+) -> None:
+    """Test a later import does not disable an excluded zone the user enabled."""
+    await _async_setup_yaml(
+        hass, hass_config, ALARM_CONTROL_PANEL_DOMAIN, BINARY_SENSOR_DOMAIN
+    )
+    entity_registry.async_update_entity("binary_sensor.back", disabled_by=None)
+
+    await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={CONF_HOST: TEST_HOST, CONF_PORT: TEST_PORT, CONF_EXCLUDE_ZONES: [2]},
+    )
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get("binary_sensor.back").disabled_by is None
 
 
 @pytest.mark.usefixtures("mock_client", "mock_watcher", "mock_hass_config")
@@ -296,7 +319,7 @@ async def test_import_keeps_changed_alarm_entity_id(
     entity_registry.async_get_or_create(
         ALARM_CONTROL_PANEL_DOMAIN,
         DOMAIN,
-        mock_config_entry.entry_id,
+        f"{mock_config_entry.entry_id}_alarm",
         config_entry=mock_config_entry,
         suggested_object_id="my_alarm",
     )

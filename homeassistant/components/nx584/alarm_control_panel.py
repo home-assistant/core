@@ -81,7 +81,7 @@ class NX584Alarm(AlarmControlPanelEntity):
     def __init__(self, name: str, alarm_client: client.Client, entry_id: str) -> None:
         """Init the nx584 alarm panel."""
         self._attr_name = name
-        self._attr_unique_id = entry_id
+        self._attr_unique_id = f"{entry_id}_alarm"
         self._alarm = alarm_client
 
     def update(self) -> None:
