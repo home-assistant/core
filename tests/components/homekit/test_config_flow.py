@@ -3,7 +3,6 @@
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
-import probatio
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -26,6 +25,7 @@ from homeassistant.const import (
     ATTR_FLOOR_ID,
     ATTR_LABEL_ID,
     CONF_ENTITIES,
+    CONF_EXCLUDE,
     CONF_NAME,
     CONF_PORT,
 )
@@ -173,6 +173,16 @@ async def test_setup_in_bridge_mode_entity_review(
         CONF_INCLUDE_TARGETS,
         CONF_EXCLUDE_TARGETS,
     }
+    native_target = {
+        ATTR_LABEL_ID: [include_label.label_id],
+        CONF_EXCLUDE: {ATTR_ENTITY_ID: ["switch.included_by_label"]},
+    }
+    assert (
+        result["data_schema"]({CONF_INCLUDE_TARGETS: native_target})[
+            CONF_INCLUDE_TARGETS
+        ]
+        == native_target
+    )
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -1038,6 +1048,10 @@ async def _async_options_flow_to_cameras(
     )
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={"entities": "camera.front"}
+    )
+    assert result["step_id"] == "review"
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={}
     )
     assert result["step_id"] == "cameras"
     return result

@@ -38,11 +38,8 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
-    ATTR_DEVICE_ID,
-    ATTR_ENTITY_ID,
-    ATTR_FLOOR_ID,
-    ATTR_LABEL_ID,
     CONF_DEVICES,
+    CONF_EXCLUDE,
     CONF_IP_ADDRESS,
     CONF_NAME,
     CONF_PORT,
@@ -70,10 +67,7 @@ from homeassistant.helpers.entityfilter import (
     EntityFilter,
 )
 from homeassistant.helpers.start import async_at_started
-from homeassistant.helpers.target import (
-    TargetSelection,
-    async_extract_referenced_entity_ids,
-)
+from homeassistant.helpers.target import TargetSelection
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import IntegrationNotFound, async_get_integration
 
@@ -204,10 +198,10 @@ HOMEKIT_FILTER_SCHEMA = probatio.Schema(
     {
         **BASE_FILTER_SCHEMA.schema,
         probatio.Optional(CONF_INCLUDE_TARGETS, default={}): probatio.Schema(
-            cv.TARGET_ID_FIELDS
+            cv.TARGET_FIELDS
         ),
         probatio.Optional(CONF_EXCLUDE_TARGETS, default={}): probatio.Schema(
-            cv.TARGET_ID_FIELDS
+            cv.TARGET_FIELDS
         ),
     }
 )
@@ -350,13 +344,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeKitConfigEntry) -> N
             hass.config_entries.async_schedule_reload(entry.entry_id)
 
         for targets in (include_targets, exclude_targets):
+            target_exclude = targets.get(CONF_EXCLUDE)
             for target_type, target_ids in targets.items():
-                if not target_ids:
+                if target_type == CONF_EXCLUDE or not target_ids:
                     continue
+                target_config = {target_type: target_ids}
+                if target_exclude:
+                    target_config[CONF_EXCLUDE] = target_exclude
                 entry.async_on_unload(
                     await async_track_target_entity_change(
                         hass,
-                        {target_type: target_ids},
+                        target_config,
                         _async_reload_on_target_change,
                         entity_filter=(
                             async_is_bridge_target_entity

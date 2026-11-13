@@ -40,6 +40,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     selector,
 )
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integrations
 
 from .accessories import get_accessory_type
@@ -156,8 +157,8 @@ class EntityFilterDict(TypedDict, total=False):
     include_entities: list[str]
     exclude_domains: list[str]
     exclude_entities: list[str]
-    include_targets: dict[str, list[str]]
-    exclude_targets: dict[str, list[str]]
+    include_targets: ConfigType
+    exclude_targets: ConfigType
 
 
 def _make_entity_filter(
@@ -165,8 +166,8 @@ def _make_entity_filter(
     include_entities: list[str] | None = None,
     exclude_domains: list[str] | None = None,
     exclude_entities: list[str] | None = None,
-    include_targets: dict[str, list[str]] | None = None,
-    exclude_targets: dict[str, list[str]] | None = None,
+    include_targets: ConfigType | None = None,
+    exclude_targets: ConfigType | None = None,
 ) -> EntityFilterDict:
     """Create a filter dict."""
     entity_filter = EntityFilterDict(
@@ -192,7 +193,7 @@ async def _async_domain_names(hass: HomeAssistant, domains: list[str]) -> str:
 
 @callback
 def _async_build_entities_filter(
-    domains: list[str], targets: dict[str, list[str]]
+    domains: list[str], targets: ConfigType
 ) -> EntityFilterDict:
     """Build an additive entities filter from domains and targets."""
     return _make_entity_filter(include_domains=sorted(domains), include_targets=targets)
@@ -335,9 +336,7 @@ class HomeKitConfigFlow(ConfigFlow, domain=DOMAIN):
         """Choose targets to include and exclude on the bridge."""
         domains = self.hk_data[CONF_DOMAINS]
         if user_input is not None:
-            include_targets: dict[str, list[str]] = user_input.get(
-                CONF_INCLUDE_TARGETS, {}
-            )
+            include_targets: ConfigType = user_input.get(CONF_INCLUDE_TARGETS, {})
             entity_filter = (
                 _async_build_entities_filter(domains, include_targets)
                 if include_targets
@@ -767,7 +766,7 @@ class OptionsFlowHandler(OptionsFlow):
 
         if user_input is not None:
             entities = probatio.EnsureList()(user_input[CONF_ENTITIES])
-            entity_filter = _async_build_entities_filter(domains, entities)
+            entity_filter = _make_entity_filter(include_entities=entities)
             self.included_cameras = _async_entities_in_domain(entities, CAMERA_DOMAIN)
             self.included_climates = _async_entities_in_domain(entities, CLIMATE_DOMAIN)
             hk_options[CONF_FILTER] = entity_filter
@@ -820,9 +819,7 @@ class OptionsFlowHandler(OptionsFlow):
         hk_options = self.hk_options
         domains = hk_options[CONF_DOMAINS]
         if user_input is not None:
-            include_targets: dict[str, list[str]] = user_input.get(
-                CONF_INCLUDE_TARGETS, {}
-            )
+            include_targets: ConfigType = user_input.get(CONF_INCLUDE_TARGETS, {})
             previous_filter = hk_options.get(CONF_FILTER, {})
             entity_filter = _async_build_entities_filter(domains, include_targets)
             exclude_targets = user_input.get(CONF_EXCLUDE_TARGETS)

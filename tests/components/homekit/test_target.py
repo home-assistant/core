@@ -4,6 +4,7 @@ from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.homekit.target import (
     async_is_bridge_target_entity,
@@ -17,6 +18,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FLOOR_ID,
     ATTR_LABEL_ID,
+    CONF_EXCLUDE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
@@ -35,8 +37,6 @@ from homeassistant.helpers.entityfilter import (
 )
 
 from .util import async_fire_target_change_cooldown
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
@@ -151,6 +151,20 @@ def test_accessory_mode_target_expansion_is_filterable(
     }
 
 
+def test_native_target_exclude_expansion(hass: HomeAssistant) -> None:
+    """Test native target excludes are applied before specificity resolution."""
+    hass.states.async_set("light.included", "on")
+    hass.states.async_set("light.excluded", "on")
+
+    assert async_target_entity_ids_by_type(
+        hass,
+        {
+            ATTR_ENTITY_ID: ["light.included", "light.excluded"],
+            CONF_EXCLUDE: {ATTR_ENTITY_ID: ["light.excluded"]},
+        },
+    ) == {ATTR_ENTITY_ID: {"light.included"}}
+
+
 def test_target_filter_with_only_exclusions() -> None:
     """Test exclude-only targets retain unmatched entities."""
     filter_config = {
@@ -197,6 +211,39 @@ async def test_group_target_membership_change(
     await async_fire_target_change_cooldown(hass, freezer)
 
     action.assert_called_once_with({"light.living_room"}, {"light.kitchen"})
+    unsubscribe()
+
+
+async def test_excluded_group_target_membership_change(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test excluded target groups refresh when membership changes."""
+    hass.states.async_set(
+        "group.all_lights",
+        "on",
+        {ATTR_ENTITY_ID: ["light.kitchen", "light.living_room"]},
+    )
+    hass.states.async_set(
+        "group.excluded_lights", "on", {ATTR_ENTITY_ID: ["light.kitchen"]}
+    )
+    action = Mock()
+    unsubscribe = await async_track_target_entity_change(
+        hass,
+        {
+            ATTR_ENTITY_ID: ["group.all_lights"],
+            CONF_EXCLUDE: {ATTR_ENTITY_ID: ["group.excluded_lights"]},
+        },
+        action,
+    )
+
+    hass.states.async_set(
+        "group.excluded_lights", "on", {ATTR_ENTITY_ID: ["light.living_room"]}
+    )
+    await hass.async_block_till_done()
+    await async_fire_target_change_cooldown(hass, freezer)
+
+    action.assert_called_once_with({"light.kitchen"}, {"light.living_room"})
     unsubscribe()
 
 

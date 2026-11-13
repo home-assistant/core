@@ -11,6 +11,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FLOOR_ID,
     ATTR_LABEL_ID,
+    CONF_EXCLUDE,
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
@@ -59,6 +60,19 @@ _NO_MATCH_PRIORITY = -1
 type TargetEntityFilter = Callable[[HomeAssistant, str], bool]
 
 
+def _target_type_flags(
+    target: TargetSelection,
+) -> tuple[bool, bool, bool, bool]:
+    """Return which indirect target types are used by a target or its exclude."""
+    selections = (target, target.exclude) if target.exclude else (target,)
+    return (
+        any(selection.device_ids for selection in selections),
+        any(selection.area_ids for selection in selections),
+        any(selection.floor_ids for selection in selections),
+        any(selection.label_ids for selection in selections),
+    )
+
+
 @callback
 def async_is_bridge_target_entity(hass: HomeAssistant, entity_id: str) -> bool:
     """Return whether a target entity can remain on a HomeKit bridge."""
@@ -81,17 +95,21 @@ def _async_filter_target_entity_ids(
 @callback
 def async_target_entity_ids_by_type(
     hass: HomeAssistant,
-    targets: Mapping[str, list[str]],
+    targets: Mapping[str, Any],
     *,
     entity_filter: TargetEntityFilter | None = None,
 ) -> dict[str, set[str]]:
     """Expand each target type separately to preserve match specificity."""
     expanded: dict[str, set[str]] = {}
+    target_exclude = targets.get(CONF_EXCLUDE)
     for target_type, target_ids in targets.items():
-        if not target_ids:
+        if target_type == CONF_EXCLUDE or not target_ids:
             continue
+        target_config = {target_type: target_ids}
+        if target_exclude:
+            target_config[CONF_EXCLUDE] = target_exclude
         selected = target_helper.async_extract_referenced_entity_ids(
-            hass, TargetSelection({target_type: target_ids})
+            hass, TargetSelection(target_config)
         )
         expanded[target_type] = _async_filter_target_entity_ids(
             hass,
@@ -234,6 +252,8 @@ class HomeKitTargetEntitySetChangeTracker(TargetEntityChangeTracker):
         """Track target groups and their nested groups."""
         group_entity_ids: set[str] = set()
         pending_entity_ids = list(self._target_selection.entity_ids)
+        if self._target_selection.exclude:
+            pending_entity_ids.extend(self._target_selection.exclude.entity_ids)
         while pending_entity_ids:
             entity_id = pending_entity_ids.pop()
             state = self._hass.states.get(entity_id)
@@ -288,10 +308,10 @@ class HomeKitTargetEntitySetChangeTracker(TargetEntityChangeTracker):
     @callback
     def _entity_registry_event_affects_target(self, event: Event[Any]) -> bool:
         """Return whether an entity registry event can change this target."""
-        target = self._target_selection
-        if not (
-            target.device_ids or target.area_ids or target.floor_ids or target.label_ids
-        ):
+        has_device_ids, has_area_ids, has_floor_ids, has_label_ids = _target_type_flags(
+            self._target_selection
+        )
+        if not (has_device_ids or has_area_ids or has_floor_ids or has_label_ids):
             return False
         action: str = event.data["action"]
         if action != "update":
@@ -301,32 +321,32 @@ class HomeKitTargetEntitySetChangeTracker(TargetEntityChangeTracker):
 
         changed_fields = set(event.data["changes"])
         relevant_fields = {"entity_category", "hidden_by"}
-        if target.device_ids:
+        if has_device_ids:
             relevant_fields.add("device_id")
-        if target.area_ids or target.floor_ids or target.label_ids:
+        if has_area_ids or has_floor_ids or has_label_ids:
             relevant_fields.update(("area_id", "device_id"))
-        if target.label_ids:
+        if has_label_ids:
             relevant_fields.add("labels")
         return not relevant_fields.isdisjoint(changed_fields)
 
     @callback
     def _device_registry_event_affects_target(self, event: Event[Any]) -> bool:
         """Return whether a device registry event can change this target."""
-        target = self._target_selection
-        if not (
-            target.device_ids or target.area_ids or target.floor_ids or target.label_ids
-        ):
+        has_device_ids, has_area_ids, has_floor_ids, has_label_ids = _target_type_flags(
+            self._target_selection
+        )
+        if not (has_device_ids or has_area_ids or has_floor_ids or has_label_ids):
             return False
         action: str = event.data["action"]
         if action != "update":
             return action != "reorder"
-        if target.device_ids:
+        if has_device_ids:
             # Direct device targets include child and split-device topology.
             return True
 
         changed_fields = set(event.data["changes"])
         relevant_fields = {"area_id"}
-        if target.label_ids:
+        if has_label_ids:
             relevant_fields.add("labels")
         return not relevant_fields.isdisjoint(changed_fields)
 
@@ -358,22 +378,23 @@ class HomeKitTargetEntitySetChangeTracker(TargetEntityChangeTracker):
 
     def _setup_selective_registry_listeners(self) -> None:
         """Set up listeners for registries used by this target selection."""
-        target = self._target_selection
-        if target.device_ids or target.area_ids or target.floor_ids or target.label_ids:
+        has_device_ids, has_area_ids, has_floor_ids, has_label_ids = _target_type_flags(
+            self._target_selection
+        )
+        if has_device_ids or has_area_ids or has_floor_ids or has_label_ids:
             self._registry_unsubs.append(
                 self._hass.bus.async_listen(
                     er.EVENT_ENTITY_REGISTRY_UPDATED,
                     self._handle_entity_registry_update,
                 )
             )
-        if target.device_ids or target.area_ids or target.floor_ids or target.label_ids:
             self._registry_unsubs.append(
                 self._hass.bus.async_listen(
                     dr.EVENT_DEVICE_REGISTRY_UPDATED,
                     self._handle_device_registry_update,
                 )
             )
-        if target.area_ids or target.floor_ids or target.label_ids:
+        if has_area_ids or has_floor_ids or has_label_ids:
             # Area update events do not report which fields changed.
             self._registry_unsubs.append(
                 self._hass.bus.async_listen(

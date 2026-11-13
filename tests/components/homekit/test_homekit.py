@@ -9,11 +9,7 @@ from freezegun.api import FrozenDateTimeFactory
 from pyhap.accessory import Accessory
 from pyhap.const import CATEGORY_CAMERA, CATEGORY_TELEVISION
 import pytest
-from pytest_homeassistant.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    get_fixture_path,
-)
+from pytest_homeassistant.common import MockConfigEntry, get_fixture_path
 
 from homeassistant import config as hass_config
 from homeassistant.components import homekit as homekit_base, zeroconf
@@ -61,6 +57,7 @@ from homeassistant.const import (
     ATTR_FLOOR_ID,
     ATTR_LABEL_ID,
     ATTR_UNIT_OF_MEASUREMENT,
+    CONF_EXCLUDE,
     CONF_NAME,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STARTED,
@@ -846,6 +843,7 @@ async def test_homekit_expanded_target_specificity(
         config_entry_id=entry.entry_id,
         identifiers={("test", "target-device")},
     )
+    device_registry.async_update_device(device.id, area_id=area.id)
     registry_entry = entity_registry.async_get_or_create(
         "light",
         "demo",
@@ -853,7 +851,6 @@ async def test_homekit_expanded_target_specificity(
         suggested_object_id="target_specificity",
         device_id=device.id,
     )
-    entity_registry.async_update_entity(registry_entry.entity_id, area_id=area.id)
     hass.states.async_set(registry_entry.entity_id, "on")
     target_ids = {
         ATTR_DEVICE_ID: device.id,
@@ -2452,6 +2449,7 @@ async def test_yaml_config_with_targets(hass: HomeAssistant) -> None:
                             ATTR_ENTITY_ID: ["light.kitchen"],
                             ATTR_FLOOR_ID: ["ground-floor"],
                             ATTR_LABEL_ID: ["homekit"],
+                            CONF_EXCLUDE: {ATTR_ENTITY_ID: ["light.private"]},
                         },
                         CONF_EXCLUDE_TARGETS: {ATTR_LABEL_ID: ["private"]},
                     },
@@ -2475,6 +2473,7 @@ async def test_yaml_config_with_targets(hass: HomeAssistant) -> None:
             ATTR_ENTITY_ID: ["light.kitchen"],
             ATTR_FLOOR_ID: ["ground-floor"],
             ATTR_LABEL_ID: ["homekit"],
+            CONF_EXCLUDE: {ATTR_ENTITY_ID: ["light.private"]},
         },
         {ATTR_LABEL_ID: ["private"]},
         ["1.2.3.4", "10.10.10.10"],
