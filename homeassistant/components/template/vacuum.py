@@ -81,17 +81,20 @@ VACUUM_COMMON_SCHEMA = probatio.Schema(
     {
         probatio.Optional(CONF_FAN_SPEED_LIST, default=[]): probatio.EnsureList(),
         probatio.Optional(CONF_FAN_SPEED): cv.template,
-        probatio.Optional(CONF_CLEAN_AREA_PASSES, default=[]): probatio.All(
-            probatio.EnsureList(),
-            [
-                probatio.All(
-                    probatio.Check(
-                        lambda value: type(value) is int,
-                        "Cleaning passes must be integers",
-                    ),
-                    probatio.Range(min=1),
-                )
-            ],
+        probatio.Optional(CONF_CLEAN_AREA_PASSES, default=[]): probatio.Any(
+            probatio.All(
+                probatio.EnsureList(),
+                [
+                    probatio.All(
+                        probatio.Check(
+                            lambda value: type(value) is int,
+                            "Cleaning passes must be integers",
+                        ),
+                        probatio.Range(min=1),
+                    )
+                ],
+            ),
+            cv.template,
         ),
         probatio.Optional(CONF_STATE): cv.template,
         probatio.Inclusive(
@@ -233,6 +236,29 @@ def validate_segments(
     return parse
 
 
+def validate_clean_area_passes(
+    entity: AbstractTemplateVacuum, option: str
+) -> Callable[[Any], list[int] | None]:
+    """Validate the list returned by a cleaning passes template."""
+
+    def parse(result: Any) -> list[int] | None:
+        if result is None:
+            return None
+        if not isinstance(result, list) or any(
+            type(value) is not int or value < 1 for value in result
+        ):
+            _LOGGER.error(
+                "Invalid %s for %s: %r; expected a list of positive integers",
+                option,
+                entity.entity_id,
+                result,
+            )
+            return None
+        return result
+
+    return parse
+
+
 @dataclass(kw_only=True)
 class VacuumExtraStoredData(ExtraStoredData):
     """Holds extra stored data for template vacuum entities."""
@@ -284,7 +310,10 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity, RestoreE
 
         # List of valid fan speeds
         self._attr_fan_speed_list = config[CONF_FAN_SPEED_LIST]
-        self._attr_clean_area_passes = config[CONF_CLEAN_AREA_PASSES]
+        configured_passes = config[CONF_CLEAN_AREA_PASSES]
+        self._attr_clean_area_passes = (
+            configured_passes if isinstance(configured_passes, list) else []
+        )
         self._segments: list[Segment] = []
         self.setup_state_template(
             "_attr_activity",
@@ -323,6 +352,31 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity, RestoreE
             if (action_config := config.get(action_id)) is not None:
                 self.add_script(action_id, action_config, name, DOMAIN)
                 self._attr_supported_features |= supported_feature
+
+        if not isinstance(configured_passes, list):
+            self.setup_template(
+                CONF_CLEAN_AREA_PASSES,
+                "_attr_clean_area_passes",
+                validate_clean_area_passes(self, CONF_CLEAN_AREA_PASSES),
+                self._update_clean_area_passes,
+            )
+
+    @property
+    @override
+    def clean_area_passes(self) -> list[int]:
+        """Return current supported area cleaning pass counts."""
+        return self._attr_clean_area_passes
+
+    @callback
+    def _update_clean_area_passes(self, result: list[int] | None) -> None:
+        """Update supported counts and capability from a rendered template."""
+        self._attr_clean_area_passes = result or []
+        if self._attr_clean_area_passes and (
+            VacuumEntityFeature.CLEAN_AREA in self._attr_supported_features
+        ):
+            self._attr_supported_features |= VacuumEntityFeature.CLEAN_AREA_PASSES
+        else:
+            self._attr_supported_features &= ~VacuumEntityFeature.CLEAN_AREA_PASSES
 
     @callback
     def _update_segments(self, result: list[Segment] | None) -> None:

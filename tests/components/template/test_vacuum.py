@@ -926,8 +926,11 @@ async def test_not_optimistic(
     assert state.state == STATE_UNKNOWN
 
 
+# A trigger-based template is rendered only after its trigger fires. This
+# service-level test does not fire a trigger, so use the templated value in
+# state-based mode; retain both styles for an immediately available static list.
 @pytest.mark.parametrize(
-    ("count", "vacuum_config"),
+    ("count", "vacuum_config", "style"),
     [
         (
             1,
@@ -944,11 +947,43 @@ async def test_not_optimistic(
                 ),
                 "segments": "{{ [{'id': '1', 'name': 'Kitchen'}] }}",
             },
-        )
+            ConfigurationStyle.MODERN,
+        ),
+        (
+            1,
+            {
+                "unique_id": TEST_VACUUM.entity_id,
+                "start": [],
+                "clean_area_passes": [1, 2],
+                **make_test_action(
+                    "clean_segments",
+                    {
+                        "segment_ids": "{{ segment_ids }}",
+                        "passes": "{{ passes | default('omitted') }}",
+                    },
+                ),
+                "segments": "{{ [{'id': '1', 'name': 'Kitchen'}] }}",
+            },
+            ConfigurationStyle.TRIGGER,
+        ),
+        (
+            1,
+            {
+                "unique_id": TEST_VACUUM.entity_id,
+                "start": [],
+                "clean_area_passes": "{{ [1, 2] }}",
+                **make_test_action(
+                    "clean_segments",
+                    {
+                        "segment_ids": "{{ segment_ids }}",
+                        "passes": "{{ passes | default('omitted') }}",
+                    },
+                ),
+                "segments": "{{ [{'id': '1', 'name': 'Kitchen'}] }}",
+            },
+            ConfigurationStyle.MODERN,
+        ),
     ],
-)
-@pytest.mark.parametrize(
-    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
 )
 @pytest.mark.parametrize(
     ("service_options", "expected_passes"),
@@ -994,6 +1029,64 @@ async def test_clean_area_passes(
     state = hass.states.get(TEST_VACUUM.entity_id)
     assert state is not None
     assert state.attributes["clean_area_passes"] == [1, 2]
+    assert (
+        state.attributes["supported_features"] & VacuumEntityFeature.CLEAN_AREA_PASSES
+    )
+
+
+@pytest.mark.parametrize(
+    ("count", "vacuum_config"),
+    [
+        (
+            1,
+            {
+                "unique_id": TEST_VACUUM.entity_id,
+                "start": [],
+                "clean_area_passes": (
+                    "{{ [1, 2] if is_state('sensor.pass_mode', 'multi') "
+                    "else [0] if is_state('sensor.pass_mode', 'invalid') "
+                    "else [1] }}"
+                ),
+                **make_test_action(
+                    "clean_segments",
+                    {"segment_ids": "{{ segment_ids }}"},
+                ),
+                "segments": "{{ [{'id': '1', 'name': 'Kitchen'}] }}",
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize("style", [ConfigurationStyle.MODERN])
+@pytest.mark.usefixtures("setup_vacuum")
+async def test_clean_area_passes_template_reactivity(hass: HomeAssistant) -> None:
+    """Updates and invalid renderings must not expose stale supported passes."""
+    state = hass.states.get(TEST_VACUUM.entity_id)
+    assert state is not None
+    assert state.attributes["clean_area_passes"] == [1]
+
+    hass.states.async_set("sensor.pass_mode", "multi")
+    await hass.async_block_till_done()
+    state = hass.states.get(TEST_VACUUM.entity_id)
+    assert state is not None
+    assert state.attributes["clean_area_passes"] == [1, 2]
+    assert (
+        state.attributes["supported_features"] & VacuumEntityFeature.CLEAN_AREA_PASSES
+    )
+
+    hass.states.async_set("sensor.pass_mode", "invalid")
+    await hass.async_block_till_done()
+    state = hass.states.get(TEST_VACUUM.entity_id)
+    assert state is not None
+    assert "clean_area_passes" not in state.attributes
+    assert not (
+        state.attributes["supported_features"] & VacuumEntityFeature.CLEAN_AREA_PASSES
+    )
+
+    hass.states.async_set("sensor.pass_mode", "single")
+    await hass.async_block_till_done()
+    state = hass.states.get(TEST_VACUUM.entity_id)
+    assert state is not None
+    assert state.attributes["clean_area_passes"] == [1]
     assert (
         state.attributes["supported_features"] & VacuumEntityFeature.CLEAN_AREA_PASSES
     )
