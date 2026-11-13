@@ -463,7 +463,7 @@ ATTR_PERSONS: Final = "persons"
 
 
 class CommonServiceArgument(StrEnum):
-    """Action fields shared by the actions of many integrations."""
+    """Action fields shared by many integrations; target keys use TargetKey."""
 
     CONFIG_ENTRY_ID = "config_entry_id"
     DEVICE_ID = "device_id"
