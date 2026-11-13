@@ -20,5 +20,5 @@
   "iot_class": "local_push",
   "loggers": ["ryseble"],
   "quality_scale": "bronze",
-  "requirements": ["ryseble==1.16.3"]
+  "requirements": ["ryseble==1.16.4"]
 }

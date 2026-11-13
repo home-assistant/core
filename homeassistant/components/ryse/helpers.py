@@ -62,6 +62,24 @@ def async_best_local_scanner_device(
     )
 
 
+def async_store_local_ble_device(
+    hass: HomeAssistant, device: RyseBLEDevice
+) -> BLEDevice | None:
+    """Store the best local sighting on *device*.
+
+    The device already stored is preferred, so a later advertisement does not
+    move the shade to another adapter. Callers that connect use this instead
+    of choosing an adapter themselves.
+    """
+    scanner_device = async_best_local_scanner_device(
+        hass, device.address, prefer=device.ble_device
+    )
+    if scanner_device is None:
+        return None
+    device.set_ble_device(scanner_device.ble_device)
+    return scanner_device.ble_device
+
+
 def best_local_scanner_device(
     devices: Sequence[BluetoothScannerDevice],
     *,

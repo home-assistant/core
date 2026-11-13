@@ -28,7 +28,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import RyseConfigEntry
 from .const import DOMAIN, MANUFACTURER_NAME
-from .helpers import async_best_local_scanner_device, async_release_connection
+from .helpers import async_release_connection, async_store_local_ble_device
 
 PARALLEL_UPDATES = 1
 _RECONNECT_COOLDOWN = 5.0
@@ -351,13 +351,10 @@ class RyseCoverEntity(CoverEntity):
         shade, and False only when the library has neither a device nor an
         address. False is not a confirmed bond rejection.
         """
-        scanner_device = async_best_local_scanner_device(
-            self.hass, self._device.address
-        )
-        self._local_pair_attempt = scanner_device is not None
-        if scanner_device is None:
+        stored = async_store_local_ble_device(self.hass, self._device)
+        self._local_pair_attempt = stored is not None
+        if stored is None:
             return None
-        self._device.set_ble_device(scanner_device.ble_device)
         return await self._device.pair()
 
     async def _async_send_command(

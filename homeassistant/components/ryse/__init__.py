@@ -20,7 +20,11 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
-from .helpers import async_best_local_scanner_device, async_release_connection
+from .helpers import (
+    async_best_local_scanner_device,
+    async_release_connection,
+    async_store_local_ble_device,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,7 +76,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: RyseConfigEntry) -> None
     entry.async_on_unload(partial(async_release_connection, device))
 
     missing_local_route = False
-    current_ble_device = ble_device
 
     @callback
     def _async_update_ble_device(
@@ -83,13 +86,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: RyseConfigEntry) -> None
 
         Local adapters set ``service_info.source`` to the adapter MAC, not
         ``SOURCE_LOCAL``. Resolve via scanners that currently see the address.
-        Stay on the adapter that holds the BlueZ bond when several locals see it.
         """
-        nonlocal missing_local_route, current_ble_device
-        ble_device = _async_local_ble_device(
-            hass, service_info.address, prefer=current_ble_device
-        )
-        if ble_device is None:
+        nonlocal missing_local_route
+        if async_store_local_ble_device(hass, device) is None:
             if not missing_local_route:
                 _LOGGER.info(
                     "No local Bluetooth adapter currently sees %s; "
@@ -104,8 +103,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: RyseConfigEntry) -> None
                 service_info.address,
             )
             missing_local_route = False
-        current_ble_device = ble_device
-        device.set_ble_device(ble_device)
 
     entry.async_on_unload(
         async_register_callback(
