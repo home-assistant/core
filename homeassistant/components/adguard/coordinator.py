@@ -30,6 +30,15 @@ from .const import DOMAIN, LOGGER
 
 type AdGuardConfigEntry = ConfigEntry[AdGuardData]
 
+SWITCH_STATE_FIELDS = {
+    "protection": "status",
+    "filtering": "filtering",
+    "parental": "parental",
+    "querylog": "query_log",
+    "safebrowsing": "safe_browsing",
+    "safesearch": "safe_search",
+}
+
 
 @dataclass(frozen=True, kw_only=True)
 class AdGuardHomeState:
@@ -127,9 +136,9 @@ class AdGuardHomeStateCoordinator(AdGuardHomeCoordinator[AdGuardHomeState]):
         # The first refresh precedes entity listeners and supplies device info
         # and diagnostics. Later refreshes retain cached data for inactive fields.
         if self.data:
-            contexts = set(self.async_contexts())
+            fields = {SWITCH_STATE_FIELDS[context] for context in self.async_contexts()}
             requests = {
-                key: request for key, request in requests.items() if key in contexts
+                key: request for key, request in requests.items() if key in fields
             }
 
         results = await asyncio.gather(*(request() for request in requests.values()))
