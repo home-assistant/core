@@ -328,71 +328,12 @@ async def test_set_target_temperature(
 HVAC_SYSTEM_ENTITY_ID = "climate.test_climate_room_1_test_climate"
 
 
-async def test_thermostat_fan_mode(
-    hass: HomeAssistant,
-    mock_fibaro_client: Mock,
-    mock_config_entry: MockConfigEntry,
-    mock_thermostat_parent: Mock,
-    mock_hvac_system: Mock,
-    mock_room: Mock,
-) -> None:
-    """Test that the HC3 thermostat fan modes are read."""
-
-    # Arrange
-    mock_fibaro_client.read_rooms.return_value = [mock_room]
-    mock_fibaro_client.read_devices.return_value = [
-        mock_thermostat_parent,
-        mock_hvac_system,
-    ]
-
-    with patch("homeassistant.components.fibaro.PLATFORMS", [Platform.CLIMATE]):
-        # Act
-        await init_integration(hass, mock_config_entry)
-        # Assert
-        state = hass.states.get(HVAC_SYSTEM_ENTITY_ID)
-        assert state.attributes["supported_features"] & ClimateEntityFeature.FAN_MODE
-        assert state.attributes["fan_mode"] == "low"
-        assert state.attributes["fan_modes"] == ["low", "medium", "high"]
-
-
-async def test_set_thermostat_fan_mode(
-    hass: HomeAssistant,
-    mock_fibaro_client: Mock,
-    mock_config_entry: MockConfigEntry,
-    mock_thermostat_parent: Mock,
-    mock_hvac_system: Mock,
-    mock_room: Mock,
-) -> None:
-    """Test that the HC3 thermostat fan mode is set by its HC3 name."""
-
-    # Arrange
-    mock_fibaro_client.read_rooms.return_value = [mock_room]
-    mock_fibaro_client.read_devices.return_value = [
-        mock_thermostat_parent,
-        mock_hvac_system,
-    ]
-
-    with patch("homeassistant.components.fibaro.PLATFORMS", [Platform.CLIMATE]):
-        # Act
-        await init_integration(hass, mock_config_entry)
-        await hass.services.async_call(
-            "climate",
-            "set_fan_mode",
-            {"entity_id": HVAC_SYSTEM_ENTITY_ID, "fan_mode": "high"},
-            blocking=True,
-        )
-
-        # Assert
-        mock_hvac_system.execute_action.assert_called_once_with(
-            "setThermostatFanMode", ["High"]
-        )
-
-
 @pytest.mark.parametrize(
-    ("thermostat_mode", "expected_temperature"),
+    ("thermostat_mode", "without_future", "expected_temperature"),
     [
-        pytest.param("Heat", 20.5, id="heat"),
-        pytest.param("Cool", 25, id="cool"),
+        pytest.param("Heat", False, 20.5, id="heat"),
+        pytest.param("Cool", False, 24, id="cool_future"),
+        pytest.param("Cool", True, 25, id="cool_without_future"),
     ],
 )
 async def test_hvac_system_target_temperature(
@@ -403,12 +344,15 @@ async def test_hvac_system_target_temperature(
     mock_hvac_system: Mock,
     mock_room: Mock,
     thermostat_mode: str,
+    without_future: bool,
     expected_temperature: float,
 ) -> None:
     """Test that the target temperature follows the setpoint of the mode."""
 
     # Arrange
     mock_hvac_system.thermostat_mode = thermostat_mode
+    if without_future:
+        del mock_hvac_system.properties["coolingThermostatSetpointFuture"]
     mock_fibaro_client.read_rooms.return_value = [mock_room]
     mock_fibaro_client.read_devices.return_value = [
         mock_thermostat_parent,

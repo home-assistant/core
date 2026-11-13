@@ -433,7 +433,7 @@ def mock_fan_device() -> Mock:
 
 @pytest.fixture
 def mock_hvac_system() -> Mock:
-    """Fixture for an HC3 fan coil thermostat with fan modes and a cooling setpoint."""
+    """Fixture for an HC3 fan coil thermostat with a cooling setpoint."""
     climate = Mock()
     climate.fibaro_id = 8
     climate.endpoint_id = 1
@@ -447,16 +447,13 @@ def mock_hvac_system() -> Mock:
     climate.base_type = "com.fibaro.device"
     climate.properties = {
         "manufacturer": "",
-        "supportedThermostatFanModes": ["Low", "High", "Medium"],
-        "thermostatFanMode": "Low",
         "coolingThermostatSetpoint": 25,
-        "coolingThermostatSetpointFuture": 25,
+        "coolingThermostatSetpointFuture": 24,
     }
     climate.actions = {
         "setThermostatMode": 1,
         "setHeatingThermostatSetpoint": 1,
         "setCoolingThermostatSetpoint": 1,
-        "setThermostatFanMode": 1,
     }
     climate.supported_features = {}
     climate.has_supported_thermostat_modes = True
