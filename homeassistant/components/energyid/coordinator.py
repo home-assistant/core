@@ -14,6 +14,7 @@ from energyid_webhooks.directives import (
     DirectiveResource,
     DirectiveState,
 )
+from energyid_webhooks.exceptions import EnergyIDAuthenticationError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -90,6 +91,11 @@ class EnergyIDDirectiveCoordinator(DataUpdateCoordinator[EnergyIDDirectivesData]
 
         try:
             resources = await self.client.get_directives()
+        except EnergyIDAuthenticationError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_credentials",
+            ) from err
         except PermissionError:
             # A denied list can also come from a re-authentication that lost the claim.
             self._raise_if_unclaimed()
@@ -115,12 +121,16 @@ class EnergyIDDirectiveCoordinator(DataUpdateCoordinator[EnergyIDDirectivesData]
             *(self._async_get_schedule(resource) for resource in resources),
             return_exceptions=True,
         )
-        # A claim lost by any request outranks the failure of another request.
+        # A claim lost or credentials refused by any request outrank the failure
+        # of another request.
         self._raise_if_unclaimed()
         if errors := [
             result for result in results if isinstance(result, BaseException)
         ]:
-            raise errors[0]
+            raise next(
+                (err for err in errors if isinstance(err, ConfigEntryAuthFailed)),
+                errors[0],
+            )
         schedules = [
             result for result in results if not isinstance(result, BaseException)
         ]
@@ -182,6 +192,11 @@ class EnergyIDDirectiveCoordinator(DataUpdateCoordinator[EnergyIDDirectivesData]
         """Return the schedule of one directive, or None when it is unavailable."""
         try:
             schedule = await self.client.get_directive_data(resource.id)
+        except EnergyIDAuthenticationError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_credentials",
+            ) from err
         except ClientResponseError as err:
             if err.status == HTTPStatus.UNAUTHORIZED:
                 self._raise_if_unclaimed()
