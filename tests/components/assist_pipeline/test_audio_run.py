@@ -457,3 +457,64 @@ async def test_a_boundary_at_the_end_of_the_audio(
     ]
     assert vad_ends == [{"timestamp": 40}]
     assert b"".join(mock_stt_provider_entity.received) == COMMAND * 3
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_delayed_boundary_without_more_audio(
+    hass: HomeAssistant, mock_stt_provider_entity: MockSTTProviderEntity
+) -> None:
+    """Test an app boundary ends STT while the source waits for more audio."""
+    websocket = FakeWebsocket([(0, accepted(MS_PER_CHUNK))])
+
+    async def audio_stream() -> AsyncGenerator[bytes]:
+        yield WAKE
+        yield COMMAND
+        yield COMMAND
+        await asyncio.Event().wait()
+
+    async def send_boundary() -> None:
+        while len(mock_stt_provider_entity.received) < 2:
+            await asyncio.sleep(0)
+        websocket.queue_answer(speech_ended(30))
+
+    hass.async_create_task(send_boundary())
+    async with asyncio.timeout(1):
+        events = await _async_run_pipeline(
+            hass,
+            audio_stream(),
+            is_vad_enabled=True,
+            client=MockClient(websocket=websocket),
+        )
+
+    assert b"".join(mock_stt_provider_entity.received) == COMMAND * 2
+    assert [
+        event.data for event in events if event.type is PipelineEventType.STT_VAD_END
+    ] == [{"timestamp": 30}]
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_delayed_boundary_after_audio_end(
+    hass: HomeAssistant, mock_stt_provider_entity: MockSTTProviderEntity
+) -> None:
+    """Test the final app response reaches STT after the source ends."""
+    websocket = FakeWebsocket([(0, accepted(MS_PER_CHUNK))])
+
+    async def send_boundary() -> None:
+        while not websocket.audio_ended:
+            await asyncio.sleep(0)
+        await asyncio.sleep(0)
+        websocket.queue_answer(speech_ended(40))
+        websocket.go_away()
+
+    hass.async_create_task(send_boundary())
+    events = await _async_run_pipeline(
+        hass,
+        _audio_stream(WAKE, COMMAND, COMMAND, COMMAND),
+        is_vad_enabled=True,
+        client=MockClient(websocket=websocket),
+    )
+
+    assert b"".join(mock_stt_provider_entity.received) == COMMAND * 3
+    assert [
+        event.data for event in events if event.type is PipelineEventType.STT_VAD_END
+    ] == [{"timestamp": 40}]

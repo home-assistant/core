@@ -60,6 +60,10 @@ class FakeWebsocket:
         while self._answers and (self._answers[0][0] <= self.chunks):
             self._messages.put_nowait(self._answers.pop(0)[1])
 
+    def queue_answer(self, answer: Answer) -> None:
+        """Queue a response from the app."""
+        self._messages.put_nowait(answer)
+
     def go_away(self) -> None:
         """Stop saying anything, as an app that fell over does."""
         self._messages.put_nowait(None)

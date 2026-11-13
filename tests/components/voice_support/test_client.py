@@ -411,6 +411,30 @@ async def test_run_verdict_after_the_audio_ended(hass: HomeAssistant) -> None:
     assert await _drain(run) == WAKE
 
 
+async def test_run_final_event_timeout(hass: HomeAssistant) -> None:
+    """Test a missing final app event does not prevent audio completion."""
+    websocket = FakeWebsocket()
+    with patch("homeassistant.components.voice_support.client.FINAL_EVENT_TIMEOUT", 0):
+        run = _run(hass, websocket, _audio(WAKE), verifies_wake_word=False)
+        async with asyncio.timeout(1):
+            assert await _drain(run) == WAKE
+
+    assert websocket.audio_ended
+    await run.async_close()
+
+
+async def test_run_close_while_waiting_for_final_event(hass: HomeAssistant) -> None:
+    """Test closing a run releases the stream while it waits for app events."""
+    websocket = FakeWebsocket()
+    run = _run(hass, websocket, _audio(WAKE), verifies_wake_word=False)
+    while not websocket.audio_ended:
+        await asyncio.sleep(0)
+
+    async with asyncio.timeout(0.1):
+        await run.async_close()
+        assert await _drain(run) == WAKE
+
+
 async def test_run_verdict_timeout(hass: HomeAssistant) -> None:
     """Test an app that takes too long is not waited for, and the run goes on.
 
@@ -497,7 +521,8 @@ async def test_run_source_error_reaches_the_stream(hass: HomeAssistant) -> None:
     run = _run(hass, websocket, _source(), verifies_wake_word=False)
 
     with pytest.raises(OSError, match="satellite gone"):
-        await _drain(run)
+        async with asyncio.timeout(0.1):
+            await _drain(run)
 
 
 async def test_run_close_stops_the_relay(hass: HomeAssistant) -> None:

@@ -18,7 +18,9 @@ API_VERSION = 1
 INFO_TIMEOUT = 10
 RUN_TIMEOUT = 1
 SEND_TIMEOUT = 1
+FINAL_EVENT_TIMEOUT = 1
 WAKE_WORD_VERDICT_SECONDS = 2.0
+BYTES_PER_MS = 32  # 16 kHz mono audio with 16-bit samples.
 
 INFO_SCHEMA = probatio.Schema(
     {
@@ -161,6 +163,7 @@ class AudioRun:
         self._chunks: asyncio.Queue[bytes | None] = asyncio.Queue()
         self._error: Exception | None = None
         self._wake_word_known = asyncio.Event()
+        self._finished = asyncio.Event()
         self._feeder = hass.async_create_background_task(
             self._async_feed(), "voice_support run audio", eager_start=True
         )
@@ -180,8 +183,17 @@ class AudioRun:
         return self.wake_word
 
     async def async_stream(self) -> AsyncGenerator[bytes]:
-        """The run's audio as it came in, raising whatever the source raised."""
-        while (chunk := await self._chunks.get()) is not None:
+        """Stream audio through the command boundary, preserving source errors."""
+        streamed_bytes = 0
+        while (
+            self.speech_ended_ms is None
+            or streamed_bytes < self.speech_ended_ms * BYTES_PER_MS
+        ):
+            if (chunk := await self._chunks.get()) is None:
+                break
+            if not chunk:
+                continue
+            streamed_bytes += len(chunk)
             yield chunk
         if self._error is not None:
             raise self._error
@@ -199,6 +211,11 @@ class AudioRun:
                 self._chunks.put_nowait(chunk)
                 await self._async_send(self._websocket.send_bytes, chunk)
             await self._async_send(self._websocket.send_json, {"type": "audio-end"})
+            try:
+                async with asyncio.timeout(FINAL_EVENT_TIMEOUT):
+                    await self._finished.wait()
+            except TimeoutError:
+                _LOGGER.debug("No final app event within %ss", FINAL_EVENT_TIMEOUT)
         except Exception as err:  # noqa: BLE001
             self._error = err
         finally:
@@ -253,6 +270,9 @@ class AudioRun:
             self.speech_started_ms = event["timestamp"]
         elif event_type == "stt-vad-end":
             self.speech_ended_ms = event["timestamp"]
+            self._finished.set()
+            # Wake the stream even when the source has no more audio to send.
+            self._chunks.put_nowait(b"")
         elif event_type == "error":
             _LOGGER.warning(
                 "The app could not handle the run (%s): %s",
@@ -268,6 +288,7 @@ class AudioRun:
         """Stop expecting anything more from the app, releasing any waiter."""
         self.listening = False
         self._wake_word_known.set()
+        self._finished.set()
 
 
 class VoiceSupportClient:
