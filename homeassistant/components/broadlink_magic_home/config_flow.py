@@ -13,7 +13,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import selector
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 
-from .const import DOMAIN, IMPORT_PATH, IMPORT_TIMEOUT
+from .const import DOMAIN, IMPORT_PATH
 from .gateway_listener import DATA_GATEWAY_LISTENER, async_get_gateway_listener
 from .helpers import family_to_entry_data, gateways_from_entry_data
 from .import_session import ImportSession, get_import_manager
@@ -111,16 +111,19 @@ class BroadlinkMagicHomeFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def _async_wait_for_import(self) -> None:
-        """Wait for the app upload."""
+        """Wait for the app upload until the import session expires."""
         assert self._session is not None
-        async with asyncio.timeout(IMPORT_TIMEOUT):
+        async with asyncio.timeout(self._session.remaining):
             await self._session.event.wait()
 
     async def async_step_wait_for_import(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Wait for the app to upload a family."""
+        assert self._session is not None
         if self._import_task is None:
+            if self._session.expired and not self._session.event.is_set():
+                return await self.async_step_import_timeout()
             self._import_task = self.hass.async_create_task(
                 self._async_wait_for_import()
             )

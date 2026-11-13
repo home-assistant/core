@@ -17,6 +17,7 @@ from homeassistant.components.broadlink_magic_home.gateway_listener import (
     GatewayListenerManager,
     async_get_gateway_listener,
 )
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 
 
@@ -177,6 +178,27 @@ async def test_gateway_mac_routes_to_one_entry(hass: HomeAssistant) -> None:
     )
     assert first.online_gateways
     assert not second.online_gateways
+
+
+async def test_stop_listener_follows_listener_lifetime(hass: HomeAssistant) -> None:
+    """Test the stop listener is removed on close and closes on stop."""
+    listeners = hass.bus.async_listeners().get(EVENT_HOMEASSISTANT_STOP, 0)
+    closed = GatewayListenerManager(hass)
+    with patch.object(closed.registry, "async_start", AsyncMock()):
+        await closed.async_start()
+    assert hass.bus.async_listeners()[EVENT_HOMEASSISTANT_STOP] == listeners + 1
+    await closed.async_close()
+    assert hass.bus.async_listeners().get(EVENT_HOMEASSISTANT_STOP, 0) == listeners
+
+    running = GatewayListenerManager(hass)
+    with (
+        patch.object(running.registry, "async_start", AsyncMock()),
+        patch.object(running.registry, "async_close", AsyncMock()) as close,
+    ):
+        await running.async_start()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        await hass.async_block_till_done()
+    close.assert_awaited_once()
 
 
 async def _wait(started: asyncio.Event, release: asyncio.Event) -> None:

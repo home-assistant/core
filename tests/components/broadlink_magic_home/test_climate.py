@@ -2,7 +2,15 @@
 
 from unittest.mock import AsyncMock
 
-from broadlink_magic import DiscoveredRMMax, Family, ImportedDevice, RMProfile
+from broadlink_magic import (
+    AC_MODE_COOL,
+    AC_MODE_HEAT,
+    DiscoveredRMMax,
+    Family,
+    ImportedDevice,
+    RMProfile,
+    encode_ac_attribute,
+)
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -98,6 +106,71 @@ async def test_air_conditioner_commands_and_reports(
     coordinator._handle_fastcon_report(6, b"\x01\x02\x1a\x03")
     await hass.async_block_till_done()
     assert hass.states.get(AIR_CONDITIONER).state == HVACMode.OFF
+
+
+async def test_turn_on_restores_last_mode(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_send: AsyncMock,
+) -> None:
+    """Test turning on uses the last reported or commanded mode."""
+    coordinator = await setup_integration(hass, config_entry)
+
+    coordinator._handle_fastcon_report(6, bytes([0, AC_MODE_COOL, 26, 0]))
+    await hass.async_block_till_done()
+    await hass.services.async_call(
+        "climate", "turn_on", {ATTR_ENTITY_ID: AIR_CONDITIONER}, blocking=True
+    )
+    assert mock_send.await_args.args[1] == [
+        encode_ac_attribute("power", 1),
+        encode_ac_attribute("mode", AC_MODE_COOL),
+    ]
+
+    await hass.services.async_call(
+        "climate",
+        "set_hvac_mode",
+        {ATTR_ENTITY_ID: AIR_CONDITIONER, "hvac_mode": HVACMode.HEAT},
+        blocking=True,
+    )
+    await hass.services.async_call(
+        "climate", "turn_off", {ATTR_ENTITY_ID: AIR_CONDITIONER}, blocking=True
+    )
+    await hass.services.async_call(
+        "climate", "turn_on", {ATTR_ENTITY_ID: AIR_CONDITIONER}, blocking=True
+    )
+    assert mock_send.await_args.args[1] == [
+        encode_ac_attribute("power", 1),
+        encode_ac_attribute("mode", AC_MODE_HEAT),
+    ]
+    assert hass.states.get(AIR_CONDITIONER).state == HVACMode.HEAT
+
+
+async def test_pending_command_needs_new_device_report(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_send: AsyncMock,
+) -> None:
+    """Test only a newer report of the device confirms a pending command."""
+    coordinator = await setup_integration(hass, config_entry)
+    coordinator._handle_fastcon_report(6, bytes([1, AC_MODE_COOL, 24, 3]))
+    await hass.async_block_till_done()
+
+    for temperature in (26, 24):
+        await hass.services.async_call(
+            "climate",
+            "set_temperature",
+            {ATTR_ENTITY_ID: AIR_CONDITIONER, "temperature": temperature},
+            blocking=True,
+        )
+    coordinator.async_set_updated_data(coordinator.gateway_set)
+    coordinator._handle_fastcon_report(6, bytes([1, AC_MODE_COOL, 26, 3]))
+    await hass.async_block_till_done()
+    assert hass.states.get(AIR_CONDITIONER).attributes["temperature"] == 24
+
+    coordinator._handle_fastcon_report(6, bytes([1, AC_MODE_COOL, 24, 3]))
+    coordinator._handle_fastcon_report(6, bytes([1, AC_MODE_COOL, 27, 3]))
+    await hass.async_block_till_done()
+    assert hass.states.get(AIR_CONDITIONER).attributes["temperature"] == 27
 
 
 async def test_air_conditioner_command_errors(

@@ -19,31 +19,37 @@ class PendingCommands:
 
     def __init__(self) -> None:
         """Initialize an empty set of pending commands."""
-        self._values: dict[str, tuple[int, float]] = {}
+        self._values: dict[str, tuple[int, int, float]] = {}
 
-    def set(self, key: str, value: int) -> None:
-        """Record a commanded value."""
-        self._values[key] = (value, time.monotonic() + PENDING_COMMAND_TIMEOUT)
+    def set(self, key: str, value: int, serial: int) -> None:
+        """Record a value commanded after the device report with this serial."""
+        self._values[key] = (
+            value,
+            serial,
+            time.monotonic() + PENDING_COMMAND_TIMEOUT,
+        )
 
     def discard(self, key: str) -> None:
         """Forget a commanded value."""
         self._values.pop(key, None)
 
-    def confirmed(self, reported: dict[str, Any]) -> dict[str, Any]:
+    def confirmed(self, reported: dict[str, Any], serial: int) -> dict[str, Any]:
         """Return reported values that do not contradict pending commands.
 
         A periodic report sent before a command took effect still carries the
-        old value, so a pending key is only applied once a report confirms it
-        or the confirmation window has passed.
+        old value, so a pending key is only cleared by a newer report of the
+        device that confirms it, or once the confirmation window has passed.
         """
         now = time.monotonic()
         state: dict[str, Any] = {}
         for key, value in reported.items():
             if (pending := self._values.get(key)) is not None:
-                expected, deadline = pending
-                if int(value) != expected and now < deadline:
+                expected, sent_serial, deadline = pending
+                matches = int(value) == expected
+                if now >= deadline or (matches and serial > sent_serial):
+                    del self._values[key]
+                elif not matches:
                     continue
-                del self._values[key]
             state[key] = value
         return state
 
@@ -61,12 +67,17 @@ class BroadLinkMagicEntity(CoordinatorEntity[FamilyCoordinator]):
             config_entry_id=self.coordinator.config_entry.entry_id,
         )
 
+    def _report_serial(self, device: ImportedDevice) -> int:
+        """Return the number of reports received from a device."""
+        return self.coordinator.report_serials.get(device.stable_id, 0)
+
     def _confirmed_state(
         self, device: ImportedDevice, pending: PendingCommands
     ) -> dict[str, Any]:
         """Return the reported state of a device filtered by pending commands."""
         return pending.confirmed(
-            self.coordinator.device_states.get(device.stable_id, {})
+            self.coordinator.device_states.get(device.stable_id, {}),
+            self._report_serial(device),
         )
 
     @property

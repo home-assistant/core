@@ -125,6 +125,7 @@ class BroadLinkMagicClimate(BroadLinkMagicEntity, ClimateEntity):
         self._device = device
         self._area_name = coordinator.room_name(device.room_id)
         self._pending_state = PendingCommands()
+        self._last_hvac_mode = HVACMode.AUTO
         self._attr_unique_id = f"{coordinator.family.family_id}_{device.stable_id}"
         self._attr_device_info = _magic_climate_device_info(
             coordinator, device, self._family_device_id()
@@ -150,6 +151,10 @@ class BroadLinkMagicClimate(BroadLinkMagicEntity, ClimateEntity):
     def _handle_coordinator_update(self) -> None:
         """Apply a real FastCon status report."""
         state = self._confirmed_state(self._device, self._pending_state)
+        if "mode" in state:
+            self._last_hvac_mode = _RM_TO_HVAC.get(
+                int(state["mode"]), self._last_hvac_mode
+            )
         power = state.get("power")
         if power == 0:
             self._attr_hvac_mode = HVACMode.OFF
@@ -174,12 +179,14 @@ class BroadLinkMagicClimate(BroadLinkMagicEntity, ClimateEntity):
             commands = [("power", 0)]
         else:
             commands = [("power", 1), ("mode", _HVAC_TO_RM[hvac_mode])]
+        serial = self._report_serial(self._device)
         await self.coordinator.async_send_ac(self._device, commands)
-        self._pending_state.set("power", 0 if hvac_mode is HVACMode.OFF else 1)
+        self._pending_state.set("power", 0 if hvac_mode is HVACMode.OFF else 1, serial)
         if hvac_mode is HVACMode.OFF:
             self._pending_state.discard("mode")
         else:
-            self._pending_state.set("mode", _HVAC_TO_RM[hvac_mode])
+            self._pending_state.set("mode", _HVAC_TO_RM[hvac_mode], serial)
+            self._last_hvac_mode = hvac_mode
         self._attr_hvac_mode = hvac_mode
         self.async_write_ha_state()
 
@@ -189,32 +196,29 @@ class BroadLinkMagicClimate(BroadLinkMagicEntity, ClimateEntity):
         if (hvac_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
             await self.async_handle_set_hvac_mode_service(hvac_mode)
         temperature = round(float(kwargs[ATTR_TEMPERATURE]))
+        serial = self._report_serial(self._device)
         await self.coordinator.async_send_ac(
             self._device, [("temperature", temperature)]
         )
-        self._pending_state.set("temperature", temperature)
+        self._pending_state.set("temperature", temperature, serial)
         self._attr_native_target_temperature = temperature
         self.async_write_ha_state()
 
     @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set fan speed."""
+        serial = self._report_serial(self._device)
         await self.coordinator.async_send_ac(
             self._device, [("fan", _FAN_TO_RM[fan_mode])]
         )
-        self._pending_state.set("fan", _FAN_TO_RM[fan_mode])
+        self._pending_state.set("fan", _FAN_TO_RM[fan_mode], serial)
         self._attr_fan_mode = fan_mode
         self.async_write_ha_state()
 
     @override
     async def async_turn_on(self) -> None:
         """Turn on using the last selected mode."""
-        mode = (
-            HVACMode.AUTO
-            if self._attr_hvac_mode is HVACMode.OFF
-            else self._attr_hvac_mode
-        )
-        await self.async_set_hvac_mode(mode)
+        await self.async_set_hvac_mode(self._last_hvac_mode)
 
     @override
     async def async_turn_off(self) -> None:
@@ -273,10 +277,11 @@ class BroadLinkMagicFloorHeating(BroadLinkMagicEntity, ClimateEntity):
         super()._handle_coordinator_update()
 
     async def _async_send(self, attribute: str, value: int) -> None:
+        serial = self._report_serial(self._device)
         await self.coordinator.async_send_payloads(
             self._device, [encode_floor_heating_attribute(attribute, value)]
         )
-        self._pending_state.set(f"floor_heating_{attribute}", value)
+        self._pending_state.set(f"floor_heating_{attribute}", value, serial)
 
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:

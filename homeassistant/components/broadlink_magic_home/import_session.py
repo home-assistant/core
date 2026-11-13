@@ -19,16 +19,25 @@ class ImportSession:
 
     project_id: str
     flow_id: str | None = None
-    created_at: float = field(default_factory=time.monotonic)
+    created_at: float = field(init=False)
     event: asyncio.Event = field(default_factory=asyncio.Event)
     families: list[Family] | None = None
     error: str | None = None
     consumed: bool = False
 
+    def __post_init__(self) -> None:
+        """Record when the import session was created."""
+        self.created_at = time.monotonic()
+
+    @property
+    def remaining(self) -> float:
+        """Return the seconds left before the import session expires."""
+        return max(0.0, IMPORT_TIMEOUT - (time.monotonic() - self.created_at))
+
     @property
     def expired(self) -> bool:
         """Return whether the import session has expired."""
-        return time.monotonic() - self.created_at >= IMPORT_TIMEOUT
+        return self.remaining == 0
 
     def complete(self, families: list[Family]) -> bool:
         """Complete this session once."""

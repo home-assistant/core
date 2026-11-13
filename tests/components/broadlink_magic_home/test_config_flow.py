@@ -3,11 +3,12 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from broadlink_magic import DiscoveredRMMax, Family
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
-from homeassistant.components.broadlink_magic_home.const import DOMAIN
+from homeassistant.components.broadlink_magic_home.const import DOMAIN, IMPORT_TIMEOUT
 from homeassistant.components.broadlink_magic_home.gateway_listener import (
     DATA_GATEWAY_LISTENER,
 )
@@ -278,18 +279,15 @@ async def test_no_home_assistant_url(hass: HomeAssistant) -> None:
     assert result["reason"] == "no_url"
 
 
-async def test_import_timeout_and_retry(hass: HomeAssistant) -> None:
-    """Test timeout handling creates a fresh QR session."""
+async def test_import_timeout_and_retry(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    family: Family,
+) -> None:
+    """Test an expired QR code times out at once and a new code imports."""
     result, first_session = await _start_import(hass)
-    with patch(
-        "homeassistant.components.broadlink_magic_home.config_flow.BroadlinkMagicHomeFlowHandler._async_wait_for_import",
-        side_effect=TimeoutError,
-    ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-        await hass.async_block_till_done()
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    if result["type"] is FlowResultType.SHOW_PROGRESS_DONE:
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    freezer.tick(IMPORT_TIMEOUT)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "import_timeout"
 
@@ -301,7 +299,40 @@ async def test_import_timeout_and_retry(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     manager = hass.data[DATA_IMPORT_SESSIONS]
-    assert manager.active_sessions[0] is not first_session
+    session = manager.active_sessions[0]
+    assert session is not first_session
+
+    with patch(
+        "homeassistant.components.broadlink_magic_home.config_flow.get_url",
+        return_value="http://192.0.2.2:8123",
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert session.complete([family])
+    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    if result["type"] is FlowResultType.SHOW_PROGRESS_DONE:
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["step_id"] == "confirm"
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "family-1"
+
+
+async def test_import_times_out_while_waiting(hass: HomeAssistant) -> None:
+    """Test the flow offers a retry when no upload arrives in time."""
+    result, _session = await _start_import(hass)
+    with patch(
+        "homeassistant.components.broadlink_magic_home.config_flow.BroadlinkMagicHomeFlowHandler._async_wait_for_import",
+        side_effect=TimeoutError,
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        await hass.async_block_till_done()
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    if result["type"] is FlowResultType.SHOW_PROGRESS_DONE:
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "import_timeout"
 
 
 async def test_listener_released_when_flow_ends(

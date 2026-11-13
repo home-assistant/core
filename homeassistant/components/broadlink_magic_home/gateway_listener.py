@@ -14,7 +14,7 @@ from broadlink_magic import (
 )
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 
 from .const import DOMAIN
 
@@ -33,10 +33,22 @@ class GatewayListenerManager:
         self.registry = InboundGatewayRegistry()
         self._entry_macs: dict[str, set[str]] = {}
         self._flows: set[str] = set()
+        self._unsub_stop: CALLBACK_TYPE | None = None
 
     async def async_start(self) -> None:
         """Bind the fixed Industry-compatible UDP port."""
         await self.registry.async_start()
+        self._unsub_stop = self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, self._async_handle_stop
+        )
+
+    @callback
+    def _async_handle_stop(self, _event: Event) -> None:
+        """Close the listener when Home Assistant stops."""
+        self._unsub_stop = None
+        self.hass.async_create_task(
+            self.async_close(), f"{DOMAIN} close gateway listener"
+        )
 
     def acquire_flow(self, flow_id: str) -> None:
         """Keep the listener open while a Magic config flow is active."""
@@ -138,6 +150,9 @@ class GatewayListenerManager:
 
     async def async_close(self) -> None:
         """Close the shared UDP listener."""
+        if self._unsub_stop is not None:
+            self._unsub_stop()
+            self._unsub_stop = None
         await self.registry.async_close()
 
 
@@ -156,10 +171,4 @@ async def async_get_gateway_listener(
         manager = GatewayListenerManager(hass)
         await manager.async_start()
         hass.data[DATA_GATEWAY_LISTENER] = manager
-
-    @callback
-    def async_stop(_event: Event) -> None:
-        hass.async_create_task(manager.async_close())
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop)
     return manager
