@@ -153,7 +153,8 @@ def _report_deprecated_mapping_use(what: str) -> None:
         f"{what}, which is deprecated as device infos are dataclasses",
         breaks_in_ha_version="2027.12.0",
         core_behavior=ReportBehavior.ERROR,
-        core_integration_behavior=ReportBehavior.ERROR,
+        # A core integration may still use it in a path its tests do not cover
+        core_integration_behavior=ReportBehavior.LOG,
         custom_integration_behavior=ReportBehavior.LOG,
     )
 

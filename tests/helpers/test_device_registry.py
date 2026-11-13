@@ -4756,7 +4756,7 @@ def test_device_info_deprecated_parameters(parameter: str, value: Any) -> None:
         ),
         pytest.param(
             "homeassistant/components/test_integration",
-            pytest.raises(RuntimeError),
+            nullcontext(),
             1,
             id="core integration",
         ),
@@ -4778,7 +4778,7 @@ async def test_device_info_mapping_use_deprecated(
 ) -> None:
     """Test dict-style use of a device info is deprecated.
 
-    It logs for custom integrations and raises for core and core integrations.
+    It logs for core and custom integrations, and raises for core.
     """
     device_info = dr.DeviceInfo(name="name")
 
