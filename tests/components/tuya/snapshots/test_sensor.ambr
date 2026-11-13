@@ -1,4 +1,120 @@
 # serializer version: 1
+# name: test_camera_pet_feeder[sp_8zrzjldq07tlxnlv][sensor.8zrzjldq07tlxnlv_food_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'full',
+        'less',
+        'lack',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('tuya', 'vlnxlt70qdljzrz8ps')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.8zrzjldq07tlxnlv_food_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Food level',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Food level',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'food_level',
+    'unique_id': 'tuya.vlnxlt70qdljzrz8psfood_storage_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_camera_pet_feeder[sp_8zrzjldq07tlxnlv][sensor.8zrzjldq07tlxnlv_food_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '8zrzjldq07tlxnlv Food level',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'full',
+        'less',
+        'lack',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.8zrzjldq07tlxnlv_food_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_camera_pet_feeder[sp_8zrzjldq07tlxnlv][sensor.8zrzjldq07tlxnlv_last_amount-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('tuya', 'vlnxlt70qdljzrz8ps')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.8zrzjldq07tlxnlv_last_amount',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Last amount',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Last amount',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'last_amount',
+    'unique_id': 'tuya.vlnxlt70qdljzrz8psfeed_report',
+    'unit_of_measurement': '',
+  })
+# ---
+# name: test_camera_pet_feeder[sp_8zrzjldq07tlxnlv][sensor.8zrzjldq07tlxnlv_last_amount-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '8zrzjldq07tlxnlv Last amount',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.8zrzjldq07tlxnlv_last_amount',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
 # name: test_meter_channel_child_devices[cz_dhto3y4uachr1wll][sensor.meter_channel_1_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

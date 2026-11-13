@@ -862,6 +862,14 @@
       "flow_temperature": {
         "name": "Flow temperature"
       },
+      "food_level": {
+        "name": "Food level",
+        "state": {
+          "full": "Full",
+          "lack": "Empty",
+          "less": "Low"
+        }
+      },
       "formaldehyde": {
         "name": "[%key:component::tuya::entity::binary_sensor::formaldehyde::name%]"
       },

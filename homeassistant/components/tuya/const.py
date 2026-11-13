@@ -751,6 +751,7 @@ class DPCode(StrEnum):
     FLOODLIGHT_LIGHTNESS = "floodlight_lightness"
     FLOODLIGHT_SWITCH = "floodlight_switch"
     FLOW_RATE = "flow_rate"
+    FOOD_STORAGE_STATUS = "food_storage_status"
     FORWARD_ENERGY_TOTAL = "forward_energy_total"
     FROST = "frost"  # Frost protection
     GAS_SENSOR_STATE = "gas_sensor_state"
