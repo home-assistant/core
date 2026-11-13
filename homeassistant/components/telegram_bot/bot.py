@@ -57,11 +57,7 @@ from .const import (
     ATTR_DISABLE_NOTIF,
     ATTR_DISABLE_WEB_PREV,
     ATTR_FILE,
-    ATTR_FILE_ID,
-    ATTR_FILE_MIME_TYPE,
-    ATTR_FILE_NAME,
     ATTR_FILE_PATH,
-    ATTR_FILE_SIZE,
     ATTR_INLINE_MESSAGE_ID,
     ATTR_MEDIA_TYPE,
     ATTR_MESSAGE_TAG,
@@ -234,10 +230,10 @@ class BaseTelegramBot:
         return {
             k: getattr(message.effective_attachment, v)
             for k, v in (
-                (ATTR_FILE_ID, "file_id"),
-                (ATTR_FILE_NAME, "file_name"),
-                (ATTR_FILE_MIME_TYPE, "mime_type"),
-                (ATTR_FILE_SIZE, "file_size"),
+                (TelegramBotEventData.FILE_ID, "file_id"),
+                (TelegramBotEventData.FILE_NAME, "file_name"),
+                (TelegramBotEventData.FILE_MIME_TYPE, "mime_type"),
+                (TelegramBotEventData.FILE_SIZE, "file_size"),
             )
             if hasattr(message.effective_attachment, v)
         }
