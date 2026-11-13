@@ -22,6 +22,7 @@ from homeassistant.components.trmnl.const import (
 )
 from homeassistant.components.trmnl.home import build_snapshot, capabilities_of
 from homeassistant.config_entries import SOURCE_REAUTH
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import (
     area_registry as ar,
@@ -68,8 +69,8 @@ from . import setup_integration
                 "climate.c", "heat", {"current_temperature": 19.5, "temperature": 21}
             ),
             {
-                "measure_temperature": {"value": 19.5},
-                "target_temperature": {"value": 21},
+                "measure_temperature": {"value": 19.5, "units": "°C"},
+                "target_temperature": {"value": 21, "units": "°C"},
                 "thermostat_mode": {"value": "heat"},
             },
         ),
@@ -92,7 +93,7 @@ from . import setup_integration
 )
 def test_capabilities_of(state: State, expected: dict) -> None:
     """Test each kind of entity maps to the capabilities TRMNL draws."""
-    assert capabilities_of(state) == expected
+    assert capabilities_of(state, UnitOfTemperature.CELSIUS) == expected
 
 
 async def test_snapshot_groups_entities_by_device_and_area(
