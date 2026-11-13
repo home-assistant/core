@@ -204,6 +204,14 @@
         "name": "Enabled"
       }
     },
+    "time": {
+      "firewall_policy_schedule_end": {
+        "name": "{policy_name} schedule end"
+      },
+      "firewall_policy_schedule_start": {
+        "name": "{policy_name} schedule start"
+      }
+    },
     "update": {
       "ips_engine": {
         "name": "IPS engine"
@@ -231,6 +239,9 @@
     },
     "schedule_mode_not_supported": {
       "message": "This schedule mode can only be set in UniFi Network"
+    },
+    "schedule_setting_unused_in_mode": {
+      "message": "The policy's current schedule mode doesn't use this setting"
     },
     "site_not_found": {
       "message": "The configured UniFi Network site no longer exists"
