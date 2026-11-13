@@ -1,10 +1,11 @@
 """Test util methods."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 from contextlib import AbstractContextManager, nullcontext as does_not_raise
 from datetime import UTC, datetime, timedelta
 import os
 from pathlib import Path
+import socket
 import sqlite3
 import threading
 from typing import Any
@@ -361,6 +362,78 @@ def test_setup_connection_for_dialect_mysql(mysql_version) -> None:
     assert execute_args[0] == "SET session wait_timeout=28800"
     assert execute_args[1] == "SELECT VERSION()"
     assert execute_args[2] == "SET time_zone = '+00:00'"
+
+
+@pytest.fixture
+def tcp_socket(socket_enabled: None) -> Generator[socket.socket]:
+    """Return the client end of a connected loopback TCP socket."""
+    with (
+        socket.create_server(("127.0.0.1", 0)) as server,
+        socket.create_connection(server.getsockname()) as client,
+    ):
+        yield client
+
+
+def _pymysql_connection(sock: socket.socket) -> MagicMock:
+    """Return a PyMySQL style connection, which keeps its socket in _sock."""
+    return MagicMock(_sock=sock)
+
+
+def _mysqldb_connection(sock: socket.socket) -> MagicMock:
+    """Return a mysqlclient style connection, which only exposes fileno()."""
+    return MagicMock(fileno=Mock(return_value=sock.fileno()))
+
+
+@pytest.mark.parametrize(
+    "make_connection",
+    [
+        pytest.param(_pymysql_connection, id="pymysql"),
+        pytest.param(_mysqldb_connection, id="mysqldb"),
+    ],
+)
+def test_setup_connection_for_dialect_mysql_tcp_keepalive(
+    tcp_socket: socket.socket,
+    make_connection: Callable[[socket.socket], MagicMock],
+) -> None:
+    """Test MySQL connections detect a dead peer instead of blocking forever."""
+    util.setup_connection_for_dialect(
+        MagicMock(), "mysql", make_connection(tcp_socket), False
+    )
+
+    # Linux names the idle time TCP_KEEPIDLE, macOS names it TCP_KEEPALIVE
+    keepidle = getattr(socket, "TCP_KEEPIDLE", getattr(socket, "TCP_KEEPALIVE", None))
+    assert tcp_socket.getsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE)
+    assert tcp_socket.getsockopt(socket.IPPROTO_TCP, keepidle) == 60
+    assert tcp_socket.getsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL) == 10
+    assert tcp_socket.getsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT) == 6
+    # The socket must stay open for the driver
+    tcp_socket.getpeername()
+
+
+@pytest.mark.skipif(
+    not hasattr(socket, "TCP_USER_TIMEOUT"), reason="TCP_USER_TIMEOUT is Linux only"
+)
+def test_setup_connection_for_dialect_mysql_tcp_user_timeout(
+    tcp_socket: socket.socket,
+) -> None:
+    """Test a query sent into a network partition does not hang retransmitting."""
+    util.setup_connection_for_dialect(
+        MagicMock(), "mysql", _pymysql_connection(tcp_socket), False
+    )
+
+    assert tcp_socket.getsockopt(socket.IPPROTO_TCP, socket.TCP_USER_TIMEOUT) == 120_000
+
+
+@pytest.mark.usefixtures("socket_enabled")
+def test_setup_connection_for_dialect_mysql_unix_socket() -> None:
+    """Test a MySQL connection over a unix socket is left alone."""
+    client, server = socket.socketpair(socket.AF_UNIX)
+    with client, server:
+        util.setup_connection_for_dialect(
+            MagicMock(), "mysql", _pymysql_connection(client), False
+        )
+
+        assert not client.getsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE)
 
 
 @pytest.mark.parametrize(
