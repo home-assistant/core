@@ -773,6 +773,9 @@ bring-api==1.1.2
 # homeassistant.components.broadlink
 broadlink-async==1.2.1
 
+# homeassistant.components.broadlink_magic_home
+broadlink-magic==0.1.0
+
 # homeassistant.components.brother
 brother==6.2.0
 

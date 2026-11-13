@@ -1,0 +1,15 @@
+{
+  "domain": "broadlink_magic_home",
+  "name": "Broadlink Magic Home",
+  "categories": ["hubs_protocols"],
+  "codeowners": ["@1045925514"],
+  "config_flow": true,
+  "connectivity": ["network"],
+  "dependencies": ["http"],
+  "documentation": "https://www.home-assistant.io/integrations/broadlink_magic_home",
+  "integration_type": "hub",
+  "iot_class": "local_push",
+  "loggers": ["broadlink_magic"],
+  "quality_scale": "bronze",
+  "requirements": ["broadlink-magic==0.1.0"]
+}
