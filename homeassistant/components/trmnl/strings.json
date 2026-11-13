@@ -3,9 +3,9 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "missing_account_identity": "TRMNL did not say which account you signed in to. Sign in again and keep \"Sign you in\" ticked.",
+      "missing_account_identity": "TRMNL did not say which account you signed in to. Sign in again and keep \"Sign you in\" selected.",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
-      "missing_scopes": "Home Assistant needs to read and change your TRMNL devices. Sign in again and keep \"Read your devices\" and \"Change your device settings\" ticked.",
+      "missing_scopes": "Home Assistant needs to read and change your TRMNL devices. Sign in again and keep \"Read your devices\" and \"Change your device settings\" selected.",
       "unique_id_mismatch": "You signed in to a different TRMNL account. Sign in to the original account."
     },
     "create_entry": {
