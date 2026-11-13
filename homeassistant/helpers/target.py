@@ -10,7 +10,7 @@ from typing import Any, TypeGuard, override
 
 import probatio
 
-from homeassistant.const import ENTITY_MATCH_ALL, ENTITY_MATCH_NONE, ServiceTarget
+from homeassistant.const import ENTITY_MATCH_ALL, ENTITY_MATCH_NONE, TargetKey
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
@@ -71,11 +71,11 @@ class TargetSelection:
 
     def __init__(self, config: ConfigType) -> None:
         """Extract ids from the config."""
-        entity_ids: str | list[str] | None = config.get(ServiceTarget.ENTITY_ID)
-        device_ids: str | list[str] | None = config.get(ServiceTarget.DEVICE_ID)
-        area_ids: str | list[str] | None = config.get(ServiceTarget.AREA_ID)
-        floor_ids: str | list[str] | None = config.get(ServiceTarget.FLOOR_ID)
-        label_ids: str | list[str] | None = config.get(ServiceTarget.LABEL_ID)
+        entity_ids: str | list[str] | None = config.get(TargetKey.ENTITY_ID)
+        device_ids: str | list[str] | None = config.get(TargetKey.DEVICE_ID)
+        area_ids: str | list[str] | None = config.get(TargetKey.AREA_ID)
+        floor_ids: str | list[str] | None = config.get(TargetKey.FLOOR_ID)
+        label_ids: str | list[str] | None = config.get(TargetKey.LABEL_ID)
 
         self.entity_ids = (
             set(probatio.EnsureList()(entity_ids)) if _has_match(entity_ids) else set()
@@ -96,7 +96,7 @@ class TargetSelection:
         # Entities matched by the exclude block are removed from the resolved
         # target. Config validation prevents nesting exclude blocks.
         self.exclude: TargetSelection | None = None
-        if exclude_config := config.get(ServiceTarget.EXCLUDE):
+        if exclude_config := config.get(TargetKey.EXCLUDE):
             exclude = TargetSelection(exclude_config)
             if exclude.has_any_target:
                 self.exclude = exclude
@@ -391,11 +391,11 @@ def _async_extract_referenced_entity_ids(
 
 
 _TARGET_ITEM_TYPES: tuple[tuple[str, str], ...] = (
-    ("entity", ServiceTarget.ENTITY_ID),
-    ("device", ServiceTarget.DEVICE_ID),
-    ("area", ServiceTarget.AREA_ID),
-    ("floor", ServiceTarget.FLOOR_ID),
-    ("label", ServiceTarget.LABEL_ID),
+    ("entity", TargetKey.ENTITY_ID),
+    ("device", TargetKey.DEVICE_ID),
+    ("area", TargetKey.AREA_ID),
+    ("floor", TargetKey.FLOOR_ID),
+    ("label", TargetKey.LABEL_ID),
 )
 
 

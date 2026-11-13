@@ -84,7 +84,7 @@ from homeassistant.const import (
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
     WEEKDAYS,
-    ServiceTarget,
+    TargetKey,
     UnitOfTemperature,
 )
 from homeassistant.core import (
@@ -1323,28 +1323,28 @@ PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA.extend({}, extra=probatio.ALLOW_EXTRA)
 # The keys which select what a target refers to. A target may additionally
 # contain an exclude block, which uses the same keys.
 TARGET_ID_KEYS = (
-    ServiceTarget.ENTITY_ID,
-    ServiceTarget.DEVICE_ID,
-    ServiceTarget.AREA_ID,
-    ServiceTarget.FLOOR_ID,
-    ServiceTarget.LABEL_ID,
+    TargetKey.ENTITY_ID,
+    TargetKey.DEVICE_ID,
+    TargetKey.AREA_ID,
+    TargetKey.FLOOR_ID,
+    TargetKey.LABEL_ID,
 )
 
 TARGET_ID_FIELDS: VolDictType = {
-    probatio.Optional(ServiceTarget.ENTITY_ID): probatio.All(
+    probatio.Optional(TargetKey.ENTITY_ID): probatio.All(
         ensure_list, [strict_entity_id]
     ),
-    probatio.Optional(ServiceTarget.DEVICE_ID): probatio.All(ensure_list, [str]),
-    probatio.Optional(ServiceTarget.AREA_ID): probatio.All(ensure_list, [str]),
-    probatio.Optional(ServiceTarget.FLOOR_ID): probatio.All(ensure_list, [str]),
-    probatio.Optional(ServiceTarget.LABEL_ID): probatio.All(ensure_list, [str]),
+    probatio.Optional(TargetKey.DEVICE_ID): probatio.All(ensure_list, [str]),
+    probatio.Optional(TargetKey.AREA_ID): probatio.All(ensure_list, [str]),
+    probatio.Optional(TargetKey.FLOOR_ID): probatio.All(ensure_list, [str]),
+    probatio.Optional(TargetKey.LABEL_ID): probatio.All(ensure_list, [str]),
 }
 
 TARGET_EXCLUDE_SCHEMA = probatio.Schema(TARGET_ID_FIELDS)
 
 TARGET_FIELDS: VolDictType = {
     **TARGET_ID_FIELDS,
-    probatio.Optional(ServiceTarget.EXCLUDE): TARGET_EXCLUDE_SCHEMA,
+    probatio.Optional(TargetKey.EXCLUDE): TARGET_EXCLUDE_SCHEMA,
 }
 
 
@@ -1353,39 +1353,37 @@ def exclude_requires_target(value: dict[str, Any]) -> dict[str, Any]:
 
     Not part of TARGET_FIELDS, which also validates partial targets while editing.
     """
-    if ServiceTarget.EXCLUDE in value and not any(
-        value.get(key) for key in TARGET_ID_KEYS
-    ):
+    if TargetKey.EXCLUDE in value and not any(value.get(key) for key in TARGET_ID_KEYS):
         raise probatio.Invalid("an exclude block requires a target to exclude from")
     return value
 
 
 ENTITY_SERVICE_FIELDS: VolDictType = {
-    probatio.Optional(ServiceTarget.ENTITY_ID): comp_entity_ids,
-    probatio.Optional(ServiceTarget.DEVICE_ID): probatio.Any(
+    probatio.Optional(TargetKey.ENTITY_ID): comp_entity_ids,
+    probatio.Optional(TargetKey.DEVICE_ID): probatio.Any(
         ENTITY_MATCH_NONE,
         probatio.All(ensure_list, [str]),
     ),
-    probatio.Optional(ServiceTarget.AREA_ID): probatio.Any(
+    probatio.Optional(TargetKey.AREA_ID): probatio.Any(
         ENTITY_MATCH_NONE,
         probatio.All(ensure_list, [str]),
     ),
-    probatio.Optional(ServiceTarget.FLOOR_ID): probatio.Any(
+    probatio.Optional(TargetKey.FLOOR_ID): probatio.Any(
         ENTITY_MATCH_NONE,
         probatio.All(ensure_list, [str]),
     ),
-    probatio.Optional(ServiceTarget.LABEL_ID): probatio.Any(
+    probatio.Optional(TargetKey.LABEL_ID): probatio.Any(
         ENTITY_MATCH_NONE,
         probatio.All(ensure_list, [str]),
     ),
-    probatio.Optional(ServiceTarget.EXCLUDE): TARGET_EXCLUDE_SCHEMA,
+    probatio.Optional(TargetKey.EXCLUDE): TARGET_EXCLUDE_SCHEMA,
 }
 
 TARGET_SERVICE_FIELDS: VolDictType = {
     # Same as ENTITY_SERVICE_FIELDS but supports specifying entity
     # by entity registry ID.
     **ENTITY_SERVICE_FIELDS,
-    probatio.Optional(ServiceTarget.ENTITY_ID): comp_entity_ids_or_uuids,
+    probatio.Optional(TargetKey.ENTITY_ID): comp_entity_ids_or_uuids,
 }
 
 _TARGET_SERVICE_FIELDS_TEMPLATED: VolDictType = {
@@ -1396,35 +1394,35 @@ _TARGET_SERVICE_FIELDS_TEMPLATED: VolDictType = {
     #
     # The schema supports templates as it is meant to be used in the initial validation
     # before templates are automatically rendered by the core logic.
-    probatio.Optional(ServiceTarget.ENTITY_ID): probatio.Any(
+    probatio.Optional(TargetKey.ENTITY_ID): probatio.Any(
         comp_entity_ids_or_uuids,
         dynamic_template,
         probatio.All(list, template_complex),
     ),
-    probatio.Optional(ServiceTarget.DEVICE_ID): probatio.Any(
+    probatio.Optional(TargetKey.DEVICE_ID): probatio.Any(
         ENTITY_MATCH_NONE,
         dynamic_template,
         probatio.All(ensure_list, [probatio.Any(dynamic_template, str)]),
     ),
-    probatio.Optional(ServiceTarget.AREA_ID): probatio.Any(
+    probatio.Optional(TargetKey.AREA_ID): probatio.Any(
         ENTITY_MATCH_NONE,
         dynamic_template,
         probatio.All(ensure_list, [probatio.Any(dynamic_template, str)]),
     ),
-    probatio.Optional(ServiceTarget.FLOOR_ID): probatio.Any(
+    probatio.Optional(TargetKey.FLOOR_ID): probatio.Any(
         ENTITY_MATCH_NONE,
         dynamic_template,
         probatio.All(ensure_list, [probatio.Any(dynamic_template, str)]),
     ),
-    probatio.Optional(ServiceTarget.LABEL_ID): probatio.Any(
+    probatio.Optional(TargetKey.LABEL_ID): probatio.Any(
         ENTITY_MATCH_NONE,
         dynamic_template,
         probatio.All(ensure_list, [probatio.Any(dynamic_template, str)]),
     ),
-    probatio.Optional(ServiceTarget.EXCLUDE): probatio.Schema(
+    probatio.Optional(TargetKey.EXCLUDE): probatio.Schema(
         {
-            probatio.Optional(ServiceTarget.ENTITY_ID): probatio.Any(
-                TARGET_ID_FIELDS[ServiceTarget.ENTITY_ID],
+            probatio.Optional(TargetKey.ENTITY_ID): probatio.Any(
+                TARGET_ID_FIELDS[TargetKey.ENTITY_ID],
                 dynamic_template,
                 probatio.All(list, template_complex),
             ),
@@ -1434,10 +1432,10 @@ _TARGET_SERVICE_FIELDS_TEMPLATED: VolDictType = {
                     probatio.All(ensure_list, [probatio.Any(dynamic_template, str)]),
                 )
                 for key in (
-                    ServiceTarget.DEVICE_ID,
-                    ServiceTarget.AREA_ID,
-                    ServiceTarget.FLOOR_ID,
-                    ServiceTarget.LABEL_ID,
+                    TargetKey.DEVICE_ID,
+                    TargetKey.AREA_ID,
+                    TargetKey.FLOOR_ID,
+                    TargetKey.LABEL_ID,
                 )
             },
         }

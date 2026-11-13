@@ -470,8 +470,8 @@ class CommonServiceArgument(StrEnum):
     ENTITY_ID = "entity_id"
 
 
-class ServiceTarget(StrEnum):
-    """Keys of an action target, also used inside its exclude block."""
+class TargetKey(StrEnum):
+    """Keys of an action, condition or trigger target and its exclude block."""
 
     ENTITY_ID = "entity_id"
     DEVICE_ID = "device_id"
