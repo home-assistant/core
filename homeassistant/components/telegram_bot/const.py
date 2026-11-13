@@ -94,7 +94,6 @@ SECTION_ADDITIONAL_SETTINGS = "additional_settings"
 SUBENTRY_TYPE_ALLOWED_CHAT_IDS = "allowed_chat_ids"
 
 CONF_ALLOWED_CHAT_IDS = "allowed_chat_ids"
-CONF_CONFIG_ENTRY_ID = "config_entry_id"
 
 CONF_API_ENDPOINT = "api_endpoint"
 CONF_PROXY_URL = "proxy_url"
@@ -150,7 +149,6 @@ class TelegramBotEventData(StrEnum):
     FROM_LAST = "from_last"
 
 
-ATTR_DATA = "data"
 ATTR_MESSAGE = "message"
 ATTR_TITLE = "title"
 
@@ -171,7 +169,6 @@ class TelegramBotChatAction(StrEnum):
     UPLOAD_VIDEO_NOTE = "upload_video_note"
 
 
-ATTR_ARGS = "args"
 ATTR_AUTHENTICATION = "authentication"
 ATTR_CAPTION = "caption"
 ATTR_CHAT_ID = "chat_id"
@@ -185,17 +182,13 @@ ATTR_FILE_NAME = "file_name"
 ATTR_FILE_SIZE = "file_size"
 ATTR_MESSAGE_ID = "message_id"
 ATTR_INLINE_MESSAGE_ID = "inline_message_id"
-ATTR_MEDIA = "media"
 ATTR_MEDIA_TYPE = "media_type"
 ATTR_PARSER = "parse_mode"
 ATTR_PASSWORD = "password"
 ATTR_REPLY_TO_MSGID = "reply_to_message_id"
 ATTR_REPLYMARKUP = "reply_markup"
-ATTR_TEXT = "text"
 ATTR_URL = "url"
-ATTR_USER_ID = "user_id"
 ATTR_USERNAME = "username"
 ATTR_VERIFY_SSL = "verify_ssl"
 ATTR_MESSAGE_TAG = "message_tag"
-ATTR_OPTIONS = "options"
 ATTR_MESSAGE_THREAD_ID = "message_thread_id"
