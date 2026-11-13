@@ -1,11 +1,13 @@
 """Weather entity."""
 
+from datetime import date, datetime
 from typing import Any, override
 
 from google_weather_api import (
     DailyForecastResponse,
     GoogleWeatherApiError,
     HourlyForecastResponse,
+    Interval,
     PrecipitationSegment,
     QuantitativePrecipitationForecast,
     WeatherCondition,
@@ -58,6 +60,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import (
@@ -151,6 +154,15 @@ _PRECIPITATION_INTENSITY_MAP: dict[
     PrecipitationSegment.PrecipitationIntensity.HEAVY: "heavy",
     PrecipitationSegment.PrecipitationIntensity.MID_HEAVY: "mid_heavy",
 }
+
+
+def _is_interval_active_or_future(interval: Interval, now: datetime) -> bool:
+    """Return True unless the interval's exclusive end time has already passed."""
+    return (
+        interval.end_time is None
+        or (end_time := dt_util.parse_datetime(interval.end_time)) is None
+        or end_time > now
+    )
 
 
 async def async_setup_entry(
@@ -346,6 +358,10 @@ class GoogleWeatherEntity(
         assert coordinator
         daily_data = coordinator.data
         assert isinstance(daily_data, DailyForecastResponse)
+        tz = dt_util.get_time_zone(daily_data.time_zone.id) or dt_util.DEFAULT_TIME_ZONE
+        today = dt_util.now(tz).date()
+        # Google's forecast day runs 07:00-07:00 local time, so between midnight
+        # and 07:00 the first record still has yesterday's display_date.
         return [
             {
                 ATTR_FORECAST_CONDITION: _get_condition(
@@ -381,6 +397,12 @@ class GoogleWeatherEntity(
                 ATTR_FORECAST_UV_INDEX: item.daytime_forecast.uv_index,
             }
             for item in daily_data.forecast_days
+            if date(
+                item.display_date.year,
+                item.display_date.month,
+                item.display_date.day,
+            )
+            >= today
         ]
 
     @callback
@@ -426,64 +448,75 @@ class GoogleWeatherEntity(
         assert coordinator
         daily_data = coordinator.data
         assert isinstance(daily_data, DailyForecastResponse)
+        now = dt_util.utcnow()
         forecasts: list[Forecast] = []
         for item in daily_data.forecast_days:
             # Process daytime forecast
             day_forecast = item.daytime_forecast
-            forecasts.append(
-                {
-                    ATTR_FORECAST_CONDITION: _get_condition(
-                        day_forecast.weather_condition.type, is_daytime=True
-                    ),
-                    ATTR_FORECAST_TIME: day_forecast.interval.start_time,
-                    ATTR_FORECAST_HUMIDITY: day_forecast.relative_humidity,
-                    ATTR_FORECAST_PRECIPITATION_PROBABILITY: (
-                        day_forecast.precipitation.probability.percent
-                    ),
-                    ATTR_FORECAST_CLOUD_COVERAGE: day_forecast.cloud_cover,
-                    ATTR_FORECAST_NATIVE_PRECIPITATION: (
-                        day_forecast.precipitation.qpf.quantity
-                    ),
-                    ATTR_FORECAST_NATIVE_TEMP: item.max_temperature.degrees,
-                    ATTR_FORECAST_NATIVE_APPARENT_TEMP: (
-                        item.feels_like_max_temperature.degrees
-                    ),
-                    ATTR_FORECAST_WIND_BEARING: day_forecast.wind.direction.degrees,
-                    ATTR_FORECAST_NATIVE_WIND_GUST_SPEED: day_forecast.wind.gust.value,
-                    ATTR_FORECAST_NATIVE_WIND_SPEED: day_forecast.wind.speed.value,
-                    ATTR_FORECAST_UV_INDEX: day_forecast.uv_index,
-                    ATTR_FORECAST_IS_DAYTIME: True,
-                }
-            )
+            if _is_interval_active_or_future(day_forecast.interval, now):
+                forecasts.append(
+                    {
+                        ATTR_FORECAST_CONDITION: _get_condition(
+                            day_forecast.weather_condition.type, is_daytime=True
+                        ),
+                        ATTR_FORECAST_TIME: day_forecast.interval.start_time,
+                        ATTR_FORECAST_HUMIDITY: day_forecast.relative_humidity,
+                        ATTR_FORECAST_PRECIPITATION_PROBABILITY: (
+                            day_forecast.precipitation.probability.percent
+                        ),
+                        ATTR_FORECAST_CLOUD_COVERAGE: day_forecast.cloud_cover,
+                        ATTR_FORECAST_NATIVE_PRECIPITATION: (
+                            day_forecast.precipitation.qpf.quantity
+                        ),
+                        ATTR_FORECAST_NATIVE_TEMP: item.max_temperature.degrees,
+                        ATTR_FORECAST_NATIVE_APPARENT_TEMP: (
+                            item.feels_like_max_temperature.degrees
+                        ),
+                        ATTR_FORECAST_WIND_BEARING: (
+                            day_forecast.wind.direction.degrees
+                        ),
+                        ATTR_FORECAST_NATIVE_WIND_GUST_SPEED: (
+                            day_forecast.wind.gust.value
+                        ),
+                        ATTR_FORECAST_NATIVE_WIND_SPEED: day_forecast.wind.speed.value,
+                        ATTR_FORECAST_UV_INDEX: day_forecast.uv_index,
+                        ATTR_FORECAST_IS_DAYTIME: True,
+                    }
+                )
 
             # Process nighttime forecast
             night_forecast = item.nighttime_forecast
-            forecasts.append(
-                {
-                    ATTR_FORECAST_CONDITION: _get_condition(
-                        night_forecast.weather_condition.type, is_daytime=False
-                    ),
-                    ATTR_FORECAST_TIME: night_forecast.interval.start_time,
-                    ATTR_FORECAST_HUMIDITY: night_forecast.relative_humidity,
-                    ATTR_FORECAST_PRECIPITATION_PROBABILITY: (
-                        night_forecast.precipitation.probability.percent
-                    ),
-                    ATTR_FORECAST_CLOUD_COVERAGE: night_forecast.cloud_cover,
-                    ATTR_FORECAST_NATIVE_PRECIPITATION: (
-                        night_forecast.precipitation.qpf.quantity
-                    ),
-                    ATTR_FORECAST_NATIVE_TEMP: item.min_temperature.degrees,
-                    ATTR_FORECAST_NATIVE_APPARENT_TEMP: (
-                        item.feels_like_min_temperature.degrees
-                    ),
-                    ATTR_FORECAST_WIND_BEARING: night_forecast.wind.direction.degrees,
-                    ATTR_FORECAST_NATIVE_WIND_GUST_SPEED: (
-                        night_forecast.wind.gust.value
-                    ),
-                    ATTR_FORECAST_NATIVE_WIND_SPEED: night_forecast.wind.speed.value,
-                    ATTR_FORECAST_UV_INDEX: night_forecast.uv_index,
-                    ATTR_FORECAST_IS_DAYTIME: False,
-                }
-            )
+            if _is_interval_active_or_future(night_forecast.interval, now):
+                forecasts.append(
+                    {
+                        ATTR_FORECAST_CONDITION: _get_condition(
+                            night_forecast.weather_condition.type, is_daytime=False
+                        ),
+                        ATTR_FORECAST_TIME: night_forecast.interval.start_time,
+                        ATTR_FORECAST_HUMIDITY: night_forecast.relative_humidity,
+                        ATTR_FORECAST_PRECIPITATION_PROBABILITY: (
+                            night_forecast.precipitation.probability.percent
+                        ),
+                        ATTR_FORECAST_CLOUD_COVERAGE: night_forecast.cloud_cover,
+                        ATTR_FORECAST_NATIVE_PRECIPITATION: (
+                            night_forecast.precipitation.qpf.quantity
+                        ),
+                        ATTR_FORECAST_NATIVE_TEMP: item.min_temperature.degrees,
+                        ATTR_FORECAST_NATIVE_APPARENT_TEMP: (
+                            item.feels_like_min_temperature.degrees
+                        ),
+                        ATTR_FORECAST_WIND_BEARING: (
+                            night_forecast.wind.direction.degrees
+                        ),
+                        ATTR_FORECAST_NATIVE_WIND_GUST_SPEED: (
+                            night_forecast.wind.gust.value
+                        ),
+                        ATTR_FORECAST_NATIVE_WIND_SPEED: (
+                            night_forecast.wind.speed.value
+                        ),
+                        ATTR_FORECAST_UV_INDEX: night_forecast.uv_index,
+                        ATTR_FORECAST_IS_DAYTIME: False,
+                    }
+                )
 
         return forecasts
