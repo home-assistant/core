@@ -117,6 +117,9 @@
     }
   },
   "options": {
+    "error": {
+      "invalid_mqtt_topic": "Enter a valid MQTT topic prefix without wildcards."
+    },
     "step": {
       "init": {
         "data": {
