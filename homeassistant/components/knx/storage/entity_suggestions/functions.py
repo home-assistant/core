@@ -372,18 +372,20 @@ def _function_roles(
             roles.addresses[role] = address
 
     free = [role for role in point_dpts if role not in roles.addresses]
-    candidates: dict[str, str] = {}
+    fitting: dict[str, list[str]] = {}
     for address in without_role:
-        if address in candidates or address in roles.addresses.values():
+        if address in fitting or address in roles.addresses.values():
             continue
         if (dpt := dpt_of(address)) is None:
             continue
-        fitting = [role for role in free if _fits(dpt, point_dpts[role])]
-        if len(fitting) == 1:
-            candidates[address] = fitting[0]
-    # a point that several addresses fit would be a guess as well
-    fitted_by = Counter(candidates.values())
-    for address, role in candidates.items():
+        fitting[address] = [role for role in free if _fits(dpt, point_dpts[role])]
+    # a point that several addresses fit would be a guess as well, also when
+    # another of them fits further points
+    fitted_by = Counter(role for points in fitting.values() for role in points)
+    for address, points in fitting.items():
+        if len(points) != 1:
+            continue
+        role = points[0]
         if fitted_by[role] == 1 and takes(address, role):
             roles.addresses[role] = address
             roles.inferred.add(role)

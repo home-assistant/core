@@ -24,6 +24,7 @@ DPT_TEMPERATURE = {"main": 9, "sub": 1}
 DPT_HVAC_MODE = {"main": 20, "sub": 102}
 DPT_COUNTER = {"main": 5, "sub": 10}
 DPT_PERCENT_ANY = {"main": 5, "sub": None}
+DPT_BOOLEAN_ANY = {"main": 1, "sub": None}
 
 
 def _group_address(address: str, dpt: dict[str, int] | None) -> dict[str, Any]:
@@ -78,6 +79,7 @@ TEST_PROJECT: dict[str, Any] = {
         "2/0/1": _group_address("2/0/1", DPT_UP_DOWN),
         "2/0/2": _group_address("2/0/2", DPT_STEP),
         "2/0/3": _group_address("2/0/3", DPT_PERCENT),
+        "2/0/4": _group_address("2/0/4", DPT_BOOLEAN_ANY),
         "3/0/1": _group_address("3/0/1", DPT_TEMPERATURE),
         "3/0/2": _group_address("3/0/2", DPT_TEMPERATURE),
         "3/0/3": _group_address("3/0/3", DPT_PERCENT),
@@ -218,6 +220,9 @@ def test_ambiguous_dpts_are_not_inferred() -> None:
         "Light", "FT-1", "P-2", ("1/0/2", "InfoOnOff"), ("1/0/1", ""), ("4/0/1", "")
     )
     assert _function_roles(TEST_PROJECT, function).addresses == {"InfoOnOff": "1/0/2"}
+    # a bare DPT 1 also fits up/down (besides step and the alarms)
+    function = _function("Blind", "FT-7", "P-3", ("2/0/1", ""), ("2/0/4", ""))
+    assert _function_roles(TEST_PROJECT, function).addresses == {}
 
 
 def test_status_address_of_a_push_button_feedback() -> None:
