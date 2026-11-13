@@ -239,6 +239,107 @@ async def test_user_step_already_configured(
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure(
+    hass: HomeAssistant,
+    identified: MockModbusConnection,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfiguring probes the new address and moves the entry there."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    # The form starts out with the entry's current address
+    assert {
+        str(key): key.description["suggested_value"]
+        for key in result["data_schema"].schema
+    } == MOCK_ENTRY_DATA
+
+    with _patch_temporary_unit(identified) as mock_temporary_unit:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "192.168.1.200", CONF_PORT: 1502}
+        )
+    mock_temporary_unit.assert_called_once_with(
+        hass, ModbusTcpParams(host="192.168.1.200", port=1502), 1
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {CONF_HOST: "192.168.1.200", CONF_PORT: 1502}
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_other_device(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test reconfiguring onto a station with another serial number keeps the old address."""
+    connection = MockModbusConnection()
+    seed_identity(connection.for_unit(1), serial="S10-99999999999")
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    with _patch_temporary_unit(connection):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "192.168.1.200", CONF_PORT: 502}
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_config_entry.data == MOCK_ENTRY_DATA
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_cannot_connect(
+    hass: HomeAssistant,
+    identified: MockModbusConnection,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a station that does not answer during reconfigure shows an error and the user can retry."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    with patch(
+        "homeassistant.components.e3dc.config_flow.async_get_temporary_unit",
+        side_effect=ModbusTimeoutError(),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "192.168.1.200", CONF_PORT: 502}
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+    assert mock_config_entry.data == MOCK_ENTRY_DATA
+
+    with _patch_temporary_unit(identified):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "192.168.1.200", CONF_PORT: 502}
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {CONF_HOST: "192.168.1.200", CONF_PORT: 502}
+
+
+async def test_reconfigure_reloads_a_loaded_entry(
+    hass: HomeAssistant,
+    identified: MockModbusConnection,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test reconfiguring a loaded entry sets it up again on the new port."""
+    result = await init_integration.start_reconfigure_flow(hass)
+    with (
+        _patch_temporary_unit(identified),
+        patch(
+            "homeassistant.components.e3dc.async_setup_entry",
+            new_callable=AsyncMock,
+            return_value=None,
+        ) as mock_setup,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "192.168.1.100", CONF_PORT: 1502}
+        )
+        await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert init_integration.data[CONF_PORT] == 1502
+    mock_setup.assert_called_once()
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_zeroconf(hass: HomeAssistant, identified: MockModbusConnection) -> None:
     """Test discovery picks the address on Home Assistant's network and probes it."""
     with _patch_temporary_unit(identified) as mock_temporary_unit:

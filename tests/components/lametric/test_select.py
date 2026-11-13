@@ -18,18 +18,18 @@ from homeassistant.components.lametric.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.components.select import (
     ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
 from homeassistant.components.time import (
-    ATTR_TIME,
     DOMAIN as TIME_DOMAIN,
-    SERVICE_SET_VALUE,
+    TimeService,
+    TimeServiceArgument,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
-    ATTR_OPTION,
     STATE_UNAVAILABLE,
+    CommonServiceArgument,
     EntityCategory,
 )
 from homeassistant.core import HomeAssistant
@@ -77,10 +77,10 @@ async def test_brightness_mode(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: "select.frenck_s_lametric_brightness_mode",
-            ATTR_OPTION: "manual",
+            CommonServiceArgument.ENTITY_ID: "select.frenck_s_lametric_brightness_mode",
+            SelectServiceArgument.OPTION: "manual",
         },
         blocking=True,
     )
@@ -105,10 +105,10 @@ async def test_select_error(
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: "select.frenck_s_lametric_brightness_mode",
-                ATTR_OPTION: "manual",
+                CommonServiceArgument.ENTITY_ID: "select.frenck_s_lametric_brightness_mode",
+                SelectServiceArgument.OPTION: "manual",
             },
             blocking=True,
         )
@@ -134,10 +134,10 @@ async def test_select_connection_error(
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: "select.frenck_s_lametric_brightness_mode",
-                ATTR_OPTION: "manual",
+                CommonServiceArgument.ENTITY_ID: "select.frenck_s_lametric_brightness_mode",
+                SelectServiceArgument.OPTION: "manual",
             },
             blocking=True,
         )
@@ -173,8 +173,11 @@ async def test_screensaver_mode_when_dark(
     """Test switching to the when dark screensaver mode."""
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: ENTITY_SCREENSAVER_MODE, ATTR_OPTION: "when_dark"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: ENTITY_SCREENSAVER_MODE,
+            SelectServiceArgument.OPTION: "when_dark",
+        },
         blocking=True,
     )
 
@@ -210,8 +213,11 @@ async def test_screensaver_mode_then_schedule_change(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: ENTITY_SCREENSAVER_MODE, ATTR_OPTION: "when_dark"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: ENTITY_SCREENSAVER_MODE,
+            SelectServiceArgument.OPTION: "when_dark",
+        },
         blocking=True,
     )
 
@@ -221,10 +227,10 @@ async def test_screensaver_mode_then_schedule_change(
 
     await hass.services.async_call(
         TIME_DOMAIN,
-        SERVICE_SET_VALUE,
+        TimeService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: "time.frenck_s_lametric_screensaver_start_time",
-            ATTR_TIME: "20:00:00",
+            CommonServiceArgument.ENTITY_ID: "time.frenck_s_lametric_screensaver_start_time",
+            TimeServiceArgument.TIME: "20:00:00",
         },
         blocking=True,
     )
@@ -244,8 +250,11 @@ async def test_screensaver_mode_time_based(
     """
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: ENTITY_SCREENSAVER_MODE, ATTR_OPTION: "time_based"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: ENTITY_SCREENSAVER_MODE,
+            SelectServiceArgument.OPTION: "time_based",
+        },
         blocking=True,
     )
 
@@ -278,8 +287,11 @@ async def test_screensaver_mode_time_based_without_times(
     with pytest.raises(ServiceValidationError, match="start and end time first"):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: ENTITY_SCREENSAVER_MODE, ATTR_OPTION: "time_based"},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: ENTITY_SCREENSAVER_MODE,
+                SelectServiceArgument.OPTION: "time_based",
+            },
             blocking=True,
         )
 

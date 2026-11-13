@@ -37,7 +37,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util import dt as dt_util
 
 if TYPE_CHECKING:
-    from . import TeslemetryConfigEntry
+    from .models import TeslemetryConfigEntry
 
 from .const import DOMAIN, LOGGER
 from .helpers import async_update_device_sw_version, flatten, gateway_issue_id

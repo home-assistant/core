@@ -6,13 +6,13 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
 from homeassistant.components.opentherm_gw import DOMAIN
 from homeassistant.components.opentherm_gw.const import OpenThermDeviceIdentifier
-from homeassistant.const import ATTR_ENTITY_ID, CONF_ID, STATE_UNKNOWN
+from homeassistant.const import CONF_ID, STATE_UNKNOWN, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -51,10 +51,10 @@ async def test_control_setpoint_number_set_value(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: number_entity_id,
-            ATTR_VALUE: 10.5,
+            CommonServiceArgument.ENTITY_ID: number_entity_id,
+            NumberServiceArgument.VALUE: 10.5,
         },
         blocking=True,
     )
@@ -63,10 +63,10 @@ async def test_control_setpoint_number_set_value(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: number_entity_id,
-            ATTR_VALUE: 0,
+            CommonServiceArgument.ENTITY_ID: number_entity_id,
+            NumberServiceArgument.VALUE: 0,
         },
         blocking=True,
     )

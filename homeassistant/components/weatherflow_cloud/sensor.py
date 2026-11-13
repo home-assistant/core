@@ -487,10 +487,9 @@ class WeatherFlowSensorBase(WeatherFlowCloudEntity, SensorEntity, ABC):
 
         if self.device_id is not None:
             # Websocket sensors - have Device IDs
-            return bool(
-                self.coordinator.data
-                and self.coordinator.data[self.station_id][self.device_id] is not None
-            )
+            if (station := self.coordinator.data.get(self.station_id)) is None:
+                return False
+            return station.get(self.device_id) is not None
 
         return True
 
