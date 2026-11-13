@@ -865,15 +865,8 @@ class EntityPlatform:
                 device_info=device_info,
             )
         # An integration can still describe its device with a plain mapping, which
-        # its type does not allow
-        report_usage(  # type: ignore[unreachable]
-            "returns a plain mapping as the `device_info` of an entity, which is "
-            "deprecated; return a `DeviceInfo` or a `ChildDeviceInfo` instead",
-            core_behavior=ReportBehavior.LOG,
-            breaks_in_ha_version="2027.12.0",
-            integration_domain=self.platform_name,
-        )
-        device_info_fields = dict(device_info)
+        # its type does not allow. To be deprecated.
+        device_info_fields = dict(device_info)  # type: ignore[unreachable]
         # A device info without any field means no device
         if not device_info_fields:
             return entity.device_entry

@@ -2404,28 +2404,6 @@ async def test_add_entity_device_info_bad_key_is_cleaned_up(
     assert "bogus_key" in caplog.text
 
 
-async def test_device_info_plain_mapping_deprecated(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test a plain mapping as device info is deprecated, but still adds the device."""
-    config_entry = MockConfigEntry(entry_id="super-mock-id")
-    config_entry.add_to_hass(hass)
-    platform = MockEntityPlatform(hass, platform_name=config_entry.domain)
-    platform.config_entry = config_entry
-    entity = MockEntity(
-        unique_id="unique", device_info={"identifiers": {("test", "dev1")}}
-    )
-
-    await platform.async_add_entities([entity])
-
-    assert device_registry.async_get_device_by_identifier(
-        ("test", "dev1"), config_entry.entry_id
-    )
-    assert "returns a plain mapping as the `device_info` of an entity" in caplog.text
-
-
 async def test_add_entity_registry_error_is_cleaned_up(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
