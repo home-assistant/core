@@ -19,6 +19,7 @@ from homeassistant.components.notify import (
 )
 from homeassistant.components.trmnl.const import (
     CONF_MESSAGES_PLUGIN_SETTING_ID,
+    CONF_MESSAGES_VIEW_SET,
     DOMAIN,
     PLUGIN_KEYNAME,
 )
@@ -46,7 +47,11 @@ def messages_entry(mock_config_entry: MockConfigEntry) -> MockConfigEntry:
         version=2,
         title=mock_config_entry.title,
         unique_id=mock_config_entry.unique_id,
-        data={**mock_config_entry.data, CONF_MESSAGES_PLUGIN_SETTING_ID: 7},
+        data={
+            **mock_config_entry.data,
+            CONF_MESSAGES_PLUGIN_SETTING_ID: 7,
+            CONF_MESSAGES_VIEW_SET: True,
+        },
     )
 
 
@@ -208,24 +213,29 @@ async def test_send_message_refused_starts_reauth(
     assert reauth_started(hass)
 
 
-async def test_failed_view_setup_saves_nothing(
+async def test_failed_view_setup_is_finished_on_the_next_message(
     hass: HomeAssistant,
     mock_trmnl_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test a plugin setting whose view could not be set is not used for messages."""
+    """Test a plugin setting whose view could not be set is kept and set up on the next message."""
     mock_trmnl_client.create_plugin_setting.return_value = MESSAGES_PLUGIN_SETTING
-    mock_trmnl_client.update_plugin_setting_fields.side_effect = TRMNLError(
-        "status 500"
-    )
+    mock_trmnl_client.update_plugin_setting_fields.side_effect = [
+        TRMNLError("status 500"),
+        None,
+    ]
     with patch("homeassistant.components.trmnl.PLATFORMS", [Platform.NOTIFY]):
         await setup_integration(hass, mock_config_entry)
-
     with pytest.raises(HomeAssistantError):
         await send(hass)
 
-    assert CONF_MESSAGES_PLUGIN_SETTING_ID not in mock_config_entry.data
-    mock_trmnl_client.update_plugin_setting_data.assert_not_called()
+    await send(hass)
+
+    mock_trmnl_client.create_plugin_setting.assert_awaited_once()
+    assert mock_trmnl_client.update_plugin_setting_fields.await_count == 2
+    mock_trmnl_client.update_plugin_setting_data.assert_awaited_once()
+    assert mock_trmnl_client.update_plugin_setting_data.await_args.args[0] == 7
+    assert mock_config_entry.data[CONF_MESSAGES_VIEW_SET] is True
 
 
 async def test_remove_during_first_message_deletes_the_new_plugin(

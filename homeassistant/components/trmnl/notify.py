@@ -13,7 +13,12 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_MESSAGES_PLUGIN_SETTING_ID, DOMAIN, PLUGIN_KEYNAME
+from .const import (
+    CONF_MESSAGES_PLUGIN_SETTING_ID,
+    CONF_MESSAGES_VIEW_SET,
+    DOMAIN,
+    PLUGIN_KEYNAME,
+)
 from .coordinator import TRMNLConfigEntry, scope_granted
 
 PARALLEL_UPDATES = 1
@@ -89,33 +94,45 @@ class TRMNLNotifyEntity(NotifyEntity):
     async def _async_push(self, data: dict[str, Any]) -> None:
         """Push to the messages plugin setting, made again if the user deleted it."""
         client = self._entry.runtime_data.client
-        plugin_setting_id = self._entry.data.get(CONF_MESSAGES_PLUGIN_SETTING_ID)
-        if plugin_setting_id is None:
-            plugin_setting_id = await self._async_create_plugin_setting()
         try:
-            await client.update_plugin_setting_data(plugin_setting_id, data)
-        except TRMNLNotFoundError:
             await client.update_plugin_setting_data(
-                await self._async_create_plugin_setting(), data
+                await self._async_plugin_setting_id(), data
+            )
+        except TRMNLNotFoundError:
+            self._save_data(
+                {CONF_MESSAGES_PLUGIN_SETTING_ID: None, CONF_MESSAGES_VIEW_SET: False}
+            )
+            await client.update_plugin_setting_data(
+                await self._async_plugin_setting_id(), data
             )
 
-    async def _async_create_plugin_setting(self) -> int:
-        """Create a plugin setting that shows the Messages view and save its id."""
+    async def _async_plugin_setting_id(self) -> int:
+        """Return the messages plugin setting, creating it and setting its view when needed."""
         client = self._entry.runtime_data.client
-        plugin_setting = await client.create_plugin_setting(
-            "Home Assistant messages", plugin_keyname=PLUGIN_KEYNAME
-        )
-        await client.update_plugin_setting_fields(
-            plugin_setting.identifier, {"view": "messages"}
-        )
+        plugin_setting_id = self._entry.data.get(CONF_MESSAGES_PLUGIN_SETTING_ID)
+        if plugin_setting_id is None:
+            plugin_setting = await client.create_plugin_setting(
+                "Home Assistant messages", plugin_keyname=PLUGIN_KEYNAME
+            )
+            plugin_setting_id = plugin_setting.identifier
+            # Saved before its view is set, so a failure below cannot lose track of it.
+            self._save_data(
+                {
+                    CONF_MESSAGES_PLUGIN_SETTING_ID: plugin_setting_id,
+                    CONF_MESSAGES_VIEW_SET: False,
+                }
+            )
+        if not self._entry.data.get(CONF_MESSAGES_VIEW_SET):
+            await client.update_plugin_setting_fields(
+                plugin_setting_id, {"view": "messages"}
+            )
+            self._save_data({CONF_MESSAGES_VIEW_SET: True})
+        return plugin_setting_id
+
+    def _save_data(self, data: dict[str, Any]) -> None:
         self.hass.config_entries.async_update_entry(
-            self._entry,
-            data={
-                **self._entry.data,
-                CONF_MESSAGES_PLUGIN_SETTING_ID: plugin_setting.identifier,
-            },
+            self._entry, data={**self._entry.data, **data}
         )
-        return plugin_setting.identifier
 
     def _raise_reauth(
         self, translation_key: str, error: Exception | None = None
