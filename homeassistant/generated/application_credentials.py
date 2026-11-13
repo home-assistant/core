@@ -7,6 +7,7 @@ APPLICATION_CREDENTIALS = [
     "abrp",
     "aladdin_connect",
     "august",
+    "beatbot",
     "bosch_smart_camera",
     "dropbox",
     "ekeybionyx",
