@@ -19,7 +19,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import MOCK_SERIAL, model_registers
 
@@ -30,6 +30,8 @@ PRIMARY_SENSORS = {
     "ac_power",
     "dc_power",
     "lifetime_energy",
+    "mppt_1_dc_power",
+    "mppt_2_dc_power",
     "operating_state",
     "temperature",
 }
@@ -53,6 +55,30 @@ async def test_all_entities(
 ) -> None:
     """Test all entities match their snapshot."""
     await snapshot_platform(hass, entity_registry, snapshot, init_integration.entry_id)
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_mppt_child_devices(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test each MPPT gets a child device of the inverter, carrying its sensors."""
+    for number in (1, 2):
+        mppt = device_registry.async_get_child_device_by_identifier(
+            (DOMAIN, f"{MOCK_SERIAL}_mppt_{number}"), init_integration.entry_id
+        )
+        assert mppt is not None
+        assert mppt == snapshot(name=f"mppt_{number}")
+        assert {
+            entry.unique_id
+            for entry in er.async_entries_for_device(entity_registry, mppt.id)
+        } == {
+            f"{MOCK_SERIAL}_mppt_{number}_{key}"
+            for key in ("dc_current", "dc_power", "dc_voltage")
+        }
 
 
 async def test_only_primary_readings_are_enabled_by_default(
@@ -83,6 +109,10 @@ async def test_only_primary_readings_are_enabled_by_default(
         pytest.param("temperature", "46.9", id="temperature"),
         pytest.param("voltage_l1", "226.5", id="voltage_l1"),
         pytest.param("current_l1", "1.64", id="current_l1"),
+        pytest.param("mppt_1_dc_power", "360", id="mppt_1_dc_power"),
+        pytest.param("mppt_1_dc_voltage", "355.1", id="mppt_1_dc_voltage"),
+        pytest.param("mppt_1_dc_current", "1.02", id="mppt_1_dc_current"),
+        pytest.param("mppt_2_dc_power", "650", id="mppt_2_dc_power"),
     ],
 )
 async def test_sensor_values(
