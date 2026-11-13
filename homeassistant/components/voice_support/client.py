@@ -1,20 +1,40 @@
 """Connect to the Voice app and read its capabilities."""
 
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from json import JSONDecodeError
 import logging
 from typing import Any
 
 import aiohttp
+import probatio
 from yarl import URL
 
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.event import async_track_time_interval
 
 API_VERSION = 1
 INFO_TIMEOUT = 10
-INFO_REFRESH_INTERVAL = timedelta(minutes=5)
+
+INFO_SCHEMA = probatio.Schema(
+    {
+        "name": str,
+        "version": str,
+        "api_version": probatio.All(
+            int,
+            probatio.Check(
+                lambda value: not isinstance(value, bool), "expected integer"
+            ),
+        ),
+        "wake_words": [
+            {
+                "id": str,
+                probatio.Optional("phrase"): probatio.Any(str, None),
+            }
+        ],
+    },
+    required=True,
+    extra=probatio.ALLOW_EXTRA,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,6 +71,7 @@ class AppInfo:
     @staticmethod
     def from_json(data: dict[str, Any]) -> AppInfo:
         """Read an /info response."""
+        data = INFO_SCHEMA(data)
         return AppInfo(
             name=data["name"],
             version=data["version"],
@@ -76,35 +97,6 @@ class VoiceSupportClient:
         self.hass = hass
         self.url = URL.build(scheme="http", host=host, port=port)
         self.info: AppInfo | None = None
-        self._stop_refresh: CALLBACK_TYPE | None = None
-        self._on_disconnect: CALLBACK_TYPE | None = None
-
-    async def async_connect(self, on_disconnect: CALLBACK_TYPE) -> None:
-        """Ask the app what it is, and keep asking now and then.
-
-        An app that is updated, or that goes away and comes back, is only
-        noticed by asking again.
-        """
-        await self.async_update_info()
-        self._on_disconnect = on_disconnect
-        self._stop_refresh = async_track_time_interval(
-            self.hass, self._async_refresh_info, INFO_REFRESH_INTERVAL
-        )
-
-    @callback
-    def async_close(self) -> None:
-        """Stop following the app."""
-        if self._stop_refresh is not None:
-            self._stop_refresh()
-            self._stop_refresh = None
-
-    async def _async_refresh_info(self, _now: datetime | None = None) -> None:
-        try:
-            await self.async_update_info()
-        except (*CLIENT_ERRORS, UnsupportedVersionError) as err:
-            _LOGGER.debug("Cannot use the app at %s (%r)", self.url, err)
-            if self._on_disconnect is not None:
-                self._on_disconnect()
 
     async def async_update_info(self) -> AppInfo:
         """Ask the app what it is and what it can verify.
@@ -120,13 +112,13 @@ class VoiceSupportClient:
                 response.raise_for_status()
                 try:
                     data = await response.json()
-                except ValueError as err:
+                except JSONDecodeError as err:
                     raise InvalidResponseError(
                         "Invalid JSON from the Voice app"
                     ) from err
                 try:
                     info = AppInfo.from_json(data)
-                except (AttributeError, KeyError, TypeError, ValueError) as err:
+                except probatio.Invalid as err:
                     raise InvalidResponseError(
                         "Invalid info from the Voice app"
                     ) from err

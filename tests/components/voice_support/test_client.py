@@ -98,6 +98,19 @@ async def test_update_info_wrong_api_version(
             InvalidResponseError,
             id="wake_word_id_not_text",
         ),
+        *[
+            pytest.param(
+                {"json": {**INFO, field: value}}, InvalidResponseError, id=name
+            )
+            for field, value, name in (
+                ("name", None, "invalid_name"),
+                ("version", 1, "invalid_version"),
+                ("api_version", "1", "invalid_api_version"),
+                ("api_version", True, "boolean_api_version"),
+                ("wake_words", [None], "invalid_wake_word"),
+                ("wake_words", [{"id": "okay_nabu", "phrase": 42}], "invalid_phrase"),
+            )
+        ],
         pytest.param(
             {"json": {**INFO, "wake_words": "okay nabu"}},
             InvalidResponseError,
@@ -132,3 +145,22 @@ async def test_update_info_unexpected_error(
 
     with pytest.raises(error):
         await client.async_update_info()
+
+
+@pytest.mark.parametrize(
+    "wake_word", [{"id": "okay_nabu"}, {"id": "okay_nabu", "phrase": None}]
+)
+async def test_update_info_optional_phrase(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    wake_word: dict[str, str | None],
+) -> None:
+    """Test optional phrases and extra response fields are accepted."""
+    aioclient_mock.get(
+        INFO_URL, json={**INFO, "wake_words": [wake_word], "extra": True}
+    )
+    client = VoiceSupportClient(hass, HOST, PORT)
+
+    info = await client.async_update_info()
+
+    assert info.wake_words == {"okay_nabu": None}

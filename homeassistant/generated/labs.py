@@ -47,7 +47,7 @@ LABS_PREVIEW_FEATURES = {
         },
     },
     "voice_support": {
-        "wake_word_verification": {
+        "next_generation_voice": {
             "feedback_url": "",
             "learn_more_url": "https://www.home-assistant.io/integrations/voice_support",
             "report_issue_url": "",
