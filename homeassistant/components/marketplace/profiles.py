@@ -97,18 +97,20 @@ GITHUB = DownloadProfile(
     },
 )
 
-# The relays serve the same paths as GitHub, raw content below /raw. A public
-# third-party relay is the last resort for downloads, it takes the full URL.
+# The relays serve the same paths as GitHub, raw content below /raw.
+# hamrelay.hasscn.top and the public proxy take the full URL instead.
 CHINA_RELAYS = DownloadProfile(
     id="hasscn",
     operator="the Home Assistant China community (hasscn.top)",
-    api="https://ghapi.hacs.vip",
+    api="https://hamrelay.hasscn.top/https://api.github.com",
     github=(
+        "https://hamrelay.hasscn.top/https://github.com",
         "https://ghrp2.hacs.vip",
         "https://ghrp.hacs.vip",
         "https://gh-proxy.org/https://github.com",
     ),
     raw=(
+        "https://hamrelay.hasscn.top/https://raw.githubusercontent.com",
         "https://ghrp2.hacs.vip/raw",
         "https://ghrp.hacs.vip/raw",
         "https://gh-proxy.org/https://raw.githubusercontent.com",
