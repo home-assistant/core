@@ -171,8 +171,13 @@
     }
   },
   "status": {
-    "cur_voltage": 418,
-    "temp_current": 188
+    "work_state": "charger_charging",
+    "cur_voltage": 410,
+    "cur_current": 153,
+    "power_total": 106,
+    "temp_current": 320,
+    "charge_energy_once": 22,
+    "charge_time": 2
   },
   "set_up": true,
   "support_local": true,
