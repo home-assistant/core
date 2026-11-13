@@ -5,8 +5,8 @@ import logging
 
 from todoist_api_python.api_async import TodoistAPIAsync
 
-from homeassistant.const import CONF_TOKEN, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_TOKEN, EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
@@ -34,7 +34,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TodoistConfigEntry) -> N
     """Set up todoist from a config entry."""
 
     token = entry.data[CONF_TOKEN]
-    api = TodoistAPIAsync(token)
+    # The SDK creates an httpx client on init, which loads SSL certs from disk.
+    api = await hass.async_add_executor_job(TodoistAPIAsync, token)
     coordinator = TodoistCoordinator(hass, _LOGGER, entry, SCAN_INTERVAL, api, token)
     try:
         await coordinator.async_config_entry_first_refresh()
@@ -43,6 +44,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: TodoistConfigEntry) -> N
     except BaseException:
         await api.close()
         raise
+
+    # Home Assistant shutdown does not unload config entries, so close the
+    # SDK's HTTP client explicitly when Home Assistant stops.
+    async def _close_api(_: Event) -> None:
+        await api.close()
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close_api)
+    )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: TodoistConfigEntry) -> None:

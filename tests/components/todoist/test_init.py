@@ -13,6 +13,7 @@ from homeassistant.components.todoist.services import (
     TodoistServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -22,6 +23,7 @@ from .conftest import PROJECT_ID, make_api_response
 async def test_load_unload(
     hass: HomeAssistant,
     setup_integration: None,
+    api: AsyncMock,
     todoist_config_entry: MockConfigEntry | None,
 ) -> None:
     """Test loading and unloading of the config entry."""
@@ -32,6 +34,23 @@ async def test_load_unload(
 
     assert await hass.config_entries.async_unload(todoist_config_entry.entry_id)
     assert todoist_config_entry.state is ConfigEntryState.NOT_LOADED
+    api.close.assert_awaited_once()
+
+
+async def test_shutdown_closes_api(
+    hass: HomeAssistant,
+    setup_integration: None,
+    api: AsyncMock,
+    todoist_config_entry: MockConfigEntry | None,
+) -> None:
+    """Test the API client is closed when Home Assistant stops."""
+    assert todoist_config_entry.state is ConfigEntryState.LOADED
+    api.close.assert_not_awaited()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    api.close.assert_awaited_once()
 
 
 @pytest.mark.usefixtures("setup_integration")

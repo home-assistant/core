@@ -43,7 +43,9 @@ class TodoistConfigFlow(ConfigFlow, domain=DOMAIN):
 
         errors: dict[str, str] = {}
         if user_input is not None:
-            api = TodoistAPIAsync(user_input[CONF_TOKEN])
+            api = await self.hass.async_add_executor_job(
+                TodoistAPIAsync, user_input[CONF_TOKEN]
+            )
             try:
                 await api.get_tasks()
             except HTTPStatusError as err:
