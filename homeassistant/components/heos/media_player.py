@@ -450,12 +450,14 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
     async def async_join_players(self, group_members: list[str]) -> None:
         """Join `group_members` as a player group with the current player."""
         player_ids: list[int] = [self._player.player_id]
+        current_group_ids: set[int] | None = None
         # Keep the members of the group this player already leads. HEOS replaces
         # the group with the players provided, so members that are not sent
         # again are removed when another player is added to the group.
         for group in self.coordinator.heos.groups.values():
             if group.lead_player_id == self._player.player_id:
                 player_ids.extend(group.member_player_ids)
+                current_group_ids = set(player_ids)
                 break
         # Resolve entity_ids to player_ids
         entity_registry = er.async_get(self.hass)
@@ -476,6 +478,9 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
             player_id = int(entity_entry.unique_id)
             if player_id not in player_ids:
                 player_ids.append(player_id)
+        # HEOS rejects a group that is identical to the current one.
+        if set(player_ids) == current_group_ids:
+            return
         await self.coordinator.heos.set_group(player_ids)
 
     @catch_action_error("unjoin player")
