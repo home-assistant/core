@@ -20,7 +20,7 @@ awesomeversion==25.8.0
 bcrypt==5.0.0
 certifi>=2021.5.30
 ciso8601==2.3.3
-cronsim==2.7
+cronsim==2.8
 cryptography==50.0.2
 fnv-hash-fast==2.0.3
 gazetteer-matcher==1.1.0
@@ -31,7 +31,7 @@ home-assistant-bluetooth==2.0.0
 home-assistant-intents==2026.10.27
 httpx2==2.14.0
 ifaddr==0.2.0
-infrared-protocols==10.6.0
+infrared-protocols==10.7.0
 Jinja2==3.1.6
 lru-dict==1.4.1
 mutagen==1.48.1
@@ -52,7 +52,7 @@ PyYAML==6.0.3
 requests==2.34.2
 rf-protocols==4.3.0
 securetar==2026.10.0
-SQLAlchemy==2.1.6
+SQLAlchemy==2.1.8
 standard-aifc==3.13.0
 standard-telnetlib==3.13.0
 truststore==0.10.4

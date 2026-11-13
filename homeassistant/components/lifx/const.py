@@ -50,9 +50,11 @@ class LIFXServiceArgument(StrEnum):
     CLOUD_SATURATION_MAX = "cloud_saturation_max"
     CLOUD_SATURATION_MIN = "cloud_saturation_min"
     COLOR_NAME = "color_name"
+    COLOR_TEMP_KELVIN = "color_temp_kelvin"
     CYCLES = "cycles"
     DIRECTION = "direction"
     DURATION = "duration"
+    HS_COLOR = "hs_color"
     INFRARED = "infrared"
     MODE = "mode"
     PALETTE = "palette"
@@ -67,6 +69,7 @@ class LIFXServiceArgument(StrEnum):
     SPREAD = "spread"
     THEME = "theme"
     TRANSITION = "transition"
+    XY_COLOR = "xy_color"
     ZONES = "zones"
 
 

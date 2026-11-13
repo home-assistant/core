@@ -31,14 +31,14 @@ from homeassistant.helpers.typing import (
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
+from .const import DOMAIN, TEMPLATE_ERRORS
+
 if TYPE_CHECKING:
     from .client import MQTT, Subscription
     from .debug_info import TimestampedPublishMessage
     from .device_trigger import Trigger
     from .discovery import MQTTDiscoveryPayload
     from .tag import MQTTTagScanner
-
-from .const import DOMAIN, TEMPLATE_ERRORS
 
 
 class PayloadSentinel(StrEnum):
@@ -440,7 +440,7 @@ class MqttValueTemplate:
             values[ATTR_ENTITY_ID] = self._entity.entity_id
             values[ATTR_NAME] = self._entity.name
             # Created again when the entity_id is changed in place
-            if self._value_template.hass and (
+            if (
                 not self._template_state
                 or self._template_state.entity_id != self._entity.entity_id
             ):

@@ -78,6 +78,15 @@ class TelegramBotServiceArgument(StrEnum):
     ONE_TIME_KEYBOARD = "one_time_keyboard"
 
 
+class TelegramBotParseMode(StrEnum):
+    """Parse modes of the Telegram bot messages."""
+
+    HTML = "html"
+    MARKDOWN = "markdown"
+    MARKDOWN_V2 = "markdownv2"
+    PLAIN_TEXT = "plain_text"
+
+
 PLATFORM_BROADCAST = "broadcast"
 PLATFORM_POLLING = "polling"
 PLATFORM_WEBHOOKS = "webhooks"
@@ -131,6 +140,43 @@ EVENT_TELEGRAM_TEXT = "telegram_text"
 EVENT_TELEGRAM_ATTACHMENT = "telegram_attachment"
 EVENT_TELEGRAM_SENT = "telegram_sent"
 
+
+class TelegramBotEvent(StrEnum):
+    """Event types fired by the Telegram bot."""
+
+    CALLBACK = "telegram_callback"
+    COMMAND = "telegram_command"
+    TEXT = "telegram_text"
+    ATTACHMENT = "telegram_attachment"
+    SENT = "telegram_sent"
+
+
+class TelegramBotEventData(StrEnum):
+    """Keys of the data of the Telegram bot events."""
+
+    BOT = "bot"
+    CHAT_ID = "chat_id"
+    CHAT_INSTANCE = "chat_instance"
+    MESSAGE_THREAD_ID = "message_thread_id"
+    ID = "id"
+    MESSAGE_ID = "message_id"
+    MESSAGE_TAG = "message_tag"
+    REPLY_TO_MESSAGE_ID = "reply_to_message_id"
+    DATE = "date"
+    TEXT = "text"
+    MESSAGE = "message"
+    DATA = "data"
+    COMMAND = "command"
+    ARGS = "args"
+    FILE_ID = "file_id"
+    FILE_NAME = "file_name"
+    FILE_MIME_TYPE = "file_mime_type"
+    FILE_SIZE = "file_size"
+    USER_ID = "user_id"
+    FROM_FIRST = "from_first"
+    FROM_LAST = "from_last"
+
+
 PARSER_HTML = "html"
 PARSER_MD = "markdown"
 PARSER_MD2 = "markdownv2"
@@ -152,6 +198,23 @@ CHAT_ACTION_CHOOSE_STICKER = "choose_sticker"
 CHAT_ACTION_FIND_LOCATION = "find_location"
 CHAT_ACTION_RECORD_VIDEO_NOTE = "record_video_note"
 CHAT_ACTION_UPLOAD_VIDEO_NOTE = "upload_video_note"
+
+
+class TelegramBotChatAction(StrEnum):
+    """Chat actions of the Telegram bot send_chat_action action."""
+
+    TYPING = "typing"
+    UPLOAD_PHOTO = "upload_photo"
+    RECORD_VIDEO = "record_video"
+    UPLOAD_VIDEO = "upload_video"
+    RECORD_VOICE = "record_voice"
+    UPLOAD_VOICE = "upload_voice"
+    UPLOAD_DOCUMENT = "upload_document"
+    CHOOSE_STICKER = "choose_sticker"
+    FIND_LOCATION = "find_location"
+    RECORD_VIDEO_NOTE = "record_video_note"
+    UPLOAD_VIDEO_NOTE = "upload_video_note"
+
 
 ATTR_ARGS = "args"
 ATTR_AUTHENTICATION = "authentication"

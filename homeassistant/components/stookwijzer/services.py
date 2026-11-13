@@ -1,10 +1,11 @@
 """Define services for the Stookwijzer integration."""
 
+from enum import StrEnum
 from typing import Required, TypedDict, cast
 
 import probatio
 
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -14,12 +15,19 @@ from homeassistant.core import (
 )
 from homeassistant.helpers import service
 
-from .const import DOMAIN, SERVICE_GET_FORECAST
+from .const import DOMAIN
 from .coordinator import StookwijzerConfigEntry
+
+
+class StookwijzerService(StrEnum):
+    """Store keys for Stookwijzer services."""
+
+    GET_FORECAST = "get_forecast"
+
 
 SERVICE_GET_FORECAST_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
+        probatio.Required(CommonServiceArgument.CONFIG_ENTRY_ID): str,
     }
 )
 
@@ -39,7 +47,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async def async_get_forecast(call: ServiceCall) -> ServiceResponse:
         """Get the forecast from API endpoint."""
         entry: StookwijzerConfigEntry = service.async_get_config_entry(
-            call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+            call.hass, DOMAIN, call.data[CommonServiceArgument.CONFIG_ENTRY_ID]
         )
         client = entry.runtime_data.client
 
@@ -54,7 +62,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_GET_FORECAST,
+        StookwijzerService.GET_FORECAST,
         async_get_forecast,
         schema=SERVICE_GET_FORECAST_SCHEMA,
         supports_response=SupportsResponse.ONLY,
