@@ -1,0 +1,7 @@
+{
+  "services": {
+    "get_image_url": {
+      "service": "mdi:image-outline"
+    }
+  }
+}
