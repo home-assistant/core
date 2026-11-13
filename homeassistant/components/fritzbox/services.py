@@ -68,7 +68,7 @@ async def _service_handler(call: ServiceCall) -> None:
 
             LOGGER.debug("Executing service %s", call.service)
             config_entry: FritzboxConfigEntry = service.async_get_config_entry(
-                call.hass, DOMAIN, None
+                call.hass, DOMAIN, entity_id.config_entry_id
             )
             coordinator = config_entry.runtime_data
             await call.hass.async_add_executor_job(
