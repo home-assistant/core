@@ -7,8 +7,6 @@ import logging
 import pathlib
 from typing import Any, Self, override
 
-import aiofiles
-import aiofiles.os
 import probatio
 
 from homeassistant.components.image import (
@@ -164,6 +162,15 @@ class ImageExtraStoredData(ExtraStoredData):
         return cls(image_last_updated=image_last_updated, image_url=image_url)
 
 
+def _write_cache_file(image_path: pathlib.Path, payload: bytes) -> None:
+    """Write a cache file atomically."""
+    image_path.parent.mkdir(parents=True, exist_ok=True)
+    tmp_path = image_path.with_suffix(".tmp")
+    tmp_path.write_bytes(payload)
+    # An interrupted write must never leave a truncated cache file.
+    tmp_path.replace(image_path)
+
+
 class AbstractTemplateImage(AbstractTemplateEntity, ImageEntity, RestoreEntity):
     """Representation of a template image features."""
 
@@ -256,7 +263,7 @@ class AbstractTemplateImage(AbstractTemplateEntity, ImageEntity, RestoreEntity):
 
     async def _async_remove_cache_file(self, image_path: pathlib.Path) -> None:
         try:
-            await aiofiles.os.remove(image_path)
+            await self.hass.async_add_executor_job(image_path.unlink)
         except FileNotFoundError:
             pass
         except OSError as err:
@@ -292,13 +299,10 @@ class AbstractTemplateImage(AbstractTemplateEntity, ImageEntity, RestoreEntity):
             + b"\n"
             + image.content
         )
-        tmp_path = image_path.with_suffix(".tmp")
         try:
-            await aiofiles.os.makedirs(image_path.parent, exist_ok=True)
-            async with aiofiles.open(tmp_path, "wb") as fh:
-                await fh.write(payload)
-            # An interrupted write must never leave a truncated cache file.
-            await aiofiles.os.replace(tmp_path, image_path)
+            await self.hass.async_add_executor_job(
+                _write_cache_file, image_path, payload
+            )
         except OSError as err:
             _LOGGER.warning(
                 "%s: Unable to save image cache %s: %s", self.entity_id, image_path, err
@@ -312,8 +316,7 @@ class AbstractTemplateImage(AbstractTemplateEntity, ImageEntity, RestoreEntity):
             paths.append(image_cache_dir(self.hass) / f"{self.entity_id}.bin")
         for image_path in paths:
             try:
-                async with aiofiles.open(image_path, "rb") as fh:
-                    data = await fh.read()
+                data = await self.hass.async_add_executor_job(image_path.read_bytes)
             except FileNotFoundError:
                 continue
             except OSError as err:
@@ -327,7 +330,9 @@ class AbstractTemplateImage(AbstractTemplateEntity, ImageEntity, RestoreEntity):
             if image_path != cache_path:
                 # Migrate it, so removing the entity also removes the file.
                 try:
-                    await aiofiles.os.replace(image_path, cache_path)
+                    await self.hass.async_add_executor_job(
+                        image_path.replace, cache_path
+                    )
                 except OSError as err:
                     _LOGGER.debug(
                         "%s: Unable to migrate image cache %s: %s",

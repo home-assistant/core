@@ -7,10 +7,10 @@ from http import HTTPStatus
 from io import BytesIO
 import os
 from pathlib import Path
+import threading
 from typing import Any
 from unittest.mock import patch
 
-import aiofiles.os
 import httpx2
 from PIL import Image
 import pytest
@@ -33,7 +33,7 @@ from homeassistant.components.input_text import (
     DOMAIN as INPUT_TEXT_DOMAIN,
     SERVICE_SET_VALUE as INPUT_TEXT_SERVICE_SET_VALUE,
 )
-from homeassistant.components.template import DOMAIN
+from homeassistant.components.template import DOMAIN, image as template_image
 from homeassistant.components.template.image import DEFAULT_NAME, ImageExtraStoredData
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
@@ -1306,13 +1306,13 @@ async def test_cache_cleared_while_saving(
     )
 
     entity = hass.data[image.DATA_COMPONENT].get_entity(TEST_IMAGE.entity_id)
-    makedirs = aiofiles.os.makedirs
+    write_cache_file = template_image._write_cache_file
 
-    async def _clear_cache_then_makedirs(*args: Any, **kwargs: Any) -> None:
+    def _clear_cache_then_write(image_path: Path, payload: bytes) -> None:
         entity._cached_image = None
-        await makedirs(*args, **kwargs)
+        write_cache_file(image_path, payload)
 
-    with patch("aiofiles.os.makedirs", _clear_cache_then_makedirs):
+    with patch.object(template_image, "_write_cache_file", _clear_cache_then_write):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         await hass.async_block_till_done()
 
@@ -1357,7 +1357,11 @@ async def test_cache_write_error_does_not_block_removal(
     )
 
     entity = hass.data[image.DATA_COMPONENT].get_entity(TEST_IMAGE.entity_id)
-    with patch("aiofiles.open", side_effect=OSError("No space left on device")):
+    with patch.object(
+        template_image,
+        "_write_cache_file",
+        side_effect=OSError("No space left on device"),
+    ):
         await entity.async_remove()
 
     assert hass.states.get(TEST_IMAGE.entity_id) is None
@@ -1453,29 +1457,29 @@ async def test_overlapping_cache_dumps(
     )
 
     entity = hass.data[image.DATA_COMPONENT].get_entity(TEST_IMAGE.entity_id)
-    makedirs = aiofiles.os.makedirs
-    first_dump_started = asyncio.Event()
-    release_first_dump = asyncio.Event()
-    makedirs_calls = 0
+    write_cache_file = template_image._write_cache_file
+    first_dump_started = threading.Event()
+    release_first_dump = threading.Event()
+    write_calls = 0
 
-    async def _makedirs(*args: Any, **kwargs: Any) -> None:
-        nonlocal makedirs_calls
-        makedirs_calls += 1
-        if makedirs_calls == 1:
+    def _write(image_path: Path, payload: bytes) -> None:
+        nonlocal write_calls
+        write_calls += 1
+        if write_calls == 1:
             first_dump_started.set()
-            await release_first_dump.wait()
-        await makedirs(*args, **kwargs)
+            release_first_dump.wait()
+        write_cache_file(image_path, payload)
 
-    with patch("aiofiles.os.makedirs", _makedirs):
+    with patch.object(template_image, "_write_cache_file", _write):
         first_dump = hass.async_create_task(entity.async_dump_cache())
-        await first_dump_started.wait()
+        await hass.async_add_executor_job(first_dump_started.wait)
 
         entity._cached_image = image.Image("image/jpeg", imgbytes2_jpg)
         second_dump = hass.async_create_task(entity.async_dump_cache())
         await asyncio.sleep(0)
         await asyncio.sleep(0)
         # The second dump must not touch the temp file while the first is writing.
-        assert makedirs_calls == 1
+        assert write_calls == 1
 
         release_first_dump.set()
         await first_dump
