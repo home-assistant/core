@@ -2,10 +2,12 @@
 
 import asyncio
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
+from aiohttp import ClientError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
+from syrupy.assertion import SnapshotAssertion
 from trmnl.exceptions import TRMNLError, TRMNLForbiddenError, TRMNLNotFoundError
 from trmnl.models import PluginSetting
 
@@ -17,22 +19,35 @@ from homeassistant.components.notify import (
 )
 from homeassistant.components.trmnl.const import (
     CONF_MESSAGES_PLUGIN_SETTING_ID,
-    CONF_MESSAGES_PLUGIN_SETTING_READY,
     DOMAIN,
-    PRIVATE_PLUGIN_ID,
+    PLUGIN_KEYNAME,
 )
-from homeassistant.components.trmnl.notify import MESSAGE_MARKUP
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    OAuth2TokenRequestConnectionError,
+    OAuth2TokenRequestReauthError,
+)
 
 from . import setup_integration
 
-READY_PLUGIN = {
-    CONF_MESSAGES_PLUGIN_SETTING_ID: 7,
-    CONF_MESSAGES_PLUGIN_SETTING_READY: True,
-}
+MESSAGES_PLUGIN_SETTING = PluginSetting(
+    identifier=7, name="Home Assistant messages", plugin_id=452
+)
+
+
+@pytest.fixture
+def messages_entry(mock_config_entry: MockConfigEntry) -> MockConfigEntry:
+    """Return an entry that already has its messages plugin setting."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        version=2,
+        title=mock_config_entry.title,
+        unique_id=mock_config_entry.unique_id,
+        data={**mock_config_entry.data, CONF_MESSAGES_PLUGIN_SETTING_ID: 7},
+    )
 
 
 def reauth_started(hass: HomeAssistant) -> bool:
@@ -42,15 +57,15 @@ def reauth_started(hass: HomeAssistant) -> bool:
     ] == [SOURCE_REAUTH]
 
 
+@pytest.mark.freeze_time("2026-11-13 12:00:00+00:00")
 async def test_send_message_creates_plugin_once(
     hass: HomeAssistant,
     mock_trmnl_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test the first message creates the messages plugin and later ones reuse it."""
-    mock_trmnl_client.create_plugin_setting.return_value = PluginSetting(
-        identifier=7, name="Home Assistant messages", plugin_id=PRIVATE_PLUGIN_ID
-    )
+    """Test the first message creates the messages plugin setting and later ones reuse it."""
+    mock_trmnl_client.create_plugin_setting.return_value = MESSAGES_PLUGIN_SETTING
     with patch("homeassistant.components.trmnl.PLATFORMS", [Platform.NOTIFY]):
         await setup_integration(hass, mock_config_entry)
 
@@ -66,21 +81,14 @@ async def test_send_message_creates_plugin_once(
             blocking=True,
         )
 
-    mock_trmnl_client.create_plugin_setting.assert_awaited_once()
+    mock_trmnl_client.create_plugin_setting.assert_awaited_once_with(
+        "Home Assistant messages", plugin_keyname=PLUGIN_KEYNAME
+    )
     mock_trmnl_client.update_plugin_setting_fields.assert_awaited_once_with(
-        7, {"strategy": "webhook"}
+        7, {"view": "messages"}
     )
-    mock_trmnl_client.write_markup.assert_awaited_once_with(
-        7, "markup_full", MESSAGE_MARKUP
-    )
-    assert mock_config_entry.options == {
-        CONF_MESSAGES_PLUGIN_SETTING_ID: 7,
-        CONF_MESSAGES_PLUGIN_SETTING_READY: True,
-    }
-    plugin_setting_id, data = (
-        mock_trmnl_client.update_plugin_setting_data.await_args.args
-    )
-    assert (plugin_setting_id, data["message"]) == (7, "Door open")
+    assert mock_config_entry.data[CONF_MESSAGES_PLUGIN_SETTING_ID] == 7
+    assert mock_trmnl_client.update_plugin_setting_data.await_args.args == snapshot
 
 
 async def send(hass: HomeAssistant) -> None:
@@ -98,7 +106,7 @@ async def test_send_message_without_content_scope(
     mock_trmnl_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test a message asks for a new sign in when the content scope was unticked."""
+    """Test a message asks for a new sign in when the content scope was not granted."""
     token = {**mock_config_entry.data["token"], "scope": "openid read devices"}
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -110,107 +118,114 @@ async def test_send_message_without_content_scope(
     with patch("homeassistant.components.trmnl.PLATFORMS", [Platform.NOTIFY]):
         await setup_integration(hass, entry)
 
-    with pytest.raises(HomeAssistantError) as error:
+    with pytest.raises(HomeAssistantError) as raised:
         await send(hass)
 
-    assert error.value.translation_key == "content_not_granted"
+    assert raised.value.translation_key == "content_not_granted"
     mock_trmnl_client.create_plugin_setting.assert_not_called()
     assert reauth_started(hass)
 
 
+@pytest.mark.parametrize(
+    "error",
+    [
+        TRMNLError("status 500"),
+        ClientError("Connection reset"),
+        TimeoutError(),
+        OAuth2TokenRequestConnectionError(domain=DOMAIN),
+    ],
+)
 async def test_send_message_error(
     hass: HomeAssistant,
     mock_trmnl_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    messages_entry: MockConfigEntry,
+    error: Exception,
 ) -> None:
-    """Test a failed push becomes a Home Assistant error."""
-    mock_trmnl_client.create_plugin_setting.side_effect = TRMNLError("status 403")
+    """Test a failed or unreachable push becomes a translated Home Assistant error."""
+    mock_trmnl_client.update_plugin_setting_data.side_effect = error
     with patch("homeassistant.components.trmnl.PLATFORMS", [Platform.NOTIFY]):
-        await setup_integration(hass, mock_config_entry)
+        await setup_integration(hass, messages_entry)
 
-    with pytest.raises(HomeAssistantError) as error:
+    with pytest.raises(HomeAssistantError) as raised:
         await send(hass)
 
-    assert error.value.translation_key == "message_error"
-    assert error.value.translation_placeholders is None
+    assert raised.value.translation_key == "message_error"
 
 
 async def test_deleted_messages_plugin_is_made_again(
     hass: HomeAssistant,
     mock_trmnl_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    messages_entry: MockConfigEntry,
 ) -> None:
-    """Test a messages plugin the user deleted on TRMNL is created again."""
-    mock_config_entry.add_to_hass(hass)
-    hass.config_entries.async_update_entry(mock_config_entry, options=READY_PLUGIN)
+    """Test a messages plugin setting the user deleted on TRMNL is created again."""
     mock_trmnl_client.create_plugin_setting.return_value = PluginSetting(
-        identifier=8, name="Home Assistant messages", plugin_id=PRIVATE_PLUGIN_ID
+        identifier=8, name="Home Assistant messages", plugin_id=452
     )
     mock_trmnl_client.update_plugin_setting_data.side_effect = [
         TRMNLNotFoundError("Plugin setting not found"),
         None,
     ]
     with patch("homeassistant.components.trmnl.PLATFORMS", [Platform.NOTIFY]):
-        await setup_integration(hass, mock_config_entry)
+        await setup_integration(hass, messages_entry)
 
     await send(hass)
 
-    assert mock_config_entry.options == {
-        CONF_MESSAGES_PLUGIN_SETTING_ID: 8,
-        CONF_MESSAGES_PLUGIN_SETTING_READY: True,
-    }
-    mock_trmnl_client.write_markup.assert_awaited_once_with(
-        8, "markup_full", MESSAGE_MARKUP
-    )
+    assert messages_entry.data[CONF_MESSAGES_PLUGIN_SETTING_ID] == 8
     assert [
         args.args[0]
         for args in mock_trmnl_client.update_plugin_setting_data.await_args_list
     ] == [7, 8]
 
 
-async def test_send_message_refused_for_scope(
+@pytest.mark.parametrize(
+    ("error", "translation_key"),
+    [
+        (TRMNLForbiddenError("Missing capability: content"), "content_not_granted"),
+        (
+            OAuth2TokenRequestReauthError(
+                domain=DOMAIN, request_info=Mock(), status=400
+            ),
+            "authentication_error",
+        ),
+    ],
+)
+async def test_send_message_refused_starts_reauth(
     hass: HomeAssistant,
     mock_trmnl_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    messages_entry: MockConfigEntry,
+    error: Exception,
+    translation_key: str,
 ) -> None:
-    """Test TRMNL refusing the message for a revoked scope asks for a new sign in."""
-    mock_config_entry.add_to_hass(hass)
-    hass.config_entries.async_update_entry(mock_config_entry, options=READY_PLUGIN)
-    mock_trmnl_client.update_plugin_setting_data.side_effect = TRMNLForbiddenError(
-        "Missing capability: content"
-    )
+    """Test TRMNL refusing the sign in or its scope asks for a new sign in."""
+    mock_trmnl_client.update_plugin_setting_data.side_effect = error
     with patch("homeassistant.components.trmnl.PLATFORMS", [Platform.NOTIFY]):
-        await setup_integration(hass, mock_config_entry)
+        await setup_integration(hass, messages_entry)
 
-    with pytest.raises(HomeAssistantError) as error:
+    with pytest.raises(HomeAssistantError) as raised:
         await send(hass)
 
-    assert error.value.translation_key == "content_not_granted"
+    assert raised.value.translation_key == translation_key
     assert reauth_started(hass)
 
 
-async def test_failed_setup_of_new_plugin_is_resumed(
+async def test_failed_view_setup_saves_nothing(
     hass: HomeAssistant,
     mock_trmnl_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test a plugin whose setup failed is kept and set up on the next message."""
-    mock_trmnl_client.create_plugin_setting.return_value = PluginSetting(
-        identifier=7, name="Home Assistant messages", plugin_id=PRIVATE_PLUGIN_ID
+    """Test a plugin setting whose view could not be set is not used for messages."""
+    mock_trmnl_client.create_plugin_setting.return_value = MESSAGES_PLUGIN_SETTING
+    mock_trmnl_client.update_plugin_setting_fields.side_effect = TRMNLError(
+        "status 500"
     )
-    mock_trmnl_client.write_markup.side_effect = [TRMNLError("status 500"), None]
     with patch("homeassistant.components.trmnl.PLATFORMS", [Platform.NOTIFY]):
         await setup_integration(hass, mock_config_entry)
+
     with pytest.raises(HomeAssistantError):
         await send(hass)
-    assert mock_config_entry.options == {CONF_MESSAGES_PLUGIN_SETTING_ID: 7}
 
-    await send(hass)
-
-    mock_trmnl_client.create_plugin_setting.assert_awaited_once()
-    assert mock_trmnl_client.write_markup.await_count == 2
-    assert mock_trmnl_client.update_plugin_setting_data.await_args.args[0] == 7
-    assert mock_config_entry.options == READY_PLUGIN
+    assert CONF_MESSAGES_PLUGIN_SETTING_ID not in mock_config_entry.data
+    mock_trmnl_client.update_plugin_setting_data.assert_not_called()
 
 
 async def test_remove_during_first_message_deletes_the_new_plugin(
@@ -221,11 +236,9 @@ async def test_remove_during_first_message_deletes_the_new_plugin(
     """Test removal waits for a message that is creating its plugin, then deletes it."""
     created = asyncio.Event()
 
-    async def create_plugin_setting(*_: Any) -> PluginSetting:
+    async def create_plugin_setting(*_: Any, **__: Any) -> PluginSetting:
         await created.wait()
-        return PluginSetting(
-            identifier=7, name="Home Assistant messages", plugin_id=PRIVATE_PLUGIN_ID
-        )
+        return MESSAGES_PLUGIN_SETTING
 
     mock_trmnl_client.create_plugin_setting.side_effect = create_plugin_setting
     with patch("homeassistant.components.trmnl.PLATFORMS", [Platform.NOTIFY]):

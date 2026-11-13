@@ -16,6 +16,4 @@ REQUIRED_SCOPES = {"read", "devices"}
 CONF_HOME_ENTITIES = "home_entities"
 CONF_HOME_PLUGIN_SETTING_ID = "home_plugin_setting_id"
 PLUGIN_KEYNAME = "home_assistant"
-PRIVATE_PLUGIN_ID = 37
 CONF_MESSAGES_PLUGIN_SETTING_ID = "messages_plugin_setting_id"
-CONF_MESSAGES_PLUGIN_SETTING_READY = "messages_plugin_setting_ready"
