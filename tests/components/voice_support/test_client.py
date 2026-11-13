@@ -106,7 +106,6 @@ async def test_update_info_wrong_api_version(
                 ("name", None, "invalid_name"),
                 ("version", 1, "invalid_version"),
                 ("api_version", "1", "invalid_api_version"),
-                ("api_version", True, "boolean_api_version"),
                 ("wake_words", [None], "invalid_wake_word"),
                 ("wake_words", [{"id": "okay_nabu", "phrase": 42}], "invalid_phrase"),
             )

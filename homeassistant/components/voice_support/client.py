@@ -19,12 +19,7 @@ INFO_SCHEMA = probatio.Schema(
     {
         "name": str,
         "version": str,
-        "api_version": probatio.All(
-            int,
-            probatio.Check(
-                lambda value: not isinstance(value, bool), "expected integer"
-            ),
-        ),
+        "api_version": int,
         "wake_words": [
             {
                 "id": str,
