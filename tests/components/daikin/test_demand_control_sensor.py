@@ -8,7 +8,7 @@ from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
 )
-from homeassistant.const import ATTR_DEVICE_CLASS
+from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -58,6 +58,12 @@ def _demand_control_entity_id(
             "off",
             {},
             id="unsupported-mode",
+        ),
+        pytest.param(
+            {"en_demand": "invalid", "mode": "1", "max_pow": "50"},
+            STATE_UNKNOWN,
+            {},
+            id="invalid-en_demand",
         ),
     ],
 )

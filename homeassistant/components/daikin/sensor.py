@@ -202,10 +202,13 @@ class DaikinDemandControlSensor(DaikinEntity, SensorEntity):
     def native_value(self) -> str | None:
         """Return the active demand control mode."""
         attrs = self.device.get_demand_control()
-        if attrs.get("en_demand") != "1":
-            return "off"
-
-        return self._get_mode(attrs)
+        match attrs.get("en_demand"):
+            case "0":
+                return "off"
+            case "1":
+                return self._get_mode(attrs)
+            case _:
+                return None
 
     @property
     @override
