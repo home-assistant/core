@@ -65,7 +65,8 @@ class RyseCoverEntity(CoverEntity):
         self._device = device
         self._config_entry = config_entry
         self._connect_lock = asyncio.Lock()
-        self._expected_disconnect = False
+        self._removing = False
+        self._released_client: BleakClient | None = None
         self._reconnect_when_seen = False
         self._reconnect_failures = 0
         self._local_failures = 0
@@ -116,7 +117,7 @@ class RyseCoverEntity(CoverEntity):
     @override
     async def async_will_remove_from_hass(self) -> None:
         """Ignore the GATT disconnect that unload itself causes."""
-        self._expected_disconnect = True
+        self._removing = True
         if self._reconnect_debouncer is not None:
             self._reconnect_debouncer.async_shutdown()
         # Wait for an in-flight pair() so unload can release that client.
@@ -147,7 +148,7 @@ class RyseCoverEntity(CoverEntity):
     @callback
     def _async_ble_disconnected(self, client: BleakClient) -> None:
         """Mark the cover unavailable as soon as the GATT link drops."""
-        if self._expected_disconnect:
+        if self._removing or client is self._released_client:
             return
         current = self._device.client
         # A reconnect can replace the client before this deferred handler runs.
@@ -175,12 +176,8 @@ class RyseCoverEntity(CoverEntity):
 
     async def _async_release_client(self) -> None:
         """Unpair while ignoring the GATT disconnect this unpair causes."""
-        unloading = self._expected_disconnect
-        self._expected_disconnect = True
-        try:
-            await _async_unpair(self._device)
-        finally:
-            self._expected_disconnect = unloading
+        self._released_client = self._device.client
+        await _async_unpair(self._device)
 
     async def _async_cleanup_disconnected_client(
         self, client: BleakClient | None
@@ -201,32 +198,32 @@ class RyseCoverEntity(CoverEntity):
 
     async def _async_reconnect(self) -> None:
         """Pair again after the shade is seen advertising."""
-        if self._expected_disconnect or self._is_connected():
+        if self._removing or self._is_connected():
             return
         if any(self._config_entry.async_get_active_flows(self.hass, {SOURCE_REAUTH})):
             return
         try:
             if not await self._async_ensure_connected():
-                if not self._expected_disconnect:
+                if not self._removing:
                     self._note_pair_failure()
                     self.async_write_ha_state()
                 return
-            if self._expected_disconnect:
+            if self._removing:
                 return
             await self._device.send_get_position()
         except RyseAuthenticationFailed as err:
-            if self._expected_disconnect:
+            if self._removing:
                 return
             self._note_reconnect_failure()
             await self._async_drop_client(str(err))
             self._config_entry.async_start_reauth(self.hass)
         except (TimeoutError, OSError, EOFError, BleakError) as err:
-            if self._expected_disconnect:
+            if self._removing:
                 return
             self._note_local_failure()
             await self._async_drop_client(str(err))
         except Exception:
-            if self._expected_disconnect:
+            if self._removing:
                 return
             # Swallow so the debouncer does not log a second traceback.
             _LOGGER.debug(
@@ -237,7 +234,7 @@ class RyseCoverEntity(CoverEntity):
             self._note_local_failure()
             await self._async_drop_client("unexpected error")
         else:
-            if self._expected_disconnect:
+            if self._removing:
                 return
             self._note_reconnect_success()
             self._reconnect_when_seen = False
@@ -326,18 +323,19 @@ class RyseCoverEntity(CoverEntity):
         ``RyseAuthenticationFailed`` is, and the caller starts reauthentication.
         """
         async with self._connect_lock:
-            if self._expected_disconnect:
+            if self._removing:
                 return False
             if self._is_connected():
                 return True
             paired = await self._async_pair_on_local_adapter()
             if paired:
-                if self._expected_disconnect:
+                if self._removing:
                     await self._async_release_client()
                     return False
+                self._released_client = None
                 return True
             await self._async_release_client()
-            if self._expected_disconnect:
+            if self._removing:
                 return False
             self._reconnect_when_seen = True
             self._set_available(
