@@ -34,14 +34,14 @@
         dict({
           'area_id': None,
           'attributes': dict({
-            'current_temperature': 19,
+            'current_temperature': 66,
           }),
           'device_class': None,
           'domain': 'climate',
           'entity_id': 'climate.hall',
           'name': 'hall',
           'state': 'heat',
-          'unit': None,
+          'unit': '°F',
         }),
       ]),
     }),
