@@ -201,5 +201,10 @@
       }
     }
   },
+  "exceptions": {
+    "characteristic_write_failed": {
+      "message": "Failed to write HomeKit characteristic {aid}.{iid}: status {status}"
+    }
+  },
   "title": "HomeKit Device"
 }

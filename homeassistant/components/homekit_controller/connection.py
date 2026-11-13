@@ -25,6 +25,7 @@ from aiohomekit.model.characteristics import (
     CharacteristicsTypes,
 )
 from aiohomekit.model.services import Service, ServicesTypes
+from aiohomekit.protocol.statuscodes import HapStatusCode
 
 from homeassistant.components.thread import async_get_preferred_dataset
 from homeassistant.config_entries import ConfigEntry
@@ -992,7 +993,18 @@ class HKDevice:
         self, characteristics: Iterable[tuple[int, int, Any]]
     ) -> None:
         """Control a HomeKit device state from Home Assistant."""
-        await self.pairing.put_characteristics(characteristics)
+        results = await self.pairing.put_characteristics(characteristics)
+        for (aid, iid), result in results.items():
+            if (status := result["status"]) not in (0, HapStatusCode.SUCCESS):
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="characteristic_write_failed",
+                    translation_placeholders={
+                        "aid": str(aid),
+                        "iid": str(iid),
+                        "status": str(status),
+                    },
+                )
 
     @property
     def is_unprovisioned_thread_device(self) -> bool:
