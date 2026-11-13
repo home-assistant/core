@@ -159,6 +159,7 @@ class RyseBLEDeviceConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 return self.async_update_reload_and_abort(reauth_entry)
 
+        self.context["title_placeholders"] = {"name": reauth_entry.title}
         return self.async_show_form(
             step_id="reauth_confirm",
             description_placeholders={"name": reauth_entry.title},
@@ -201,6 +202,10 @@ class RyseBLEDeviceConfigFlow(ConfigFlow, domain=DOMAIN):
         if not self._discovered_devices:
             return self.async_abort(reason="no_devices_found")
 
+        names = list(self._discovered_devices.values())
+        self.context["title_placeholders"] = {
+            "name": names[0] if len(names) == 1 else "RYSE"
+        }
         return self.async_show_form(
             step_id="user",
             data_schema=probatio.Schema(
