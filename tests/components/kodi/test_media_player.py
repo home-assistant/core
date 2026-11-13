@@ -607,9 +607,10 @@ async def test_websocket_reset_during_refresh(
     replied = asyncio.Event()
 
     async def pending_request(*args: Any) -> Any:
+        result = reply(*args) if reply else request.return_value
         requested.set()
         await replied.wait()
-        return reply(*args) if reply else request.return_value
+        return result
 
     request.side_effect = pending_request
     mock_kodi.reset_mock()
