@@ -16,6 +16,8 @@ from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.schema_config_entry_flow import (
+    SchemaCommonFlowHandler,
+    SchemaFlowError,
     SchemaFlowFormStep,
     SchemaOptionsFlowHandlerWithReload,
 )
@@ -38,13 +40,32 @@ SYSTEM_ID_SCHEMA = CONFIG_SCHEMA.extend(
     }
 )
 
+
+async def validate_options(
+    handler: SchemaCommonFlowHandler,
+    user_input: dict[str, Any],
+) -> dict[str, Any]:
+    """Validate Airzone options."""
+    mqtt_topic = user_input.get(CONF_MQTT_TOPIC, "")
+    if len(mqtt_topic) > 0:
+        try:
+            mqtt.valid_publish_topic(mqtt_topic)
+        except probatio.Invalid as err:
+            raise SchemaFlowError("invalid_mqtt_topic") from err
+
+    return user_input
+
+
 OPTIONS_SCHEMA = probatio.Schema(
     {
-        probatio.Optional(CONF_MQTT_TOPIC): probatio.Any("", mqtt.valid_publish_topic),
+        probatio.Optional(CONF_MQTT_TOPIC): str,
     }
 )
 OPTIONS_FLOW = {
-    "init": SchemaFlowFormStep(OPTIONS_SCHEMA),
+    "init": SchemaFlowFormStep(
+        OPTIONS_SCHEMA,
+        validate_user_input=validate_options,
+    ),
 }
 
 
