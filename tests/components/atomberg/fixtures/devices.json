@@ -1,0 +1,34 @@
+[
+  {
+    "device_id": "a4cf12abcdef",
+    "name": "Living Room",
+    "model": "Renesa+",
+    "series": "I1",
+    "color": "white",
+    "device_type": "fan",
+    "supported_commands": [
+      {
+        "command": "power"
+      },
+      {
+        "command": "speed"
+      }
+    ]
+  },
+  {
+    "device_id": "a4cf12123456",
+    "name": "Bedroom",
+    "model": "Studio+",
+    "series": "R1",
+    "color": "brown",
+    "device_type": "fan",
+    "supported_commands": [
+      {
+        "command": "power"
+      },
+      {
+        "command": "speed"
+      }
+    ]
+  }
+]
