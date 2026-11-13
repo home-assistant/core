@@ -525,6 +525,48 @@ class HoneywellUSThermostat(ClimateEntity):
                 translation_key="stop_hold_failed",
             ) from err
 
+    async def async_set_hold_until(
+        self, until: dt.time, temperature: float | None = None
+    ) -> None:
+        """Set a temporary hold that ends at the given time."""
+        if until.minute % 15 or until.second:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="hold_until_invalid_time",
+            )
+        mode = self._device.system_mode
+        if mode not in HEATING_MODES | COOLING_MODES:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="hold_until_invalid_mode",
+                translation_placeholders={"mode": mode},
+            )
+        if temperature is not None:
+            native_temperature = TemperatureConverter.convert(
+                temperature,
+                self.hass.config.units.temperature_unit,
+                self.native_temperature_unit,
+            )
+            if not self.min_temp <= native_temperature <= self.max_temp:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="temp_failed_value",
+                    translation_placeholders={"temperature": str(temperature)},
+                )
+            temperature = native_temperature
+        self._away = False
+        try:
+            if mode in COOLING_MODES:
+                await self._device.set_hold_cool(until, temperature)
+            if mode in HEATING_MODES:
+                await self._device.set_hold_heat(until, temperature)
+
+        except SomeComfortError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_hold_until_failed",
+            ) from err
+
     @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""

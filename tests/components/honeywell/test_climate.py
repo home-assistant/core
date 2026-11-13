@@ -1,13 +1,13 @@
 """Test the Honeywell climate domain."""
 
 import datetime as dt
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, _Call, call
 
 from aiohttp import ClientConnectionError
 import aiosomecomfort
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
@@ -37,6 +37,10 @@ from homeassistant.components.honeywell.climate import (
     RETRY,
     SCAN_INTERVAL,
 )
+from homeassistant.components.honeywell.services import (
+    HoneywellService,
+    HoneywellServiceArgument,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
@@ -48,10 +52,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import init_integration, reset_mock
 
 FAN_ACTION = "fan_action"
+ENTITY_ID = "climate.device1"
 
 
 async def test_no_thermostat_options(
@@ -1246,3 +1252,206 @@ async def test_preset_mode(
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE
+
+
+@pytest.mark.parametrize(
+    ("system_mode", "service_data", "heat_calls", "cool_calls"),
+    [
+        pytest.param(
+            "heat",
+            {ATTR_TEMPERATURE: 22},
+            [call(dt.time(22, 30), 22)],
+            [],
+            id="heat",
+        ),
+        pytest.param(
+            "emheat",
+            {ATTR_TEMPERATURE: 22},
+            [call(dt.time(22, 30), 22)],
+            [],
+            id="emheat",
+        ),
+        pytest.param(
+            "cool",
+            {ATTR_TEMPERATURE: 18},
+            [],
+            [call(dt.time(22, 30), 18)],
+            id="cool",
+        ),
+        pytest.param(
+            "auto",
+            {ATTR_TEMPERATURE: 20},
+            [call(dt.time(22, 30), 20)],
+            [call(dt.time(22, 30), 20)],
+            id="auto",
+        ),
+        pytest.param(
+            "heat",
+            {},
+            [call(dt.time(22, 30), None)],
+            [],
+            id="heat_keep_temperature",
+        ),
+    ],
+)
+async def test_set_hold_until(
+    hass: HomeAssistant,
+    device: MagicMock,
+    config_entry: MockConfigEntry,
+    system_mode: str,
+    service_data: dict[str, float],
+    heat_calls: list[_Call],
+    cool_calls: list[_Call],
+) -> None:
+    """Test setting a temporary hold until a given time."""
+    device.system_mode = system_mode
+    await init_integration(hass, config_entry)
+
+    await hass.services.async_call(
+        DOMAIN,
+        HoneywellService.SET_HOLD_UNTIL,
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            HoneywellServiceArgument.UNTIL: "22:30:00",
+            **service_data,
+        },
+        blocking=True,
+    )
+
+    assert device.set_hold_heat.mock_calls == heat_calls
+    assert device.set_hold_cool.mock_calls == cool_calls
+
+
+async def test_set_hold_until_converts_temperature(
+    hass: HomeAssistant, device: MagicMock, config_entry: MockConfigEntry
+) -> None:
+    """Test the temperature is converted to the unit of the thermostat."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    device.system_mode = "heat"
+    await init_integration(hass, config_entry)
+
+    await hass.services.async_call(
+        DOMAIN,
+        HoneywellService.SET_HOLD_UNTIL,
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            HoneywellServiceArgument.UNTIL: "22:30:00",
+            ATTR_TEMPERATURE: 77,
+        },
+        blocking=True,
+    )
+
+    device.set_hold_heat.assert_called_once_with(dt.time(22, 30), 25)
+
+
+@pytest.mark.parametrize(
+    ("system_mode", "service_data", "translation_key"),
+    [
+        pytest.param(
+            "heat",
+            {HoneywellServiceArgument.UNTIL: "22:40:00"},
+            "hold_until_invalid_time",
+            id="not_on_quarter_hour",
+        ),
+        pytest.param(
+            "heat",
+            {HoneywellServiceArgument.UNTIL: "22:30:10"},
+            "hold_until_invalid_time",
+            id="seconds",
+        ),
+        pytest.param(
+            "off",
+            {HoneywellServiceArgument.UNTIL: "22:30:00"},
+            "hold_until_invalid_mode",
+            id="system_off",
+        ),
+        pytest.param(
+            "heat",
+            {HoneywellServiceArgument.UNTIL: "22:30:00", ATTR_TEMPERATURE: 36},
+            "temp_failed_value",
+            id="temperature_out_of_range",
+        ),
+    ],
+)
+async def test_set_hold_until_invalid(
+    hass: HomeAssistant,
+    device: MagicMock,
+    config_entry: MockConfigEntry,
+    system_mode: str,
+    service_data: dict[str, str | float],
+    translation_key: str,
+) -> None:
+    """Test a temporary hold is not set with invalid input."""
+    device.system_mode = system_mode
+    await init_integration(hass, config_entry)
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            HoneywellService.SET_HOLD_UNTIL,
+            {ATTR_ENTITY_ID: ENTITY_ID, **service_data},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == translation_key
+    device.set_hold_heat.assert_not_called()
+    device.set_hold_cool.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        aiosomecomfort.SomeComfortError,
+        aiosomecomfort.ConnectionError,
+        aiosomecomfort.UnexpectedResponse,
+    ],
+)
+async def test_set_hold_until_failed(
+    hass: HomeAssistant,
+    device: MagicMock,
+    config_entry: MockConfigEntry,
+    error: type[Exception],
+) -> None:
+    """Test errors from the Honeywell API when setting a temporary hold."""
+    device.system_mode = "heat"
+    device.set_hold_heat.side_effect = error
+    await init_integration(hass, config_entry)
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            HoneywellService.SET_HOLD_UNTIL,
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                HoneywellServiceArgument.UNTIL: "22:30:00",
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "set_hold_until_failed"
+
+
+async def test_set_hold_until_ends_away_preset(
+    hass: HomeAssistant, device: MagicMock, config_entry: MockConfigEntry
+) -> None:
+    """Test a temporary hold replaces the away preset."""
+    device.system_mode = "heat"
+    device.raw_ui_data["StatusHeat"] = MODE_PERMANENT_HOLD
+    await init_integration(hass, config_entry)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: PRESET_AWAY},
+        blocking=True,
+    )
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_PRESET_MODE] == PRESET_AWAY
+
+    device.raw_ui_data["StatusHeat"] = MODE_TEMPORARY_HOLD
+    await hass.services.async_call(
+        DOMAIN,
+        HoneywellService.SET_HOLD_UNTIL,
+        {ATTR_ENTITY_ID: ENTITY_ID, HoneywellServiceArgument.UNTIL: "22:30:00"},
+        blocking=True,
+    )
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_PRESET_MODE] == PRESET_HOLD
