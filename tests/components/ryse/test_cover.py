@@ -49,10 +49,11 @@ ENTITY_ID = "cover.test_device"
 LOGGER_NAME = "homeassistant.components.ryse.cover"
 
 
-def _disconnect_callback(client: MagicMock) -> Callable[[MagicMock], None]:
-    """Return the GATT disconnect callback registered on *client*."""
-    client.set_disconnected_callback.assert_called()
-    return client.set_disconnected_callback.call_args[0][0]
+def _disconnect_callback(device: MagicMock) -> Callable[[MagicMock], None]:
+    """Return the disconnect callback the cover registered on the device."""
+    callback = device.disconnected_callback
+    assert callable(callback)
+    return callback
 
 
 async def async_see_shade(
@@ -618,7 +619,7 @@ async def test_cover_reconnects_when_proxy_also_sees_shade(
         )
         mock_device.pair.reset_mock()
         client = mock_device.client
-        _disconnect_callback(client)(client)
+        _disconnect_callback(mock_device)(client)
         await hass.async_block_till_done()
 
         await async_see_shade(hass, local_ryse_scanner)
@@ -637,7 +638,7 @@ async def test_reconnect_transport_error_releases_client(
     """Test a transport error from pair() during reconnect releases the client."""
     client = mock_device.client
     mock_device.unpair.reset_mock()
-    _disconnect_callback(client)(client)
+    _disconnect_callback(mock_device)(client)
     await hass.async_block_till_done()
 
     mock_device.pair.reset_mock()
@@ -654,33 +655,20 @@ async def test_reconnect_transport_error_releases_client(
 
 
 @pytest.mark.usefixtures("local_ryse_scanner")
-async def test_cover_setup_attaches_disconnect_on_bleak_backend(
+async def test_cover_registers_disconnect_callback_on_the_device(
     hass: HomeAssistant,
     mock_device: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test cover setup uses the Bleak backend when the client has no callback setter."""
-    backend = MagicMock()
-    client = MagicMock(spec=["is_connected", "_backend"], is_connected=True)
-    client._backend = backend
-
-    async def _pair() -> bool:
-        mock_device.client = client
-        return True
-
-    mock_device.pair.side_effect = _pair
+    """Test the cover registers its disconnect callback for the library to forward."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    backend.set_disconnected_callback.assert_called()
-    state = hass.states.get(ENTITY_ID)
-    assert state
-    assert state.state != STATE_UNAVAILABLE
-
+    client = mock_device.client
     mock_device.unpair.reset_mock()
-    backend.set_disconnected_callback.call_args[0][0]()
+    _disconnect_callback(mock_device)(client)
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
@@ -702,7 +690,7 @@ async def test_disconnect_callback_marks_unavailable(
     mock_device.pair.reset_mock()
     mock_device.unpair.reset_mock()
 
-    _disconnect_callback(client)(client)
+    _disconnect_callback(mock_device)(client)
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
@@ -728,7 +716,7 @@ async def test_stale_disconnect_callback_does_not_unpair_new_client(
 ) -> None:
     """Test a late disconnect from an old client does not tear down a new connection."""
     old_client = mock_device.client
-    disconnect = _disconnect_callback(old_client)
+    disconnect = _disconnect_callback(mock_device)
     mock_device.client = MagicMock(is_connected=True)
     mock_device.unpair.reset_mock()
 
@@ -750,7 +738,7 @@ async def test_advertisement_reconnect_does_not_start_reauth(
     """Test a failed background reconnect does not start reauthentication."""
     client = mock_device.client
     mock_device.unpair.reset_mock()
-    _disconnect_callback(client)(client)
+    _disconnect_callback(mock_device)(client)
     await hass.async_block_till_done()
 
     mock_device.pair.reset_mock()
@@ -786,7 +774,7 @@ async def test_unload_releases_in_flight_reconnect(
 
     mock_device.pair.side_effect = _slow_pair
     mock_device.unpair.reset_mock()
-    _disconnect_callback(client)(client)
+    _disconnect_callback(mock_device)(client)
     await hass.async_block_till_done()
 
     inject_ryse(
@@ -819,7 +807,7 @@ async def test_static_advertisement_reconnects_after_disconnect(
     client = mock_device.client
     mock_device.pair.reset_mock()
     mock_device.send_get_position.reset_mock()
-    _disconnect_callback(client)(client)
+    _disconnect_callback(mock_device)(client)
     await hass.async_block_till_done()
 
     inject_ryse(hass, local_ryse_scanner, make_advertisement())
@@ -888,7 +876,7 @@ async def test_unexpected_reconnect_error_backs_off(
     client = mock_device.client
     mock_device.pair.side_effect = RuntimeError("boom")
     mock_device.pair.reset_mock()
-    _disconnect_callback(client)(client)
+    _disconnect_callback(mock_device)(client)
     await hass.async_block_till_done()
 
     await async_see_shade(hass, local_ryse_scanner)
@@ -918,7 +906,7 @@ async def test_reconnect_backs_off_after_repeated_failures(
     client = mock_device.client
     mock_device.pair.side_effect = BleakError("link dropped")
     mock_device.pair.reset_mock()
-    _disconnect_callback(client)(client)
+    _disconnect_callback(mock_device)(client)
     await hass.async_block_till_done()
 
     await async_see_shade(hass, local_ryse_scanner)
@@ -953,7 +941,7 @@ async def test_repeated_local_transport_failures_start_reauth(
     client = mock_device.client
     mock_device.pair.side_effect = BleakError("link dropped")
     mock_device.pair.reset_mock()
-    _disconnect_callback(client)(client)
+    _disconnect_callback(mock_device)(client)
     await hass.async_block_till_done()
 
     await async_see_shade(hass, local_ryse_scanner)
@@ -980,7 +968,7 @@ async def test_advertisement_reconnects_after_disconnect(
     mock_device.send_get_position.reset_mock()
     mock_device.unpair.reset_mock()
 
-    _disconnect_callback(client)(client)
+    _disconnect_callback(mock_device)(client)
     await hass.async_block_till_done()
     mock_device.pair.assert_not_awaited()
 

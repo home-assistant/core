@@ -87,6 +87,7 @@ class RyseCoverEntity(CoverEntity):
         """Run when entity is added to Home Assistant."""
         await super().async_added_to_hass()
         self._device.update_callback = self._update_position
+        self._device.disconnected_callback = self._on_ble_disconnect
         self.async_on_remove(self._clear_callback)
         self._reconnect_debouncer = Debouncer(
             self.hass,
@@ -105,7 +106,6 @@ class RyseCoverEntity(CoverEntity):
                 self._device.address,
             )
         )
-        self._async_attach_disconnect_callback()
         client = self._device.client
         if client and client.is_connected:
             try:
@@ -132,27 +132,13 @@ class RyseCoverEntity(CoverEntity):
         """
         if self._device.update_callback == self._update_position:
             self._device.update_callback = None
+        if self._device.disconnected_callback == self._on_ble_disconnect:
+            self._device.disconnected_callback = None
 
     def _is_connected(self) -> bool:
         """Return True when the BLE client is present and connected."""
         client = self._device.client
         return bool(client and client.is_connected)
-
-    def _async_attach_disconnect_callback(self) -> None:
-        """Watch the current GATT client so availability is not delayed 15s."""
-        client = self._device.client
-        if client is None:
-            return
-        # BleakClient takes disconnected_callback in its constructor; ryseble
-        # builds the client, so attach afterward on the backend setter.
-        setter = getattr(client, "set_disconnected_callback", None)
-        if callable(setter):
-            setter(self._on_ble_disconnect)
-            return
-        backend = getattr(client, "_backend", None)
-        if backend is None:
-            return
-        backend.set_disconnected_callback(lambda: self._on_ble_disconnect(client))
 
     def _on_ble_disconnect(self, client: BleakClient) -> None:
         """Handle a GATT disconnect, which may arrive off the event loop."""
@@ -343,14 +329,12 @@ class RyseCoverEntity(CoverEntity):
             if self._expected_disconnect:
                 return False
             if self._is_connected():
-                self._async_attach_disconnect_callback()
                 return True
             paired = await self._async_pair_on_local_adapter()
             if paired:
                 if self._expected_disconnect:
                     await self._async_release_client()
                     return False
-                self._async_attach_disconnect_callback()
                 return True
             await self._async_release_client()
             if self._expected_disconnect:
@@ -438,7 +422,6 @@ class RyseCoverEntity(CoverEntity):
         """
         if not self._is_connected():
             return
-        self._async_attach_disconnect_callback()
         try:
             if (
                 self._current_position is not None
