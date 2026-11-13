@@ -36,7 +36,7 @@ async def async_setup_entry(
 
     if isinstance(
         coordinator.device,
-        (switchbot.SwitchbotArtFrame, switchbot.SwitchbotImageFrame),
+        (switchbot.SwitchbotArtFrame, switchbot.SwitchbotArtFrame2),
     ):
         entities.extend(
             [
@@ -104,7 +104,7 @@ class ResetFilterUsageButton(SwitchbotEntity, ButtonEntity):
 class SwitchBotArtFrameButtonBase(SwitchbotEntity, ButtonEntity):
     """Base class for Art Frame buttons."""
 
-    _device: switchbot.SwitchbotArtFrame | switchbot.SwitchbotImageFrame
+    _device: switchbot.SwitchbotArtFrame | switchbot.SwitchbotArtFrame2
 
     def __init__(
         self, coordinator: SwitchbotDataUpdateCoordinator, translation_key: str
