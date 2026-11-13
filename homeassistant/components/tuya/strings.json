@@ -802,6 +802,9 @@
           "charger_wait": "Waiting"
         }
       },
+      "charging_time": {
+        "name": "Charging time"
+      },
       "cleaning_area": {
         "name": "Cleaning area"
       },
