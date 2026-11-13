@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx2
 import openai
+from openai import Omit
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -21,10 +22,21 @@ from homeassistant.components.llama_cpp.const import (
     DEFAULT_MODEL,
     DOMAIN,
 )
+from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_PROMPT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import llm
+
+
+def _get_subentry(entry: MockConfigEntry, subentry_type: str) -> ConfigSubentry:
+    """Return the first subentry of the given type."""
+    return next(
+        subentry
+        for subentry in entry.subentries.values()
+        if subentry.subentry_type == subentry_type
+    )
+
 
 RECOMMENDED_OPTIONS = {
     CONF_RECOMMENDED: True,
@@ -84,6 +96,15 @@ async def test_config_flow(
             "subentry_type": "conversation",
             "data": {
                 **RECOMMENDED_OPTIONS,
+                CONF_CHAT_MODEL: "gpt-4",
+            },
+            "title": "Gpt 4",
+            "unique_id": None,
+        },
+        {
+            "subentry_type": "ai_task_data",
+            "data": {
+                CONF_RECOMMENDED: True,
                 CONF_CHAT_MODEL: "gpt-4",
             },
             "title": "Gpt 4",
@@ -225,6 +246,15 @@ async def test_config_flow_no_streaming(
             "title": "Gpt 4",
             "unique_id": None,
         },
+        {
+            "subentry_type": "ai_task_data",
+            "data": {
+                CONF_RECOMMENDED: True,
+                CONF_CHAT_MODEL: "gpt-4",
+            },
+            "title": "Gpt 4",
+            "unique_id": None,
+        },
     ]
 
     assert len(mock_setup.mock_calls) == 1
@@ -263,19 +293,27 @@ async def test_creating_conversation_subentry(
     assert result2["data"] == RECOMMENDED_OPTIONS
 
 
+@pytest.mark.parametrize(
+    "subentry_type",
+    [
+        pytest.param("conversation", id="conversation"),
+        pytest.param("ai_task_data", id="ai_task"),
+    ],
+)
 @pytest.mark.usefixtures("setup_integration")
-async def test_creating_conversation_subentry_not_loaded(
+async def test_creating_subentry_not_loaded(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    subentry_type: str,
 ) -> None:
-    """Test creating a conversation subentry when entry is not loaded."""
+    """Test creating a subentry when entry is not loaded."""
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     with patch(
         "homeassistant.components.llama_cpp.config_flow.openai.resources.models.AsyncModels.list",
         return_value=[],
     ):
         result = await hass.config_entries.subentries.async_init(
-            (mock_config_entry.entry_id, "conversation"),
+            (mock_config_entry.entry_id, subentry_type),
             context={"source": config_entries.SOURCE_USER},
         )
 
@@ -283,18 +321,26 @@ async def test_creating_conversation_subentry_not_loaded(
     assert result["reason"] == "entry_not_loaded"
 
 
+@pytest.mark.parametrize(
+    "subentry_type",
+    [
+        pytest.param("conversation", id="conversation"),
+        pytest.param("ai_task_data", id="ai_task"),
+    ],
+)
 @pytest.mark.usefixtures("setup_integration")
-async def test_creating_conversation_subentry_error(
+async def test_creating_subentry_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    subentry_type: str,
 ) -> None:
-    """Test creating a conversation subentry handles connection errors."""
+    """Test creating a subentry handles connection errors."""
     with patch(
         "homeassistant.components.llama_cpp.config_flow.openai.resources.models.AsyncModels.list",
         side_effect=openai.APIConnectionError(request=None),
     ):
         result = await hass.config_entries.subentries.async_init(
-            (mock_config_entry.entry_id, "conversation"),
+            (mock_config_entry.entry_id, subentry_type),
             context={"source": config_entries.SOURCE_USER},
         )
 
@@ -516,39 +562,55 @@ async def test_reconfiguring_conversation_subentry(
     assert CONF_STREAMING not in updated_subentry.data
 
 
+@pytest.mark.parametrize(
+    "subentry_type",
+    [
+        pytest.param("conversation", id="conversation"),
+        pytest.param("ai_task_data", id="ai_task"),
+    ],
+)
+@pytest.mark.usefixtures("setup_integration")
 async def test_subentry_options_entry_not_loaded(
     hass: HomeAssistant,
-    setup_integration: None,
     mock_config_entry: MockConfigEntry,
+    subentry_type: str,
 ) -> None:
     """Test options flow aborts if config entry is not loaded."""
-    subentry = list(mock_config_entry.subentries.values())[0]
+    subentry = _get_subentry(mock_config_entry, subentry_type)
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     result = await hass.config_entries.subentries.async_init(
-        (mock_config_entry.entry_id, "conversation"),
+        (mock_config_entry.entry_id, subentry_type),
         context={"source": "reconfigure", "subentry_id": subentry.subentry_id},
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "entry_not_loaded"
 
 
-async def test_reconfiguring_conversation_subentry_connection_error(
+@pytest.mark.parametrize(
+    "subentry_type",
+    [
+        pytest.param("conversation", id="conversation"),
+        pytest.param("ai_task_data", id="ai_task"),
+    ],
+)
+@pytest.mark.usefixtures("setup_integration")
+async def test_reconfiguring_subentry_connection_error(
     hass: HomeAssistant,
-    setup_integration: None,
     mock_config_entry: MockConfigEntry,
+    subentry_type: str,
 ) -> None:
     """Test reconfiguring subentry aborts if model listing fails."""
-    subentry = list(mock_config_entry.subentries.values())[0]
+    subentry = _get_subentry(mock_config_entry, subentry_type)
 
     with patch(
         "openai.resources.models.AsyncModels.list",
         side_effect=openai.APIConnectionError(request=None),
     ):
         result = await hass.config_entries.subentries.async_init(
-            (mock_config_entry.entry_id, "conversation"),
+            (mock_config_entry.entry_id, subentry_type),
             context={"source": "reconfigure", "subentry_id": subentry.subentry_id},
         )
         assert result["type"] is FlowResultType.ABORT
@@ -756,3 +818,104 @@ async def test_reauth_flow_errors(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert mock_config_entry.data[CONF_API_KEY] == "sk-new-key"
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_creating_ai_task_subentry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test creating an AI task subentry."""
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "ai_task_data"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert not result["errors"]
+    # AI tasks run without a prompt or AI tools
+    assert set(result["data_schema"].schema) == {
+        CONF_CHAT_MODEL,
+        CONF_RECOMMENDED,
+        CONF_MAX_TOKENS,
+        CONF_TOP_P,
+        CONF_TEMPERATURE,
+    }
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {CONF_RECOMMENDED: True, CONF_CHAT_MODEL: "gpt-4"},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Gpt 4"
+    assert result["data"] == {CONF_RECOMMENDED: True, CONF_CHAT_MODEL: "gpt-4"}
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_reconfiguring_ai_task_subentry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfiguring an AI task subentry."""
+    subentry = _get_subentry(mock_config_entry, "ai_task_data")
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "ai_task_data"),
+        context={"source": "reconfigure", "subentry_id": subentry.subentry_id},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            CONF_RECOMMENDED: False,
+            CONF_CHAT_MODEL: "gpt-4",
+            CONF_TEMPERATURE: 0.2,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    updated_subentry = mock_config_entry.subentries[subentry.subentry_id]
+    assert updated_subentry.title == "Gpt 4"
+    assert updated_subentry.data[CONF_CHAT_MODEL] == "gpt-4"
+    assert updated_subentry.data[CONF_TEMPERATURE] == 0.2
+
+
+@pytest.mark.parametrize(
+    ("subentry_type", "with_tools"),
+    [
+        pytest.param("conversation", True, id="conversation"),
+        pytest.param("ai_task_data", False, id="ai_task"),
+    ],
+)
+@pytest.mark.usefixtures("setup_integration")
+async def test_subentry_validation_tools(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_completion: AsyncMock,
+    subentry_type: str,
+    with_tools: bool,
+) -> None:
+    """Test only conversation subentries require tool support from the model."""
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, subentry_type),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    mock_completion.reset_mock()
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {CONF_RECOMMENDED: True, CONF_CHAT_MODEL: "gpt-4"},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert (
+        not isinstance(mock_completion.call_args.kwargs["tools"], Omit)
+    ) is with_tools
