@@ -1,5 +1,6 @@
 """Test the Model Context Protocol config flow."""
 
+import asyncio
 import json
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
@@ -136,6 +137,29 @@ async def test_form(
 
     assert len(mock_setup_entry.mock_calls) == 1
     mock_mcp_client.return_value.initialize.assert_called_once()
+
+
+async def test_form_mcp_client_initialization_timeout(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_mcp_client: Mock,
+) -> None:
+    """Test the config flow times out when MCP initialization stalls."""
+    async def stalled_initialize() -> None:
+        await asyncio.Event().wait()
+
+    mock_mcp_client.return_value.initialize.side_effect = stalled_initialize
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    with patch("homeassistant.components.mcp.config_flow.TIMEOUT", 0.01):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_URL: MCP_SERVER_URL}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "timeout_connect"}
 
 
 @pytest.mark.parametrize(
