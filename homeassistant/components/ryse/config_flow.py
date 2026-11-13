@@ -18,9 +18,12 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 
-from . import _async_unpair
 from .const import DOMAIN, MANUFACTURER_ID, SERVICE_UUID
-from .helpers import async_local_scanner_devices, best_local_scanner_device
+from .helpers import (
+    async_local_scanner_devices,
+    async_release_connection,
+    best_local_scanner_device,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -93,7 +96,7 @@ class RyseBLEDeviceConfigFlow(ConfigFlow, domain=DOMAIN):
             return "unknown"
         finally:
             # Teardown errors must not override a successful pair or chosen error key.
-            await _async_unpair(device)
+            await async_release_connection(device)
         return "cannot_connect"
 
     @override

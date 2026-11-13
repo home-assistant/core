@@ -26,9 +26,9 @@ from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import RyseConfigEntry, _async_unpair
+from . import RyseConfigEntry
 from .const import DOMAIN, MANUFACTURER_NAME
-from .helpers import async_best_local_scanner_device
+from .helpers import async_best_local_scanner_device, async_release_connection
 
 PARALLEL_UPDATES = 1
 _RECONNECT_COOLDOWN = 5.0
@@ -174,7 +174,7 @@ class RyseCoverEntity(CoverEntity):
     async def _async_release_client(self) -> None:
         """Unpair while ignoring the GATT disconnect this unpair causes."""
         self._released_client = self._device.client
-        await _async_unpair(self._device)
+        await async_release_connection(self._device)
 
     async def _async_cleanup_disconnected_client(
         self, client: BleakClient | None

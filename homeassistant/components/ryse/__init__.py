@@ -20,25 +20,13 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
-from .helpers import async_best_local_scanner_device
+from .helpers import async_best_local_scanner_device, async_release_connection
 
 _LOGGER = logging.getLogger(__name__)
 
 type RyseConfigEntry = ConfigEntry[RyseBLEDevice]
 
 PLATFORMS = [Platform.COVER]
-
-
-async def _async_unpair(device: RyseBLEDevice) -> None:
-    """Release the BLE connection, ignoring teardown errors.
-
-    Teardown must not replace a pairing/setup failure: the BLE link is often
-    already gone, and the original error is what setup should retry on.
-    """
-    try:
-        await device.unpair()
-    except Exception:
-        _LOGGER.debug("Error while releasing RYSE connection", exc_info=True)
 
 
 def _async_local_ble_device(
@@ -76,12 +64,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: RyseConfigEntry) -> None
         raise ConfigEntryNotReady(connect_error) from err
     finally:
         if not paired:
-            await _async_unpair(device)
+            await async_release_connection(device)
 
     entry.runtime_data = device
     # Wrap disconnect so a teardown error cannot replace ConfigEntryNotReady
     # when Home Assistant runs on_unload after a failed setup.
-    entry.async_on_unload(partial(_async_unpair, device))
+    entry.async_on_unload(partial(async_release_connection, device))
 
     missing_local_route = False
     current_ble_device = ble_device

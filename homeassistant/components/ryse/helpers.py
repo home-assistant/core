@@ -1,8 +1,10 @@
 """Helpers for the RYSE integration."""
 
 from collections.abc import Sequence
+import logging
 
 from bleak.backends.device import BLEDevice
+from ryseble.device import RyseBLEDevice
 
 from homeassistant.components.bluetooth import (
     BaseHaRemoteScanner,
@@ -10,6 +12,20 @@ from homeassistant.components.bluetooth import (
     async_scanner_devices_by_address,
 )
 from homeassistant.core import HomeAssistant
+
+_LOGGER = logging.getLogger(__name__)
+
+
+async def async_release_connection(device: RyseBLEDevice) -> None:
+    """Disconnect the shade. This does not remove the BlueZ bond.
+
+    A teardown error must not replace the pairing or setup error that Home
+    Assistant should retry.
+    """
+    try:
+        await device.unpair()
+    except Exception:
+        _LOGGER.debug("Error while releasing the RYSE connection", exc_info=True)
 
 
 def async_local_scanner_devices(
