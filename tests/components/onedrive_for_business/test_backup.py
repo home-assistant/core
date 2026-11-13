@@ -1,10 +1,11 @@
 """Test the backups for OneDrive for Business."""
 
 import asyncio
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, AsyncIterator
 from dataclasses import replace
 from io import StringIO
 from json import dumps
+from typing import Any
 from unittest.mock import Mock, patch
 
 from onedrive_personal_sdk.exceptions import (
@@ -14,6 +15,7 @@ from onedrive_personal_sdk.exceptions import (
     UploadSessionExpired,
 )
 from onedrive_personal_sdk.models.items import File
+from onedrive_personal_sdk.models.upload import FileInfo
 import pytest
 from pytest_homeassistant.common import AsyncMock, MockConfigEntry
 from pytest_homeassistant.typing import (
@@ -22,7 +24,11 @@ from pytest_homeassistant.typing import (
     WebSocketGenerator,
 )
 
-from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, AgentBackup
+from homeassistant.components.backup import (
+    DOMAIN as BACKUP_DOMAIN,
+    AgentBackup,
+    async_get_manager,
+)
 from homeassistant.components.onedrive_for_business.backup import (
     METADATA_DOWNLOAD_CONCURRENCY,
     async_register_backup_agents_listener,
@@ -397,6 +403,42 @@ async def test_agents_upload_session_expired(
         "Error during backup in async_upload_backup: UploadSessionExpired"
         in caplog.text
     ) is error_logged
+
+
+async def test_agents_upload_retry_reopens_stream(
+    hass: HomeAssistant,
+    mock_large_file_upload_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the retry after an expired session uploads the full backup again."""
+    content = [b"chunk1", b"chunk2", b"chunk3"]
+    received: list[bytes] = []
+
+    async def open_stream() -> AsyncIterator[bytes]:
+        async def stream() -> AsyncIterator[bytes]:
+            for chunk in content:
+                yield chunk
+
+        return stream()
+
+    async def upload(_token_function: Any, file: FileInfo, **kwargs: Any) -> None:
+        if not received:
+            received.append(await anext(file.content_stream))
+            raise UploadSessionExpired
+        received.append(b"".join([chunk async for chunk in file.content_stream]))
+
+    mock_large_file_upload_client.side_effect = upload
+    agent = async_get_manager(hass).backup_agents[
+        f"{DOMAIN}.{mock_config_entry.unique_id}"
+    ]
+
+    await agent.async_upload_backup(
+        open_stream=open_stream,
+        backup=AgentBackup.from_dict(BACKUP_METADATA),
+        on_progress=Mock(),
+    )
+
+    assert received == [b"chunk1", b"chunk1chunk2chunk3"]
 
 
 async def test_agents_upload_metadata_upload_failed(
