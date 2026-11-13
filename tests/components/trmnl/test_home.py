@@ -268,7 +268,7 @@ async def test_timer_and_change_share_one_cooldown(
     home_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test the timer does not push within a minute of a change push."""
+    """Test the timer does not push while a change push waits, and they share one push."""
     home_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
         home_entry, options={**home_entry.options, CONF_HOME_PLUGIN_SETTING_ID: 42}
@@ -279,17 +279,46 @@ async def test_timer_and_change_share_one_cooldown(
     async_fire_time_changed(hass)
     hass.states.async_set("light.lamp", "off")
     await hass.async_block_till_done()
-    hass.states.async_set("light.lamp", "on")
 
     freezer.tick(timedelta(seconds=31))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert mock_trmnl_client.update_plugin_setting_data.await_count == 2
+    assert mock_trmnl_client.update_plugin_setting_data.await_count == 1
 
     freezer.tick(timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert mock_trmnl_client.update_plugin_setting_data.await_count == 3
+    assert mock_trmnl_client.update_plugin_setting_data.await_count == 2
+
+
+async def test_burst_after_cooldown_waits_and_pushes_once(
+    hass: HomeAssistant,
+    mock_trmnl_client: AsyncMock,
+    home_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a burst of changes on an idle pusher waits a minute and pushes the last state once."""
+    home_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        home_entry, options={**home_entry.options, CONF_HOME_PLUGIN_SETTING_ID: 42}
+    )
+    hass.states.async_set("light.lamp", "on")
+    await setup_integration(hass, home_entry)
+    freezer.tick(timedelta(minutes=2))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    hass.states.async_set("light.lamp", "off", {"brightness": 10})
+    hass.states.async_set("light.lamp", "on", {"brightness": 255})
+    await hass.async_block_till_done()
+    assert mock_trmnl_client.update_plugin_setting_data.await_count == 1
+
+    freezer.tick(timedelta(seconds=61))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_trmnl_client.update_plugin_setting_data.await_count == 2
+    snapshot = mock_trmnl_client.update_plugin_setting_data.await_args.args[1]
+    assert snapshot["devices"][0]["capabilities"]["dim"] == {"value": 1.0}
 
 
 async def test_slow_push_does_not_overlap_the_next(
@@ -298,7 +327,7 @@ async def test_slow_push_does_not_overlap_the_next(
     home_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test a push that outlasts the cooldown finishes before the next one starts."""
+    """Test the minute between sends starts when a slow push finishes."""
     created = asyncio.Event()
 
     async def create_plugin_setting(*_: Any) -> PluginSetting:
@@ -315,6 +344,11 @@ async def test_slow_push_does_not_overlap_the_next(
     await asyncio.sleep(0)
 
     created.set()
+    await hass.async_block_till_done()
+    assert mock_trmnl_client.update_plugin_setting_data.await_count == 1
+
+    freezer.tick(timedelta(seconds=61))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     mock_trmnl_client.create_plugin_setting.assert_awaited_once()
@@ -349,6 +383,48 @@ async def test_remove_during_first_push_deletes_the_new_plugin_setting(
     await remove
 
     mock_trmnl_client.delete_plugin_setting.assert_awaited_once_with(42)
+
+
+async def test_remove_waits_for_a_push_past_the_unload_task_timeout(
+    hass: HomeAssistant,
+    mock_trmnl_client: AsyncMock,
+    home_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test removal waits for a push itself, and nothing is sent after it."""
+    created = asyncio.Event()
+
+    async def create_plugin_setting(*_: Any) -> PluginSetting:
+        await created.wait()
+        return PluginSetting(identifier=42, name="Home", plugin_id=HOMEY_PLUGIN_ID)
+
+    mock_trmnl_client.create_plugin_setting.side_effect = create_plugin_setting
+    hass.states.async_set("light.lamp", "on")
+    home_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(home_entry.entry_id)
+    wait = asyncio.wait
+
+    async def give_up_at_once(tasks: Any, timeout: float | None = None) -> Any:
+        # Only the config entry's 10 second wait for its tasks gives up at once.
+        return await wait(tasks, timeout=0 if timeout == 10 else timeout)
+
+    hass.states.async_set("light.lamp", "off")
+    await asyncio.sleep(0)
+    with patch("homeassistant.config_entries.asyncio.wait", give_up_at_once):
+        remove = hass.async_create_task(
+            hass.config_entries.async_remove(home_entry.entry_id)
+        )
+        for _ in range(20):
+            await asyncio.sleep(0)
+        assert not remove.done()
+        created.set()
+        await remove
+    freezer.tick(timedelta(seconds=61))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    mock_trmnl_client.delete_plugin_setting.assert_awaited_once_with(42)
+    assert mock_trmnl_client.update_plugin_setting_data.await_count == 1
 
 
 async def test_failed_push_is_retried_on_the_next_tick(
@@ -432,6 +508,40 @@ async def test_push_refused_for_scope_starts_reauth_once_and_stops(
         flow["context"]["source"] for flow in hass.config_entries.flow.async_progress()
     ] == [SOURCE_REAUTH]
     assert caplog.text.count("Missing capability: content") == 1
+
+
+async def test_change_during_refused_push_is_not_sent(
+    hass: HomeAssistant,
+    mock_trmnl_client: AsyncMock,
+    home_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a change waiting behind a push that TRMNL refuses for its scope is dropped."""
+    home_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        home_entry, options={**home_entry.options, CONF_HOME_PLUGIN_SETTING_ID: 42}
+    )
+    refuse = asyncio.Event()
+
+    async def update_plugin_setting_data(*_: Any) -> None:
+        await refuse.wait()
+        raise TRMNLForbiddenError("Missing capability: content")
+
+    mock_trmnl_client.update_plugin_setting_data.side_effect = (
+        update_plugin_setting_data
+    )
+    hass.states.async_set("light.lamp", "on")
+    await hass.config_entries.async_setup(home_entry.entry_id)
+    hass.states.async_set("light.lamp", "off")
+    await asyncio.sleep(0)
+
+    refuse.set()
+    await hass.async_block_till_done()
+    freezer.tick(timedelta(seconds=61))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_trmnl_client.update_plugin_setting_data.await_count == 1
 
 
 async def test_last_entity_removed_clears_the_plugin(

@@ -16,6 +16,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER, OAUTH2_SCOPES
+from .home import HomePusher
 
 type TRMNLConfigEntry = ConfigEntry[TRMNLCoordinator]
 
@@ -45,6 +46,7 @@ class TRMNLCoordinator(DataUpdateCoordinator[dict[int, Device]]):
             update_interval=timedelta(hours=1),
         )
         self.oauth_session = oauth_session
+        self.home_pusher: HomePusher | None = None
         self.client = TRMNLClient(
             token=oauth_session.token["access_token"],
             session=async_get_clientsession(hass),

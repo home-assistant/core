@@ -68,9 +68,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: TRMNLConfigEntry) -> Non
     if entity_ids or (
         CONF_HOME_PLUGIN_SETTING_ID in entry.options and scope_granted(entry, "content")
     ):
-        entry.async_on_unload(
-            HomePusher(hass, entry, entity_ids, _home_push(hass, entry)).async_start()
+        coordinator.home_pusher = HomePusher(
+            hass, entry, entity_ids, _home_push(hass, entry)
         )
+        coordinator.home_pusher.async_start()
 
 
 def _home_push(
@@ -111,6 +112,8 @@ def _home_push(
 
 async def async_unload_entry(hass: HomeAssistant, entry: TRMNLConfigEntry) -> None:
     """Unload a config entry."""
+    if pusher := entry.runtime_data.home_pusher:
+        await pusher.async_stop()
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 

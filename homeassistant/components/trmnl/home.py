@@ -224,9 +224,10 @@ def build_snapshot(hass: HomeAssistant, entity_ids: list[str]) -> dict[str, Any]
 
 
 class HomePusher:
-    """Push the picked entities on start, on a timer and after they change.
+    """Push the picked entities on start, every 5 minutes and after they change.
 
-    All three share one cooldown, so TRMNL gets at most one push a minute.
+    One push runs at a time, the next waits a minute after it ends, and requests
+    made meanwhile share that next push. A change waits that minute even when idle.
     """
 
     def __init__(
@@ -241,82 +242,102 @@ class HomePusher:
         self._entry = entry
         self._entity_ids = entity_ids
         self._push = push
-        self._lock = asyncio.Lock()
         self._last_body: str | None = None
-        self._cancel_cooldown: CALLBACK_TYPE | None = None
+        self._unsubscribes: list[CALLBACK_TYPE] = []
+        self._cancel_wait: CALLBACK_TYPE | None = None
+        self._push_task: asyncio.Task[None] | None = None
         self._push_pending = False
+        self._stopped = False
         # Set when TRMNL refuses for a missing scope; the reauth reload makes a new pusher.
         self._refused_for_scope = False
 
     @callback
-    def async_request_push(self) -> None:
-        """Push now, or when the cooldown ends; requests made meanwhile share that push."""
-        if self._refused_for_scope:
-            return
-        if self._cancel_cooldown is not None:
-            self._push_pending = True
-            return
-        self._push_pending = False
-        self._cancel_cooldown = async_call_later(
-            self._hass, PUSH_COOLDOWN_SECONDS, self._async_cooldown_ended
-        )
-        # An entry task, so unloading the entry waits for a push that is under way.
-        self._entry.async_create_task(self._hass, self._async_push(), "trmnl_home_push")
+    def async_start(self) -> None:
+        """Push now, then on the timer and after changes."""
+        self._unsubscribes = [
+            async_track_time_interval(
+                self._hass, self._async_timer_fired, PUSH_INTERVAL
+            ),
+            async_track_state_change_event(
+                self._hass, self._entity_ids, self._async_state_changed
+            ),
+        ]
+        self._async_request_push()
+
+    async def async_stop(self) -> None:
+        """Stop new pushes and wait for one under way, so its plugin id is saved."""
+        self._stopped = True
+        for unsubscribe in self._unsubscribes:
+            unsubscribe()
+        if self._cancel_wait is not None:
+            self._cancel_wait()
+        if self._push_task is not None:
+            await self._push_task
 
     @callback
-    def _async_cooldown_ended(self, _now: datetime) -> None:
-        self._cancel_cooldown = None
+    def _async_request_push(self, wait: bool = False) -> None:
+        if self._refused_for_scope:
+            return
+        if self._push_task is not None or self._cancel_wait is not None:
+            self._push_pending = True
+            return
+        if wait:
+            self._push_pending = True
+            self._cancel_wait = async_call_later(
+                self._hass, PUSH_COOLDOWN_SECONDS, self._async_wait_ended
+            )
+            return
+        task = self._entry.async_create_task(
+            self._hass, self._async_push(), "trmnl_home_push"
+        )
+        # The task starts eagerly, so a push that never waits is already done here.
+        if not task.done():
+            self._push_task = task
+
+    @callback
+    def _async_wait_ended(self, _now: datetime) -> None:
+        self._cancel_wait = None
         if self._push_pending:
-            self.async_request_push()
+            self._push_pending = False
+            self._async_request_push()
 
     async def _async_push(self) -> None:
         """Push the snapshot if it changed since the last push."""
-        async with self._lock:
-            snapshot = build_snapshot(self._hass, self._entity_ids)
-            body = json.dumps(snapshot, sort_keys=True)
-            if body == self._last_body:
-                return
-            try:
-                await self._push(snapshot)
-            except TRMNLForbiddenError as err:
-                self._refused_for_scope = True
-                self._entry.async_start_reauth(self._hass)
-                LOGGER.warning(
-                    'TRMNL refused the home: %s. Sign in again with "Change your'
-                    ' markup, plugin settings, playlists and mashups" ticked',
-                    err,
+        try:
+            await self._async_send_if_changed()
+        finally:
+            self._push_task = None
+            if not self._stopped:
+                self._cancel_wait = async_call_later(
+                    self._hass, PUSH_COOLDOWN_SECONDS, self._async_wait_ended
                 )
-                return
-            except TRMNLError as err:
-                LOGGER.warning("Could not send the home to TRMNL: %s", err)
-                return
-            self._last_body = body
-            LOGGER.debug("Pushed %s devices to TRMNL", len(snapshot["devices"]))
 
-    @callback
-    def async_start(self) -> Callable[[], None]:
-        """Start pushing; return a callback that stops."""
-        cancel_timer = async_track_time_interval(
-            self._hass, self._async_timer_fired, PUSH_INTERVAL
-        )
-        cancel_listener = async_track_state_change_event(
-            self._hass, self._entity_ids, self._async_state_changed
-        )
-        self.async_request_push()
-
-        @callback
-        def stop() -> None:
-            cancel_timer()
-            cancel_listener()
-            if self._cancel_cooldown is not None:
-                self._cancel_cooldown()
-
-        return stop
+    async def _async_send_if_changed(self) -> None:
+        snapshot = build_snapshot(self._hass, self._entity_ids)
+        body = json.dumps(snapshot, sort_keys=True)
+        if body == self._last_body:
+            return
+        try:
+            await self._push(snapshot)
+        except TRMNLForbiddenError as err:
+            self._refused_for_scope = True
+            self._entry.async_start_reauth(self._hass)
+            LOGGER.warning(
+                'TRMNL refused the home: %s. Sign in again with "Change your'
+                ' markup, plugin settings, playlists and mashups" ticked',
+                err,
+            )
+            return
+        except TRMNLError as err:
+            LOGGER.warning("Could not send the home to TRMNL: %s", err)
+            return
+        self._last_body = body
+        LOGGER.debug("Pushed %s devices to TRMNL", len(snapshot["devices"]))
 
     @callback
     def _async_timer_fired(self, _now: datetime) -> None:
-        self.async_request_push()
+        self._async_request_push()
 
     @callback
     def _async_state_changed(self, _event: Event[EventStateChangedData]) -> None:
-        self.async_request_push()
+        self._async_request_push(wait=True)
