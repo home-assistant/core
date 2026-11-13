@@ -92,6 +92,7 @@ class Module(StrEnum):
     DEVICE_TRIGGER = "device_trigger"
     DIAGNOSTICS = "diagnostics"
     ENTITY = "entity"
+    REPAIRS = "repairs"
 
 
 class QualityScaleTier(IntEnum):
