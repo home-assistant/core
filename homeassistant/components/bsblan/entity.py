@@ -104,6 +104,7 @@ class BSBLanCircuitEntity(BSBLanDualCoordinatorEntity):
     @property
     def _circuit_config(self) -> StaticState | None:
         """Return the slow-polled config for this circuit."""
+        # The background slow-data fetch may still be pending after entity setup.
         return (
             self.slow_coordinator.data.heating_config.get(self._circuit)
             if self.slow_coordinator.data
@@ -204,6 +205,7 @@ class BSBLanWaterHeaterDeviceEntity(BSBLanDualCoordinatorEntity):
 
         It may still be pending when the platform is set up.
         """
+        # Coordinator data is None until the initial background fetch completes.
         return (
             self.slow_coordinator.data.dhw_config
             if self.slow_coordinator.data
