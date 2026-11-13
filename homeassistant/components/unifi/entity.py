@@ -3,7 +3,7 @@
 from abc import abstractmethod
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from datetime import time
+from datetime import date, time
 from functools import partial
 from typing import TYPE_CHECKING, Any, Literal, override
 
@@ -119,6 +119,8 @@ async def async_save_firewall_policy_schedule(
     mode: FirewallPolicyScheduleMode | None = None,
     start_time: time | None = None,
     end_time: time | None = None,
+    start_date: date | None = None,
+    end_date: date | None = None,
 ) -> None:
     """Save a change to a firewall policy's schedule.
 
@@ -133,6 +135,8 @@ async def async_save_firewall_policy_schedule(
                 mode=mode,
                 start_time=start_time,
                 end_time=end_time,
+                start_date=start_date,
+                end_date=end_date,
             )
         except FirewallPolicyScheduleError as err:
             raise ServiceValidationError(
