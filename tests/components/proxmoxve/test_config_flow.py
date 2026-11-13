@@ -330,15 +330,18 @@ async def test_form_exceptions_qemu(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.parametrize("status_code", [595, 596])
 async def test_form_skips_node_with_guest_list_error(
     hass: HomeAssistant,
     mock_proxmox_client: MagicMock,
     mock_setup_entry: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+    status_code: int,
 ) -> None:
     """Test that a guest-list error on one node doesn't stop discovery."""
     failed_node = MagicMock()
     failed_node.qemu.get.side_effect = ResourceException(
-        596, "Connection timed out", ""
+        status_code, "Connection timed out", ""
     )
     healthy_node = mock_proxmox_client._node_mock
     mock_proxmox_client.nodes.get.return_value = [
@@ -363,6 +366,13 @@ async def test_form_skips_node_with_guest_list_error(
     assert [node[CONF_NODE] for node in result["data"][CONF_NODES]] == ["pve1"]
     failed_node.qemu.get.assert_called_once_with()
     healthy_node.qemu.get.assert_called_once_with()
+    records = [
+        record
+        for record in caplog.records
+        if record.message == "Unable to fetch VMs/LXC for node pve-pi, skipping node"
+    ]
+    assert len(records) == 1
+    assert records[0].levelname == "WARNING"
 
 
 async def test_form_no_nodes_exception(
