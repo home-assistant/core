@@ -1317,6 +1317,134 @@ async def test_group_mode_template(
     assert state.attributes.get(attribute) == expected
 
 
+def _attribute_template(attribute: str) -> str:
+    return f"{{{{ state_attr('{TEST_STATE_ENTITY_ID}', '{attribute}') }}}}"
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    ("option", "list_option", "action"),
+    [
+        pytest.param("fan_mode", "fan_modes", SET_FAN_MODE_ACTION, id="fan_mode"),
+        pytest.param(
+            "swing_mode", "swing_modes", SET_SWING_MODE_ACTION, id="swing_mode"
+        ),
+        pytest.param(
+            "swing_horizontal_mode",
+            "swing_horizontal_modes",
+            SET_SWING_HORIZONTAL_MODE_ACTION,
+            id="swing_horizontal_mode",
+        ),
+        pytest.param(
+            "preset_mode", "preset_modes", SET_PRESET_MODE_ACTION, id="preset_mode"
+        ),
+    ],
+)
+async def test_mode_revalidated_on_list_change(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    option: str,
+    list_option: str,
+    action: ConfigType,
+) -> None:
+    """Test an unchanged mode becomes valid when its list later includes it."""
+    await setup_entity(
+        hass,
+        TEST_CLIMATE,
+        style,
+        1,
+        {
+            option: _attribute_template(option),
+            list_option: f"{{{{ state_attr('{TEST_STATE_ENTITY_ID}', '{list_option}')"
+            " or [] }}",
+            **action,
+            **MINIMUM_REQUIREMENTS,
+        },
+    )
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "on", {option: "high"})
+    assert hass.states.get(TEST_CLIMATE.entity_id).attributes.get(option) is None
+
+    await async_trigger(
+        hass, TEST_STATE_ENTITY_ID, "on", {option: "high", list_option: ["high"]}
+    )
+    assert hass.states.get(TEST_CLIMATE.entity_id).attributes.get(option) == "high"
+
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "on", {option: "high"})
+    assert hass.states.get(TEST_CLIMATE.entity_id).attributes.get(option) is None
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_hvac_mode_revalidated_on_list_change(
+    hass: HomeAssistant, style: ConfigurationStyle
+) -> None:
+    """Test an unchanged hvac mode becomes valid when hvac_modes later includes it."""
+    await setup_entity(
+        hass,
+        TEST_CLIMATE,
+        style,
+        1,
+        {
+            "hvac_mode": _attribute_template("hvac_mode"),
+            "hvac_modes": f"{{{{ state_attr('{TEST_STATE_ENTITY_ID}', 'hvac_modes')"
+            " or [] }}",
+            **SET_HVAC_MODE_ACTION,
+        },
+    )
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "on", {"hvac_mode": "heat"})
+    assert hass.states.get(TEST_CLIMATE.entity_id).state == STATE_UNKNOWN
+
+    await async_trigger(
+        hass,
+        TEST_STATE_ENTITY_ID,
+        "on",
+        {"hvac_mode": "heat", "hvac_modes": ["off", "heat"]},
+    )
+    state = hass.states.get(TEST_CLIMATE.entity_id)
+    assert state.state == HVACMode.HEAT
+    assert (
+        state.attributes["supported_features"]
+        == ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+    )
+
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "on", {"hvac_mode": "heat"})
+    assert hass.states.get(TEST_CLIMATE.entity_id).state == STATE_UNKNOWN
+
+
+async def test_hvac_mode_error_not_restored_on_list_change(
+    hass: HomeAssistant,
+) -> None:
+    """Test a list change does not restore an hvac mode whose template failed."""
+    await setup_entity(
+        hass,
+        TEST_CLIMATE,
+        ConfigurationStyle.MODERN,
+        1,
+        {
+            "hvac_mode": "{{ 'heat' if is_state('"
+            + TEST_STATE_ENTITY_ID
+            + "', 'on') else x - 1 }}",
+            "hvac_modes": f"{{{{ state_attr('{TEST_ATTRIBUTE_ENTITY_ID}', 'hvac_modes')"
+            " or ['heat'] }}",
+            "availability": "{{ True }}",
+            **SET_HVAC_MODE_ACTION,
+        },
+    )
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "on")
+    assert hass.states.get(TEST_CLIMATE.entity_id).state == HVACMode.HEAT
+
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "off")
+    assert hass.states.get(TEST_CLIMATE.entity_id).state == STATE_UNKNOWN
+
+    await async_trigger(
+        hass, TEST_ATTRIBUTE_ENTITY_ID, "on", {"hvac_modes": ["off", "heat"]}
+    )
+    assert hass.states.get(TEST_CLIMATE.entity_id).state == STATE_UNKNOWN
+
+
 @pytest.mark.parametrize(
     "style",
     [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],

@@ -455,13 +455,10 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
         self.add_assumed_attribute("_attr_xy_color", CONF_XY, CONF_XY_ACTION)
 
         # Setup Effect templates
-        self.setup_template(
+        self.setup_list_item_templates(
             CONF_EFFECT_LIST,
             "_attr_effect_list",
             tcv.list_of_strings(self, CONF_EFFECT_LIST, none_on_empty=True),
-            render_complex=True,
-        )
-        self.setup_template(
             CONF_EFFECT,
             "_attr_effect",
             tcv.item_in_list(
@@ -471,6 +468,7 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
                 CONF_EFFECT_LIST,
                 stringify_result=True,
             ),
+            render_complex=True,
         )
         self.add_assumed_attribute("_attr_effect", CONF_EFFECT, CONF_EFFECT_ACTION)
 
