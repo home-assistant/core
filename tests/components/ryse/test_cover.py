@@ -941,6 +941,33 @@ async def test_reconnect_backs_off_after_repeated_failures(
     mock_device.pair.assert_awaited_once()
 
 
+async def test_repeated_local_transport_failures_start_reauth(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    local_ryse_scanner: BLEDevice,
+    mock_device: MagicMock,
+    setup_integration: MockConfigEntry,
+) -> None:
+    """Test a shade that keeps failing locally asks the user to re-pair."""
+    assert setup_integration.state is ConfigEntryState.LOADED
+    client = mock_device.client
+    mock_device.pair.side_effect = BleakError("link dropped")
+    mock_device.pair.reset_mock()
+    _disconnect_callback(client)(client)
+    await hass.async_block_till_done()
+
+    await async_see_shade(hass, local_ryse_scanner)
+    freezer.tick(5)
+    async_fire_time_changed(hass)
+    await async_see_shade(hass, local_ryse_scanner, token=b"\x02")
+    assert not list(setup_integration.async_get_active_flows(hass, {SOURCE_REAUTH}))
+
+    freezer.tick(10)
+    async_fire_time_changed(hass)
+    await async_see_shade(hass, local_ryse_scanner, token=b"\x03")
+    assert list(setup_integration.async_get_active_flows(hass, {SOURCE_REAUTH}))
+
+
 async def test_advertisement_reconnects_after_disconnect(
     hass: HomeAssistant,
     local_ryse_scanner: BLEDevice,

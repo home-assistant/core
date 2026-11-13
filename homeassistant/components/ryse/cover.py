@@ -32,6 +32,9 @@ from .helpers import async_best_local_scanner_device
 PARALLEL_UPDATES = 1  # one BLE connection at a time
 _RECONNECT_COOLDOWN = 5.0
 _RECONNECT_COOLDOWN_MAX = 300.0
+# A reset shade on Home Assistant OS fails start_notify as a transport error,
+# so one radio glitch must not ask the user to press PAIR.
+_REAUTH_AFTER_LOCAL_FAILURES = 3
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,6 +68,8 @@ class RyseCoverEntity(CoverEntity):
         self._expected_disconnect = False
         self._reconnect_when_seen = False
         self._reconnect_failures = 0
+        self._local_failures = 0
+        self._local_pair_attempt = False
         self._reconnect_debouncer: Debouncer[Coroutine[Any, Any, None]] | None = None
 
         self._attr_unique_id = device.address
@@ -217,7 +222,7 @@ class RyseCoverEntity(CoverEntity):
         try:
             if not await self._async_ensure_connected():
                 if not self._expected_disconnect:
-                    self._note_reconnect_failure()
+                    self._note_pair_failure()
                     self.async_write_ha_state()
                 return
             if self._expected_disconnect:
@@ -232,7 +237,7 @@ class RyseCoverEntity(CoverEntity):
         except (TimeoutError, OSError, EOFError, BleakError) as err:
             if self._expected_disconnect:
                 return
-            self._note_reconnect_failure()
+            self._note_local_failure()
             await self._async_drop_client(str(err))
         except Exception:
             if self._expected_disconnect:
@@ -243,7 +248,7 @@ class RyseCoverEntity(CoverEntity):
                 self._device.address,
                 exc_info=True,
             )
-            self._note_reconnect_failure()
+            self._note_local_failure()
             await self._async_drop_client("unexpected error")
         else:
             if self._expected_disconnect:
@@ -265,9 +270,27 @@ class RyseCoverEntity(CoverEntity):
         )
         self._reconnect_debouncer.cooldown = min(delay, _RECONNECT_COOLDOWN_MAX)
 
+    def _note_pair_failure(self) -> None:
+        """Back off, and count the failure toward reauth when a local adapter saw it."""
+        if self._local_pair_attempt:
+            self._note_local_failure()
+            return
+        self._note_reconnect_failure()
+
+    def _note_local_failure(self) -> None:
+        """Back off and ask for re-pairing after repeated local failures."""
+        self._local_failures += 1
+        self._note_reconnect_failure()
+        if self._local_failures < _REAUTH_AFTER_LOCAL_FAILURES:
+            return
+        if any(self._config_entry.async_get_active_flows(self.hass, {SOURCE_REAUTH})):
+            return
+        self._config_entry.async_start_reauth(self.hass)
+
     def _note_reconnect_success(self) -> None:
         """Restore the short reconnect interval after a successful bond."""
         self._reconnect_failures = 0
+        self._local_failures = 0
         if self._reconnect_debouncer is not None:
             self._reconnect_debouncer.cooldown = _RECONNECT_COOLDOWN
 
@@ -351,6 +374,7 @@ class RyseCoverEntity(CoverEntity):
         scanner_device = async_best_local_scanner_device(
             self.hass, self._device.address
         )
+        self._local_pair_attempt = scanner_device is not None
         if scanner_device is None:
             return None
         self._device.set_ble_device(scanner_device.ble_device)
@@ -367,7 +391,7 @@ class RyseCoverEntity(CoverEntity):
             )
         try:
             if not await self._async_ensure_connected():
-                self._note_reconnect_failure()
+                self._note_pair_failure()
                 self.async_write_ha_state()
                 raise HomeAssistantError(f"Failed to {description}: failed to pair")
             await send()
@@ -381,7 +405,7 @@ class RyseCoverEntity(CoverEntity):
             self.async_write_ha_state()
             raise HomeAssistantError(f"Failed to {description}: {err}") from err
         except (TimeoutError, OSError, EOFError, BleakError) as err:
-            self._note_reconnect_failure()
+            self._note_local_failure()
             await self._async_drop_client(str(err))
             self.async_write_ha_state()
             raise HomeAssistantError(f"Failed to {description}: {err}") from err
