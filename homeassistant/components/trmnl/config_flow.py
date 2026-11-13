@@ -135,16 +135,15 @@ class TRMNLOptionsFlow(OptionsFlowWithReload):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Pick the entities to show on TRMNL."""
-        errors: dict[str, str] = {}
         if user_input is not None:
             if user_input[CONF_HOME_ENTITIES] and not scope_granted(
                 self.config_entry, "content"
             ):
-                errors["base"] = "content_not_granted"
-            else:
-                return self.async_create_entry(
-                    data={**self.config_entry.options, **user_input}
-                )
+                self.config_entry.async_start_reauth(self.hass)
+                return self.async_abort(reason="content_not_granted")
+            return self.async_create_entry(
+                data={**self.config_entry.options, **user_input}
+            )
         schema = probatio.Schema(
             {
                 probatio.Optional(
@@ -157,4 +156,4 @@ class TRMNLOptionsFlow(OptionsFlowWithReload):
                 )
             }
         )
-        return self.async_show_form(step_id="init", data_schema=schema, errors=errors)
+        return self.async_show_form(step_id="init", data_schema=schema)

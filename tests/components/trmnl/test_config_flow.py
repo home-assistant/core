@@ -17,7 +17,12 @@ from homeassistant.components.trmnl.const import (
     OAUTH2_AUTHORIZE,
     OAUTH2_TOKEN,
 )
-from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_DHCP,
+    SOURCE_REAUTH,
+    SOURCE_USER,
+    ConfigFlowResult,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -388,5 +393,9 @@ async def test_options_flow_needs_content_scope(
         result["flow_id"], {"home_entities": ["light.lamp"]}
     )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "content_not_granted"}
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "content_not_granted"
+    assert mock_config_entry.options == {}
+    assert [
+        flow["context"]["source"] for flow in hass.config_entries.flow.async_progress()
+    ] == [SOURCE_REAUTH]
