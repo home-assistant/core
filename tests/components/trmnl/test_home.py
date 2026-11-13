@@ -3,11 +3,12 @@
 import asyncio
 from datetime import timedelta
 from typing import Any
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.plugins import AiohttpClientMocker
 from trmnl.exceptions import TRMNLError, TRMNLForbiddenError, TRMNLNotFoundError
 from trmnl.models import PluginSetting
 
@@ -16,6 +17,7 @@ from homeassistant.components.trmnl.const import (
     CONF_HOME_PLUGIN_SETTING_ID,
     DOMAIN,
     HOMEY_PLUGIN_ID,
+    OAUTH2_TOKEN,
 )
 from homeassistant.components.trmnl.home import build_snapshot, capabilities_of
 from homeassistant.core import HomeAssistant, State
@@ -426,6 +428,45 @@ async def test_remove_entry_deletes_plugin_setting_when_allowed(
     await hass.config_entries.async_remove(entry.entry_id)
 
     assert mock_trmnl_client.delete_plugin_setting.await_count == int(deleted)
+
+
+async def test_remove_entry_refreshes_an_expired_token_without_saving_it(
+    hass: HomeAssistant,
+    mock_trmnl_client: AsyncMock,
+    home_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test removal refreshes an expired token for the delete, though the entry is gone."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=2,
+        data=home_entry.data,
+        options={CONF_HOME_PLUGIN_SETTING_ID: 42},
+    )
+    await setup_integration(hass, entry)
+    hass.config_entries.async_update_entry(
+        entry,
+        data={**entry.data, "token": {**entry.data["token"], "expires_at": 0}},
+    )
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        json={
+            "access_token": "new-access",
+            "refresh_token": "new-refresh",
+            "expires_in": 7200,
+            "token_type": "Bearer",
+        },
+    )
+
+    with patch(
+        "homeassistant.components.trmnl.TRMNLClient", return_value=mock_trmnl_client
+    ) as client_class:
+        await hass.config_entries.async_remove(entry.entry_id)
+
+    assert client_class.call_args.kwargs["token"] == "new-access"
+    mock_trmnl_client.delete_plugin_setting.assert_awaited_once_with(42)
+    assert "Error calling entry remove callback" not in caplog.text
 
 
 async def test_remove_entry_logs_failed_delete(

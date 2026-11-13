@@ -161,12 +161,13 @@ async def async_remove_entry(hass: HomeAssistant, entry: TRMNLConfigEntry) -> No
     if plugin_setting_id is None or not scope_granted(entry, "delete"):
         return
     implementation = await async_get_config_entry_implementation(hass, entry)
-    session = OAuth2Session(hass, entry, implementation)
+    token = entry.data["token"]
     try:
-        await session.async_ensure_token_valid()
+        # The entry is already removed, so a refreshed token cannot be saved to it.
+        if not OAuth2Session(hass, entry, implementation).valid_token:
+            token = await implementation.async_refresh_token(token)
         await TRMNLClient(
-            token=session.token["access_token"],
-            session=async_get_clientsession(hass),
+            token=token["access_token"], session=async_get_clientsession(hass)
         ).delete_plugin_setting(plugin_setting_id)
     except (ClientError, TRMNLError) as err:
         LOGGER.warning("Could not delete the TRMNL home plugin setting: %s", err)
