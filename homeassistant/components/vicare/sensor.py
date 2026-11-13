@@ -605,6 +605,82 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
     ),
     ViCareSensorEntityDescription(
+        key="heat_production_summary_heating_currentday",
+        translation_key="heat_production_summary_heating_currentday",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        value_getter=lambda api: api.getHeatProductionSummaryHeatingCurrentDay(),
+        unit_getter=lambda api: api.getHeatProductionSummaryHeatingUnit(),
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    ViCareSensorEntityDescription(
+        key="heat_production_summary_heating_currentmonth",
+        translation_key="heat_production_summary_heating_currentmonth",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        value_getter=lambda api: api.getHeatProductionSummaryHeatingCurrentMonth(),
+        unit_getter=lambda api: api.getHeatProductionSummaryHeatingUnit(),
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+    ViCareSensorEntityDescription(
+        key="heat_production_summary_heating_currentyear",
+        translation_key="heat_production_summary_heating_currentyear",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        value_getter=lambda api: api.getHeatProductionSummaryHeatingCurrentYear(),
+        unit_getter=lambda api: api.getHeatProductionSummaryHeatingUnit(),
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+    ViCareSensorEntityDescription(
+        key="heat_production_summary_heating_lastsevendays",
+        translation_key="heat_production_summary_heating_lastsevendays",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        value_getter=lambda api: api.getHeatProductionSummaryHeatingLastSevenDays(),
+        unit_getter=lambda api: api.getHeatProductionSummaryHeatingUnit(),
+        entity_registry_enabled_default=False,
+    ),
+    ViCareSensorEntityDescription(
+        key="heat_production_summary_dhw_currentday",
+        translation_key="heat_production_summary_dhw_currentday",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        value_getter=lambda api: (
+            api.getHeatProductionSummaryDomesticHotWaterCurrentDay()
+        ),
+        unit_getter=lambda api: api.getHeatProductionSummaryDomesticHotWaterUnit(),
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    ViCareSensorEntityDescription(
+        key="heat_production_summary_dhw_currentmonth",
+        translation_key="heat_production_summary_dhw_currentmonth",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        value_getter=lambda api: (
+            api.getHeatProductionSummaryDomesticHotWaterCurrentMonth()
+        ),
+        unit_getter=lambda api: api.getHeatProductionSummaryDomesticHotWaterUnit(),
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+    ViCareSensorEntityDescription(
+        key="heat_production_summary_dhw_currentyear",
+        translation_key="heat_production_summary_dhw_currentyear",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        value_getter=lambda api: (
+            api.getHeatProductionSummaryDomesticHotWaterCurrentYear()
+        ),
+        unit_getter=lambda api: api.getHeatProductionSummaryDomesticHotWaterUnit(),
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+    ViCareSensorEntityDescription(
+        key="heat_production_summary_dhw_lastsevendays",
+        translation_key="heat_production_summary_dhw_lastsevendays",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        value_getter=lambda api: (
+            api.getHeatProductionSummaryDomesticHotWaterLastSevenDays()
+        ),
+        unit_getter=lambda api: api.getHeatProductionSummaryDomesticHotWaterUnit(),
+        entity_registry_enabled_default=False,
+    ),
+    ViCareSensorEntityDescription(
         key="power_production_current",
         translation_key="power_production_current",
         native_unit_of_measurement=UnitOfPower.WATT,
