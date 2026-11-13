@@ -1,15 +1,16 @@
 """Axis camera platform tests."""
 
 import asyncio
-from collections.abc import Coroutine
-from typing import Any
-from unittest.mock import Mock, patch
+from types import SimpleNamespace
+from unittest.mock import AsyncMock, patch
 from urllib.parse import unquote, urlsplit
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
+from yarl import URL
 
 from homeassistant.components import camera
 from homeassistant.components.axis.const import (
@@ -113,45 +114,48 @@ async def test_camera_uses_vapix_basic_authentication_for_snapshot(
 @pytest.mark.parametrize("basic_auth_challenge", [pytest.param(True, id="basic")])
 async def test_camera_stream_closed_on_unload(
     hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
     config_entry_factory: ConfigEntryFactoryType,
+    hass_client: ClientSessionGenerator,
     basic_auth_challenge: bool,
 ) -> None:
     """Test unloading the entry closes an active MJPEG request."""
-    assert basic_auth_challenge
+    assert basic_auth_challenge  # The Digest path uses httpx, not aioclient_mock.
     config_entry = await config_entry_factory()
     camera_entity = camera.helper.get_camera_from_entity_id(
         hass, f"{CAMERA_DOMAIN}.{NAME}"
     )
     stream_started = asyncio.Event()
-    stream_closed = asyncio.Event()
+    upstream_closed = asyncio.Event()
 
-    async def mock_proxy(
-        _hass: HomeAssistant,
-        _request: object,
-        stream_coro: Coroutine[Any, Any, Any],
-    ) -> None:
-        stream_coro.close()
+    async def wait_for_stream_end(_size: int) -> bytes:
         stream_started.set()
-        try:
-            await asyncio.Event().wait()
-        finally:
-            stream_closed.set()
+        await asyncio.Event().wait()
+        return b""
 
-    with patch(
-        "homeassistant.components.mjpeg.camera.async_aiohttp_proxy_web", mock_proxy
-    ):
-        stream_task = asyncio.create_task(
-            camera_entity.handle_async_mjpeg_stream(Mock())
+    async def mock_stream_response(
+        _method: str, _url: URL, _data: None
+    ) -> SimpleNamespace:
+        return SimpleNamespace(
+            exc=None,
+            headers={"Content-Type": "multipart/x-mixed-replace"},
+            content=SimpleNamespace(read=AsyncMock(side_effect=wait_for_stream_end)),
+            close=upstream_closed.set,
         )
-        try:
-            await stream_started.wait()
-            assert await hass.config_entries.async_unload(config_entry.entry_id)
-            await asyncio.wait_for(stream_closed.wait(), timeout=1)
-            await asyncio.gather(stream_task, return_exceptions=True)
-            assert stream_task.cancelled()
-        finally:
-            stream_task.cancel()
-            await asyncio.gather(stream_task, return_exceptions=True)
+
+    aioclient_mock.get(camera_entity.mjpeg_source, side_effect=mock_stream_response)
+
+    client = await hass_client()
+    response = await client.get(f"/api/camera_proxy_stream/{camera_entity.entity_id}")
+    try:
+        await asyncio.wait_for(stream_started.wait(), timeout=1)
+        assert response.status == 200
+        assert aioclient_mock.mock_calls[-1][3]["Authorization"] == "Basic cm9vdDpwYXNz"
+        assert await hass.config_entries.async_unload(config_entry.entry_id)
+        await asyncio.wait_for(upstream_closed.wait(), timeout=1)
+    finally:
+        await hass.config_entries.async_unload(config_entry.entry_id)
+        response.close()
 
 
 @pytest.mark.parametrize("param_properties_payload", [PROPERTY_DATA])

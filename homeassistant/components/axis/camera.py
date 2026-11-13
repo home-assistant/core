@@ -1,7 +1,7 @@
 """Support for Axis camera streaming."""
 
 import asyncio
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 from urllib.parse import quote, urlencode
 
 from aiohttp import web
@@ -87,8 +87,9 @@ class AxisCamera(AxisEntity, MjpegCamera):
         self, request: web.Request
     ) -> web.StreamResponse | None:
         """Track the stream request so it can be cancelled on entity removal."""
-        if (task := asyncio.current_task()) is None:
-            return await super().handle_async_mjpeg_stream(request)
+        task = asyncio.current_task()
+        if TYPE_CHECKING:
+            assert task is not None
 
         self._active_streams.add(task)
         try:
