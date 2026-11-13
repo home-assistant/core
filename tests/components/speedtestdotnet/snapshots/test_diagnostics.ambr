@@ -1,0 +1,22 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'configured_server_id': '1',
+    'known_servers': 2,
+    'last_update_success': True,
+    'results': dict({
+      'bytes_received': 19712300,
+      'bytes_sent': 4194304,
+      'download': 1024000,
+      'ping': 18.465,
+      'server': dict({
+        'cc': 'CC',
+        'country': 'Country',
+        'id': '8408',
+        'latency': 18.465,
+        'sponsor': 'Sponsor',
+      }),
+      'upload': 1024000,
+    }),
+  })
+# ---

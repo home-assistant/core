@@ -1,21 +1,28 @@
 """Tests for the Flexit Nordic (BACnet) number entities."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock
 
 from flexit_bacnet import DecodingError
+from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util.dt import utcnow
 
 from . import setup_with_selected_platforms
 
@@ -51,10 +58,10 @@ async def test_numbers_implementation(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_VALUE: 60,
+            CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+            NumberServiceArgument.VALUE: 60,
         },
         blocking=True,
     )
@@ -67,10 +74,10 @@ async def test_numbers_implementation(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_VALUE: 40,
+            CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+            NumberServiceArgument.VALUE: 40,
         },
         blocking=True,
     )
@@ -85,10 +92,10 @@ async def test_numbers_implementation(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_VALUE: 40,
+                CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+                NumberServiceArgument.VALUE: 40,
             },
             blocking=True,
         )
@@ -101,12 +108,56 @@ async def test_numbers_implementation(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_VALUE: 30,
+            CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+            NumberServiceArgument.VALUE: 30,
         },
         blocking=True,
     )
 
     assert hass.states.get(ENTITY_ID).state == "30"
+
+
+@pytest.mark.parametrize(
+    ("property_name", "entity_id"),
+    [
+        pytest.param(
+            "fan_setpoint_supply_air_fire",
+            ENTITY_ID,
+            id="missing_value",
+        ),
+        pytest.param(
+            "fan_setpoint_extract_air_home",
+            "number.device_name_away_extract_fan_setpoint",
+            id="missing_maximum",
+        ),
+        pytest.param(
+            "fan_setpoint_supply_air_away",
+            "number.device_name_home_supply_fan_setpoint",
+            id="missing_minimum",
+        ),
+    ],
+)
+async def test_missing_number_property(
+    hass: HomeAssistant,
+    mock_flexit_bacnet: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    property_name: str,
+    entity_id: str,
+) -> None:
+    """Test missing number values or limits make controls unavailable."""
+    initial_value = getattr(mock_flexit_bacnet, property_name)
+    setattr(mock_flexit_bacnet, property_name, None)
+
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.NUMBER])
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    setattr(mock_flexit_bacnet, property_name, initial_value)
+    freezer.tick(timedelta(seconds=61))
+    async_fire_time_changed(hass, utcnow())
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state != STATE_UNAVAILABLE

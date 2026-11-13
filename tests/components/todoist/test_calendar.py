@@ -17,23 +17,14 @@ from todoist_api_python.models import Due
 
 from homeassistant import setup
 from homeassistant.components.todoist.const import (
-    ASSIGNEE,
-    CONTENT,
     DOMAIN,
-    LABELS,
-    PROJECT_NAME,
-    REMINDER_DATE,
-    REMINDER_LATITUDE,
-    REMINDER_LOCATION_DIRECTION,
     REMINDER_LOCATION_DIRECTION_LEAVE,
-    REMINDER_LOCATION_NAME,
-    REMINDER_LONGITUDE,
-    REMINDER_RADIUS,
-    REMINDER_ZONE,
-    SECTION_NAME,
-    SERVICE_NEW_TASK,
 )
-from homeassistant.components.todoist.services import SYNC_URL
+from homeassistant.components.todoist.services import (
+    SYNC_URL,
+    TodoistService,
+    TodoistServiceArgument,
+)
 from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
@@ -340,8 +331,13 @@ async def test_create_task_service_call(hass: HomeAssistant, api: AsyncMock) -> 
     """Test api is called correctly after a new task service call."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_NEW_TASK,
-        {ASSIGNEE: "user", CONTENT: "task", LABELS: ["Label1"], PROJECT_NAME: "Name"},
+        TodoistService.NEW_TASK,
+        {
+            TodoistServiceArgument.ASSIGNEE: "user",
+            TodoistServiceArgument.CONTENT: "task",
+            TodoistServiceArgument.LABELS: ["Label1"],
+            TodoistServiceArgument.PROJECT: "Name",
+        },
     )
     await hass.async_block_till_done()
 
@@ -358,12 +354,12 @@ async def test_create_task_service_call_raises(
     with pytest.raises(ServiceValidationError) as exc:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_NEW_TASK,
+            TodoistService.NEW_TASK,
             {
-                ASSIGNEE: "user",
-                CONTENT: "task",
-                LABELS: ["Label1"],
-                PROJECT_NAME: "Missing Project",
+                TodoistServiceArgument.ASSIGNEE: "user",
+                TodoistServiceArgument.CONTENT: "task",
+                TodoistServiceArgument.LABELS: ["Label1"],
+                TodoistServiceArgument.PROJECT: "Missing Project",
             },
             blocking=True,
         )
@@ -376,13 +372,13 @@ async def test_create_task_service_call_with_section(
     """Test api is called correctly when section is included."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_NEW_TASK,
+        TodoistService.NEW_TASK,
         {
-            ASSIGNEE: "user",
-            CONTENT: "task",
-            LABELS: ["Label1"],
-            PROJECT_NAME: "Name",
-            SECTION_NAME: "Section Name",
+            TodoistServiceArgument.ASSIGNEE: "user",
+            TodoistServiceArgument.CONTENT: "task",
+            TodoistServiceArgument.LABELS: ["Label1"],
+            TodoistServiceArgument.PROJECT: "Name",
+            TodoistServiceArgument.SECTION: "Section Name",
         },
     )
     await hass.async_block_till_done()
@@ -402,11 +398,11 @@ async def test_create_task_service_call_with_none_section(
     """Test a `None` section is ignored rather than raising an error."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_NEW_TASK,
+        TodoistService.NEW_TASK,
         {
-            CONTENT: "task",
-            PROJECT_NAME: "Name",
-            SECTION_NAME: None,
+            TodoistServiceArgument.CONTENT: "task",
+            TodoistServiceArgument.PROJECT: "Name",
+            TodoistServiceArgument.SECTION: None,
         },
         blocking=True,
     )
@@ -458,8 +454,12 @@ async def test_create_task_service_call_with_zone_reminder(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_NEW_TASK,
-        {CONTENT: "task", PROJECT_NAME: "Name", REMINDER_ZONE: ZONE_ENTITY_ID},
+        TodoistService.NEW_TASK,
+        {
+            TodoistServiceArgument.CONTENT: "task",
+            TodoistServiceArgument.PROJECT: "Name",
+            TodoistServiceArgument.REMINDER_ZONE: ZONE_ENTITY_ID,
+        },
         blocking=True,
     )
 
@@ -487,15 +487,15 @@ async def test_create_task_service_call_with_coordinate_reminder(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_NEW_TASK,
+        TodoistService.NEW_TASK,
         {
-            CONTENT: "task",
-            PROJECT_NAME: "Name",
-            REMINDER_LOCATION_NAME: "Grocery store",
-            REMINDER_LATITUDE: 37.3861,
-            REMINDER_LONGITUDE: -122.0839,
-            REMINDER_RADIUS: 100,
-            REMINDER_LOCATION_DIRECTION: REMINDER_LOCATION_DIRECTION_LEAVE,
+            TodoistServiceArgument.CONTENT: "task",
+            TodoistServiceArgument.PROJECT: "Name",
+            TodoistServiceArgument.REMINDER_LOCATION_NAME: "Grocery store",
+            TodoistServiceArgument.REMINDER_LATITUDE: 37.3861,
+            TodoistServiceArgument.REMINDER_LONGITUDE: -122.0839,
+            TodoistServiceArgument.REMINDER_RADIUS: 100,
+            TodoistServiceArgument.REMINDER_LOCATION_DIRECTION: REMINDER_LOCATION_DIRECTION_LEAVE,
         },
         blocking=True,
     )
@@ -525,12 +525,12 @@ async def test_create_task_service_call_with_date_and_location_reminder(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_NEW_TASK,
+        TodoistService.NEW_TASK,
         {
-            CONTENT: "task",
-            PROJECT_NAME: "Name",
-            REMINDER_DATE: "2024-05-25T10:30:00",
-            REMINDER_ZONE: ZONE_ENTITY_ID,
+            TodoistServiceArgument.CONTENT: "task",
+            TodoistServiceArgument.PROJECT: "Name",
+            TodoistServiceArgument.REMINDER_DATE: "2024-05-25T10:30:00",
+            TodoistServiceArgument.REMINDER_ZONE: ZONE_ENTITY_ID,
         },
         blocking=True,
     )
@@ -548,8 +548,12 @@ async def test_create_task_service_call_with_unknown_zone(
     with pytest.raises(ServiceValidationError) as exc:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_NEW_TASK,
-            {CONTENT: "task", PROJECT_NAME: "Name", REMINDER_ZONE: "zone.missing"},
+            TodoistService.NEW_TASK,
+            {
+                TodoistServiceArgument.CONTENT: "task",
+                TodoistServiceArgument.PROJECT: "Name",
+                TodoistServiceArgument.REMINDER_ZONE: "zone.missing",
+            },
             blocking=True,
         )
 
@@ -574,8 +578,12 @@ async def test_create_task_service_call_with_zone_radius_out_of_range(
     with pytest.raises(ServiceValidationError) as exc:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_NEW_TASK,
-            {CONTENT: "task", PROJECT_NAME: "Name", REMINDER_ZONE: ZONE_ENTITY_ID},
+            TodoistService.NEW_TASK,
+            {
+                TodoistServiceArgument.CONTENT: "task",
+                TodoistServiceArgument.PROJECT: "Name",
+                TodoistServiceArgument.REMINDER_ZONE: ZONE_ENTITY_ID,
+            },
             blocking=True,
         )
 
@@ -587,15 +595,21 @@ async def test_create_task_service_call_with_zone_radius_out_of_range(
     "reminder_fields",
     [
         # Coordinate fields must all be supplied together.
-        {REMINDER_LOCATION_NAME: "Store", REMINDER_LATITUDE: 37.3861},
-        {REMINDER_LATITUDE: 37.3861, REMINDER_LONGITUDE: -122.0839},
+        {
+            TodoistServiceArgument.REMINDER_LOCATION_NAME: "Store",
+            TodoistServiceArgument.REMINDER_LATITUDE: 37.3861,
+        },
+        {
+            TodoistServiceArgument.REMINDER_LATITUDE: 37.3861,
+            TodoistServiceArgument.REMINDER_LONGITUDE: -122.0839,
+        },
         # A zone and coordinates are mutually exclusive.
         {
-            REMINDER_ZONE: ZONE_ENTITY_ID,
-            REMINDER_LOCATION_NAME: "Store",
-            REMINDER_LATITUDE: 37.3861,
-            REMINDER_LONGITUDE: -122.0839,
-            REMINDER_RADIUS: 100,
+            TodoistServiceArgument.REMINDER_ZONE: ZONE_ENTITY_ID,
+            TodoistServiceArgument.REMINDER_LOCATION_NAME: "Store",
+            TodoistServiceArgument.REMINDER_LATITUDE: 37.3861,
+            TodoistServiceArgument.REMINDER_LONGITUDE: -122.0839,
+            TodoistServiceArgument.REMINDER_RADIUS: 100,
         },
     ],
     ids=("incomplete_coordinates", "no_location_name", "zone_and_coordinates"),
@@ -607,8 +621,12 @@ async def test_create_task_service_call_invalid_location(
     with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_NEW_TASK,
-            {CONTENT: "task", PROJECT_NAME: "Name", **reminder_fields},
+            TodoistService.NEW_TASK,
+            {
+                TodoistServiceArgument.CONTENT: "task",
+                TodoistServiceArgument.PROJECT: "Name",
+                **reminder_fields,
+            },
             blocking=True,
         )
 

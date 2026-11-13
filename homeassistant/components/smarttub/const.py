@@ -1,12 +1,16 @@
 """smarttub constants."""
 
+from enum import StrEnum
+
 DOMAIN = "smarttub"
 
 EVENT_SMARTTUB = "smarttub"
 
 SCAN_INTERVAL = 60
 
-POLLING_TIMEOUT = 10
+POLLING_TIMEOUT = 30
+# consecutive failed polls for which the last known data is kept
+MAX_STALE_POLLS = 3
 API_TIMEOUT = 5
 
 DEFAULT_MIN_TEMP = 18.5
@@ -32,3 +36,21 @@ ATTR_DURATION = "duration"
 ATTR_START_HOUR = "start_hour"
 # how many days to snooze the reminder for
 ATTR_REMINDER_DAYS = "days"
+
+
+class SmartTubService(StrEnum):
+    """Store keys for SmartTub services."""
+
+    SET_PRIMARY_FILTRATION = "set_primary_filtration"
+    SET_SECONDARY_FILTRATION = "set_secondary_filtration"
+    SNOOZE_REMINDER = "snooze_reminder"
+    RESET_REMINDER = "reset_reminder"
+
+
+class SmartTubServiceArgument(StrEnum):
+    """Store keys for SmartTub service arguments."""
+
+    DURATION = "duration"
+    START_HOUR = "start_hour"
+    MODE = "mode"
+    DAYS = "days"

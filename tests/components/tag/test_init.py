@@ -1,6 +1,5 @@
 """Tests for the tag component."""
 
-import logging
 from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
@@ -11,6 +10,7 @@ from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
 from homeassistant.components.tag import DOMAIN, _create_entry, async_scan_tag
+from homeassistant.components.tag.const import TagEntityStateAttribute
 from homeassistant.const import CONF_NAME, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import collection, entity_registry as er
@@ -267,8 +267,8 @@ async def test_entity(
     assert entity
     assert entity.state == now.isoformat(timespec="milliseconds")
     assert entity.attributes == {
-        "tag_id": "test tag id",
-        "last_scanned_by_device_id": "device id",
+        TagEntityStateAttribute.TAG_ID: "test tag id",
+        TagEntityStateAttribute.LAST_SCANNED_BY_DEVICE_ID: "device id",
         "friendly_name": "test tag name",
     }
 
@@ -286,7 +286,6 @@ async def test_entity_created_and_removed(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test tag entity created and removed."""
-    caplog.at_level(logging.DEBUG)
     assert await storage_setup()
 
     client = await hass_ws_client(hass)

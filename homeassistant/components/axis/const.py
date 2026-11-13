@@ -10,6 +10,7 @@ DOMAIN = "axis"
 
 ATTR_MANUFACTURER = "Axis Communications AB"
 
+CONF_COMPANION = "companion"
 CONF_STREAM_PROFILE = "stream_profile"
 CONF_VIDEO_SOURCE = "video_source"
 

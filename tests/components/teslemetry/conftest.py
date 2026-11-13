@@ -21,6 +21,7 @@ from .const import (
     METADATA_ENERGY,
     METADATA_LEGACY,
     METADATA_OLD_FIRMWARE,
+    POWERWALL_COMPONENTS,
     POWERWALL_STATUS,
     PRODUCTS,
     PRODUCTS_ENERGY,
@@ -164,7 +165,7 @@ def mock_powerwall_live_status() -> Generator[AsyncMock]:
     no-op merge; paired tests override the return value or side effect.
     """
     with patch(
-        "aiopowerwall.energysite.PowerwallEnergySite.live_status",
+        "tesla_fleet_api.tesla.powerwall.energysite.PowerwallEnergySite.live_status",
         new_callable=AsyncMock,
     ) as mock_powerwall_live_status:
         mock_powerwall_live_status.side_effect = lambda: deepcopy(LIVE_STATUS)
@@ -179,7 +180,7 @@ def mock_powerwall_local_config() -> Generator[AsyncMock]:
     config-backed entities keep their cloud values; paired tests override it.
     """
     with patch(
-        "aiopowerwall.energysite.PowerwallEnergySite.local_config",
+        "tesla_fleet_api.tesla.powerwall.energysite.PowerwallEnergySite.local_config",
         new_callable=AsyncMock,
         return_value={},
     ) as mock_powerwall_local_config:
@@ -425,7 +426,8 @@ def mock_stream_connected():
 def mock_powerwall_connect() -> Generator[AsyncMock]:
     """Mock the local Powerwall gateway connection."""
     with patch(
-        "aiopowerwall.PowerwallClient.connect", return_value="GATEWAY-DIN"
+        "tesla_fleet_api.tesla.powerwall.PowerwallClient.connect",
+        return_value="GATEWAY-DIN",
     ) as mock_connect:
         yield mock_connect
 
@@ -434,7 +436,17 @@ def mock_powerwall_connect() -> Generator[AsyncMock]:
 def mock_powerwall_status() -> Generator[AsyncMock]:
     """Mock the local Powerwall gateway status."""
     with patch(
-        "aiopowerwall.PowerwallClient.get_status",
+        "tesla_fleet_api.tesla.powerwall.PowerwallClient.get_status",
         side_effect=lambda: deepcopy(POWERWALL_STATUS),
     ) as mock_status:
         yield mock_status
+
+
+@pytest.fixture(autouse=True)
+def mock_powerwall_components() -> Generator[AsyncMock]:
+    """Mock the local Powerwall gateway components."""
+    with patch(
+        "tesla_fleet_api.tesla.powerwall.PowerwallClient.get_components",
+        side_effect=lambda: deepcopy(POWERWALL_COMPONENTS),
+    ) as mock_components:
+        yield mock_components

@@ -18,7 +18,6 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_ATTRIBUTE,
     CONF_DEVICE_CLASS,
     CONF_ENTITY_ID,
@@ -46,11 +45,6 @@ from homeassistant.util.dt import utcnow
 
 from . import PLATFORMS
 from .const import (
-    ATTR_GRADIENT,
-    ATTR_INVERT,
-    ATTR_MIN_GRADIENT,
-    ATTR_SAMPLE_COUNT,
-    ATTR_SAMPLE_DURATION,
     CONF_INVERT,
     CONF_MAX_SAMPLES,
     CONF_MIN_GRADIENT,
@@ -61,6 +55,7 @@ from .const import (
     DEFAULT_MIN_SAMPLES,
     DEFAULT_SAMPLE_DURATION,
     DOMAIN,
+    TrendEntityStateAttribute,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -205,12 +200,12 @@ class SensorTrend(BinarySensorEntity, RestoreEntity):
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the state attributes of the sensor."""
         return {
-            ATTR_ENTITY_ID: self._entity_id,
-            ATTR_GRADIENT: self._gradient,
-            ATTR_INVERT: self._invert,
-            ATTR_MIN_GRADIENT: self._min_gradient,
-            ATTR_SAMPLE_COUNT: len(self.samples),
-            ATTR_SAMPLE_DURATION: self._sample_duration,
+            TrendEntityStateAttribute.ENTITY_ID: self._entity_id,
+            TrendEntityStateAttribute.GRADIENT: self._gradient,
+            TrendEntityStateAttribute.INVERT: self._invert,
+            TrendEntityStateAttribute.MIN_GRADIENT: self._min_gradient,
+            TrendEntityStateAttribute.SAMPLE_COUNT: len(self.samples),
+            TrendEntityStateAttribute.SAMPLE_DURATION: self._sample_duration,
         }
 
     @override

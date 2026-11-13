@@ -24,7 +24,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_ENTITY_ID,
     CONF_NAME,
     CONF_UNIQUE_ID,
@@ -40,6 +39,8 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device import async_entity_id_to_device
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -76,6 +77,7 @@ from .const import (
     TIME_SMA_LAST,
     WINDOW_SIZE_UNIT_NUMBER_EVENTS,
     WINDOW_SIZE_UNIT_TIME,
+    FilterEntityStateAttribute,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -225,7 +227,17 @@ async def async_setup_entry(
         FILTERS[filter_config.pop(CONF_FILTER_NAME)](entity=entity_id, **filter_config)
     ]
 
-    async_add_entities([SensorFilter(name, entry.entry_id, entity_id, filters)])
+    async_add_entities(
+        [
+            SensorFilter(
+                name,
+                entry.entry_id,
+                entity_id,
+                filters,
+                device=async_entity_id_to_device(hass, entity_id),
+            )
+        ]
+    )
 
 
 class SensorFilter(SensorEntity):
@@ -239,10 +251,12 @@ class SensorFilter(SensorEntity):
         unique_id: str | None,
         entity_id: str,
         filters: list[Filter],
+        device: AnyDeviceEntry | None = None,
     ) -> None:
         """Initialize the sensor."""
         self._attr_name = name
         self._attr_unique_id = unique_id
+        self.device_entry = device
         self._entity = entity_id
         self._attr_native_unit_of_measurement = None
         self._state: StateType = None
@@ -250,7 +264,9 @@ class SensorFilter(SensorEntity):
         self._attr_icon = None
         self._attr_device_class = None
         self._attr_state_class = None
-        self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_id}
+        self._attr_extra_state_attributes = {
+            FilterEntityStateAttribute.ENTITY_ID: entity_id
+        }
 
     @callback
     def _update_filter_sensor_state_event(

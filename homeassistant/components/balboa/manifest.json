@@ -4,6 +4,7 @@
   "categories": ["water.pools_spas"],
   "codeowners": ["@garbled1", "@natekspencer"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dhcp": [
     {
       "registered_devices": true

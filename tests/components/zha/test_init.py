@@ -2,7 +2,6 @@
 
 from collections.abc import Callable
 from datetime import timedelta
-import logging
 import typing
 from unittest.mock import AsyncMock, patch
 import zoneinfo
@@ -11,7 +10,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from zigpy.application import ControllerApplication
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
-from zigpy.device import Device
+from zigpy.device import ZigbeeDevice
 from zigpy.exceptions import TransientConnectionError
 
 from homeassistant.components.homeassistant_hardware import (
@@ -276,7 +275,7 @@ async def test_migration_baudrate_and_flow_control(
 async def test_zha_retry_unique_ids(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
     mock_zigpy_connect: ControllerApplication,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -345,11 +344,17 @@ async def test_timezone_update(
 
     assert hass.config.time_zone == "US/Pacific"
     assert gateway.config.local_timezone == zoneinfo.ZoneInfo("US/Pacific")
+    assert gateway.application_controller.local_timezone == zoneinfo.ZoneInfo(
+        "US/Pacific"
+    )
 
     await hass.config.async_update(time_zone="America/New_York")
 
     assert hass.config.time_zone == "America/New_York"
     assert gateway.config.local_timezone == zoneinfo.ZoneInfo("America/New_York")
+    assert gateway.application_controller.local_timezone == zoneinfo.ZoneInfo(
+        "America/New_York"
+    )
 
 
 async def test_setup_no_firmware_update_in_progress(
@@ -558,7 +563,6 @@ async def test_device_path_not_changed_when_already_unique(
             "homeassistant.components.zha.usb_device_from_path",
             return_value=mock_usb_device,
         ),
-        caplog.at_level(logging.DEBUG),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()

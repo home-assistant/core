@@ -8,6 +8,7 @@
   ],
   "codeowners": ["@Quentame"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["ffmpeg"],
   "documentation": "https://www.home-assistant.io/integrations/freebox",
   "integration_type": "device",

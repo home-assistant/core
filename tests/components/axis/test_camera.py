@@ -5,17 +5,30 @@ from urllib.parse import unquote, urlsplit
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import camera
-from homeassistant.components.axis.const import CONF_STREAM_PROFILE, CONF_VIDEO_SOURCE
-from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.components.axis.const import (
+    CONF_COMPANION,
+    CONF_STREAM_PROFILE,
+    CONF_VIDEO_SOURCE,
+)
+from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN, async_get_image
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_MODEL,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import ConfigEntryFactoryType
-from .const import MAC, NAME
+from .const import DEFAULT_HOST, MAC, MODEL, NAME
 
 
 @pytest.fixture(autouse=True)
@@ -72,11 +85,71 @@ async def test_camera(
     )
 
 
+@pytest.mark.parametrize("basic_auth_challenge", [pytest.param(True, id="basic")])
+async def test_camera_uses_vapix_basic_authentication_for_snapshot(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    config_entry_factory: ConfigEntryFactoryType,
+    basic_auth_challenge: bool,
+) -> None:
+    """Test snapshot requests use the Basic auth resolved by VAPIX."""
+    assert basic_auth_challenge
+    await config_entry_factory()
+
+    entity_id = f"{CAMERA_DOMAIN}.{NAME}"
+    camera_entity = camera.helper.get_camera_from_entity_id(hass, entity_id)
+    image_bytes = b"image_bytes"
+    aioclient_mock.get(camera_entity.image_source, content=image_bytes)
+
+    image = await async_get_image(hass, entity_id)
+
+    assert image.content == image_bytes
+    assert aioclient_mock.mock_calls[-1][3]["Authorization"] == "Basic cm9vdDpwYXNz"
+
+
 @pytest.mark.parametrize("param_properties_payload", [PROPERTY_DATA])
 @pytest.mark.usefixtures("config_entry_setup")
 async def test_camera_disabled(hass: HomeAssistant) -> None:
     """Test Axis camera platform loads but does not create camera entity."""
     assert len(hass.states.async_entity_ids(CAMERA_DOMAIN)) == 0
+
+
+@pytest.mark.parametrize(
+    "config_entry_data",
+    [
+        {
+            CONF_HOST: DEFAULT_HOST,
+            CONF_USERNAME: "root",
+            CONF_PASSWORD: "pass",
+            CONF_PORT: 80,
+            CONF_MODEL: MODEL,
+            CONF_NAME: NAME,
+            CONF_COMPANION: True,
+        }
+    ],
+)
+async def test_camera_companion(
+    hass: HomeAssistant, config_entry_setup: MockConfigEntry
+) -> None:
+    """Test Companion devices request media with the Axis-Orig-Sw parameter."""
+    assert config_entry_setup.runtime_data.api.config.is_companion
+
+    camera_entity = camera.helper.get_camera_from_entity_id(
+        hass, f"{CAMERA_DOMAIN}.{NAME}"
+    )
+    assert (
+        camera_entity.image_source
+        == "http://1.2.3.4:80/axis-cgi/jpg/image.cgi?Axis-Orig-Sw=true"
+    )
+    assert (
+        camera_entity.mjpeg_source
+        == "http://1.2.3.4:80/axis-cgi/mjpg/video.cgi?Axis-Orig-Sw=true"
+    )
+    assert (
+        await camera_entity.stream_source()
+        == "rtsp://root:pass@1.2.3.4/axis-media/media.amp"
+        "?videocodec=h264&Axis-Orig-Sw=true"
+    )
 
 
 @pytest.mark.parametrize(
@@ -91,9 +164,10 @@ async def test_camera_disabled(hass: HomeAssistant) -> None:
         pytest.param("root", "pass?word", "root:pass%3Fword", id="query"),
         pytest.param("root", "pass word", "root:pass%20word", id="space"),
         pytest.param(
-            "user@:/?#%",
+            # aiohttp digest auth rejects ":" in the username
+            "user@/?#%",
             "pass@:/?#%",
-            "user%40%3A%2F%3F%23%25:pass%40%3A%2F%3F%23%25",
+            "user%40%2F%3F%23%25:pass%40%3A%2F%3F%23%25",
             id="both-components",
         ),
     ],

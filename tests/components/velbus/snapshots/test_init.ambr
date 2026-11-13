@@ -4,7 +4,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -32,7 +32,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -60,7 +60,35 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'velbus',
+          '77',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'Velleman',
+      'model': 'VMBPSU',
+      'model_id': '11',
+      'name': 'Power supply',
+      'name_by_user': None,
+      'serial_number': 'psu123456789',
+      'sw_version': '1.0.0',
+      'via_device_id': None,
+    }),
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -88,7 +116,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -116,7 +144,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -144,7 +172,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -172,7 +200,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -200,7 +228,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -228,7 +256,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -256,7 +284,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -284,7 +312,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -312,7 +340,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),

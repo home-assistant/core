@@ -25,13 +25,14 @@ from homeassistant.components.elevenlabs.const import (
     DEFAULT_STYLE,
     DEFAULT_USE_SPEAKER_BOOST,
 )
+from homeassistant.components.elevenlabs.tts import ElevenLabsTextToSpeechOption
 from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
     DOMAIN as MP_DOMAIN,
     SERVICE_PLAY_MEDIA,
 )
-from homeassistant.components.tts import TTSAudioRequest
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODEL
+from homeassistant.components.tts import TextToSpeechCommonOption, TTSAudioRequest
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.core_config import async_process_ha_core_config
 
@@ -191,7 +192,7 @@ async def setup_internal_url(hass: HomeAssistant) -> None:
                 ATTR_ENTITY_ID: "tts.elevenlabs_text_to_speech",
                 tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
                 tts.ATTR_MESSAGE: "There is a person at the front door.",
-                tts.ATTR_OPTIONS: {tts.ATTR_VOICE: "voice2"},
+                tts.ATTR_OPTIONS: {TextToSpeechCommonOption.VOICE: "voice2"},
             },
         ),
         (
@@ -201,7 +202,7 @@ async def setup_internal_url(hass: HomeAssistant) -> None:
                 ATTR_ENTITY_ID: "tts.elevenlabs_text_to_speech",
                 tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
                 tts.ATTR_MESSAGE: "There is a person at the front door.",
-                tts.ATTR_OPTIONS: {ATTR_MODEL: "model2"},
+                tts.ATTR_OPTIONS: {ElevenLabsTextToSpeechOption.MODEL: "model2"},
             },
         ),
         (
@@ -211,7 +212,10 @@ async def setup_internal_url(hass: HomeAssistant) -> None:
                 ATTR_ENTITY_ID: "tts.elevenlabs_text_to_speech",
                 tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
                 tts.ATTR_MESSAGE: "There is a person at the front door.",
-                tts.ATTR_OPTIONS: {tts.ATTR_VOICE: "voice2", ATTR_MODEL: "model2"},
+                tts.ATTR_OPTIONS: {
+                    TextToSpeechCommonOption.VOICE: "voice2",
+                    ElevenLabsTextToSpeechOption.MODEL: "model2",
+                },
             },
         ),
     ],
@@ -250,8 +254,12 @@ async def test_tts_service_speak(
         == HTTPStatus.OK
     )
     assert len(stream_calls) == 1
-    voice_id = service_data[tts.ATTR_OPTIONS].get(tts.ATTR_VOICE, "voice1")
-    model_id = service_data[tts.ATTR_OPTIONS].get(ATTR_MODEL, "model1")
+    voice_id = service_data[tts.ATTR_OPTIONS].get(
+        TextToSpeechCommonOption.VOICE, "voice1"
+    )
+    model_id = service_data[tts.ATTR_OPTIONS].get(
+        ElevenLabsTextToSpeechOption.MODEL, "model1"
+    )
     language = service_data.get(tts.ATTR_LANGUAGE, tts_entity.default_language)
 
     call_kwargs = stream_calls[0]
@@ -274,7 +282,7 @@ async def test_tts_service_speak(
                 tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
                 tts.ATTR_MESSAGE: "There is a person at the front door.",
                 tts.ATTR_LANGUAGE: "de",
-                tts.ATTR_OPTIONS: {tts.ATTR_VOICE: "voice1"},
+                tts.ATTR_OPTIONS: {TextToSpeechCommonOption.VOICE: "voice1"},
             },
         ),
         (
@@ -285,7 +293,7 @@ async def test_tts_service_speak(
                 tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
                 tts.ATTR_MESSAGE: "There is a person at the front door.",
                 tts.ATTR_LANGUAGE: "es",
-                tts.ATTR_OPTIONS: {tts.ATTR_VOICE: "voice1"},
+                tts.ATTR_OPTIONS: {TextToSpeechCommonOption.VOICE: "voice1"},
             },
         ),
     ],
@@ -338,7 +346,7 @@ async def test_tts_service_speak_lang_config(
                 ATTR_ENTITY_ID: "tts.elevenlabs_text_to_speech",
                 tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
                 tts.ATTR_MESSAGE: "There is a person at the front door.",
-                tts.ATTR_OPTIONS: {tts.ATTR_VOICE: "voice1"},
+                tts.ATTR_OPTIONS: {TextToSpeechCommonOption.VOICE: "voice1"},
             },
         ),
     ],
@@ -407,7 +415,7 @@ async def test_tts_service_speak_error(
                 ATTR_ENTITY_ID: "tts.elevenlabs_text_to_speech",
                 tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
                 tts.ATTR_MESSAGE: "There is a person at the front door.",
-                tts.ATTR_OPTIONS: {tts.ATTR_VOICE: "voice2"},
+                tts.ATTR_OPTIONS: {TextToSpeechCommonOption.VOICE: "voice2"},
             },
         ),
     ],
@@ -561,7 +569,7 @@ async def test_stream_tts_with_request_ids(
     prev_request_ids: deque[str] = deque(maxlen=3)  # keep last 3 request IDs
     sentence_iter = iter(zip(message, chunks, request_ids, strict=False))
     get_next_part, message_gen = stream_sentence_helpers(sentence_iter, queue)
-    options = {tts.ATTR_VOICE: "voice1", "model": model_id}
+    options = {TextToSpeechCommonOption.VOICE: "voice1", "model": model_id}
     req = TTSAudioRequest(message_gen=message_gen(), language="en", options=options)
 
     resp = await tts_entity.async_stream_tts_audio(req)
@@ -640,7 +648,7 @@ async def test_stream_tts_without_previous_info(
     queue = asyncio.Queue()
     sentence_iter = iter(zip(message, chunks, request_ids, strict=False))
     get_next_part, message_gen = stream_sentence_helpers(sentence_iter, queue)
-    options = {tts.ATTR_VOICE: "voice1", "model": model}
+    options = {TextToSpeechCommonOption.VOICE: "voice1", "model": model}
     req = TTSAudioRequest(message_gen=message_gen(), language="en", options=options)
 
     resp = await tts_entity.async_stream_tts_audio(req)

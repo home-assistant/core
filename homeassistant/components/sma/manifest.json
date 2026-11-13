@@ -4,6 +4,7 @@
   "categories": ["energy.solar_batteries"],
   "codeowners": ["@kellerza", "@rklomp", "@erwindouna"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dhcp": [
     {
       "hostname": "sma*",

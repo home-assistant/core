@@ -14,7 +14,7 @@ from pytest_homeassistant.common import (
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.indevolt.coordinator import SCAN_INTERVAL
-from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, SERVICE_SET_VALUE
+from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, NumberService
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -110,7 +110,7 @@ async def test_number_set_values(
     fetch_count_before = mock_indevolt.fetch_data.call_count
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {"entity_id": entity_id, "value": test_value},
         blocking=True,
     )
@@ -140,7 +140,7 @@ async def test_number_set_value_error(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
                 "entity_id": "number.cms_sf2000_discharge_limit",
                 "value": 50,

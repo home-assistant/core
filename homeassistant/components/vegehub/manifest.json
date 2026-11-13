@@ -4,6 +4,7 @@
   "categories": ["garden_plants"],
   "codeowners": ["@thulrus"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["http", "webhook"],
   "documentation": "https://www.home-assistant.io/integrations/vegehub",
   "integration_type": "hub",

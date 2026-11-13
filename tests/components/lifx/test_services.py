@@ -7,17 +7,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.lifx import DOMAIN
-from homeassistant.components.lifx.const import (
-    CONF_SERIAL,
-    SERVICE_EFFECT_COLORLOOP,
-    SERVICE_EFFECT_FLAME,
-    SERVICE_EFFECT_MORPH,
-    SERVICE_EFFECT_MOVE,
-    SERVICE_EFFECT_PULSE,
-    SERVICE_EFFECT_SKY,
-    SERVICE_EFFECT_STOP,
-    SERVICE_PAINT_THEME,
-)
+from homeassistant.components.lifx.const import CONF_SERIAL, LIFXService
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST
 from homeassistant.core import HomeAssistant
@@ -28,14 +18,14 @@ from . import IP_ADDRESS, SERIAL
 from .helpers import create_mock_hev_light
 
 SERVICES = (
-    SERVICE_EFFECT_COLORLOOP,
-    SERVICE_EFFECT_FLAME,
-    SERVICE_EFFECT_MORPH,
-    SERVICE_EFFECT_MOVE,
-    SERVICE_EFFECT_PULSE,
-    SERVICE_EFFECT_SKY,
-    SERVICE_EFFECT_STOP,
-    SERVICE_PAINT_THEME,
+    LIFXService.EFFECT_COLORLOOP,
+    LIFXService.EFFECT_FLAME,
+    LIFXService.EFFECT_MORPH,
+    LIFXService.EFFECT_MOVE,
+    LIFXService.EFFECT_PULSE,
+    LIFXService.EFFECT_SKY,
+    LIFXService.EFFECT_STOP,
+    LIFXService.PAINT_THEME,
 )
 
 
@@ -49,18 +39,19 @@ async def test_services_registered_without_entry(hass: HomeAssistant) -> None:
         assert hass.services.has_service(DOMAIN, service)
 
 
-@pytest.mark.parametrize("service", SERVICES)
 @pytest.mark.usefixtures("mock_discovery")
-async def test_service_without_loaded_entry_raises(
-    hass: HomeAssistant, service: str
-) -> None:
+async def test_service_without_loaded_entry_raises(hass: HomeAssistant) -> None:
     """Test the effect actions raise when no config entry is loaded."""
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()
 
+    # Every effect action shares one handler
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
-            DOMAIN, service, {ATTR_ENTITY_ID: "light.test"}, blocking=True
+            DOMAIN,
+            LIFXService.EFFECT_PULSE,
+            {ATTR_ENTITY_ID: "light.test"},
+            blocking=True,
         )
 
     assert err.value.translation_domain == DOMAIN

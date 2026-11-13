@@ -30,15 +30,14 @@ from homeassistant.components.update import (
     ATTR_SKIPPED_VERSION,
     ATTR_UPDATE_PERCENTAGE,
     DOMAIN as UPDATE_DOMAIN,
-    SERVICE_INSTALL,
-    SERVICE_SKIP,
+    UpdateService,
 )
-from homeassistant.components.zwave_js.const import DOMAIN, SERVICE_REFRESH_VALUE
+from homeassistant.components.zwave_js.const import DOMAIN, ZWaveJSService
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import CoreState, HomeAssistant, State
@@ -48,6 +47,7 @@ from homeassistant.util import dt as dt_util
 
 NODE_UPDATE_ENTITY = "update.z_wave_thermostat_firmware"
 CONTROLLER_UPDATE_ENTITY = "update.z_stick_gen5_usb_controller_firmware"
+SLEEPING_NODE_UPDATE_ENTITY = "update.tilt_shock_xs_sensor_firmware"
 LATEST_VERSION_FIRMWARE = {
     "version": "11.2.4",
     "changelog": "blah 2",
@@ -226,9 +226,9 @@ async def test_update_entity_states(
     # Refresh value should not be supported by this entity
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_REFRESH_VALUE,
+        ZWaveJSService.REFRESH_VALUE,
         {
-            ATTR_ENTITY_ID: entity_id,
+            CommonServiceArgument.ENTITY_ID: entity_id,
         },
         blocking=True,
     )
@@ -243,6 +243,73 @@ async def test_update_entity_states(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_OFF
+
+
+@pytest.fixture
+def sleeping_node(
+    client: MagicMock, zooz_zse43_state: dict[str, Any], metadata: dict[str, str]
+) -> Node:
+    """Mock a sleeping node with the given device config metadata."""
+    state = deepcopy(zooz_zse43_state)
+    state["deviceConfig"]["metadata"] = metadata
+    node = Node(client, state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.mark.parametrize(
+    ("metadata", "expected_message"),
+    [
+        pytest.param(
+            {"wakeup": "Click the Z-Wave button 4 times quickly.\n"},
+            "This is a battery powered sleeping device. You may need to wake it up"
+            " manually for the update to begin. To wake up this device:\n\n"
+            "Click the Z-Wave button 4 times quickly.",
+            id="wakeup_instructions",
+        ),
+        pytest.param(
+            {},
+            "This is a battery powered sleeping device. You may need to wake it up"
+            " manually for the update to begin.",
+            id="no_wakeup_instructions",
+        ),
+        pytest.param(
+            {"wakeup": "  \n"},
+            "This is a battery powered sleeping device. You may need to wake it up"
+            " manually for the update to begin.",
+            id="blank_wakeup_instructions",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("sleeping_node", "integration")
+async def test_update_entity_release_notes_sleeping_device(
+    hass: HomeAssistant,
+    client: MagicMock,
+    hass_ws_client: WebSocketGenerator,
+    expected_message: str,
+) -> None:
+    """Test release notes of a sleeping device start with a wake-up alert."""
+    ws_client = await hass_ws_client(hass)
+    client.async_send_command.return_value = FIRMWARE_UPDATES
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=15, days=1))
+    await hass.async_block_till_done()
+
+    state = hass.states.get(SLEEPING_NODE_UPDATE_ENTITY)
+    assert state
+    assert state.state == STATE_ON
+
+    await ws_client.send_json(
+        {
+            "id": 1,
+            "type": "update/release_notes",
+            "entity_id": SLEEPING_NODE_UPDATE_ENTITY,
+        }
+    )
+    result = await ws_client.receive_json()
+    assert result["result"] == (
+        f"<ha-alert alert-type='info'>\n\n{expected_message}\n\n</ha-alert>\n\nblah 2"
+    )
 
 
 @pytest.mark.parametrize(
@@ -268,9 +335,9 @@ async def test_update_entity_install_raises(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
+            UpdateService.INSTALL,
             {
-                ATTR_ENTITY_ID: entity_id,
+                CommonServiceArgument.ENTITY_ID: entity_id,
             },
             blocking=True,
         )
@@ -523,9 +590,9 @@ async def test_update_entity_progress(
     install_task = hass.async_create_task(
         hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
+            UpdateService.INSTALL,
             {
-                ATTR_ENTITY_ID: entity_id,
+                CommonServiceArgument.ENTITY_ID: entity_id,
             },
             blocking=True,
         )
@@ -669,9 +736,9 @@ async def test_update_entity_install_failed(
     install_task = hass.async_create_task(
         hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
+            UpdateService.INSTALL,
             {
-                ATTR_ENTITY_ID: entity_id,
+                CommonServiceArgument.ENTITY_ID: entity_id,
             },
             blocking=True,
         )
@@ -751,9 +818,9 @@ async def test_update_entity_reload(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_SKIP,
+        UpdateService.SKIP,
         {
-            ATTR_ENTITY_ID: entity_id,
+            CommonServiceArgument.ENTITY_ID: entity_id,
         },
         blocking=True,
     )
@@ -1025,9 +1092,9 @@ async def test_update_entity_full_restore_data_update_available(
     install_task = hass.async_create_task(
         hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
+            UpdateService.INSTALL,
             {
-                ATTR_ENTITY_ID: entity_id,
+                CommonServiceArgument.ENTITY_ID: entity_id,
             },
             blocking=True,
         )

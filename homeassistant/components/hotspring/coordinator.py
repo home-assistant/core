@@ -2,7 +2,13 @@
 
 from typing import override
 
-from hotspring import HotSpring, HotSpringConnectionError, HotSpringError, Spa
+from hotspring import (
+    HotSpring,
+    HotSpringConnectionError,
+    HotSpringConnectionTimeoutError,
+    HotSpringError,
+    Spa,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
@@ -39,6 +45,11 @@ class HotSpringDataUpdateCoordinator(DataUpdateCoordinator[Spa]):
         """Fetch data from Hot Spring."""
         try:
             spa = await self.hotspring.update()
+        except HotSpringConnectionTimeoutError as error:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="timeout",
+            ) from error
         except HotSpringConnectionError as error:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -50,13 +61,14 @@ class HotSpringDataUpdateCoordinator(DataUpdateCoordinator[Spa]):
                 translation_key="invalid_response",
             ) from error
 
-        if (
-            not spa.info.mac_address
-            or spa.info.mac_address != self.config_entry.unique_id
-        ):
+        if spa.info.mac_address != self.config_entry.unique_id:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
-                translation_key="invalid_response",
+                translation_key="wrong_device",
+                translation_placeholders={
+                    "found": spa.info.mac_address or "unknown",
+                    "expected": str(self.config_entry.unique_id),
+                },
             )
 
         return spa

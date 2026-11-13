@@ -1075,12 +1075,16 @@ class AlexaTemperatureSensor(AlexaCapability):
         )
         temp: str | None = self.entity.state
         if self.entity.domain == CLIMATE_DOMAIN:
-            unit = self.hass.config.units.temperature_unit
+            unit = self.entity.attributes[
+                ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT
+            ]
             temp = self.entity.attributes.get(
                 ClimateEntityStateAttribute.CURRENT_TEMPERATURE
             )
         elif self.entity.domain == WATER_HEATER_DOMAIN:
-            unit = self.hass.config.units.temperature_unit
+            unit = self.entity.attributes[
+                WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT
+            ]
             temp = self.entity.attributes.get(
                 WaterHeaterStateAttribute.CURRENT_TEMPERATURE
             )
@@ -1318,7 +1322,7 @@ class AlexaThermostatController(AlexaCapability):
                 mode = API_THERMOSTAT_MODES[HVACMode(self.entity.state)]
             return mode
 
-        unit = self.hass.config.units.temperature_unit
+        unit = self.entity.attributes[ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT]
         if name == "targetSetpoint":
             temp = self.entity.attributes.get(
                 ClimateEntityStateAttribute.TARGET_TEMPERATURE
@@ -2803,3 +2807,44 @@ class AlexaCameraStreamController(AlexaCapability):
                 "audioCodecs": ["AAC"],
             }
         ]
+
+
+class AlexaRTCSessionController(AlexaCapability):
+    """Implements Alexa.RTCSessionController.
+
+    Alexa sends a WebRTC SDP offer and expects a complete SDP answer in return.
+    This is what Echo Show devices use for the live view of a camera.
+
+    https://developer.amazon.com/docs/device-apis/alexa-rtcsessioncontroller.html
+    """
+
+    supported_locales = {
+        "ar-SA",
+        "de-DE",
+        "en-AU",
+        "en-CA",
+        "en-GB",
+        "en-US",
+        "es-ES",
+        "es-US",
+        "fr-CA",
+        "fr-FR",
+        "hi-IN",
+        "it-IT",
+        "ja-JP",
+        "nl-NL",
+        "pt-BR",
+    }
+
+    @override
+    def name(self) -> str:
+        """Return the Alexa API name of this interface."""
+        return "Alexa.RTCSessionController"
+
+    @override
+    def configuration(self) -> dict[str, Any] | None:
+        """Return configuration object.
+
+        Two-way audio is not supported, so the session is half duplex.
+        """
+        return {"isFullDuplexAudioSupported": False}

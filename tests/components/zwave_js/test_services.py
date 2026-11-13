@@ -1,5 +1,6 @@
 """Test the Z-Wave JS services."""
 
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import probatio
@@ -10,42 +11,24 @@ from zwave_js_server.model.value import SetConfigParameterResult
 
 from homeassistant.components.group import Group
 from homeassistant.components.zwave_js.const import (
-    ATTR_BROADCAST,
-    ATTR_COMMAND_CLASS,
-    ATTR_CONFIG_PARAMETER,
-    ATTR_CONFIG_PARAMETER_BITMASK,
-    ATTR_CONFIG_VALUE,
-    ATTR_ENDPOINT,
-    ATTR_METHOD_NAME,
-    ATTR_NOTIFICATION_EVENT,
-    ATTR_NOTIFICATION_TYPE,
-    ATTR_OPTIONS,
-    ATTR_PARAMETERS,
-    ATTR_PROPERTY,
-    ATTR_PROPERTY_KEY,
-    ATTR_REFRESH_ALL_VALUES,
-    ATTR_VALUE,
-    ATTR_VALUE_FORMAT,
-    ATTR_VALUE_SIZE,
-    ATTR_WAIT_FOR_RESULT,
     DOMAIN,
-    SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS,
-    SERVICE_INVOKE_CC_API,
-    SERVICE_MULTICAST_SET_VALUE,
-    SERVICE_PING,
-    SERVICE_REFRESH_NOTIFICATIONS,
-    SERVICE_REFRESH_VALUE,
-    SERVICE_SET_CONFIG_PARAMETER,
-    SERVICE_SET_VALUE,
+    ZWaveJSService,
+    ZWaveJSServiceArgument,
 )
 from homeassistant.components.zwave_js.helpers import get_device_id
-from homeassistant.const import ATTR_AREA_ID, ATTR_DEVICE_ID, ATTR_ENTITY_ID
+from homeassistant.const import (
+    ATTR_AREA_ID,
+    ATTR_DEVICE_ID,
+    ATTR_ENTITY_ID,
+    CommonServiceArgument,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
     entity_registry as er,
+    issue_registry as ir,
 )
 from homeassistant.setup import async_setup_component
 
@@ -77,12 +60,12 @@ async def test_set_config_parameter(
     # Test setting config parameter by property and property_key
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_CONFIG_PARAMETER,
+        ZWaveJSService.SET_CONFIG_PARAMETER,
         {
-            ATTR_ENTITY_ID: AIR_TEMPERATURE_SENSOR,
-            ATTR_CONFIG_PARAMETER: 102,
-            ATTR_CONFIG_PARAMETER_BITMASK: 1,
-            ATTR_CONFIG_VALUE: 1,
+            CommonServiceArgument.ENTITY_ID: AIR_TEMPERATURE_SENSOR,
+            ZWaveJSServiceArgument.PARAMETER: 102,
+            ZWaveJSServiceArgument.BITMASK: 1,
+            ZWaveJSServiceArgument.VALUE: 1,
         },
         blocking=True,
     )
@@ -104,12 +87,12 @@ async def test_set_config_parameter(
     # Test setting config parameter value in hex
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_CONFIG_PARAMETER,
+        ZWaveJSService.SET_CONFIG_PARAMETER,
         {
-            ATTR_ENTITY_ID: AIR_TEMPERATURE_SENSOR,
-            ATTR_CONFIG_PARAMETER: 102,
-            ATTR_CONFIG_PARAMETER_BITMASK: 1,
-            ATTR_CONFIG_VALUE: "0x1",
+            CommonServiceArgument.ENTITY_ID: AIR_TEMPERATURE_SENSOR,
+            ZWaveJSServiceArgument.PARAMETER: 102,
+            ZWaveJSServiceArgument.BITMASK: 1,
+            ZWaveJSServiceArgument.VALUE: "0x1",
         },
         blocking=True,
     )
@@ -131,11 +114,11 @@ async def test_set_config_parameter(
     # Test setting parameter by property name
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_CONFIG_PARAMETER,
+        ZWaveJSService.SET_CONFIG_PARAMETER,
         {
-            ATTR_ENTITY_ID: AIR_TEMPERATURE_SENSOR,
-            ATTR_CONFIG_PARAMETER: "Group 2: Send battery reports",
-            ATTR_CONFIG_VALUE: 1,
+            CommonServiceArgument.ENTITY_ID: AIR_TEMPERATURE_SENSOR,
+            ZWaveJSServiceArgument.PARAMETER: "Group 2: Send battery reports",
+            ZWaveJSServiceArgument.VALUE: 1,
         },
         blocking=True,
     )
@@ -157,11 +140,11 @@ async def test_set_config_parameter(
     # Test setting parameter by property name and state label
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_CONFIG_PARAMETER,
+        ZWaveJSService.SET_CONFIG_PARAMETER,
         {
-            ATTR_DEVICE_ID: entity_entry.device_id,
-            ATTR_CONFIG_PARAMETER: "Temperature Threshold (Unit)",
-            ATTR_CONFIG_VALUE: "Fahrenheit",
+            CommonServiceArgument.DEVICE_ID: entity_entry.device_id,
+            ZWaveJSServiceArgument.PARAMETER: "Temperature Threshold (Unit)",
+            ZWaveJSServiceArgument.VALUE: "Fahrenheit",
         },
         blocking=True,
     )
@@ -185,11 +168,11 @@ async def test_set_config_parameter(
     entity_registry.async_update_entity(entity_entry.entity_id, area_id=area.id)
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_CONFIG_PARAMETER,
+        ZWaveJSService.SET_CONFIG_PARAMETER,
         {
             ATTR_AREA_ID: area.id,
-            ATTR_CONFIG_PARAMETER: "Temperature Threshold (Unit)",
-            ATTR_CONFIG_VALUE: "Fahrenheit",
+            ZWaveJSServiceArgument.PARAMETER: "Temperature Threshold (Unit)",
+            ZWaveJSServiceArgument.VALUE: "Fahrenheit",
         },
         blocking=True,
     )
@@ -211,12 +194,12 @@ async def test_set_config_parameter(
     # Test setting parameter by property and bitmask
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_CONFIG_PARAMETER,
+        ZWaveJSService.SET_CONFIG_PARAMETER,
         {
-            ATTR_ENTITY_ID: AIR_TEMPERATURE_SENSOR,
-            ATTR_CONFIG_PARAMETER: 102,
-            ATTR_CONFIG_PARAMETER_BITMASK: "0x01",
-            ATTR_CONFIG_VALUE: 1,
+            CommonServiceArgument.ENTITY_ID: AIR_TEMPERATURE_SENSOR,
+            ZWaveJSServiceArgument.PARAMETER: 102,
+            ZWaveJSServiceArgument.BITMASK: "0x01",
+            ZWaveJSServiceArgument.VALUE: 1,
         },
         blocking=True,
     )
@@ -238,13 +221,13 @@ async def test_set_config_parameter(
     # Test setting parameter by value_size
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_CONFIG_PARAMETER,
+        ZWaveJSService.SET_CONFIG_PARAMETER,
         {
-            ATTR_ENTITY_ID: AIR_TEMPERATURE_SENSOR,
-            ATTR_CONFIG_PARAMETER: 2,
-            ATTR_VALUE_SIZE: 2,
-            ATTR_VALUE_FORMAT: 1,
-            ATTR_CONFIG_VALUE: 1,
+            CommonServiceArgument.ENTITY_ID: AIR_TEMPERATURE_SENSOR,
+            ZWaveJSServiceArgument.PARAMETER: 2,
+            ZWaveJSServiceArgument.VALUE_SIZE: 2,
+            ZWaveJSServiceArgument.VALUE_FORMAT: 1,
+            ZWaveJSServiceArgument.VALUE: 1,
         },
         blocking=True,
     )
@@ -264,14 +247,17 @@ async def test_set_config_parameter(
     # Test setting parameter when one node has endpoint and other doesn't
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_CONFIG_PARAMETER,
+        ZWaveJSService.SET_CONFIG_PARAMETER,
         {
-            ATTR_ENTITY_ID: [AIR_TEMPERATURE_SENSOR, "siren.indoor_siren_6_tone_id"],
-            ATTR_ENDPOINT: 1,
-            ATTR_CONFIG_PARAMETER: 32,
-            ATTR_VALUE_SIZE: 2,
-            ATTR_VALUE_FORMAT: 1,
-            ATTR_CONFIG_VALUE: 1,
+            CommonServiceArgument.ENTITY_ID: [
+                AIR_TEMPERATURE_SENSOR,
+                "siren.indoor_siren_6_tone_id",
+            ],
+            ZWaveJSServiceArgument.ENDPOINT: 1,
+            ZWaveJSServiceArgument.PARAMETER: 32,
+            ZWaveJSServiceArgument.VALUE_SIZE: 2,
+            ZWaveJSServiceArgument.VALUE_FORMAT: 1,
+            ZWaveJSServiceArgument.VALUE: 1,
         },
         blocking=True,
     )
@@ -305,12 +291,12 @@ async def test_set_config_parameter(
     )
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_CONFIG_PARAMETER,
+        ZWaveJSService.SET_CONFIG_PARAMETER,
         {
-            ATTR_ENTITY_ID: "group.test",
-            ATTR_CONFIG_PARAMETER: 102,
-            ATTR_CONFIG_PARAMETER_BITMASK: "0x01",
-            ATTR_CONFIG_VALUE: 1,
+            CommonServiceArgument.ENTITY_ID: "group.test",
+            ZWaveJSServiceArgument.PARAMETER: 102,
+            ZWaveJSServiceArgument.BITMASK: "0x01",
+            ZWaveJSServiceArgument.VALUE: 1,
         },
         blocking=True,
     )
@@ -333,12 +319,12 @@ async def test_set_config_parameter(
     with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_CONFIG_PARAMETER,
+            ZWaveJSService.SET_CONFIG_PARAMETER,
             {
-                ATTR_DEVICE_ID: entity_entry.device_id,
-                ATTR_CONFIG_PARAMETER: "Temperature Threshold (Unit)",
-                ATTR_CONFIG_PARAMETER_BITMASK: 1,
-                ATTR_CONFIG_VALUE: "Fahrenheit",
+                CommonServiceArgument.DEVICE_ID: entity_entry.device_id,
+                ZWaveJSServiceArgument.PARAMETER: "Temperature Threshold (Unit)",
+                ZWaveJSServiceArgument.BITMASK: 1,
+                ZWaveJSServiceArgument.VALUE: "Fahrenheit",
             },
             blocking=True,
         )
@@ -366,14 +352,14 @@ async def test_set_config_parameter(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_CONFIG_PARAMETER,
+            ZWaveJSService.SET_CONFIG_PARAMETER,
             {
-                ATTR_ENTITY_ID: AIR_TEMPERATURE_SENSOR,
-                ATTR_ENDPOINT: 5,
-                ATTR_CONFIG_PARAMETER: 2,
-                ATTR_VALUE_SIZE: 2,
-                ATTR_VALUE_FORMAT: 1,
-                ATTR_CONFIG_VALUE: 1,
+                CommonServiceArgument.ENTITY_ID: AIR_TEMPERATURE_SENSOR,
+                ZWaveJSServiceArgument.ENDPOINT: 5,
+                ZWaveJSServiceArgument.PARAMETER: 2,
+                ZWaveJSServiceArgument.VALUE_SIZE: 2,
+                ZWaveJSServiceArgument.VALUE_FORMAT: 1,
+                ZWaveJSServiceArgument.VALUE: 1,
             },
             blocking=True,
         )
@@ -382,14 +368,14 @@ async def test_set_config_parameter(
     with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_CONFIG_PARAMETER,
+            ZWaveJSService.SET_CONFIG_PARAMETER,
             {
-                ATTR_ENTITY_ID: AIR_TEMPERATURE_SENSOR,
-                ATTR_CONFIG_PARAMETER: 102,
-                ATTR_CONFIG_PARAMETER_BITMASK: 1,
-                ATTR_CONFIG_VALUE: "Fahrenheit",
-                ATTR_VALUE_FORMAT: 1,
-                ATTR_VALUE_SIZE: 2,
+                CommonServiceArgument.ENTITY_ID: AIR_TEMPERATURE_SENSOR,
+                ZWaveJSServiceArgument.PARAMETER: 102,
+                ZWaveJSServiceArgument.BITMASK: 1,
+                ZWaveJSServiceArgument.VALUE: "Fahrenheit",
+                ZWaveJSServiceArgument.VALUE_FORMAT: 1,
+                ZWaveJSServiceArgument.VALUE_SIZE: 2,
             },
             blocking=True,
         )
@@ -398,14 +384,14 @@ async def test_set_config_parameter(
     with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_CONFIG_PARAMETER,
+            ZWaveJSService.SET_CONFIG_PARAMETER,
             {
-                ATTR_ENTITY_ID: AIR_TEMPERATURE_SENSOR,
-                ATTR_CONFIG_PARAMETER: 102,
-                ATTR_CONFIG_PARAMETER_BITMASK: 1,
-                ATTR_CONFIG_VALUE: "Fahrenheit",
-                ATTR_VALUE_FORMAT: 1,
-                ATTR_VALUE_SIZE: 3,
+                CommonServiceArgument.ENTITY_ID: AIR_TEMPERATURE_SENSOR,
+                ZWaveJSServiceArgument.PARAMETER: 102,
+                ZWaveJSServiceArgument.BITMASK: 1,
+                ZWaveJSServiceArgument.VALUE: "Fahrenheit",
+                ZWaveJSServiceArgument.VALUE_FORMAT: 1,
+                ZWaveJSServiceArgument.VALUE_SIZE: 3,
             },
             blocking=True,
         )
@@ -414,21 +400,21 @@ async def test_set_config_parameter(
     # non Z-Wave JS device, invalid device_id, and invalid node_id gets filtered out.
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_CONFIG_PARAMETER,
+        ZWaveJSService.SET_CONFIG_PARAMETER,
         {
-            ATTR_ENTITY_ID: [
+            CommonServiceArgument.ENTITY_ID: [
                 AIR_TEMPERATURE_SENSOR,
                 non_zwave_js_entity.entity_id,
                 "sensor.fake",
             ],
-            ATTR_DEVICE_ID: [
+            CommonServiceArgument.DEVICE_ID: [
                 zwave_js_device_with_invalid_node_id.id,
                 non_zwave_js_device.id,
                 "fake_device_id",
             ],
-            ATTR_CONFIG_PARAMETER: 102,
-            ATTR_CONFIG_PARAMETER_BITMASK: "0x01",
-            ATTR_CONFIG_VALUE: 1,
+            ZWaveJSServiceArgument.PARAMETER: 102,
+            ZWaveJSServiceArgument.BITMASK: "0x01",
+            ZWaveJSServiceArgument.VALUE: 1,
         },
         blocking=True,
     )
@@ -452,12 +438,12 @@ async def test_set_config_parameter(
     multisensor_6.handle_wake_up(None)
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_CONFIG_PARAMETER,
+        ZWaveJSService.SET_CONFIG_PARAMETER,
         {
-            ATTR_ENTITY_ID: AIR_TEMPERATURE_SENSOR,
-            ATTR_CONFIG_PARAMETER: 102,
-            ATTR_CONFIG_PARAMETER_BITMASK: 1,
-            ATTR_CONFIG_VALUE: 1,
+            CommonServiceArgument.ENTITY_ID: AIR_TEMPERATURE_SENSOR,
+            ZWaveJSServiceArgument.PARAMETER: 102,
+            ZWaveJSServiceArgument.BITMASK: 1,
+            ZWaveJSServiceArgument.VALUE: 1,
         },
         blocking=True,
     )
@@ -477,18 +463,20 @@ async def test_set_config_parameter(
     client.async_send_command.reset_mock()
 
     # Test setting config parameter with no valid nodes raises Exception
-    with pytest.raises(probatio.MultipleInvalid):
+    with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_CONFIG_PARAMETER,
+            ZWaveJSService.SET_CONFIG_PARAMETER,
             {
-                ATTR_ENTITY_ID: "sensor.fake",
-                ATTR_CONFIG_PARAMETER: 102,
-                ATTR_CONFIG_PARAMETER_BITMASK: 1,
-                ATTR_CONFIG_VALUE: 1,
+                CommonServiceArgument.ENTITY_ID: "sensor.fake",
+                ZWaveJSServiceArgument.PARAMETER: 102,
+                ZWaveJSServiceArgument.BITMASK: 1,
+                ZWaveJSServiceArgument.VALUE: 1,
             },
             blocking=True,
         )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "no_nodes_found"
 
     client.async_send_command_no_wait.reset_mock()
     client.async_send_command.reset_mock()
@@ -504,14 +492,14 @@ async def test_set_config_parameter(
     ) as mock_set_raw_config_parameter_value:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_CONFIG_PARAMETER,
+            ZWaveJSService.SET_CONFIG_PARAMETER,
             {
-                ATTR_ENTITY_ID: ["siren.indoor_siren_6_tone_id"],
-                ATTR_ENDPOINT: 0,
-                ATTR_CONFIG_PARAMETER: 32,
-                ATTR_VALUE_SIZE: 2,
-                ATTR_VALUE_FORMAT: 1,
-                ATTR_CONFIG_VALUE: 1,
+                CommonServiceArgument.ENTITY_ID: ["siren.indoor_siren_6_tone_id"],
+                ZWaveJSServiceArgument.ENDPOINT: 0,
+                ZWaveJSServiceArgument.PARAMETER: 32,
+                ZWaveJSServiceArgument.VALUE_SIZE: 2,
+                ZWaveJSServiceArgument.VALUE_FORMAT: 1,
+                ZWaveJSServiceArgument.VALUE: 1,
             },
             blocking=True,
         )
@@ -535,14 +523,14 @@ async def test_set_config_parameter(
     ) as mock_set_raw_config_parameter_value:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_CONFIG_PARAMETER,
+            ZWaveJSService.SET_CONFIG_PARAMETER,
             {
-                ATTR_ENTITY_ID: ["siren.indoor_siren_6_tone_id"],
-                ATTR_ENDPOINT: 0,
-                ATTR_CONFIG_PARAMETER: 32,
-                ATTR_VALUE_SIZE: 2,
-                ATTR_VALUE_FORMAT: 1,
-                ATTR_CONFIG_VALUE: 1,
+                CommonServiceArgument.ENTITY_ID: ["siren.indoor_siren_6_tone_id"],
+                ZWaveJSServiceArgument.ENDPOINT: 0,
+                ZWaveJSServiceArgument.PARAMETER: 32,
+                ZWaveJSServiceArgument.VALUE_SIZE: 2,
+                ZWaveJSServiceArgument.VALUE_FORMAT: 1,
+                ZWaveJSServiceArgument.VALUE: 1,
             },
             blocking=True,
         )
@@ -572,14 +560,14 @@ async def test_set_config_parameter_gather(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_CONFIG_PARAMETER,
+            ZWaveJSService.SET_CONFIG_PARAMETER,
             {
-                ATTR_ENTITY_ID: [
+                CommonServiceArgument.ENTITY_ID: [
                     AIR_TEMPERATURE_SENSOR,
                     CLIMATE_RADIO_THERMOSTAT_ENTITY,
                 ],
-                ATTR_CONFIG_PARAMETER: 1,
-                ATTR_CONFIG_VALUE: 1,
+                ZWaveJSServiceArgument.PARAMETER: 1,
+                ZWaveJSServiceArgument.VALUE: 1,
             },
             blocking=True,
         )
@@ -616,11 +604,11 @@ async def test_bulk_set_config_parameters(
     # Test setting config parameter by property and property_key
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS,
+        ZWaveJSService.BULK_SET_PARTIAL_CONFIG_PARAMETERS,
         {
-            ATTR_DEVICE_ID: device.id,
-            ATTR_CONFIG_PARAMETER: 102,
-            ATTR_CONFIG_VALUE: 241,
+            CommonServiceArgument.DEVICE_ID: device.id,
+            ZWaveJSServiceArgument.PARAMETER: 102,
+            ZWaveJSServiceArgument.VALUE: 241,
         },
         blocking=True,
     )
@@ -643,11 +631,11 @@ async def test_bulk_set_config_parameters(
     device_registry.async_update_device(device.id, area_id=area.id)
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS,
+        ZWaveJSService.BULK_SET_PARTIAL_CONFIG_PARAMETERS,
         {
             ATTR_AREA_ID: area.id,
-            ATTR_CONFIG_PARAMETER: 102,
-            ATTR_CONFIG_VALUE: 241,
+            ZWaveJSServiceArgument.PARAMETER: 102,
+            ZWaveJSServiceArgument.VALUE: 241,
         },
         blocking=True,
     )
@@ -667,11 +655,11 @@ async def test_bulk_set_config_parameters(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS,
+        ZWaveJSService.BULK_SET_PARTIAL_CONFIG_PARAMETERS,
         {
-            ATTR_ENTITY_ID: AIR_TEMPERATURE_SENSOR,
-            ATTR_CONFIG_PARAMETER: 102,
-            ATTR_CONFIG_VALUE: {
+            CommonServiceArgument.ENTITY_ID: AIR_TEMPERATURE_SENSOR,
+            ZWaveJSServiceArgument.PARAMETER: 102,
+            ZWaveJSServiceArgument.VALUE: {
                 1: 1,
                 16: 1,
                 32: 1,
@@ -698,11 +686,11 @@ async def test_bulk_set_config_parameters(
     # Test using hex values for config parameter values
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS,
+        ZWaveJSService.BULK_SET_PARTIAL_CONFIG_PARAMETERS,
         {
-            ATTR_ENTITY_ID: AIR_TEMPERATURE_SENSOR,
-            ATTR_CONFIG_PARAMETER: 102,
-            ATTR_CONFIG_VALUE: {
+            CommonServiceArgument.ENTITY_ID: AIR_TEMPERATURE_SENSOR,
+            ZWaveJSServiceArgument.PARAMETER: 102,
+            ZWaveJSServiceArgument.VALUE: {
                 1: "0x1",
                 16: "0x1",
                 32: "0x1",
@@ -728,11 +716,11 @@ async def test_bulk_set_config_parameters(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS,
+        ZWaveJSService.BULK_SET_PARTIAL_CONFIG_PARAMETERS,
         {
-            ATTR_ENTITY_ID: AIR_TEMPERATURE_SENSOR,
-            ATTR_CONFIG_PARAMETER: 102,
-            ATTR_CONFIG_VALUE: {
+            CommonServiceArgument.ENTITY_ID: AIR_TEMPERATURE_SENSOR,
+            ZWaveJSServiceArgument.PARAMETER: 102,
+            ZWaveJSServiceArgument.VALUE: {
                 "0x1": 1,
                 "0x10": 1,
                 "0x20": 1,
@@ -761,11 +749,11 @@ async def test_bulk_set_config_parameters(
     multisensor_6.handle_wake_up(None)
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS,
+        ZWaveJSService.BULK_SET_PARTIAL_CONFIG_PARAMETERS,
         {
-            ATTR_ENTITY_ID: AIR_TEMPERATURE_SENSOR,
-            ATTR_CONFIG_PARAMETER: 102,
-            ATTR_CONFIG_VALUE: {
+            CommonServiceArgument.ENTITY_ID: AIR_TEMPERATURE_SENSOR,
+            ZWaveJSServiceArgument.PARAMETER: 102,
+            ZWaveJSServiceArgument.VALUE: {
                 1: 1,
                 16: 1,
                 32: 1,
@@ -804,11 +792,11 @@ async def test_bulk_set_config_parameters(
     )
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS,
+        ZWaveJSService.BULK_SET_PARTIAL_CONFIG_PARAMETERS,
         {
-            ATTR_ENTITY_ID: "group.test",
-            ATTR_CONFIG_PARAMETER: 102,
-            ATTR_CONFIG_VALUE: {
+            CommonServiceArgument.ENTITY_ID: "group.test",
+            ZWaveJSServiceArgument.PARAMETER: 102,
+            ZWaveJSServiceArgument.VALUE: {
                 1: 1,
                 16: 1,
                 32: 1,
@@ -832,6 +820,22 @@ async def test_bulk_set_config_parameters(
 
     client.async_send_command.reset_mock()
 
+    # Test that targets without Z-Wave devices raise an error
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            ZWaveJSService.BULK_SET_PARTIAL_CONFIG_PARAMETERS,
+            {
+                CommonServiceArgument.ENTITY_ID: "sensor.fake",
+                ZWaveJSServiceArgument.PARAMETER: 102,
+                ZWaveJSServiceArgument.VALUE: 241,
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "no_nodes_found"
+    assert len(client.async_send_command.call_args_list) == 0
+
 
 async def test_bulk_set_config_parameters_gather(
     hass: HomeAssistant,
@@ -846,14 +850,14 @@ async def test_bulk_set_config_parameters_gather(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS,
+            ZWaveJSService.BULK_SET_PARTIAL_CONFIG_PARAMETERS,
             {
-                ATTR_ENTITY_ID: [
+                CommonServiceArgument.ENTITY_ID: [
                     CLIMATE_RADIO_THERMOSTAT_ENTITY,
                     AIR_TEMPERATURE_SENSOR,
                 ],
-                ATTR_CONFIG_PARAMETER: 102,
-                ATTR_CONFIG_VALUE: 241,
+                ZWaveJSServiceArgument.PARAMETER: 102,
+                ZWaveJSServiceArgument.VALUE: 241,
             },
             blocking=True,
         )
@@ -884,8 +888,8 @@ async def test_refresh_value(
     client.async_send_command.return_value = {"result": 2}
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_REFRESH_VALUE,
-        {ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY},
+        ZWaveJSService.REFRESH_VALUE,
+        {CommonServiceArgument.ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -905,10 +909,10 @@ async def test_refresh_value(
     client.async_send_command.return_value = {"result": 2}
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_REFRESH_VALUE,
+        ZWaveJSService.REFRESH_VALUE,
         {
-            ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
-            ATTR_REFRESH_ALL_VALUES: True,
+            CommonServiceArgument.ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
+            ZWaveJSServiceArgument.REFRESH_ALL_VALUES: True,
         },
         blocking=True,
     )
@@ -921,10 +925,10 @@ async def test_refresh_value(
     client.async_send_command.return_value = {"result": 2}
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_REFRESH_VALUE,
+        ZWaveJSService.REFRESH_VALUE,
         {
-            ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
-            ATTR_REFRESH_ALL_VALUES: "true",
+            CommonServiceArgument.ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
+            ZWaveJSServiceArgument.REFRESH_ALL_VALUES: "true",
         },
         blocking=True,
     )
@@ -949,10 +953,10 @@ async def test_refresh_value(
     client.async_send_command.return_value = {"result": 2}
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_REFRESH_VALUE,
+        ZWaveJSService.REFRESH_VALUE,
         {
-            ATTR_ENTITY_ID: "group.test",
-            ATTR_REFRESH_ALL_VALUES: "true",
+            CommonServiceArgument.ENTITY_ID: "group.test",
+            ZWaveJSServiceArgument.REFRESH_ALL_VALUES: "true",
         },
         blocking=True,
     )
@@ -961,14 +965,16 @@ async def test_refresh_value(
 
     client.async_send_command.reset_mock()
 
-    # Test polling against an invalid entity raises MultipleInvalid
-    with pytest.raises(probatio.MultipleInvalid):
+    # Test polling against an invalid entity raises ServiceValidationError
+    with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_REFRESH_VALUE,
-            {ATTR_ENTITY_ID: "sensor.fake_entity_id"},
+            ZWaveJSService.REFRESH_VALUE,
+            {CommonServiceArgument.ENTITY_ID: "sensor.fake_entity_id"},
             blocking=True,
         )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "no_entities_found"
 
 
 async def test_set_value(
@@ -987,12 +993,12 @@ async def test_set_value(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_VALUE,
+        ZWaveJSService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: CLIMATE_DANFOSS_LC13_ENTITY,
-            ATTR_COMMAND_CLASS: 117,
-            ATTR_PROPERTY: "local",
-            ATTR_VALUE: 2,
+            CommonServiceArgument.ENTITY_ID: CLIMATE_DANFOSS_LC13_ENTITY,
+            ZWaveJSServiceArgument.COMMAND_CLASS: 117,
+            ZWaveJSServiceArgument.PROPERTY: "local",
+            ZWaveJSServiceArgument.VALUE: 2,
         },
         blocking=True,
     )
@@ -1013,13 +1019,13 @@ async def test_set_value(
     # Test bitmask as value and non bool as bool
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_VALUE,
+        ZWaveJSService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: CLIMATE_DANFOSS_LC13_ENTITY,
-            ATTR_COMMAND_CLASS: 117,
-            ATTR_PROPERTY: "local",
-            ATTR_VALUE: "0x2",
-            ATTR_WAIT_FOR_RESULT: 1,
+            CommonServiceArgument.ENTITY_ID: CLIMATE_DANFOSS_LC13_ENTITY,
+            ZWaveJSServiceArgument.COMMAND_CLASS: 117,
+            ZWaveJSServiceArgument.PROPERTY: "local",
+            ZWaveJSServiceArgument.VALUE: "0x2",
+            ZWaveJSServiceArgument.WAIT_FOR_RESULT: 1,
         },
         blocking=True,
     )
@@ -1042,13 +1048,13 @@ async def test_set_value(
     device_registry.async_update_device(device.id, area_id=area.id)
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_VALUE,
+        ZWaveJSService.SET_VALUE,
         {
             ATTR_AREA_ID: area.id,
-            ATTR_COMMAND_CLASS: 117,
-            ATTR_PROPERTY: "local",
-            ATTR_VALUE: "0x2",
-            ATTR_WAIT_FOR_RESULT: 1,
+            ZWaveJSServiceArgument.COMMAND_CLASS: 117,
+            ZWaveJSServiceArgument.PROPERTY: "local",
+            ZWaveJSServiceArgument.VALUE: "0x2",
+            ZWaveJSServiceArgument.WAIT_FOR_RESULT: 1,
         },
         blocking=True,
     )
@@ -1081,13 +1087,13 @@ async def test_set_value(
     )
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_VALUE,
+        ZWaveJSService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: "group.test",
-            ATTR_COMMAND_CLASS: 117,
-            ATTR_PROPERTY: "local",
-            ATTR_VALUE: "0x2",
-            ATTR_WAIT_FOR_RESULT: 1,
+            CommonServiceArgument.ENTITY_ID: "group.test",
+            ZWaveJSServiceArgument.COMMAND_CLASS: 117,
+            ZWaveJSServiceArgument.PROPERTY: "local",
+            ZWaveJSServiceArgument.VALUE: "0x2",
+            ZWaveJSServiceArgument.WAIT_FOR_RESULT: 1,
         },
         blocking=True,
     )
@@ -1113,13 +1119,13 @@ async def test_set_value(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_VALUE,
+            ZWaveJSService.SET_VALUE,
             {
-                ATTR_DEVICE_ID: device.id,
-                ATTR_COMMAND_CLASS: 117,
-                ATTR_PROPERTY: "local",
-                ATTR_VALUE: 2,
-                ATTR_WAIT_FOR_RESULT: True,
+                CommonServiceArgument.DEVICE_ID: device.id,
+                ZWaveJSServiceArgument.COMMAND_CLASS: 117,
+                ZWaveJSServiceArgument.PROPERTY: "local",
+                ZWaveJSServiceArgument.VALUE: 2,
+                ZWaveJSServiceArgument.WAIT_FOR_RESULT: True,
             },
             blocking=True,
         )
@@ -1142,15 +1148,31 @@ async def test_set_value(
     with pytest.raises(probatio.MultipleInvalid):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_VALUE,
+            ZWaveJSService.SET_VALUE,
             {
-                ATTR_COMMAND_CLASS: 117,
-                ATTR_PROPERTY: "local",
-                ATTR_VALUE: 2,
-                ATTR_WAIT_FOR_RESULT: True,
+                ZWaveJSServiceArgument.COMMAND_CLASS: 117,
+                ZWaveJSServiceArgument.PROPERTY: "local",
+                ZWaveJSServiceArgument.VALUE: 2,
+                ZWaveJSServiceArgument.WAIT_FOR_RESULT: True,
             },
             blocking=True,
         )
+
+    # Test setting a value with no valid nodes raises Exception
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            ZWaveJSService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: "sensor.fake",
+                ZWaveJSServiceArgument.COMMAND_CLASS: 117,
+                ZWaveJSServiceArgument.PROPERTY: "local",
+                ZWaveJSServiceArgument.VALUE: 2,
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "no_nodes_found"
 
 
 async def test_set_value_string(
@@ -1161,13 +1183,13 @@ async def test_set_value_string(
     # Test that number gets converted to a string when needed
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_VALUE,
+        ZWaveJSService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
-            ATTR_COMMAND_CLASS: 99,
-            ATTR_PROPERTY: "userCode",
-            ATTR_PROPERTY_KEY: 1,
-            ATTR_VALUE: 12345,
+            CommonServiceArgument.ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
+            ZWaveJSServiceArgument.COMMAND_CLASS: 99,
+            ZWaveJSServiceArgument.PROPERTY: "userCode",
+            ZWaveJSServiceArgument.PROPERTY_KEY: 1,
+            ZWaveJSServiceArgument.VALUE: 12345,
         },
         blocking=True,
     )
@@ -1191,13 +1213,13 @@ async def test_set_value_options(
     """Test set_value service with options."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_VALUE,
+        ZWaveJSService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: AEON_SMART_SWITCH_LIGHT_ENTITY,
-            ATTR_COMMAND_CLASS: 37,
-            ATTR_PROPERTY: "targetValue",
-            ATTR_VALUE: 2,
-            ATTR_OPTIONS: {"transitionDuration": 1},
+            CommonServiceArgument.ENTITY_ID: AEON_SMART_SWITCH_LIGHT_ENTITY,
+            ZWaveJSServiceArgument.COMMAND_CLASS: 37,
+            ZWaveJSServiceArgument.PROPERTY: "targetValue",
+            ZWaveJSServiceArgument.VALUE: 2,
+            ZWaveJSServiceArgument.OPTIONS: {"transitionDuration": 1},
         },
         blocking=True,
     )
@@ -1230,16 +1252,16 @@ async def test_set_value_gather(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_VALUE,
+            ZWaveJSService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: [
+                CommonServiceArgument.ENTITY_ID: [
                     CLIMATE_RADIO_THERMOSTAT_ENTITY,
                     AIR_TEMPERATURE_SENSOR,
                 ],
-                ATTR_COMMAND_CLASS: 112,
-                ATTR_PROPERTY: 102,
-                ATTR_PROPERTY_KEY: 1,
-                ATTR_VALUE: 1,
+                ZWaveJSServiceArgument.COMMAND_CLASS: 112,
+                ZWaveJSServiceArgument.PROPERTY: 102,
+                ZWaveJSServiceArgument.PROPERTY_KEY: 1,
+                ZWaveJSServiceArgument.VALUE: 1,
             },
             blocking=True,
         )
@@ -1273,16 +1295,16 @@ async def test_multicast_set_value(
     # Test successful multicast call
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_MULTICAST_SET_VALUE,
+        ZWaveJSService.MULTICAST_SET_VALUE,
         {
-            ATTR_ENTITY_ID: [
+            CommonServiceArgument.ENTITY_ID: [
                 CLIMATE_DANFOSS_LC13_ENTITY,
                 CLIMATE_EUROTRONICS_SPIRIT_Z_ENTITY,
             ],
-            ATTR_COMMAND_CLASS: 67,
-            ATTR_PROPERTY: "setpoint",
-            ATTR_PROPERTY_KEY: 1,
-            ATTR_VALUE: 2,
+            ZWaveJSServiceArgument.COMMAND_CLASS: 67,
+            ZWaveJSServiceArgument.PROPERTY: "setpoint",
+            ZWaveJSServiceArgument.PROPERTY_KEY: 1,
+            ZWaveJSServiceArgument.VALUE: 2,
         },
         blocking=True,
     )
@@ -1306,16 +1328,16 @@ async def test_multicast_set_value(
     # Test successful multicast call with hex value
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_MULTICAST_SET_VALUE,
+        ZWaveJSService.MULTICAST_SET_VALUE,
         {
-            ATTR_ENTITY_ID: [
+            CommonServiceArgument.ENTITY_ID: [
                 CLIMATE_DANFOSS_LC13_ENTITY,
                 CLIMATE_EUROTRONICS_SPIRIT_Z_ENTITY,
             ],
-            ATTR_COMMAND_CLASS: 67,
-            ATTR_PROPERTY: "setpoint",
-            ATTR_PROPERTY_KEY: 1,
-            ATTR_VALUE: "0x2",
+            ZWaveJSServiceArgument.COMMAND_CLASS: 67,
+            ZWaveJSServiceArgument.PROPERTY: "setpoint",
+            ZWaveJSServiceArgument.PROPERTY_KEY: 1,
+            ZWaveJSServiceArgument.VALUE: "0x2",
         },
         blocking=True,
     )
@@ -1350,13 +1372,13 @@ async def test_multicast_set_value(
     device_registry.async_update_device(device_danfoss.id, area_id=area.id)
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_MULTICAST_SET_VALUE,
+        ZWaveJSService.MULTICAST_SET_VALUE,
         {
             ATTR_AREA_ID: area.id,
-            ATTR_COMMAND_CLASS: 67,
-            ATTR_PROPERTY: "setpoint",
-            ATTR_PROPERTY_KEY: 1,
-            ATTR_VALUE: "0x2",
+            ZWaveJSServiceArgument.COMMAND_CLASS: 67,
+            ZWaveJSServiceArgument.PROPERTY: "setpoint",
+            ZWaveJSServiceArgument.PROPERTY_KEY: 1,
+            ZWaveJSServiceArgument.VALUE: "0x2",
         },
         blocking=True,
     )
@@ -1392,13 +1414,13 @@ async def test_multicast_set_value(
     )
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_MULTICAST_SET_VALUE,
+        ZWaveJSService.MULTICAST_SET_VALUE,
         {
-            ATTR_ENTITY_ID: "group.test",
-            ATTR_COMMAND_CLASS: 67,
-            ATTR_PROPERTY: "setpoint",
-            ATTR_PROPERTY_KEY: 1,
-            ATTR_VALUE: "0x2",
+            CommonServiceArgument.ENTITY_ID: "group.test",
+            ZWaveJSServiceArgument.COMMAND_CLASS: 67,
+            ZWaveJSServiceArgument.PROPERTY: "setpoint",
+            ZWaveJSServiceArgument.PROPERTY_KEY: 1,
+            ZWaveJSServiceArgument.VALUE: "0x2",
         },
         blocking=True,
     )
@@ -1422,13 +1444,13 @@ async def test_multicast_set_value(
     # Test successful broadcast call
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_MULTICAST_SET_VALUE,
+        ZWaveJSService.MULTICAST_SET_VALUE,
         {
-            ATTR_BROADCAST: True,
-            ATTR_COMMAND_CLASS: 67,
-            ATTR_PROPERTY: "setpoint",
-            ATTR_PROPERTY_KEY: 1,
-            ATTR_VALUE: 2,
+            ZWaveJSServiceArgument.BROADCAST: True,
+            ZWaveJSServiceArgument.COMMAND_CLASS: 67,
+            ZWaveJSServiceArgument.PROPERTY: "setpoint",
+            ZWaveJSServiceArgument.PROPERTY_KEY: 1,
+            ZWaveJSServiceArgument.VALUE: 2,
         },
         blocking=True,
     )
@@ -1448,13 +1470,13 @@ async def test_multicast_set_value(
     # Test sending one node without broadcast uses the node.set_value command instead
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_MULTICAST_SET_VALUE,
+        ZWaveJSService.MULTICAST_SET_VALUE,
         {
-            ATTR_ENTITY_ID: CLIMATE_DANFOSS_LC13_ENTITY,
-            ATTR_COMMAND_CLASS: 67,
-            ATTR_PROPERTY: "setpoint",
-            ATTR_PROPERTY_KEY: 1,
-            ATTR_VALUE: 2,
+            CommonServiceArgument.ENTITY_ID: CLIMATE_DANFOSS_LC13_ENTITY,
+            ZWaveJSServiceArgument.COMMAND_CLASS: 67,
+            ZWaveJSServiceArgument.PROPERTY: "setpoint",
+            ZWaveJSServiceArgument.PROPERTY_KEY: 1,
+            ZWaveJSServiceArgument.VALUE: 2,
         },
         blocking=True,
     )
@@ -1469,15 +1491,32 @@ async def test_multicast_set_value(
     with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_MULTICAST_SET_VALUE,
+            ZWaveJSService.MULTICAST_SET_VALUE,
             {
-                ATTR_COMMAND_CLASS: 67,
-                ATTR_PROPERTY: "setpoint",
-                ATTR_PROPERTY_KEY: 1,
-                ATTR_VALUE: 2,
+                ZWaveJSServiceArgument.COMMAND_CLASS: 67,
+                ZWaveJSServiceArgument.PROPERTY: "setpoint",
+                ZWaveJSServiceArgument.PROPERTY_KEY: 1,
+                ZWaveJSServiceArgument.VALUE: 2,
             },
             blocking=True,
         )
+
+    # Test that targets without Z-Wave devices raise an error
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            ZWaveJSService.MULTICAST_SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: "sensor.fake",
+                ZWaveJSServiceArgument.COMMAND_CLASS: 67,
+                ZWaveJSServiceArgument.PROPERTY: "setpoint",
+                ZWaveJSServiceArgument.PROPERTY_KEY: 1,
+                ZWaveJSServiceArgument.VALUE: 2,
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "no_nodes_found"
 
     # Test that when a command is unsuccessful we raise an exception
     client.async_send_command.return_value = {
@@ -1487,16 +1526,16 @@ async def test_multicast_set_value(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_MULTICAST_SET_VALUE,
+            ZWaveJSService.MULTICAST_SET_VALUE,
             {
-                ATTR_ENTITY_ID: [
+                CommonServiceArgument.ENTITY_ID: [
                     CLIMATE_DANFOSS_LC13_ENTITY,
                     CLIMATE_EUROTRONICS_SPIRIT_Z_ENTITY,
                 ],
-                ATTR_COMMAND_CLASS: 67,
-                ATTR_PROPERTY: "setpoint",
-                ATTR_PROPERTY_KEY: 1,
-                ATTR_VALUE: 2,
+                ZWaveJSServiceArgument.COMMAND_CLASS: 67,
+                ZWaveJSServiceArgument.PROPERTY: "setpoint",
+                ZWaveJSServiceArgument.PROPERTY_KEY: 1,
+                ZWaveJSServiceArgument.VALUE: 2,
             },
             blocking=True,
         )
@@ -1508,16 +1547,16 @@ async def test_multicast_set_value(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_MULTICAST_SET_VALUE,
+            ZWaveJSService.MULTICAST_SET_VALUE,
             {
-                ATTR_ENTITY_ID: [
+                CommonServiceArgument.ENTITY_ID: [
                     CLIMATE_DANFOSS_LC13_ENTITY,
                     CLIMATE_EUROTRONICS_SPIRIT_Z_ENTITY,
                 ],
-                ATTR_COMMAND_CLASS: 67,
-                ATTR_PROPERTY: "setpoint",
-                ATTR_PROPERTY_KEY: 1,
-                ATTR_VALUE: 2,
+                ZWaveJSServiceArgument.COMMAND_CLASS: 67,
+                ZWaveJSServiceArgument.PROPERTY: "setpoint",
+                ZWaveJSServiceArgument.PROPERTY_KEY: 1,
+                ZWaveJSServiceArgument.VALUE: 2,
             },
             blocking=True,
         )
@@ -1531,7 +1570,7 @@ async def test_multicast_set_value(
     diff_network_node.client.driver.controller.home_id.return_value = "diff_home_id"
 
     with (
-        pytest.raises(probatio.MultipleInvalid),
+        pytest.raises(ServiceValidationError) as exc_info,
         patch(
             "homeassistant.components.zwave_js.helpers.async_get_node_from_device_id",
             side_effect=(climate_danfoss_lc_13, diff_network_node),
@@ -1539,37 +1578,70 @@ async def test_multicast_set_value(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_MULTICAST_SET_VALUE,
+            ZWaveJSService.MULTICAST_SET_VALUE,
             {
-                ATTR_ENTITY_ID: [
+                CommonServiceArgument.ENTITY_ID: [
                     CLIMATE_DANFOSS_LC13_ENTITY,
                 ],
-                ATTR_DEVICE_ID: "fake_device_id",
-                ATTR_COMMAND_CLASS: 67,
-                ATTR_PROPERTY: "setpoint",
-                ATTR_PROPERTY_KEY: 1,
-                ATTR_VALUE: 2,
+                CommonServiceArgument.DEVICE_ID: "fake_device_id",
+                ZWaveJSServiceArgument.COMMAND_CLASS: 67,
+                ZWaveJSServiceArgument.PROPERTY: "setpoint",
+                ZWaveJSServiceArgument.PROPERTY_KEY: 1,
+                ZWaveJSServiceArgument.VALUE: 2,
             },
             blocking=True,
         )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "multicast_different_networks"
+
+    # Test that a target node without a ready driver raises an error
+    no_driver_node = MagicMock()
+    no_driver_node.client.driver = None
+
+    with (
+        pytest.raises(HomeAssistantError) as exc_info,
+        patch(
+            "homeassistant.components.zwave_js.helpers.async_get_node_from_device_id",
+            side_effect=(climate_danfoss_lc_13, no_driver_node),
+        ),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            ZWaveJSService.MULTICAST_SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: [
+                    CLIMATE_DANFOSS_LC13_ENTITY,
+                ],
+                CommonServiceArgument.DEVICE_ID: "fake_device_id",
+                ZWaveJSServiceArgument.COMMAND_CLASS: 67,
+                ZWaveJSServiceArgument.PROPERTY: "setpoint",
+                ZWaveJSServiceArgument.PROPERTY_KEY: 1,
+                ZWaveJSServiceArgument.VALUE: 2,
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "driver_not_ready"
 
     # Test that when there are multiple zwave_js config entries, service will fail
     # without devices or entities
     new_entry = MockConfigEntry(domain=DOMAIN)
     new_entry.add_to_hass(hass)
-    with pytest.raises(probatio.Invalid):
+    with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_MULTICAST_SET_VALUE,
+            ZWaveJSService.MULTICAST_SET_VALUE,
             {
-                ATTR_BROADCAST: True,
-                ATTR_COMMAND_CLASS: 67,
-                ATTR_PROPERTY: "setpoint",
-                ATTR_PROPERTY_KEY: 1,
-                ATTR_VALUE: 2,
+                ZWaveJSServiceArgument.BROADCAST: True,
+                ZWaveJSServiceArgument.COMMAND_CLASS: 67,
+                ZWaveJSServiceArgument.PROPERTY: "setpoint",
+                ZWaveJSServiceArgument.PROPERTY_KEY: 1,
+                ZWaveJSServiceArgument.VALUE: 2,
             },
             blocking=True,
         )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "multicast_broadcast_requires_target"
 
 
 async def test_multicast_set_value_options(
@@ -1582,18 +1654,18 @@ async def test_multicast_set_value_options(
     """Test multicast_set_value service with options."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_MULTICAST_SET_VALUE,
+        ZWaveJSService.MULTICAST_SET_VALUE,
         {
-            ATTR_ENTITY_ID: [
+            CommonServiceArgument.ENTITY_ID: [
                 BULB_6_MULTI_COLOR_LIGHT_ENTITY,
                 "light.dining_room_repeater",
             ],
-            ATTR_COMMAND_CLASS: 51,
-            ATTR_PROPERTY: "targetColor",
-            ATTR_VALUE: (
+            ZWaveJSServiceArgument.COMMAND_CLASS: 51,
+            ZWaveJSServiceArgument.PROPERTY: "targetColor",
+            ZWaveJSServiceArgument.VALUE: (
                 '{ "warmWhite": 0, "coldWhite": 0, "red": 255, "green": 0, "blue": 0 }'
             ),
-            ATTR_OPTIONS: {"transitionDuration": 1},
+            ZWaveJSServiceArgument.OPTIONS: {"transitionDuration": 1},
         },
         blocking=True,
     )
@@ -1631,13 +1703,13 @@ async def test_multicast_set_value_string(
     # Test that number gets converted to a string when needed
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_MULTICAST_SET_VALUE,
+        ZWaveJSService.MULTICAST_SET_VALUE,
         {
-            ATTR_BROADCAST: True,
-            ATTR_COMMAND_CLASS: 99,
-            ATTR_PROPERTY: "userCode",
-            ATTR_PROPERTY_KEY: 1,
-            ATTR_VALUE: 12345,
+            ZWaveJSServiceArgument.BROADCAST: True,
+            ZWaveJSServiceArgument.COMMAND_CLASS: 99,
+            ZWaveJSServiceArgument.PROPERTY: "userCode",
+            ZWaveJSServiceArgument.PROPERTY_KEY: 1,
+            ZWaveJSServiceArgument.VALUE: 12345,
         },
         blocking=True,
     )
@@ -1661,6 +1733,7 @@ async def test_ping(
     climate_danfoss_lc_13,
     climate_radio_thermostat_ct100_plus_different_endpoints,
     integration,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test ping service."""
     device_radio_thermostat = device_registry.async_get_device_by_identifier(
@@ -1680,9 +1753,9 @@ async def test_ping(
     # Test successful ping call
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_PING,
+        ZWaveJSService.PING,
         {
-            ATTR_ENTITY_ID: [
+            CommonServiceArgument.ENTITY_ID: [
                 CLIMATE_DANFOSS_LC13_ENTITY,
                 CLIMATE_RADIO_THERMOSTAT_ENTITY,
             ],
@@ -1693,6 +1766,10 @@ async def test_ping(
     assert len(client.async_send_command.call_args_list) == 2
     args = client.async_send_command.call_args_list[0][0][0]
     assert args["command"] == "node.ping"
+    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_ping_action")
+    assert issue
+    assert issue.breaks_in_ha_version == "2027.6.0"
+    assert issue.translation_placeholders == {"action": "zwave_js.ping"}
     assert (
         args["nodeId"]
         == climate_radio_thermostat_ct100_plus_different_endpoints.node_id
@@ -1706,9 +1783,9 @@ async def test_ping(
     # Test successful ping call with devices
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_PING,
+        ZWaveJSService.PING,
         {
-            ATTR_DEVICE_ID: [
+            CommonServiceArgument.DEVICE_ID: [
                 device_radio_thermostat.id,
                 device_danfoss.id,
             ],
@@ -1735,7 +1812,7 @@ async def test_ping(
     device_registry.async_update_device(device_danfoss.id, area_id=area.id)
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_PING,
+        ZWaveJSService.PING,
         {ATTR_AREA_ID: area.id},
         blocking=True,
     )
@@ -1768,9 +1845,9 @@ async def test_ping(
     )
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_PING,
+        ZWaveJSService.PING,
         {
-            ATTR_ENTITY_ID: "group.test",
+            CommonServiceArgument.ENTITY_ID: "group.test",
         },
         blocking=True,
     )
@@ -1792,19 +1869,31 @@ async def test_ping(
     with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_PING,
+            ZWaveJSService.PING,
             {},
             blocking=True,
         )
+
+    # Test that targets without Z-Wave devices raise an error
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            ZWaveJSService.PING,
+            {CommonServiceArgument.ENTITY_ID: "sensor.fake"},
+            blocking=True,
+        )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "no_nodes_found"
+    assert len(client.async_send_command.call_args_list) == 0
 
     client.async_send_command.reset_mock()
     client.async_send_command.side_effect = FailedZWaveCommand("test", 1, "test")
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_PING,
+            ZWaveJSService.PING,
             {
-                ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
+                CommonServiceArgument.ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
             },
             blocking=True,
         )
@@ -1838,16 +1927,16 @@ async def test_invoke_cc_api(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_INVOKE_CC_API,
+        ZWaveJSService.INVOKE_CC_API,
         {
-            ATTR_DEVICE_ID: [
+            CommonServiceArgument.DEVICE_ID: [
                 device_radio_thermostat.id,
                 device_danfoss.id,
             ],
-            ATTR_COMMAND_CLASS: 67,
-            ATTR_ENDPOINT: 0,
-            ATTR_METHOD_NAME: "someMethod",
-            ATTR_PARAMETERS: [1, 2],
+            ZWaveJSServiceArgument.COMMAND_CLASS: 67,
+            ZWaveJSServiceArgument.ENDPOINT: 0,
+            ZWaveJSServiceArgument.METHOD_NAME: "someMethod",
+            ZWaveJSServiceArgument.PARAMETERS: [1, 2],
         },
         blocking=True,
     )
@@ -1885,21 +1974,21 @@ async def test_invoke_cc_api(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_INVOKE_CC_API,
+        ZWaveJSService.INVOKE_CC_API,
         {
             ATTR_AREA_ID: area.id,
-            ATTR_DEVICE_ID: [
+            CommonServiceArgument.DEVICE_ID: [
                 device_radio_thermostat.id,
                 "fake_device_id",
             ],
-            ATTR_ENTITY_ID: [
+            CommonServiceArgument.ENTITY_ID: [
                 "sensor.not_real",
                 "select.living_connect_z_thermostat_local_protection_state",
                 "sensor.living_connect_z_thermostat_node_status",
             ],
-            ATTR_COMMAND_CLASS: 67,
-            ATTR_METHOD_NAME: "someMethod",
-            ATTR_PARAMETERS: [1, 2],
+            ZWaveJSServiceArgument.COMMAND_CLASS: 67,
+            ZWaveJSServiceArgument.METHOD_NAME: "someMethod",
+            ZWaveJSServiceArgument.PARAMETERS: [1, 2],
         },
         blocking=True,
     )
@@ -1938,16 +2027,16 @@ async def test_invoke_cc_api(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_INVOKE_CC_API,
+            ZWaveJSService.INVOKE_CC_API,
             {
-                ATTR_DEVICE_ID: [
+                CommonServiceArgument.DEVICE_ID: [
                     device_danfoss.id,
                     device_radio_thermostat.id,
                 ],
-                ATTR_COMMAND_CLASS: 67,
-                ATTR_ENDPOINT: 0,
-                ATTR_METHOD_NAME: "someMethod",
-                ATTR_PARAMETERS: [1, 2],
+                ZWaveJSServiceArgument.COMMAND_CLASS: 67,
+                ZWaveJSServiceArgument.ENDPOINT: 0,
+                ZWaveJSServiceArgument.METHOD_NAME: "someMethod",
+                ZWaveJSServiceArgument.PARAMETERS: [1, 2],
             },
             blocking=True,
         )
@@ -1974,6 +2063,24 @@ async def test_invoke_cc_api(
 
     client.async_send_command.reset_mock()
     client.async_send_command_no_wait.reset_mock()
+
+    # Test that targets without Z-Wave devices raise an error
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            ZWaveJSService.INVOKE_CC_API,
+            {
+                CommonServiceArgument.ENTITY_ID: "sensor.fake",
+                ZWaveJSServiceArgument.COMMAND_CLASS: 67,
+                ZWaveJSServiceArgument.METHOD_NAME: "someMethod",
+                ZWaveJSServiceArgument.PARAMETERS: [1, 2],
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "no_nodes_found"
+    assert len(client.async_send_command.call_args_list) == 0
+    assert len(client.async_send_command_no_wait.call_args_list) == 0
 
 
 async def test_refresh_notifications(
@@ -2004,12 +2111,15 @@ async def test_refresh_notifications(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_REFRESH_NOTIFICATIONS,
+        ZWaveJSService.REFRESH_NOTIFICATIONS,
         {
             ATTR_AREA_ID: area.id,
-            ATTR_DEVICE_ID: [zen_31_device.id, multisensor_6_device.id],
-            ATTR_NOTIFICATION_TYPE: 1,
-            ATTR_NOTIFICATION_EVENT: 2,
+            CommonServiceArgument.DEVICE_ID: [
+                zen_31_device.id,
+                multisensor_6_device.id,
+            ],
+            ZWaveJSServiceArgument.NOTIFICATION_TYPE: 1,
+            ZWaveJSServiceArgument.NOTIFICATION_EVENT: 2,
         },
         blocking=True,
     )
@@ -2045,10 +2155,13 @@ async def test_refresh_notifications(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_REFRESH_NOTIFICATIONS,
+            ZWaveJSService.REFRESH_NOTIFICATIONS,
             {
-                ATTR_DEVICE_ID: [multisensor_6_device.id, zen_31_device.id],
-                ATTR_NOTIFICATION_TYPE: 1,
+                CommonServiceArgument.DEVICE_ID: [
+                    multisensor_6_device.id,
+                    zen_31_device.id,
+                ],
+                ZWaveJSServiceArgument.NOTIFICATION_TYPE: 1,
             },
             blocking=True,
         )
@@ -2073,8 +2186,76 @@ async def test_refresh_notifications(
     client.async_send_command.reset_mock()
     client.async_send_command_no_wait.reset_mock()
 
+    # Test that targets without Z-Wave devices raise an error
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            ZWaveJSService.REFRESH_NOTIFICATIONS,
+            {
+                CommonServiceArgument.ENTITY_ID: "sensor.fake",
+                ZWaveJSServiceArgument.NOTIFICATION_TYPE: 1,
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "no_nodes_found"
+    assert len(client.async_send_command.call_args_list) == 0
+    assert len(client.async_send_command_no_wait.call_args_list) == 0
+
 
 @pytest.mark.parametrize("target", [ATTR_ENTITY_ID, ATTR_DEVICE_ID])
+@pytest.mark.parametrize(
+    ("service", "service_data"),
+    [
+        pytest.param(
+            ZWaveJSService.SET_CONFIG_PARAMETER,
+            {
+                ZWaveJSServiceArgument.PARAMETER: 102,
+                ZWaveJSServiceArgument.BITMASK: 1,
+                ZWaveJSServiceArgument.VALUE: 1,
+            },
+            id="set_config_parameter",
+        ),
+        pytest.param(
+            ZWaveJSService.REFRESH_NOTIFICATIONS,
+            {ZWaveJSServiceArgument.NOTIFICATION_TYPE: 1},
+            id="refresh_notifications",
+        ),
+        pytest.param(ZWaveJSService.PING, {}, id="ping"),
+        pytest.param(
+            ZWaveJSService.BULK_SET_PARTIAL_CONFIG_PARAMETERS,
+            {ZWaveJSServiceArgument.PARAMETER: 102, ZWaveJSServiceArgument.VALUE: 241},
+            id="bulk_set_partial_config_parameters",
+        ),
+        pytest.param(
+            ZWaveJSService.INVOKE_CC_API,
+            {
+                ZWaveJSServiceArgument.COMMAND_CLASS: 67,
+                ZWaveJSServiceArgument.METHOD_NAME: "someMethod",
+                ZWaveJSServiceArgument.PARAMETERS: [1, 2],
+            },
+            id="invoke_cc_api",
+        ),
+        pytest.param(
+            ZWaveJSService.SET_VALUE,
+            {
+                ZWaveJSServiceArgument.COMMAND_CLASS: 117,
+                ZWaveJSServiceArgument.PROPERTY: "local",
+                ZWaveJSServiceArgument.VALUE: 2,
+            },
+            id="set_value",
+        ),
+        pytest.param(
+            ZWaveJSService.MULTICAST_SET_VALUE,
+            {
+                ZWaveJSServiceArgument.COMMAND_CLASS: 117,
+                ZWaveJSServiceArgument.PROPERTY: "local",
+                ZWaveJSServiceArgument.VALUE: 2,
+            },
+            id="multicast_set_value",
+        ),
+    ],
+)
 async def test_service_driver_not_ready(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -2082,13 +2263,15 @@ async def test_service_driver_not_ready(
     multisensor_6: MagicMock,
     integration: MockConfigEntry,
     target: str,
+    service: str,
+    service_data: dict[str, Any],
 ) -> None:
     """Test a service call fails with a runtime error while the driver is not ready."""
     entity_entry = entity_registry.async_get(AIR_TEMPERATURE_SENSOR)
     assert entity_entry
     targets = {
-        ATTR_ENTITY_ID: AIR_TEMPERATURE_SENSOR,
-        ATTR_DEVICE_ID: entity_entry.device_id,
+        CommonServiceArgument.ENTITY_ID: AIR_TEMPERATURE_SENSOR,
+        CommonServiceArgument.DEVICE_ID: entity_entry.device_id,
     }
 
     with (
@@ -2097,13 +2280,8 @@ async def test_service_driver_not_ready(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_CONFIG_PARAMETER,
-            {
-                target: targets[target],
-                ATTR_CONFIG_PARAMETER: 102,
-                ATTR_CONFIG_PARAMETER_BITMASK: 1,
-                ATTR_CONFIG_VALUE: 1,
-            },
+            service,
+            {target: targets[target], **service_data},
             blocking=True,
         )
 

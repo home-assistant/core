@@ -19,7 +19,6 @@ from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
 from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN
 from homeassistant.config_entries import (
     SOURCE_IMPORT,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
@@ -44,6 +43,9 @@ from homeassistant.helpers import (
 from homeassistant.loader import async_get_integrations
 
 from .const import (
+    CAMERA_MODE_STANDARD,
+    CAMERA_MODES,
+    CONF_CAMERA_MODE,
     CONF_ENTITY_CONFIG,
     CONF_EXCLUDE_ACCESSORY_MODE,
     CONF_FILTER,
@@ -61,7 +63,7 @@ from .const import (
     TYPE_THERMOSTAT,
     VIDEO_CODEC_COPY,
 )
-from .models import HomeKitEntryData
+from .models import HomeKitConfigEntry, HomeKitEntryData
 from .util import async_find_next_available_port, state_needs_accessory_mode
 
 CONF_CAMERA_AUDIO = "camera_audio"
@@ -287,7 +289,7 @@ class HomeKitConfigFlow(ConfigFlow, domain=DOMAIN):
         hk_data[CONF_EXCLUDE_ACCESSORY_MODE] = True
         return self.async_show_form(
             step_id="pairing",
-            description_placeholders={CONF_NAME: hk_data[CONF_NAME]},
+            description_placeholders={"name": hk_data[CONF_NAME]},
         )
 
     async def _async_add_entries_for_accessory_mode_entities(
@@ -390,7 +392,7 @@ class HomeKitConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: HomeKitConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler()
@@ -567,6 +569,12 @@ class OptionsFlowHandler(OptionsFlow):
                 elif CONF_SUPPORT_AUDIO in entity_config:
                     del entity_config[CONF_SUPPORT_AUDIO]
 
+                camera_mode = user_input.get(CONF_CAMERA_MODE, CAMERA_MODE_STANDARD)
+                if camera_mode != CAMERA_MODE_STANDARD:
+                    entity_config[CONF_CAMERA_MODE] = camera_mode
+                else:
+                    entity_config.pop(CONF_CAMERA_MODE, None)
+
                 if not entity_config:
                     all_entity_config.pop(entity_id)
 
@@ -582,26 +590,32 @@ class OptionsFlowHandler(OptionsFlow):
             if entity_config.get(CONF_SUPPORT_AUDIO):
                 cameras_with_audio.append(entity)
 
-        data_schema = probatio.Schema(
-            {
-                probatio.Optional(
-                    CONF_CAMERA_COPY, default=cameras_with_copy
-                ): selector.EntitySelector(
-                    selector.EntitySelectorConfig(
-                        multiple=True,
-                        include_entities=(self.included_cameras),
-                    )
-                ),
-                probatio.Optional(
-                    CONF_CAMERA_AUDIO, default=cameras_with_audio
-                ): selector.EntitySelector(
-                    selector.EntitySelectorConfig(
-                        multiple=True,
-                        include_entities=(self.included_cameras),
-                    )
-                ),
-            }
+        camera_selector = selector.EntitySelector(
+            selector.EntitySelectorConfig(
+                multiple=True, include_entities=self.included_cameras
+            )
         )
+        schema: dict[probatio.Marker, selector.Selector] = {
+            probatio.Optional(
+                CONF_CAMERA_COPY, default=cameras_with_copy
+            ): camera_selector,
+            probatio.Optional(
+                CONF_CAMERA_AUDIO, default=cameras_with_audio
+            ): camera_selector,
+        }
+        # Accessory mode has a single camera.
+        if hk_options[CONF_HOMEKIT_MODE] == HOMEKIT_MODE_ACCESSORY:
+            camera_mode = all_entity_config.get(self.included_cameras[0], {}).get(
+                CONF_CAMERA_MODE, CAMERA_MODE_STANDARD
+            )
+            schema[probatio.Required(CONF_CAMERA_MODE, default=camera_mode)] = (
+                selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=CAMERA_MODES, translation_key=CONF_CAMERA_MODE
+                    )
+                )
+            )
+        data_schema = probatio.Schema(schema)
         return self.async_show_form(step_id="cameras", data_schema=data_schema)
 
     async def async_step_accessory(

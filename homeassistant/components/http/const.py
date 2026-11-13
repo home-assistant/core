@@ -46,7 +46,7 @@ UNVERSIONED_SSL_PROFILES: Final = {
 }
 # Profiles following the current guidelines, recommended one first. A server
 # running any other profile with SSL gets a repair offering these.
-CURRENT_SSL_PROFILES: Final = (SSLProfile.MODERN_V6, SSLProfile.INTERMEDIATE_V6)
+CURRENT_SSL_PROFILES: Final = (SSLProfile.INTERMEDIATE_V6, SSLProfile.MODERN_V6)
 DEFAULT_SSL_PROFILE: Final = CURRENT_SSL_PROFILES[0]
 
 ISSUE_SSL_PROFILE_OUTDATED: Final = "ssl_profile_outdated"
@@ -62,6 +62,8 @@ SUPERVISOR_DEFAULT_PORT: Final = 80
 # My to be able to check url and version info.
 DEFAULT_CORS: Final[list[str]] = ["https://cast.home-assistant.io"]
 NO_LOGIN_ATTEMPT_THRESHOLD: Final = -1
+# Largest legitimate unauthenticated request (login flow, token) is a few KB
+MAX_UNAUTHENTICATED_BODY_SIZE: Final = 64 * 1024
 
 ATTR_CONFIG = "config"
 

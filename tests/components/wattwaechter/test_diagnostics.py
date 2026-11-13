@@ -1,4 +1,4 @@
-"""Tests for the WattWächter Plus diagnostics."""
+"""Tests for the WattWächter diagnostics."""
 
 from unittest.mock import AsyncMock
 

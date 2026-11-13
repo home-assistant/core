@@ -17,7 +17,7 @@ from .const import DEFAULT_PORT, LOGGER, UPDATE_INTERVAL
 type FullyKioskConfigEntry = ConfigEntry[FullyKioskDataUpdateCoordinator]
 
 
-class FullyKioskDataUpdateCoordinator(DataUpdateCoordinator):
+class FullyKioskDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Define an object to hold Fully Kiosk Browser data."""
 
     config_entry: FullyKioskConfigEntry

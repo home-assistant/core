@@ -3,13 +3,14 @@
 import asyncio
 from typing import Any
 
-from pyopenuv import Client
+from pyopenuv.client import Client
 
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_BINARY_SENSORS,
     CONF_ELEVATION,
     CONF_LATITUDE,
+    CONF_LOCATION,
     CONF_LONGITUDE,
     CONF_SENSORS,
     Platform,
@@ -40,8 +41,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenUvConfigEntry) -> No
     websession = aiohttp_client.async_get_clientsession(hass)
     client = Client(
         entry.data[CONF_API_KEY],
-        entry.data.get(CONF_LATITUDE, hass.config.latitude),
-        entry.data.get(CONF_LONGITUDE, hass.config.longitude),
+        entry.data[CONF_LOCATION][CONF_LATITUDE],
+        entry.data[CONF_LOCATION][CONF_LONGITUDE],
         altitude=entry.data.get(CONF_ELEVATION, hass.config.elevation),
         session=websession,
         check_status_before_request=True,
@@ -90,15 +91,19 @@ async def async_unload_entry(hass: HomeAssistant, entry: OpenUvConfigEntry) -> N
 
 async def async_migrate_entry(hass: HomeAssistant, entry: OpenUvConfigEntry) -> None:
     """Migrate the config entry upon new versions."""
-    version = entry.version
-    data = {**entry.data}
-
-    LOGGER.debug("Migrating from version %s", version)
+    LOGGER.debug("Migrating from version %s", entry.version)
 
     # 1 -> 2: Remove unused condition data:
-    if version == 1:
+    if entry.version < 2:
+        data = dict(entry.data)
         data.pop(CONF_BINARY_SENSORS, None)
         data.pop(CONF_SENSORS, None)
-        version = 2
         hass.config_entries.async_update_entry(entry, data=data, version=2)
-        LOGGER.debug("Migration to version %s successful", version)
+        LOGGER.debug("Migration to version %s successful", 2)
+    if entry.version < 3:
+        data = dict(entry.data)
+        long = data.pop(CONF_LONGITUDE, hass.config.longitude)
+        lat = data.pop(CONF_LATITUDE, hass.config.latitude)
+        data[CONF_LOCATION] = {CONF_LATITUDE: lat, CONF_LONGITUDE: long}
+        hass.config_entries.async_update_entry(entry, data=data, version=3)
+        LOGGER.debug("Migration to version %s successful", 3)
