@@ -79,7 +79,7 @@
       "message": "The order at pharmacy {apb} could not be confirmed. Check the Mijn Farmad Apotheek app before retrying to avoid a duplicate order."
     },
     "price_unavailable": {
-      "message": "The pharmacy lists no price for product {product}, so it cannot be ordered."
+      "message": "Pharmacy {apb} lists no price for product {product}, so it cannot be ordered."
     },
     "search_failed": {
       "message": "Searching at pharmacy {apb} failed."

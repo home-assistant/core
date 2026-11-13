@@ -495,7 +495,10 @@ async def test_order_medication_missing_price(
         )
 
     assert exc_info.value.translation_key == "price_unavailable"
-    assert exc_info.value.translation_placeholders == {"product": API_PRODUCT_CNK}
+    assert exc_info.value.translation_placeholders == {
+        "apb": API_APB,
+        "product": API_PRODUCT_CNK,
+    }
     client.async_clear_draft_basket.assert_awaited_once_with(API_APB)
 
 

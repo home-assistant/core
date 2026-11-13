@@ -233,6 +233,17 @@ async def _async_place_order(
         except FarmadPriceLookupError:
             await _async_clear_draft(data, apb)
             raise
+        except FarmadMissingPriceError as err:
+            _LOGGER.debug("Ordering at pharmacy %s failed: %s", apb, err)
+            await _async_clear_draft(data, apb)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="price_unavailable",
+                translation_placeholders={
+                    "apb": apb,
+                    "product": products[0].product_cnk,
+                },
+            ) from err
         except FarmadCommunicationError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -286,12 +297,6 @@ async def _async_order_medication(call: ServiceCall) -> ServiceResponse:
             ),
             call.data.get(FarmadServiceArgument.COMMENT),
         )
-    except FarmadMissingPriceError as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="price_unavailable",
-            translation_placeholders={"product": cnk},
-        ) from err
     except FarmadError as err:
         if isinstance(err, FarmadAuthenticationError):
             entry.async_start_reauth(call.hass)
