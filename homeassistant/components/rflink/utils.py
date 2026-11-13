@@ -1,6 +1,11 @@
 """RFLink integration utils."""
 
-from .const import EVENT_KEY_COMMAND, EVENT_KEY_SENSOR
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import (
+    async_create_platform_config_not_supported_issue,
+)
+
+from .const import DOMAIN, EVENT_KEY_COMMAND, EVENT_KEY_SENSOR
 
 
 def brightness_to_rflink(brightness: int) -> int:
@@ -23,3 +28,14 @@ def identify_event_type(event):
     if EVENT_KEY_SENSOR in event:
         return EVENT_KEY_SENSOR
     return "unknown"
+
+
+def create_issue_platform(hass: HomeAssistant, platform: str) -> None:
+    """Create a deprecated platform config issue."""
+    async_create_platform_config_not_supported_issue(
+        hass,
+        DOMAIN,
+        platform,
+        yaml_config_under_integration_supported=True,
+        learn_more_url="https://www.home-assistant.io/integrations/rflink/#migrating-from-legacy-configuration-format",
+    )

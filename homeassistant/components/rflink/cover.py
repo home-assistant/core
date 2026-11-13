@@ -5,7 +5,11 @@ from typing import Any, override
 
 import probatio
 
-from homeassistant.components.cover import CoverEntity, CoverState
+from homeassistant.components.cover import (
+    DOMAIN as PLATFORM_DOMAIN,
+    CoverEntity,
+    CoverState,
+)
 from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
@@ -24,6 +28,7 @@ from .const import (
     DEVICE_DEFAULTS_SCHEMA,
 )
 from .entity import RflinkCommand
+from .utils import create_issue_platform
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -119,6 +124,7 @@ async def async_setup_platform(
 ) -> None:
     """Set up the Rflink cover platform."""
     if discovery_info is None:
+        create_issue_platform(hass, PLATFORM_DOMAIN)
         return
     async_add_entities(devices_from_config(discovery_info))
 
