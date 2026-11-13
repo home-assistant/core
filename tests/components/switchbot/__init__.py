@@ -1762,3 +1762,28 @@ STANDING_FAN_SERVICE_INFO = BluetoothServiceInfoBleak(
     connectable=True,
     tx_power=-127,
 )
+
+
+UWB_LOCK_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="UWB Lock",
+    manufacturer_data={2409: b"\xb0\xe9\xfe\x11\x22\x33\x2a\x88\x18\x64\x00\x91"},
+    service_data={
+        "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x80\x64\x00\x12\x11\x00"
+    },
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="UWB Lock",
+        manufacturer_data={2409: b"\xb0\xe9\xfe\x11\x22\x33\x2a\x88\x18\x64\x00\x91"},
+        service_data={
+            "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x80\x64\x00\x12\x11\x00"
+        },
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "UWB Lock"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
