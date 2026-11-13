@@ -9,5 +9,6 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["meteofrance_api"],
+  "quality_scale": "gold",
   "requirements": ["meteofrance-api==1.5.0"]
 }
