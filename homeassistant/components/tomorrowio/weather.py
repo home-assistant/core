@@ -1,7 +1,7 @@
 """Weather component that handles meteorological data for your location."""
 
-from datetime import datetime
-from typing import override
+from datetime import datetime, timedelta
+from typing import Any, cast, override
 
 from pytomorrowio.const import DAILY, FORECASTS, HOURLY, NOWCAST, WeatherCode
 
@@ -13,10 +13,13 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_NATIVE_TEMP,
     ATTR_FORECAST_NATIVE_TEMP_LOW,
     ATTR_FORECAST_NATIVE_WIND_SPEED,
+    ATTR_FORECAST_PRECIPITATION,
     ATTR_FORECAST_PRECIPITATION_PROBABILITY,
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
+    ATTR_WEATHER_PRECIPITATION_UNIT,
     DOMAIN as WEATHER_DOMAIN,
+    UNIT_CONVERSIONS,
     Forecast,
     SingleCoordinatorWeatherEntity,
     WeatherEntityFeature,
@@ -253,8 +256,9 @@ class TomorrowioWeatherEntity(TomorrowioEntity, SingleCoordinatorWeatherEntity):
         max_forecasts = MAX_FORECASTS[forecast_type]
         forecast_count = 0
 
+        now = dt_util.utcnow()
         # Convert utcnow to local to be compatible with tests
-        today = dt_util.as_local(dt_util.utcnow()).date()
+        today = dt_util.as_local(now).date()
 
         # Set default values (in cases where keys don't exist), None will be
         # returned. Override properties per forecast type as needed
@@ -291,12 +295,14 @@ class TomorrowioWeatherEntity(TomorrowioEntity, SingleCoordinatorWeatherEntity):
                 if precipitation:
                     precipitation = precipitation * 24
             elif forecast_type == NOWCAST:
+                timestep = self._subentry.data[CONF_TIMESTEP]
+                # Data can be up to one update old, so skip intervals that ended
+                if forecast_dt + timedelta(minutes=timestep) <= now:
+                    continue
                 # Precipitation is forecasted in CONF_TIMESTEP increments but in a
                 # per hour rate, so value needs to be converted to an amount.
                 if precipitation:
-                    precipitation = (
-                        precipitation / 60 * self._subentry.data[CONF_TIMESTEP]
-                    )
+                    precipitation = precipitation / 60 * timestep
 
             forecasts.append(
                 self._forecast_dict(
@@ -331,3 +337,22 @@ class TomorrowioWeatherEntity(TomorrowioEntity, SingleCoordinatorWeatherEntity):
     def _async_forecast_hourly(self) -> list[Forecast] | None:
         """Return the hourly forecast in native units."""
         return self._forecast(HOURLY)
+
+    async def async_get_minute_forecast(self) -> dict[str, Any]:
+        """Return the nowcast forecast in the units configured by the user."""
+        native_forecasts = self._forecast(NOWCAST) or []
+        forecasts = cast(list[dict[str, Any]], self._convert_forecast(native_forecasts))
+        # Per-interval amounts are too small to survive the rounding in
+        # _convert_forecast, so they are converted without rounding
+        for native, forecast in zip(native_forecasts, forecasts, strict=True):
+            if (
+                precipitation := native.get(ATTR_FORECAST_NATIVE_PRECIPITATION)
+            ) is not None:
+                forecast[ATTR_FORECAST_PRECIPITATION] = UNIT_CONVERSIONS[
+                    ATTR_WEATHER_PRECIPITATION_UNIT
+                ](
+                    precipitation,
+                    UnitOfPrecipitationDepth.MILLIMETERS,
+                    self._precipitation_unit,
+                )
+        return {"forecast": forecasts}
