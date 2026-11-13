@@ -35,7 +35,6 @@ from .const import (
     REQUIRED_SCOPES,
 )
 from .coordinator import TRMNLConfigEntry, scope_granted
-from .home import HOME_DOMAINS
 
 
 class TRMNLConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
@@ -132,12 +131,12 @@ class TRMNLConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         if self.source == SOURCE_REAUTH:
             self._abort_if_unique_id_mismatch()
             return self.async_update_reload_and_abort(
-                self._get_reauth_entry(), data=data
+                self._get_reauth_entry(), data_updates=data
             )
         if self.source == SOURCE_RECONFIGURE:
             self._abort_if_unique_id_mismatch()
             return self.async_update_reload_and_abort(
-                self._get_reconfigure_entry(), data=data
+                self._get_reconfigure_entry(), data_updates=data
             )
         self._abort_if_unique_id_configured()
         return self.async_create_entry(title=user.name if user else "TRMNL", data=data)
@@ -156,17 +155,13 @@ class TRMNLOptionsFlow(OptionsFlowWithReload):
             ):
                 self.config_entry.async_start_reauth(self.hass)
                 return self.async_abort(reason="content_not_granted")
-            return self.async_create_entry(
-                data={**self.config_entry.options, **user_input}
-            )
+            return self.async_create_entry(data=user_input)
         schema = probatio.Schema(
             {
                 probatio.Optional(
                     CONF_HOME_ENTITIES,
                     default=self.config_entry.options.get(CONF_HOME_ENTITIES, []),
-                ): EntitySelector(
-                    EntitySelectorConfig(domain=HOME_DOMAINS, multiple=True)
-                )
+                ): EntitySelector(EntitySelectorConfig(multiple=True))
             }
         )
         return self.async_show_form(step_id="init", data_schema=schema)
