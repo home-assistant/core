@@ -1,7 +1,7 @@
 """Diagnostics support for the Helty Flow Cloud integration."""
 
 from dataclasses import asdict
-from typing import Any, cast
+from typing import Any
 
 from pyheltycloud import HeltyState
 
@@ -45,9 +45,8 @@ async def async_get_config_entry_diagnostics(
     }
 
 
-def _state_diagnostics(data: HeltyState) -> dict[str, Any] | None:
+def _state_diagnostics(data: HeltyState | None) -> dict[str, Any] | None:
     """Return the last state of a unit, if its panel has reported one."""
     # Setup refreshes each coordinator without raising, so the data of a
     # panel that has not reported yet is still None despite its type.
-    state = cast(HeltyState | None, data)
-    return asdict(state) if state is not None else None
+    return asdict(data) if data is not None else None
