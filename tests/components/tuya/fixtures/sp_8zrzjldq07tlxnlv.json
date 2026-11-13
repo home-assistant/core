@@ -1,0 +1,250 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "8zrzjldq07tlxnlv",
+  "category": "sp",
+  "product_id": "8zrzjldq07tlxnlv",
+  "product_name": "Smart Pet Feeder",
+  "online": true,
+  "sub": false,
+  "time_zone": "+01:00",
+  "active_time": "2026-10-25T06:26:06+00:00",
+  "create_time": "2026-10-25T06:26:06+00:00",
+  "update_time": "2026-10-25T06:26:06+00:00",
+  "function": {
+    "basic_indicator": {
+      "type": "Boolean",
+      "value": "{}"
+    },
+    "basic_osd": {
+      "type": "Boolean",
+      "value": "{}"
+    },
+    "basic_nightvision": {
+      "type": "Enum",
+      "value": "{\"range\":[\"0\",\"1\",\"2\"]}"
+    },
+    "sd_format": {
+      "type": "Boolean",
+      "value": "{}"
+    },
+    "motion_record": {
+      "type": "Boolean",
+      "value": "{}"
+    },
+    "record_switch": {
+      "type": "Boolean",
+      "value": "{}"
+    },
+    "record_mode": {
+      "type": "Enum",
+      "value": "{\"range\":[\"1\",\"2\"]}"
+    },
+    "device_restart": {
+      "type": "Boolean",
+      "value": "{}"
+    }
+  },
+  "status_range": {
+    "basic_indicator": {
+      "type": "Boolean",
+      "value": "{}",
+      "report_type": null
+    },
+    "basic_osd": {
+      "type": "Boolean",
+      "value": "{}",
+      "report_type": null
+    },
+    "basic_nightvision": {
+      "type": "Enum",
+      "value": "{\"range\":[\"0\",\"1\",\"2\"]}",
+      "report_type": null
+    },
+    "sd_storge": {
+      "type": "String",
+      "value": "{\"maxlen\":255}",
+      "report_type": null
+    },
+    "sd_status": {
+      "type": "Integer",
+      "value": "{\"min\":1,\"max\":5,\"scale\":0,\"step\":1}",
+      "report_type": null
+    },
+    "sd_format": {
+      "type": "Boolean",
+      "value": "{}",
+      "report_type": null
+    },
+    "motion_record": {
+      "type": "Boolean",
+      "value": "{}",
+      "report_type": null
+    },
+    "sd_format_state": {
+      "type": "Integer",
+      "value": "{\"min\":-20000,\"max\":200000,\"scale\":0,\"step\":1}",
+      "report_type": null
+    },
+    "record_switch": {
+      "type": "Boolean",
+      "value": "{}",
+      "report_type": null
+    },
+    "record_mode": {
+      "type": "Enum",
+      "value": "{\"range\":[\"1\",\"2\"]}",
+      "report_type": null
+    },
+    "device_restart": {
+      "type": "Boolean",
+      "value": "{}",
+      "report_type": null
+    }
+  },
+  "status": {
+    "basic_indicator": false,
+    "basic_osd": false,
+    "basic_nightvision": "0",
+    "sd_storge": "100|0|100",
+    "sd_status": 5,
+    "sd_format": false,
+    "motion_record": false,
+    "sd_format_state": 0,
+    "record_switch": false,
+    "record_mode": "1",
+    "device_restart": false,
+    "feed_block_status": false,
+    "feed_stuck_status": false,
+    "auto_feed_report": 3,
+    "feed_report": 2,
+    "manual_feed_report": 2
+  },
+  "local_strategy": {
+    "101": {
+      "value_convert": "default",
+      "status_code": "basic_indicator",
+      "config_item": {
+        "statusFormat": "{\"basic_indicator\":\"$\"}",
+        "valueDesc": "{}",
+        "valueType": "Boolean",
+        "enumMappingMap": {},
+        "pid": "8zrzjldq07tlxnlv"
+      }
+    },
+    "104": {
+      "value_convert": "default",
+      "status_code": "basic_osd",
+      "config_item": {
+        "statusFormat": "{\"basic_osd\":\"$\"}",
+        "valueDesc": "{}",
+        "valueType": "Boolean",
+        "enumMappingMap": {},
+        "pid": "8zrzjldq07tlxnlv"
+      }
+    },
+    "108": {
+      "value_convert": "default",
+      "status_code": "basic_nightvision",
+      "config_item": {
+        "statusFormat": "{\"basic_nightvision\":\"$\"}",
+        "valueDesc": "{\"range\":[\"0\",\"1\",\"2\"]}",
+        "valueType": "Enum",
+        "enumMappingMap": {},
+        "pid": "8zrzjldq07tlxnlv"
+      }
+    },
+    "109": {
+      "value_convert": "default",
+      "status_code": "sd_storge",
+      "config_item": {
+        "statusFormat": "{\"sd_storge\":\"$\"}",
+        "valueDesc": "{\"maxlen\":255}",
+        "valueType": "String",
+        "enumMappingMap": {},
+        "pid": "8zrzjldq07tlxnlv"
+      }
+    },
+    "110": {
+      "value_convert": "default",
+      "status_code": "sd_status",
+      "config_item": {
+        "statusFormat": "{\"sd_status\":\"$\"}",
+        "valueDesc": "{\"min\":1,\"max\":5,\"scale\":0,\"step\":1}",
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "8zrzjldq07tlxnlv"
+      }
+    },
+    "111": {
+      "value_convert": "default",
+      "status_code": "sd_format",
+      "config_item": {
+        "statusFormat": "{\"sd_format\":\"$\"}",
+        "valueDesc": "{}",
+        "valueType": "Boolean",
+        "enumMappingMap": {},
+        "pid": "8zrzjldq07tlxnlv"
+      }
+    },
+    "113": {
+      "value_convert": "default",
+      "status_code": "motion_record",
+      "config_item": {
+        "statusFormat": "{\"motion_record\":\"$\"}",
+        "valueDesc": "{}",
+        "valueType": "Boolean",
+        "enumMappingMap": {},
+        "pid": "8zrzjldq07tlxnlv"
+      }
+    },
+    "117": {
+      "value_convert": "default",
+      "status_code": "sd_format_state",
+      "config_item": {
+        "statusFormat": "{\"sd_format_state\":\"$\"}",
+        "valueDesc": "{\"min\":-20000,\"max\":200000,\"scale\":0,\"step\":1}",
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "8zrzjldq07tlxnlv"
+      }
+    },
+    "150": {
+      "value_convert": "default",
+      "status_code": "record_switch",
+      "config_item": {
+        "statusFormat": "{\"record_switch\":\"$\"}",
+        "valueDesc": "{}",
+        "valueType": "Boolean",
+        "enumMappingMap": {},
+        "pid": "8zrzjldq07tlxnlv"
+      }
+    },
+    "151": {
+      "value_convert": "default",
+      "status_code": "record_mode",
+      "config_item": {
+        "statusFormat": "{\"record_mode\":\"$\"}",
+        "valueDesc": "{\"range\":[\"1\",\"2\"]}",
+        "valueType": "Enum",
+        "enumMappingMap": {},
+        "pid": "8zrzjldq07tlxnlv"
+      }
+    },
+    "162": {
+      "value_convert": "default",
+      "status_code": "device_restart",
+      "config_item": {
+        "statusFormat": "{\"device_restart\":\"$\"}",
+        "valueDesc": "{}",
+        "valueType": "Boolean",
+        "enumMappingMap": {},
+        "pid": "8zrzjldq07tlxnlv"
+      }
+    }
+  },
+  "set_up": true,
+  "support_local": true
+}

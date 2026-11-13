@@ -298,6 +298,9 @@
       "heat_preservation_time": {
         "name": "Heat preservation time"
       },
+      "height": {
+        "name": "Height"
+      },
       "indexed_cook_temperature": {
         "name": "Cooking temperature {index}"
       },
