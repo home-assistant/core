@@ -23,7 +23,7 @@ from telegram import (
     Message,
     Update,
 )
-from telegram.constants import ChatType, InputMediaType
+from telegram.constants import ChatAction, ChatType, InputMediaType
 from telegram.error import (
     InvalidToken,
     NetworkError,
@@ -45,14 +45,11 @@ from homeassistant.components.telegram_bot.const import (
     ATTR_PARSER,
     ATTR_REPLY_TO_MSGID,
     ATTR_URL,
-    CHAT_ACTION_TYPING,
     DOMAIN,
-    PARSER_HTML,
-    PARSER_MD,
-    PARSER_MD2,
-    PARSER_PLAIN_TEXT,
     PLATFORM_BROADCAST,
     SECTION_ADDITIONAL_SETTINGS,
+    TelegramBotChatAction,
+    TelegramBotParseMode,
     TelegramBotService,
     TelegramBotServiceArgument,
 )
@@ -179,7 +176,7 @@ async def test_polling_platform_init_failed_does_not_log_token(
                     "/command3",
                 ],
                 TelegramBotServiceArgument.MESSAGE: "test_message",
-                TelegramBotServiceArgument.PARSE_MODE: PARSER_HTML,
+                TelegramBotServiceArgument.PARSE_MODE: TelegramBotParseMode.HTML,
                 TelegramBotServiceArgument.DISABLE_NOTIFICATION: True,
                 TelegramBotServiceArgument.DISABLE_WEB_PAGE_PREVIEW: True,
                 TelegramBotServiceArgument.MESSAGE_TAG: "mock_tag",
@@ -259,7 +256,7 @@ async def test_send_message(
         (
             {
                 TelegramBotServiceArgument.MESSAGE: "test_message",
-                TelegramBotServiceArgument.PARSE_MODE: PARSER_PLAIN_TEXT,
+                TelegramBotServiceArgument.PARSE_MODE: TelegramBotParseMode.PLAIN_TEXT,
                 TelegramBotServiceArgument.INLINE_KEYBOARD: "command1:/cmd1,/cmd2,mock_link:https://mock_link",
             },
             InlineKeyboardMarkup(
@@ -276,7 +273,7 @@ async def test_send_message(
         (
             {
                 TelegramBotServiceArgument.MESSAGE: "test_message",
-                TelegramBotServiceArgument.PARSE_MODE: PARSER_PLAIN_TEXT,
+                TelegramBotServiceArgument.PARSE_MODE: TelegramBotParseMode.PLAIN_TEXT,
                 TelegramBotServiceArgument.INLINE_KEYBOARD: [
                     [["command1", "/cmd1"]],
                     [["mock_link", "https://mock_link"]],
@@ -563,7 +560,7 @@ async def test_send_chat_action(
             {
                 CommonServiceArgument.CONFIG_ENTRY_ID: mock_broadcast_config_entry.entry_id,
                 TelegramBotServiceArgument.CHAT_ID: [123456],
-                TelegramBotServiceArgument.CHAT_ACTION: CHAT_ACTION_TYPING,
+                TelegramBotServiceArgument.CHAT_ACTION: TelegramBotChatAction.TYPING,
                 TelegramBotServiceArgument.MESSAGE_THREAD_ID: 123,
             },
             blocking=True,
@@ -573,7 +570,7 @@ async def test_send_chat_action(
     await hass.async_block_till_done()
     mock.assert_called_once()
     mock.assert_called_with(
-        chat_id=123456, action=CHAT_ACTION_TYPING, message_thread_id=123
+        chat_id=123456, action=ChatAction.TYPING, message_thread_id=123
     )
 
 
@@ -1201,7 +1198,7 @@ async def test_send_message_no_chat_id_error(
             CONF_API_KEY: "mock api key",
             SECTION_ADDITIONAL_SETTINGS: {},
         },
-        options={ATTR_PARSER: PARSER_PLAIN_TEXT},
+        options={ATTR_PARSER: TelegramBotParseMode.PLAIN_TEXT},
     )
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -1406,7 +1403,7 @@ async def test_edit_message_media(
                 TelegramBotServiceArgument.MESSAGE_ID: 12345,
                 TelegramBotServiceArgument.CHAT_ID: 123456,
                 TelegramBotServiceArgument.INLINE_KEYBOARD: "/mock",
-                TelegramBotServiceArgument.PARSE_MODE: PARSER_MD,
+                TelegramBotServiceArgument.PARSE_MODE: TelegramBotParseMode.MARKDOWN,
             },
             blocking=True,
         )
@@ -1415,7 +1412,7 @@ async def test_edit_message_media(
     mock.assert_called_once()
     assert mock.call_args[1]["media"].__class__.__name__ == expected_media_class
     assert mock.call_args[1]["media"].caption == "mock caption"
-    assert mock.call_args[1]["media"].parse_mode == PARSER_MD
+    assert mock.call_args[1]["media"].parse_mode == TelegramBotParseMode.MARKDOWN
     assert mock.call_args[1]["chat_id"] == 123456
     assert mock.call_args[1]["message_id"] == 12345
     assert mock.call_args[1]["reply_markup"] == InlineKeyboardMarkup(
@@ -1444,7 +1441,7 @@ async def test_edit_message(
                 TelegramBotServiceArgument.MESSAGE: "mock message",
                 TelegramBotServiceArgument.CHAT_ID: 123456,
                 TelegramBotServiceArgument.MESSAGE_ID: 12345,
-                TelegramBotServiceArgument.PARSE_MODE: PARSER_PLAIN_TEXT,
+                TelegramBotServiceArgument.PARSE_MODE: TelegramBotParseMode.PLAIN_TEXT,
             },
             blocking=True,
         )
@@ -1471,7 +1468,7 @@ async def test_edit_message(
                 TelegramBotServiceArgument.CAPTION: "mock caption",
                 TelegramBotServiceArgument.CHAT_ID: 123456,
                 TelegramBotServiceArgument.MESSAGE_ID: 12345,
-                TelegramBotServiceArgument.PARSE_MODE: PARSER_MD2,
+                TelegramBotServiceArgument.PARSE_MODE: TelegramBotParseMode.MARKDOWN_V2,
             },
             blocking=True,
         )
@@ -1483,7 +1480,7 @@ async def test_edit_message(
         inline_message_id=None,
         caption="mock caption",
         reply_markup=None,
-        parse_mode=PARSER_MD2,
+        parse_mode=TelegramBotParseMode.MARKDOWN_V2,
     )
 
     with patch(
@@ -1887,7 +1884,7 @@ async def test_send_message_draft(
                 TelegramBotServiceArgument.CHAT_ID: 123456,
                 TelegramBotServiceArgument.MESSAGE: "_Thinking..._",
                 TelegramBotServiceArgument.MESSAGE_THREAD_ID: "123",
-                TelegramBotServiceArgument.PARSE_MODE: PARSER_MD2,
+                TelegramBotServiceArgument.PARSE_MODE: TelegramBotParseMode.MARKDOWN_V2,
                 "draft_id": "3456",
             },
             blocking=True,
@@ -1899,7 +1896,7 @@ async def test_send_message_draft(
         draft_id=3456,
         text="_Thinking..._",
         message_thread_id=123,
-        parse_mode=PARSER_MD2,
+        parse_mode=TelegramBotParseMode.MARKDOWN_V2,
     )
 
 
@@ -2733,7 +2730,7 @@ async def test_send_media_group_caption_parse_mode(
             DOMAIN,
             TelegramBotService.SEND_MEDIA_GROUP,
             {
-                TelegramBotServiceArgument.PARSE_MODE: PARSER_MD,
+                TelegramBotServiceArgument.PARSE_MODE: TelegramBotParseMode.MARKDOWN,
                 TelegramBotServiceArgument.MEDIA: [
                     {
                         ATTR_MEDIA_TYPE: InputMediaType.PHOTO,
@@ -2752,7 +2749,7 @@ async def test_send_media_group_caption_parse_mode(
 
     media = mock_send_media_group.call_args.kwargs["media"]
     assert media[0].caption == "*bold*"
-    assert media[0].parse_mode == PARSER_MD
+    assert media[0].parse_mode == TelegramBotParseMode.MARKDOWN
 
 
 @pytest.mark.parametrize(

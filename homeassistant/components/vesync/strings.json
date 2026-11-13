@@ -77,6 +77,11 @@
         }
       }
     },
+    "light": {
+      "nightlight": {
+        "name": "Night light"
+      }
+    },
     "number": {
       "mist_level": {
         "name": "Mist level"
@@ -175,6 +180,9 @@
     },
     "invalid_auth": {
       "message": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "nightlight_command_failed": {
+      "message": "Failed to control the night light"
     },
     "server_error": {
       "message": "Server error occurred while connecting to VeSync"

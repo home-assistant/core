@@ -637,6 +637,52 @@ async def test_power_state_during_registration(
 
 
 @pytest.mark.usefixtures("mock_version")
+async def test_power_state_while_fetching_commands(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a sleep event while fetching commands doesn't report the host as back."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    fetching = asyncio.Event()
+    slept = asyncio.Event()
+
+    async def listen_then_sleep(
+        callback: Any = None,
+        _: bool = False,
+        notification_event_callback: Any = None,
+        power_state_callback: Any = None,
+        settings_callback: Any = None,
+    ) -> None:
+        await fetching.wait()
+        await power_state_callback(PowerStateEvent(state=PowerState.SLEEPING))
+        slept.set()
+        await asyncio.Event().wait()
+
+    async def fetch_until_closed() -> None:
+        fetching.set()
+        await slept.wait()
+        raise ConnectionClosedException("Connection closed")
+
+    mock_websocket_client.connected = False
+    mock_websocket_client.listen.side_effect = listen_then_sleep
+    mock_websocket_client.get_commands.side_effect = fetch_until_closed
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("update.hostname")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+    assert "TestSystem is available again" not in caplog.text
+
+
+@pytest.mark.usefixtures("mock_version")
 async def test_power_state_while_waiting_for_registration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -664,6 +710,7 @@ async def test_power_state_while_waiting_for_registration(
         _: bool = False,
         notification_event_callback: Any = None,
         power_state_callback: Any = None,
+        settings_callback: Any = None,
     ) -> None:
         await registering.wait()
         await power_state_callback(PowerStateEvent(state=PowerState.SLEEPING))
@@ -699,6 +746,7 @@ async def test_power_state_from_running_listener(
         _: bool = False,
         notification_event_callback: Any = None,
         power_state_callback: Any = None,
+        settings_callback: Any = None,
     ) -> None:
         await power_state_callback(PowerStateEvent(state=PowerState.SLEEPING))
         await asyncio.Event().wait()

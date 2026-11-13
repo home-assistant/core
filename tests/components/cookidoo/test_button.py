@@ -7,9 +7,9 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -47,9 +47,9 @@ async def test_pressing_button(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
+        ButtonService.PRESS,
         {
-            ATTR_ENTITY_ID: (
+            CommonServiceArgument.ENTITY_ID: (
                 "button.cookidoo_clear_shopping_list_and_additional_purchases"
             ),
         },
@@ -77,9 +77,9 @@ async def test_pressing_button_exception(
     ):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
+            ButtonService.PRESS,
             {
-                ATTR_ENTITY_ID: (
+                CommonServiceArgument.ENTITY_ID: (
                     "button.cookidoo_clear_shopping_list_and_additional_purchases"
                 ),
             },

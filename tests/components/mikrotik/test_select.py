@@ -9,11 +9,11 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.mikrotik.const import INTERFACE, MIKROTIK_SERVICES, POE
 from homeassistant.components.mikrotik.select import SELECTS, MikrotikSelectEntity
 from homeassistant.components.select import (
-    ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -68,8 +68,11 @@ async def test_select_option(hass: HomeAssistant, mock_api: MagicMock) -> None:
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "forced_on"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            SelectServiceArgument.OPTION: "forced_on",
+        },
         blocking=True,
     )
 

@@ -23,7 +23,10 @@ from pytest_homeassistant.common import (
 from pytest_unordered import unordered
 
 from homeassistant.components import automation
-from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
+from homeassistant.components.device_automation import (
+    DEVICE_TRIGGER_BASE_SCHEMA,
+    InvalidDeviceAutomationConfig,
+)
 from homeassistant.components.sun import DOMAIN as SUN_DOMAIN
 from homeassistant.components.system_health import DOMAIN as SYSTEM_HEALTH_DOMAIN
 from homeassistant.components.tag import DOMAIN as TAG_DOMAIN
@@ -191,6 +194,85 @@ async def test_bad_trigger_platform(hass: HomeAssistant) -> None:
     with pytest.raises(probatio.Invalid) as ex:
         await async_validate_trigger_config(hass, [{"platform": "not_a_platform"}])
     assert "Invalid trigger 'not_a_platform' specified" in str(ex)
+
+
+@pytest.mark.parametrize(
+    ("trigger_config", "expected_exception", "expected_error", "expected_path"),
+    [
+        pytest.param(
+            [{"platform": "not_a_platform"}],
+            probatio.Invalid,
+            "Invalid trigger 'not_a_platform' specified",
+            [0],
+            id="unknown_platform",
+        ),
+        pytest.param(
+            [
+                {"platform": "event", "event_type": "test_event"},
+                {"platform": "event", "event_type": "test_event"},
+                {"platform": "automation"},
+            ],
+            probatio.Invalid,
+            "Integration 'automation' does not provide trigger support",
+            [2],
+            id="no_trigger_support",
+        ),
+        pytest.param(
+            [
+                {"platform": "event", "event_type": "test_event"},
+                {"platform": "state", "entity_id": "0123456789abcdef0123456789abcdef"},
+            ],
+            probatio.Invalid,
+            "Unknown entity registry entry 0123456789abcdef0123456789abcdef",
+            [1],
+            id="platform_validator",
+        ),
+        pytest.param(
+            [
+                {"platform": "event", "event_type": "test_event"},
+                {"platform": "numeric_state", "above": 1},
+            ],
+            probatio.MultipleInvalid,
+            "required key not provided",
+            [1, "entity_id"],
+            id="platform_schema_path",
+        ),
+    ],
+)
+async def test_validate_trigger_config_error_path(
+    hass: HomeAssistant,
+    trigger_config: list[ConfigType],
+    expected_exception: type[probatio.Invalid],
+    expected_error: str,
+    expected_path: list[str | int],
+) -> None:
+    """Test a probatio.Invalid error is located in the validated triggers."""
+    config = cv.TRIGGER_SCHEMA(trigger_config)
+
+    with pytest.raises(probatio.Invalid) as exc_info:
+        await async_validate_trigger_config(hass, config)
+
+    assert type(exc_info.value) is expected_exception
+    assert exc_info.value.error_message == expected_error
+    assert exc_info.value.path == expected_path
+
+
+async def test_validate_trigger_config_homeassistant_error(
+    hass: HomeAssistant,
+) -> None:
+    """Test a HomeAssistantError keeps its type and message."""
+    config = cv.TRIGGER_SCHEMA(
+        [
+            {"platform": "event", "event_type": "test_event"},
+            {"platform": "device", "domain": "light", "device_id": "abc"},
+        ]
+    )
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await async_validate_trigger_config(hass, config)
+
+    assert type(exc_info.value) is InvalidDeviceAutomationConfig
+    assert str(exc_info.value) == "Unknown device 'abc'"
 
 
 async def test_trigger_subtype(hass: HomeAssistant) -> None:

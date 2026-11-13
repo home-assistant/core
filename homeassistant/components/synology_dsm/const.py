@@ -39,7 +39,6 @@ EXCEPTION_UNKNOWN = "unknown"
 ISSUE_MISSING_BACKUP_SETUP = "missing_backup_setup"
 
 # Configuration
-CONF_SERIAL = "serial"
 CONF_VOLUMES = "volumes"
 CONF_DEVICE_TOKEN = "device_token"
 CONF_SNAPSHOT_QUALITY = "snap_profile_type"
@@ -64,14 +63,6 @@ SHARED_SUFFIX = "_shared"
 
 # Signals
 SIGNAL_CAMERA_SOURCE_CHANGED = "synology_dsm.camera_stream_source_changed"
-
-# Services
-SERVICE_REBOOT = "reboot"
-SERVICE_SHUTDOWN = "shutdown"
-SERVICES = [
-    SERVICE_REBOOT,
-    SERVICE_SHUTDOWN,
-]
 
 SYNOLOGY_AUTH_FAILED_EXCEPTIONS = (
     SynologyDSMLogin2SAForcedException,
