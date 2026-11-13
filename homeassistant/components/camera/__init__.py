@@ -11,8 +11,13 @@ from aiohttp import hdrs, web
 import attr
 import probatio
 
+from homeassistant.auth.permissions.const import POLICY_READ
 from homeassistant.components import websocket_api
-from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
+from homeassistant.components.http import (
+    KEY_AUTHENTICATED,
+    KEY_HASS_USER,
+    HomeAssistantView,
+)
 from homeassistant.components.stream import OUTPUT_FORMATS, Orientation
 from homeassistant.components.websocket_api import ActiveConnection
 from homeassistant.config_entries import ConfigEntry
@@ -29,7 +34,7 @@ from homeassistant.core import (
     HomeAssistant,
     callback,
 )
-from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
+from homeassistant.exceptions import ConfigEntryError, HomeAssistantError, Unauthorized
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_time_interval
@@ -356,6 +361,13 @@ class CameraView(HomeAssistantView):
             # register as a wrong login and ban the user's own IP.
             raise web.HTTPForbidden
 
+        # Signed-token requests have no user; user requests must be able to read
+        # the entity. 403 rather than 401 so the ban middleware ignores it.
+        if (
+            user := request.get(KEY_HASS_USER)
+        ) is not None and not user.permissions.check_entity(entity_id, POLICY_READ):
+            raise web.HTTPForbidden
+
         if not camera.is_on:
             _LOGGER.debug("Camera is off")
             raise web.HTTPServiceUnavailable
@@ -434,6 +446,8 @@ async def ws_camera_capabilities(
 
     Async friendly.
     """
+    if not connection.user.permissions.check_entity(msg["entity_id"], POLICY_READ):
+        raise Unauthorized(entity_id=msg["entity_id"], permission=POLICY_READ)
     camera = get_camera_from_entity_id(hass, msg["entity_id"])
     connection.send_result(msg["id"], asdict(camera.camera_capabilities))
 
@@ -453,6 +467,8 @@ async def ws_camera_stream(
 
     Async friendly.
     """
+    if not connection.user.permissions.check_entity(msg["entity_id"], POLICY_READ):
+        raise Unauthorized(entity_id=msg["entity_id"], permission=POLICY_READ)
     try:
         entity_id = msg["entity_id"]
         camera = get_camera_from_entity_id(hass, entity_id)

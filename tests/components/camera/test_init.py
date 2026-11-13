@@ -11,6 +11,7 @@ from unittest.mock import ANY, AsyncMock, Mock, PropertyMock, mock_open, patch
 from aiohttp import hdrs
 import pytest
 from pytest_homeassistant.common import (
+    MockUser,
     async_fire_time_changed,
     setup_test_component_platform,
 )
@@ -815,6 +816,59 @@ async def test_camera_proxy_authenticated_unknown_entity(
 
     resp = await client.get("/api/camera_proxy/camera.unknown")
     assert resp.status == HTTPStatus.NOT_FOUND
+
+
+@pytest.mark.usefixtures("mock_camera")
+@pytest.mark.parametrize(
+    "url",
+    [
+        "/api/camera_proxy/camera.demo_camera",
+        "/api/camera_proxy_stream/camera.demo_camera",
+    ],
+)
+async def test_camera_proxy_entity_permission(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_client_no_auth: ClientSessionGenerator,
+    hass_admin_user: MockUser,
+    url: str,
+) -> None:
+    """Test camera proxy views enforce per-entity read permission."""
+    hass_admin_user.groups = []
+    hass_admin_user.mock_policy({})
+    client = await hass_client()
+    async with client.get(url) as resp:
+        assert resp.status == HTTPStatus.FORBIDDEN
+
+    hass_admin_user.mock_policy(
+        {"entities": {"entity_ids": {"camera.demo_camera": True}}}
+    )
+    async with client.get(url) as resp:
+        assert resp.status == HTTPStatus.OK
+
+    # The entity access token path carries no user and keeps working.
+    hass_admin_user.mock_policy({})
+    state = hass.states.get("camera.demo_camera")
+    resp = await (await hass_client_no_auth()).get(state.attributes["entity_picture"])
+    assert resp.status == HTTPStatus.OK
+
+
+@pytest.mark.usefixtures("mock_camera", "mock_stream")
+@pytest.mark.parametrize("command", ["camera/stream", "camera/capabilities"])
+async def test_websocket_entity_permission(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user: MockUser,
+    command: str,
+) -> None:
+    """Test camera websocket commands enforce per-entity read permission."""
+    hass_admin_user.groups = []
+    hass_admin_user.mock_policy({})
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": command, "entity_id": "camera.demo_camera"})
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == "unauthorized"
 
 
 @pytest.mark.usefixtures("mock_camera")
