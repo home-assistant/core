@@ -2,6 +2,7 @@
 
 from functools import partial
 import logging
+from typing import TYPE_CHECKING
 
 from bleak import BleakError
 from bleak.backends.device import BLEDevice
@@ -51,7 +52,8 @@ def _async_local_ble_device(
 async def async_setup_entry(hass: HomeAssistant, entry: RyseConfigEntry) -> None:
     """Set up RYSE."""
     address = entry.unique_id
-    assert address is not None
+    if TYPE_CHECKING:
+        assert address is not None
 
     ble_device = _async_local_ble_device(hass, address)
     if not ble_device:

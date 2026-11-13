@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 from bleak import BleakError
 import probatio
@@ -114,7 +114,8 @@ class RyseBLEDeviceConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm discovered BLE device."""
-        assert self._discovery_info is not None
+        if TYPE_CHECKING:
+            assert self._discovery_info is not None
         discovery_info = self._discovery_info
         name = discovery_info.name or "RYSE device"
 
@@ -146,7 +147,8 @@ class RyseBLEDeviceConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         reauth_entry = self._get_reauth_entry()
         address = reauth_entry.unique_id
-        assert address is not None
+        if TYPE_CHECKING:
+            assert address is not None
 
         if user_input is not None:
             if error := await self._async_pair(address):
