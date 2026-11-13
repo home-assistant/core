@@ -21,9 +21,10 @@ from homeassistant.components.trmnl.const import (
     OAUTH2_TOKEN,
 )
 from homeassistant.components.trmnl.home import build_snapshot, capabilities_of
-from homeassistant.config_entries import SOURCE_REAUTH
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, State
+from homeassistant.exceptions import OAuth2TokenRequestConnectionError
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
@@ -460,6 +461,45 @@ async def test_remove_waits_for_a_push_past_the_unload_task_timeout(
 
     mock_trmnl_client.delete_plugin_setting.assert_awaited_once_with(42)
     assert mock_trmnl_client.update_plugin_setting_data.await_count == 1
+
+
+async def test_unload_survives_a_token_refresh_failing_under_way(
+    hass: HomeAssistant,
+    mock_trmnl_client: AsyncMock,
+    home_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test unload waits for a push whose token refresh fails, logs it and unloads."""
+    release = asyncio.Event()
+
+    async def fail_refresh() -> None:
+        await release.wait()
+        raise OAuth2TokenRequestConnectionError(domain=DOMAIN)
+
+    home_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        home_entry, options={**home_entry.options, CONF_HOME_PLUGIN_SETTING_ID: 42}
+    )
+    hass.states.async_set("light.lamp", "on")
+    await setup_integration(hass, home_entry)
+
+    with patch.object(
+        home_entry.runtime_data, "async_ensure_token_valid", side_effect=fail_refresh
+    ):
+        hass.states.async_set("light.lamp", "off")
+        freezer.tick(timedelta(seconds=61))
+        async_fire_time_changed(hass)
+        await asyncio.sleep(0)
+        unload = hass.async_create_task(
+            hass.config_entries.async_unload(home_entry.entry_id)
+        )
+        await asyncio.sleep(0)
+        release.set()
+        assert await unload
+
+    assert home_entry.state is ConfigEntryState.NOT_LOADED
+    assert "Could not send the home to TRMNL" in caplog.text
 
 
 async def test_failed_push_is_retried_on_the_next_tick(

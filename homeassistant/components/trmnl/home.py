@@ -279,8 +279,10 @@ class HomePusher:
             unsubscribe()
         if self._cancel_wait is not None:
             self._cancel_wait()
-        if self._push_task is not None:
-            await self._push_task
+        if (task := self._push_task) is not None:
+            await asyncio.wait([task])
+            if err := task.exception():
+                LOGGER.warning("Could not send the home to TRMNL: %s", err)
 
     @callback
     def _async_request_push(self, wait: bool = False) -> None:
