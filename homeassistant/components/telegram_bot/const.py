@@ -175,3 +175,13 @@ ATTR_REPLY_TO_MSGID = "reply_to_message_id"
 ATTR_REPLYMARKUP = "reply_markup"
 ATTR_MESSAGE_TAG = "message_tag"
 ATTR_MESSAGE_THREAD_ID = "message_thread_id"
+
+
+class TelegramBotServiceResponse(StrEnum):
+    """Keys of the Telegram bot action responses."""
+
+    CHATS = "chats"
+    CHAT_ID = "chat_id"
+    MESSAGE_ID = "message_id"
+    ENTITY_ID = "entity_id"
+    FILE_PATH = "file_path"
