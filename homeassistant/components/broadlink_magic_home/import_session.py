@@ -55,7 +55,7 @@ class ImportSessionManager:
 
     @property
     def active_sessions(self) -> tuple[ImportSession, ...]:
-        """Return active sessions for diagnostics and tests."""
+        """Return active sessions."""
         return tuple(self._sessions.values())
 
     def get(self, project_id: str) -> ImportSession | None:
