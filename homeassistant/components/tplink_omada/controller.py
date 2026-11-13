@@ -8,6 +8,9 @@ from tplink_omada_client.devices import OmadaListDevice, OmadaSwitch
 
 from homeassistant.core import HomeAssistant, callback
 
+if TYPE_CHECKING:
+    from . import OmadaConfigEntry
+
 from .coordinator import (
     OmadaClientsCoordinator,
     OmadaControllerStatusCoordinator,
@@ -18,9 +21,6 @@ from .coordinator import (
     OmadaSwitchPortCoordinator,
     OmadaVpnPoliciesCoordinator,
 )
-
-if TYPE_CHECKING:
-    from . import OmadaConfigEntry
 
 
 class OmadaSiteController:
