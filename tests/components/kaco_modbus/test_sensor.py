@@ -23,6 +23,8 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import MOCK_SERIAL, model_registers
 
+MPPT_MODEL_ID = 160
+
 # The readings someone adds this integration to get, as opposed to the detail
 # ones that stay disabled until they are asked for.
 PRIMARY_SENSORS = {
@@ -216,29 +218,50 @@ async def test_sensors_go_unavailable_when_the_link_drops(
     assert hass.states.get(power).state == "1000"
 
 
-async def test_an_unreadable_block_takes_its_sensors_unavailable(
+@pytest.mark.parametrize(
+    ("model_id", "failing", "answering"),
+    [
+        pytest.param(INVERTER_MODEL_ID, "ac_power", "mppt_1_dc_power", id="inverter"),
+        pytest.param(MPPT_MODEL_ID, "mppt_1_dc_power", "ac_power", id="mppt"),
+    ],
+)
+async def test_an_unreadable_block_takes_only_its_sensors_unavailable(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     entity_registry: er.EntityRegistry,
     mock_connection: MockModbusConnection,
     init_integration: MockConfigEntry,
+    model_id: int,
+    failing: str,
+    answering: str,
 ) -> None:
     """Test a partial poll, where one block fails and the others answer.
 
     A different path from a dead link: the poll still succeeds, so the entry
     stays loaded, and it is the per-component check that takes these entities
-    unavailable. That the *other* components are unaffected is not observable
-    until a second component has entities of its own.
+    unavailable.
     """
-    power = _entity_id(entity_registry, "ac_power")
-    assert hass.states.get(power).state == "1000"
-
+    failing_id = _entity_id(entity_registry, failing)
+    answering_id = _entity_id(entity_registry, answering)
+    failing_value = hass.states.get(failing_id).state
+    answering_value = hass.states.get(answering_id).state
     unit = mock_connection.for_unit(1)
-    for address in model_registers(BLUEPLANET_86TL3, INVERTER_MODEL_ID):
+    addresses = model_registers(BLUEPLANET_86TL3, model_id)
+
+    for address in addresses:
         unit.fail_read(address, ModbusTimeoutError("slow block"))
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get(power).state == STATE_UNAVAILABLE
+    assert hass.states.get(failing_id).state == STATE_UNAVAILABLE
+    assert hass.states.get(answering_id).state == answering_value
     assert init_integration.state is ConfigEntryState.LOADED
+
+    for address in addresses:
+        unit.fail_read(address, None)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(failing_id).state == failing_value
