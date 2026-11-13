@@ -221,10 +221,6 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             redact_debug_log=True,
         )
 
-        if not self.connection:
-            LOGGER.error("Unable to establish a connection with %s", self.host)
-            return
-
         LOGGER.debug(
             "detected services on %s %s",
             self.host,
@@ -1050,6 +1046,9 @@ class AvmWrapper(FritzBoxTools):
 
     async def async_get_current_user_rights(self) -> dict[str, Any]:
         """Call X_AVM-DE_GetCurrentUser service."""
+
+        if "LANConfigSecurity1" not in self.connection.services:
+            return {}
 
         result = await self._async_service_call(
             "LANConfigSecurity",

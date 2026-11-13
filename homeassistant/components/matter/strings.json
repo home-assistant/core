@@ -751,6 +751,9 @@
       "evse_charging_switch": {
         "name": "Enable charging"
       },
+      "led_indicator": {
+        "name": "LED indicator"
+      },
       "music_sync": {
         "name": "Music sync"
       },
