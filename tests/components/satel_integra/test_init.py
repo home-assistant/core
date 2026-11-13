@@ -1,10 +1,11 @@
 """Test init of Satel Integra integration."""
 
 from copy import deepcopy
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from satel_integra import (
     SatelConnectFailedError,
     SatelConnectionInitializationError,
@@ -45,6 +46,7 @@ from . import (
     MOCK_PARTITION_SUBENTRY,
     MOCK_SWITCHABLE_OUTPUT_SUBENTRY,
     MOCK_ZONE_SUBENTRY,
+    get_alarm_status_callback,
     setup_integration,
 )
 
@@ -266,6 +268,27 @@ async def test_unload_unsubscribes_connection_status_callbacks(
     for unsubscribe_callback in unsubscribe_callbacks:
         unsubscribe_callback.assert_called_once_with()
     mock_satel.close.assert_awaited_once_with()
+
+
+async def test_unload_cancels_pending_partition_update(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test unload cancels a pending partition state update."""
+    await setup_integration(hass, mock_config_entry)
+    coordinator = mock_config_entry.runtime_data.coordinator_partitions
+
+    with patch.object(coordinator, "async_set_updated_data") as set_updated_data:
+        get_alarm_status_callback(mock_satel)()
+
+        assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+        freezer.tick(1)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    set_updated_data.assert_not_called()
 
 
 async def test_setup_failure_unsubscribes_connection_status_callbacks(

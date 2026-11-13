@@ -5,6 +5,7 @@
   "categories": ["presence_location.phones_companion_apps"],
   "codeowners": [],
   "config_flow": true,
+  "connectivity": ["mqtt", "network"],
   "dependencies": ["webhook"],
   "documentation": "https://www.home-assistant.io/integrations/owntracks",
   "integration_type": "service",

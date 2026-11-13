@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, cast, override
+from typing import TYPE_CHECKING, Any, cast, override
 
 from pytradfri.api.aiocoap_api import APIRequestProtocol
 from pytradfri.device import Device
@@ -32,7 +32,8 @@ class TradfriSensorEntityDescription(SensorEntityDescription):
 
 def _get_air_quality(device: Device) -> int | None:
     """Fetch the air quality value."""
-    assert device.air_purifier_control is not None
+    if TYPE_CHECKING:
+        assert device.air_purifier_control is not None
     if (
         device.air_purifier_control.air_purifiers[0].air_quality == 65535
     ):  # The sensor returns 65535 if the fan is turned off
@@ -41,12 +42,12 @@ def _get_air_quality(device: Device) -> int | None:
     return device.air_purifier_control.air_purifiers[0].air_quality
 
 
-def _get_filter_time_left(device: Device) -> int:
+def _get_filter_time_left(device: Device) -> int | None:
     """Fetch the filter's remaining lifetime (in hours)."""
-    assert device.air_purifier_control is not None
-    return round(
-        device.air_purifier_control.air_purifiers[0].filter_lifetime_remaining / 60
-    )
+    if TYPE_CHECKING:
+        assert device.air_purifier_control is not None
+    remaining = device.air_purifier_control.air_purifiers[0].filter_lifetime_remaining
+    return None if remaining is None else round(remaining / 60)
 
 
 SENSOR_DESCRIPTIONS_BATTERY: tuple[TradfriSensorEntityDescription, ...] = (
@@ -177,6 +178,7 @@ class TradfriSensor(TradfriBaseEntity, SensorEntity):
 
         self._refresh()  # Set initial state
 
+    @callback
     @override
     def _refresh(self) -> None:
         """Refresh the device."""

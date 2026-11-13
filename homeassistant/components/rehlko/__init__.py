@@ -53,7 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RehlkoConfigEntry) -> No
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="invalid_auth",
-            translation_placeholders={CONF_EMAIL: entry.data[CONF_EMAIL]},
+            translation_placeholders={"email": entry.data[CONF_EMAIL]},
         ) from ex
     except CONNECTION_EXCEPTIONS as ex:
         raise ConfigEntryNotReady(

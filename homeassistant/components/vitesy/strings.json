@@ -2,6 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reconfigure_account_mismatch": "The credentials belong to a different Vitesy Hub account than the one originally configured.",
       "unique_id_mismatch": "The credentials belong to a different Vitesy Hub account. Please reauthenticate with the account originally configured."
     },
     "error": {
@@ -18,6 +19,17 @@
         },
         "description": "The password for {email} is no longer valid. Enter the current password of your Vitesy Hub account.",
         "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "reconfigure": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "email": "[%key:component::vitesy::config::step::user::data_description::email%]",
+          "password": "[%key:component::vitesy::config::step::user::data_description::password%]"
+        },
+        "description": "Update the credentials of your Vitesy Hub account."
       },
       "user": {
         "data": {

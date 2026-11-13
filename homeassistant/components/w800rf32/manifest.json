@@ -3,6 +3,7 @@
   "name": "WGL Designs W800RF32",
   "categories": ["hubs_protocols.wireless_protocols"],
   "codeowners": [],
+  "connectivity": ["rf"],
   "documentation": "https://www.home-assistant.io/integrations/w800rf32",
   "iot_class": "local_push",
   "loggers": ["W800rf32"],

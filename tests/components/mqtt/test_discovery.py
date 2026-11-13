@@ -4,7 +4,6 @@ import asyncio
 from collections.abc import Awaitable, Callable
 import copy
 import json
-import logging
 from pathlib import Path
 import re
 from typing import Any
@@ -328,22 +327,40 @@ async def test_discovery_schema_error(
         assert "AttributeError: Attribute abc not found" in caplog.text
 
 
+@pytest.mark.parametrize(
+    ("payload", "error"),
+    [
+        pytest.param(
+            '{"name": "abc", "state_topic": "home/alarm", '
+            '"command_topic": "home/alarm/set", '
+            '"qos": "some_invalid_value"}',
+            "Error 'expected int at 'qos''",
+            id="qos",
+        ),
+        pytest.param(
+            '{"name": "abc", "state_topic": "home/alarm", '
+            '"command_topic": "home/alarm/set", '
+            '"encoding": "unknown-encoding"}',
+            "Error 'Unknown payload encoding 'unknown-encoding' at 'encoding''",
+            id="encoding",
+        ),
+    ],
+)
 async def test_invalid_config(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
+    payload: str,
+    error: str,
 ) -> None:
     """Test sending in JSON that violates the platform schema."""
     await mqtt_mock_entry()
     async_fire_mqtt_message(
-        hass,
-        "homeassistant/alarm_control_panel/bla/config",
-        '{"name": "abc", "state_topic": "home/alarm", '
-        '"command_topic": "home/alarm/set", '
-        '"qos": "some_invalid_value"}',
+        hass, "homeassistant/alarm_control_panel/bla/config", payload
     )
     await hass.async_block_till_done()
-    assert "Error 'expected int at 'qos''" in caplog.text
+    assert error in caplog.text
+    assert hass.states.get("alarm_control_panel.abc") is None
 
 
 async def test_invalid_device_discovery_config(
@@ -2830,13 +2847,10 @@ async def test_mqtt_discovery_flow_starts_once(
         assert mqtt_data_flow_calls[0].payload == "initial message"
 
         # Test we can ignore updates if they are the same
-        with caplog.at_level(logging.DEBUG):
-            async_fire_mqtt_message(
-                hass, "comp/discovery/bla/config1", "initial message"
-            )
-            await hass.async_block_till_done(wait_background_tasks=True)
-            assert "Ignoring already processed discovery message" in caplog.text
-            assert len(mqtt_data_flow_calls) == 1
+        async_fire_mqtt_message(hass, "comp/discovery/bla/config1", "initial message")
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert "Ignoring already processed discovery message" in caplog.text
+        assert len(mqtt_data_flow_calls) == 1
 
         # Test we can apply updates
         async_fire_mqtt_message(hass, "comp/discovery/bla/config1", "update message")

@@ -7,14 +7,7 @@ import probatio
 
 from homeassistant.components import webhook
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    ATTR_NAME,
-    CONF_WEBHOOK_ID,
-    STATE_NOT_HOME,
-    Platform,
-)
+from homeassistant.const import ATTR_NAME, CONF_WEBHOOK_ID, STATE_NOT_HOME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_flow, config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -45,6 +38,8 @@ CONFIG_SCHEMA = probatio.Schema(
 
 ATTR_ADDRESS = "address"
 ATTR_BEACON_ID = "beaconUUID"
+ATTR_LATITUDE = "latitude"
+ATTR_LONGITUDE = "longitude"
 ATTR_CURRENT_LATITUDE = "currentLatitude"
 ATTR_CURRENT_LONGITUDE = "currentLongitude"
 ATTR_DEVICE = "device"

@@ -107,6 +107,7 @@ class ApplicationType(StrEnum):
     GECKO_BOOTLOADER = "bootloader"
     EZSP = "ezsp"
     SPINEL = "spinel"
+    SPINEL_ZIGGURAT = "spinel_ziggurat"
     CPC = "cpc"
     ROUTER = "router"
 

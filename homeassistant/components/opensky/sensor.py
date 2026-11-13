@@ -3,7 +3,6 @@
 from typing import override
 
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -46,7 +45,7 @@ class OpenSkySensor(CoordinatorEntity[OpenSkyDataUpdateCoordinator], SensorEntit
     def __init__(
         self,
         coordinator: OpenSkyDataUpdateCoordinator,
-        config_entry: ConfigEntry,
+        config_entry: OpenSkyConfigEntry,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)

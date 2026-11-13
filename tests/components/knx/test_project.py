@@ -14,6 +14,7 @@ from unittest.mock import patch
 
 import pytest
 from pytest_homeassistant.typing import WebSocketGenerator
+from xknx.telegram.address import GroupAddress
 
 from homeassistant.components.knx.const import KNX_MODULE_KEY
 from homeassistant.core import HomeAssistant
@@ -99,3 +100,44 @@ async def test_cache_is_refreshed_on_upload(
     assert res["success"], res
     knxproject = await project.get_knxproject()
     assert knxproject["info"]["name"] == "Reuploaded"
+
+
+@pytest.mark.usefixtures("load_knxproj")
+async def test_new_project_replaces_group_addresses(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+    project_data: dict[str, Any],
+) -> None:
+    """Group addresses of a previous project don't stay with a new one."""
+    await knx.setup_integration()
+    project = hass.data[KNX_MODULE_KEY].project
+    xknx = hass.data[KNX_MODULE_KEY].xknx
+    assert "0/0/1" in project.group_addresses
+
+    new_data = {
+        **project_data,
+        "group_addresses": {
+            address: ga
+            for address, ga in project_data["group_addresses"].items()
+            if address != "0/0/1"
+        },
+    }
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "knx/project_file_process", "file_id": "1234", "password": ""}
+    )
+    with (
+        patch(
+            "homeassistant.components.knx.project.process_uploaded_file"
+        ) as file_upload_mock,
+        patch("xknxproject.XKNXProj.parse", return_value=new_data),
+    ):
+        file_upload_mock.return_value.__enter__.return_value = ""
+        res = await client.receive_json()
+
+    assert res["success"], res
+    assert "0/0/1" not in project.group_addresses
+    assert "0/0/2" in project.group_addresses
+    assert xknx.group_address_dpt.get(GroupAddress("0/0/1")) is None
+    assert xknx.group_address_dpt.get(GroupAddress("0/0/2")) is not None

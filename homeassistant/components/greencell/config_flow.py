@@ -110,10 +110,11 @@ class EVSEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> config_entries.ConfigFlowResult:
         """Manual step: start active discovery process."""
         try:
-            if not mqtt.is_connected(self.hass):
-                return self.async_abort(reason="mqtt_not_connected")
+            mqtt_connected = mqtt.is_connected(self.hass)
         except KeyError:
             return self.async_abort(reason="mqtt_not_configured")
+        if not mqtt_connected:
+            return self.async_abort(reason="mqtt_not_connected")
 
         return await self.async_step_discover()
 

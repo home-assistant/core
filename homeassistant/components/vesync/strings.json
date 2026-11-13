@@ -77,15 +77,24 @@
         }
       }
     },
+    "light": {
+      "nightlight": {
+        "name": "Night light"
+      }
+    },
     "number": {
       "mist_level": {
         "name": "Mist level"
+      },
+      "warm_mist_level": {
+        "name": "Warm mist level"
       }
     },
     "select": {
       "night_light_level": {
         "name": "Night light level",
         "state": {
+          "auto": "[%key:common::state::auto%]",
           "bright": "Bright",
           "dim": "Dim",
           "off": "[%key:common::state::off%]",
@@ -100,6 +109,9 @@
       "carbon_filter_life": {
         "name": "Carbon filter lifetime"
       },
+      "co2": {
+        "name": "Carbon dioxide"
+      },
       "cook_set_temp": {
         "name": "Cooking set temperature"
       },
@@ -109,13 +121,16 @@
       "cook_status": {
         "name": "Cooking status",
         "state": {
+          "appointing": "Appointing",
           "cooking": "Cooking",
           "cooking_end": "Cooking finished",
           "cooking_stop": "Cooking stopped",
           "heating": "Preheating",
+          "hold": "Hold",
           "preheat_end": "Preheating finished",
           "preheat_stop": "Preheating stopped",
           "pull_out": "Drawer pulled out",
+          "ready": "Ready",
           "standby": "[%key:common::state::standby%]"
         }
       },
@@ -174,6 +189,9 @@
     },
     "invalid_auth": {
       "message": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "nightlight_command_failed": {
+      "message": "Failed to control the night light"
     },
     "server_error": {
       "message": "Server error occurred while connecting to VeSync"

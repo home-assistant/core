@@ -3,6 +3,7 @@
   "name": "Aruba ClearPass",
   "categories": ["presence_location.network_presence"],
   "codeowners": [],
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/cppm_tracker",
   "iot_class": "local_polling",
   "quality_scale": "legacy",

@@ -20,6 +20,7 @@ from zha.application.const import (
     ATTR_ENDPOINT_NAMES,
     ATTR_IEEE,
     ATTR_MANUFACTURER,
+    ATTR_MODEL,
     ATTR_NEIGHBORS,
     ATTR_QUIRK_APPLIED,
     ATTR_TYPE,
@@ -57,6 +58,7 @@ from homeassistant.components.zha.const import (
     ATTR_QR_CODE,
     ATTR_SOURCE_IEEE,
     EZSP_OVERWRITE_EUI64,
+    ZHAService,
 )
 from homeassistant.components.zha.helpers import (
     DEBUG_LEVELS,
@@ -65,7 +67,6 @@ from homeassistant.components.zha.helpers import (
     get_zha_gateway,
     get_zha_gateway_proxy,
 )
-from homeassistant.components.zha.services import SERVICE_PERMIT
 from homeassistant.components.zha.websocket_api import (
     ATTR_TARGET_IEEE,
     BINDINGS,
@@ -76,7 +77,7 @@ from homeassistant.components.zha.websocket_api import (
     TYPE,
     async_load_api,
 )
-from homeassistant.const import ATTR_AREA_ID, ATTR_MODEL, ATTR_NAME, Platform
+from homeassistant.const import ATTR_AREA_ID, ATTR_NAME, Platform
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -879,7 +880,7 @@ async def test_permit_ha12(
     """Test permit service."""
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_PERMIT, params, True, Context(user_id=hass_admin_user.id)
+        DOMAIN, ZHAService.PERMIT, params, True, Context(user_id=hass_admin_user.id)
     )
     assert app_controller.permit.await_count == 1
     assert app_controller.permit.await_args[1]["time_s"] == duration
@@ -923,7 +924,7 @@ async def test_permit_with_install_code(
     """Test permit service with install code."""
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_PERMIT, params, True, Context(user_id=hass_admin_user.id)
+        DOMAIN, ZHAService.PERMIT, params, True, Context(user_id=hass_admin_user.id)
     )
     assert app_controller.permit.await_count == 0
     assert app_controller.permit_with_link_key.call_count == 1
@@ -978,7 +979,7 @@ async def test_permit_with_install_code_fail(
 
     with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
-            DOMAIN, SERVICE_PERMIT, params, True, Context(user_id=hass_admin_user.id)
+            DOMAIN, ZHAService.PERMIT, params, True, Context(user_id=hass_admin_user.id)
         )
     assert app_controller.permit.await_count == 0
     assert app_controller.permit_with_link_key.call_count == 0
@@ -1039,7 +1040,7 @@ async def test_permit_with_qr_code(
     """Test permit service with install code from qr code."""
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_PERMIT, params, True, Context(user_id=hass_admin_user.id)
+        DOMAIN, ZHAService.PERMIT, params, True, Context(user_id=hass_admin_user.id)
     )
     assert app_controller.permit.await_count == 0
     assert app_controller.permit_with_link_key.call_count == 1
@@ -1055,7 +1056,7 @@ async def test_ws_permit_with_qr_code(
     """Test permit service with install code from qr code."""
 
     await zha_client.send_json(
-        {ID: 14, TYPE: f"{DOMAIN}/devices/{SERVICE_PERMIT}", **params}
+        {ID: 14, TYPE: f"{DOMAIN}/devices/{ZHAService.PERMIT}", **params}
     )
 
     msg_type = None
@@ -1083,7 +1084,7 @@ async def test_ws_permit_with_install_code_fail(
     """Test permit ws service with install code."""
 
     await zha_client.send_json(
-        {ID: 14, TYPE: f"{DOMAIN}/devices/{SERVICE_PERMIT}", **params}
+        {ID: 14, TYPE: f"{DOMAIN}/devices/{ZHAService.PERMIT}", **params}
     )
 
     msg = await zha_client.receive_json()
@@ -1118,7 +1119,7 @@ async def test_ws_permit_ha12(
     """Test permit ws service."""
 
     await zha_client.send_json(
-        {ID: 14, TYPE: f"{DOMAIN}/devices/{SERVICE_PERMIT}", **params}
+        {ID: 14, TYPE: f"{DOMAIN}/devices/{ZHAService.PERMIT}", **params}
     )
 
     msg_type = None
@@ -1158,8 +1159,8 @@ async def test_ws_permit_overlapping_restores_log_levels(
     for name in DEBUG_LEVELS:
         caplog.set_level(logging.INFO, logger=name)
 
-    await send_and_wait_result({ID: 20, TYPE: f"{DOMAIN}/devices/{SERVICE_PERMIT}"})
-    await send_and_wait_result({ID: 21, TYPE: f"{DOMAIN}/devices/{SERVICE_PERMIT}"})
+    await send_and_wait_result({ID: 20, TYPE: f"{DOMAIN}/devices/{ZHAService.PERMIT}"})
+    await send_and_wait_result({ID: 21, TYPE: f"{DOMAIN}/devices/{ZHAService.PERMIT}"})
     assert log_levels() == DEBUG_LEVELS
 
     # Ending the first session must leave the second one in debug mode

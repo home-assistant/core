@@ -5,6 +5,7 @@
   "categories": ["ai_voice.ai_models"],
   "codeowners": ["@Crocmagnon"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["conversation"],
   "documentation": "https://www.home-assistant.io/integrations/ovhcloud_ai_endpoints",
   "integration_type": "service",

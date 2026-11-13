@@ -3,7 +3,7 @@
 from collections import defaultdict
 from json import JSONDecodeError
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pyControl4.account import C4Account
 from pyControl4.director import C4Director
@@ -13,8 +13,10 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_TOKEN, CONF_USERN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 
-from . import Control4ConfigEntry
 from .const import CONF_CONTROLLER_UNIQUE_ID
+
+if TYPE_CHECKING:
+    from . import Control4ConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

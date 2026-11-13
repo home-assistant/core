@@ -4,6 +4,7 @@ from collections.abc import Awaitable, Callable
 from unittest.mock import AsyncMock, MagicMock
 
 from aiohomeconnect.model import (
+    ApplianceType,
     ArrayOfEvents,
     ArrayOfPrograms,
     Event,
@@ -30,15 +31,14 @@ from aiohomeconnect.model.program import (
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -75,7 +75,7 @@ def platforms() -> list[Platform]:
     ),
     [
         (
-            "Dishwasher",
+            ApplianceType.DISHWASHER,
             {
                 OptionKey.DISHCARE_DISHWASHER_HALF_LOAD: "switch.dishwasher_half_load",
                 OptionKey.DISHCARE_DISHWASHER_SILENCE_ON_DEMAND: (
@@ -235,7 +235,7 @@ async def test_program_options_retrieval(
         assert hass.states.is_state(entity_id, STATE_UNKNOWN)
 
 
-@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.WASHER], indirect=True)
 @pytest.mark.parametrize(
     ("array_of_programs_program_arg", "event_key"),
     [
@@ -317,7 +317,7 @@ async def test_no_options_retrieval_on_unknown_program(
     ("appliance", "option_key", "option_entity_id"),
     [
         (
-            "Dishwasher",
+            ApplianceType.DISHWASHER,
             OptionKey.DISHCARE_DISHWASHER_HALF_LOAD,
             "switch.dishwasher_half_load",
         )
@@ -470,5 +470,8 @@ async def test_option_entity_functionality_exception(
 
     with pytest.raises(HomeAssistantError, match=r"Error.*setting.*option.*"):
         await hass.services.async_call(
-            SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+            SWITCH_DOMAIN,
+            SwitchService.TURN_OFF,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
+            blocking=True,
         )

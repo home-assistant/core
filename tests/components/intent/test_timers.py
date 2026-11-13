@@ -24,7 +24,7 @@ from homeassistant.components.intent.timers import (
     async_register_timer_handler,
 )
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_NAME
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
@@ -1491,6 +1491,7 @@ async def test_start_timer_with_conversation_command(
     timer_name = "test timer"
     test_command = "turn on the lights"
     agent_id = "test_agent"
+    request_context = Context(user_id="test_user")
 
     mock_handle_timer = MagicMock()
     async_register_timer_handler(hass, device_id, mock_handle_timer)
@@ -1515,6 +1516,7 @@ async def test_start_timer_with_conversation_command(
                 "seconds": {"value": 0},
                 "conversation_command": {"value": test_command},
             },
+            context=request_context,
             device_id=device_id,
             conversation_agent_id=agent_id,
         )
@@ -1528,6 +1530,11 @@ async def test_start_timer_with_conversation_command(
         await hass.async_block_till_done()
         mock_converse.assert_called_once()
         assert mock_converse.call_args.args[1] == test_command
+
+        # The command runs as the user who set the timer, linked to the request.
+        command_context = mock_converse.call_args.kwargs["context"]
+        assert command_context.user_id == request_context.user_id
+        assert command_context.parent_id == request_context.id
 
 
 def _delayed_command_acted() -> intent.IntentResponse:

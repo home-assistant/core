@@ -4,6 +4,7 @@
   "categories": ["security_safety.cameras"],
   "codeowners": ["@davet2001"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["http", "stream"],
   "documentation": "https://www.home-assistant.io/integrations/generic",
   "integration_type": "device",

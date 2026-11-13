@@ -2,7 +2,10 @@
 
 from datetime import timedelta
 from http import HTTPStatus
+from typing import Any
+from unittest.mock import MagicMock
 
+import aiohttp
 from aiowebostv import WebOsTvPairError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -30,26 +33,20 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.components.webostv.const import (
-    ATTR_PAYLOAD,
     ATTR_SOUND_OUTPUT,
     CONF_SOURCES,
     DOMAIN,
     LIVE_TV_APP_ID,
     WebOsTvCommandError,
+    WebOsTvService,
+    WebOsTvServiceArgument,
 )
 from homeassistant.components.webostv.media_player import (
     SUPPORT_WEBOSTV,
     SUPPORT_WEBOSTV_VOLUME,
 )
-from homeassistant.components.webostv.services import (
-    ATTR_BUTTON,
-    SERVICE_BUTTON,
-    SERVICE_COMMAND,
-    SERVICE_SELECT_SOUND_OUTPUT,
-)
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
-    ATTR_COMMAND,
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     CONF_CLIENT_SECRET,
@@ -69,7 +66,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     EntityStateAttribute,
 )
-from homeassistant.core import HomeAssistant, State
+from homeassistant.core import CoreState, HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
@@ -236,9 +233,9 @@ async def test_button(hass: HomeAssistant, client) -> None:
 
     data = {
         ATTR_ENTITY_ID: ENTITY_ID,
-        ATTR_BUTTON: "test",
+        WebOsTvServiceArgument.BUTTON: "test",
     }
-    await hass.services.async_call(DOMAIN, SERVICE_BUTTON, data, True)
+    await hass.services.async_call(DOMAIN, WebOsTvService.BUTTON, data, True)
     await hass.async_block_till_done()
     client.button.assert_called_once()
     client.button.assert_called_with("test")
@@ -260,10 +257,10 @@ async def test_command(
 
     data = {
         ATTR_ENTITY_ID: ENTITY_ID,
-        ATTR_COMMAND: "audio/getVolume",
+        WebOsTvServiceArgument.COMMAND: "audio/getVolume",
     }
     response = await hass.services.async_call(
-        DOMAIN, SERVICE_COMMAND, data, True, return_response=True
+        DOMAIN, WebOsTvService.COMMAND, data, True, return_response=True
     )
     await hass.async_block_till_done()
     client.request.assert_called_with("audio/getVolume", payload=None)
@@ -276,10 +273,10 @@ async def test_command_with_optional_arg(hass: HomeAssistant, client) -> None:
 
     data = {
         ATTR_ENTITY_ID: ENTITY_ID,
-        ATTR_COMMAND: "test",
-        ATTR_PAYLOAD: {"target": "https://www.google.com"},
+        WebOsTvServiceArgument.COMMAND: "test",
+        WebOsTvServiceArgument.PAYLOAD: {"target": "https://www.google.com"},
     }
-    await hass.services.async_call(DOMAIN, SERVICE_COMMAND, data, True)
+    await hass.services.async_call(DOMAIN, WebOsTvService.COMMAND, data, True)
     await hass.async_block_till_done()
     client.request.assert_called_with(
         "test", payload={"target": "https://www.google.com"}
@@ -300,11 +297,11 @@ async def test_select_sound_output(
 
     data = {
         ATTR_ENTITY_ID: ENTITY_ID,
-        ATTR_SOUND_OUTPUT: "external_speaker",
+        WebOsTvServiceArgument.SOUND_OUTPUT: "external_speaker",
     }
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_SELECT_SOUND_OUTPUT,
+        WebOsTvService.SELECT_SOUND_OUTPUT,
         data,
         True,
         return_response=True,
@@ -387,9 +384,11 @@ async def test_service_entity_id_none(hass: HomeAssistant, client) -> None:
 
     data = {
         ATTR_ENTITY_ID: ENTITY_MATCH_NONE,
-        ATTR_SOUND_OUTPUT: "external_speaker",
+        WebOsTvServiceArgument.SOUND_OUTPUT: "external_speaker",
     }
-    await hass.services.async_call(DOMAIN, SERVICE_SELECT_SOUND_OUTPUT, data, True)
+    await hass.services.async_call(
+        DOMAIN, WebOsTvService.SELECT_SOUND_OUTPUT, data, True
+    )
 
     client.change_sound_output.assert_not_called()
 
@@ -584,11 +583,23 @@ async def test_app_id(hass: HomeAssistant, client) -> None:
     assert hass.states.get(ENTITY_ID).attributes[ATTR_APP_ID] == "com.webos.app.home"
 
 
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        pytest.param(TimeoutError(), id="timeout"),
+        pytest.param(ConnectionResetError(), id="connection_reset"),
+        pytest.param(
+            aiohttp.ClientOSError(104, "Connection reset by peer"),
+            id="client_os_error",
+        ),
+    ],
+)
 async def test_client_disconnected(
     hass: HomeAssistant,
     client,
     caplog: pytest.LogCaptureFixture,
     freezer: FrozenDateTimeFactory,
+    side_effect: Exception,
 ) -> None:
     """Test error not raised when client is disconnected."""
     await setup_webostv(hass)
@@ -617,11 +628,13 @@ async def test_client_disconnected(
     )
 
     client.is_connected.return_value = False
-    client.connect.side_effect = TimeoutError
+    client.tv_state.is_on = False
+    client.connect.side_effect = side_effect
 
     await mock_scan_interval(hass, freezer)
 
-    assert "TimeoutError" not in caplog.text
+    assert hass.states.get(ENTITY_ID).state == MediaPlayerState.OFF
+    assert type(side_effect).__name__ not in caplog.text
 
 
 async def test_client_key_update_on_connect(
@@ -757,6 +770,182 @@ async def test_supported_features(hass: HomeAssistant, client) -> None:
     attrs = hass.states.get(ENTITY_ID).attributes
 
     assert attrs[ATTR_SUPPORTED_FEATURES] == supported
+
+
+WEBOS_24_ARC_NOT_SYNCABLE = {
+    "volumeLimitable": False,
+    "activeStatus": True,
+    "maxVolume": 100,
+    "ossActivate": False,
+    "volumeLimiter": "none",
+    "soundOutput": "external_arc",
+    "volume": 31,
+    "dedicatedSpeakerConnected": False,
+    "mode": "normal",
+    "externalDeviceControl": True,
+    "muteStatus": False,
+    "volumeSyncable": False,
+    "adjustVolume": True,
+}
+WEBOS_22_ARC_SYNCABLE = {
+    "volumeLimitable": False,
+    "activeStatus": True,
+    "maxVolume": 100,
+    "ossActivate": False,
+    "volumeLimiter": "none",
+    "soundOutput": "external_arc_sound_mode_sync",
+    "volume": 10,
+    "mode": "normal",
+    "externalDeviceControl": True,
+    "muteStatus": False,
+    "volumeSyncable": True,
+    "adjustVolume": True,
+}
+WEBOS_23_TV_SPEAKER_SYNCABLE = {
+    "volumeLimitable": True,
+    "activeStatus": True,
+    "maxVolume": 100,
+    "ossActivate": False,
+    "volumeLimiter": "none",
+    "soundOutput": "tv_speaker",
+    "volume": 18,
+    "mode": "normal",
+    "externalDeviceControl": False,
+    "muteStatus": False,
+    "volumeSyncable": True,
+    "adjustVolume": True,
+}
+WEBOS_4_ARC_NO_SUPPORT_VOLUME = {
+    "returnValue": True,
+    "volumeMax": 100,
+    "scenario": "mastervolume_ext_speaker_arc",
+    "subscribed": True,
+    "volume": 15,
+    "action": "requested",
+    "supportvolume": False,
+    "slider": False,
+    "active": False,
+    "mute": False,
+}
+WEBOS_4_TV_SPEAKER_SUPPORT_VOLUME = {
+    "returnValue": True,
+    "volumeMax": 100,
+    "scenario": "mastervolume_tv_speaker_ext",
+    "subscribed": True,
+    "volume": 12,
+    "action": "requested",
+    "supportvolume": True,
+    "slider": False,
+    "active": False,
+    "mute": False,
+}
+WEBOS_6_ARC_UNKNOWN = {
+    "activeStatus": True,
+    "adjustVolume": True,
+    "maxVolume": 100,
+    "muteStatus": False,
+    "volume": 10,
+    "mode": "normal",
+    "soundOutput": "external_arc",
+}
+SUPPORT_WEBOSTV_VOLUME_SET = (
+    SUPPORT_WEBOSTV | SUPPORT_WEBOSTV_VOLUME | MediaPlayerEntityFeature.VOLUME_SET
+)
+
+
+@pytest.mark.parametrize(
+    ("sound_output", "volume_status", "expected"),
+    [
+        pytest.param(
+            "external_arc",
+            WEBOS_24_ARC_NOT_SYNCABLE,
+            SUPPORT_WEBOSTV | SUPPORT_WEBOSTV_VOLUME,
+            id="webos_22_not_syncable",
+        ),
+        pytest.param(
+            "external_arc_sound_mode_sync",
+            WEBOS_22_ARC_SYNCABLE,
+            SUPPORT_WEBOSTV_VOLUME_SET,
+            id="webos_22_syncable",
+        ),
+        pytest.param(
+            "tv_speaker",
+            WEBOS_23_TV_SPEAKER_SYNCABLE,
+            SUPPORT_WEBOSTV_VOLUME_SET,
+            id="webos_23_tv_speaker",
+        ),
+        pytest.param(
+            "external_arc",
+            WEBOS_4_ARC_NO_SUPPORT_VOLUME,
+            SUPPORT_WEBOSTV | SUPPORT_WEBOSTV_VOLUME,
+            id="webos_4_no_support_volume",
+        ),
+        pytest.param(
+            "tv_speaker",
+            WEBOS_4_TV_SPEAKER_SUPPORT_VOLUME,
+            SUPPORT_WEBOSTV_VOLUME_SET,
+            id="webos_4_support_volume",
+        ),
+        pytest.param(
+            "external_arc",
+            WEBOS_6_ARC_UNKNOWN,
+            SUPPORT_WEBOSTV_VOLUME_SET,
+            id="webos_6_unknown",
+        ),
+        pytest.param(
+            "external_speaker",
+            WEBOS_22_ARC_SYNCABLE,
+            SUPPORT_WEBOSTV | SUPPORT_WEBOSTV_VOLUME,
+            id="external_speaker",
+        ),
+        pytest.param(
+            "lineout",
+            WEBOS_22_ARC_SYNCABLE,
+            SUPPORT_WEBOSTV,
+            id="lineout",
+        ),
+    ],
+)
+async def test_supported_features_volume_status(
+    hass: HomeAssistant,
+    client: MagicMock,
+    sound_output: str,
+    volume_status: dict[str, Any],
+    expected: MediaPlayerEntityFeature,
+) -> None:
+    """Test volume set support follows the volume status reported by the TV."""
+    client.tv_state.sound_output = sound_output
+    client.tv_state.volume_status = volume_status
+    await setup_webostv(hass)
+    await client.mock_state_update()
+
+    attrs = hass.states.get(ENTITY_ID).attributes
+    assert attrs[ATTR_SUPPORTED_FEATURES] == expected
+
+
+async def test_supported_features_volume_status_update(
+    hass: HomeAssistant, client: MagicMock
+) -> None:
+    """Test volume set support is updated when the volume status changes."""
+    client.tv_state.sound_output = "external_arc"
+    await setup_webostv(hass)
+    await client.mock_state_update()
+
+    attrs = hass.states.get(ENTITY_ID).attributes
+    assert attrs[ATTR_SUPPORTED_FEATURES] == SUPPORT_WEBOSTV_VOLUME_SET
+
+    client.tv_state.volume_status = WEBOS_24_ARC_NOT_SYNCABLE
+    await client.mock_state_update()
+
+    attrs = hass.states.get(ENTITY_ID).attributes
+    assert attrs[ATTR_SUPPORTED_FEATURES] == SUPPORT_WEBOSTV | SUPPORT_WEBOSTV_VOLUME
+
+    client.tv_state.sound_output = "tv_speaker"
+    client.tv_state.volume_status = {}
+    await client.mock_state_update()
+
+    attrs = hass.states.get(ENTITY_ID).attributes
+    assert attrs[ATTR_SUPPORTED_FEATURES] == SUPPORT_WEBOSTV_VOLUME_SET
 
 
 async def test_cached_supported_features(hass: HomeAssistant, client) -> None:
@@ -1060,8 +1249,9 @@ async def test_availability(
     await mock_scan_interval(hass, freezer)
 
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
-    unavailable_log = f"Device {TV_NAME} is unavailable"
+    unavailable_log = f"{TV_NAME} is unavailable"
     assert unavailable_log in caplog.text
+    assert "Error fetching" not in caplog.text
 
     # Clear logs and update the offline entity again - should NOT log again
     caplog.clear()
@@ -1113,9 +1303,35 @@ async def test_availability(
             ],
         },
     )
+    await hass.async_block_till_done()
 
-    await mock_scan_interval(hass, freezer)
-
+    # Available without waiting for the next poll
     assert hass.states.get(ENTITY_ID).state == MediaPlayerState.ON
     available_log = f"Fetching {TV_NAME} data recovered"
     assert available_log in caplog.text
+
+
+async def test_availability_during_startup(
+    hass: HomeAssistant,
+    client: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test entity is not marked unavailable before Home Assistant is running."""
+    hass.set_state(CoreState.starting)
+    await setup_webostv(hass)
+
+    client.connect.side_effect = TimeoutError
+    client.is_connected.return_value = False
+    client.tv_state.is_on = False
+    await mock_scan_interval(hass, freezer)
+
+    # turn_on trigger may not be attached yet
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
+    assert f"{TV_NAME} is unavailable" not in caplog.text
+
+    hass.set_state(CoreState.running)
+    await mock_scan_interval(hass, freezer)
+
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+    assert f"{TV_NAME} is unavailable" in caplog.text

@@ -258,8 +258,11 @@ async def test_update_time_segment_api_error(
             blocking=True,
         )
     assert excinfo.value.translation_domain == DOMAIN
-    assert excinfo.value.translation_key == "api_error"
-    assert "error" in excinfo.value.translation_placeholders
+    assert excinfo.value.translation_key == "api_error_with_code"
+    assert excinfo.value.translation_placeholders == {
+        "error": "API Error",
+        "code": "1",
+    }
 
 
 async def test_no_min_devices_skips_service_registration(
@@ -515,8 +518,11 @@ async def test_read_time_segments_api_error(
             "homeassistant.components.growatt_server.coordinator.GrowattCoordinator.read_time_segments",
             side_effect=HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="api_error",
-                translation_placeholders={"error": "API connection failed"},
+                translation_key="api_error_with_code",
+                translation_placeholders={
+                    "error": "API connection failed",
+                    "code": "1",
+                },
             ),
         ),
         pytest.raises(HomeAssistantError),
@@ -911,7 +917,7 @@ async def test_write_ac_charge_times_api_error(
         growattServer.GrowattV1ApiError("Write failed", error_code=1, error_msg="Error")
     )
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             DOMAIN,
             "write_ac_charge_times",
@@ -923,6 +929,8 @@ async def test_write_ac_charge_times_api_error(
             },
             blocking=True,
         )
+    assert excinfo.value.translation_key == "api_error_with_code"
+    assert excinfo.value.translation_placeholders == {"error": "Error", "code": "1"}
 
 
 async def test_write_ac_discharge_times_api_error(
@@ -943,7 +951,7 @@ async def test_write_ac_discharge_times_api_error(
         growattServer.GrowattV1ApiError("Write failed", error_code=1, error_msg="Error")
     )
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             DOMAIN,
             "write_ac_discharge_times",
@@ -954,6 +962,8 @@ async def test_write_ac_discharge_times_api_error(
             },
             blocking=True,
         )
+    assert excinfo.value.translation_key == "api_error_with_code"
+    assert excinfo.value.translation_placeholders == {"error": "Error", "code": "1"}
 
 
 async def test_write_ac_charge_times_invalid_charge_power(

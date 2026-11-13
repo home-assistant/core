@@ -4,6 +4,7 @@
   "categories": ["messaging_notifications.email_sms_calls"],
   "codeowners": ["@jbouwh"],
   "config_flow": true,
+  "connectivity": ["cloud", "network"],
   "dependencies": ["repairs"],
   "documentation": "https://www.home-assistant.io/integrations/imap",
   "integration_type": "service",
