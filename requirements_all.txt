@@ -2375,7 +2375,7 @@ pyhomematic==0.1.78
 pyhomeworks==1.1.2
 
 # homeassistant.components.icloud
-pyicloud==2026.10.1
+pyicloud==2026.11.1
 
 # homeassistant.components.imou
 pyimouapi==1.4.4
