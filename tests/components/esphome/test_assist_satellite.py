@@ -2196,7 +2196,12 @@ async def test_secondary_pipeline(
     )
     await hass.async_block_till_done()
 
-    async def get_pipeline(wake_word_phrase):
+    pipeline_kwargs: dict[str, Any] = {}
+
+    async def get_pipeline(
+        wake_word_phrase: str | None,
+        wake_word_audio: VoiceAssistantWakeWordAudio | None = None,
+    ) -> str:
         with patch(
             "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
         ) as mock_pipeline_from_audio_stream:
@@ -2205,11 +2210,23 @@ async def test_secondary_pipeline(
                 flags=0,
                 audio_settings=VoiceAssistantAudioSettings(),
                 wake_word_phrase=wake_word_phrase,
+                wake_word_audio=wake_word_audio,
             )
 
             mock_pipeline_from_audio_stream.assert_called_once()
-            kwargs = mock_pipeline_from_audio_stream.call_args_list[0].kwargs
-            return pipeline_id_to_name[kwargs["pipeline_id"]]
+            pipeline_kwargs.update(
+                mock_pipeline_from_audio_stream.call_args_list[0].kwargs
+            )
+            return pipeline_id_to_name[pipeline_kwargs["pipeline_id"]]
+
+    def wake_word_audio(wake_word_id: str) -> VoiceAssistantWakeWordAudio:
+        return VoiceAssistantWakeWordAudio(
+            wake_word_id=wake_word_id,
+            audio_bytes=48000,
+            audio_bytes2=48000,
+            probability=0.75,
+            probability_cutoff=0.375,
+        )
 
     # Primary pipeline is the default
     for wake_word_phrase in (None, "Okay Nabu"):
@@ -2220,6 +2237,16 @@ async def test_secondary_pipeline(
 
     # Primary pipeline should be restored after
     assert (await get_pipeline(None)) == "Primary Pipeline"
+
+    # A device that sends only the model ID gets the pipeline of its phrase
+    assert (
+        await get_pipeline(None, wake_word_audio("hey_jarvis"))
+    ) == "Secondary Pipeline"
+    assert pipeline_kwargs["wake_word_phrase"] == "Hey Jarvis"
+
+    # An unknown model ID is passed on as the phrase
+    assert (await get_pipeline(None, wake_word_audio("unknown"))) == "Primary Pipeline"
+    assert pipeline_kwargs["wake_word_phrase"] == "unknown"
 
 
 @pytest.mark.timeout(5)

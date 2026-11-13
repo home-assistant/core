@@ -633,6 +633,17 @@ class EsphomeAssistSatellite(
             # ANNOUNCEMENT format from media player
             self._update_tts_format()
 
+        if not wake_word_phrase and wake_word_audio is not None:
+            # The wake word selects hold phrases, not model IDs
+            wake_word_phrase = next(
+                (
+                    wake_word.wake_word
+                    for wake_word in self._satellite_config.available_wake_words
+                    if wake_word.id == wake_word_audio.wake_word_id
+                ),
+                wake_word_audio.wake_word_id,
+            )
+
         # Run the appropriate pipeline.
         self._active_pipeline_index = 0
 
@@ -666,7 +677,6 @@ class EsphomeAssistSatellite(
                 if self._active_audio_channel == 1
                 else wake_word_audio.audio_bytes
             )
-            wake_word_phrase = wake_word_phrase or wake_word_audio.wake_word_id
             wake_word_audio_ms = audio_bytes // _AUDIO_BYTES_PER_MS
 
         _LOGGER.debug(
@@ -718,7 +728,9 @@ class EsphomeAssistSatellite(
         # As the pipeline will ask at STT_START, which may depend on the language
         audio_processing = stt_engine.async_get_audio_processing(
             stt.SpeechMetadata(
-                language=pipeline.stt_language or pipeline.language,
+                language=pipeline.stt_language
+                or pipeline.language
+                or self.hass.config.language,
                 format=stt.AudioFormats.WAV,
                 codec=stt.AudioCodecs.PCM,
                 bit_rate=stt.AudioBitRates.BITRATE_16,
