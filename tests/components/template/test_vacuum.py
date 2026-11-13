@@ -934,6 +934,79 @@ async def test_not_optimistic(
             {
                 "unique_id": TEST_VACUUM.entity_id,
                 "start": [],
+                "clean_area_passes": [1, 2],
+                **make_test_action(
+                    "clean_segments",
+                    {
+                        "segment_ids": "{{ segment_ids }}",
+                        "passes": "{{ passes | default('omitted') }}",
+                    },
+                ),
+                "segments": "{{ [{'id': '1', 'name': 'Kitchen'}] }}",
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    ("service_options", "expected_passes"),
+    [
+        pytest.param({}, "omitted", id="omitted"),
+        pytest.param({"passes": 2}, 2, id="explicit"),
+    ],
+)
+@pytest.mark.usefixtures("setup_vacuum")
+async def test_clean_area_passes(
+    hass: HomeAssistant,
+    calls: list[ServiceCall],
+    entity_registry: er.EntityRegistry,
+    service_options: dict[str, int],
+    expected_passes: int | str,
+) -> None:
+    """Pass counts are optional even when the entity advertises the capability."""
+    entity_registry.async_update_entity_options(
+        TEST_VACUUM.entity_id,
+        vacuum.DOMAIN,
+        {"area_mapping": {"area_1": ["1"]}},
+    )
+    await hass.services.async_call(
+        vacuum.DOMAIN,
+        vacuum.SERVICE_CLEAN_AREA,
+        {
+            "entity_id": TEST_VACUUM.entity_id,
+            "cleaning_area_id": ["area_1"],
+            **service_options,
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert_action(
+        TEST_VACUUM,
+        calls,
+        1,
+        "clean_segments",
+        segment_ids=["1"],
+        passes=expected_passes,
+    )
+
+    state = hass.states.get(TEST_VACUUM.entity_id)
+    assert state is not None
+    assert state.attributes["clean_area_passes"] == [1, 2]
+    assert (
+        state.attributes["supported_features"] & VacuumEntityFeature.CLEAN_AREA_PASSES
+    )
+
+
+@pytest.mark.parametrize(
+    ("count", "vacuum_config"),
+    [
+        (
+            1,
+            {
+                "unique_id": TEST_VACUUM.entity_id,
+                "start": [],
                 **CLEAN_SEGMENTS_ACTION,
                 "segments": (
                     "{{ [{'id': '1', 'name': 'Livingroom'},"

@@ -29,6 +29,7 @@ STATE_VACUUM_CACHED_PROPERTIES_WITH_ATTR_ = {
     "supported_features",
     "fan_speed",
     "fan_speed_list",
+    "clean_area_passes",
     "activity",
 }
 
@@ -41,11 +42,15 @@ class StateVacuumEntity(
     entity_description: StateVacuumEntityDescription
 
     _entity_component_unrecorded_attributes = frozenset(
-        {VacuumEntityCapabilityAttribute.FAN_SPEED_LIST}
+        {
+            VacuumEntityCapabilityAttribute.FAN_SPEED_LIST,
+            VacuumEntityCapabilityAttribute.CLEAN_AREA_PASSES,
+        }
     )
 
     _attr_fan_speed: str | None = None
     _attr_fan_speed_list: list[str]
+    _attr_clean_area_passes: list[int] = []
     _attr_activity: VacuumActivity | None = None
     _attr_supported_features: VacuumEntityFeature = VacuumEntityFeature(0)
 
@@ -62,9 +67,16 @@ class StateVacuumEntity(
     @override
     def capability_attributes(self) -> dict[str, Any] | None:
         """Return capability attributes."""
+        attributes: dict[str, Any] = {}
         if VacuumEntityFeature.FAN_SPEED in self.supported_features:
-            return {VacuumEntityCapabilityAttribute.FAN_SPEED_LIST: self.fan_speed_list}
-        return None
+            attributes[VacuumEntityCapabilityAttribute.FAN_SPEED_LIST] = (
+                self.fan_speed_list
+            )
+        if VacuumEntityFeature.CLEAN_AREA_PASSES in self.supported_features:
+            attributes[VacuumEntityCapabilityAttribute.CLEAN_AREA_PASSES] = (
+                self.clean_area_passes
+            )
+        return attributes or None
 
     @cached_property
     def fan_speed(self) -> str | None:
@@ -75,6 +87,11 @@ class StateVacuumEntity(
     def fan_speed_list(self) -> list[str]:
         """Get the list of available fan speed steps of the vacuum cleaner."""
         return self._attr_fan_speed_list
+
+    @cached_property
+    def clean_area_passes(self) -> list[int]:
+        """Return supported pass counts for area cleaning."""
+        return self._attr_clean_area_passes
 
     @property
     @override

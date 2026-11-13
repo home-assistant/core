@@ -4,7 +4,9 @@ from collections.abc import Mapping
 import logging
 from typing import TYPE_CHECKING, Any, override
 
-from deebot_client.capabilities import Capabilities, DeviceType
+from deebot_client.capabilities import Capabilities, CapabilityNumber, DeviceType
+from deebot_client.commands.json.clean import CleanArea as JsonCleanArea
+from deebot_client.commands.xml.clean import CleanArea as XmlCleanArea
 from deebot_client.device import Device
 from deebot_client.events import (
     CachedMapInfoEvent,
@@ -248,6 +250,18 @@ class EcovacsVacuum(
 
         if self._capability.map and self._capability.clean.action.area:
             self._attr_supported_features |= VacuumEntityFeature.CLEAN_AREA
+            if self._capability.clean.action.area in (JsonCleanArea, XmlCleanArea) and (
+                clean_count := self._capability.clean.count
+            ):
+                self._attr_clean_area_passes = (
+                    list(range(max(1, clean_count.min), clean_count.max + 1))
+                    if isinstance(clean_count, CapabilityNumber)
+                    else [1, 2, 3, 4]
+                )
+                if self._attr_clean_area_passes:
+                    self._attr_supported_features |= (
+                        VacuumEntityFeature.CLEAN_AREA_PASSES
+                    )
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -533,7 +547,7 @@ class EcovacsVacuum(
             self._capability.clean.action.area(
                 CleanMode.SPOT_AREA,
                 valid_room_ids,
-                self._clean_count,
+                kwargs.get("passes", self._clean_count),
             )
         )
 

@@ -54,6 +54,7 @@ from .trigger_entity import TriggerEntity
 _LOGGER = logging.getLogger(__name__)
 
 CONF_CLEAN_SEGMENTS = "clean_segments"
+CONF_CLEAN_AREA_PASSES = "clean_area_passes"
 CONF_FAN_SPEED = "fan_speed"
 CONF_FAN_SPEED_LIST = "fan_speeds"
 CONF_SEGMENTS = "segments"
@@ -80,6 +81,18 @@ VACUUM_COMMON_SCHEMA = probatio.Schema(
     {
         probatio.Optional(CONF_FAN_SPEED_LIST, default=[]): probatio.EnsureList(),
         probatio.Optional(CONF_FAN_SPEED): cv.template,
+        probatio.Optional(CONF_CLEAN_AREA_PASSES, default=[]): probatio.All(
+            probatio.EnsureList(),
+            [
+                probatio.All(
+                    probatio.Check(
+                        lambda value: type(value) is int,
+                        "Cleaning passes must be integers",
+                    ),
+                    probatio.Range(min=1),
+                )
+            ],
+        ),
         probatio.Optional(CONF_STATE): cv.template,
         probatio.Inclusive(
             CONF_SEGMENTS,
@@ -271,6 +284,7 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity, RestoreE
 
         # List of valid fan speeds
         self._attr_fan_speed_list = config[CONF_FAN_SPEED_LIST]
+        self._attr_clean_area_passes = config[CONF_CLEAN_AREA_PASSES]
         self._segments: list[Segment] = []
         self.setup_state_template(
             "_attr_activity",
@@ -292,6 +306,9 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity, RestoreE
         self._attr_supported_features = (
             VacuumEntityFeature.START | VacuumEntityFeature.STATE
         )
+
+        if self._attr_clean_area_passes and CONF_CLEAN_SEGMENTS in config:
+            self._attr_supported_features |= VacuumEntityFeature.CLEAN_AREA_PASSES
 
         for action_id, supported_feature in (
             (SERVICE_START, 0),
@@ -334,7 +351,7 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity, RestoreE
         if script := self._action_scripts.get(CONF_CLEAN_SEGMENTS):
             await self.async_run_script(
                 script,
-                run_variables={"segment_ids": segment_ids},
+                run_variables={"segment_ids": segment_ids, **kwargs},
                 context=self._context,
             )
 
