@@ -2319,6 +2319,15 @@
         }
       }
     },
+    "clicky": {
+      "name": "Clicky Web Analytics",
+      "integration_type": "service",
+      "categories": [
+        "computers_network.monitoring"
+      ],
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "cloudflare": {
       "name": "Cloudflare",
       "integrations": {
