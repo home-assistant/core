@@ -406,7 +406,13 @@ class FibaroThermostat(FibaroEntity, ClimateEntity):
                 )
             elif (
                 "setCoolingThermostatSetpoint" in target.actions
-                and self.hvac_mode == HVACMode.COOL
+                and (
+                    self.hvac_mode == HVACMode.COOL
+                    or (
+                        "setHeatingThermostatSetpoint" not in target.actions
+                        and "setTargetLevel" not in target.actions
+                    )
+                )
             ):
                 target.execute_action("setCoolingThermostatSetpoint", [temperature])
             elif "setHeatingThermostatSetpoint" in target.actions:
