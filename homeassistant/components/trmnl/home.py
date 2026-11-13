@@ -166,6 +166,7 @@ CAPABILITIES_BY_DOMAIN: dict[str, Callable[[State], dict[str, dict[str, Any]]]] 
         "homealarm_state": {"value": ALARM_STATES.get(state.state, "armed")}
     },
 }
+HOME_DOMAINS = [*CAPABILITIES_BY_DOMAIN, "climate"]
 
 
 def capabilities_of(state: State, temperature_unit: str) -> dict[str, dict[str, Any]]:

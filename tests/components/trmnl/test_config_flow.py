@@ -362,19 +362,20 @@ async def test_reconfigure_flow_wrong_account(
 
 
 @pytest.mark.usefixtures("mock_trmnl_client")
+@pytest.mark.parametrize("entity_id", ["light.lamp", "climate.living_room"])
 async def test_options_flow_picks_entities(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, entity_id: str
 ) -> None:
     """Test the options flow stores the entities to show on TRMNL."""
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {"home_entities": ["light.lamp"]}
+        result["flow_id"], {"home_entities": [entity_id]}
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert mock_config_entry.options == {"home_entities": ["light.lamp"]}
+    assert mock_config_entry.options == {"home_entities": [entity_id]}
 
 
 @pytest.mark.usefixtures("mock_trmnl_client")
