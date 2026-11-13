@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-from energyid_webhooks.directives import DirectiveResource
+from energyid_webhooks.directives import DirectiveResource, DirectiveState
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.core import HomeAssistant, ServiceResponse, callback
@@ -17,7 +17,6 @@ from .coordinator import (
     EnergyIDConfigEntry,
     EnergyIDDirectiveCoordinator,
     EnergyIDDirectiveSnapshot,
-    EnergyIDDirectiveState,
     async_directives_enabled,
 )
 
@@ -123,7 +122,7 @@ class EnergyIDDirectiveSensor(
         )
 
     @property
-    def directive_state(self) -> EnergyIDDirectiveState:
+    def directive_state(self) -> DirectiveState:
         """Return the signal of this directive now and its next change."""
         return self.snapshot.state_at(dt_util.utcnow())
 
