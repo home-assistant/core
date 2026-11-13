@@ -85,6 +85,12 @@ class HomeConnectEntity(CoordinatorEntity[HomeConnectApplianceCoordinator]):
         self, option_key: OptionKey, value: Any
     ) -> None:
         """Set an option for the entity."""
+        if option_key not in self.appliance.available_options:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_option_not_writable",
+                translation_placeholders={"option": option_key},
+            )
         try:
             # We try to set the active program option first,
             # if it fails we try to set the selected program option

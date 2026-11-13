@@ -4,7 +4,7 @@ from asyncio import sleep as asyncio_sleep
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import override
+from typing import Literal, override
 
 from aiohomeconnect.client import Client as HomeConnectClient
 from aiohomeconnect.model import (
@@ -15,6 +15,7 @@ from aiohomeconnect.model import (
     EventType,
     GetSetting,
     HomeAppliance,
+    Option,
     OptionKey,
     ProgramKey,
     SettingKey,
@@ -69,7 +70,8 @@ class HomeConnectApplianceData:
     commands: set[CommandKey]
     events: dict[EventKey, Event]
     info: HomeAppliance
-    options: dict[OptionKey, ProgramDefinitionOption]
+    options: dict[OptionKey, Option]
+    available_options: dict[OptionKey, ProgramDefinitionOption]
     programs: list[EnumerateProgram]
     settings: dict[SettingKey, GetSetting]
     status: dict[StatusKey, Status]
@@ -85,6 +87,8 @@ class HomeConnectApplianceData:
         self.info.connected = other.info.connected
         self.options.clear()
         self.options.update(other.options)
+        self.available_options.clear()
+        self.available_options.update(other.available_options)
         self.programs.clear()
         self.programs.extend(other.programs)
         self.settings.update(other.settings)
@@ -98,6 +102,7 @@ class HomeConnectApplianceData:
             events={},
             info=appliance,
             options={},
+            available_options={},
             programs=[],
             settings={},
             status={},
@@ -421,8 +426,7 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                 # Also avoid redundant program fetches if the
                 # program hasn't changed since the last fetch.
                 if program_update_event_value:
-                    await self.update_options(program_update_event_value[1])
-                    self.last_fetched_program = program_update_event_value
+                    await self.update_options(*program_update_event_value)
                 self._call_event_listener(event_message)
 
             case EventType.EVENT:
@@ -584,11 +588,7 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
         # When the active program is cleared, refresh options from the selected
         # program so the UI doesn't keep showing the completed program's options.
         # Wait for READY; earlier requests fail.
-        await self.update_options(program)
-        self.last_fetched_program = (
-            EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
-            program,
-        )
+        await self.update_options(EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM, program)
         # Notify listeners to discover entities for the refreshed options.
         for listener in self._get_listeners_for_event_key(
             EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM
@@ -715,6 +715,7 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
         programs = []
         events = {}
         options = {}
+        available_options = {}
         if appliance.type in APPLIANCES_WITH_PROGRAMS:  # pylint: disable=too-many-nested-blocks
             try:
                 all_programs = await self.client.get_all_programs(appliance.ha_id)
@@ -729,7 +730,7 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
             else:
                 programs.extend(all_programs.programs)
                 current_program_key = None
-                program_options = None
+                options_data = []
                 for program, event_key in (
                     (
                         all_programs.selected,
@@ -750,20 +751,39 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                             program.key,
                         )
                         current_program_key = program.key
-                        program_options = program.options
-                        if current_program_key in FAVORITE_PROGRAMS and program_options:
+                        options_data = program.options or []
+                        options = {
+                            option.key: option for option in program.options or []
+                        }
+                        if current_program_key in FAVORITE_PROGRAMS and options:
                             # The API doesn't allow to fetch the
                             # options from the favorite program.
                             # We can attempt to get the base program and get the options
-                            for option in program_options:
+                            for option in options_data:
                                 if option.key == OptionKey.BSH_COMMON_BASE_PROGRAM:
                                     current_program_key = ProgramKey(option.value)
                                     break
                         self.last_fetched_program = (event_key, current_program_key)
 
                 if current_program_key:
-                    options = await self.get_options_definitions(current_program_key)
-                    for option in program_options or []:
+                    available_options = await self.get_options_definitions(
+                        current_program_key
+                    )
+                    # In theory, available options should be always a subset of options,
+                    # but we add them to options anyway just to be safe.
+                    options.update(
+                        {
+                            option_key: Option(
+                                key=option_key,
+                                value=None,
+                                name=available_option.name,
+                                display_value=None,
+                                unit=available_option.unit,
+                            )
+                            for option_key, available_option in available_options.items()
+                        }
+                    )
+                    for option in options_data:
                         option_event_key = EventKey(option.key)
                         events[option_event_key] = Event(
                             option_event_key,
@@ -795,6 +815,7 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                 events=events,
                 info=appliance,
                 options=options,
+                available_options=available_options,
                 programs=programs,
                 settings=settings,
                 status=status,
@@ -825,14 +846,24 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                 self.data.info.ha_id,
                 error,
             )
+            self.last_fetched_program = None
             return {}
 
-    async def update_options(self, program_key: ProgramKey) -> None:
+    async def update_options(
+        self,
+        program_type: Literal[
+            EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
+            EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
+        ],
+        program_key: ProgramKey,
+    ) -> None:
         """Update options for appliance."""
         options = self.data.options
+        available_options = self.data.available_options
         events = self.data.events
         options_to_notify = options.copy()
         options.clear()
+        available_options.clear()
         if (
             program_key in FAVORITE_PROGRAMS
             and (event := events.get(EventKey.BSH_COMMON_OPTION_BASE_PROGRAM))
@@ -844,24 +875,73 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
         else:
             resolved_program_key = program_key
 
-        options.update(await self.get_options_definitions(resolved_program_key))
+        available_options.update(
+            await self.get_options_definitions(resolved_program_key)
+        )
+        try:
+            _options = (
+                await (
+                    self.client.get_active_program_options(self.data.info.ha_id)
+                    if program_type == EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM
+                    else self.client.get_selected_program_options(self.data.info.ha_id)
+                )
+            ).options
+        except TooManyRequestsError:
+            raise
+        except HomeConnectError as error:
+            self.last_fetched_program = None
+            _LOGGER.debug(
+                "Error fetching active/selected program options for %s: %s",
+                self.data.info.ha_id,
+                error,
+            )
+            _options = []
+        else:
+            self.last_fetched_program = (program_type, program_key)
 
-        for option in options.values():
+        options.update({option.key: option for option in _options})
+
+        for option in _options:
             option_event_key = EventKey(option.key)
+            events[option_event_key] = Event(
+                option_event_key,
+                option.key,
+                0,
+                "",
+                "",
+                option.value,
+                option.name,
+                display_value=option.display_value,
+                unit=option.unit,
+            )
+        for option_key, available_option in available_options.items():
+            option_event_key = EventKey(available_option.key)
+            option_default_value = None
             if (
                 option_event_key not in events
-                and option.constraints
-                and (option_default_value := option.constraints.default) is not None
+                and available_option.constraints
+                and (option_default_value := available_option.constraints.default)
+                is not None
             ):
                 events[option_event_key] = Event(
                     option_event_key,
-                    option.key.value,
+                    available_option.key.value,
                     0,
                     "",
                     "",
                     option_default_value,
-                    option.name,
-                    unit=option.unit,
+                    available_option.name,
+                    unit=available_option.unit,
+                )
+            if option_key not in options:
+                # In theory, available options should be always a subset of options,
+                # but we add them to options anyway just to be safe.
+                options[option_key] = Option(
+                    key=option_key,
+                    value=option_default_value,
+                    name=available_option.name,
+                    display_value=None,
+                    unit=available_option.unit,
                 )
         options_to_notify.update(options)
         for option_key in options_to_notify:

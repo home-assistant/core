@@ -1622,6 +1622,9 @@
     "set_option": {
       "message": "Error setting the option for the program: {error}"
     },
+    "set_option_not_writable": {
+      "message": "Option \"{option}\" cannot be set"
+    },
     "set_options_active_program": {
       "message": "Error setting options for the active program: {error}"
     },

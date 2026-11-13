@@ -169,19 +169,28 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
         """Return the native unit of measurement."""
         if (
             (
-                option_definition := self.appliance.options.get(
-                    OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_SETPOINT_TEMPERATURE
+                (
+                    option_definition := self.appliance.available_options.get(
+                        OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_SETPOINT_TEMPERATURE
+                    )
                 )
+                and (proto_unit := option_definition.unit) is not None
             )
-            and (proto_unit := option_definition.unit) is not None
-            and (unit := UNIT_MAP.get(proto_unit)) is not None
-        ):
+            or (
+                (
+                    option := self.appliance.options.get(
+                        OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_SETPOINT_TEMPERATURE
+                    )
+                )
+                and (proto_unit := option.unit) is not None
+            )
+        ) and (unit := UNIT_MAP.get(proto_unit)) is not None:
             return unit
         return UnitOfTemperature.CELSIUS
 
     def _get_temperature_constraints(self) -> ProgramDefinitionConstraints | None:
         """Get the temperature constraints for the appliance."""
-        if option_definition := self.appliance.options.get(
+        if option_definition := self.appliance.available_options.get(
             OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_SETPOINT_TEMPERATURE
         ):
             return option_definition.constraints
@@ -226,12 +235,14 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
             features |= ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
         if self.preset_modes:
             features |= ClimateEntityFeature.PRESET_MODE
-        if self.appliance.options.get(
+        if (
             OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_SETPOINT_TEMPERATURE
+            in self.appliance.options
         ):
             features |= ClimateEntityFeature.TARGET_TEMPERATURE
-        if self.appliance.options.get(
+        if (
             OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_MODE
+            in self.appliance.options
         ):
             features |= ClimateEntityFeature.FAN_MODE
         return features
@@ -316,7 +327,7 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
         """Return the list of available fan modes."""
         if (
             (
-                option_definition := self.appliance.options.get(
+                option_definition := self.appliance.available_options.get(
                     OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_MODE
                 )
             )
@@ -328,7 +339,11 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
                 for fan_mode, api_value in FAN_MODES_OPTIONS.items()
                 if api_value in option_constraints.allowed_values
             ]
-        if option_definition:
+        if (
+            option_definition
+            or OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_MODE
+            in self.appliance.options
+        ):
             # Then the constraints or the allowed values are not present
             # So we stick to the default values
             return list(FAN_MODES_OPTIONS.keys())
