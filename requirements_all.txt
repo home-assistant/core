@@ -847,7 +847,7 @@ cookidoo-api==0.18.4
 
 # homeassistant.components.backup
 # homeassistant.components.utility_meter
-cronsim==2.7
+cronsim==2.8
 
 # homeassistant.components.data_grand_lyon
 data-grand-lyon-ha==0.9.0
