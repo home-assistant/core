@@ -35,6 +35,7 @@ OLD_IP_ADDRESS = "127.0.0.2"
 THREAD_IP_ADDRESS = "fd00::1"
 IPV4_LOOKUP = (AF_INET, SOCK_DGRAM, IPPROTO_UDP, "", (IP_ADDRESS, 0))
 IPV6_LOOKUP = (AF_INET6, SOCK_DGRAM, IPPROTO_UDP, "", (THREAD_IP_ADDRESS, 0, 0, 0))
+LINK_LOCAL_LOOKUP = (AF_INET6, SOCK_DGRAM, IPPROTO_UDP, "", ("fe80::1", 0, 0, 7))
 
 type DiscoveryData = DhcpServiceInfo | ZeroconfServiceInfo | dict[str, str]
 
@@ -751,6 +752,7 @@ async def test_manual_host_creates_version_2_entry(
     [
         pytest.param([IPV4_LOOKUP], IP_ADDRESS, id="ipv4-only"),
         pytest.param([IPV6_LOOKUP], THREAD_IP_ADDRESS, id="ipv6-only"),
+        pytest.param([LINK_LOCAL_LOOKUP], "fe80::1%7", id="ipv6-link-local"),
         pytest.param([IPV6_LOOKUP, IPV4_LOOKUP], IP_ADDRESS, id="dual-stack"),
     ],
 )

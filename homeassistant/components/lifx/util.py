@@ -43,12 +43,16 @@ def _resolve_host(host: str) -> str:
     """Return the IPv4 address of a host if it has one, otherwise an IPv6 one."""
     results = getaddrinfo(host, None, type=SOCK_DGRAM)
     # Only Thread devices lack an IPv4 address, and they are reached over IPv6
-    address = next(
-        (sockaddr[0] for family, _, _, _, sockaddr in results if family == AF_INET),
-        results[0][4][0],
+    sockaddr = next(
+        (sockaddr for family, _, _, _, sockaddr in results if family == AF_INET),
+        results[0][4],
     )
+    address = sockaddr[0]
     if TYPE_CHECKING:
         assert isinstance(address, str)
+    # The library rejects a link-local address without its interface
+    if len(sockaddr) == 4 and sockaddr[3]:
+        return f"{address}%{sockaddr[3]}"
     return address
 
 
