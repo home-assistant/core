@@ -31,6 +31,7 @@ from . import auth_store, jwt_wrapper, models
 from .const import ACCESS_TOKEN_EXPIRATION, GROUP_ID_ADMIN, REFRESH_TOKEN_EXPIRATION
 from .mfa_modules import MultiFactorAuthModule, auth_mfa_module_from_config
 from .models import AuthFlowContext, AuthFlowResult
+from .permissions.types import PolicyType
 from .providers import AuthProvider, LoginFlow, auth_provider_from_config
 
 _LOGGER = logging.getLogger(__name__)
@@ -251,6 +252,27 @@ class AuthManager:
     async def async_get_group(self, group_id: str) -> models.Group | None:
         """Retrieve all groups."""
         return await self._store.async_get_group(group_id)
+
+    async def async_get_groups(self) -> list[models.Group]:
+        """Retrieve all groups."""
+        return await self._store.async_get_groups()
+
+    async def async_create_group(self, name: str, policy: PolicyType) -> models.Group:
+        """Create a custom group."""
+        return await self._store.async_create_group(name, policy)
+
+    async def async_update_group(
+        self,
+        group: models.Group,
+        name: str | None = None,
+        policy: PolicyType | None = None,
+    ) -> None:
+        """Update a custom group."""
+        await self._store.async_update_group(group, name=name, policy=policy)
+
+    async def async_remove_group(self, group: models.Group) -> None:
+        """Remove a custom group."""
+        await self._store.async_remove_group(group)
 
     async def async_get_user_by_credentials(
         self, credentials: models.Credentials
