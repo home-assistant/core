@@ -7,7 +7,7 @@ from jsonrpc_base.jsonrpc import ProtocolError, TransportError
 from homeassistant.const import CONF_PORT, CONF_SSL
 from homeassistant.core import HomeAssistant
 
-from . import KodiConfigEntry
+from .connection import KodiConfigEntry
 from .const import CONF_WS_PORT
 
 

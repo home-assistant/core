@@ -8,8 +8,7 @@ from typing import Any
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
-from jsonrpc_base.jsonrpc import TransportError
-from pykodi import CannotConnectError
+from pykodi import CannotConnectError, ProtocolError, TransportError
 import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
@@ -40,6 +39,7 @@ from homeassistant.components.media_player import (
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
     EVENT_HOMEASSISTANT_STARTED,
+    EVENT_HOMEASSISTANT_STOP,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import CoreState, HomeAssistant
@@ -769,6 +769,9 @@ async def test_watchdog_connects(
 
 
 @websocket
+@pytest.mark.parametrize(
+    "error", [CannotConnectError("Timeout"), TransportError("Connection lost")]
+)
 async def test_watchdog_ping_failure(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -776,12 +779,13 @@ async def test_watchdog_ping_failure(
     mock_kodi: MagicMock,
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
+    error: Exception,
 ) -> None:
     """Test a failed ping turns the state off and warns only once."""
     await set_playing(hass, mock_kodi)
     await setup_integration(hass, mock_config_entry)
     assert hass.states.get(ENTITY_ID).state == MediaPlayerState.PLAYING
-    mock_kodi.ping.side_effect = TransportError("Connection lost")
+    mock_kodi.ping.side_effect = error
 
     await advance_time(hass, freezer, WATCHDOG_INTERVAL)
 
@@ -791,6 +795,7 @@ async def test_watchdog_ping_failure(
     await advance_time(hass, freezer, WATCHDOG_INTERVAL)
 
     assert caplog.text.count("Unable to ping Kodi via websocket") == 1
+    assert "Unable to connect to Kodi via websocket" not in caplog.text
 
 
 @websocket
@@ -875,6 +880,213 @@ async def test_watchdog_warns_again_after_reconnect(
 
 
 @websocket
+@pytest.mark.parametrize(
+    "error", [TransportError("No reply"), ProtocolError("No version")]
+)
+async def test_watchdog_reconnect_without_version(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_connection: MagicMock,
+    mock_kodi: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    error: Exception,
+) -> None:
+    """Test a reconnected Kodi that does not report its version stays off."""
+
+    async def connect() -> None:
+        mock_connection.connected = True
+
+    mock_connection.connect.side_effect = connect
+    await setup_integration(hass, mock_config_entry)
+    get_application_properties = mock_kodi.get_application_properties.side_effect
+
+    mock_connection.connected = False
+    mock_kodi.get_application_properties.side_effect = error
+    await advance_time(hass, freezer, WATCHDOG_INTERVAL)
+
+    assert hass.states.get(ENTITY_ID).state == MediaPlayerState.OFF
+    assert caplog.text.count("Unable to connect to Kodi via websocket") == 1
+
+    mock_kodi.get_application_properties.side_effect = get_application_properties
+    await advance_time(hass, freezer, WATCHDOG_INTERVAL)
+
+    assert hass.states.get(ENTITY_ID).state == MediaPlayerState.IDLE
+
+
+@websocket
+@pytest.mark.usefixtures("mock_kodi")
+async def test_reload_keeps_version_while_kodi_is_off(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_connection: MagicMock,
+) -> None:
+    """Test the device keeps its version if Kodi is off when the entry loads."""
+    await setup_integration(hass, mock_config_entry)
+    mock_connection.connect.side_effect = CannotConnectError
+
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == MediaPlayerState.OFF
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.unique_id), mock_config_entry.entry_id
+    )
+    assert device.sw_version == "21.2"
+
+
+@websocket
+async def test_watchdog_reconnects_after_quit(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_connection: MagicMock,
+    mock_kodi: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the state returns once Kodi is back after it quit."""
+
+    async def connect() -> None:
+        mock_connection.connected = True
+
+    mock_connection.connect.side_effect = connect
+    await set_playing(hass, mock_kodi)
+    await setup_integration(hass, mock_config_entry)
+
+    await mock_connection.server.System.OnQuit("xbmc", None)
+    await mock_connection.server.System.OnQuit("xbmc", None)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == MediaPlayerState.OFF
+    assert not mock_connection.connected
+
+    await advance_time(hass, freezer, WATCHDOG_INTERVAL)
+
+    assert hass.states.get(ENTITY_ID).state == MediaPlayerState.PLAYING
+
+
+@websocket
+async def test_watchdog_reconnect_refreshes_state_and_version(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_connection: MagicMock,
+    mock_kodi: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a reconnect after a silently lost connection refreshes the entity."""
+
+    async def connect() -> None:
+        mock_connection.connected = True
+
+    async def get_application_properties(properties: list[str]) -> dict[str, Any]:
+        return {"version": {"major": 22, "minor": 0}, "volume": 50, "muted": False}
+
+    mock_connection.connect.side_effect = connect
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get(ENTITY_ID).state == MediaPlayerState.IDLE
+
+    mock_connection.connected = False
+    await set_playing(hass, mock_kodi)
+    await advance_time(hass, freezer, WATCHDOG_INTERVAL)
+
+    assert hass.states.get(ENTITY_ID).state == MediaPlayerState.PLAYING
+
+    mock_connection.connected = False
+    mock_kodi.get_application_properties.side_effect = get_application_properties
+    await advance_time(hass, freezer, WATCHDOG_INTERVAL)
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.unique_id), mock_config_entry.entry_id
+    )
+    assert device.sw_version == "22.0"
+
+
+@websocket
+async def test_watchdog_recovers_from_failed_version_request(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_kodi: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the watchdog asks for the version again if Kodi did not answer."""
+    get_application_properties = mock_kodi.get_application_properties.side_effect
+    failed = False
+
+    def fail_once(properties: list[str]) -> dict[str, Any]:
+        nonlocal failed
+        if not failed:
+            failed = True
+            raise TransportError("No reply")
+        return get_application_properties(properties)
+
+    mock_kodi.get_application_properties.side_effect = fail_once
+    await set_playing(hass, mock_kodi)
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(ENTITY_ID).state == MediaPlayerState.PLAYING
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.unique_id), mock_config_entry.entry_id
+    )
+    assert device.sw_version == "21.2"
+    assert "Unable to" not in caplog.text
+
+
+@websocket
+@pytest.mark.parametrize(
+    "error", [ProtocolError("No version"), TransportError("No reply")]
+)
+async def test_watchdog_closes_connection_without_version(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_connection: MagicMock,
+    mock_kodi: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+    error: Exception,
+) -> None:
+    """Test a Kodi that answers the ping but not the version request is off."""
+    mock_kodi.get_application_properties.side_effect = error
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(ENTITY_ID).state == MediaPlayerState.OFF
+    mock_connection.close.assert_awaited_once()
+    assert caplog.text.count("Unable to ping Kodi via websocket") == 1
+
+
+@websocket
+@pytest.mark.usefixtures("mock_kodi")
+async def test_watchdog_waits_for_slow_connect(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_connection: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the watchdog does not connect again while a connect is pending."""
+    connected = asyncio.Event()
+
+    async def connect() -> None:
+        await connected.wait()
+        mock_connection.connected = True
+
+    await setup_integration(hass, mock_config_entry)
+    mock_connection.connected = False
+    mock_connection.connect.reset_mock()
+    mock_connection.connect.side_effect = connect
+
+    freezer.tick(WATCHDOG_INTERVAL)
+    async_fire_time_changed(hass)
+    freezer.tick(WATCHDOG_INTERVAL)
+    async_fire_time_changed(hass)
+    connected.set()
+    await hass.async_block_till_done()
+
+    mock_connection.connect.assert_awaited_once()
+    assert hass.states.get(ENTITY_ID).state == MediaPlayerState.IDLE
+
+
+@websocket
 async def test_unload(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -890,11 +1102,48 @@ async def test_unload(
 
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
     mock_connection.close.assert_awaited_once()
-    mock_kodi.ping.reset_mock()
+    mock_connection.connect.reset_mock()
 
     await advance_time(hass, freezer, WATCHDOG_INTERVAL)
+    await mock_connection.server.System.OnQuit("xbmc", None)
+    hass.set_state(CoreState.stopping)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
 
-    mock_kodi.ping.assert_not_awaited()
+    mock_connection.connect.assert_not_awaited()
+    mock_connection.close.assert_awaited_once()
+
+
+@websocket
+async def test_removed_entity_ignores_kodi(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_connection: MagicMock,
+    mock_kodi: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test an entity removed from a loaded entry no longer follows Kodi."""
+
+    async def connect() -> None:
+        mock_connection.connected = True
+
+    mock_connection.connect.side_effect = connect
+    await setup_integration(hass, mock_config_entry)
+    events = async_capture_events(hass, f"{DOMAIN}_keypress")
+    entity_registry.async_remove(ENTITY_ID)
+    await hass.async_block_till_done()
+    mock_kodi.reset_mock()
+
+    mock_connection.server.Player.OnPause("xbmc", player_notification(0))
+    mock_connection.server.Other.OnKeyPress("xbmc", {"key": "volume_up"})
+    await mock_connection.server.System.OnQuit("xbmc", None)
+    await advance_time(hass, freezer, WATCHDOG_INTERVAL)
+
+    assert hass.states.get(ENTITY_ID) is None
+    assert not events
+    mock_kodi.get_players.assert_not_awaited()
+    assert mock_connection.connected
 
 
 @pytest.mark.usefixtures("mock_connection")

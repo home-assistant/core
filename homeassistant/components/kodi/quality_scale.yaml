@@ -23,9 +23,7 @@ rules:
     comment: There is no prerequisites section. The page only mentions the web interface, for discovery, and not the Kodi settings Allow remote control via HTTP and Allow remote control from applications on other systems.
   docs-removal-instructions: todo
   docs-triggers: done
-  entity-event-setup:
-    status: todo
-    comment: The media player does not remove its WebSocket callbacks and its start listener.
+  entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
@@ -41,9 +39,7 @@ rules:
   action-exceptions:
     status: todo
     comment: Failed entity commands and kodi.call_method are logged instead of raised, kodi.add_to_playlist lets library errors through, the notify service lets ProtocolError through, and invalid input or a missing player raises RuntimeError or ValueError instead of ServiceValidationError.
-  config-entry-unloading:
-    status: todo
-    comment: The start listener of the media player is not removed, so an entry that is unloaded before Home Assistant has started connects again once it starts and keeps its 10 second watchdog running.
+  config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
     comment: The integration has no options flow.
