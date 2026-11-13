@@ -48,6 +48,54 @@
   },
   "entity": {
     "sensor": {
+      "observation_station": {
+        "name": "Observation station"
+      },
+      "observation_time": {
+        "name": "Observation time"
+      },
+      "observed_apparent_temperature": {
+        "name": "Observed apparent temperature"
+      },
+      "observed_condition": {
+        "name": "Observed condition",
+        "state": {
+          "clear-night": "[%key:component::weather::entity_component::_::state::clear-night%]",
+          "cloudy": "[%key:component::weather::entity_component::_::state::cloudy%]",
+          "fog": "[%key:component::weather::entity_component::_::state::fog%]",
+          "lightning-rainy": "[%key:component::weather::entity_component::_::state::lightning-rainy%]",
+          "partlycloudy": "[%key:component::weather::entity_component::_::state::partlycloudy%]",
+          "pouring": "[%key:component::weather::entity_component::_::state::pouring%]",
+          "rainy": "[%key:component::weather::entity_component::_::state::rainy%]",
+          "snowy": "[%key:component::weather::entity_component::_::state::snowy%]",
+          "snowy-rainy": "[%key:component::weather::entity_component::_::state::snowy-rainy%]",
+          "sunny": "[%key:component::weather::entity_component::_::state::sunny%]"
+        }
+      },
+      "observed_humidity": {
+        "name": "Observed humidity"
+      },
+      "observed_pressure": {
+        "name": "Observed pressure"
+      },
+      "observed_snow_depth": {
+        "name": "Observed snow depth"
+      },
+      "observed_temperature": {
+        "name": "Observed temperature"
+      },
+      "observed_visibility": {
+        "name": "Observed visibility"
+      },
+      "observed_wind_direction": {
+        "name": "Observed wind direction"
+      },
+      "observed_wind_gust_speed": {
+        "name": "Observed wind gust speed"
+      },
+      "observed_wind_speed": {
+        "name": "Observed wind speed"
+      },
       "precipitation_probability": {
         "name": "Precipitation probability"
       },

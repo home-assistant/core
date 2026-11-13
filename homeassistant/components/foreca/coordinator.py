@@ -1,4 +1,4 @@
-"""Data update coordinator for the Foreca integration."""
+"""Data update coordinators for the Foreca integration."""
 
 from dataclasses import dataclass
 import logging
@@ -12,6 +12,7 @@ from pyforeca import (
     ForecaError,
     ForecaProductUnavailableError,
     HourlyForecast,
+    Observation,
     format_location,
 )
 
@@ -26,7 +27,8 @@ from .const import DAILY_PERIODS, DOMAIN, HOURLY_PERIODS, UPDATE_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
-type ForecaConfigEntry = ConfigEntry[dict[str, ForecaUpdateCoordinator]]
+
+type ForecaConfigEntry = ConfigEntry[dict[str, ForecaLocationCoordinators]]
 
 
 @dataclass(slots=True)
@@ -38,8 +40,8 @@ class ForecaWeatherData:
     daily: list[DailyForecast]
 
 
-class ForecaUpdateCoordinator(DataUpdateCoordinator[ForecaWeatherData]):
-    """Class to manage fetching Foreca data for one location."""
+class ForecaCoordinator[DataT](DataUpdateCoordinator[DataT]):
+    """Base class for the coordinators of one Foreca location."""
 
     config_entry: ForecaConfigEntry
 
@@ -49,12 +51,13 @@ class ForecaUpdateCoordinator(DataUpdateCoordinator[ForecaWeatherData]):
         entry: ForecaConfigEntry,
         subentry: ConfigSubentry,
         client: ForecaApiClient,
+        name: str,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
             _LOGGER,
-            name=f"{DOMAIN} {subentry.title}",
+            name=name,
             update_interval=UPDATE_INTERVAL,
             config_entry=entry,
         )
@@ -68,6 +71,20 @@ class ForecaUpdateCoordinator(DataUpdateCoordinator[ForecaWeatherData]):
             manufacturer="Foreca",
             entry_type=DeviceEntryType.SERVICE,
         )
+
+
+class ForecaUpdateCoordinator(ForecaCoordinator[ForecaWeatherData]):
+    """Class to manage fetching the Foreca forecast for one location."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: ForecaConfigEntry,
+        subentry: ConfigSubentry,
+        client: ForecaApiClient,
+    ) -> None:
+        """Initialize the coordinator."""
+        super().__init__(hass, entry, subentry, client, f"{DOMAIN} {subentry.title}")
 
     @override
     async def _async_update_data(self) -> ForecaWeatherData:
@@ -90,3 +107,37 @@ class ForecaUpdateCoordinator(DataUpdateCoordinator[ForecaWeatherData]):
             ) from err
 
         return ForecaWeatherData(current=current, hourly=hourly, daily=daily)
+
+
+class ForecaObservationCoordinator(ForecaCoordinator[Observation | None]):
+    """Class to manage fetching the nearest station's observation for one location."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: ForecaConfigEntry,
+        subentry: ConfigSubentry,
+        client: ForecaApiClient,
+    ) -> None:
+        """Initialize the coordinator."""
+        super().__init__(
+            hass, entry, subentry, client, f"{DOMAIN} {subentry.title} observation"
+        )
+
+    @override
+    async def _async_update_data(self) -> Observation | None:
+        """Fetch the latest observation, or None where no station reports nearby."""
+        try:
+            return await self.client.observation_latest(self.location)
+        except ForecaError as err:
+            raise UpdateFailed(
+                f"Error communicating with the Foreca API: {err}"
+            ) from err
+
+
+@dataclass(slots=True)
+class ForecaLocationCoordinators:
+    """The coordinators of one Foreca location."""
+
+    weather: ForecaUpdateCoordinator
+    observation: ForecaObservationCoordinator

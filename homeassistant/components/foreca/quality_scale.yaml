@@ -60,13 +60,9 @@ rules:
   docs-troubleshooting: done
   docs-use-cases: done
   dynamic-devices: done
-  entity-category:
-    status: exempt
-    comment: Every entity is primary weather data.
+  entity-category: done
   entity-device-class: done
-  entity-disabled-by-default:
-    status: exempt
-    comment: Every entity is primary weather data that is useful by default.
+  entity-disabled-by-default: done
   entity-translations: done
   exception-translations: todo
   icon-translations: todo
