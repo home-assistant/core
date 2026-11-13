@@ -3,6 +3,7 @@
 from abc import abstractmethod
 from contextlib import suppress
 from datetime import timedelta
+from functools import partial
 import logging
 from typing import Any, override
 
@@ -47,6 +48,7 @@ from .const import (
     SLOPE_STEEP,
     RachioServiceArgument,
 )
+from .coordinator import RachioControllerUpdateCoordinator
 from .device import RachioConfigEntry
 from .entity import RachioDevice, RachioHoseTimerEntity
 from .webhooks import (
@@ -100,7 +102,11 @@ def _create_entities(
         zones = controller.list_zones()
         schedules = controller.list_schedules()
         flex_schedules = controller.list_flex_schedules()
-        current_schedule = controller.current_schedule
+        current_schedule = (
+            controller.poll_coordinator.data
+            if controller.poll_coordinator
+            else controller.current_schedule
+        )
         entities.extend(
             RachioZone(person, controller, zone, current_schedule) for zone in zones
         )
@@ -384,6 +390,16 @@ class RachioZone(RachioSwitch):
 
         self.async_write_ha_state()
 
+    @callback
+    def _async_handle_poll_update(
+        self, coordinator: RachioControllerUpdateCoordinator
+    ) -> None:
+        """Handle data polled from the controller."""
+        if not coordinator.last_update_success:
+            return
+        self._attr_is_on = self.zone_id == coordinator.data.get(KEY_ZONE_ID)
+        self.async_write_ha_state()
+
     @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to updates."""
@@ -394,6 +410,12 @@ class RachioZone(RachioSwitch):
                 self.hass, SIGNAL_RACHIO_ZONE_UPDATE, self._async_handle_update
             )
         )
+        if (coordinator := self._controller.poll_coordinator) is not None:
+            self.async_on_remove(
+                coordinator.async_add_listener(
+                    partial(self._async_handle_poll_update, coordinator)
+                )
+            )
 
 
 class RachioSchedule(RachioSwitch):
@@ -467,6 +489,16 @@ class RachioSchedule(RachioSwitch):
 
         self.async_write_ha_state()
 
+    @callback
+    def _async_handle_poll_update(
+        self, coordinator: RachioControllerUpdateCoordinator
+    ) -> None:
+        """Handle data polled from the controller."""
+        if not coordinator.last_update_success:
+            return
+        self._attr_is_on = self._schedule_id == coordinator.data.get(KEY_SCHEDULE_ID)
+        self.async_write_ha_state()
+
     @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to updates."""
@@ -479,6 +511,12 @@ class RachioSchedule(RachioSwitch):
                 self.hass, SIGNAL_RACHIO_SCHEDULE_UPDATE, self._async_handle_update
             )
         )
+        if (coordinator := self._controller.poll_coordinator) is not None:
+            self.async_on_remove(
+                coordinator.async_add_listener(
+                    partial(self._async_handle_poll_update, coordinator)
+                )
+            )
 
 
 class RachioValve(RachioHoseTimerEntity, SwitchEntity):

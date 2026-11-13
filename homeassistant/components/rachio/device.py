@@ -1,5 +1,6 @@
 """Adapter to wrap the rachiopy api for home assistant."""
 
+from contextlib import suppress
 from http import HTTPStatus
 import logging
 from typing import Any, override
@@ -16,6 +17,7 @@ from homeassistant.exceptions import (
 )
 
 from .const import (
+    DEFAULT_API_DAILY_CALL_LIMIT,
     KEY_BASE_STATIONS,
     KEY_DEVICES,
     KEY_ENABLED,
@@ -33,9 +35,15 @@ from .const import (
     LISTEN_EVENT_TYPES,
     WEBHOOK_CONST_ID,
 )
-from .coordinator import RachioScheduleUpdateCoordinator, RachioUpdateCoordinator
+from .coordinator import (
+    RachioControllerUpdateCoordinator,
+    RachioScheduleUpdateCoordinator,
+    RachioUpdateCoordinator,
+)
 
 _LOGGER = logging.getLogger(__name__)
+
+HEADER_RATE_LIMIT = "x-ratelimit-limit"
 
 PERMISSION_ERROR = "7"
 
@@ -59,6 +67,7 @@ class RachioPerson:
         self.config_entry = config_entry
         self.username = None
         self._id: str | None = None
+        self.rate_limit = DEFAULT_API_DAILY_CALL_LIMIT
         self._controllers: list[RachioIro] = []
         self._base_stations: list[RachioBaseStation] = []
 
@@ -76,6 +85,8 @@ class RachioPerson:
         if int(response[0][KEY_STATUS]) != HTTPStatus.OK:
             raise ConfigEntryNotReady(f"API Error: {response}")
         self._id = response[1][KEY_ID]
+        with suppress(KeyError, ValueError):
+            self.rate_limit = int(response[0][HEADER_RATE_LIMIT])
 
         # Use user ID to get user data
         data = rachio.person.get(self._id)
@@ -176,6 +187,7 @@ class RachioIro:
         self._flex_schedules = data[KEY_FLEX_SCHEDULES]
         self._init_data = data
         self._webhooks: list[dict[str, Any]] = webhooks
+        self.poll_coordinator: RachioControllerUpdateCoordinator | None = None
         _LOGGER.debug('%s has ID "%s"', self, self.controller_id)
 
     def setup(self) -> None:
