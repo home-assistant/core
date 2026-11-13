@@ -27,6 +27,7 @@ MOCK_IPS = {
     "fritz.box": "192.168.178.1",
     "printer": "192.168.178.2",
     "server": "192.168.178.3",
+    "phone": "192.168.178.4",
 }
 MOCK_MODELNAME = "FRITZ!Box 7530 AX"
 MOCK_FIRMWARE = "256.07.29"
@@ -915,6 +916,49 @@ MOCK_NEW_DEVICE_NODE = {
     ],
 }
 
+MOCK_WLAN_DEVICE_NODE = {
+    "uid": "n-89",
+    "device_name": "phone",
+    "device_model": "",
+    "device_manufacturer": "",
+    "device_firmware_version": "",
+    "device_mac_address": "AA:BB:CC:66:77:88",
+    "is_meshed": False,
+    "mesh_role": "unknown",
+    "meshd_version": "0.0",
+    "node_interfaces": [
+        {
+            "uid": "ni-90",
+            "name": "wlan0",
+            "type": "WLAN",
+            "mac_address": "AA:BB:CC:66:77:88",
+            "blocking_state": "UNKNOWN",
+            "node_links": [
+                {
+                    "uid": "nl-219",
+                    "type": "WLAN",
+                    "state": "CONNECTED",
+                    "last_connected": 1644618820,
+                    "node_1_uid": "n-1",
+                    "node_2_uid": "n-89",
+                    "node_interface_1_uid": "ni-230",
+                    "node_interface_2_uid": "ni-90",
+                    "max_data_rate_rx": 72200,
+                    "max_data_rate_tx": 86700,
+                    "cur_data_rate_rx": 54000,
+                    "cur_data_rate_tx": 65000,
+                    "cur_availability_rx": 100,
+                    "cur_availability_tx": 100,
+                    "rx_rsni": 51,
+                    "tx_rsni": 255,
+                    "rx_rcpi": -38,
+                    "tx_rcpi": 255,
+                }
+            ],
+        }
+    ],
+}
+
 MOCK_HOST_PRINTER = {
     "Index": 1,
     "IPAddress": MOCK_IPS["printer"],
@@ -990,6 +1034,32 @@ MOCK_HOST_SERVER = {
     "X_AVM-DE_IsMeshable": "0",
     "X_AVM-DE_Priority": "0",
     "X_AVM-DE_FriendlyName": "server",
+    "X_AVM-DE_FriendlyNameIsWriteable": "1",
+}
+
+MOCK_HOST_PHONE = {
+    "Index": 4,
+    "IPAddress": MOCK_IPS["phone"],
+    "MACAddress": "AA:BB:CC:66:77:88",
+    "Active": True,
+    "HostName": "phone",
+    "InterfaceType": "802.11",
+    "X_AVM-DE_Port": 0,
+    "X_AVM-DE_Speed": 0,
+    "X_AVM-DE_UpdateAvailable": False,
+    "X_AVM-DE_UpdateSuccessful": "unknown",
+    "X_AVM-DE_InfoURL": None,
+    "X_AVM-DE_MACAddressList": None,
+    "X_AVM-DE_Model": None,
+    "X_AVM-DE_URL": f"http://{MOCK_IPS['phone']}",
+    "X_AVM-DE_Guest": False,
+    "X_AVM-DE_RequestClient": "0",
+    "X_AVM-DE_VPN": False,
+    "X_AVM-DE_WANAccess": "granted",
+    "X_AVM-DE_Disallow": False,
+    "X_AVM-DE_IsMeshable": "0",
+    "X_AVM-DE_Priority": "0",
+    "X_AVM-DE_FriendlyName": "phone",
     "X_AVM-DE_FriendlyNameIsWriteable": "1",
 }
 

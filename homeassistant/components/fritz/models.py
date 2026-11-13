@@ -2,11 +2,38 @@
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import NotRequired, TypedDict
+from typing import Any, NotRequired, TypedDict
 
 from homeassistant.util import dt as dt_util
 
 from .const import MeshRoles
+
+# The mesh topology reports 255 when the signal strength is not available
+INVALID_RCPI = 255
+
+
+@dataclass(frozen=True)
+class LinkInfo:
+    """Mesh link details of a device connected to the FRITZ!Box."""
+
+    signal_strength: int | None
+    download_rate: int | None
+    upload_rate: int | None
+    max_download_rate: int | None
+    max_upload_rate: int | None
+
+    @classmethod
+    def from_node_link(cls, node_link: dict[str, Any]) -> LinkInfo:
+        """Create link details from a mesh topology node link."""
+        rcpi = node_link.get("rx_rcpi")
+        # rx/tx values are reported from the FRITZ!Box point of view
+        return cls(
+            signal_strength=None if rcpi == INVALID_RCPI else rcpi,
+            download_rate=node_link.get("cur_data_rate_tx"),
+            upload_rate=node_link.get("cur_data_rate_rx"),
+            max_download_rate=node_link.get("max_data_rate_tx"),
+            max_upload_rate=node_link.get("max_data_rate_rx"),
+        )
 
 
 @dataclass
@@ -20,6 +47,7 @@ class Device:
     name: str
     ssid: str | None
     wan_access: bool | None = None
+    link_info: LinkInfo | None = None
 
 
 class Interface(TypedDict):
@@ -79,6 +107,7 @@ class FritzDevice:
     _connection_type: str
     _ip_address: str
     _last_activity: datetime | None
+    _link_info: LinkInfo | None
     _mac: str
     _name: str
     _ssid: str | None
@@ -111,6 +140,7 @@ class FritzDevice:
         self._connected_to = dev_info.connected_to
         self._connection_type = dev_info.connection_type
         self._ip_address = dev_info.ip_address
+        self._link_info = dev_info.link_info
         self._ssid = dev_info.ssid
         self._wan_access = dev_info.wan_access
 
@@ -148,6 +178,11 @@ class FritzDevice:
     def last_activity(self) -> datetime | None:
         """Return device last activity."""
         return self._last_activity
+
+    @property
+    def link_info(self) -> LinkInfo | None:
+        """Return device mesh link details."""
+        return self._link_info
 
     @property
     def ssid(self) -> str | None:
