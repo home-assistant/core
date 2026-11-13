@@ -286,12 +286,16 @@ async def test_temperature_control_temperature_setpoint(
     state = hass.states.get("number.refrigerator_temperature_setpoint_2")
     assert state
     assert state.state == "-18.0"
+    # Step of 100 (0.01 °C units) -> 1.0 °C
+    assert state.attributes["step"] == 1.0
 
     set_node_attribute(matter_node, 2, 86, 0, -1600)
+    set_node_attribute(matter_node, 2, 86, 3, 50)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get("number.refrigerator_temperature_setpoint_2")
     assert state
     assert state.state == "-16.0"
+    assert state.attributes["step"] == 0.5
 
     # test set value
     await hass.services.async_call(
@@ -311,6 +315,20 @@ async def test_temperature_control_temperature_setpoint(
             targetTemperature=-1700
         ),
     )
+
+    # only the Step subscription (2/86/3) is notified
+    await set_node_attribute_and_notify(
+        hass,
+        matter_client,
+        matter_node,
+        endpoint=2,
+        cluster_id=86,
+        attribute_id=3,
+        value=10,
+    )
+    state = hass.states.get("number.refrigerator_temperature_setpoint_2")
+    assert state
+    assert state.attributes["step"] == 0.1
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_dimmable_light"])

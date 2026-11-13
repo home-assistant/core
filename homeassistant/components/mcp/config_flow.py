@@ -224,6 +224,15 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             updates[CONF_API_TOKEN] = token
 
         entry = await self.async_set_unique_id(discovery_info.uuid)
+        if entry is None:
+            # A discovery gets a new uuid when its app removes and sends it again
+            for app_entry in self._async_current_entries(include_ignore=False):
+                if app_entry.data.get(CONF_SLUG) == discovery_info.slug:
+                    self.hass.config_entries.async_update_entry(
+                        app_entry, unique_id=discovery_info.uuid
+                    )
+                    entry = app_entry
+                    break
         # The unique ID check below only reloads loaded entries or ones waiting
         # to retry, so a setup that fails on the old token would never retry
         if (

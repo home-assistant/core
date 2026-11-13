@@ -29,6 +29,11 @@
         }
       }
     },
+    "light": {
+      "nightlight": {
+        "default": "mdi:lightbulb-night"
+      }
+    },
     "number": {
       "mist_level": {
         "default": "mdi:water-percent"

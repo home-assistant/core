@@ -100,6 +100,108 @@
     'state': 'off',
   })
 # ---
+# name: test_platform_setup_and_discovery[binary_sensor.8zrzjldq07tlxnlv_feed_blocked-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('tuya', 'vlnxlt70qdljzrz8ps')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.8zrzjldq07tlxnlv_feed_blocked',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Feed blocked',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Feed blocked',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'feed_blocked',
+    'unique_id': 'tuya.vlnxlt70qdljzrz8psfeed_block_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.8zrzjldq07tlxnlv_feed_blocked-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '8zrzjldq07tlxnlv Feed blocked',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.8zrzjldq07tlxnlv_feed_blocked',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.8zrzjldq07tlxnlv_food_stuck-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('tuya', 'vlnxlt70qdljzrz8ps')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.8zrzjldq07tlxnlv_food_stuck',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Food stuck',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Food stuck',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'food_stuck',
+    'unique_id': 'tuya.vlnxlt70qdljzrz8psfeed_stuck_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.8zrzjldq07tlxnlv_food_stuck-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '8zrzjldq07tlxnlv Food stuck',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.8zrzjldq07tlxnlv_food_stuck',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_platform_setup_and_discovery[binary_sensor.aqi_safety-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

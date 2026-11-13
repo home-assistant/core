@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from python_overseerr import OverseerrConnectionError
+from python_overseerr.exceptions import OverseerrNothingToRequestError
 from python_overseerr.models import MediaType
 from syrupy.assertion import SnapshotAssertion
 
@@ -164,6 +165,18 @@ async def test_service_request_media(
             OverseerrConnectionError("Timeout"),
             HomeAssistantError,
             "Error connecting to the Seerr instance: Timeout",
+        ),
+        (
+            OverseerrService.REQUEST_MEDIA,
+            {
+                OverseerrServiceArgument.MEDIA_TYPE: "tv",
+                OverseerrServiceArgument.MEDIA_ID: "123456789",
+                OverseerrServiceArgument.SEASONS: "all",
+            },
+            "create_request",
+            OverseerrNothingToRequestError("No seasons available to request"),
+            ServiceValidationError,
+            "There is nothing left to request",
         ),
     ],
 )

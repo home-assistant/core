@@ -14,14 +14,14 @@ from pytest_homeassistant.components.bluetooth import (
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     EVENT_HOMEASSISTANT_STARTED,
     STATE_UNKNOWN,
+    CommonServiceArgument,
 )
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
@@ -246,10 +246,10 @@ async def test_meter_pro_co2_set_display_time_offset(
         mock_get_time_offset.return_value = expected_seconds_on_device
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: TIME_OFFSET_ENTITY_ID,
-                ATTR_VALUE: time_offset,
+                CommonServiceArgument.ENTITY_ID: TIME_OFFSET_ENTITY_ID,
+                NumberServiceArgument.VALUE: time_offset,
             },
             blocking=True,
         )
@@ -308,10 +308,10 @@ async def test_set_display_time_offset_out_of_range(
         ):
             await hass.services.async_call(
                 NUMBER_DOMAIN,
-                SERVICE_SET_VALUE,
+                NumberService.SET_VALUE,
                 {
-                    ATTR_ENTITY_ID: TIME_OFFSET_ENTITY_ID,
-                    ATTR_VALUE: value,
+                    CommonServiceArgument.ENTITY_ID: TIME_OFFSET_ENTITY_ID,
+                    NumberServiceArgument.VALUE: value,
                 },
                 blocking=True,
             )
@@ -356,8 +356,11 @@ async def test_standing_fan_oscillation_angle_number(
 
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 60},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: entity_id,
+                NumberServiceArgument.VALUE: 60,
+            },
             blocking=True,
         )
 
