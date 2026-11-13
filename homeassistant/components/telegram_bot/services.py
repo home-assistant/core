@@ -3,7 +3,7 @@
 import logging
 
 import probatio
-from telegram.constants import InputMediaType
+from telegram.constants import ChatAction, InputMediaType
 from telegram.error import TelegramError
 
 from homeassistant.config_entries import ConfigEntryState
@@ -37,17 +37,6 @@ from .const import (
     ATTR_URL,
     ATTR_USERNAME,
     ATTR_VERIFY_SSL,
-    CHAT_ACTION_CHOOSE_STICKER,
-    CHAT_ACTION_FIND_LOCATION,
-    CHAT_ACTION_RECORD_VIDEO,
-    CHAT_ACTION_RECORD_VIDEO_NOTE,
-    CHAT_ACTION_RECORD_VOICE,
-    CHAT_ACTION_TYPING,
-    CHAT_ACTION_UPLOAD_DOCUMENT,
-    CHAT_ACTION_UPLOAD_PHOTO,
-    CHAT_ACTION_UPLOAD_VIDEO,
-    CHAT_ACTION_UPLOAD_VIDEO_NOTE,
-    CHAT_ACTION_UPLOAD_VOICE,
     DOMAIN,
     PARSER_HTML,
     PARSER_MD,
@@ -132,20 +121,8 @@ SERVICE_SCHEMA_SEND_CHAT_ACTION = probatio.Schema(
         probatio.Optional(TelegramBotServiceArgument.CHAT_ID): probatio.All(
             probatio.EnsureList(), [probatio.Coerce(int)]
         ),
-        probatio.Required(TelegramBotServiceArgument.CHAT_ACTION): probatio.In(
-            (
-                CHAT_ACTION_TYPING,
-                CHAT_ACTION_UPLOAD_PHOTO,
-                CHAT_ACTION_RECORD_VIDEO,
-                CHAT_ACTION_UPLOAD_VIDEO,
-                CHAT_ACTION_RECORD_VOICE,
-                CHAT_ACTION_UPLOAD_VOICE,
-                CHAT_ACTION_UPLOAD_DOCUMENT,
-                CHAT_ACTION_CHOOSE_STICKER,
-                CHAT_ACTION_FIND_LOCATION,
-                CHAT_ACTION_RECORD_VIDEO_NOTE,
-                CHAT_ACTION_UPLOAD_VIDEO_NOTE,
-            )
+        probatio.Required(TelegramBotServiceArgument.CHAT_ACTION): probatio.Coerce(
+            ChatAction
         ),
         probatio.Optional(
             TelegramBotServiceArgument.MESSAGE_THREAD_ID
