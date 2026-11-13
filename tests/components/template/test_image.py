@@ -797,7 +797,6 @@ async def test_restore_state(
             "__type": "<class 'datetime.datetime'>",
             "isoformat": datetime(2021, 7, 13, 0, 0, 0, tzinfo=UTC).isoformat(),
         },
-        "image_url": "http://example2.com",
     }
 
     fake_state = State(
@@ -870,7 +869,6 @@ async def test_restore_bad_state_does_not_restore(
             "__type": "<class 'datetime.datetime'>",
             "isoformat": datetime(2021, 7, 13, 0, 0, 0, tzinfo=UTC).isoformat(),
         },
-        "image_url": "http://example2.com",
     }
 
     fake_state = State(TEST_IMAGE.entity_id, saved_state)
@@ -929,7 +927,6 @@ async def test_saving_state(
             "__type": "<class 'datetime.datetime'>",
             "isoformat": datetime(2021, 7, 13, 0, 0, 0, tzinfo=UTC).isoformat(),
         },
-        "image_url": "http://example.com",
     }
 
     await setup_entity(
@@ -988,7 +985,6 @@ async def test_saving_state(
                     "__type": "<class 'datetime.datetime'>",
                     "isoformat": datetime(2021, 7, 13, 0, 0, 0, tzinfo=UTC).isoformat(),
                 },
-                "image_url": "http://example.com",
             },
             id="missing_image_last_updated",
         ),
@@ -998,24 +994,12 @@ async def test_saving_state(
                     "__ty": "<class 'datetime.datetime'>",
                     "isoformat": datetime(2021, 7, 13, 0, 0, 0, tzinfo=UTC).isoformat(),
                 },
-                "image_url": "http://example.com",
             },
             id="missing_type",
         ),
         pytest.param(
             {
-                "image_last_updated": {
-                    "__type": "<class 'datetime.datetime'>",
-                    "isoformat": datetime(2021, 7, 13, 0, 0, 0, tzinfo=UTC).isoformat(),
-                },
-                "image_ur": "http://example.com",
-            },
-            id="missing_image_url",
-        ),
-        pytest.param(
-            {
                 "image_last_updated": "2021-07-13T00:00:00+00:00",
-                "image_url": "http://example.com",
             },
             id="image_last_updated_not_dict",
         ),
@@ -1025,7 +1009,6 @@ async def test_saving_state(
                     "__type": "<class 'str'>",
                     "isoformat": "2021-07-13T00:00:00+00:00",
                 },
-                "image_url": "http://example.com",
             },
             id="unknown_type",
         ),
@@ -1035,7 +1018,6 @@ async def test_saving_state(
                     "__type": "<class 'datetime.datetime'>",
                     "isoformat": 123,
                 },
-                "image_url": "http://example.com",
             },
             id="isoformat_not_str",
         ),
@@ -1045,7 +1027,6 @@ async def test_saving_state(
                     "__type": "<class 'datetime.datetime'>",
                     "isoformat": "not a datetime",
                 },
-                "image_url": "http://example.com",
             },
             id="isoformat_unparsable",
         ),
@@ -1055,19 +1036,8 @@ async def test_saving_state(
                     "__type": "<class 'datetime.datetime'>",
                     "isoformat": "2021-13-45T00:00:00+00:00",
                 },
-                "image_url": "http://example.com",
             },
             id="isoformat_invalid_date",
-        ),
-        pytest.param(
-            {
-                "image_last_updated": {
-                    "__type": "<class 'datetime.datetime'>",
-                    "isoformat": datetime(2021, 7, 13, 0, 0, 0, tzinfo=UTC).isoformat(),
-                },
-                "image_url": 5,
-            },
-            id="image_url_not_str",
         ),
     ],
 )
@@ -1122,14 +1092,11 @@ async def test_restore_bad_extra_data_does_not_restore(
     "extra_data",
     [
         pytest.param(
-            ImageExtraStoredData(
-                image_last_updated=datetime(2021, 7, 13, tzinfo=UTC),
-                image_url="http://example.com",
-            ),
+            ImageExtraStoredData(image_last_updated=datetime(2021, 7, 13, tzinfo=UTC)),
             id="populated",
         ),
         pytest.param(
-            ImageExtraStoredData(image_last_updated=None, image_url=None),
+            ImageExtraStoredData(image_last_updated=None),
             id="empty",
         ),
     ],
@@ -1142,6 +1109,19 @@ def test_extra_stored_data_round_trip(extra_data: ImageExtraStoredData) -> None:
         )
         == extra_data
     )
+
+
+def test_extra_stored_data_ignores_stored_url() -> None:
+    """Test restore state saved with the image URL is still restored."""
+    assert ImageExtraStoredData.from_dict(
+        {
+            "image_last_updated": {
+                "__type": "<class 'datetime.datetime'>",
+                "isoformat": "2021-07-13T00:00:00+00:00",
+            },
+            "image_url": "http://user:pass@example.com",
+        }
+    ) == ImageExtraStoredData(image_last_updated=datetime(2021, 7, 13, tzinfo=UTC))
 
 
 @pytest.mark.parametrize(
@@ -1189,10 +1169,10 @@ async def test_stale_cache_removed_at_stop(
             id="different_last_updated",
         ),
         pytest.param(
-            b'{"image_url":"http://example3.com",'
+            b'{"image_url":5,'
             b'"image_last_updated":"2021-07-13T00:00:00+00:00",'
             b'"content_type":"image/jpeg"}\n' + _CACHED_JPEG,
-            id="different_url",
+            id="invalid_url",
         ),
         pytest.param(
             b'{"image_url":"http://example2.com",'
@@ -1228,22 +1208,16 @@ async def test_restore_mismatched_cache_not_restored(
     style: ConfigurationStyle,
     images_cache_dir: Path,
     cache_file_content: bytes,
-    imgbytes_jpg: bytes,
-    imgbytes2_jpg: bytes,
 ) -> None:
     """Test a cached image that doesn't match the restored state is not used."""
     images_cache_dir.mkdir(parents=True)
     (images_cache_dir / f"{TEST_IMAGE.entity_id}.bin").write_bytes(cache_file_content)
-    respx.get("http://example2.com").respond(
-        stream=imgbytes2_jpg, content_type="image/jpeg"
-    )
 
     saved_extra_data = {
         "image_last_updated": {
             "__type": "<class 'datetime.datetime'>",
             "isoformat": datetime(2021, 7, 13, 0, 0, 0, tzinfo=UTC).isoformat(),
         },
-        "image_url": "http://example2.com",
     }
     fake_state = State(TEST_IMAGE.entity_id, "2021-07-13T00:00:00+00:00")
     mock_restore_cache_with_extra_data(hass, ((fake_state, saved_extra_data),))
@@ -1259,15 +1233,16 @@ async def test_restore_mismatched_cache_not_restored(
         },
     )
 
-    # The restored URL is fetched instead of serving the cached bytes.
+    # No URL is restored, so there is no image until the template renders.
     await _assert_state(
         hass,
         hass_client,
         "2021-07-13T00:00:00+00:00",
-        imgbytes2_jpg,
+        b"500: Internal Server Error",
         entity_id=TEST_IMAGE.entity_id,
+        expected_status=HTTPStatus.INTERNAL_SERVER_ERROR,
+        expected_content_type="text/plain",
     )
-    assert respx.get("http://example2.com").call_count == 1
 
 
 @pytest.mark.parametrize(
@@ -1378,22 +1353,17 @@ async def test_cache_read_error_does_not_block_setup(
     hass_client: ClientSessionGenerator,
     style: ConfigurationStyle,
     images_cache_dir: Path,
-    imgbytes2_jpg: bytes,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test an unreadable cache is logged and the restored URL is fetched instead."""
+    """Test an unreadable cache is logged and the image waits for the template."""
     # Opening a directory raises IsADirectoryError, an OSError.
     (images_cache_dir / f"{TEST_IMAGE.entity_id}.bin").mkdir(parents=True)
-    respx.get("http://example2.com").respond(
-        stream=imgbytes2_jpg, content_type="image/jpeg"
-    )
 
     saved_extra_data = {
         "image_last_updated": {
             "__type": "<class 'datetime.datetime'>",
             "isoformat": datetime(2021, 7, 13, 0, 0, 0, tzinfo=UTC).isoformat(),
         },
-        "image_url": "http://example2.com",
     }
     fake_state = State(TEST_IMAGE.entity_id, "2021-07-13T00:00:00+00:00")
     mock_restore_cache_with_extra_data(hass, ((fake_state, saved_extra_data),))
@@ -1413,8 +1383,10 @@ async def test_cache_read_error_does_not_block_setup(
         hass,
         hass_client,
         "2021-07-13T00:00:00+00:00",
-        imgbytes2_jpg,
+        b"500: Internal Server Error",
         entity_id=TEST_IMAGE.entity_id,
+        expected_status=HTTPStatus.INTERNAL_SERVER_ERROR,
+        expected_content_type="text/plain",
     )
     assert "Unable to read image cache" in caplog.text
 
@@ -1888,7 +1860,6 @@ async def test_restore_cache_after_unique_id_added(
             "__type": "<class 'datetime.datetime'>",
             "isoformat": datetime(2021, 7, 13, 0, 0, 0, tzinfo=UTC).isoformat(),
         },
-        "image_url": "http://example2.com",
     }
     fake_state = State(TEST_IMAGE.entity_id, "2021-07-13T00:00:00+00:00")
     mock_restore_cache_with_extra_data(hass, ((fake_state, saved_extra_data),))

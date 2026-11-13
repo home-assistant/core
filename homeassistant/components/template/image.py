@@ -110,10 +110,13 @@ async def async_setup_entry(
 
 @dataclass(kw_only=True)
 class ImageExtraStoredData(ExtraStoredData):
-    """Holds extra stored data for template image entities."""
+    """Holds extra stored data for template image entities.
+
+    The URL is not stored, it can contain credentials and restore state is
+    included in backups.
+    """
 
     image_last_updated: datetime | None
-    image_url: str | None
 
     @override
     def as_dict(self) -> dict[str, Any]:
@@ -125,21 +128,14 @@ class ImageExtraStoredData(ExtraStoredData):
                 "isoformat": image_last_updated.isoformat(),
             }
 
-        return {
-            "image_last_updated": image_last_updated,
-            "image_url": self.image_url,
-        }
+        return {"image_last_updated": image_last_updated}
 
     @classmethod
     def from_dict(cls, restored: dict[str, Any]) -> Self | None:
         """Initialize a stored image state from a dict."""
         try:
             stored_last_updated = restored["image_last_updated"]
-            image_url = restored["image_url"]
         except KeyError:
-            return None
-
-        if image_url is not None and not isinstance(image_url, str):
             return None
 
         image_last_updated: datetime | None = None
@@ -159,7 +155,15 @@ class ImageExtraStoredData(ExtraStoredData):
             if image_last_updated is None:
                 return None
 
-        return cls(image_last_updated=image_last_updated, image_url=image_url)
+        return cls(image_last_updated=image_last_updated)
+
+
+@dataclass(frozen=True, slots=True)
+class CachedImage:
+    """An image restored from the cache with the URL it was fetched from."""
+
+    image: Image
+    url: str | None
 
 
 def _write_cache_file(image_path: pathlib.Path, payload: bytes) -> None:
@@ -230,16 +234,12 @@ class AbstractTemplateImage(AbstractTemplateEntity, ImageEntity, RestoreEntity):
     @override
     def extra_restore_state_data(self) -> ImageExtraStoredData:
         """Return image specific state data to be restored."""
-        return ImageExtraStoredData(
-            image_last_updated=self._attr_image_last_updated,
-            image_url=self._attr_image_url,
-        )
+        return ImageExtraStoredData(image_last_updated=self._attr_image_last_updated)
 
     @override
     def restore_extra_data(self, extra_data: ImageExtraStoredData) -> None:
         """Restore the extra data."""
         self._attr_image_last_updated = extra_data.image_last_updated
-        self._attr_image_url = extra_data.image_url
 
     def _cache_path(self) -> pathlib.Path:
         # Restore state follows the registry ID across entity_id changes.
@@ -344,7 +344,7 @@ class AbstractTemplateImage(AbstractTemplateEntity, ImageEntity, RestoreEntity):
         return None
 
     @override
-    async def async_get_cached_data(self) -> Image | None:
+    async def async_get_cached_data(self) -> CachedImage | None:
         if (data := await self._async_read_cache_file()) is None:
             return None
 
@@ -359,8 +359,10 @@ class AbstractTemplateImage(AbstractTemplateEntity, ImageEntity, RestoreEntity):
         except ValueError, KeyError:
             return None
 
-        if not isinstance(content_type, str) or not isinstance(
-            stored_last_updated, str
+        if (
+            not isinstance(content_type, str)
+            or not isinstance(stored_last_updated, str)
+            or (image_url is not None and not isinstance(image_url, str))
         ):
             return None
 
@@ -371,19 +373,18 @@ class AbstractTemplateImage(AbstractTemplateEntity, ImageEntity, RestoreEntity):
             return None
 
         # Checked after the read, so an update during the await is not overwritten.
-        if (
-            last_updated is None
-            or last_updated != self._attr_image_last_updated
-            or image_url != self._attr_image_url
-        ):
+        if last_updated is None or last_updated != self._attr_image_last_updated:
             return None
-        return Image(content_type=content_type, content=content)
+        return CachedImage(
+            image=Image(content_type=content_type, content=content), url=image_url
+        )
 
     @override
-    def restore_cached_data(self, cached_data: Image) -> None:
+    def restore_cached_data(self, cached_data: CachedImage) -> None:
         """Restore cached data from the last state."""
-        self._cached_image = cached_data
-        self._attr_content_type = cached_data.content_type
+        self._cached_image = cached_data.image
+        self._attr_content_type = cached_data.image.content_type
+        self._attr_image_url = cached_data.url
 
 
 class StateImageEntity(TemplateEntity, AbstractTemplateImage):
