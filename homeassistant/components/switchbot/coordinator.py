@@ -59,6 +59,7 @@ class SwitchbotDataUpdateCoordinator(ActiveBluetoothDataUpdateCoordinator[None])
         self.config_entry = config_entry
         self._ready_event = asyncio.Event()
         self._was_unavailable = True
+        self.last_advertisement: switchbot.SwitchBotAdvertisement | None = None
 
     @callback
     def _needs_poll(
@@ -119,6 +120,7 @@ class SwitchbotDataUpdateCoordinator(ActiveBluetoothDataUpdateCoordinator[None])
             return
         self._was_unavailable = False
         _LOGGER.info("Device %s is online", self.device_name)
+        self.last_advertisement = adv
         self.device.update_from_advertisement(adv)
         super()._async_handle_bluetooth_event(service_info, change)
 
