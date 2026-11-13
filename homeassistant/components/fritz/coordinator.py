@@ -713,6 +713,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 raise Exception("Mesh supported but empty topology reported")  # noqa: TRY002
         except FritzActionError:
             self.mesh_role = MeshRoles.SLAVE
+            self.device_discovery_enabled = False
             # Avoid duplicating device trackers
             return
 

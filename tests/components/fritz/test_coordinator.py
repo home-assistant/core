@@ -448,6 +448,7 @@ async def test_async_scan_devices_mesh_topology_not_accessible(
         await fritz_tools.async_scan_devices()
 
     assert fritz_tools.mesh_role is MeshRoles.SLAVE
+    assert fritz_tools.device_discovery_enabled is False
     update_hosts_info.assert_not_awaited()
     signal_update.assert_not_awaited()
 
@@ -743,6 +744,37 @@ async def test_async_trigger_cleanup_preserves_fritz_device(
     )
     assert fritz_device_after is not None
     assert fritz_device_after.id == fritz_device.id
+
+
+async def test_device_discovery_disabled_without_mesh_topology_access(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    fc_class_mock,
+    fh_class_mock,
+    fs_class_mock,
+) -> None:
+    """Test hosts are never fetched when the device has no access to the mesh topology."""
+    fh_class_mock.get_mesh_topology.side_effect = FritzActionError(
+        "Error 404: Device has no access to topology information."
+    )
+
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert entry.state is ConfigEntryState.LOADED
+
+    wrapper: AvmWrapper = entry.runtime_data
+    assert wrapper.mesh_role is MeshRoles.SLAVE
+    assert wrapper.device_discovery_enabled is False
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Neither scan nor cleanup fetches hosts, and the topology is not retried
+    fh_class_mock.get_hosts_attributes.assert_not_called()
+    fh_class_mock.get_mesh_topology.assert_called_once()
 
 
 async def test_old_discovery_does_not_self_reference_box(
