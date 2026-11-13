@@ -20,6 +20,9 @@ from homeassistant.helpers.selector import (
     DateSelector,
     LocationSelector,
     LocationSelectorConfig,
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
 )
 from homeassistant.util import dt as dt_util
 
@@ -150,7 +153,9 @@ class AemetOptionsFlow(OptionsFlow):
 
         schema = probatio.Schema(
             {
-                probatio.Optional(probatio.Secret(CONF_API_KEY)): str,
+                probatio.Optional(probatio.Secret(CONF_API_KEY)): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.PASSWORD)
+                ),
                 probatio.Optional(CONF_API_KEY_DATE): probatio.Maybe(
                     _OptionalDateSelector()
                 ),
@@ -235,7 +240,9 @@ class AemetConfigFlow(ConfigFlow, domain=DOMAIN):
 
         schema = probatio.Schema(
             {
-                probatio.Required(probatio.Secret(CONF_API_KEY)): str,
+                probatio.Required(probatio.Secret(CONF_API_KEY)): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.PASSWORD)
+                ),
                 probatio.Optional(CONF_API_KEY_REMINDER, default=False): bool,
                 probatio.Optional(CONF_API_KEY_DATE, default=None): probatio.Maybe(
                     _OptionalDateSelector()
@@ -308,7 +315,9 @@ class AemetConfigFlow(ConfigFlow, domain=DOMAIN):
 
         schema = probatio.Schema(
             {
-                probatio.Required(probatio.Secret(CONF_API_KEY)): str,
+                probatio.Required(probatio.Secret(CONF_API_KEY)): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.PASSWORD)
+                ),
                 probatio.Optional(CONF_API_KEY_DATE, default=None): probatio.Maybe(
                     _OptionalDateSelector()
                 ),
