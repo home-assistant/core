@@ -12,6 +12,7 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from pytest_homeassistant.plugins import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 from trmnl.exceptions import (
+    TRMNLAuthenticationError,
     TRMNLError,
     TRMNLForbiddenError,
     TRMNLNotFoundError,
@@ -117,7 +118,9 @@ async def test_setup_creates_plugin_setting_and_pushes_the_home(
         "light.lamp", "on", {"brightness": 128, "friendly_name": "Desk lamp"}
     )
     hass.states.async_set(
-        "climate.hall", "heat", {"current_temperature": 19, "temperature": 21}
+        "climate.hall",
+        "heat",
+        {"current_temperature": 66, "temperature": 70, "temperature_unit": "°F"},
     )
     hass.states.async_set("light.not_picked", "on")
     entry = MockConfigEntry(
@@ -218,7 +221,7 @@ async def test_rate_limited_push_waits_as_long_as_trmnl_asks(
     home_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test a 429 with Retry-After is retried only once that time has passed."""
+    """Test a 429 with Retry-After holds every push, a change too, until that time has passed."""
     mock_trmnl_client.update_plugin_setting_data.side_effect = [
         TRMNLRateLimitError("Rate limit exceeded", 600),
         None,
@@ -226,6 +229,7 @@ async def test_rate_limited_push_waits_as_long_as_trmnl_asks(
     hass.states.async_set("light.lamp", "on")
     await setup_integration(hass, home_entry)
 
+    hass.states.async_set("light.lamp", "off")
     await tick(hass, freezer)
     assert mock_trmnl_client.update_plugin_setting_data.await_count == 1
 
@@ -233,6 +237,62 @@ async def test_rate_limited_push_waits_as_long_as_trmnl_asks(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert mock_trmnl_client.update_plugin_setting_data.await_count == 2
+    assert (
+        mock_trmnl_client.update_plugin_setting_data.await_args.args[1]["entities"][0][
+            "state"
+        ]
+        == "off"
+    )
+
+
+async def test_unload_cancels_a_pending_retry(
+    hass: HomeAssistant,
+    mock_trmnl_client: AsyncMock,
+    home_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a retry waiting when the entry unloads is never sent."""
+    mock_trmnl_client.update_plugin_setting_data.side_effect = TimeoutError()
+    hass.states.async_set("light.lamp", "on")
+    await setup_integration(hass, home_entry)
+
+    await hass.config_entries.async_unload(home_entry.entry_id)
+    await tick(hass, freezer)
+
+    assert mock_trmnl_client.update_plugin_setting_data.await_count == 1
+
+
+async def test_change_during_a_slow_push_is_sent_after_it(
+    hass: HomeAssistant,
+    mock_trmnl_client: AsyncMock,
+    home_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a change whose cooldown ends while a push still runs is sent once that push ends."""
+    release = asyncio.Event()
+    calls: list[str] = []
+
+    async def update_plugin_setting_data(_: int, home: dict[str, Any]) -> None:
+        calls.append(home["entities"][0]["state"])
+        if len(calls) == 1:
+            await release.wait()
+
+    mock_trmnl_client.update_plugin_setting_data.side_effect = (
+        update_plugin_setting_data
+    )
+    hass.states.async_set("light.lamp", "on")
+    home_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(home_entry.entry_id)
+    hass.states.async_set("light.lamp", "off")
+    freezer.tick(timedelta(seconds=91))
+    async_fire_time_changed(hass)
+    await asyncio.sleep(0)
+
+    release.set()
+    await hass.async_block_till_done()
+    await tick(hass, freezer)
+
+    assert calls == ["on", "off"]
 
 
 async def test_successful_push_sends_no_retry(
@@ -262,42 +322,62 @@ async def test_area_moves_and_renames_are_pushed(
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test moving a picked entity's device or the entity, and renaming its area, each push."""
+    """Test moving the parent device, the device or the entity, and renaming the area, each push."""
     other_entry = MockConfigEntry(domain="test")
     other_entry.add_to_hass(hass)
-    device = device_registry.async_get_or_create(
-        config_entry_id=other_entry.entry_id, identifiers={("test", "lamp")}
+    hub = device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id, identifiers={("test", "hub")}
+    )
+    lamp = device_registry.async_get_or_create_child(
+        config_entry_id=other_entry.entry_id,
+        identifiers={("test", "lamp")},
+        parent_device_id=hub.id,
     )
     entity_registry.async_get_or_create(
         "light",
         "test",
         "lamp",
         suggested_object_id="lamp",
-        device_id=device.id,
+        device_id=lamp.id,
         original_name="Lamp",
     )
     kitchen = area_registry.async_create("Kitchen")
     hall = area_registry.async_create("Hall")
+    bedroom = area_registry.async_create("Bedroom")
+    other_device = device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id, identifiers={("test", "other")}
+    )
     hass.states.async_set("light.lamp", "on")
     await setup_integration(hass, home_entry)
 
-    device_registry.async_update_device(device.id, area_id=kitchen.id)
+    device_registry.async_update_device(other_device.id, area_id=hall.id)
+    await tick(hass, freezer)
+    device_registry.async_update_device(hub.id, area_id=kitchen.id)
     await tick(hass, freezer)
     area_registry.async_update(kitchen.id, name="Galley")
     await tick(hass, freezer)
-    entity_registry.async_update_entity("light.lamp", area_id=hall.id)
+    device_registry.async_update_child_device(lamp.id, area_id=hall.id)
+    await tick(hass, freezer)
+    entity_registry.async_update_entity("light.lamp", area_id=bedroom.id)
     await tick(hass, freezer)
 
     assert [
         call.args[1]["areas"]
         for call in mock_trmnl_client.update_plugin_setting_data.await_args_list
-    ] == [{}, {kitchen.id: "Kitchen"}, {kitchen.id: "Galley"}, {hall.id: "Hall"}]
+    ] == [
+        {},
+        {kitchen.id: "Kitchen"},
+        {kitchen.id: "Galley"},
+        {hall.id: "Hall"},
+        {bedroom.id: "Bedroom"},
+    ]
 
 
 @pytest.mark.parametrize(
     "error",
     [
         OAuth2TokenRequestReauthError(domain=DOMAIN, request_info=Mock(), status=400),
+        TRMNLAuthenticationError("Request failed with status 401."),
         TRMNLForbiddenError("Missing capability: content"),
     ],
 )

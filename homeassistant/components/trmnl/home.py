@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Any
 
 from aiohttp import ClientError
-from trmnl.exceptions import TRMNLError, TRMNLForbiddenError
+from trmnl.exceptions import TRMNLAuthenticationError, TRMNLError, TRMNLForbiddenError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_UNIT_OF_MEASUREMENT
@@ -48,7 +48,9 @@ def build_home(hass: HomeAssistant, entity_ids: list[str]) -> dict[str, Any]:
                 "domain": state.domain,
                 "device_class": state.attributes.get(ATTR_DEVICE_CLASS),
                 "state": state.state,
-                "unit": state.attributes.get(ATTR_UNIT_OF_MEASUREMENT),
+                # Climate entities name their unit in temperature_unit.
+                "unit": state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+                or state.attributes.get("temperature_unit"),
                 "attributes": {
                     key: state.attributes[key]
                     for key in SENT_ATTRIBUTES
@@ -127,11 +129,15 @@ class HomePusher:
 
     @callback
     def _is_picked_device(self, data: dr.EventDeviceRegistryUpdatedData) -> bool:
+        """Return True for the device of a picked entity, or that device's parent."""
         entity_registry = er.async_get(self._hass)
+        device_registry = dr.async_get(self._hass)
         return any(
-            (registry_entry := entity_registry.async_get(entity_id))
-            and registry_entry.device_id == data["device_id"]
+            data["device_id"] in (device.id, getattr(device, "parent_device_id", None))
             for entity_id in self._entity_ids
+            if (registry_entry := entity_registry.async_get(entity_id))
+            and registry_entry.device_id
+            and (device := device_registry.async_get(registry_entry.device_id))
         )
 
     @callback
@@ -141,13 +147,19 @@ class HomePusher:
         )
 
     async def _async_push(self) -> None:
+        # A pending retry holds every push until TRMNL's Retry-After has passed.
+        if self._cancel_retry is not None:
+            return
         home = build_home(self._hass, self._entity_ids)
         if home == self._last_home:
             return
-        self._cancel_pending_retry()
         try:
             await self._push(home)
-        except OAuth2TokenRequestReauthError, TRMNLForbiddenError:
+        except (
+            OAuth2TokenRequestReauthError,
+            TRMNLAuthenticationError,
+            TRMNLForbiddenError,
+        ):
             # Pushing again cannot work; the reload after reauth starts a new pusher.
             self._debouncer.async_shutdown()
             self._entry.async_start_reauth(self._hass)
@@ -165,6 +177,9 @@ class HomePusher:
             LOGGER.info("Sent the home to TRMNL again")
         self._failing = False
         self._last_home = home
+        # The debouncer drops a change whose cooldown ended while this push ran.
+        if build_home(self._hass, self._entity_ids) != home:
+            self._debouncer.async_schedule_call()
 
     @callback
     def _cancel_pending_retry(self) -> None:
