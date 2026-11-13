@@ -4788,6 +4788,18 @@ async def test_device_info_mapping_use_deprecated(
     assert caplog.text.count(what) == expected_log
 
 
+def test_device_info_mapping_use_without_frame_helper(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test dict-style use of a device info logs before the frame helper is set up."""
+    device_info = dr.DeviceInfo(name="name")
+
+    with patch.object(frame._hass, "hass", None):
+        assert device_info["name"] == "name"
+
+    assert "Detected code that reads `DeviceInfo['name']`" in caplog.text
+
+
 @pytest.mark.parametrize(
     "integration_frame_path", ["custom_components/test_integration"]
 )

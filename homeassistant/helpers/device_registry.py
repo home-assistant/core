@@ -45,7 +45,7 @@ from homeassistant.util.event_type import EventType
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import format_unserializable_data
 
-from . import storage, translation
+from . import frame, storage, translation
 from .debounce import Debouncer
 from .frame import (
     MissingIntegrationFrame,
@@ -149,8 +149,16 @@ type _DeviceInfoLike = _DeviceInfoMapping | Mapping[str, Any]
 
 def _report_deprecated_mapping_use(what: str) -> None:
     """Report deprecated dict-style use of a device info."""
+    what = f"{what}, which is deprecated as device infos are dataclasses"
+    # report_usage raises before the frame helper is set up, as in tests without hass
+    if frame._hass.hass is None:  # noqa: SLF001
+        _LOGGER.warning(
+            "Detected code that %s. This will stop working in Home Assistant 2027.12",
+            what,
+        )
+        return
     report_usage(
-        f"{what}, which is deprecated as device infos are dataclasses",
+        what,
         breaks_in_ha_version="2027.12.0",
         core_behavior=ReportBehavior.ERROR,
         # A core integration may still use it in a path its tests do not cover
