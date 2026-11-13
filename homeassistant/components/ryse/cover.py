@@ -96,6 +96,7 @@ class RyseCoverEntity(CoverEntity):
             cooldown=_RECONNECT_COOLDOWN,
             immediate=True,
             function=self._async_reconnect,
+            background=True,
         )
         self.async_on_remove(self._reconnect_debouncer.async_shutdown)
         # Fires for unchanged advertisements. The change callback does not, so a
@@ -118,8 +119,6 @@ class RyseCoverEntity(CoverEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Ignore the GATT disconnect that unload itself causes."""
         self._removing = True
-        if self._reconnect_debouncer is not None:
-            self._reconnect_debouncer.async_shutdown()
         # Wait for an in-flight pair() so unload can release that client.
         async with self._connect_lock:
             pass
