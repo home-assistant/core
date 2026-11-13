@@ -83,9 +83,7 @@ def create_mcp_httpx_client(
     certificates for every client.
     """
     kwargs: dict[str, Any] = {
-        "timeout": timeout
-        if timeout is not None
-        else httpx2.Timeout(TIMEOUT, read=300)
+        "timeout": timeout if timeout is not None else httpx2.Timeout(TIMEOUT, read=300)
     }
     return httpx2.AsyncClient(
         verify=client_context(SSLCipherList.PYTHON_DEFAULT, SSL_ALPN_HTTP11),
