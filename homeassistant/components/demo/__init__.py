@@ -16,6 +16,8 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.typing import ConfigType
 
+from .services import async_setup_services
+
 DOMAIN = "demo"
 
 COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
@@ -29,6 +31,7 @@ COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
     Platform.COVER,
     Platform.DATE,
     Platform.DATETIME,
+    Platform.DEVICE_TRACKER,
     Platform.EVENT,
     Platform.FAN,
     Platform.GEO_LOCATION,
@@ -57,7 +60,6 @@ COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
 
 COMPONENTS_WITH_DEMO_PLATFORM = [
     Platform.IMAGE_PROCESSING,
-    Platform.DEVICE_TRACKER,
 ]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
@@ -69,6 +71,8 @@ __all__ = [
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the demo environment."""
+    async_setup_services(hass)
+
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data={}
