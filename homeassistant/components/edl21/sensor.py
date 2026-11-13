@@ -347,8 +347,11 @@ class EDL21:
         # pysml exposes no public close API; drive its internals to stop the
         # protocol and its pending reconnects when the entry is unloaded.
         serial = self._proto._impl  # noqa: SLF001
-        # pysml's _reconnect does not check _running, so clear it to stop the
-        # protocol from opening a new connection after the entry was unloaded.
+        # pysml 0.1.9 exposes no public shutdown API: _disconnect() and
+        # _running are private, and _reconnect() does not check _running.
+        # Clear it so the protocol cannot open a new connection after the
+        # entry was unloaded. Switch to a public disconnect() once pysml
+        # offers one (upstream PR).
         serial._running = False  # noqa: SLF001
         await serial._disconnect()  # noqa: SLF001
 
