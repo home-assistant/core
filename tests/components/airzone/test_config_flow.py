@@ -540,3 +540,31 @@ async def test_options_flow(hass: HomeAssistant) -> None:
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert entry.options[CONF_MQTT_TOPIC] == "airzone"
+
+
+async def test_options_flow_invalid_mqtt_topic(hass: HomeAssistant) -> None:
+    """Test options flow rejects an invalid MQTT topic prefix."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        unique_id="airzone_unique_id",
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_MQTT_TOPIC: "airzone/#"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_mqtt_topic"}
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_MQTT_TOPIC: "airzone"},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_MQTT_TOPIC: "airzone"}
