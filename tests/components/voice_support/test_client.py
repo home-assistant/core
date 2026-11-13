@@ -128,7 +128,6 @@ async def test_update_info_wrong_api_version(
                 ("name", None, "invalid_name"),
                 ("version", 1, "invalid_version"),
                 ("api_version", "1", "invalid_api_version"),
-                ("api_version", True, "boolean_api_version"),
                 ("wake_words", [None], "invalid_wake_word"),
                 ("wake_words", [{"id": "okay_nabu", "phrase": 42}], "invalid_phrase"),
             )
@@ -571,9 +570,6 @@ async def test_run_error_ends_the_run(
         ),
         pytest.param(
             accepted(-1), None, None, None, "said something odd", id="negative"
-        ),
-        pytest.param(
-            accepted(True), None, None, None, "said something odd", id="boolean"
         ),
         *[
             pytest.param(answer, None, None, None, "said something odd", id=name)

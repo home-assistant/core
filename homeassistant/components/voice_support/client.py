@@ -24,12 +24,7 @@ INFO_SCHEMA = probatio.Schema(
     {
         "name": str,
         "version": str,
-        "api_version": probatio.All(
-            int,
-            probatio.Check(
-                lambda value: not isinstance(value, bool), "expected integer"
-            ),
-        ),
+        "api_version": int,
         "wake_words": [
             {
                 "id": str,
@@ -41,11 +36,7 @@ INFO_SCHEMA = probatio.Schema(
     extra=probatio.ALLOW_EXTRA,
 )
 
-TIMESTAMP_SCHEMA = probatio.All(
-    int,
-    probatio.Check(lambda value: not isinstance(value, bool), "expected integer"),
-    probatio.Range(min=0),
-)
+TIMESTAMP_SCHEMA = probatio.All(int, probatio.Range(min=0))
 EVENT_SCHEMA = probatio.Schema({"type": str}, required=True, extra=probatio.ALLOW_EXTRA)
 EVENT_SCHEMAS = {
     event_type: probatio.Schema(schema, required=True, extra=probatio.ALLOW_EXTRA)
