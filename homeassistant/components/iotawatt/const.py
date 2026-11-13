@@ -4,6 +4,7 @@ import json
 
 import httpx2
 
+CONF_LEGACY_ENERGY = "legacy_energy"
 DOMAIN = "iotawatt"
 VOLT_AMPERE_REACTIVE_HOURS = "VARh"
 
