@@ -94,6 +94,9 @@
           "day": "Day",
           "night": "Night"
         }
+      },
+      "sleep_timer": {
+        "name": "Sleep timer"
       }
     },
     "switch": {
@@ -135,8 +138,14 @@
     "invalid_media_id": {
       "message": "Not a Yoto media identifier: {media_id}"
     },
+    "no_current_track": {
+      "message": "No track is currently playing on this Yoto player."
+    },
     "play_failed": {
       "message": "Failed to play Yoto media."
+    },
+    "sleep_timer_failed": {
+      "message": "Could not set the sleep timer on the Yoto player."
     },
     "unknown_card": {
       "message": "Unknown Yoto card: {card_id}"
@@ -152,6 +161,34 @@
     },
     "update_error": {
       "message": "An error occurred while communicating with Yoto."
+    }
+  },
+  "selector": {
+    "sleep_timer_mode": {
+      "options": {
+        "duration": "Duration",
+        "end_of_track": "End of current track"
+      }
+    }
+  },
+  "services": {
+    "clear_sleep_timer": {
+      "description": "Cancels the sleep timer of a Yoto player.",
+      "name": "Clear sleep timer"
+    },
+    "set_sleep_timer": {
+      "description": "Stops playback on a Yoto player after a set duration or at the end of the current track.",
+      "fields": {
+        "duration": {
+          "description": "How long playback continues before it stops.",
+          "name": "Duration"
+        },
+        "mode": {
+          "description": "Whether playback stops after a duration or at the end of the current track.",
+          "name": "Mode"
+        }
+      },
+      "name": "Set sleep timer"
     }
   }
 }

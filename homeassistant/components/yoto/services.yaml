@@ -1,0 +1,29 @@
+set_sleep_timer:
+  target:
+    entity:
+      integration: yoto
+      domain: media_player
+  fields:
+    mode:
+      required: true
+      default: duration
+      selector:
+        select:
+          translation_key: sleep_timer_mode
+          options:
+            - duration
+            - end_of_track
+    duration:
+      required: true
+      example: "00:30:00"
+      visible:
+        field: mode
+        value: duration
+      selector:
+        duration:
+
+clear_sleep_timer:
+  target:
+    entity:
+      integration: yoto
+      domain: media_player
