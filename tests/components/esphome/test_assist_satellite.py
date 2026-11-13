@@ -37,6 +37,7 @@ from homeassistant.components.assist_pipeline import (
     AudioSettings,
     PipelineEvent,
     PipelineEventType,
+    PipelineNotFound,
     VadSensitivity,
 )
 from homeassistant.components.assist_pipeline.pipeline import KEY_ASSIST_PIPELINE  # pylint: disable=home-assistant-component-root-import
@@ -2622,6 +2623,89 @@ async def test_multichannel_audio_picked_at_start(
     assert chunks == expected_chunks
     metadata = stt_engine.async_get_audio_processing.call_args.args[0]
     assert metadata.language == "en-GB"
+
+
+@pytest.mark.parametrize(
+    "get_pipeline",
+    [
+        pytest.param(
+            {"side_effect": PipelineNotFound("pipeline_not_found", "Not found")},
+            id="pipeline_not_found",
+        ),
+        pytest.param({"return_value": Mock(stt_engine=None)}, id="no_stt_engine"),
+        pytest.param(
+            {"return_value": Mock(stt_engine="stt.missing")},
+            id="stt_engine_not_found",
+        ),
+    ],
+)
+async def test_multichannel_audio_unknown_stt_engine(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    get_pipeline: dict[str, Any],
+) -> None:
+    """Test a run starting at stt keeps channel 0 when its engine is unknown."""
+    mock_device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+            | VoiceAssistantFeature.API_AUDIO
+            | VoiceAssistantFeature.MULTI_CHANNEL_AUDIO
+        },
+    )
+    await hass.async_block_till_done()
+
+    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
+    assert satellite is not None
+
+    chunks: list[bytes] = []
+    pipeline_finished = asyncio.Event()
+
+    async def async_pipeline_from_audio_stream(*args, **kwargs):
+        # Too late to switch: the run has already streamed
+        kwargs["event_callback"](
+            PipelineEvent(
+                type=PipelineEventType.STT_START,
+                data={
+                    "engine": "stt.test",
+                    "metadata": {},
+                    "audio_processing": {
+                        "prefers_auto_gain_enabled": False,
+                        "prefers_noise_reduction_enabled": False,
+                    },
+                },
+            )
+        )
+        chunks.extend([chunk async for chunk in kwargs["stt_stream"]])
+        pipeline_finished.set()
+
+    with (
+        patch(
+            "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
+            new=async_pipeline_from_audio_stream,
+        ),
+        patch(
+            "homeassistant.components.esphome.assist_satellite.async_get_pipeline",
+            **get_pipeline,
+        ),
+        patch(
+            "homeassistant.components.stt.async_get_speech_to_text_engine",
+            return_value=None,
+        ),
+    ):
+        async with asyncio.timeout(1):
+            await satellite.handle_pipeline_start(
+                conversation_id="",
+                flags=VoiceAssistantCommandFlag(0),  # stt
+                audio_settings=VoiceAssistantAudioSettings(),
+                wake_word_phrase=None,
+            )
+            await satellite.handle_audio(b"channel 0", b"channel 1")
+            await satellite.handle_pipeline_stop(abort=False)
+            await pipeline_finished.wait()
+
+    assert chunks == [b"channel 0"]
 
 
 @pytest.mark.parametrize(
