@@ -31,6 +31,7 @@ from .const import (
     CONF_TIME_MODE,
     CONF_TIME_OFFSET,
     CONF_TIME_STATION,
+    CONF_TRANSPORTATIONS,
     CONF_VIA,
     DEFAULT_TIME_MODE,
     DEFAULT_TIME_STATION,
@@ -39,6 +40,7 @@ from .const import (
     MAX_VIA,
     PLACEHOLDERS,
     TIME_MODE_OPTIONS,
+    TRANSPORTATION_OPTIONS,
 )
 from .helper import offset_opendata, unique_id_from_config
 
@@ -52,6 +54,14 @@ USER_DATA_SCHEMA = probatio.Schema(
             ),
         ),
         probatio.Required(CONF_DESTINATION): cv.string,
+        probatio.Optional(CONF_TRANSPORTATIONS): SelectSelector(
+            SelectSelectorConfig(
+                options=TRANSPORTATION_OPTIONS,
+                multiple=True,
+                mode=SelectSelectorMode.LIST,
+                translation_key="transportations",
+            ),
+        ),
         probatio.Optional(CONF_TIME_MODE, default=DEFAULT_TIME_MODE): SelectSelector(
             SelectSelectorConfig(
                 options=TIME_MODE_OPTIONS,
@@ -187,6 +197,7 @@ class SwissPublicTransportConfigFlow(ConfigFlow, domain=DOMAIN):
                 session,
                 via=input.get(CONF_VIA),
                 time=input.get(CONF_TIME_FIXED),
+                transportations=input.get(CONF_TRANSPORTATIONS),
             )
             if time_offset:
                 offset_opendata(opendata, time_offset)

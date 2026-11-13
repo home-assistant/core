@@ -39,6 +39,7 @@
           "time_mode": "Select a time mode",
           "time_station": "Select the relevant station",
           "to": "End station",
+          "transportations": "Means of transport",
           "via": "Via stations"
         },
         "data_description": {
@@ -46,6 +47,7 @@
           "time_mode": "Time mode lets you change the departure timing and fix it to a specific time (e.g. 7:12:00 AM every morning) or add a moving offset (e.g. +00:05:00 taking into account the time to walk to the station).",
           "time_station": "Usually the departure time of a connection when it leaves the start station is tracked. Alternatively, track the time when the connection arrives at its end station.",
           "to": "The station where the connection ends",
+          "transportations": "Only show connections using the selected means of transport. Leave empty to allow all.",
           "via": "List of up to 5 stations the route must go through"
         },
         "description": "Provide start and end station for your connection, and optionally up to 5 via stations.\n\nCheck the [stationboard]({stationboard_url}) for valid stations.",
@@ -110,6 +112,15 @@
       "options": {
         "arrival": "Show arrival time at end station",
         "departure": "Show departure time from start station"
+      }
+    },
+    "transportations": {
+      "options": {
+        "bus": "Bus",
+        "cableway": "Cableway",
+        "ship": "Ship",
+        "train": "Train",
+        "tram": "Tram"
       }
     }
   },
