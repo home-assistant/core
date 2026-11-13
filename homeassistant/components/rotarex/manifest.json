@@ -1,0 +1,12 @@
+{
+  "domain": "rotarex",
+  "name": "Rotarex DIMES SRG",
+  "categories": ["energy"],
+  "codeowners": ["@kangnieric"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/rotarex",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
+  "requirements": ["rotarex-dimes-srg-api==0.2.1"]
+}
