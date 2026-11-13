@@ -11,6 +11,7 @@ from onedrive_personal_sdk.exceptions import (
     AuthenticationError,
     HashMismatchError,
     OneDriveException,
+    UploadSessionExpired,
 )
 from onedrive_personal_sdk.models.items import File
 import pytest
@@ -348,6 +349,54 @@ async def test_agents_upload_corrupt_upload(
     )
     assert mock_onedrive_client.update_drive_item.call_count == 0
     assert "Hash validation failed, backup file might be corrupt" in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "metadata_uploads", "error_logged"),
+    [
+        pytest.param([UploadSessionExpired(), None], 1, False, id="retry_succeeds"),
+        pytest.param(UploadSessionExpired(), 0, True, id="retry_fails"),
+    ],
+)
+async def test_agents_upload_session_expired(
+    hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+    mock_onedrive_client: MagicMock,
+    mock_large_file_upload_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    side_effect: list[Exception | None] | Exception,
+    metadata_uploads: int,
+    error_logged: bool,
+) -> None:
+    """Test the upload is retried once with a new session when it expires."""
+    mock_large_file_upload_client.side_effect = side_effect
+    client = await hass_client()
+    test_backup = AgentBackup.from_dict(BACKUP_METADATA)
+
+    with (
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
+        ) as fetch_backup,
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            return_value=test_backup,
+        ),
+        patch("pathlib.Path.open") as mocked_open,
+    ):
+        mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
+        fetch_backup.return_value = test_backup
+        resp = await client.post(
+            f"/api/backup/upload?agent_id={DOMAIN}.{mock_config_entry.unique_id}",
+            data={"file": StringIO("test")},
+        )
+
+    assert resp.status == 201
+    assert mock_large_file_upload_client.call_count == 2
+    assert mock_onedrive_client.upload_file.call_count == metadata_uploads
+    assert (
+        "Error during backup in async_upload_backup: UploadSessionExpired"
+        in caplog.text
+    ) is error_logged
 
 
 async def test_agents_upload_metadata_upload_failed(
