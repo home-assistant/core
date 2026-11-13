@@ -159,6 +159,7 @@ class TessieSteeringWheelHeaterSelectEntity(TessieEntity, SelectEntity):
         # The vehicle rejects steering wheel heat while climate is off
         if level and not self.get("climate_state_is_climate_on"):
             await self.run(self.api.start_climate())
+            self.set(("climate_state_is_climate_on", True))
         # Tessie has no level endpoint, so this goes through its Fleet API proxy
         await self.run(self.api.remote_steering_wheel_heat_level_request(level))
         self.set((self.key, level))
