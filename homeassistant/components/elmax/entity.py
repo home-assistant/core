@@ -1,5 +1,7 @@
 """Elmax integration common classes and utilities."""
 
+from typing import override
+
 from elmax_api.model.endpoint import DeviceEndpoint
 
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -34,6 +36,7 @@ class ElmaxEntity(CoordinatorEntity[ElmaxCoordinator]):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self.coordinator.panel_entry.online

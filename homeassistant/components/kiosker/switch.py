@@ -3,7 +3,7 @@
 import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from kiosker import (
     AuthenticationError,
@@ -19,9 +19,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import KioskerConfigEntry
 from .const import REFRESH_DELAY
-from .coordinator import KioskerData
+from .coordinator import KioskerConfigEntry, KioskerData
 from .entity import KioskerEntity
 
 PARALLEL_UPDATES = 0
@@ -64,6 +63,7 @@ class KioskerSwitch(KioskerEntity, SwitchEntity):
     entity_description: KioskerSwitchEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the switch is on."""
         return self.entity_description.is_on_fn(self.coordinator.data)
@@ -88,10 +88,12 @@ class KioskerSwitch(KioskerEntity, SwitchEntity):
         await asyncio.sleep(REFRESH_DELAY)
         await self.coordinator.async_refresh()
 
+    @override
     async def async_turn_on(self, **_kwargs: Any) -> None:
         """Turn the switch on."""
         await self._handle_method_call(True)
 
+    @override
     async def async_turn_off(self, **_kwargs: Any) -> None:
         """Turn the switch off."""
         await self._handle_method_call(False)

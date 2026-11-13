@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from aidot.client import AidotClient
 from aidot.const import (
@@ -16,7 +17,7 @@ from aidot.exceptions import AidotAuthFailed, AidotUserOrPassIncorrect
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -48,6 +49,7 @@ class AidotDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceStatusData]):
         )
         self.device_client = device_client
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
         self.device_client.on_status_update = self._handle_status_update
@@ -56,6 +58,7 @@ class AidotDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceStatusData]):
         """Handle status callback."""
         self.async_set_updated_data(status)
 
+    @override
     async def _async_update_data(self) -> DeviceStatusData:
         """Return current status."""
         return self.device_client.status
@@ -86,19 +89,25 @@ class AidotDeviceManagerCoordinator(DataUpdateCoordinator[None]):
         self.client.set_token_fresh_cb(self.token_fresh_cb)
         self.device_coordinators: dict[str, AidotDeviceUpdateCoordinator] = {}
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
         try:
             await self.async_auto_login()
         except AidotUserOrPassIncorrect as error:
-            raise ConfigEntryError from error
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN, translation_key="invalid_auth"
+            ) from error
 
+    @override
     async def _async_update_data(self) -> None:
         """Update data async."""
         try:
             data = await self.client.async_get_all_device()
         except AidotAuthFailed as error:
-            raise ConfigEntryError from error
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN, translation_key="invalid_auth"
+            ) from error
         current_devices = {
             device[CONF_ID]: device
             for device in data[CONF_DEVICE_LIST]
@@ -158,6 +167,4 @@ class AidotDeviceManagerCoordinator(DataUpdateCoordinator[None]):
         ):
             if not set(device.identifiers) & identifiers:
                 _LOGGER.debug("Removing obsolete device entry %s", device.name)
-                device_reg.async_update_device(
-                    device.id, remove_config_entry_id=self.config_entry.entry_id
-                )
+                device_reg.async_remove_device(device.id)

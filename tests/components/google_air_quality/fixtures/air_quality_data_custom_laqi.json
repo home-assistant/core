@@ -1,0 +1,88 @@
+{
+  "dateTime": "2026-02-01T11:00:00Z",
+  "regionCode": "de",
+  "indexes": [
+    {
+      "code": "deu_lubw",
+      "displayName": "LuQx (DE)",
+      "aqi": 3,
+      "aqiDisplay": "3",
+      "color": {
+        "red": 0.6,
+        "green": 1,
+        "blue": 1
+      },
+      "category": "Satisfactory air quality",
+      "dominantPollutant": "pm10"
+    },
+    {
+      "code": "uaqi",
+      "displayName": "Universal AQI",
+      "aqi": 57,
+      "aqiDisplay": "57",
+      "color": {
+        "red": 0.827451,
+        "green": 0.93333334,
+        "blue": 0.06666667
+      },
+      "category": "Moderate air quality",
+      "dominantPollutant": "pm25"
+    }
+  ],
+  "pollutants": [
+    {
+      "code": "no2",
+      "displayName": "NO2",
+      "fullName": "Nitrogen dioxide",
+      "concentration": {
+        "value": 14.25,
+        "units": "PARTS_PER_BILLION"
+      }
+    },
+    {
+      "code": "o3",
+      "displayName": "O3",
+      "fullName": "Ozone",
+      "concentration": {
+        "value": 8.4,
+        "units": "PARTS_PER_BILLION"
+      }
+    },
+    {
+      "code": "pm10",
+      "displayName": "PM10",
+      "fullName": "Inhalable particulate matter (\u003c10µm)",
+      "concentration": {
+        "value": 32.04,
+        "units": "MICROGRAMS_PER_CUBIC_METER"
+      }
+    },
+    {
+      "code": "pm25",
+      "displayName": "PM2.5",
+      "fullName": "Fine particulate matter (\u003c2.5µm)",
+      "concentration": {
+        "value": 27.23,
+        "units": "MICROGRAMS_PER_CUBIC_METER"
+      }
+    },
+    {
+      "code": "co",
+      "displayName": "CO",
+      "fullName": "Carbon monoxide",
+      "concentration": {
+        "value": 349.3,
+        "units": "PARTS_PER_BILLION"
+      }
+    },
+    {
+      "code": "so2",
+      "displayName": "SO2",
+      "fullName": "Sulfur dioxide",
+      "concentration": {
+        "value": 1.13,
+        "units": "PARTS_PER_BILLION"
+      }
+    }
+  ]
+}

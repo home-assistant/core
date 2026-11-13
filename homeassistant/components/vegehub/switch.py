@@ -1,6 +1,6 @@
 """Switch configuration for VegeHub integration."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -65,16 +65,19 @@ class VegeHubSwitch(VegeHubEntity, SwitchEntity):
         self.duration = duration
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if the switch is on."""
         if self.coordinator.data is None or self._attr_unique_id is None:
             return False
         return self.coordinator.data.get(self.data_key, 0) > 0
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.coordinator.vegehub.set_actuator(1, self.index, self.duration)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.coordinator.vegehub.set_actuator(0, self.index, self.duration)

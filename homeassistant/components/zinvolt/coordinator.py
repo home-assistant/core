@@ -3,13 +3,15 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 from zinvolt import ZinvoltClient
-from zinvolt.exceptions import ZinvoltError
+from zinvolt.exceptions import ZinvoltAuthenticationError, ZinvoltError
 from zinvolt.models import Battery, BatteryState, Unit, UnitType
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -39,6 +41,7 @@ class BatteryData:
 class ZinvoltDeviceCoordinator(DataUpdateCoordinator[ZinvoltData]):
     """Class for Zinvolt devices."""
 
+    config_entry: ZinvoltConfigEntry
     battery_units: dict[str, Unit]
 
     def __init__(
@@ -54,15 +57,20 @@ class ZinvoltDeviceCoordinator(DataUpdateCoordinator[ZinvoltData]):
             _LOGGER,
             config_entry=config_entry,
             name=f"Zinvolt {battery.identifier}",
-            update_interval=timedelta(minutes=5),
+            update_interval=timedelta(seconds=30),
         )
         self.battery = battery
         self.client = client
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the Zinvolt integration."""
         try:
             units = await self.client.get_units(self.battery.identifier)
+        except ZinvoltAuthenticationError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN, translation_key="authentication_failed"
+            ) from err
         except ZinvoltError as err:
             raise UpdateFailed(
                 translation_key="update_failed", translation_domain=DOMAIN
@@ -71,6 +79,7 @@ class ZinvoltDeviceCoordinator(DataUpdateCoordinator[ZinvoltData]):
             unit.serial_number: unit for unit in units if unit.type is UnitType.BATTERY
         }
 
+    @override
     async def _async_update_data(self) -> ZinvoltData:
         """Update data from Zinvolt."""
         try:
@@ -83,6 +92,10 @@ class ZinvoltDeviceCoordinator(DataUpdateCoordinator[ZinvoltData]):
                 )
                 for unit_serial_number in self.battery_units
             }
+        except ZinvoltAuthenticationError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN, translation_key="authentication_failed"
+            ) from err
         except ZinvoltError as err:
             raise UpdateFailed(
                 translation_key="update_failed",

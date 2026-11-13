@@ -3,6 +3,11 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.components.repairs import (
+    process_repair_fix_flow,
+    start_repair_fix_flow,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 from zeroconf import ServiceStateChange
 from zeroconf.asyncio import AsyncServiceInfo
 
@@ -17,13 +22,6 @@ from homeassistant.helpers import instance_id, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from .test_init import service_update_mock
-
-from tests.components.repairs import (
-    async_process_repairs_platforms,
-    process_repair_fix_flow,
-    start_repair_fix_flow,
-)
-from tests.typing import ClientSessionGenerator
 
 
 def service_state_change_mock(
@@ -58,7 +56,6 @@ def _get_hass_service_info_mock(
             "external_url": None,
             "internal_url": "http://10.0.0.1:8123",
             "location_name": "Home",
-            "requires_api_password": "True",
             "uuid": instance_id,
             "version": "2025.9.0.dev0",
         },
@@ -239,7 +236,6 @@ async def test_duplicate_repair_issue_repair_flow(
     """Test desired flow of the fix flow for duplicate instance ID."""
     assert await async_setup_component(hass, REPAIRS_DOMAIN, {REPAIRS_DOMAIN: {}})
     assert await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
-    await async_process_repairs_platforms(hass)
 
     with (
         patch("homeassistant.helpers.instance_id.async_get", return_value="abc123"),

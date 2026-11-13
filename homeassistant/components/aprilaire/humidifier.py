@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any, cast, override
 
 from pyaprilaire.const import Attribute
 
@@ -127,6 +127,7 @@ class AprilaireHumidifierEntity(BaseAprilaireEntity, HumidifierEntity):
         super().__init__(coordinator, unique_id)
 
     @property
+    @override
     def action(self) -> HumidifierAction | None:
         """Get the current action."""
 
@@ -135,12 +136,14 @@ class AprilaireHumidifierEntity(BaseAprilaireEntity, HumidifierEntity):
         return self.entity_description.action_map.get(action, HumidifierAction.OFF)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Get whether the humidifier is on."""
 
         return self.target_humidity is not None and self.target_humidity > 0
 
     @property
+    @override
     def current_humidity(self) -> float | None:
         """Get the current humidity."""
 
@@ -150,6 +153,7 @@ class AprilaireHumidifierEntity(BaseAprilaireEntity, HumidifierEntity):
         )
 
     @property
+    @override
     def target_humidity(self) -> float | None:
         """Get the target humidity."""
 
@@ -164,6 +168,7 @@ class AprilaireHumidifierEntity(BaseAprilaireEntity, HumidifierEntity):
         return target_humidity
 
     @property
+    @override
     def min_humidity(self) -> float:
         """Return the minimum humidity."""
 
@@ -173,6 +178,7 @@ class AprilaireHumidifierEntity(BaseAprilaireEntity, HumidifierEntity):
         return self.entity_description.min_humidity
 
     @property
+    @override
     def max_humidity(self) -> float:
         """Return the maximum humidity."""
 
@@ -192,11 +198,13 @@ class AprilaireHumidifierEntity(BaseAprilaireEntity, HumidifierEntity):
             == self.entity_description.auto_status_value
         )
 
+    @override
     async def async_set_humidity(self, humidity: int) -> None:
         """Set the humidity."""
 
         await self.entity_description.set_humidity_fn(humidity)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
 
@@ -207,6 +215,7 @@ class AprilaireHumidifierEntity(BaseAprilaireEntity, HumidifierEntity):
 
         await self.entity_description.set_humidity_fn(target_humidity)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
 

@@ -1,9 +1,9 @@
 """Tests for the Arve integration."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 USER_INPUT = {
     CONF_ACCESS_TOKEN: "test-access-token",

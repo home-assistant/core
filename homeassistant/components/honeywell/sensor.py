@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from aiosomecomfort.device import Device
 
@@ -112,6 +112,7 @@ class HoneywellSensor(SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state."""
         return self.entity_description.value_fn(self._device)

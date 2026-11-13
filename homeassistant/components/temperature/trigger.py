@@ -1,20 +1,24 @@
 """Provides triggers for temperature."""
 
+from typing import override
+
 from homeassistant.components.climate import (
-    ATTR_CURRENT_TEMPERATURE as CLIMATE_ATTR_CURRENT_TEMPERATURE,
     DOMAIN as CLIMATE_DOMAIN,
+    ClimateEntityCapabilityAttribute,
+    ClimateEntityStateAttribute,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.components.water_heater import (
-    ATTR_CURRENT_TEMPERATURE as WATER_HEATER_ATTR_CURRENT_TEMPERATURE,
     DOMAIN as WATER_HEATER_DOMAIN,
+    WaterHeaterCapabilityAttribute,
+    WaterHeaterStateAttribute,
 )
 from homeassistant.components.weather import (
-    ATTR_WEATHER_TEMPERATURE,
-    ATTR_WEATHER_TEMPERATURE_UNIT,
     DOMAIN as WEATHER_DOMAIN,
+    WeatherEntityCapabilityAttribute,
+    WeatherEntityStateAttribute,
 )
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, UnitOfTemperature
+from homeassistant.const import EntityStateAttribute, UnitOfTemperature
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.trigger import (
@@ -25,16 +29,18 @@ from homeassistant.helpers.trigger import (
 )
 from homeassistant.util.unit_conversion import TemperatureConverter
 
-TEMPERATURE_DOMAIN_SPECS = {
+TEMPERATURE_DOMAIN_SPECS: dict[str, DomainSpec] = {
     CLIMATE_DOMAIN: DomainSpec(
-        value_source=CLIMATE_ATTR_CURRENT_TEMPERATURE,
+        value_source=ClimateEntityStateAttribute.CURRENT_TEMPERATURE,
     ),
     SENSOR_DOMAIN: DomainSpec(
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
-    WATER_HEATER_DOMAIN: DomainSpec(value_source=WATER_HEATER_ATTR_CURRENT_TEMPERATURE),
+    WATER_HEATER_DOMAIN: DomainSpec(
+        value_source=WaterHeaterStateAttribute.CURRENT_TEMPERATURE
+    ),
     WEATHER_DOMAIN: DomainSpec(
-        value_source=ATTR_WEATHER_TEMPERATURE,
+        value_source=WeatherEntityStateAttribute.TEMPERATURE,
     ),
 }
 
@@ -46,6 +52,7 @@ class _TemperatureTriggerMixin(EntityNumericalStateTriggerWithUnitBase):
     _domain_specs = TEMPERATURE_DOMAIN_SPECS
     _unit_converter = TemperatureConverter
 
+    @override
     def _should_include(self, state: State) -> bool:
         """Skip attribute-source entities that lack the temperature attribute.
 
@@ -63,14 +70,18 @@ class _TemperatureTriggerMixin(EntityNumericalStateTriggerWithUnitBase):
             return True
         return state.attributes.get(domain_spec.value_source) is not None
 
+    @override
     def _get_entity_unit(self, state: State) -> str | None:
         """Get the temperature unit of an entity from its state."""
         if state.domain == SENSOR_DOMAIN:
-            return state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        if state.domain == WEATHER_DOMAIN:
-            return state.attributes.get(ATTR_WEATHER_TEMPERATURE_UNIT)
-        # Climate and water_heater: show_temp converts to system unit
-        return self._hass.config.units.temperature_unit
+            return state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
+        if state.domain == CLIMATE_DOMAIN:
+            return state.attributes.get(
+                ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT
+            )
+        if state.domain == WATER_HEATER_DOMAIN:
+            return state.attributes.get(WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT)
+        return state.attributes.get(WeatherEntityCapabilityAttribute.TEMPERATURE_UNIT)
 
 
 class TemperatureChangedTrigger(

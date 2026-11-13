@@ -1,8 +1,8 @@
 """A todo platform for Todoist."""
 
 import asyncio
-import datetime
-from typing import Any, cast
+import datetime as dt
+from typing import Any, cast, override
 
 from todoist_api_python.models import Task
 
@@ -42,7 +42,7 @@ def _task_api_data(item: TodoItem, api_data: Task | None = None) -> dict[str, An
         "description": item.description or "",
     }
     if due := item.due:
-        if isinstance(due, datetime.datetime):
+        if isinstance(due, dt.datetime):
             item_data["due_datetime"] = due
         else:
             item_data["due_date"] = due
@@ -85,6 +85,7 @@ class TodoistTodoListEntity(CoordinatorEntity[TodoistCoordinator], TodoListEntit
         self._attr_name = project_name
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if self.coordinator.data is None:
@@ -113,6 +114,7 @@ class TodoistTodoListEntity(CoordinatorEntity[TodoistCoordinator], TodoListEntit
             self._attr_todo_items = items
         super()._handle_coordinator_update()
 
+    @override
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Create a To-do item."""
         if item.status != TodoItemStatus.NEEDS_ACTION:
@@ -123,6 +125,7 @@ class TodoistTodoListEntity(CoordinatorEntity[TodoistCoordinator], TodoListEntit
         )
         await self.coordinator.async_refresh()
 
+    @override
     async def async_update_todo_item(self, item: TodoItem) -> None:
         """Update a To-do item."""
         uid: str = cast(str, item.uid)
@@ -142,6 +145,7 @@ class TodoistTodoListEntity(CoordinatorEntity[TodoistCoordinator], TodoListEntit
                         await self.coordinator.api.uncomplete_task(task_id=uid)
         await self.coordinator.async_refresh()
 
+    @override
     async def async_delete_todo_items(self, uids: list[str]) -> None:
         """Delete a To-do item."""
         await asyncio.gather(
@@ -149,6 +153,7 @@ class TodoistTodoListEntity(CoordinatorEntity[TodoistCoordinator], TodoListEntit
         )
         await self.coordinator.async_refresh()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass update state from existing coordinator data."""
         await super().async_added_to_hass()

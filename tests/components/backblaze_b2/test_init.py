@@ -1,18 +1,17 @@
 """Test the Backblaze B2 storage integration."""
 
-from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from b2sdk.v2 import exception
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.backblaze_b2.const import CONF_APPLICATION_KEY
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_load_unload_config_entry(
@@ -101,7 +100,7 @@ async def test_periodic_issue_check(
     ):
         await setup_integration(hass, mock_config_entry)
         assert captured_callback is not None
-        await captured_callback(datetime.now())
+        await captured_callback(dt_util.utcnow())
 
         assert mock_check.call_count == 2  # setup + callback
         mock_check.assert_called_with(hass, mock_config_entry)

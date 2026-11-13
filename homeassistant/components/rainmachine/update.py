@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any
+from typing import Any, override
 
 from regenmaschine.errors import RequestError
 
@@ -76,6 +76,7 @@ class RainMachineUpdateEntity(RainMachineEntity, UpdateEntity):
         | UpdateEntityFeature.SPECIFIC_VERSION
     )
 
+    @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
@@ -88,6 +89,7 @@ class RainMachineUpdateEntity(RainMachineEntity, UpdateEntity):
         await self.coordinator.async_refresh()
 
     @callback
+    @override
     def update_from_latest_data(self) -> None:
         """Update the state."""
         if version := self._version_coordinator.data["swVer"]:

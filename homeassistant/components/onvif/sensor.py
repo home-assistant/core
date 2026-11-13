@@ -2,8 +2,13 @@
 
 from datetime import date, datetime
 from decimal import Decimal
+from typing import override
 
-from homeassistant.components.sensor import RestoreSensor, SensorDeviceClass
+from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
+    RestoreSensor,
+    SensorDeviceClass,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -34,7 +39,7 @@ async def async_setup_entry(
 
     ent_reg = er.async_get(hass)
     for entry in er.async_entries_for_config_entry(ent_reg, config_entry.entry_id):
-        if entry.domain == "sensor" and entry.unique_id not in uids:
+        if entry.domain == SENSOR_DOMAIN and entry.unique_id not in uids:
             uids.add(entry.unique_id)
             entities.append(ONVIFSensor(entry.unique_id, device, entry=entry))
 
@@ -98,6 +103,7 @@ class ONVIFSensor(ONVIFBaseEntity, RestoreSensor):
         super().__init__(device)
 
     @property
+    @override
     def native_value(self) -> StateType | date | datetime | Decimal:
         """Return the value reported by the sensor."""
         assert self._attr_unique_id is not None
@@ -105,6 +111,7 @@ class ONVIFSensor(ONVIFBaseEntity, RestoreSensor):
             return event.value
         return self._attr_native_value
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Connect to dispatcher listening for entity data notifications."""
         self.async_on_remove(

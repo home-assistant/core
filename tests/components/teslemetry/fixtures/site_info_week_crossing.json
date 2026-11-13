@@ -123,10 +123,7 @@
             "WEEKEND": {
               "periods": [
                 {
-                  "fromDayOfWeek": 4,
-                  "toDayOfWeek": 0,
-                  "fromHour": 0,
-                  "toHour": 0
+                  "fromDayOfWeek": 4
                 }
               ]
             }
@@ -166,10 +163,7 @@
               "WEEKEND": {
                 "periods": [
                   {
-                    "fromDayOfWeek": 4,
-                    "toDayOfWeek": 0,
-                    "fromHour": 0,
-                    "toHour": 0
+                    "fromDayOfWeek": 4
                   }
                 ]
               }

@@ -1,14 +1,17 @@
 """Coordinator for WS66i."""
 
 import logging
+from typing import TYPE_CHECKING, override
 
 from pyws66i import WS66i, ZoneStatus
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import POLL_INTERVAL
+
+if TYPE_CHECKING:
+    from .models import Ws66iConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -16,12 +19,12 @@ _LOGGER = logging.getLogger(__name__)
 class Ws66iDataUpdateCoordinator(DataUpdateCoordinator[list[ZoneStatus]]):
     """DataUpdateCoordinator to gather data for WS66i Zones."""
 
-    config_entry: ConfigEntry
+    config_entry: Ws66iConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: Ws66iConfigEntry,
         my_api: WS66i,
         zones: list[int],
     ) -> None:
@@ -48,6 +51,7 @@ class Ws66iDataUpdateCoordinator(DataUpdateCoordinator[list[ZoneStatus]]):
 
         return data
 
+    @override
     async def _async_update_data(self) -> list[ZoneStatus]:
         """Fetch data for each of the zones."""
         # The data that is returned here can be accessed through coordinator.data.

@@ -3,19 +3,19 @@
 from unittest.mock import PropertyMock, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    assert_setup_component,
+    async_capture_events,
+    async_load_fixture,
+)
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components import camera, image_processing as ip
 from homeassistant.components.openalpr_cloud.image_processing import OPENALPR_API_URL
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import (
-    assert_setup_component,
-    async_capture_events,
-    async_load_fixture,
-)
 from tests.components.image_processing import common
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture(autouse=True)

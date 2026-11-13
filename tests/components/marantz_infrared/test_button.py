@@ -2,17 +2,19 @@
 
 from infrared_protocols.codes.marantz.audio import MarantzAudioCode
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.components.common import (
+    assert_availability_follows_source_entity,
+)
+from pytest_homeassistant.components.infrared.common import MockInfraredEmitterEntity
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .utils import check_availability_follows_ir_entity
-
-from tests.common import MockConfigEntry, snapshot_platform
-from tests.components.infrared.common import MockInfraredEmitterEntity
+from .conftest import MOCK_INFRARED_EMITTER_ENTITY_ID
 
 BUTTON_ENTITY_ID_SPEAKER_AB = "button.marantz_pm6006_integrated_amplifier_speaker_a_b"
 BUTTON_ENTITY_ID_SOURCE_DIRECT = (
@@ -38,8 +40,8 @@ async def test_entities(
     """Test all button entities are created with correct attributes."""
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
-    device_entry = device_registry.async_get_device(
-        identifiers={("marantz_infrared", mock_config_entry.entry_id)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        ("marantz_infrared", mock_config_entry.entry_id), mock_config_entry.entry_id
     )
     assert device_entry
     entity_entries = er.async_entries_for_config_entry(
@@ -67,8 +69,8 @@ async def test_button_press_sends_correct_code(
     """Test pressing a button sends the correct IR code."""
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: entity_id},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -101,4 +103,6 @@ async def test_button_availability_follows_ir_entity(
     hass: HomeAssistant,
 ) -> None:
     """Test button becomes unavailable when IR entity is unavailable."""
-    await check_availability_follows_ir_entity(hass, BUTTON_ENTITY_ID_LOUDNESS)
+    await assert_availability_follows_source_entity(
+        hass, BUTTON_ENTITY_ID_LOUDNESS, [MOCK_INFRARED_EMITTER_ENTITY_ID]
+    )

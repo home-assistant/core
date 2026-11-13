@@ -6,18 +6,21 @@ from unittest.mock import AsyncMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from indevolt_api import IndevoltConfig
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.indevolt.coordinator import SCAN_INTERVAL
-from homeassistant.components.switch import SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 DEFAULT_STATE_ON = 1
 DEFAULT_STATE_OFF = 0
@@ -79,13 +82,11 @@ async def test_switch_turn_on(
     # Reset mock call count for this iteration
     mock_indevolt.set_data.reset_mock()
 
-    # Update mock data to reflect the new value
-    mock_indevolt.fetch_data.return_value[read_key] = on_value
-
     # Call the service to turn on
+    fetch_count_before = mock_indevolt.fetch_data.call_count
     await hass.services.async_call(
-        Platform.SWITCH,
-        SERVICE_TURN_ON,
+        SWITCH_DOMAIN,
+        SwitchService.TURN_ON,
         {"entity_id": entity_id},
         blocking=True,
     )
@@ -93,7 +94,8 @@ async def test_switch_turn_on(
     # Verify set_data was called with correct parameters
     mock_indevolt.set_data.assert_called_with(write_key, 1)
 
-    # Verify updated state
+    # Verify state updated optimistically without a new fetch
+    assert mock_indevolt.fetch_data.call_count == fetch_count_before
     assert (state := hass.states.get(entity_id)) is not None
     assert state.state == STATE_ON
 
@@ -138,13 +140,11 @@ async def test_switch_turn_off(
     # Reset mock call count for this iteration
     mock_indevolt.set_data.reset_mock()
 
-    # Update mock data to reflect the new value
-    mock_indevolt.fetch_data.return_value[read_key] = off_value
-
     # Call the service to turn off
+    fetch_count_before = mock_indevolt.fetch_data.call_count
     await hass.services.async_call(
-        Platform.SWITCH,
-        SERVICE_TURN_OFF,
+        SWITCH_DOMAIN,
+        SwitchService.TURN_OFF,
         {"entity_id": entity_id},
         blocking=True,
     )
@@ -152,7 +152,8 @@ async def test_switch_turn_off(
     # Verify set_data was called with correct parameters
     mock_indevolt.set_data.assert_called_with(write_key, 0)
 
-    # Verify updated state
+    # Verify state updated optimistically without a new fetch
+    assert mock_indevolt.fetch_data.call_count == fetch_count_before
     assert (state := hass.states.get(entity_id)) is not None
     assert state.state == STATE_OFF
 
@@ -172,8 +173,8 @@ async def test_switch_set_value_error(
     # Attempt to switch on
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
-            Platform.SWITCH,
-            SERVICE_TURN_ON,
+            SWITCH_DOMAIN,
+            SwitchService.TURN_ON,
             {"entity_id": "switch.cms_sf2000_allow_grid_charging"},
             blocking=True,
         )

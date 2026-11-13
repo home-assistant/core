@@ -25,6 +25,20 @@
       }
     }
   },
+  "exceptions": {
+    "invalid_picture": {
+      "message": "The picture must be an image uploaded to Home Assistant."
+    },
+    "no_person_linked": {
+      "message": "Your user is not linked to a person. Ask an administrator to link your user to a person first."
+    },
+    "person_not_editable": {
+      "message": "Your person is configured in YAML and cannot be changed from the UI."
+    },
+    "system_generated_user": {
+      "message": "System-generated users cannot change their profile."
+    }
+  },
   "services": {
     "reload": {
       "description": "Reloads persons from the YAML-configuration.",

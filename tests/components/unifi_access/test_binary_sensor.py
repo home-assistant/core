@@ -3,6 +3,7 @@
 from collections.abc import Awaitable, Callable
 from unittest.mock import MagicMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 from unifi_access_api import DoorPositionStatus
 from unifi_access_api.models.websocket import (
@@ -20,8 +21,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 FRONT_DOOR_ENTITY = "binary_sensor.front_door"
 BACK_DOOR_ENTITY = "binary_sensor.back_door"
@@ -197,5 +196,5 @@ async def test_v2_device_update_no_explicit_state_does_not_overwrite(
     await handlers["access.data.v2.device.update"](update_msg)
     await hass.async_block_till_done()
 
-    # Back door must still be open/on – not silently reset to closed/off
+    # Back door must still be open/on - not silently reset to closed/off
     assert hass.states.get(BACK_DOOR_ENTITY).state == "on"

@@ -1,6 +1,7 @@
 """Support for Meteoclimatic weather data."""
 
 import logging
+from typing import override
 
 from meteoclimatic import MeteoclimaticClient, Observation
 from meteoclimatic.exceptions import MeteoclimaticError
@@ -33,6 +34,7 @@ class MeteoclimaticUpdateCoordinator(DataUpdateCoordinator[Observation]):
         )
         self._meteoclimatic_client = MeteoclimaticClient()
 
+    @override
     async def _async_update_data(self) -> Observation:
         """Obtain the latest data from Meteoclimatic."""
         try:

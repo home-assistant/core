@@ -1,6 +1,8 @@
 """Config flow to configure iss component."""
 
-import voluptuous as vol
+from typing import override
+
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_SHOW_ON_MAP
@@ -17,12 +19,14 @@ class ISSConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: IssConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler()
 
+    @override
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         if user_input is not None:
@@ -45,9 +49,9 @@ class OptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_SHOW_ON_MAP,
                         default=self.config_entry.options.get(CONF_SHOW_ON_MAP, False),
                     ): bool,

@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from pysmarlaapi import Federwiege
 
@@ -46,6 +46,7 @@ class SmarlaBaseEntity(Entity):
         self._unavailable_logged = False
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._federwiege.available
@@ -66,11 +67,13 @@ class SmarlaBaseEntity(Entity):
         """Notify ha when state changes."""
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when this Entity has been added to HA."""
         await self._federwiege.add_listener(self.on_availability_change)
         await self._property.add_listener(self.on_change)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Entity being removed from hass."""
         await self._property.remove_listener(self.on_change)

@@ -2,11 +2,12 @@
 
 import asyncio
 import re
+from typing import override
 
 from haffmpeg.core import HAFFmpeg
 from haffmpeg.tools import IMAGE_JPEG, FFVersion, ImageFrame
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant.const import (
     CONTENT_TYPE_MULTIPART,
@@ -44,14 +45,26 @@ DEFAULT_BINARY = "ffmpeg"
 # content-type changes again in the future
 OFFICIAL_IMAGE_VERSION = "6.0"
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
-            {vol.Optional(CONF_FFMPEG_BIN, default=DEFAULT_BINARY): cv.string}
+        DOMAIN: probatio.Schema(
+            {probatio.Optional(CONF_FFMPEG_BIN, default=DEFAULT_BINARY): cv.string}
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
+
+__all__ = [
+    "CONF_EXTRA_ARGUMENTS",
+    "CONF_INITIAL_STATE",
+    "CONF_INPUT",
+    "CONF_OUTPUT",
+    "DOMAIN",
+    "FFmpegBase",
+    "FFmpegManager",
+    "async_get_image",
+    "get_ffmpeg_manager",
+]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -150,6 +163,7 @@ class FFmpegBase[_HAFFmpegT: HAFFmpeg](Entity):  # pylint: disable=home-assistan
         self.ffmpeg = ffmpeg
         self.initial_state = initial_state
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register dispatcher & events.
 
@@ -175,6 +189,7 @@ class FFmpegBase[_HAFFmpegT: HAFFmpeg](Entity):  # pylint: disable=home-assistan
         self._async_register_events()
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self.ffmpeg.is_running

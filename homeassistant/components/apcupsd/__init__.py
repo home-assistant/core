@@ -12,7 +12,7 @@ PLATFORMS: Final = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: APCUPSdConfigEntry
-) -> bool:
+) -> None:
     """Use config values to set up a function enabling status retrieval."""
     host, port = config_entry.data[CONF_HOST], config_entry.data[CONF_PORT]
     coordinator = APCUPSdCoordinator(hass, config_entry, host, port)
@@ -24,9 +24,8 @@ async def async_setup_entry(
 
     # Forward the config entries to the supported platforms.
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: APCUPSdConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: APCUPSdConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

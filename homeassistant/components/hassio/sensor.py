@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from aiohasupervisor.models.base import ContainerStats
 
@@ -153,6 +154,15 @@ HOST_ENTITY_DESCRIPTIONS = (
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda entity: entity.host.disk_free,
     ),
+    HassioHostSensorEntityDescription(
+        entity_registry_enabled_default=False,
+        key="disk_life_time",
+        translation_key="disk_life_time",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda entity: entity.host.disk_life_time,
+    ),
 )
 
 
@@ -258,6 +268,7 @@ class HassioAddonSensor(HassioAddonEntity, SensorEntity):
     entity_description: HassioAddonSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return native value of entity."""
         return self.entity_description.value_fn(self)
@@ -269,6 +280,7 @@ class HassioStatsSensor(HassioStatsEntity, SensorEntity):
     entity_description: HassioStatsSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> float:
         """Return native value of entity."""
         return self.entity_description.value_fn(self)
@@ -280,6 +292,7 @@ class HassioOSSensor(HassioOSEntity, SensorEntity):
     entity_description: HassioOSSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return native value of entity."""
         return self.entity_description.value_fn(self)
@@ -291,6 +304,7 @@ class HostSensor(HassioHostEntity, SensorEntity):
     entity_description: HassioHostSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> str | float | None:
         """Return native value of entity."""
         return self.entity_description.value_fn(self)

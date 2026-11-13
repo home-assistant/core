@@ -3,7 +3,7 @@
 from datetime import timedelta
 from http import HTTPStatus
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from aiohttp import ClientError, ClientResponseError
 from tesla_fleet_api.const import TeslaEnergyPeriod
@@ -16,10 +16,10 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
+from .const import DOMAIN, ENERGY_HISTORY_FIELDS
+
 if TYPE_CHECKING:
     from . import TessieConfigEntry
-
-from .const import DOMAIN, ENERGY_HISTORY_FIELDS
 
 # This matches the update interval Tessie performs server side
 TESSIE_SYNC_INTERVAL = 10
@@ -70,6 +70,7 @@ class TessieStateUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.session = async_get_clientsession(hass)
         self.data = flatten(data)
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update vehicle data using Tessie API."""
         try:
@@ -124,6 +125,7 @@ class TessieEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         }
         self.data = data
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update energy site data using Tessie API."""
 
@@ -163,6 +165,7 @@ class TessieEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.api = api
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update energy site data using Tessie API."""
 
@@ -201,6 +204,7 @@ class TessieEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.api = api
         self.data = {}
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update energy history data using Tessie API."""
 

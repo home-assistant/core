@@ -1,12 +1,11 @@
 """Idasen Desk integration cover platform."""
 
-from typing import Any
+from typing import Any, override
 
 from bleak.exc import BleakError
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
 )
@@ -31,7 +30,6 @@ async def async_setup_entry(
 class IdasenDeskCover(IdasenDeskEntity, CoverEntity):
     """Representation of Idasen Desk device."""
 
-    _attr_device_class = CoverDeviceClass.DAMPER
     _attr_supported_features = (
         CoverEntityFeature.OPEN
         | CoverEntityFeature.CLOSE
@@ -46,10 +44,12 @@ class IdasenDeskCover(IdasenDeskEntity, CoverEntity):
         super().__init__(coordinator.address, coordinator)
 
     @property
+    @override
     def is_closed(self) -> bool:
         """Return if the cover is closed."""
         return self.current_cover_position == 0
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         try:
@@ -57,6 +57,7 @@ class IdasenDeskCover(IdasenDeskEntity, CoverEntity):
         except BleakError as err:
             raise HomeAssistantError("Failed to move down: Bluetooth error") from err
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         try:
@@ -64,6 +65,7 @@ class IdasenDeskCover(IdasenDeskEntity, CoverEntity):
         except BleakError as err:
             raise HomeAssistantError("Failed to move up: Bluetooth error") from err
 
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         try:
@@ -71,6 +73,7 @@ class IdasenDeskCover(IdasenDeskEntity, CoverEntity):
         except BleakError as err:
             raise HomeAssistantError("Failed to stop moving: Bluetooth error") from err
 
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover shutter to a specific position."""
         try:
@@ -81,6 +84,7 @@ class IdasenDeskCover(IdasenDeskEntity, CoverEntity):
             ) from err
 
     @property
+    @override
     def current_cover_position(self) -> int | None:
         """Return the current cover position."""
         return self._desk.height_percent

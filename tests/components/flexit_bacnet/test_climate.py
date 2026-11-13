@@ -4,11 +4,14 @@ import asyncio
 from unittest.mock import AsyncMock
 
 from flexit_bacnet import (
+    OPERATION_MODE_COOKER_HOOD,
+    OPERATION_MODE_TEMPORARY_HIGH,
     VENTILATION_MODE_AWAY,
     VENTILATION_MODE_HOME,
     VENTILATION_MODE_STOP,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -24,15 +27,21 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.components.flexit_bacnet.const import PRESET_TO_VENTILATION_MODE_MAP
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform
+from homeassistant.components.flexit_bacnet.const import (
+    PRESET_HIGH,
+    PRESET_TO_VENTILATION_MODE_MAP,
+)
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_TEMPERATURE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_component, entity_registry as er
 
 from . import setup_with_selected_platforms
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 ENTITY_ID = "climate.device_name"
 
@@ -223,3 +232,47 @@ async def test_set_temperature(
             },
             blocking=True,
         )
+
+
+@pytest.mark.parametrize(
+    ("operation_mode", "expected_preset"),
+    [
+        pytest.param(OPERATION_MODE_TEMPORARY_HIGH, PRESET_HIGH, id="temporary_high"),
+        pytest.param(OPERATION_MODE_COOKER_HOOD, PRESET_HIGH, id="cooker_hood"),
+    ],
+)
+async def test_transient_operation_modes(
+    hass: HomeAssistant,
+    mock_flexit_bacnet: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    operation_mode: int,
+    expected_preset: str,
+) -> None:
+    """Test that transient operation modes report the correct preset."""
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
+
+    mock_flexit_bacnet.operation_mode = operation_mode
+    await entity_component.async_update_entity(hass, ENTITY_ID)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_PRESET_MODE] == expected_preset
+
+
+async def test_missing_climate_properties(
+    hass: HomeAssistant,
+    mock_flexit_bacnet: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test missing climate properties are reported as unknown."""
+    mock_flexit_bacnet.operation_mode = None
+    mock_flexit_bacnet.electric_heater = None
+    mock_flexit_bacnet.room_temperature = None
+    mock_flexit_bacnet.air_temp_setpoint_home = None
+
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes[ATTR_PRESET_MODE] is None
+    assert state.attributes[ATTR_TEMPERATURE] is None
+    assert state.attributes.get(ATTR_HVAC_ACTION) is None

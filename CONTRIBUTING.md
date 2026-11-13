@@ -10,7 +10,7 @@ The process is straight-forward.
  - Ensure tests work.
  - Create a Pull Request against the [**dev**](https://github.com/home-assistant/core/tree/dev) branch of Home Assistant.
 
-Still interested? Then you should take a peek at the [developer documentation](https://developers.home-assistant.io/) to get more details.
+Still interested? Then you should take a peek at the [contributor documentation](https://contributors.home-assistant.io/) to get more details.
 
 ## Feature suggestions
 
@@ -19,3 +19,10 @@ If you want to suggest a new feature for Home Assistant (e.g. new integrations),
 ## Issue Tracker
 
 If you want to report an issue, please [create an issue](https://github.com/home-assistant/core/issues) on GitHub.
+
+## AI policy
+
+This project follows the [Open Home Foundation AI Policy](AI_POLICY.md). In
+short: AI tools are welcome as an aid, but you must fully understand and be
+able to explain every change you submit. Contributions made by autonomous
+agents are not accepted.

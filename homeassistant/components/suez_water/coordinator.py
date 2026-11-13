@@ -3,13 +3,17 @@
 from dataclasses import dataclass
 from datetime import date, datetime
 import logging
+from typing import override
 
 from pysuez import PySuezError, SuezClient, TelemetryMeasure
 
 from homeassistant.components.recorder import get_instance
-from homeassistant.components.recorder.models import StatisticData, StatisticMetaData
-from homeassistant.components.recorder.statistics import (
+from homeassistant.components.recorder.models import (
+    StatisticData,
     StatisticMeanType,
+    StatisticMetaData,
+)
+from homeassistant.components.recorder.statistics import (
     StatisticsRow,
     async_add_external_statistics,
     get_last_statistics,
@@ -78,6 +82,7 @@ class SuezWaterCoordinator(DataUpdateCoordinator[SuezWaterData]):
             f"{DOMAIN}:{self._counter_id}_water_consumption_statistics"
         )
 
+    @override
     async def _async_setup(self) -> None:
         self._suez_client = SuezClient(
             username=self.config_entry.data[CONF_USERNAME],
@@ -87,6 +92,7 @@ class SuezWaterCoordinator(DataUpdateCoordinator[SuezWaterData]):
         if not await self._suez_client.check_credentials():
             raise ConfigEntryError("Invalid credentials for suez water")
 
+    @override
     async def _async_update_data(self) -> SuezWaterData:
         """Fetch data from API endpoint."""
 

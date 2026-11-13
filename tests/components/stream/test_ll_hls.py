@@ -11,6 +11,7 @@ from urllib.parse import urlparse
 from aiohttp import web
 from dateutil import parser
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.stream import create_stream
 from homeassistant.components.stream.const import (
@@ -32,8 +33,6 @@ from .common import (
     generate_h264_video,
 )
 from .test_hls import STREAM_SOURCE, HlsClient, make_playlist
-
-from tests.typing import ClientSessionGenerator
 
 SEGMENT_DURATION = 6
 TEST_PART_DURATION = 0.75
@@ -128,7 +127,7 @@ async def test_ll_hls_stream(
     """
     await async_setup_component(
         hass,
-        "stream",
+        DOMAIN,
         {
             "stream": {
                 CONF_LL_HLS: True,
@@ -261,7 +260,7 @@ async def test_ll_hls_playlist_view(
     """Test rendering the hls playlist with 1 and 2 output segments."""
     await async_setup_component(
         hass,
-        "stream",
+        DOMAIN,
         {
             "stream": {
                 CONF_LL_HLS: True,
@@ -332,7 +331,7 @@ async def test_ll_hls_msn(
     """Test that requests using _HLS_msn get held and returned or rejected."""
     await async_setup_component(
         hass,
-        "stream",
+        DOMAIN,
         {
             "stream": {
                 CONF_LL_HLS: True,
@@ -402,7 +401,7 @@ async def test_ll_hls_playlist_bad_msn_part(
 
     await async_setup_component(
         hass,
-        "stream",
+        DOMAIN,
         {
             "stream": {
                 CONF_LL_HLS: True,
@@ -480,7 +479,7 @@ async def test_ll_hls_playlist_rollover_part(
 
     await async_setup_component(
         hass,
-        "stream",
+        DOMAIN,
         {
             "stream": {
                 CONF_LL_HLS: True,
@@ -561,7 +560,7 @@ async def test_ll_hls_playlist_msn_part(
 
     await async_setup_component(
         hass,
-        "stream",
+        DOMAIN,
         {
             "stream": {
                 CONF_LL_HLS: True,
@@ -623,13 +622,59 @@ async def test_ll_hls_playlist_msn_part(
     stream_worker_sync.resume()
 
 
+async def test_ll_hls_playlist_msn_part_after_cleanup(
+    hass: HomeAssistant, hls_stream, stream_worker_sync, hls_sync
+) -> None:
+    """Test a held part request returns not found when the output is cleaned up."""
+
+    await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "stream": {
+                CONF_LL_HLS: True,
+                CONF_SEGMENT_DURATION: SEGMENT_DURATION,
+                CONF_PART_DURATION: TEST_PART_DURATION,
+            }
+        },
+    )
+
+    stream = create_stream(hass, STREAM_SOURCE, {}, dynamic_stream_settings())
+    stream_worker_sync.pause()
+
+    hls = stream.add_provider(HLS_PROVIDER)
+
+    hls_client = await hls_stream(stream)
+
+    segment = create_segment(sequence=0)
+    hls.put(segment)
+    parts = create_parts(SEQUENCE_BYTES)
+    segment.async_add_part(parts[0], 0)
+
+    hls_sync.reset_request_pool(1)
+    request = asyncio.create_task(
+        hls_client.get("/playlist.m3u8?_HLS_msn=0&_HLS_part=1")
+    )
+    await hls_sync.wait_for_handler()
+
+    # A part can still arrive after the output is cleaned up, e.g. on stream stop
+    hls.cleanup()
+    segment.async_add_part(parts[1], 0)
+    hls.part_put()
+
+    response = await request
+    assert response.status == HTTPStatus.NOT_FOUND
+
+    stream_worker_sync.resume()
+
+
 async def test_get_part_segments(
     hass: HomeAssistant, hls_stream, stream_worker_sync, hls_sync
 ) -> None:
     """Test requests for part segments and hinted parts."""
     await async_setup_component(
         hass,
-        "stream",
+        DOMAIN,
         {
             "stream": {
                 CONF_LL_HLS: True,

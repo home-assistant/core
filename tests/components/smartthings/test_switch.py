@@ -5,13 +5,14 @@ from unittest.mock import AsyncMock
 from pysmartthings import Attribute, Capability, Command
 from pysmartthings.models import HealthStatus
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import automation, script
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.script import scripts_with_entity
 from homeassistant.components.smartthings.const import DOMAIN, MAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -19,6 +20,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -33,8 +35,6 @@ from . import (
     trigger_health_update,
     trigger_update,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_all_entities(
@@ -71,7 +71,7 @@ async def test_switch_turn_on_off(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         action,
-        {ATTR_ENTITY_ID: "switch.2nd_floor_hallway"},
+        {ATTR_ENTITY_ID: "switch.theater_2nd_floor_hallway"},
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -100,7 +100,7 @@ async def test_command_switch_turn_on_off(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         action,
-        {ATTR_ENTITY_ID: "switch.dryer_wrinkle_prevent"},
+        {ATTR_ENTITY_ID: "switch.theater_dryer_wrinkle_prevent"},
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -172,7 +172,7 @@ async def test_custom_commands(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         action,
-        {ATTR_ENTITY_ID: "switch.refrigerator_power_cool"},
+        {ATTR_ENTITY_ID: "switch.theater_refrigerator_power_cool"},
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -204,7 +204,7 @@ async def test_ac_purify_switch(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         action,
-        {ATTR_ENTITY_ID: "switch.ac_office_granit_purify"},
+        {ATTR_ENTITY_ID: "switch.theater_ac_office_granit_purify"},
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -225,7 +225,7 @@ async def test_state_update(
     """Test state update."""
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get("switch.2nd_floor_hallway").state == STATE_ON
+    assert hass.states.get("switch.theater_2nd_floor_hallway").state == STATE_ON
 
     await trigger_update(
         hass,
@@ -236,7 +236,7 @@ async def test_state_update(
         "off",
     )
 
-    assert hass.states.get("switch.2nd_floor_hallway").state == STATE_OFF
+    assert hass.states.get("switch.theater_2nd_floor_hallway").state == STATE_OFF
 
 
 @pytest.mark.parametrize(
@@ -312,12 +312,14 @@ async def test_create_issue_with_items(
     entity_id = f"switch.{suggested_object_id}"
     issue_id = f"deprecated_switch_{issue_string}_{entity_id}"
 
+    mock_config_entry.add_to_hass(hass)
     entity_entry = entity_registry.async_get_or_create(
         SWITCH_DOMAIN,
         DOMAIN,
         f"{device_id}_{MAIN}_{Capability.SWITCH}_{Attribute.SWITCH}_{Attribute.SWITCH}",
         suggested_object_id=suggested_object_id,
         original_name=suggested_object_id,
+        config_entry=mock_config_entry,
     )
 
     assert await async_setup_component(
@@ -364,6 +366,7 @@ async def test_create_issue_with_items(
 
     issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert issue is not None
+    assert issue.config_entry_id == mock_config_entry.entry_id
     assert issue.translation_key == f"deprecated_switch_{issue_string}_scripts"
     assert issue.translation_placeholders == {
         "entity_id": entity_id,
@@ -475,12 +478,14 @@ async def test_create_issue(
     entity_id = f"switch.{suggested_object_id}"
     issue_id = f"deprecated_switch_{issue_string}_{entity_id}"
 
+    mock_config_entry.add_to_hass(hass)
     entity_entry = entity_registry.async_get_or_create(
         SWITCH_DOMAIN,
         DOMAIN,
         f"{device_id}_{MAIN}_{Capability.SWITCH}_{Attribute.SWITCH}_{Attribute.SWITCH}",
         suggested_object_id=suggested_object_id,
         original_name=suggested_object_id,
+        config_entry=mock_config_entry,
     )
 
     await setup_integration(hass, mock_config_entry)
@@ -489,6 +494,7 @@ async def test_create_issue(
 
     issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert issue is not None
+    assert issue.config_entry_id == mock_config_entry.entry_id
     assert issue.translation_key == f"deprecated_switch_{issue_string}"
     assert issue.translation_placeholders == {
         "entity_id": entity_id,
@@ -517,19 +523,21 @@ async def test_availability(
     """Test availability."""
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get("switch.2nd_floor_hallway").state == STATE_ON
+    assert hass.states.get("switch.theater_2nd_floor_hallway").state == STATE_ON
 
     await trigger_health_update(
         hass, devices, "10e06a70-ee7d-4832-85e9-a0a06a7a05bd", HealthStatus.OFFLINE
     )
 
-    assert hass.states.get("switch.2nd_floor_hallway").state == STATE_UNAVAILABLE
+    assert (
+        hass.states.get("switch.theater_2nd_floor_hallway").state == STATE_UNAVAILABLE
+    )
 
     await trigger_health_update(
         hass, devices, "10e06a70-ee7d-4832-85e9-a0a06a7a05bd", HealthStatus.ONLINE
     )
 
-    assert hass.states.get("switch.2nd_floor_hallway").state == STATE_ON
+    assert hass.states.get("switch.theater_2nd_floor_hallway").state == STATE_ON
 
 
 @pytest.mark.parametrize("device_fixture", ["c2c_arlo_pro_3_switch"])
@@ -540,7 +548,9 @@ async def test_availability_at_start(
 ) -> None:
     """Test unavailable at boot."""
     await setup_integration(hass, mock_config_entry)
-    assert hass.states.get("switch.2nd_floor_hallway").state == STATE_UNAVAILABLE
+    assert (
+        hass.states.get("switch.theater_2nd_floor_hallway").state == STATE_UNAVAILABLE
+    )
 
 
 @pytest.mark.parametrize("device_fixture", ["da_wm_dw_01011"])
@@ -560,12 +570,12 @@ async def test_turn_on_without_remote_control(
 
     with pytest.raises(
         ServiceValidationError,
-        match="Can only be updated when remote control is enabled",
+        match="Can only be changed when remote control is enabled",
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.dishwasher_1_speed_booster"},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: "switch.dishwasher_1_speed_booster"},
             blocking=True,
         )
     devices.execute_device_command.assert_not_called()
@@ -594,12 +604,12 @@ async def test_turn_on_with_wrong_dishwasher_machine_state(
 
     with pytest.raises(
         ServiceValidationError,
-        match="Can only be updated when dishwasher machine state is stop",
+        match="Can only be changed when the dishwasher machine state is stop",
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.dishwasher_1_speed_booster"},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: "switch.dishwasher_1_speed_booster"},
             blocking=True,
         )
     devices.execute_device_command.assert_not_called()
@@ -628,12 +638,12 @@ async def test_turn_on_with_wrong_dishwasher_cycle(
 
     with pytest.raises(
         ServiceValidationError,
-        match="Option is not supported by selected cycle",
+        match="Option is not supported by the selected cycle",
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.dishwasher_1_speed_booster"},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: "switch.dishwasher_1_speed_booster"},
             blocking=True,
         )
     devices.execute_device_command.assert_not_called()

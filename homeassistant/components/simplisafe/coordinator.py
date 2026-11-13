@@ -1,16 +1,15 @@
 """Data update coordinator for SimpliSafe."""
 
 from datetime import timedelta
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import LOGGER
 
 if TYPE_CHECKING:
-    from . import SimpliSafe
+    from . import SimpliSafe, SimpliSafeConfigEntry
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -18,12 +17,12 @@ DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 class SimpliSafeDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Class to manage fetching SimpliSafe data."""
 
-    config_entry: ConfigEntry
+    config_entry: SimpliSafeConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: SimpliSafeConfigEntry,
         *,
         name: str,
         simplisafe: SimpliSafe,
@@ -38,6 +37,7 @@ class SimpliSafeDataUpdateCoordinator(DataUpdateCoordinator[None]):
         )
         self._simplisafe = simplisafe
 
+    @override
     async def _async_update_data(self) -> None:
         """Fetch data from SimpliSafe."""
         await self._simplisafe.async_update()

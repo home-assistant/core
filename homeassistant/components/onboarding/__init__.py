@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, TypedDict
+from typing import TYPE_CHECKING, TypedDict, override
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
@@ -18,12 +18,22 @@ from .const import (
     STEP_USER,
     STEPS,
 )
-from .views import BaseOnboardingView, NoAuthBaseOnboardingView  # noqa: F401
+from .views import BaseOnboardingView, NoAuthBaseOnboardingView
 
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 4
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
+__all__ = [
+    "DOMAIN",
+    "BaseOnboardingView",
+    "NoAuthBaseOnboardingView",
+    "OnboardingStoreData",
+    "async_add_listener",
+    "async_is_onboarded",
+    "async_is_user_onboarded",
+]
 
 
 @dataclass
@@ -44,6 +54,7 @@ class OnboardingStoreData(TypedDict):
 class OnboardingStorage(Store[OnboardingStoreData]):
     """Store onboarding data."""
 
+    @override
     async def _async_migrate_func(
         self,
         old_major_version: int,

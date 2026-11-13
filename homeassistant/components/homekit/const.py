@@ -30,6 +30,10 @@ AUDIO_CODEC_COPY = "copy"
 ATTR_DISPLAY_NAME = "display_name"
 ATTR_VALUE = "value"
 ATTR_INTEGRATION = "platform"
+ATTR_HW_VERSION = "hw_version"
+ATTR_MANUFACTURER = "manufacturer"
+ATTR_MODEL = "model"
+ATTR_SW_VERSION = "sw_version"
 ATTR_KEY_NAME = "key_name"
 # Current attribute used by homekit_controller
 ATTR_OBSTRUCTION_DETECTED = "obstruction-detected"
@@ -40,6 +44,7 @@ CONF_ADVERTISE_IP = "advertise_ip"
 CONF_AUDIO_CODEC = "audio_codec"
 CONF_AUDIO_MAP = "audio_map"
 CONF_AUDIO_PACKET_SIZE = "audio_packet_size"
+CONF_CAMERA_MODE = "camera_mode"
 CONF_ENTITY_CONFIG = "entity_config"
 CONF_FEATURE = "feature"
 CONF_FEATURE_LIST = "feature_list"
@@ -106,9 +111,11 @@ HOMEKIT_MODE_BRIDGE = "bridge"
 DEFAULT_HOMEKIT_MODE = HOMEKIT_MODE_BRIDGE
 HOMEKIT_MODES = [HOMEKIT_MODE_BRIDGE, HOMEKIT_MODE_ACCESSORY]
 
-# #### HomeKit Component Services ####
-SERVICE_HOMEKIT_RESET_ACCESSORY = "reset_accessory"
-SERVICE_HOMEKIT_UNPAIR = "unpair"
+# #### Camera Modes ####
+CAMERA_MODE_STANDARD = "standard"
+CAMERA_MODE_SECURE_VIDEO = "secure_video"
+DEFAULT_CAMERA_MODE = CAMERA_MODE_STANDARD
+CAMERA_MODES = [CAMERA_MODE_STANDARD, CAMERA_MODE_SECURE_VIDEO]
 
 # #### String Constants ####
 BRIDGE_MODEL = "Bridge"
@@ -128,6 +135,9 @@ TYPE_VALVE = "valve"
 TYPE_FAN = "fan"
 TYPE_AIR_PURIFIER = "air_purifier"
 
+TYPE_HEATER_COOLER = "heater_cooler"
+TYPE_THERMOSTAT = "thermostat"
+
 # #### Categories ####
 CATEGORY_RECEIVER = 34
 
@@ -145,6 +155,7 @@ SERV_DOORBELL = "Doorbell"
 SERV_FANV2 = "Fanv2"
 SERV_FILTER_MAINTENANCE = "FilterMaintenance"
 SERV_GARAGE_DOOR_OPENER = "GarageDoorOpener"
+SERV_HEATER_COOLER = "HeaterCooler"
 SERV_HUMIDIFIER_DEHUMIDIFIER = "HumidifierDehumidifier"
 SERV_HUMIDITY_SENSOR = "HumiditySensor"
 SERV_INPUT_SOURCE = "InputSource"
@@ -193,6 +204,7 @@ CHAR_CURRENT_AMBIENT_LIGHT_LEVEL = "CurrentAmbientLightLevel"
 CHAR_CURRENT_AIR_PURIFIER_STATE = "CurrentAirPurifierState"
 CHAR_CURRENT_DOOR_STATE = "CurrentDoorState"
 CHAR_CURRENT_FAN_STATE = "CurrentFanState"
+CHAR_CURRENT_HEATER_COOLER_STATE = "CurrentHeaterCoolerState"
 CHAR_CURRENT_HEATING_COOLING = "CurrentHeatingCoolingState"
 CHAR_CURRENT_HUMIDIFIER_DEHUMIDIFIER = "CurrentHumidifierDehumidifierState"
 CHAR_CURRENT_POSITION = "CurrentPosition"
@@ -227,6 +239,7 @@ CHAR_OBSTRUCTION_DETECTED = "ObstructionDetected"
 CHAR_OCCUPANCY_DETECTED = "OccupancyDetected"
 CHAR_ON = "On"
 CHAR_OUTLET_IN_USE = "OutletInUse"
+CHAR_OZONE_DENSITY = "OzoneDensity"
 CHAR_POSITION_STATE = "PositionState"
 CHAR_PROGRAMMABLE_SWITCH_EVENT = "ProgrammableSwitchEvent"
 CHAR_REMAINING_DURATION = "RemainingDuration"
@@ -242,9 +255,11 @@ CHAR_SLEEP_DISCOVER_MODE = "SleepDiscoveryMode"
 CHAR_SMOKE_DETECTED = "SmokeDetected"
 CHAR_STATUS_LOW_BATTERY = "StatusLowBattery"
 CHAR_STREAMING_STRATUS = "StreamingStatus"
+CHAR_SULPHUR_DIOXIDE_DENSITY = "SulphurDioxideDensity"
 CHAR_SWING_MODE = "SwingMode"
 CHAR_TARGET_AIR_PURIFIER_STATE = "TargetAirPurifierState"
 CHAR_TARGET_DOOR_STATE = "TargetDoorState"
+CHAR_TARGET_HEATER_COOLER_STATE = "TargetHeaterCoolerState"
 CHAR_TARGET_HEATING_COOLING = "TargetHeatingCoolingState"
 CHAR_TARGET_POSITION = "TargetPosition"
 CHAR_TARGET_FAN_STATE = "TargetFanState"
@@ -323,3 +338,9 @@ MAX_SERIAL_LENGTH = 64
 MAX_MODEL_LENGTH = 64
 MAX_VERSION_LENGTH = 64
 MAX_MANUFACTURER_LENGTH = 64
+
+# #### Driver Status ####
+STATUS_READY = 0
+STATUS_RUNNING = 1
+STATUS_STOPPED = 2
+STATUS_WAIT = 3

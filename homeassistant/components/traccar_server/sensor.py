@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Literal
+from typing import Any, Literal, override
 
 from pytraccar import DeviceModel, GeofenceModel, PositionModel
 
@@ -140,6 +140,7 @@ class TraccarServerSensor[_T](TraccarServerEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the value of the sensor."""
         return self.entity_description.value_fn(

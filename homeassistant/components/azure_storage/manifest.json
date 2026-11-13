@@ -1,8 +1,10 @@
 {
   "domain": "azure_storage",
   "name": "Azure Storage",
+  "categories": ["computers_network.cloud_developer_tools"],
   "codeowners": ["@zweckj"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/azure_storage",
   "integration_type": "service",
   "iot_class": "cloud_polling",

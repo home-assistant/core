@@ -1,7 +1,7 @@
 """Base class for Switcher entities."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from aioswitcher.api import SwitcherApi
 from aioswitcher.api.messages import SwitcherBaseResponse
@@ -12,6 +12,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .const import DOMAIN
 from .coordinator import SwitcherDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,6 +31,7 @@ class SwitcherEntity(CoordinatorEntity[SwitcherDataUpdateCoordinator]):
         )
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._update_data()
@@ -42,8 +44,9 @@ class SwitcherEntity(CoordinatorEntity[SwitcherDataUpdateCoordinator]):
         """Call Switcher API."""
         _LOGGER.debug("Calling api for %s, api: '%s', args: %s", self.name, api, args)
         response: SwitcherBaseResponse | None = None
-        error = None
 
+        # Availability is driven by the device broadcasts, so surface failures
+        # without marking the entity unavailable.
         try:
             async with SwitcherApi(
                 self.coordinator.data.device_type,
@@ -53,13 +56,23 @@ class SwitcherEntity(CoordinatorEntity[SwitcherDataUpdateCoordinator]):
                 self.coordinator.token,
             ) as swapi:
                 response = await getattr(swapi, api)(*args, **kwargs)
-        except (TimeoutError, OSError, RuntimeError) as err:
-            error = repr(err)
-
-        if error or not response or not response.successful:
-            self.coordinator.last_update_success = False
-            self.async_write_ha_state()
+        except (TimeoutError, OSError) as err:
             raise HomeAssistantError(
-                f"Call api for {self.name} failed, api: '{api}', "
-                f"args: {args}, response/error: {response or error}"
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"entity": str(self.name)},
+            ) from err
+        except RuntimeError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={"entity": str(self.name)},
+            ) from err
+
+        if not response or not response.successful:
+            _LOGGER.debug("Unsuccessful response from %s: %s", self.name, response)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={"entity": str(self.name)},
             )

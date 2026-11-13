@@ -1,17 +1,17 @@
 """Test conversation triggers."""
 
 import logging
+from unittest.mock import ANY
 
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.conversation import HOME_ASSISTANT_AGENT, async_get_agent
 from homeassistant.components.conversation.models import ConversationInput
 from homeassistant.core import Context, HomeAssistant, ServiceCall
 from homeassistant.helpers import trigger
 from homeassistant.setup import async_setup_component
-
-from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -65,6 +65,7 @@ async def test_if_fires_on_event(
         context=context,
     )
     assert service_response["response"]["speech"]["plain"]["speech"] == "Done"
+    assert service_response["conversation_id"] is not None
 
     await hass.async_block_till_done()
     assert len(service_calls) == 2
@@ -83,7 +84,7 @@ async def test_if_fires_on_event(
         "user_input": {
             "agent_id": HOME_ASSISTANT_AGENT,
             "context": context.as_dict(),
-            "conversation_id": None,
+            "conversation_id": service_response["conversation_id"],
             "device_id": None,
             "satellite_id": None,
             "language": "en",
@@ -235,7 +236,7 @@ async def test_response_same_sentence(
         "user_input": {
             "agent_id": HOME_ASSISTANT_AGENT,
             "context": context.as_dict(),
-            "conversation_id": None,
+            "conversation_id": ANY,
             "device_id": None,
             "satellite_id": None,
             "language": "en",
@@ -416,7 +417,7 @@ async def test_same_trigger_multiple_sentences(
         "user_input": {
             "agent_id": HOME_ASSISTANT_AGENT,
             "context": context.as_dict(),
-            "conversation_id": None,
+            "conversation_id": ANY,
             "device_id": None,
             "satellite_id": None,
             "language": "en",
@@ -522,7 +523,7 @@ async def test_same_sentence_multiple_triggers(
 )
 async def test_fails_on_punctuation(hass: HomeAssistant, command: str) -> None:
     """Test that validation fails when sentences contain punctuation."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await trigger.async_validate_trigger_config(
             hass,
             [
@@ -543,7 +544,7 @@ async def test_fails_on_punctuation(hass: HomeAssistant, command: str) -> None:
 )
 async def test_fails_on_empty(hass: HomeAssistant, command: str) -> None:
     """Test that validation fails when sentences are empty."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await trigger.async_validate_trigger_config(
             hass,
             [
@@ -560,7 +561,7 @@ async def test_fails_on_empty(hass: HomeAssistant, command: str) -> None:
 
 async def test_fails_on_no_sentences(hass: HomeAssistant) -> None:
     """Test that validation fails when no sentences are provided."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await trigger.async_validate_trigger_config(
             hass,
             [
@@ -568,6 +569,21 @@ async def test_fails_on_no_sentences(hass: HomeAssistant) -> None:
                     "id": "trigger1",
                     "platform": "conversation",
                     "command": [],
+                },
+            ],
+        )
+
+
+async def test_fails_on_bad_parse(hass: HomeAssistant) -> None:
+    """Test that validation fails when sentence is malformed."""
+    with pytest.raises(probatio.Invalid):
+        await trigger.async_validate_trigger_config(
+            hass,
+            [
+                {
+                    "id": "trigger1",
+                    "platform": "conversation",
+                    "command": ["[test)"],
                 },
             ],
         )
@@ -649,7 +665,7 @@ async def test_wildcards(hass: HomeAssistant, service_calls: list[ServiceCall]) 
         "user_input": {
             "agent_id": HOME_ASSISTANT_AGENT,
             "context": context.as_dict(),
-            "conversation_id": None,
+            "conversation_id": ANY,
             "device_id": None,
             "satellite_id": None,
             "language": "en",
@@ -695,4 +711,39 @@ async def test_trigger_with_device_id(hass: HomeAssistant) -> None:
     assert (
         result.response.speech["plain"]["speech"]
         == "my_device - assist_satellite.my_satellite"
+    )
+
+
+async def test_inline_range_list(hass: HomeAssistant) -> None:
+    """Test sentence trigger and response with an inline number range list."""
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": {
+                    "platform": "conversation",
+                    "command": ["set brightness to {0..100:brightness} percent"],
+                },
+                "action": {
+                    "set_conversation_response": "Brightness set to"
+                    " {{trigger.slots.brightness|int}}"
+                    " ({{trigger.details.brightness.text}}) percent",
+                },
+            }
+        },
+    )
+
+    service_response = await hass.services.async_call(
+        "conversation",
+        "process",
+        {
+            "text": "set brightness to forty two percent",
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert (
+        service_response["response"]["speech"]["plain"]["speech"]
+        == "Brightness set to 42 (forty two) percent"
     )

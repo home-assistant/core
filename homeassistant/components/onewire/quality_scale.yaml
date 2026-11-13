@@ -11,6 +11,9 @@ rules:
   appropriate-polling: done
   entity-unique-id: done
   has-entity-name: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   entity-event-setup:
     status: exempt
     comment: entities do not subscribe to events
@@ -21,6 +24,9 @@ rules:
   common-modules:
     status: done
     comment: base entity available, but no coordinator
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
@@ -33,9 +39,7 @@ rules:
   config-entry-unloading: done
   log-when-unavailable: done
   entity-unavailable: done
-  action-exceptions:
-    status: exempt
-    comment: No service actions currently available
+  action-exceptions: done
   reauthentication-flow:
     status: exempt
     comment: Local polling without authentication
@@ -60,9 +64,7 @@ rules:
       Manual removal, as it is not possible to distinguish
       between a flaky device and a device that has been removed
   diagnostics: done
-  exception-translations:
-    status: todo
-    comment: Under review
+  exception-translations: done
   icon-translations:
     status: exempt
     comment: It doesn't make sense to override defaults
@@ -71,32 +73,21 @@ rules:
     status: done
     comment: The bus is scanned for new devices at regular interval
   discovery-update-info:
-    status: todo
-    comment: Under review
+    status: exempt
+    comment: >
+      owserver has no unique identifier to reliably match a discovered server
+      to an existing entry. Discovered entries store a hostname (mDNS or app),
+      not an IP address.
   repair-issues:
     status: exempt
     comment: No repairs available
-  docs-use-cases:
-    status: todo
-    comment: Under review
-  docs-supported-devices:
-    status: todo
-    comment: Under review
-  docs-supported-functions:
-    status: todo
-    comment: Under review
-  docs-data-update:
-    status: todo
-    comment: Under review
-  docs-known-limitations:
-    status: todo
-    comment: Under review
-  docs-troubleshooting:
-    status: todo
-    comment: Under review
-  docs-examples:
-    status: todo
-    comment: Under review
+  docs-use-cases: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-data-update: done
+  docs-known-limitations: done
+  docs-troubleshooting: done
+  docs-examples: done
 
   ## Platinum
   async-dependency: done

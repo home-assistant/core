@@ -6,6 +6,7 @@ from aioautomower.exceptions import ApiError
 from aioautomower.model import HeadlightModes, MowerAttributes
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.husqvarna_automower.coordinator import SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
@@ -13,8 +14,6 @@ from homeassistant.exceptions import HomeAssistantError
 
 from . import setup_integration
 from .const import TEST_MOWER_ID
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_select_states(
@@ -26,7 +25,7 @@ async def test_select_states(
 ) -> None:
     """Test states of headlight mode select."""
     await setup_integration(hass, mock_config_entry)
-    state = hass.states.get("select.test_mower_1_headlight_mode")
+    state = hass.states.get("select.garden_test_mower_1_headlight_mode")
     assert state is not None
     assert state.state == "evening_only"
 
@@ -43,7 +42,7 @@ async def test_select_states(
         freezer.tick(SCAN_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
-        state = hass.states.get("select.test_mower_1_headlight_mode")
+        state = hass.states.get("select.garden_test_mower_1_headlight_mode")
         assert state.state == expected_state
 
 
@@ -68,7 +67,7 @@ async def test_select_commands(
         domain="select",
         service="select_option",
         service_data={
-            "entity_id": "select.test_mower_1_headlight_mode",
+            "entity_id": "select.garden_test_mower_1_headlight_mode",
             "option": service,
         },
         blocking=True,
@@ -86,7 +85,7 @@ async def test_select_commands(
             domain="select",
             service="select_option",
             service_data={
-                "entity_id": "select.test_mower_1_headlight_mode",
+                "entity_id": "select.garden_test_mower_1_headlight_mode",
                 "option": service,
             },
             blocking=True,

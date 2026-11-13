@@ -1,6 +1,6 @@
 """Authentication for Dropbox."""
 
-from typing import cast
+from typing import cast, override
 
 from aiohttp import ClientSession
 from python_dropbox_api import Auth
@@ -20,6 +20,7 @@ class DropboxConfigEntryAuth(Auth):
         super().__init__(websession)
         self._oauth_session = oauth_session
 
+    @override
     async def async_get_access_token(self) -> str:
         """Return a valid access token."""
         await self._oauth_session.async_ensure_token_valid()
@@ -39,6 +40,7 @@ class DropboxConfigFlowAuth(Auth):
         super().__init__(websession)
         self._token = token
 
+    @override
     async def async_get_access_token(self) -> str:
         """Return the fixed access token."""
         return self._token

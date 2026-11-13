@@ -3,20 +3,15 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.switch import (
-    DOMAIN as SWITCH_DOMAIN,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-)
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import async_init_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def test_switches(
@@ -62,8 +57,8 @@ async def test_switches_actions(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: target},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: target},
         blocking=True,
     )
 
@@ -71,8 +66,8 @@ async def test_switches_actions(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: target},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: target},
         blocking=True,
     )
 

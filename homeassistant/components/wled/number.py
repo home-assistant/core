@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
+from typing import override
 
 from wled import Segment
 
@@ -42,12 +43,14 @@ class WLEDNumberEntityDescription(NumberEntityDescription):
     """Class describing WLED number entities."""
 
     value_fn: Callable[[Segment], int | None]
+    segment_translation_key: str
 
 
 NUMBERS = [
     WLEDNumberEntityDescription(
         key=ATTR_SPEED,
         translation_key="speed",
+        segment_translation_key="segment_speed",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
         native_min_value=0,
@@ -57,6 +60,7 @@ NUMBERS = [
     WLEDNumberEntityDescription(
         key=ATTR_INTENSITY,
         translation_key="intensity",
+        segment_translation_key="segment_intensity",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
         native_min_value=0,
@@ -84,7 +88,7 @@ class WLEDNumber(WLEDEntity, NumberEntity):
         # Segment 0 uses a simpler name, which is more natural for when using
         # a single segment / using WLED with one big LED strip.
         if segment != 0:
-            self._attr_translation_key = f"segment_{description.translation_key}"
+            self._attr_translation_key = description.segment_translation_key
             self._attr_translation_placeholders = {"segment": str(segment)}
 
         self._attr_unique_id = (
@@ -93,6 +97,7 @@ class WLEDNumber(WLEDEntity, NumberEntity):
         self._segment = segment
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return (
@@ -100,6 +105,7 @@ class WLEDNumber(WLEDEntity, NumberEntity):
         )
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the current WLED segment number value."""
         return self.entity_description.value_fn(
@@ -107,6 +113,7 @@ class WLEDNumber(WLEDEntity, NumberEntity):
         )
 
     @wled_exception_handler
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the WLED segment value."""
         key = self.entity_description.key
@@ -127,16 +134,10 @@ def async_update_segments(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Update segments."""
-    segment_ids = {
-        segment.segment_id
-        for segment in coordinator.data.state.segments.values()
-        if segment.segment_id is not None
-    }
-
     new_entities: list[WLEDNumber] = []
 
     # Process new segments, add them to Home Assistant
-    for segment_id in segment_ids - current_ids:
+    for segment_id in coordinator.segment_ids - current_ids:
         current_ids.add(segment_id)
         new_entities.extend(
             WLEDNumber(coordinator, segment_id, desc) for desc in NUMBERS

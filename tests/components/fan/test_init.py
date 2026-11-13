@@ -1,6 +1,7 @@
 """Tests for fan platforms."""
 
 import pytest
+from pytest_homeassistant.common import setup_test_component_platform
 
 from homeassistant.components.fan import (
     ATTR_PRESET_MODE,
@@ -16,8 +17,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .common import MockFan
-
-from tests.common import setup_test_component_platform
 
 
 class BaseFan(FanEntity):
@@ -115,7 +114,7 @@ async def test_preset_mode_validation(
     )
     setup_test_component_platform(hass, "fan", [test_fan])
 
-    assert await async_setup_component(hass, "fan", {"fan": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"fan": {"platform": "test"}})
     await hass.async_block_till_done()
 
     state = hass.states.get("fan.support_fan_with_preset_mode_support")

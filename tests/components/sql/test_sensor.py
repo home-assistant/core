@@ -8,16 +8,23 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    assert_platform_setup_creates_issue,
+    async_fire_time_changed,
+)
+from sqlalchemy import make_url
 from sqlalchemy.exc import SQLAlchemyError
 
 from homeassistant.components.recorder import CONF_DB_URL, Recorder
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorStateClass,
 )
 from homeassistant.components.sql.const import (
-    CONF_ADVANCED_OPTIONS,
+    CONF_ADDITIONAL_OPTIONS,
     CONF_COLUMN_NAME,
     CONF_QUERY,
     DOMAIN,
@@ -49,8 +56,6 @@ from . import (
     YAML_CONFIG_FULL_TABLE_SCAN_WITH_MULTIPLE_COLUMNS,
     init_integration,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_query_basic(recorder_mock: Recorder, hass: HomeAssistant) -> None:
@@ -89,7 +94,7 @@ async def test_query_value_template(
     options = {
         CONF_QUERY: "SELECT 5.01 as value",
         CONF_COLUMN_NAME: "value",
-        CONF_ADVANCED_OPTIONS: {
+        CONF_ADDITIONAL_OPTIONS: {
             CONF_VALUE_TEMPLATE: "{{ value | int }}",
             CONF_UNIT_OF_MEASUREMENT: "MiB",
             CONF_DEVICE_CLASS: SensorDeviceClass.DATA_SIZE,
@@ -121,7 +126,7 @@ async def test_template_query(
             " 5 {% else %} 6 {% endif %} as value"
         ),
         CONF_COLUMN_NAME: "value",
-        CONF_ADVANCED_OPTIONS: {
+        CONF_ADDITIONAL_OPTIONS: {
             CONF_VALUE_TEMPLATE: "{{ value | int }}",
         },
     }
@@ -163,7 +168,7 @@ async def test_broken_template_query(
     options = {
         CONF_QUERY: "SELECT {{ 5 as value",
         CONF_COLUMN_NAME: "value",
-        CONF_ADVANCED_OPTIONS: {
+        CONF_ADDITIONAL_OPTIONS: {
             CONF_VALUE_TEMPLATE: "{{ value | int }}",
         },
     }
@@ -432,30 +437,19 @@ async def test_templates_with_yaml(
 
 
 async def test_config_from_old_yaml(
-    recorder_mock: Recorder, hass: HomeAssistant, issue_registry: ir.IssueRegistry
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the SQL sensor from old yaml config does not create any entity."""
-    config = {
-        "sensor": {
-            "platform": "sql",
-            CONF_DB_URL: "sqlite://",
-            "queries": [
-                {
-                    CONF_NAME: "count_tables",
-                    CONF_QUERY: "SELECT 5 as value",
-                    CONF_COLUMN_NAME: "value",
-                }
-            ],
-        }
-    }
-    assert await async_setup_component(hass, "sensor", config)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.count_tables")
-    assert not state
-    issue = issue_registry.async_get_issue(DOMAIN, "sensor_platform_yaml_not_supported")
-    assert issue is not None
-    assert issue.severity == ir.IssueSeverity.WARNING
+    await assert_platform_setup_creates_issue(
+        hass,
+        SENSOR_DOMAIN,
+        DOMAIN,
+        issue_registry,
+        caplog,
+    )
 
 
 @pytest.mark.parametrize(
@@ -502,6 +496,31 @@ async def test_invalid_url_setup_from_yaml(
         assert pattern not in caplog.text
     for pattern in expected_patterns:
         assert pattern in caplog.text
+
+
+async def test_postgresql_url_uses_psycopg2_from_yaml(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Test the engine for a driverless PostgreSQL URL uses psycopg2."""
+    config = {
+        "sql": {
+            CONF_DB_URL: "postgresql://user:pass@host/db",
+            CONF_QUERY: "SELECT 5 as value",
+            CONF_COLUMN_NAME: "value",
+            CONF_NAME: "count_tables",
+        }
+    }
+
+    with patch(
+        "homeassistant.components.sql.util.sqlalchemy.create_engine",
+        side_effect=SQLAlchemyError("error_message"),
+    ) as create_engine_mock:
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+
+    assert create_engine_mock.mock_calls[0].args[0] == make_url(
+        "postgresql+psycopg2://user:pass@host/db"
+    )
 
 
 async def test_attributes_from_yaml_setup(
@@ -554,6 +573,29 @@ async def test_issue_when_using_old_query(
         DOMAIN, f"entity_id_query_does_full_table_scan_{unique_id}"
     )
     assert issue.translation_placeholders == {CONF_QUERY: config[CONF_QUERY]}
+    assert issue.config_entry_id is None
+
+
+async def test_issue_when_using_old_query_from_config_entry(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the full table scan issue is linked to the config entry."""
+    options = {
+        CONF_QUERY: "SELECT entity_id from states",
+        CONF_COLUMN_NAME: "entity_id",
+    }
+    entry = await init_integration(hass, options=options)
+
+    issue_id = f"entity_id_query_does_full_table_scan_{entry.entry_id}"
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.config_entry_id == entry.entry_id
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
 @pytest.mark.parametrize(
@@ -678,7 +720,7 @@ async def test_attributes_from_entry_config(
         options={
             CONF_QUERY: "SELECT 5 as value",
             CONF_COLUMN_NAME: "value",
-            CONF_ADVANCED_OPTIONS: {
+            CONF_ADDITIONAL_OPTIONS: {
                 CONF_UNIT_OF_MEASUREMENT: "MiB",
                 CONF_DEVICE_CLASS: SensorDeviceClass.DATA_SIZE,
                 CONF_STATE_CLASS: SensorStateClass.TOTAL,
@@ -700,7 +742,7 @@ async def test_attributes_from_entry_config(
         options={
             CONF_QUERY: "SELECT 6 as value",
             CONF_COLUMN_NAME: "value",
-            CONF_ADVANCED_OPTIONS: {
+            CONF_ADDITIONAL_OPTIONS: {
                 CONF_UNIT_OF_MEASUREMENT: "MiB",
             },
         },

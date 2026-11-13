@@ -29,13 +29,14 @@ async def _build_module_diagnostics_info(module: VelbusModule) -> dict[str, Any]
         "name": module.get_name(),
         "sw_version": module.get_sw_version(),
         "is_loaded": await module.is_loaded(),
+        "serial": module.get_serial(),
         "channels": _build_channels_diagnostics_info(module.get_channels()),
     }
     return data
 
 
 def _build_channels_diagnostics_info(
-    channels: dict[str, VelbusChannel],
+    channels: dict[int, VelbusChannel],
 ) -> dict[str, Any]:
     """Build diagnostics info for all channels."""
     data: dict[str, Any] = {}

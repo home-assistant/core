@@ -1,12 +1,12 @@
 """Config flow for Pure Energie integration."""
 
-from typing import Any
+from typing import Any, override
 
 from gridnet import Device, GridNet, GridNetConnectionError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import TextSelector
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -21,6 +21,7 @@ class PureEnergieFlowHandler(ConfigFlow, domain=DOMAIN):
     discovered_host: str
     discovered_device: Device
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -47,14 +48,15 @@ class PureEnergieFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_HOST): TextSelector(),
+                    probatio.Required(CONF_HOST): TextSelector(),
                 }
             ),
             errors=errors or {},
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -71,8 +73,8 @@ class PureEnergieFlowHandler(ConfigFlow, domain=DOMAIN):
         self.context.update(
             {
                 "title_placeholders": {
-                    CONF_NAME: "Pure Energie Meter",
-                    CONF_HOST: self.discovered_host,
+                    "name": "Pure Energie Meter",
+                    "host": self.discovered_host,
                     "model": self.discovered_device.model,
                 },
             }
@@ -94,7 +96,7 @@ class PureEnergieFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="zeroconf_confirm",
             description_placeholders={
-                CONF_NAME: "Pure Energie Meter",
+                "name": "Pure Energie Meter",
                 "model": self.discovered_device.model,
             },
         )

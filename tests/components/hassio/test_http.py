@@ -1,13 +1,20 @@
 """The tests for the hassio component."""
 
+import asyncio
+from contextlib import suppress
 from http import HTTPStatus
+from pathlib import Path
+from unittest.mock import Mock, PropertyMock, patch
 
-from aiohttp import StreamReader
+from aiohttp import ClientError, StreamReader, web
+from aiohttp.hdrs import AUTHORIZATION
 from aiohttp.test_utils import TestClient
 import pytest
-
-from tests.common import MockUser
-from tests.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.common import MockUser
+from pytest_homeassistant.test_util.aiohttp import (
+    AiohttpClientMocker,
+    AiohttpClientMockResponse,
+)
 
 
 @pytest.fixture
@@ -265,6 +272,30 @@ async def test_forward_request_admin_post(
     }
 
 
+@pytest.mark.parametrize(
+    "path",
+    [
+        pytest.param("addons/bl_b392/logo", id="no_auth_path"),
+        pytest.param("backups/1234abcd/info", id="admin_path"),
+    ],
+)
+async def test_forward_request_unix_socket(
+    hassio_unix_socket_client: TestClient,
+    supervisor_unix_socket: tuple[Path, list[web.Request]],
+    path: str,
+) -> None:
+    """Test forwarding over the Supervisor Unix socket sends no token."""
+    resp = await hassio_unix_socket_client.get(f"/api/hassio/{path}")
+
+    assert resp.status == HTTPStatus.OK
+    _, requests = supervisor_unix_socket
+    assert len(requests) == 1
+    assert requests[0].path == f"/{path}"
+    assert requests[0].host == "localhost"
+    assert AUTHORIZATION not in requests[0].headers
+    assert requests[0].headers["X-Hass-Source"] == "core.http"
+
+
 @pytest.mark.parametrize("method", ["POST", "PUT", "DELETE"])
 async def test_forward_request_admin_unallowed_methods(
     hassio_client: TestClient, aioclient_mock: AiohttpClientMocker, method: str
@@ -478,3 +509,28 @@ async def test_forward_range_header_for_logs(
     assert aioclient_mock.mock_calls[3][-1].get("Range") == test_range
     assert aioclient_mock.mock_calls[4][-1].get("Range") == test_range
     assert aioclient_mock.mock_calls[5][-1].get("Range") is None
+
+
+async def test_supervisor_response_released_when_stream_cancelled(
+    hassio_client: TestClient, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test the response from the Supervisor is released when the stream is cancelled."""
+    # A frontend disconnect cancels the handler, simulated here from the stream.
+    stream = StreamReader(Mock(), limit=2**16)
+    stream.feed_data(b"line 1\n")
+    stream.set_exception(asyncio.CancelledError())
+
+    aioclient_mock.get("http://127.0.0.1/addons/bl_b392/logs/follow")
+
+    with (
+        patch.object(
+            AiohttpClientMockResponse, "content", new_callable=PropertyMock
+        ) as mock_content,
+        patch.object(AiohttpClientMockResponse, "release") as mock_release,
+    ):
+        mock_content.return_value = stream
+        resp = await hassio_client.get("/api/hassio/addons/bl_b392/logs/follow")
+        with suppress(ClientError):
+            await resp.read()
+
+    mock_release.assert_called_once()

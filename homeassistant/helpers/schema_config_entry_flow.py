@@ -5,9 +5,9 @@ from collections.abc import Callable, Container, Coroutine, Mapping
 import copy
 from dataclasses import dataclass
 import types
-from typing import Any, cast
+from typing import Any, cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant, callback, split_entity_id
 from homeassistant.data_entry_flow import UnknownHandler
 
 from . import entity_registry as er, selector
-from .typing import UNDEFINED, UndefinedType
+from .typing import Undefined
 
 
 class SchemaFlowError(Exception):
@@ -37,11 +37,13 @@ class SchemaFlowFormStep(SchemaFlowStep):
     """Define a config or options flow form step."""
 
     schema: (
-        vol.Schema
-        | Callable[[SchemaCommonFlowHandler], Coroutine[Any, Any, vol.Schema | None]]
+        probatio.Schema
+        | Callable[
+            [SchemaCommonFlowHandler], Coroutine[Any, Any, probatio.Schema | None]
+        ]
         | None
     ) = None
-    """Optional voluptuous schema, or function which returns a schema or None, for
+    """Optional schema, or function which returns a schema or None, for
     requesting and validating user input.
 
     - If a function is specified, the function will be passed the current
@@ -79,12 +81,12 @@ class SchemaFlowFormStep(SchemaFlowStep):
 
     suggested_values: (
         Callable[[SchemaCommonFlowHandler], Coroutine[Any, Any, dict[str, Any]]]
+        | Undefined
         | None
-        | UndefinedType
-    ) = UNDEFINED
+    ) = Undefined
     """Optional property to populate suggested values.
 
-    - If `suggested_values` is UNDEFINED, each key in the schema will get a suggested
+    - If `suggested_values` is Undefined, each key in the schema will get a suggested
       value from an option with the same key.
 
     Note: if a step is retried due to a validation failure, then the user input will
@@ -96,8 +98,8 @@ class SchemaFlowFormStep(SchemaFlowStep):
 
     description_placeholders: (
         Callable[[SchemaCommonFlowHandler], Coroutine[Any, Any, dict[str, str]]]
-        | UndefinedType
-    ) = UNDEFINED
+        | Undefined
+    ) = Undefined
     """Optional property to populate description placeholders."""
 
 
@@ -168,10 +170,12 @@ class SchemaCommonFlowHandler:
             return form_step.options
         return await form_step.options(self)
 
-    async def _get_schema(self, form_step: SchemaFlowFormStep) -> vol.Schema | None:
+    async def _get_schema(
+        self, form_step: SchemaFlowFormStep
+    ) -> probatio.Schema | None:
         if form_step.schema is None:
             return None
-        if isinstance(form_step.schema, vol.Schema):
+        if isinstance(form_step.schema, probatio.Schema):
             return form_step.schema
         return await form_step.schema(self)
 
@@ -180,25 +184,6 @@ class SchemaCommonFlowHandler:
     ) -> ConfigFlowResult:
         """Handle a form step."""
         form_step: SchemaFlowFormStep = cast(SchemaFlowFormStep, self._flow[step_id])
-
-        if (
-            user_input is not None
-            and (data_schema := await self._get_schema(form_step))
-            and data_schema.schema
-            and not self._handler.show_advanced_options
-        ):
-            # Add advanced field default if not set
-            for key in data_schema.schema:
-                if isinstance(key, (vol.Optional, vol.Required)):
-                    if (
-                        key.description
-                        and key.description.get("advanced")
-                        and key.default is not vol.UNDEFINED
-                        and key not in self._options
-                    ):
-                        user_input[str(key.schema)] = cast(
-                            Callable[[], Any], key.default
-                        )()
 
         if user_input is not None and form_step.validate_user_input is not None:
             # Do extra validation of user input
@@ -210,7 +195,7 @@ class SchemaCommonFlowHandler:
         if user_input is not None:
             # User input was validated successfully, update options
             self._update_and_remove_omitted_optional_keys(
-                self._options, user_input, data_schema
+                self._options, user_input, await self._get_schema(form_step)
             )
 
         if user_input is not None or form_step.schema is None:
@@ -222,20 +207,14 @@ class SchemaCommonFlowHandler:
         self,
         values: dict[str, Any],
         user_input: dict[str, Any],
-        data_schema: vol.Schema | None,
+        data_schema: probatio.Schema | None,
     ) -> None:
         values.update(user_input)
         if data_schema and data_schema.schema:
             for key in data_schema.schema:
                 if (
-                    isinstance(key, vol.Optional)
+                    isinstance(key, probatio.Optional)
                     and key not in user_input
-                    and not (
-                        # don't remove advanced keys, if they are hidden
-                        key.description
-                        and key.description.get("advanced")
-                        and not self._handler.show_advanced_options
-                    )
                     and not (
                         # don't remove read_only keys
                         isinstance(data_schema.schema[key], selector.Selector)
@@ -281,11 +260,11 @@ class SchemaCommonFlowHandler:
             return await self._show_next_step_or_create_entry(form_step)
 
         description_placeholders: dict[str, str] | None = None
-        if form_step.description_placeholders is not UNDEFINED:
+        if form_step.description_placeholders is not Undefined:
             description_placeholders = await form_step.description_placeholders(self)
 
         suggested_values: dict[str, Any] = {}
-        if form_step.suggested_values is UNDEFINED:
+        if form_step.suggested_values is Undefined:
             suggested_values = self._options
         elif form_step.suggested_values:
             suggested_values = await form_step.suggested_values(self)
@@ -339,6 +318,7 @@ class SchemaConfigFlowHandler(ConfigFlow, ABC):
 
     VERSION = 1
 
+    @override
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Initialize a subclass."""
         super().__init_subclass__(**kwargs)
@@ -377,11 +357,13 @@ class SchemaConfigFlowHandler(ConfigFlow, ABC):
         self._common_handler = SchemaCommonFlowHandler(self, self.config_flow, None)
 
     @staticmethod
+    @override
     async def async_setup_preview(hass: HomeAssistant) -> None:
         """Set up preview."""
 
     @classmethod
     @callback
+    @override
     def async_supports_options_flow(cls, config_entry: ConfigEntry) -> bool:
         """Return options flow support for this handler."""
         return cls.options_flow is not None
@@ -432,6 +414,7 @@ class SchemaConfigFlowHandler(ConfigFlow, ABC):
         """
 
     @callback
+    @override
     def async_create_entry(
         self,
         data: Mapping[str, Any],
@@ -500,6 +483,7 @@ class SchemaOptionsFlowHandler(OptionsFlow):
         return _async_step
 
     @callback
+    @override
     def async_create_entry(
         self,
         data: Mapping[str, Any],

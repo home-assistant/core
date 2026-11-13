@@ -2,9 +2,9 @@
 # name: test_sensor_next
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Trafikverket',
-      'device_class': 'timestamp',
-      'friendly_name': 'Stockholm C to Uppsala C Departure time',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Trafikverket',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Stockholm C to Uppsala C Departure time',
       'product_filter': 'Regionaltåg',
     }),
     'context': <ANY>,
@@ -18,10 +18,10 @@
 # name: test_sensor_next.1
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Trafikverket',
-      'device_class': 'enum',
-      'friendly_name': 'Stockholm C to Uppsala C Departure state',
-      'options': list([
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Trafikverket',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Stockholm C to Uppsala C Departure state',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on_time',
         'delayed',
         'canceled',
@@ -39,9 +39,9 @@
 # name: test_sensor_next.10
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Trafikverket',
-      'device_class': 'timestamp',
-      'friendly_name': 'Stockholm C to Uppsala C Departure time next',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Trafikverket',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Stockholm C to Uppsala C Departure time next',
       'product_filter': 'Regionaltåg',
     }),
     'context': <ANY>,
@@ -55,9 +55,9 @@
 # name: test_sensor_next.11
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Trafikverket',
-      'device_class': 'timestamp',
-      'friendly_name': 'Stockholm C to Uppsala C Departure time next after',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Trafikverket',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Stockholm C to Uppsala C Departure time next after',
       'product_filter': 'Regionaltåg',
     }),
     'context': <ANY>,
@@ -71,9 +71,9 @@
 # name: test_sensor_next.2
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Trafikverket',
-      'device_class': 'timestamp',
-      'friendly_name': 'Stockholm C to Uppsala C Actual time',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Trafikverket',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Stockholm C to Uppsala C Actual time',
       'product_filter': 'Regionaltåg',
     }),
     'context': <ANY>,
@@ -87,8 +87,8 @@
 # name: test_sensor_next.3
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Trafikverket',
-      'friendly_name': 'Stockholm C to Uppsala C Other information',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Trafikverket',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Stockholm C to Uppsala C Other information',
       'product_filter': 'Regionaltåg',
     }),
     'context': <ANY>,
@@ -102,9 +102,9 @@
 # name: test_sensor_next.4
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Trafikverket',
-      'device_class': 'timestamp',
-      'friendly_name': 'Stockholm C to Uppsala C Departure time next',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Trafikverket',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Stockholm C to Uppsala C Departure time next',
       'product_filter': 'Regionaltåg',
     }),
     'context': <ANY>,
@@ -118,9 +118,9 @@
 # name: test_sensor_next.5
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Trafikverket',
-      'device_class': 'timestamp',
-      'friendly_name': 'Stockholm C to Uppsala C Departure time next after',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Trafikverket',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Stockholm C to Uppsala C Departure time next after',
       'product_filter': 'Regionaltåg',
     }),
     'context': <ANY>,
@@ -134,9 +134,9 @@
 # name: test_sensor_next.6
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Trafikverket',
-      'device_class': 'timestamp',
-      'friendly_name': 'Stockholm C to Uppsala C Departure time',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Trafikverket',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Stockholm C to Uppsala C Departure time',
       'product_filter': 'Regionaltåg',
     }),
     'context': <ANY>,
@@ -150,10 +150,10 @@
 # name: test_sensor_next.7
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Trafikverket',
-      'device_class': 'enum',
-      'friendly_name': 'Stockholm C to Uppsala C Departure state',
-      'options': list([
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Trafikverket',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Stockholm C to Uppsala C Departure state',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on_time',
         'delayed',
         'canceled',
@@ -171,9 +171,9 @@
 # name: test_sensor_next.8
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Trafikverket',
-      'device_class': 'timestamp',
-      'friendly_name': 'Stockholm C to Uppsala C Actual time',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Trafikverket',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Stockholm C to Uppsala C Actual time',
       'product_filter': 'Regionaltåg',
     }),
     'context': <ANY>,
@@ -187,8 +187,8 @@
 # name: test_sensor_next.9
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Trafikverket',
-      'friendly_name': 'Stockholm C to Uppsala C Other information',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Trafikverket',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Stockholm C to Uppsala C Other information',
       'product_filter': 'Regionaltåg',
     }),
     'context': <ANY>,
@@ -202,9 +202,9 @@
 # name: test_sensor_single_stop
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Trafikverket',
-      'device_class': 'timestamp',
-      'friendly_name': 'Stockholm C to Uppsala C Departure time',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Trafikverket',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Stockholm C to Uppsala C Departure time',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.stockholm_c_to_uppsala_c_departure_time_2',

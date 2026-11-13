@@ -2,16 +2,16 @@
 
 from collections.abc import Iterable
 import logging
-from typing import Any
+from typing import Any, override
 
 from androidtv.constants import KEYS
 
 from homeassistant.components.remote import ATTR_NUM_REPEATS, RemoteEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import AndroidTVConfigEntry
 from .const import CONF_TURN_OFF_COMMAND, CONF_TURN_ON_COMMAND, DOMAIN
 from .entity import AndroidTVEntity, adb_decorator
 
@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: AndroidTVConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the AndroidTV remote from a config entry."""
@@ -34,6 +34,7 @@ class AndroidTVRemote(AndroidTVEntity, RemoteEntity):
     _attr_should_poll = False
 
     @adb_decorator()
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the device."""
         options = self._entry_runtime_data.dev_opt
@@ -43,6 +44,7 @@ class AndroidTVRemote(AndroidTVEntity, RemoteEntity):
             await self.aftv.turn_on()
 
     @adb_decorator()
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the device."""
         options = self._entry_runtime_data.dev_opt
@@ -52,6 +54,7 @@ class AndroidTVRemote(AndroidTVEntity, RemoteEntity):
             await self.aftv.turn_off()
 
     @adb_decorator()
+    @override
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a command to a device."""
 

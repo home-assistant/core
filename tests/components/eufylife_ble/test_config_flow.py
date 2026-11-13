@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant import config_entries
 from homeassistant.components.eufylife_ble.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IGNORE
@@ -9,8 +11,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import NOT_EUFYLIFE_SERVICE_INFO, T9146_SERVICE_INFO
-
-from tests.common import MockConfigEntry
 
 
 async def test_async_step_bluetooth_valid_device(hass: HomeAssistant) -> None:
@@ -23,7 +23,7 @@ async def test_async_step_bluetooth_valid_device(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
     with patch(
-        "homeassistant.components.eufylife_ble.async_setup_entry", return_value=True
+        "homeassistant.components.eufylife_ble.async_setup_entry", return_value=None
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
@@ -57,9 +57,14 @@ async def test_async_step_user_no_devices_found(hass: HomeAssistant) -> None:
 
 async def test_async_step_user_with_found_devices(hass: HomeAssistant) -> None:
     """Test setup from service info cache with devices found."""
-    with patch(
-        "homeassistant.components.eufylife_ble.config_flow.async_discovered_service_info",
-        return_value=[T9146_SERVICE_INFO],
+    with (
+        patch(
+            "homeassistant.components.eufylife_ble.config_flow.async_discovered_service_info",
+            return_value=[T9146_SERVICE_INFO],
+        ),
+        patch(
+            "homeassistant.components.eufylife_ble.config_flow.bluetooth.async_request_active_scan"
+        ) as mock_request_active_scan,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -67,8 +72,9 @@ async def test_async_step_user_with_found_devices(hass: HomeAssistant) -> None:
         )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    mock_request_active_scan.assert_awaited_once_with(hass)
     with patch(
-        "homeassistant.components.eufylife_ble.async_setup_entry", return_value=True
+        "homeassistant.components.eufylife_ble.async_setup_entry", return_value=None
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -100,7 +106,7 @@ async def test_async_step_user_device_added_between_steps(hass: HomeAssistant) -
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.eufylife_ble.async_setup_entry", return_value=True
+        "homeassistant.components.eufylife_ble.async_setup_entry", return_value=None
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -191,7 +197,7 @@ async def test_async_step_user_takes_precedence_over_discovery(
         assert result["type"] is FlowResultType.FORM
 
     with patch(
-        "homeassistant.components.eufylife_ble.async_setup_entry", return_value=True
+        "homeassistant.components.eufylife_ble.async_setup_entry", return_value=None
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -231,7 +237,7 @@ async def test_user_setup_replaces_ignored_device(hass: HomeAssistant) -> None:
     assert "11:22:33:44:55:66" in result["data_schema"].schema["address"].container
 
     with patch(
-        "homeassistant.components.eufylife_ble.async_setup_entry", return_value=True
+        "homeassistant.components.eufylife_ble.async_setup_entry", return_value=None
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

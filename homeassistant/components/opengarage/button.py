@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any, cast, override
 
 from opengarage import OpenGarage
 
@@ -15,7 +15,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import OpenGarageConfigEntry, OpenGarageDataUpdateCoordinator
+from .coordinator import OpenGarageConfigEntry
 from .entity import OpenGarageEntity
 
 
@@ -57,15 +57,7 @@ class OpenGarageButtonEntity(OpenGarageEntity, ButtonEntity):
 
     entity_description: OpenGarageButtonEntityDescription
 
-    def __init__(
-        self,
-        coordinator: OpenGarageDataUpdateCoordinator,
-        device_id: str,
-        description: OpenGarageButtonEntityDescription,
-    ) -> None:
-        """Initialize the button."""
-        super().__init__(coordinator, device_id, description)
-
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         await self.entity_description.press_action(

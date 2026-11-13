@@ -3,7 +3,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 import pyzerproc
 
@@ -95,6 +95,7 @@ class ZerprocLight(LightEntity):
             name=light.name,
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         self.async_on_remove(
@@ -105,6 +106,7 @@ class ZerprocLight(LightEntity):
         """Run on EVENT_HOMEASSISTANT_STOP."""
         await self.async_will_remove_from_hass()
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         try:
@@ -114,6 +116,7 @@ class ZerprocLight(LightEntity):
                 "Exception disconnecting from %s", self._light.address, exc_info=True
             )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         if ATTR_BRIGHTNESS in kwargs or ATTR_HS_COLOR in kwargs:
@@ -130,6 +133,7 @@ class ZerprocLight(LightEntity):
         else:
             await self._light.turn_on()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         await self._light.turn_off()

@@ -2,7 +2,7 @@
 
 import asyncio
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from chip.clusters import Objects as clusters
 from matter_server.common.errors import MatterError
@@ -18,18 +18,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    ATTR_CREDENTIAL_DATA,
-    ATTR_CREDENTIAL_INDEX,
-    ATTR_CREDENTIAL_RULE,
-    ATTR_CREDENTIAL_TYPE,
-    ATTR_USER_INDEX,
-    ATTR_USER_NAME,
-    ATTR_USER_STATUS,
-    ATTR_USER_TYPE,
-    LOCK_TIMED_REQUEST_TIMEOUT_MS,
-    LOGGER,
-)
+from .const import LOCK_TIMED_REQUEST_TIMEOUT_MS, LOGGER, MatterServiceArgument
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import MatterConfigEntry
 from .lock_helpers import (
@@ -88,11 +77,12 @@ class MatterLock(MatterEntity, LockEntity):
     _platform_translation_key = "lock"
     _attr_changed_by = "Unknown"
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to events."""
         await super().async_added_to_hass()
         # subscribe to NodeEvent events
-        self._unsubscribes.append(
+        self.async_on_remove(
             self.matter_client.subscribe_events(
                 callback=self._on_matter_node_event,
                 event_filter=EventType.NODE_EVENT,
@@ -132,6 +122,7 @@ class MatterLock(MatterEntity, LockEntity):
                 self.async_write_ha_state()
 
     @property
+    @override
     def code_format(self) -> str | None:
         """Regex for code format or None if no code is required."""
         if self.get_matter_attribute_value(
@@ -151,6 +142,7 @@ class MatterLock(MatterEntity, LockEntity):
 
         return None
 
+    @override
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock with pin if needed."""
         if not self._attr_is_locked:
@@ -169,6 +161,7 @@ class MatterLock(MatterEntity, LockEntity):
             timed_request_timeout_ms=LOCK_TIMED_REQUEST_TIMEOUT_MS,
         )
 
+    @override
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock with pin if needed."""
         if self._attr_is_locked:
@@ -196,6 +189,7 @@ class MatterLock(MatterEntity, LockEntity):
                 timed_request_timeout_ms=LOCK_TIMED_REQUEST_TIMEOUT_MS,
             )
 
+    @override
     async def async_open(self, **kwargs: Any) -> None:
         """Open the door latch."""
         # optimistically signal opening to state machine
@@ -214,6 +208,7 @@ class MatterLock(MatterEntity, LockEntity):
         )
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update the entity from the device."""
         # always calculate the features as they can dynamically change
@@ -284,10 +279,10 @@ class MatterLock(MatterEntity, LockEntity):
             await set_lock_user(
                 self.matter_client,
                 self._endpoint.node,
-                user_index=kwargs.get(ATTR_USER_INDEX),
-                user_name=kwargs.get(ATTR_USER_NAME),
-                user_type=kwargs.get(ATTR_USER_TYPE),
-                credential_rule=kwargs.get(ATTR_CREDENTIAL_RULE),
+                user_index=kwargs.get(MatterServiceArgument.USER_INDEX),
+                user_name=kwargs.get(MatterServiceArgument.USER_NAME),
+                user_type=kwargs.get(MatterServiceArgument.USER_TYPE),
+                credential_rule=kwargs.get(MatterServiceArgument.CREDENTIAL_RULE),
             )
         except MatterError as err:
             raise HomeAssistantError(
@@ -300,7 +295,7 @@ class MatterLock(MatterEntity, LockEntity):
             await clear_lock_user(
                 self.matter_client,
                 self._endpoint.node,
-                kwargs[ATTR_USER_INDEX],
+                kwargs[MatterServiceArgument.USER_INDEX],
             )
         except MatterError as err:
             raise HomeAssistantError(
@@ -337,12 +332,12 @@ class MatterLock(MatterEntity, LockEntity):
             return await set_lock_credential(
                 self.matter_client,
                 self._endpoint.node,
-                credential_type=kwargs[ATTR_CREDENTIAL_TYPE],
-                credential_data=kwargs[ATTR_CREDENTIAL_DATA],
-                credential_index=kwargs.get(ATTR_CREDENTIAL_INDEX),
-                user_index=kwargs.get(ATTR_USER_INDEX),
-                user_status=kwargs.get(ATTR_USER_STATUS),
-                user_type=kwargs.get(ATTR_USER_TYPE),
+                credential_type=kwargs[MatterServiceArgument.CREDENTIAL_TYPE],
+                credential_data=kwargs[MatterServiceArgument.CREDENTIAL_DATA],
+                credential_index=kwargs.get(MatterServiceArgument.CREDENTIAL_INDEX),
+                user_index=kwargs.get(MatterServiceArgument.USER_INDEX),
+                user_status=kwargs.get(MatterServiceArgument.USER_STATUS),
+                user_type=kwargs.get(MatterServiceArgument.USER_TYPE),
             )
         except MatterError as err:
             raise HomeAssistantError(
@@ -355,8 +350,8 @@ class MatterLock(MatterEntity, LockEntity):
             await clear_lock_credential(
                 self.matter_client,
                 self._endpoint.node,
-                credential_type=kwargs[ATTR_CREDENTIAL_TYPE],
-                credential_index=kwargs[ATTR_CREDENTIAL_INDEX],
+                credential_type=kwargs[MatterServiceArgument.CREDENTIAL_TYPE],
+                credential_index=kwargs[MatterServiceArgument.CREDENTIAL_INDEX],
             )
         except MatterError as err:
             raise HomeAssistantError(
@@ -371,8 +366,8 @@ class MatterLock(MatterEntity, LockEntity):
             return await get_lock_credential_status(
                 self.matter_client,
                 self._endpoint.node,
-                credential_type=kwargs[ATTR_CREDENTIAL_TYPE],
-                credential_index=kwargs[ATTR_CREDENTIAL_INDEX],
+                credential_type=kwargs[MatterServiceArgument.CREDENTIAL_TYPE],
+                credential_index=kwargs[MatterServiceArgument.CREDENTIAL_INDEX],
             )
         except MatterError as err:
             raise HomeAssistantError(

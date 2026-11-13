@@ -4,36 +4,26 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockUser, mock_restore_cache
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.input_select import (
-    ATTR_OPTION,
-    ATTR_OPTIONS,
     CONF_INITIAL,
     DOMAIN,
-    SERVICE_SELECT_FIRST,
-    SERVICE_SELECT_LAST,
-    SERVICE_SELECT_NEXT,
-    SERVICE_SELECT_OPTION,
-    SERVICE_SELECT_PREVIOUS,
-    SERVICE_SET_OPTIONS,
     STORAGE_VERSION,
     STORAGE_VERSION_MINOR,
 )
-from homeassistant.const import (
-    ATTR_EDITABLE,
-    ATTR_ENTITY_ID,
-    ATTR_FRIENDLY_NAME,
-    ATTR_ICON,
-    ATTR_NAME,
-    SERVICE_RELOAD,
+from homeassistant.components.input_select.const import (
+    InputSelectEntityStateAttribute,
+    InputSelectService,
+    InputSelectServiceArgument,
 )
+from homeassistant.components.select import SelectEntityCapabilityAttribute
+from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, EntityStateAttribute
 from homeassistant.core import Context, HomeAssistant, State
-from homeassistant.exceptions import HomeAssistantError, Unauthorized
+from homeassistant.exceptions import ServiceValidationError, Unauthorized
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockUser, mock_restore_cache
-from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture
@@ -98,18 +88,27 @@ async def test_select_option(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "another option"},
+        InputSelectService.SELECT_OPTION,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            InputSelectServiceArgument.OPTION: "another option",
+        },
         blocking=True,
     )
     state = hass.states.get(entity_id)
     assert state.state == "another option"
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(
+        ServiceValidationError,
+        match="Option non existing option is not valid for input_select.test_1",
+    ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "non existing option"},
+            InputSelectService.SELECT_OPTION,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                InputSelectServiceArgument.OPTION: "non existing option",
+            },
             blocking=True,
         )
     state = hass.states.get(entity_id)
@@ -137,7 +136,7 @@ async def test_select_next(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SELECT_NEXT,
+        InputSelectService.SELECT_NEXT,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
@@ -146,7 +145,7 @@ async def test_select_next(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SELECT_NEXT,
+        InputSelectService.SELECT_NEXT,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
@@ -175,7 +174,7 @@ async def test_select_previous(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SELECT_PREVIOUS,
+        InputSelectService.SELECT_PREVIOUS,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
@@ -184,7 +183,7 @@ async def test_select_previous(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SELECT_PREVIOUS,
+        InputSelectService.SELECT_PREVIOUS,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
@@ -213,7 +212,7 @@ async def test_select_first_last(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SELECT_FIRST,
+        InputSelectService.SELECT_FIRST,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
@@ -223,7 +222,7 @@ async def test_select_first_last(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SELECT_LAST,
+        InputSelectService.SELECT_LAST,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
@@ -263,13 +262,16 @@ async def test_config_options(hass: HomeAssistant) -> None:
     assert state_2 is not None
 
     assert state_1.state == "1"
-    assert state_1.attributes.get(ATTR_OPTIONS) == ["1", "2"]
-    assert ATTR_ICON not in state_1.attributes
+    assert state_1.attributes.get(SelectEntityCapabilityAttribute.OPTIONS) == ["1", "2"]
+    assert EntityStateAttribute.ICON not in state_1.attributes
 
     assert state_2.state == "Better Option"
-    assert state_2.attributes.get(ATTR_OPTIONS) == test_2_options
-    assert state_2.attributes.get(ATTR_FRIENDLY_NAME) == "Hello World"
-    assert state_2.attributes.get(ATTR_ICON) == "mdi:work"
+    assert (
+        state_2.attributes.get(SelectEntityCapabilityAttribute.OPTIONS)
+        == test_2_options
+    )
+    assert state_2.attributes.get(EntityStateAttribute.FRIENDLY_NAME) == "Hello World"
+    assert state_2.attributes.get(EntityStateAttribute.ICON) == "mdi:work"
 
 
 async def test_set_options_service(hass: HomeAssistant) -> None:
@@ -293,8 +295,11 @@ async def test_set_options_service(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_OPTIONS,
-        {ATTR_OPTIONS: ["first option", "middle option"], ATTR_ENTITY_ID: entity_id},
+        InputSelectService.SET_OPTIONS,
+        {
+            InputSelectServiceArgument.OPTIONS: ["first option", "middle option"],
+            ATTR_ENTITY_ID: entity_id,
+        },
         blocking=True,
     )
     state = hass.states.get(entity_id)
@@ -302,18 +307,27 @@ async def test_set_options_service(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_OPTIONS,
-        {ATTR_OPTIONS: ["test1", "test2"], ATTR_ENTITY_ID: entity_id},
+        InputSelectService.SET_OPTIONS,
+        {
+            InputSelectServiceArgument.OPTIONS: ["test1", "test2"],
+            ATTR_ENTITY_ID: entity_id,
+        },
         blocking=True,
     )
     state = hass.states.get(entity_id)
     assert state.state == "test1"
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(
+        ServiceValidationError,
+        match="Option first option is not valid for input_select.test_1",
+    ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "first option"},
+            InputSelectService.SELECT_OPTION,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                InputSelectServiceArgument.OPTION: "first option",
+            },
             blocking=True,
         )
     state = hass.states.get(entity_id)
@@ -321,15 +335,24 @@ async def test_set_options_service(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "test2"},
+        InputSelectService.SELECT_OPTION,
+        {ATTR_ENTITY_ID: entity_id, InputSelectServiceArgument.OPTION: "test2"},
         blocking=True,
     )
     state = hass.states.get(entity_id)
     assert state.state == "test2"
 
 
-async def test_set_options_service_duplicate(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("options", "duplicates"),
+    [
+        (["option1", "option1"], "option1"),
+        (["option1", "option2", "option1", "option3", "option2"], "option1, option2"),
+    ],
+)
+async def test_set_options_service_duplicate(
+    hass: HomeAssistant, options: list[str], duplicates: str
+) -> None:
     """Test set_options service with duplicates."""
     assert await async_setup_component(
         hass,
@@ -347,22 +370,25 @@ async def test_set_options_service_duplicate(hass: HomeAssistant) -> None:
 
     state = hass.states.get(entity_id)
     assert state.state == "middle option"
-    assert state.attributes[ATTR_OPTIONS] == [
+    assert state.attributes[SelectEntityCapabilityAttribute.OPTIONS] == [
         "first option",
         "middle option",
         "last option",
     ]
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(
+        ServiceValidationError,
+        match=f"Options for input_select.test_1 contain duplicates: {duplicates}$",
+    ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_OPTIONS,
-            {ATTR_OPTIONS: ["option1", "option1"], ATTR_ENTITY_ID: entity_id},
+            InputSelectService.SET_OPTIONS,
+            {InputSelectServiceArgument.OPTIONS: options, ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
     state = hass.states.get(entity_id)
     assert state.state == "middle option"
-    assert state.attributes[ATTR_OPTIONS] == [
+    assert state.attributes[SelectEntityCapabilityAttribute.OPTIONS] == [
         "first option",
         "middle option",
         "last option",
@@ -424,7 +450,7 @@ async def test_input_select_context(
     """Test that input_select context works."""
     assert await async_setup_component(
         hass,
-        "input_select",
+        DOMAIN,
         {
             "input_select": {
                 "s1": {"options": ["first option", "middle option", "last option"]}
@@ -509,13 +535,13 @@ async def test_reload(
         with pytest.raises(Unauthorized):
             await hass.services.async_call(
                 DOMAIN,
-                SERVICE_RELOAD,
+                InputSelectService.RELOAD,
                 blocking=True,
                 context=Context(user_id=hass_read_only_user.id),
             )
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_RELOAD,
+            InputSelectService.RELOAD,
             blocking=True,
             context=Context(user_id=hass_admin_user.id),
         )
@@ -541,9 +567,9 @@ async def test_load_from_storage(hass: HomeAssistant, storage_setup) -> None:
     assert await storage_setup()
     state = hass.states.get(f"{DOMAIN}.from_storage")
     assert state.state == "storage option 1"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "from storage"
-    assert state.attributes.get(ATTR_EDITABLE)
-    assert state.attributes.get(ATTR_OPTIONS) == [
+    assert state.attributes.get(EntityStateAttribute.FRIENDLY_NAME) == "from storage"
+    assert state.attributes.get(InputSelectEntityStateAttribute.EDITABLE)
+    assert state.attributes.get(SelectEntityCapabilityAttribute.OPTIONS) == [
         "storage option 1",
         "storage option 2",
     ]
@@ -570,9 +596,12 @@ async def test_load_from_storage_duplicate(
 
     state = hass.states.get(f"{DOMAIN}.from_storage")
     assert state.state == "yaml update 1"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "from storage"
-    assert state.attributes.get(ATTR_EDITABLE)
-    assert state.attributes.get(ATTR_OPTIONS) == ["yaml update 1", "yaml update 2"]
+    assert state.attributes.get(EntityStateAttribute.FRIENDLY_NAME) == "from storage"
+    assert state.attributes.get(InputSelectEntityStateAttribute.EDITABLE)
+    assert state.attributes.get(SelectEntityCapabilityAttribute.OPTIONS) == [
+        "yaml update 1",
+        "yaml update 2",
+    ]
 
 
 async def test_editable_state_attribute(hass: HomeAssistant, storage_setup) -> None:
@@ -583,12 +612,12 @@ async def test_editable_state_attribute(hass: HomeAssistant, storage_setup) -> N
 
     state = hass.states.get(f"{DOMAIN}.from_storage")
     assert state.state == "storage option 1"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "from storage"
-    assert state.attributes.get(ATTR_EDITABLE)
+    assert state.attributes.get(EntityStateAttribute.FRIENDLY_NAME) == "from storage"
+    assert state.attributes.get(InputSelectEntityStateAttribute.EDITABLE)
 
     state = hass.states.get(f"{DOMAIN}.from_yaml")
     assert state.state == "yaml option"
-    assert not state.attributes.get(ATTR_EDITABLE)
+    assert not state.attributes.get(InputSelectEntityStateAttribute.EDITABLE)
 
 
 async def test_ws_list(
@@ -612,7 +641,7 @@ async def test_ws_list(
     assert len(result) == 1
     assert storage_ent in result
     assert yaml_ent not in result
-    assert result[storage_ent][ATTR_NAME] == "from storage"
+    assert result[storage_ent][CONF_NAME] == "from storage"
 
 
 async def test_ws_delete(
@@ -663,7 +692,10 @@ async def test_update(
     input_entity_id = f"{DOMAIN}.{input_id}"
 
     state = hass.states.get(input_entity_id)
-    assert state.attributes[ATTR_OPTIONS] == ["yaml update 1", "yaml update 2"]
+    assert state.attributes[SelectEntityCapabilityAttribute.OPTIONS] == [
+        "yaml update 1",
+        "yaml update 2",
+    ]
     assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, input_id) is not None
 
     client = await hass_ws_client(hass)
@@ -685,7 +717,10 @@ async def test_update(
     assert resp["result"] == {"id": "from_storage"} | updated_settings
 
     state = hass.states.get(input_entity_id)
-    assert state.attributes[ATTR_OPTIONS] == ["new option", "newer option"]
+    assert state.attributes[SelectEntityCapabilityAttribute.OPTIONS] == [
+        "new option",
+        "newer option",
+    ]
 
     # Should fail because the initial state is now invalid
     updated_settings = settings | {
@@ -724,7 +759,10 @@ async def test_update_duplicates(
     input_entity_id = f"{DOMAIN}.{input_id}"
 
     state = hass.states.get(input_entity_id)
-    assert state.attributes[ATTR_OPTIONS] == ["yaml update 1", "yaml update 2"]
+    assert state.attributes[SelectEntityCapabilityAttribute.OPTIONS] == [
+        "yaml update 1",
+        "yaml update 2",
+    ]
     assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, input_id) is not None
 
     client = await hass_ws_client(hass)
@@ -747,7 +785,10 @@ async def test_update_duplicates(
     assert resp["error"]["message"] == "Duplicate options are not allowed"
 
     state = hass.states.get(input_entity_id)
-    assert state.attributes[ATTR_OPTIONS] == ["yaml update 1", "yaml update 2"]
+    assert state.attributes[SelectEntityCapabilityAttribute.OPTIONS] == [
+        "yaml update 1",
+        "yaml update 2",
+    ]
 
 
 async def test_ws_create(
@@ -782,7 +823,10 @@ async def test_ws_create(
 
     state = hass.states.get(input_entity_id)
     assert state.state == "even newer option"
-    assert state.attributes[ATTR_OPTIONS] == ["new option", "even newer option"]
+    assert state.attributes[SelectEntityCapabilityAttribute.OPTIONS] == [
+        "new option",
+        "even newer option",
+    ]
 
 
 async def test_ws_create_duplicates(
@@ -831,7 +875,7 @@ async def test_setup_no_config(hass: HomeAssistant, hass_admin_user: MockUser) -
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_RELOAD,
+            InputSelectService.RELOAD,
             blocking=True,
             context=Context(user_id=hass_admin_user.id),
         )

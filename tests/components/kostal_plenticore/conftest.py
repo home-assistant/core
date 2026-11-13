@@ -6,10 +6,10 @@ from unittest.mock import patch
 
 from pykoplenti import ExtendedApiClient, MeData, SettingsData, VersionData
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
+from homeassistant.components.kostal_plenticore.const import DOMAIN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 DEFAULT_SETTING_VALUES = {
     "devices:local": {
@@ -78,7 +78,7 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         entry_id="2ab8dd92a62787ddfe213a67e09406bd",
         title="scb",
-        domain="kostal_plenticore",
+        domain=DOMAIN,
         data={"host": "192.168.1.2", "password": "SecretPassword"},
     )
 
@@ -89,7 +89,7 @@ def mock_installer_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         entry_id="2ab8dd92a62787ddfe213a67e09406bd",
         title="scb",
-        domain="kostal_plenticore",
+        domain=DOMAIN,
         data={
             "host": "192.168.1.2",
             "password": "secret_password",

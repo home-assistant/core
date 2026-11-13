@@ -1,7 +1,7 @@
 """Water heater platform for Compit integration."""
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from compit_inext_api.consts import CompitParameter
 from propcache.api import cached_property
@@ -176,7 +176,7 @@ class CompitWaterHeater(
     """Representation of a Compit Water Heater."""
 
     _attr_target_temperature_step = PRECISION_WHOLE
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_has_entity_name = True
     _attr_name = None
     entity_description: CompitWaterHeaterEntityDescription
@@ -200,6 +200,7 @@ class CompitWaterHeater(
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return (
@@ -208,21 +209,25 @@ class CompitWaterHeater(
         )
 
     @cached_property
+    @override
     def min_temp(self) -> float:
         """Return the minimum temperature."""
         return self.entity_description.min_temp
 
     @cached_property
+    @override
     def max_temp(self) -> float:
         """Return the maximum temperature."""
         return self.entity_description.max_temp
 
     @cached_property
+    @override
     def supported_features(self) -> WaterHeaterEntityFeature:
         """Return the supported features."""
         return self.entity_description.supported_features
 
     @cached_property
+    @override
     def operation_list(self) -> list[str] | None:
         """Return the list of available operation modes."""
         if (
@@ -233,7 +238,8 @@ class CompitWaterHeater(
         return None
 
     @property
-    def target_temperature(self) -> float | None:
+    @override
+    def native_target_temperature(self) -> float | None:
         """Return the set target temperature."""
         value = self.coordinator.connector.get_current_value(
             self.device_id, CompitParameter.DHW_TARGET_TEMPERATURE
@@ -245,7 +251,8 @@ class CompitWaterHeater(
         return None
 
     @property
-    def current_temperature(self) -> float | None:
+    @override
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         if self.entity_description.supports_current_temperature is False:
             return None
@@ -259,6 +266,7 @@ class CompitWaterHeater(
 
         return None
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
@@ -266,7 +274,7 @@ class CompitWaterHeater(
         if temperature is None:
             return
 
-        self._attr_target_temperature = temperature
+        self._attr_native_target_temperature = temperature
 
         await self.coordinator.connector.set_device_parameter(
             self.device_id,
@@ -275,6 +283,7 @@ class CompitWaterHeater(
         )
         self.async_write_ha_state()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the water heater on."""
         await self.coordinator.connector.select_device_option(
@@ -284,6 +293,7 @@ class CompitWaterHeater(
         )
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the water heater off."""
         await self.coordinator.connector.select_device_option(
@@ -293,6 +303,7 @@ class CompitWaterHeater(
         )
         self.async_write_ha_state()
 
+    @override
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
         await self.coordinator.connector.select_device_option(
@@ -303,6 +314,7 @@ class CompitWaterHeater(
         self.async_write_ha_state()
 
     @property
+    @override
     def current_operation(self) -> str | None:
         """Return the current operation mode."""
         on_off = self.coordinator.connector.get_current_option(

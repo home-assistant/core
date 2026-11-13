@@ -1,16 +1,15 @@
 """Support for ESPHome covers."""
 
 from functools import partial
-from typing import Any
+from typing import Any, override
 
 from aioesphomeapi import APIVersion, CoverInfo, CoverOperation, CoverState, EntityInfo
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
-    ATTR_TILT_POSITION,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
+    CoverServiceArgument,
 )
 from homeassistant.core import callback
 from homeassistant.util.enum import try_parse_enum
@@ -29,6 +28,7 @@ class EsphomeCover(EsphomeEntity[CoverInfo, CoverState], CoverEntity):
     """A cover implementation for ESPHome."""
 
     @callback
+    @override
     def _on_static_info_update(self, static_info: EntityInfo) -> None:
         """Set attrs from static info."""
         super()._on_static_info_update(static_info)
@@ -52,6 +52,7 @@ class EsphomeCover(EsphomeEntity[CoverInfo, CoverState], CoverEntity):
 
     @property
     @esphome_state_property
+    @override
     def is_closed(self) -> bool | None:
         """Return if the cover is closed or not."""
         # Check closed state with api version due to a protocol change
@@ -59,18 +60,21 @@ class EsphomeCover(EsphomeEntity[CoverInfo, CoverState], CoverEntity):
 
     @property
     @esphome_state_property
+    @override
     def is_opening(self) -> bool:
         """Return if the cover is opening or not."""
         return self._state.current_operation is CoverOperation.IS_OPENING
 
     @property
     @esphome_state_property
+    @override
     def is_closing(self) -> bool:
         """Return if the cover is closing or not."""
         return self._state.current_operation is CoverOperation.IS_CLOSING
 
     @property
     @esphome_state_property
+    @override
     def current_cover_position(self) -> int | None:
         """Return current position of cover. 0 is closed, 100 is open."""
         if not self._static_info.supports_position:
@@ -79,6 +83,7 @@ class EsphomeCover(EsphomeEntity[CoverInfo, CoverState], CoverEntity):
 
     @property
     @esphome_state_property
+    @override
     def current_cover_tilt_position(self) -> int | None:
         """Return current position of cover tilt. 0 is closed, 100 is open."""
         if not self._static_info.supports_tilt:
@@ -86,6 +91,7 @@ class EsphomeCover(EsphomeEntity[CoverInfo, CoverState], CoverEntity):
         return round(self._state.tilt * 100.0)
 
     @convert_api_error_ha_error
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         self._client.cover_command(
@@ -93,6 +99,7 @@ class EsphomeCover(EsphomeEntity[CoverInfo, CoverState], CoverEntity):
         )
 
     @convert_api_error_ha_error
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         self._client.cover_command(
@@ -100,6 +107,7 @@ class EsphomeCover(EsphomeEntity[CoverInfo, CoverState], CoverEntity):
         )
 
     @convert_api_error_ha_error
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         self._client.cover_command(
@@ -107,15 +115,17 @@ class EsphomeCover(EsphomeEntity[CoverInfo, CoverState], CoverEntity):
         )
 
     @convert_api_error_ha_error
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         self._client.cover_command(
             key=self._key,
-            position=kwargs[ATTR_POSITION] / 100,
+            position=kwargs[CoverServiceArgument.POSITION] / 100,
             device_id=self._static_info.device_id,
         )
 
     @convert_api_error_ha_error
+    @override
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
         self._client.cover_command(
@@ -123,6 +133,7 @@ class EsphomeCover(EsphomeEntity[CoverInfo, CoverState], CoverEntity):
         )
 
     @convert_api_error_ha_error
+    @override
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
         self._client.cover_command(
@@ -130,9 +141,10 @@ class EsphomeCover(EsphomeEntity[CoverInfo, CoverState], CoverEntity):
         )
 
     @convert_api_error_ha_error
+    @override
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
-        tilt_position: int = kwargs[ATTR_TILT_POSITION]
+        tilt_position: int = kwargs[CoverServiceArgument.TILT_POSITION]
         self._client.cover_command(
             key=self._key,
             tilt=tilt_position / 100,

@@ -1,25 +1,25 @@
 """Config flow for Nice G.O. integration."""
 
 from collections.abc import Mapping
-from datetime import datetime
 import logging
-from typing import Any
+import time
+from typing import Any, override
 
 from nice_go import AuthFailedError, NiceGOApi
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_EMAIL, CONF_NAME, CONF_PASSWORD
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_REFRESH_TOKEN, CONF_REFRESH_TOKEN_CREATION_TIME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_EMAIL): str,
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_EMAIL): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
     }
 )
 
@@ -29,6 +29,7 @@ class NiceGOConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -58,7 +59,7 @@ class NiceGOConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_EMAIL: user_input[CONF_EMAIL],
                         CONF_PASSWORD: user_input[CONF_PASSWORD],
                         CONF_REFRESH_TOKEN: refresh_token,
-                        CONF_REFRESH_TOKEN_CREATION_TIME: datetime.now().timestamp(),
+                        CONF_REFRESH_TOKEN_CREATION_TIME: time.time(),
                     },
                 )
 
@@ -99,7 +100,7 @@ class NiceGOConfigFlow(ConfigFlow, domain=DOMAIN):
                     data={
                         **user_input,
                         CONF_REFRESH_TOKEN: refresh_token,
-                        CONF_REFRESH_TOKEN_CREATION_TIME: datetime.now().timestamp(),
+                        CONF_REFRESH_TOKEN_CREATION_TIME: time.time(),
                     },
                     unique_id=user_input[CONF_EMAIL],
                 )
@@ -110,6 +111,6 @@ class NiceGOConfigFlow(ConfigFlow, domain=DOMAIN):
                 STEP_USER_DATA_SCHEMA,
                 user_input or {CONF_EMAIL: reauth_entry.data[CONF_EMAIL]},
             ),
-            description_placeholders={CONF_NAME: reauth_entry.title},
+            description_placeholders={"name": reauth_entry.title},
             errors=errors,
         )

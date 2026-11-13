@@ -3,16 +3,15 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.switch import SERVICE_TURN_OFF, SERVICE_TURN_ON
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.components.switch import SwitchService
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from .conftest import http_404_error, http_429_error, setup_integration
 from .const import MOCK_SWITCH_ENTITY_ID
-
-from tests.common import MockConfigEntry
 
 
 async def test_wallbox_switch_class(
@@ -28,18 +27,18 @@ async def test_wallbox_switch_class(
 
     await hass.services.async_call(
         "switch",
-        SERVICE_TURN_ON,
+        SwitchService.TURN_ON,
         {
-            ATTR_ENTITY_ID: MOCK_SWITCH_ENTITY_ID,
+            CommonServiceArgument.ENTITY_ID: MOCK_SWITCH_ENTITY_ID,
         },
         blocking=True,
     )
 
     await hass.services.async_call(
         "switch",
-        SERVICE_TURN_OFF,
+        SwitchService.TURN_OFF,
         {
-            ATTR_ENTITY_ID: MOCK_SWITCH_ENTITY_ID,
+            CommonServiceArgument.ENTITY_ID: MOCK_SWITCH_ENTITY_ID,
         },
         blocking=True,
     )
@@ -59,9 +58,9 @@ async def test_wallbox_switch_class_error_handling(
         # Test behavior when a connection error occurs
         await hass.services.async_call(
             "switch",
-            SERVICE_TURN_ON,
+            SwitchService.TURN_ON,
             {
-                ATTR_ENTITY_ID: MOCK_SWITCH_ENTITY_ID,
+                CommonServiceArgument.ENTITY_ID: MOCK_SWITCH_ENTITY_ID,
             },
             blocking=True,
         )
@@ -73,9 +72,9 @@ async def test_wallbox_switch_class_error_handling(
         # Test behavior when a connection error occurs
         await hass.services.async_call(
             "switch",
-            SERVICE_TURN_ON,
+            SwitchService.TURN_ON,
             {
-                ATTR_ENTITY_ID: MOCK_SWITCH_ENTITY_ID,
+                CommonServiceArgument.ENTITY_ID: MOCK_SWITCH_ENTITY_ID,
             },
             blocking=True,
         )

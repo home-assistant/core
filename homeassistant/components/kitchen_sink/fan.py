@@ -1,6 +1,6 @@
 """Demo platform that offers a fake infrared fan entity."""
 
-from typing import Any
+from typing import Any, override
 
 from infrared_protocols.commands.nec import NECCommand
 
@@ -86,6 +86,7 @@ class DemoInfraredFan(InfraredEmitterConsumerEntity, FanEntity):
             )
         )
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -100,12 +101,14 @@ class DemoInfraredFan(InfraredEmitterConsumerEntity, FanEntity):
         self._attr_percentage = 33
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""
         await self._send_fan_command(INFRARED_CMD_POWER_OFF)
         self._attr_percentage = 0
         self.async_write_ha_state()
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
         if percentage == 0:

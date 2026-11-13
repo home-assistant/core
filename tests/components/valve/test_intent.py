@@ -1,5 +1,7 @@
 """The tests for the valve platform."""
 
+from pytest_homeassistant.common import async_mock_service
+
 from homeassistant.components.valve import (
     ATTR_CURRENT_POSITION,
     DOMAIN,
@@ -11,8 +13,6 @@ from homeassistant.components.valve import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
 from homeassistant.setup import async_setup_component
-
-from tests.common import async_mock_service
 
 
 async def test_open_valve_intent(hass: HomeAssistant) -> None:
@@ -28,7 +28,7 @@ async def test_open_valve_intent(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == DOMAIN
@@ -49,7 +49,7 @@ async def test_close_valve_intent(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == DOMAIN
@@ -75,7 +75,7 @@ async def test_set_valve_position(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == DOMAIN

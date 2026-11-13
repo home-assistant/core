@@ -196,6 +196,7 @@ WALLBOX_INVALID_REAUTH_RESPONSE = {
 }
 
 
+MOCK_BUTTON_RESUME_SCHEDULE_ID = "button.wallbox_wallboxname_resume_schedule"
 MOCK_NUMBER_ENTITY_ID = "number.wallbox_wallboxname_maximum_charging_current"
 MOCK_NUMBER_ENTITY_ENERGY_PRICE_ID = "number.wallbox_wallboxname_energy_price"
 MOCK_NUMBER_ENTITY_ICP_CURRENT_ID = "number.wallbox_wallboxname_maximum_icp_current"

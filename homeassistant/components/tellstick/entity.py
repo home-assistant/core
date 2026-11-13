@@ -2,6 +2,7 @@
 
 import logging
 import threading
+from typing import override
 
 from tellcore.constants import TELLSTICK_DIM, TELLSTICK_TURNOFF, TELLSTICK_TURNON
 from tellcore.library import TelldusError
@@ -39,6 +40,7 @@ class TellstickDevice(Entity):
         self._attr_name = tellcore_device.name
         self._attr_unique_id = tellcore_device.id
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(

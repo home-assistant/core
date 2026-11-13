@@ -3,19 +3,19 @@
 from collections.abc import Generator
 from unittest.mock import patch
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.number import (
     ATTR_MAX,
     ATTR_MIN,
     ATTR_STEP,
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
     NumberMode,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, Platform
+from homeassistant.const import ATTR_MODE, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
@@ -83,11 +83,14 @@ async def test_set_value_bad_attr(hass: HomeAssistant) -> None:
     state = hass.states.get(ENTITY_VOLUME)
     assert state.state == "42.0"
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_VALUE: None, ATTR_ENTITY_ID: ENTITY_VOLUME},
+            NumberService.SET_VALUE,
+            {
+                NumberServiceArgument.VALUE: None,
+                CommonServiceArgument.ENTITY_ID: ENTITY_VOLUME,
+            },
             blocking=True,
         )
     await hass.async_block_till_done()
@@ -104,8 +107,11 @@ async def test_set_value_bad_range(hass: HomeAssistant) -> None:
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_VALUE: 1024, ATTR_ENTITY_ID: ENTITY_VOLUME},
+            NumberService.SET_VALUE,
+            {
+                NumberServiceArgument.VALUE: 1024,
+                CommonServiceArgument.ENTITY_ID: ENTITY_VOLUME,
+            },
             blocking=True,
         )
     await hass.async_block_till_done()
@@ -121,8 +127,11 @@ async def test_set_set_value(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_VALUE: 23, ATTR_ENTITY_ID: ENTITY_VOLUME},
+        NumberService.SET_VALUE,
+        {
+            NumberServiceArgument.VALUE: 23,
+            CommonServiceArgument.ENTITY_ID: ENTITY_VOLUME,
+        },
         blocking=True,
     )
     await hass.async_block_till_done()

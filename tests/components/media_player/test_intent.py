@@ -4,6 +4,7 @@ import math
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockEntityPlatform, async_mock_service
 
 from homeassistant.components.media_player import (
     DOMAIN,
@@ -44,8 +45,6 @@ from homeassistant.helpers import (
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockEntityPlatform, async_mock_service
-
 
 async def test_pause_media_player_intent(hass: HomeAssistant) -> None:
     """Test HassMediaPause intent for media players."""
@@ -68,7 +67,7 @@ async def test_pause_media_player_intent(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == DOMAIN
@@ -115,7 +114,7 @@ async def test_unpause_media_player_intent(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == DOMAIN
@@ -141,7 +140,7 @@ async def test_next_media_player_intent(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == DOMAIN
@@ -192,7 +191,7 @@ async def test_previous_media_player_intent(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == DOMAIN
@@ -243,7 +242,7 @@ async def test_volume_media_player_intent(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == DOMAIN
@@ -284,7 +283,7 @@ async def test_media_player_mute_intent(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == DOMAIN
@@ -325,7 +324,7 @@ async def test_media_player_unmute_intent(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == DOMAIN
@@ -479,7 +478,7 @@ async def test_multiple_media_players(
         {"name": {"value": "TV"}, "floor": {"value": "upstairs"}},
     )
     await hass.async_block_till_done()
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert len(calls) == 1
     assert calls[0].data == {"entity_id": bedroom_tv.entity_id}
     hass.states.async_set(bedroom_tv.entity_id, STATE_PAUSED, attributes=attributes)
@@ -494,7 +493,7 @@ async def test_multiple_media_players(
     )
 
     await hass.async_block_till_done()
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert len(calls) == 1
     assert calls[0].data == {"entity_id": living_room_tv.entity_id}
     hass.states.async_set(living_room_tv.entity_id, STATE_PAUSED, attributes=attributes)
@@ -508,7 +507,7 @@ async def test_multiple_media_players(
         {"name": {"value": "smart speaker"}, "area": {"value": "kitchen"}},
     )
     await hass.async_block_till_done()
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert len(calls) == 1
     assert calls[0].data == {"entity_id": kitchen_smart_speaker.entity_id}
     hass.states.async_set(
@@ -527,7 +526,7 @@ async def test_multiple_media_players(
         },
     )
     await hass.async_block_till_done()
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert len(calls) == 1
     assert calls[0].data == {"entity_id": living_room_smart_speaker.entity_id}
     hass.states.async_set(
@@ -543,7 +542,7 @@ async def test_multiple_media_players(
         {"floor": {"value": "upstairs"}},
     )
     await hass.async_block_till_done()
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert len(calls) == 3
     assert {call.data["entity_id"] for call in calls} == {
         bedroom_tv.entity_id,
@@ -565,7 +564,7 @@ async def test_multiple_media_players(
         },
     )
     await hass.async_block_till_done()
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert len(calls) == 1
     assert calls[0].data == {"entity_id": bedroom_tv.entity_id}
     hass.states.async_set(bedroom_tv.entity_id, STATE_PAUSED, attributes=attributes)
@@ -579,7 +578,7 @@ async def test_multiple_media_players(
         {"area": {"value": "bathroom"}, "volume_level": {"value": 50}},
     )
     await hass.async_block_till_done()
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert len(calls) == 1
     assert calls[0].data == {
         "entity_id": bathroom_smart_speaker.entity_id,
@@ -599,7 +598,7 @@ async def test_multiple_media_players(
         {"floor": {"value": "ground"}},
     )
     await hass.async_block_till_done()
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert len(calls) == 1
     assert calls[0].data == {"entity_id": kitchen_smart_speaker.entity_id}
 
@@ -612,7 +611,7 @@ async def test_multiple_media_players(
         {"area": {"value": "kitchen"}},
     )
     await hass.async_block_till_done()
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert len(calls) == 1
     assert calls[0].data == {"entity_id": kitchen_smart_speaker.entity_id}
 
@@ -628,7 +627,7 @@ async def test_multiple_media_players(
         media_player_intent.INTENT_MEDIA_UNPAUSE,
     )
     await hass.async_block_till_done()
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert len(calls) == 1
     assert calls[0].data == {"entity_id": kitchen_smart_speaker.entity_id}
 
@@ -666,7 +665,7 @@ async def test_manual_pause_unpause(
         context=context,
     )
     await hass.async_block_till_done()
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert len(calls) == 2
 
     hass.states.async_set(
@@ -686,7 +685,7 @@ async def test_manual_pause_unpause(
         context=context,
     )
     await hass.async_block_till_done()
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert len(calls) == 2
 
     hass.states.async_set(
@@ -707,7 +706,7 @@ async def test_manual_pause_unpause(
         context=context,
     )
     await hass.async_block_till_done()
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert len(calls) == 1
     assert calls[0].data == {"entity_id": device_1.entity_id}
 
@@ -732,7 +731,7 @@ async def test_manual_pause_unpause(
         context=context,
     )
     await hass.async_block_till_done()
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert len(calls) == 1
     assert calls[0].data == {"entity_id": device_2.entity_id}
 
@@ -776,7 +775,7 @@ async def test_search_and_play_media_player_intent(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
 
     # Response should contain a "media" slot with the matched item.
     assert not response.speech
@@ -804,19 +803,15 @@ async def test_search_and_play_media_player_intent(hass: HomeAssistant) -> None:
 
     # Test no search results
     search_results.clear()
-    response = await intent.async_handle(
-        hass,
-        "test",
-        media_player_intent.INTENT_MEDIA_SEARCH_AND_PLAY,
-        {"search_query": {"value": "another query"}},
-    )
+    with pytest.raises(intent.IntentHandleError, match="No results found"):
+        await intent.async_handle(
+            hass,
+            "test",
+            media_player_intent.INTENT_MEDIA_SEARCH_AND_PLAY,
+            {"search_query": {"value": "another query"}},
+        )
     await hass.async_block_till_done()
 
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
-
-    # A search failure is indicated by no "media" slot in the response.
-    assert not response.speech
-    assert "media" not in response.speech_slots
     assert len(search_calls) == 2  # Search was called again
     assert len(play_calls) == 1  # Play was not called again
 
@@ -928,7 +923,7 @@ async def test_search_and_play_media_player_intent_with_media_class(
     )
     await hass.async_block_till_done()
 
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
 
     # Response should contain a "media" slot with the matched item.
     assert not response.speech
@@ -1020,7 +1015,7 @@ async def test_volume_relative_media_player_intent(
     )
     await hass.async_block_till_done()
 
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     idle_expected_volume += volume_change
     assert math.isclose(idle_entity.volume_level, idle_expected_volume)
 
@@ -1051,7 +1046,7 @@ async def test_volume_relative_media_player_intent(
     )
     await hass.async_block_till_done()
 
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     playing_expected_volume += volume_change
     assert math.isclose(idle_entity.volume_level, idle_expected_volume)
     assert math.isclose(playing_entity.volume_level, playing_expected_volume)
@@ -1065,7 +1060,7 @@ async def test_volume_relative_media_player_intent(
     )
     await hass.async_block_till_done()
 
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     idle_expected_volume += volume_change
     assert math.isclose(idle_entity.volume_level, idle_expected_volume)
     assert math.isclose(playing_entity.volume_level, playing_expected_volume)
@@ -1079,7 +1074,7 @@ async def test_volume_relative_media_player_intent(
     )
     await hass.async_block_till_done()
 
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     playing_expected_volume += volume_change_int / 100
     assert math.isclose(idle_entity.volume_level, idle_expected_volume)
     assert math.isclose(playing_entity.volume_level, playing_expected_volume)

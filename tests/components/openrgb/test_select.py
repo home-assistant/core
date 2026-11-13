@@ -7,23 +7,24 @@ from unittest.mock import MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from openrgb.utils import OpenRGBDisconnected
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.openrgb.const import DOMAIN, SCAN_INTERVAL
-from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_OPTION,
-    SERVICE_SELECT_OPTION,
-    STATE_UNAVAILABLE,
-    Platform,
+from homeassistant.components.select import (
+    DOMAIN as SELECT_DOMAIN,
+    SelectService,
+    SelectServiceArgument,
 )
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -59,8 +60,8 @@ async def test_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
     # Ensure entity is correctly assigned to the OpenRGB server device
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_config_entry.entry_id)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
     )
     assert device_entry
     entity_entries = er.async_entries_for_config_entry(
@@ -133,10 +134,10 @@ async def test_select_option_success(
     # Select a profile
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: "select.test_computer_profile",
-            ATTR_OPTION: "Gaming",
+            CommonServiceArgument.ENTITY_ID: "select.test_computer_profile",
+            SelectServiceArgument.OPTION: "Gaming",
         },
         blocking=True,
     )
@@ -174,10 +175,10 @@ async def test_select_option_not_found(
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: "select.test_computer_profile",
-                ATTR_OPTION: "NonExistent",
+                CommonServiceArgument.ENTITY_ID: "select.test_computer_profile",
+                SelectServiceArgument.OPTION: "NonExistent",
             },
             blocking=True,
         )
@@ -206,10 +207,10 @@ async def test_select_option_connection_error(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: "select.test_computer_profile",
-                ATTR_OPTION: "Gaming",
+                CommonServiceArgument.ENTITY_ID: "select.test_computer_profile",
+                SelectServiceArgument.OPTION: "Gaming",
             },
             blocking=True,
         )
@@ -236,10 +237,10 @@ async def test_select_option_value_error(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: "select.test_computer_profile",
-                ATTR_OPTION: "Gaming",
+                CommonServiceArgument.ENTITY_ID: "select.test_computer_profile",
+                SelectServiceArgument.OPTION: "Gaming",
             },
             blocking=True,
         )
@@ -340,10 +341,10 @@ async def test_current_option_cleared_when_device_state_changes(
     # Select a profile
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: "select.test_computer_profile",
-            ATTR_OPTION: "Gaming",
+            CommonServiceArgument.ENTITY_ID: "select.test_computer_profile",
+            SelectServiceArgument.OPTION: "Gaming",
         },
         blocking=True,
     )
@@ -387,10 +388,10 @@ async def test_current_option_cleared_when_colors_change(
     # Select a profile
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: "select.test_computer_profile",
-            ATTR_OPTION: "Work",
+            CommonServiceArgument.ENTITY_ID: "select.test_computer_profile",
+            SelectServiceArgument.OPTION: "Work",
         },
         blocking=True,
     )

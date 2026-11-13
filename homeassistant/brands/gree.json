@@ -1,0 +1,5 @@
+{
+  "domain": "gree",
+  "name": "Gree",
+  "integrations": ["gree", "gree_infrared"]
+}

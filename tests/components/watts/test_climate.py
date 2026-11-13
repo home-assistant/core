@@ -5,6 +5,11 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 from visionpluspython.models import ThermostatMode
 
@@ -18,19 +23,17 @@ from homeassistant.components.climate import (
     SERVICE_SET_TEMPERATURE,
     HVACMode,
 )
-from homeassistant.components.watts.const import (
-    ATTR_DURATION,
-    DOMAIN,
-    SERVICE_ACTIVATE_TIMER_MODE,
+from homeassistant.components.watts.const import DOMAIN
+from homeassistant.components.watts.services import (
+    WattsVisionService,
+    WattsVisionServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 async def test_entities(
@@ -55,7 +58,7 @@ async def test_set_temperature(
     """Test setting temperature."""
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("climate.living_room_thermostat")
+    state = hass.states.get("climate.living_room_living_room_thermostat")
     assert state is not None
     assert state.attributes.get(ATTR_TEMPERATURE) == 22.0
 
@@ -63,7 +66,7 @@ async def test_set_temperature(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: "climate.living_room_thermostat",
+            ATTR_ENTITY_ID: "climate.living_room_living_room_thermostat",
             ATTR_TEMPERATURE: 23.5,
         },
         blocking=True,
@@ -88,7 +91,7 @@ async def test_fast_polling(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: "climate.living_room_thermostat",
+            ATTR_ENTITY_ID: "climate.living_room_living_room_thermostat",
             ATTR_TEMPERATURE: 23.5,
         },
         blocking=True,
@@ -138,7 +141,7 @@ async def test_set_hvac_mode_heat(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
         {
-            ATTR_ENTITY_ID: "climate.living_room_thermostat",
+            ATTR_ENTITY_ID: "climate.living_room_living_room_thermostat",
             ATTR_HVAC_MODE: HVACMode.HEAT,
         },
         blocking=True,
@@ -161,7 +164,7 @@ async def test_set_hvac_mode_auto(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
         {
-            ATTR_ENTITY_ID: "climate.bedroom_thermostat",
+            ATTR_ENTITY_ID: "climate.bedroom_bedroom_thermostat",
             ATTR_HVAC_MODE: HVACMode.AUTO,
         },
         blocking=True,
@@ -184,7 +187,7 @@ async def test_set_hvac_mode_off(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
         {
-            ATTR_ENTITY_ID: "climate.living_room_thermostat",
+            ATTR_ENTITY_ID: "climate.living_room_living_room_thermostat",
             ATTR_HVAC_MODE: HVACMode.OFF,
         },
         blocking=True,
@@ -207,7 +210,7 @@ async def test_set_preset_mode_comfort(
         CLIMATE_DOMAIN,
         SERVICE_SET_PRESET_MODE,
         {
-            ATTR_ENTITY_ID: "climate.living_room_thermostat",
+            ATTR_ENTITY_ID: "climate.living_room_living_room_thermostat",
             ATTR_PRESET_MODE: "comfort",
         },
         blocking=True,
@@ -230,7 +233,7 @@ async def test_set_preset_mode_defrost(
         CLIMATE_DOMAIN,
         SERVICE_SET_PRESET_MODE,
         {
-            ATTR_ENTITY_ID: "climate.living_room_thermostat",
+            ATTR_ENTITY_ID: "climate.living_room_living_room_thermostat",
             ATTR_PRESET_MODE: "defrost",
         },
         blocking=True,
@@ -253,7 +256,7 @@ async def test_set_preset_mode_timer(
         CLIMATE_DOMAIN,
         SERVICE_SET_PRESET_MODE,
         {
-            ATTR_ENTITY_ID: "climate.living_room_thermostat",
+            ATTR_ENTITY_ID: "climate.living_room_living_room_thermostat",
             ATTR_PRESET_MODE: "timer",
         },
         blocking=True,
@@ -281,7 +284,7 @@ async def test_set_preset_mode_error(
             CLIMATE_DOMAIN,
             SERVICE_SET_PRESET_MODE,
             {
-                ATTR_ENTITY_ID: "climate.living_room_thermostat",
+                ATTR_ENTITY_ID: "climate.living_room_living_room_thermostat",
                 ATTR_PRESET_MODE: "defrost",
             },
             blocking=True,
@@ -307,11 +310,11 @@ async def test_activate_timer_mode(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_ACTIVATE_TIMER_MODE,
+        WattsVisionService.ACTIVATE_TIMER_MODE,
         {
-            ATTR_ENTITY_ID: "climate.living_room_thermostat",
-            ATTR_TEMPERATURE: 20.5,
-            ATTR_DURATION: duration,
+            CommonServiceArgument.ENTITY_ID: "climate.living_room_living_room_thermostat",
+            WattsVisionServiceArgument.TEMPERATURE: 20.5,
+            WattsVisionServiceArgument.DURATION: duration,
         },
         blocking=True,
     )
@@ -334,11 +337,11 @@ async def test_activate_timer_mode_temperature_out_of_range(
     with pytest.raises(ServiceValidationError, match="out of range"):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ACTIVATE_TIMER_MODE,
+            WattsVisionService.ACTIVATE_TIMER_MODE,
             {
-                ATTR_ENTITY_ID: "climate.living_room_thermostat",
-                ATTR_TEMPERATURE: temperature,
-                ATTR_DURATION: timedelta(minutes=90),
+                CommonServiceArgument.ENTITY_ID: "climate.living_room_living_room_thermostat",
+                WattsVisionServiceArgument.TEMPERATURE: temperature,
+                WattsVisionServiceArgument.DURATION: timedelta(minutes=90),
             },
             blocking=True,
         )
@@ -361,11 +364,11 @@ async def test_activate_timer_mode_error(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ACTIVATE_TIMER_MODE,
+            WattsVisionService.ACTIVATE_TIMER_MODE,
             {
-                ATTR_ENTITY_ID: "climate.living_room_thermostat",
-                ATTR_TEMPERATURE: 20.5,
-                ATTR_DURATION: timedelta(minutes=90),
+                CommonServiceArgument.ENTITY_ID: "climate.living_room_living_room_thermostat",
+                WattsVisionServiceArgument.TEMPERATURE: 20.5,
+                WattsVisionServiceArgument.DURATION: timedelta(minutes=90),
             },
             blocking=True,
         )
@@ -389,7 +392,7 @@ async def test_set_temperature_api_error(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: "climate.living_room_thermostat",
+                ATTR_ENTITY_ID: "climate.living_room_living_room_thermostat",
                 ATTR_TEMPERATURE: 23.5,
             },
             blocking=True,
@@ -413,7 +416,7 @@ async def test_set_hvac_mode_value_error(
             CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,
             {
-                ATTR_ENTITY_ID: "climate.living_room_thermostat",
+                ATTR_ENTITY_ID: "climate.living_room_living_room_thermostat",
                 ATTR_HVAC_MODE: HVACMode.HEAT,
             },
             blocking=True,

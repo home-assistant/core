@@ -1,7 +1,7 @@
 """Notify platform for PlayStation Network."""
 
 from enum import StrEnum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from psnawp_api.core.psnawp_exceptions import (
     PSNAWPClientError,
@@ -16,7 +16,6 @@ from homeassistant.components.notify import (
     NotifyEntity,
     NotifyEntityDescription,
 )
-from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -117,6 +116,7 @@ class PlaystationNetworkNotifyBaseEntity(PlaystationNetworkServiceEntity, Notify
             assert self.psn_group
         self.psn_group.send_message(message)
 
+    @override
     def send_message(self, message: str, title: str | None = None) -> None:
         """Send a message."""
 
@@ -159,7 +159,7 @@ class PlaystationNetworkNotifyEntity(PlaystationNetworkNotifyBaseEntity):
             key=group_id,
             translation_key=PlaystationNetworkNotify.GROUP_MESSAGE,
             translation_placeholders={
-                CONF_NAME: group_details["groupName"]["value"]
+                "name": group_details["groupName"]["value"]
                 or ", ".join(
                     member["onlineId"]
                     for member in group_details["members"]
@@ -187,13 +187,14 @@ class PlaystationNetworkDirectMessageNotifyEntity(PlaystationNetworkNotifyBaseEn
             key=f"{account_id}_{PlaystationNetworkNotify.DIRECT_MESSAGE}",
             translation_key=PlaystationNetworkNotify.DIRECT_MESSAGE,
             translation_placeholders={
-                CONF_NAME: coordinator.psn.friends_list[account_id].online_id
+                "name": coordinator.psn.friends_list[account_id].online_id
             },
             entity_registry_enabled_default=False,
         )
 
         super().__init__(coordinator, self.entity_description)
 
+    @override
     def _send_message(self, message: str) -> None:
         if not self.psn_group:
             self.psn_group = self.coordinator.psn.psn.group(

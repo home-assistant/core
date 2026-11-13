@@ -16,7 +16,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, state as state_helper
 
-from . import config_flow as config_flow
 from .const import CONF_RATE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,7 +25,7 @@ type DatadogConfigEntry = ConfigEntry[DogStatsd]
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: DatadogConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: DatadogConfigEntry) -> None:
     """Set up Datadog from a config entry."""
 
     data = entry.data
@@ -85,12 +84,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: DatadogConfigEntry) -> b
         hass.bus.async_listen(EVENT_STATE_CHANGED, state_changed_listener)
     )
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: DatadogConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: DatadogConfigEntry) -> None:
     """Unload a Datadog config entry."""
     runtime = entry.runtime_data
     runtime.flush()
     runtime.close_socket()
-    return True

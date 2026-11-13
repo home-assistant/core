@@ -10,6 +10,7 @@ from hyperion.const import (
     KEY_COMPONENTSTATE,
     KEY_STATE,
 )
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.hyperion import get_hyperion_device_id
 from homeassistant.components.hyperion.const import (
@@ -18,9 +19,9 @@ from homeassistant.components.hyperion.const import (
     HYPERION_MODEL_NAME,
     TYPE_HYPERION_COMPONENT_SWITCH_BASE,
 )
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util, slugify
@@ -35,8 +36,6 @@ from . import (
     register_test_entity,
     setup_test_config_entry,
 )
-
-from tests.common import async_fire_time_changed
 
 TEST_COMPONENTS = [
     {"enabled": True, "name": "ALL"},
@@ -76,8 +75,8 @@ async def test_switch_turn_on_off(hass: HomeAssistant) -> None:
     # Turn switch off.
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: TEST_SWITCH_COMPONENT_ALL_ENTITY_ID},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: TEST_SWITCH_COMPONENT_ALL_ENTITY_ID},
         blocking=True,
     )
 
@@ -100,8 +99,8 @@ async def test_switch_turn_on_off(hass: HomeAssistant) -> None:
     # Turn switch on.
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: TEST_SWITCH_COMPONENT_ALL_ENTITY_ID},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: TEST_SWITCH_COMPONENT_ALL_ENTITY_ID},
         blocking=True,
     )
 
@@ -168,9 +167,11 @@ async def test_device_info(
 
     device_identifer = get_hyperion_device_id(TEST_SYSINFO_ID, TEST_INSTANCE)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, device_identifer)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, device_identifer), TEST_CONFIG_ENTRY_ID
+    )
     assert device
-    assert device.config_entries == {TEST_CONFIG_ENTRY_ID}
+    assert device.config_entry_id == TEST_CONFIG_ENTRY_ID
     assert device.identifiers == {(DOMAIN, device_identifer)}
     assert device.manufacturer == HYPERION_MANUFACTURER_NAME
     assert device.model == HYPERION_MODEL_NAME

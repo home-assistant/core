@@ -1,7 +1,7 @@
 """Button platform for Indevolt integration."""
 
 from dataclasses import dataclass
-from typing import Final
+from typing import Final, override
 
 from indevolt_api import IndevoltRealtimeAction
 
@@ -9,8 +9,7 @@ from homeassistant.components.button import ButtonEntity, ButtonEntityDescriptio
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import IndevoltConfigEntry
-from .coordinator import IndevoltCoordinator
+from .coordinator import IndevoltConfigEntry, IndevoltCoordinator
 from .entity import IndevoltEntity
 
 PARALLEL_UPDATES = 0
@@ -64,6 +63,7 @@ class IndevoltButtonEntity(IndevoltEntity, ButtonEntity):
         self.entity_description = description
         self._attr_unique_id = f"{self.serial_number}_{description.key}"
 
+    @override
     async def async_press(self) -> None:
         """Handle the button press."""
         await self.coordinator.async_realtime_action(IndevoltRealtimeAction.STOP)

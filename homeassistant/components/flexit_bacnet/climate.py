@@ -1,7 +1,7 @@
 """The Flexit Nordic (BACnet) integration."""
 
 import asyncio.exceptions
-from typing import Any
+from typing import Any, override
 
 from flexit_bacnet import (
     OPERATION_MODE_FIREPLACE,
@@ -76,7 +76,7 @@ class FlexitClimateEntity(FlexitEntity, ClimateEntity):
     )
 
     _attr_target_temperature_step = PRECISION_HALVES
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_max_temp = MAX_TEMP
     _attr_min_temp = MIN_TEMP
 
@@ -86,25 +86,31 @@ class FlexitClimateEntity(FlexitEntity, ClimateEntity):
         self._attr_unique_id = coordinator.device.serial_number
 
     @property
+    @override
     def hvac_action(self) -> HVACAction | None:
         """Return current HVAC action."""
+        if self.device.electric_heater is None:
+            return None
         if self.device.electric_heater:
             return HVACAction.HEATING
         return HVACAction.FAN
 
     @property
-    def current_temperature(self) -> float:
+    @override
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self.device.room_temperature
 
     @property
-    def target_temperature(self) -> float:
+    @override
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if self.device.ventilation_mode == VENTILATION_MODE_AWAY:
             return self.device.air_temp_setpoint_away
 
         return self.device.air_temp_setpoint_home
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
@@ -131,13 +137,17 @@ class FlexitClimateEntity(FlexitEntity, ClimateEntity):
             await self.coordinator.async_refresh()
 
     @property
-    def preset_mode(self) -> str:
+    @override
+    def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp.
 
         Requires ClimateEntityFeature.PRESET_MODE.
         """
-        return OPERATION_TO_PRESET_MODE_MAP[self.device.operation_mode]
+        if (operation_mode := self.device.operation_mode) is None:
+            return None
+        return OPERATION_TO_PRESET_MODE_MAP[operation_mode]
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         try:
@@ -169,13 +179,17 @@ class FlexitClimateEntity(FlexitEntity, ClimateEntity):
             await self.coordinator.async_refresh()
 
     @property
-    def hvac_mode(self) -> HVACMode:
+    @override
+    def hvac_mode(self) -> HVACMode | None:
         """Return hvac operation ie. heat, cool mode."""
+        if self.device.operation_mode is None:
+            return None
         if self.device.operation_mode == OPERATION_MODE_OFF:
             return HVACMode.OFF
 
         return HVACMode.FAN_ONLY
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         try:

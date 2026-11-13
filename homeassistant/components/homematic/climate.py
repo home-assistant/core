@@ -1,6 +1,6 @@
 """Support for Homematic thermostats."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.climate import (
     PRESET_BOOST,
@@ -60,7 +60,7 @@ class HMThermostat(HMDevice, ClimateEntity):
         | ClimateEntityFeature.TURN_OFF
         | ClimateEntityFeature.TURN_ON
     )
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_min_temp = 4.5
     _attr_max_temp = 30.5
     _attr_target_temperature_step = 0.5
@@ -68,12 +68,13 @@ class HMThermostat(HMDevice, ClimateEntity):
     _state: str
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode.
 
         Need to be one of HVAC_MODE_*.
         """
-        if self.target_temperature <= self._hmdevice.OFF_VALUE + 0.5:
+        if self.native_target_temperature <= self._hmdevice.OFF_VALUE + 0.5:
             return HVACMode.OFF
         if "MANU_MODE" in self._hmdevice.ACTIONNODE:
             if self._hm_control_mode == self._hmdevice.MANU_MODE:
@@ -86,6 +87,7 @@ class HMThermostat(HMDevice, ClimateEntity):
         return HVACMode.HEAT
 
     @property
+    @override
     def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available hvac operation modes.
 
@@ -96,6 +98,7 @@ class HMThermostat(HMDevice, ClimateEntity):
         return [HVACMode.HEAT, HVACMode.OFF]
 
     @property
+    @override
     def preset_mode(self) -> str:
         """Return the current preset mode, e.g., home, away, temp."""
         if self._data.get("BOOST_MODE", False):
@@ -113,6 +116,7 @@ class HMThermostat(HMDevice, ClimateEntity):
         return mode
 
     @property
+    @override
     def preset_modes(self) -> list[str]:
         """Return a list of available preset modes."""
         return [
@@ -122,6 +126,7 @@ class HMThermostat(HMDevice, ClimateEntity):
         ]
 
     @property
+    @override
     def current_humidity(self) -> float | None:
         """Return the current humidity."""
         for node in HM_HUMI_MAP:
@@ -130,7 +135,8 @@ class HMThermostat(HMDevice, ClimateEntity):
         return None
 
     @property
-    def current_temperature(self) -> float | None:
+    @override
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         for node in HM_TEMP_MAP:
             if node in self._data:
@@ -138,10 +144,12 @@ class HMThermostat(HMDevice, ClimateEntity):
         return None
 
     @property
-    def target_temperature(self) -> float | None:
+    @override
+    def native_target_temperature(self) -> float | None:
         """Return the target temperature."""
         return self._data.get(self._state)
 
+    @override
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
@@ -149,6 +157,7 @@ class HMThermostat(HMDevice, ClimateEntity):
 
         self._hmdevice.writeNodeData(self._state, float(temperature))
 
+    @override
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         if hvac_mode == HVACMode.AUTO:
@@ -158,6 +167,7 @@ class HMThermostat(HMDevice, ClimateEntity):
         elif hvac_mode == HVACMode.OFF:
             self._hmdevice.turnoff()
 
+    @override
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         if preset_mode == PRESET_BOOST:
@@ -176,6 +186,7 @@ class HMThermostat(HMDevice, ClimateEntity):
         # Homematic
         return self._data.get("CONTROL_MODE")
 
+    @override
     def _init_data_struct(self) -> None:
         """Generate a data dict (self._data) from the Homematic metadata."""
         self._state = next(iter(self._hmdevice.WRITENODE.keys()))

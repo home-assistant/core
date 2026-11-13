@@ -3,6 +3,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from pymicro_vad import MicroVad
 from pyspeex_noise import AudioProcessor
@@ -75,6 +76,7 @@ class MicroVadSpeexEnhancer(AudioEnhancer):
             self.vad = MicroVad()
             _LOGGER.debug("Initialized microVAD")
 
+    @override
     def enhance_chunk(self, audio: bytes, timestamp_ms: int) -> EnhancedAudioChunk:
         """Enhance 10ms chunk of PCM audio @ 16Khz with 16-bit mono samples."""
         speech_probability: float | None = None

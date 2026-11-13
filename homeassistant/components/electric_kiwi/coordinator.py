@@ -5,15 +5,19 @@ from collections import OrderedDict
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
+from aiohttp import ClientError
 from electrickiwi_api import ElectricKiwiApi
 from electrickiwi_api.exceptions import ApiException, AuthException
 from electrickiwi_api.model import AccountSummary, Hop, HopIntervals
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,6 +55,7 @@ class ElectricKiwiAccountDataCoordinator(DataUpdateCoordinator[AccountSummary]):
         )
         self.ek_api = ek_api
 
+    @override
     async def _async_update_data(self) -> AccountSummary:
         """Fetch data from Account balance API endpoint."""
         try:
@@ -66,6 +71,8 @@ class ElectricKiwiAccountDataCoordinator(DataUpdateCoordinator[AccountSummary]):
 
 class ElectricKiwiHOPDataCoordinator(DataUpdateCoordinator[Hop]):
     """ElectricKiwi HOP Data object."""
+
+    config_entry: ElectricKiwiConfigEntry
 
     def __init__(
         self,
@@ -98,16 +105,23 @@ class ElectricKiwiHOPDataCoordinator(DataUpdateCoordinator[Hop]):
     async def async_update_hop(self, hop_interval: int) -> Hop:
         """Update selected hop and data."""
         try:
-            self.async_set_updated_data(await self.ek_api.post_hop(hop_interval))
+            hop = await self.ek_api.post_hop(hop_interval)
         except AuthException as auth_err:
-            raise ConfigEntryAuthFailed from auth_err
-        except ApiException as api_err:
-            raise UpdateFailed(
-                f"Error communicating with EK API: {api_err}"
-            ) from api_err
+            self.config_entry.async_start_reauth(self.hass)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="auth_failed",
+            ) from auth_err
+        except (ApiException, ClientError, TimeoutError) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_hop_failed",
+            ) from err
 
+        self.async_set_updated_data(hop)
         return self.data
 
+    @override
     async def _async_update_data(self) -> Hop:
         """Fetch data from API endpoint.
 

@@ -15,8 +15,8 @@ from homeassistant.components.stream import (
     async_check_stream_client_error,
     create_stream,
 )
-from homeassistant.components.stream.const import ATTR_PREFER_TCP
-from homeassistant.const import EVENT_LOGGING_CHANGED
+from homeassistant.components.stream.const import ATTR_PREFER_TCP, DOMAIN
+from homeassistant.const import CONF_VERIFY_SSL, EVENT_LOGGING_CHANGED
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
@@ -42,7 +42,7 @@ async def test_log_levels(
 ) -> None:
     """Test that the worker logs the url without username and password."""
 
-    await async_setup_component(hass, "stream", {"stream": {}})
+    await async_setup_component(hass, DOMAIN, {"stream": {}})
 
     # These namespaces should only pass log messages when the stream logger
     # is at logging.DEBUG or below
@@ -83,7 +83,7 @@ async def test_log_levels(
 
 async def test_check_open_stream_params(hass: HomeAssistant) -> None:
     """Test check open stream params."""
-    await async_setup_component(hass, "stream", {"stream": {}})
+    await async_setup_component(hass, DOMAIN, {"stream": {}})
 
     container_mock = MagicMock()
     source = "rtsp://foobar"
@@ -94,6 +94,7 @@ async def test_check_open_stream_params(hass: HomeAssistant) -> None:
     options = {
         "rtsp_flags": ATTR_PREFER_TCP,
         "stimeout": "5000000",
+        "tls_verify": "0",
     }
     open_mock.assert_called_once_with(source, options=options, timeout=SOURCE_TIMEOUT)
     container_mock.close.assert_called_once()
@@ -134,7 +135,7 @@ async def test_try_open_stream_error(
     hass: HomeAssistant, error: av.HTTPClientError, enum_result: StreamClientError
 ) -> None:
     """Test trying to open a stream."""
-    await async_setup_component(hass, "stream", {"stream": {}})
+    await async_setup_component(hass, DOMAIN, {"stream": {}})
 
     with (
         patch("av.open", side_effect=error),
@@ -149,7 +150,7 @@ async def test_try_open_stream_error(
     [
         (
             {},
-            {"rtsp_flags": "prefer_tcp", "stimeout": "5000000"},
+            {"rtsp_flags": "prefer_tcp", "stimeout": "5000000", "tls_verify": "0"},
         ),
         (
             {"rtsp_transport": "udp"},
@@ -157,6 +158,7 @@ async def test_try_open_stream_error(
                 "rtsp_flags": "prefer_tcp",
                 "rtsp_transport": "udp",
                 "stimeout": "5000000",
+                "tls_verify": "0",
             },
         ),
         (
@@ -164,6 +166,7 @@ async def test_try_open_stream_error(
             {
                 "rtsp_flags": "prefer_tcp",
                 "stimeout": "5000000",
+                "tls_verify": "0",
                 "use_wallclock_as_timestamps": "1",
             },
         ),
@@ -175,7 +178,7 @@ async def test_convert_stream_options(
     expected_pyav_options: dict[str, Any],
 ) -> None:
     """Test stream options."""
-    await async_setup_component(hass, "stream", {"stream": {}})
+    await async_setup_component(hass, DOMAIN, {"stream": {}})
 
     container_mock = MagicMock()
     source = "rtsp://foobar"
@@ -187,3 +190,48 @@ async def test_convert_stream_options(
         source, options=expected_pyav_options, timeout=SOURCE_TIMEOUT
     )
     container_mock.close.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        pytest.param("rtsps://foobar", id="rtsps"),
+        pytest.param("https://foobar", id="https"),
+        # an http source can redirect to https
+        pytest.param("http://foobar", id="http"),
+    ],
+)
+async def test_tls_verify_disabled(hass: HomeAssistant, source: str) -> None:
+    """Test TLS certificate verification is disabled for non-RTSP sources."""
+    await async_setup_component(hass, DOMAIN, {"stream": {}})
+
+    with patch("av.open") as open_mock:
+        await async_check_stream_client_error(hass, source)
+
+    open_mock.assert_called_once_with(
+        source, options={"tls_verify": "0"}, timeout=SOURCE_TIMEOUT
+    )
+
+
+@pytest.mark.parametrize(
+    ("verify_ssl", "tls_verify"),
+    [
+        pytest.param(True, "1", id="enabled"),
+        pytest.param(False, "0", id="disabled"),
+    ],
+)
+async def test_verify_ssl_option(
+    hass: HomeAssistant, verify_ssl: bool, tls_verify: str
+) -> None:
+    """Test the verify_ssl stream option controls TLS certificate verification."""
+    await async_setup_component(hass, DOMAIN, {"stream": {}})
+    source = "rtsps://foobar"
+
+    with patch("av.open") as open_mock:
+        await async_check_stream_client_error(
+            hass, source, {CONF_VERIFY_SSL: verify_ssl}
+        )
+
+    open_mock.assert_called_once_with(
+        source, options={"tls_verify": tls_verify}, timeout=SOURCE_TIMEOUT
+    )

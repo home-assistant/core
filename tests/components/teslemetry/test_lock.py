@@ -2,23 +2,20 @@
 
 from unittest.mock import AsyncMock, patch
 
+from aiohttp import ClientConnectionError
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from tesla_fleet_api.exceptions import InvalidCommand
 from teslemetry_stream.const import Signal
 
-from homeassistant.components.lock import (
-    DOMAIN as LOCK_DOMAIN,
-    SERVICE_LOCK,
-    SERVICE_UNLOCK,
-    LockState,
-)
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockService, LockState
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import assert_entities, reload_platform, setup_platform
-from .const import COMMAND_OK, VEHICLE_DATA_ALT
+from .const import COMMAND_ERRORS, COMMAND_OK, VEHICLE_DATA_ALT
 
 
 async def test_lock(
@@ -62,8 +59,8 @@ async def test_lock_services(
     ) as call:
         await hass.services.async_call(
             LOCK_DOMAIN,
-            SERVICE_LOCK,
-            {ATTR_ENTITY_ID: entity_id},
+            LockService.LOCK,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
         state = hass.states.get(entity_id)
@@ -76,8 +73,8 @@ async def test_lock_services(
     ) as call:
         await hass.services.async_call(
             LOCK_DOMAIN,
-            SERVICE_UNLOCK,
-            {ATTR_ENTITY_ID: entity_id},
+            LockService.UNLOCK,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
         state = hass.states.get(entity_id)
@@ -89,8 +86,8 @@ async def test_lock_services(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             LOCK_DOMAIN,
-            SERVICE_LOCK,
-            {ATTR_ENTITY_ID: entity_id},
+            LockService.LOCK,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -100,13 +97,67 @@ async def test_lock_services(
     ) as call:
         await hass.services.async_call(
             LOCK_DOMAIN,
-            SERVICE_UNLOCK,
-            {ATTR_ENTITY_ID: entity_id},
+            LockService.UNLOCK,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
         state = hass.states.get(entity_id)
         assert state.state == LockState.UNLOCKED
         call.assert_called_once()
+
+
+@pytest.mark.parametrize("response", COMMAND_ERRORS)
+async def test_lock_command_errors(hass: HomeAssistant, response: dict) -> None:
+    """Tests that vehicle command failures raise HomeAssistantError."""
+
+    await setup_platform(hass, [Platform.LOCK])
+
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.Vehicle.door_lock",
+            return_value=response,
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            LOCK_DOMAIN,
+            LockService.LOCK,
+            {CommonServiceArgument.ENTITY_ID: "lock.test_lock"},
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "translation_key"),
+    [
+        pytest.param(InvalidCommand, "command_exception", id="fleet_error"),
+        pytest.param(
+            ClientConnectionError, "command_connection_error", id="client_error"
+        ),
+        pytest.param(TimeoutError, "command_connection_error", id="timeout"),
+    ],
+)
+async def test_lock_command_exception(
+    hass: HomeAssistant, side_effect: type[BaseException], translation_key: str
+) -> None:
+    """Tests that a command exception raises a translated HomeAssistantError."""
+
+    await setup_platform(hass, [Platform.LOCK])
+
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.Vehicle.door_lock",
+            side_effect=side_effect,
+        ),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            LOCK_DOMAIN,
+            LockService.LOCK,
+            {CommonServiceArgument.ENTITY_ID: "lock.test_lock"},
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == translation_key
 
 
 async def test_lock_streaming(

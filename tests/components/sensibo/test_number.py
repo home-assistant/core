@@ -5,20 +5,19 @@ from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.parametrize(
@@ -46,7 +45,7 @@ async def test_number(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("number.hallway_temperature_calibration")
+    state = hass.states.get("number.hallway_hallway_temperature_calibration")
     assert state.state == "0.2"
 
 
@@ -56,7 +55,7 @@ async def test_number_set_value(
 ) -> None:
     """Test the Sensibo number service."""
 
-    state = hass.states.get("number.hallway_temperature_calibration")
+    state = hass.states.get("number.hallway_hallway_temperature_calibration")
     assert state.state == "0.1"
 
     mock_client.async_set_calibration.return_value = {"status": "failure"}
@@ -64,22 +63,28 @@ async def test_number_set_value(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: state.entity_id, ATTR_VALUE: "0.2"},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: state.entity_id,
+                NumberServiceArgument.VALUE: "0.2",
+            },
             blocking=True,
         )
 
-    state = hass.states.get("number.hallway_temperature_calibration")
+    state = hass.states.get("number.hallway_hallway_temperature_calibration")
     assert state.state == "0.1"
 
     mock_client.async_set_calibration.return_value = {"status": "success"}
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: state.entity_id, ATTR_VALUE: "0.2"},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: state.entity_id,
+            NumberServiceArgument.VALUE: "0.2",
+        },
         blocking=True,
     )
 
-    state = hass.states.get("number.hallway_temperature_calibration")
+    state = hass.states.get("number.hallway_hallway_temperature_calibration")
     assert state.state == "0.2"

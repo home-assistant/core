@@ -8,6 +8,7 @@ import aiohttp
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant.components.emoncms_history import DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_URL, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -27,14 +28,14 @@ async def test_setup_valid_config(hass: HomeAssistant) -> None:
     hass.states.async_set("sensor.temp", "23.4", {"unit_of_measurement": "°C"})
     await hass.async_block_till_done()
 
-    assert await async_setup_component(hass, "emoncms_history", config)
+    assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done()
 
 
 async def test_setup_missing_config(hass: HomeAssistant) -> None:
     """Test setting up the emoncms_history component with missing configuration."""
     config = {"emoncms_history": {"api_key": "dummy"}}
-    success = await async_setup_component(hass, "emoncms_history", config)
+    success = await async_setup_component(hass, DOMAIN, config)
     assert not success
 
 
@@ -66,7 +67,7 @@ async def test_emoncms_send_data(
         }
     }
 
-    assert await async_setup_component(hass, "emoncms_history", config)
+    assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done()
 
     for state in None, "", STATE_UNAVAILABLE, STATE_UNKNOWN:

@@ -1,7 +1,7 @@
 """Breeze switch of the Renson ventilation unit."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from renson_endura_delta.field_enum import CURRENT_LEVEL_FIELD, DataType
 from renson_endura_delta.renson import Level, RensonVentilation
@@ -33,6 +33,7 @@ class RensonBreezeSwitch(RensonEntity, SwitchEntity):
 
         self._attr_is_on = False
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         _LOGGER.debug("Enable Breeze")
@@ -40,6 +41,7 @@ class RensonBreezeSwitch(RensonEntity, SwitchEntity):
         await self.hass.async_add_executor_job(self.api.set_manual_level, Level.BREEZE)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         _LOGGER.debug("Disable Breeze")
@@ -48,6 +50,7 @@ class RensonBreezeSwitch(RensonEntity, SwitchEntity):
         await self.coordinator.async_request_refresh()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
 

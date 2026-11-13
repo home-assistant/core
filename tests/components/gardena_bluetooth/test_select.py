@@ -11,25 +11,27 @@ from gardena_bluetooth.const import (
 )
 from habluetooth import BluetoothServiceInfo
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import AQUA_CONTOUR_SERVICE_INFO, setup_entry
 
-from tests.common import MockConfigEntry, snapshot_platform
+pytestmark = pytest.mark.usefixtures("constant_advertisements")
 
 
 @pytest.fixture
 def mock_chars(mock_read_char_raw):
     """Mock data on device."""
-    mock_read_char_raw[AquaContourWatering.watering_active.uuid] = b"\x00"
+    mock_read_char_raw[AquaContourWatering.watering_active.unique_id] = b"\x00"
     return mock_read_char_raw
 
 
@@ -39,11 +41,13 @@ def mock_chars(mock_read_char_raw):
         pytest.param(
             AQUA_CONTOUR_SERVICE_INFO,
             {
-                AquaContourWatering.watering_active.uuid: (
+                AquaContourWatering.watering_active.unique_id: (
                     AquaContourWatering.watering_active.encode(0)
                 ),
-                AquaContour.operation_mode.uuid: AquaContour.operation_mode.encode(0),
-                AquaContourPosition.active_position.uuid: (
+                AquaContour.operation_mode.unique_id: AquaContour.operation_mode.encode(
+                    0
+                ),
+                AquaContourPosition.active_position.unique_id: (
                     AquaContourPosition.active_position.encode(0)
                 ),
             },
@@ -78,7 +82,7 @@ async def test_state_change(
     """Test setup creates expected entities."""
     entity_id = "select.mock_title_watering"
 
-    mock_read_char_raw[AquaContourWatering.watering_active.uuid] = (
+    mock_read_char_raw[AquaContourWatering.watering_active.unique_id] = (
         AquaContourWatering.watering_active.encode(AquaContourWateringMode.REST)
     )
 
@@ -89,7 +93,7 @@ async def test_state_change(
     assert state
     assert state.state == "rest"
 
-    mock_read_char_raw[AquaContourWatering.watering_active.uuid] = (
+    mock_read_char_raw[AquaContourWatering.watering_active.unique_id] = (
         AquaContourWatering.watering_active.encode(AquaContourWateringMode.CONTOUR_1)
     )
     await scan_step()
@@ -107,7 +111,7 @@ async def test_select(
 ) -> None:
     """Test switching makes correct calls."""
 
-    mock_read_char_raw[AquaContourWatering.watering_active.uuid] = b"\x00"
+    mock_read_char_raw[AquaContourWatering.watering_active.unique_id] = b"\x00"
     entity_id = "select.mock_title_watering"
     await setup_entry(
         hass, platforms=[Platform.SELECT], service_info=AQUA_CONTOUR_SERVICE_INFO
@@ -116,15 +120,21 @@ async def test_select(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "rest"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            SelectServiceArgument.OPTION: "rest",
+        },
         blocking=True,
     )
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "contour_3"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            SelectServiceArgument.OPTION: "contour_3",
+        },
         blocking=True,
     )
 

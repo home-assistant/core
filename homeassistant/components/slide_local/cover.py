@@ -1,7 +1,7 @@
 """Support for Slide covers."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.cover import ATTR_POSITION, CoverDeviceClass, CoverEntity
 from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPENING
@@ -55,21 +55,25 @@ class SlideCoverLocal(SlideEntity, CoverEntity):
         self._attr_unique_id = coordinator.data["mac"]
 
     @property
+    @override
     def is_opening(self) -> bool:
         """Return if the cover is opening or not."""
         return self.coordinator.data["state"] == STATE_OPENING
 
     @property
+    @override
     def is_closing(self) -> bool:
         """Return if the cover is closing or not."""
         return self.coordinator.data["state"] == STATE_CLOSING
 
     @property
+    @override
     def is_closed(self) -> bool:
         """Return None if status is unknown, True if closed, else False."""
         return self.coordinator.data["state"] == STATE_CLOSED
 
     @property
+    @override
     def current_cover_position(self) -> int | None:
         """Return the current position of cover shutter."""
         pos = self.coordinator.data["pos"]
@@ -79,20 +83,24 @@ class SlideCoverLocal(SlideEntity, CoverEntity):
             pos = int(pos * 100)
         return pos
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         self.coordinator.data["state"] = STATE_OPENING
         await self.coordinator.slide.slide_open(self.coordinator.host)
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         self.coordinator.data["state"] = STATE_CLOSING
         await self.coordinator.slide.slide_close(self.coordinator.host)
 
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         await self.coordinator.slide.slide_stop(self.coordinator.host)
 
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         position = kwargs[ATTR_POSITION] / 100

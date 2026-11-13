@@ -2,14 +2,15 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any, Final
+from typing import Any, Final, override
 
 from aioswitcher.device import SwitcherBase
 from aioswitcher.device.tools import validate_token
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_TOKEN, CONF_USERNAME
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, PREREQUISITES_URL
 from .utils import async_discover_devices
@@ -17,10 +18,10 @@ from .utils import async_discover_devices
 _LOGGER = logging.getLogger(__name__)
 
 
-CONFIG_SCHEMA: Final = vol.Schema(
+CONFIG_SCHEMA: Final = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_TOKEN): str,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(probatio.Secret(CONF_TOKEN)): str,
     }
 )
 
@@ -37,12 +38,14 @@ class SwitcherFlowHandler(ConfigFlow, domain=DOMAIN):
         self.username: str | None = None
         self.token: str | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the start of the config flow."""
         self.discovered_devices = await async_discover_devices()
 
+        # pylint: disable-next=home-assistant-step_id-match-method
         return self.async_show_form(step_id="confirm")
 
     async def async_step_confirm(
@@ -68,7 +71,9 @@ class SwitcherFlowHandler(ConfigFlow, domain=DOMAIN):
             self.token = user_input.get(CONF_TOKEN)
 
             token_is_valid = await validate_token(
-                user_input[CONF_USERNAME], user_input[CONF_TOKEN]
+                user_input[CONF_USERNAME],
+                user_input[CONF_TOKEN],
+                async_get_clientsession(self.hass),
             )
             if token_is_valid:
                 return await self._create_entry()
@@ -95,7 +100,9 @@ class SwitcherFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             token_is_valid = await validate_token(
-                user_input[CONF_USERNAME], user_input[CONF_TOKEN]
+                user_input[CONF_USERNAME],
+                user_input[CONF_TOKEN],
+                async_get_clientsession(self.hass),
             )
             if token_is_valid:
                 return self.async_update_reload_and_abort(

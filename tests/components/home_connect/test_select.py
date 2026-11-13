@@ -4,6 +4,7 @@ from collections.abc import Awaitable, Callable
 from unittest.mock import AsyncMock, MagicMock
 
 from aiohomeconnect.model import (
+    ApplianceType,
     ArrayOfEvents,
     ArrayOfPrograms,
     ArrayOfSettings,
@@ -36,36 +37,35 @@ from aiohomeconnect.model.program import (
 )
 from aiohomeconnect.model.setting import SettingConstraints
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.home_connect.const import DOMAIN
 from homeassistant.components.select import (
-    ATTR_OPTION,
     ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
+    SelectService,
+    SelectServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_RESTORED,
-    SERVICE_SELECT_OPTION,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry, async_fire_time_changed
-
 
 @pytest.fixture
-def platforms() -> list[str]:
+def platforms() -> list[Platform]:
     """Fixture to specify platforms to test."""
     return [Platform.SELECT]
 
 
-@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.WASHER], indirect=True)
 async def test_paired_depaired_devices_flow(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -90,7 +90,9 @@ async def test_paired_depaired_devices_flow(
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, appliance.ha_id), config_entry.entry_id
+    )
     assert device
     entity_entries = entity_registry.entities.get_entries_for_device_id(device.id)
     assert entity_entries
@@ -106,7 +108,9 @@ async def test_paired_depaired_devices_flow(
     )
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, appliance.ha_id), config_entry.entry_id
+    )
     assert not device
     for entity_entry in entity_entries:
         assert not entity_registry.async_get(entity_entry.entity_id)
@@ -123,7 +127,9 @@ async def test_paired_depaired_devices_flow(
     )
     await hass.async_block_till_done()
 
-    assert device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, appliance.ha_id), config_entry.entry_id
+    )
     for entity_entry in entity_entries:
         assert entity_registry.async_get(entity_entry.entity_id)
 
@@ -132,7 +138,7 @@ async def test_paired_depaired_devices_flow(
     ("appliance", "keys_to_check"),
     [
         (
-            "Hood",
+            ApplianceType.HOOD,
             (
                 EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
                 EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
@@ -181,7 +187,9 @@ async def test_connected_devices(
     client.get_settings = get_settings_original_mock
     client.get_all_programs = get_all_programs_mock
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, appliance.ha_id), config_entry.entry_id
+    )
     assert device
     for key in keys_to_check:
         assert not entity_registry.async_get_entity_id(
@@ -209,7 +217,7 @@ async def test_connected_devices(
         )
 
 
-@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.WASHER], indirect=True)
 async def test_select_entity_availability(
     hass: HomeAssistant,
     client: MagicMock,
@@ -338,7 +346,7 @@ async def test_filter_programs(
     ),
     [
         (
-            "Dishwasher",
+            ApplianceType.DISHWASHER,
             "select.dishwasher_selected_program",
             "dishcare_dishwasher_program_auto_1",
             "set_selected_program",
@@ -347,7 +355,7 @@ async def test_filter_programs(
             EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
         ),
         (
-            "Dishwasher",
+            ApplianceType.DISHWASHER,
             "select.dishwasher_active_program",
             "dishcare_dishwasher_program_auto_1",
             "start_program",
@@ -380,8 +388,11 @@ async def test_select_program_functionality(
     assert hass.states.is_state(entity_id, expected_initial_state)
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: program_to_set},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            SelectServiceArgument.OPTION: program_to_set,
+        },
     )
     await hass.async_block_till_done()
     getattr(client, mock_method).assert_awaited_once_with(
@@ -468,14 +479,17 @@ async def test_select_exception_handling(
     with pytest.raises(HomeAssistantError, match=exception_match):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: program_to_set},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: entity_id,
+                SelectServiceArgument.OPTION: program_to_set,
+            },
             blocking=True,
         )
     assert getattr(client_with_exception, mock_attr).call_count == 2
 
 
-@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.WASHER], indirect=True)
 async def test_programs_updated_on_connect(
     hass: HomeAssistant,
     client: MagicMock,
@@ -526,7 +540,7 @@ async def test_programs_updated_on_connect(
     assert len(state.attributes[ATTR_OPTIONS]) > len(programs)
 
 
-@pytest.mark.parametrize("appliance", ["Hood"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.HOOD], indirect=True)
 @pytest.mark.parametrize(
     (
         "entity_id",
@@ -581,8 +595,11 @@ async def test_select_functionality(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: value_to_set},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            SelectServiceArgument.OPTION: value_to_set,
+        },
     )
     await hass.async_block_till_done()
 
@@ -595,7 +612,7 @@ async def test_select_functionality(
     assert hass.states.is_state(entity_id, value_to_set)
 
 
-@pytest.mark.parametrize("appliance", ["Hood"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.HOOD], indirect=True)
 @pytest.mark.parametrize(
     (
         "entity_id",
@@ -659,7 +676,7 @@ async def test_fetch_allowed_values(
     assert set(entity_state.attributes[ATTR_OPTIONS]) == expected_options
 
 
-@pytest.mark.parametrize("appliance", ["Hood"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.HOOD], indirect=True)
 @pytest.mark.parametrize(
     (
         "entity_id",
@@ -729,7 +746,7 @@ async def test_fetch_allowed_values_after_rate_limit_error(
     assert set(entity_state.attributes[ATTR_OPTIONS]) == expected_options
 
 
-@pytest.mark.parametrize("appliance", ["Hood"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.HOOD], indirect=True)
 @pytest.mark.parametrize(
     (
         "entity_id",
@@ -834,14 +851,17 @@ async def test_select_entity_error(
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: value_to_set},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: entity_id,
+                SelectServiceArgument.OPTION: value_to_set,
+            },
             blocking=True,
         )
     assert getattr(client_with_exception, mock_attr).call_count == 2
 
 
-@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.WASHER], indirect=True)
 @pytest.mark.parametrize(
     (
         "set_active_program_options_side_effect",
@@ -961,10 +981,10 @@ async def test_options_functionality(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_OPTION: "laundry_care_washer_enum_type_temperature_ul_warm",
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            SelectServiceArgument.OPTION: "laundry_care_washer_enum_type_temperature_ul_warm",
         },
     )
     await hass.async_block_till_done()
@@ -980,7 +1000,7 @@ async def test_options_functionality(
     )
 
 
-@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.WASHER], indirect=True)
 async def test_options_unavailable_when_option_is_missing(
     hass: HomeAssistant,
     client: MagicMock,
@@ -1041,7 +1061,7 @@ async def test_options_unavailable_when_option_is_missing(
     assert state.state == STATE_UNAVAILABLE
 
 
-@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.WASHER], indirect=True)
 @pytest.mark.parametrize(
     "event_key",
     [
@@ -1110,7 +1130,7 @@ async def test_options_available_when_program_is_null(
     assert state.state != STATE_UNAVAILABLE
 
 
-@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.WASHER], indirect=True)
 async def test_restore_option_entity(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -1178,7 +1198,7 @@ async def test_favorite_001_program_not_exposed_as_option(
     assert entity_state.attributes[ATTR_OPTIONS] == []
 
 
-@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
 @pytest.mark.parametrize(
     ("array_of_programs_param", "entity_id"),
     [

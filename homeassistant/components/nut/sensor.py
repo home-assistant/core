@@ -1,7 +1,7 @@
 """Provides a sensor to track various status aspects of a NUT device."""
 
 import logging
-from typing import Final
+from typing import Final, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -23,6 +23,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import outlet_numbers_from_status
 from .const import KEY_STATUS, KEY_STATUS_DISPLAY, STATE_TYPES
 from .coordinator import NutConfigEntry
 from .entity import NUTBaseEntity
@@ -37,7 +38,9 @@ AMBIENT_SENSORS = {
     "ambient.temperature",
     "ambient.temperature.status",
 }
+UPS_ALARM = "ups.alarm"
 BATTERY_CHARGER_STATUS_OPTIONS = [
+    "charged",
     "charging",
     "discharging",
     "floating",
@@ -833,8 +836,8 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "ups.alarm": SensorEntityDescription(
-        key="ups.alarm",
+    UPS_ALARM: SensorEntityDescription(
+        key=UPS_ALARM,
         translation_key="ups_alarm",
     ),
     "ups.beeper.status": SensorEntityDescription(
@@ -910,7 +913,6 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
     ),
     "ups.power": SensorEntityDescription(
         key="ups.power",
-        translation_key="ups_power",
         native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
         device_class=SensorDeviceClass.APPARENT_POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -1057,12 +1059,14 @@ async def async_setup_entry(
     status = coordinator.data
 
     # Dynamically add outlet sensors to valid sensors dictionary
-    if (num_outlets := status.get("outlet.count")) is not None:
+    if outlet_numbers := outlet_numbers_from_status(status):
         additional_sensor_types: dict[str, SensorEntityDescription] = {}
-        for outlet_num in range(1, int(num_outlets) + 1):
+        for outlet_num in sorted(outlet_numbers):
             outlet_num_str: str = str(outlet_num)
             outlet_name: str = (
-                status.get(f"outlet.{outlet_num_str}.name") or outlet_num_str
+                status.get(f"outlet.{outlet_num_str}.name")
+                or status.get(f"outlet.{outlet_num_str}.desc")
+                or outlet_num_str
             )
             additional_sensor_types |= {
                 f"outlet.{outlet_num_str}.current": SensorEntityDescription(
@@ -1112,7 +1116,7 @@ async def async_setup_entry(
     resources = [
         sensor_id
         for sensor_id in valid_sensor_types
-        if sensor_id in status
+        if (sensor_id in status or sensor_id == UPS_ALARM)
         and (has_ambient_sensors or sensor_id not in AMBIENT_SENSORS)
     ]
 
@@ -1136,6 +1140,7 @@ class NUTSensor(NUTBaseEntity, SensorEntity):
     """Representation of a sensor entity for NUT status values."""
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return entity state from NUT device."""
         status = self.coordinator.data

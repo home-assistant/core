@@ -14,4 +14,3 @@ BEDTIME_END_TIME_MAX = "09:00"
 APP_SETUP_URL = (
     "https://www.nintendo.com/my/support/switch/parentalcontrols/app/setup.html"
 )
-ATTR_BONUS_TIME = "bonus_time"

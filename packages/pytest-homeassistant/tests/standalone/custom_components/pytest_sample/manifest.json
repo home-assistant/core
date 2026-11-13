@@ -1,0 +1,8 @@
+{
+  "domain": "pytest_sample",
+  "name": "Pytest sample",
+  "codeowners": [],
+  "config_flow": true,
+  "documentation": "https://contributors.home-assistant.io/",
+  "version": "1.0.0"
+}

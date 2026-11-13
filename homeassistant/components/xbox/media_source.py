@@ -1,9 +1,9 @@
 """Xbox Media Source Implementation."""
 
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
-from httpx import HTTPStatusError, RequestError, TimeoutException
+from httpx2 import HTTPStatusError, RequestError, TimeoutException
 from pythonxbox.api.provider.titlehub.models import Image, Title, TitleFields
 
 from homeassistant.components.media_player import BrowseError, MediaClass
@@ -17,10 +17,9 @@ from homeassistant.components.media_source import (
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from .binary_sensor import profile_pic
 from .const import DOMAIN
 from .coordinator import XboxConfigEntry
-from .entity import to_https
+from .entity import profile_pic, to_https
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -74,6 +73,7 @@ class XboxMediaSourceIdentifier:
             self.title_id, _, self.media_type = (self.title_id).partition(SEPARATOR)
             self.media_type, _, self.media_id = (self.media_type).partition(SEPARATOR)
 
+    @override
     def __str__(self) -> str:
         """Build identifier."""
 
@@ -92,6 +92,7 @@ class XboxSource(MediaSource):
         super().__init__(DOMAIN)
         self.hass = hass
 
+    @override
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media to a url."""
         identifier = XboxMediaSourceIdentifier(item)
@@ -219,6 +220,7 @@ class XboxSource(MediaSource):
             translation_key="media_not_found",
         )
 
+    @override
     async def async_browse_media(self, item: MediaSourceItem) -> BrowseMediaSource:
         """Return media."""
         if not (entries := self.hass.config_entries.async_loaded_entries(DOMAIN)):

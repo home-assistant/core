@@ -8,11 +8,11 @@ from homeassistant.helpers.significant_change import (
     check_valid_float,
 )
 
-from . import ATTR_CURRENT_POSITION, ATTR_CURRENT_TILT_POSITION
+from .const import CoverEntityStateAttribute
 
 SIGNIFICANT_ATTRIBUTES: set[str] = {
-    ATTR_CURRENT_POSITION,
-    ATTR_CURRENT_TILT_POSITION,
+    CoverEntityStateAttribute.CURRENT_POSITION,
+    CoverEntityStateAttribute.CURRENT_TILT_POSITION,
 }
 
 

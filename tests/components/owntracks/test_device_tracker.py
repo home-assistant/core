@@ -9,6 +9,8 @@ from unittest.mock import patch
 from nacl.encoding import Base64Encoder
 from nacl.secret import SecretBox
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_mqtt_message
+from pytest_homeassistant.typing import ClientSessionGenerator, MqttMockHAClient
 
 from homeassistant.components import owntracks
 from homeassistant.components.device_tracker.legacy import Device
@@ -19,14 +21,12 @@ from homeassistant.components.owntracks.const import (
     ATTR_TID,
     ATTR_UPDATE_TIMESTAMP,
     ATTR_VELOCITY,
+    DOMAIN,
 )
 from homeassistant.const import STATE_NOT_HOME
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_mqtt_message
-from tests.typing import ClientSessionGenerator, MqttMockHAClient
 
 type OwnTracksContextFactory = Callable[[], owntracks.OwnTracksContext]
 
@@ -327,11 +327,11 @@ async def setup_owntracks(
 ) -> None:
     """Set up OwnTracks."""
     MockConfigEntry(
-        domain="owntracks", data={"webhook_id": "owntracks_test", "secret": "abcd"}
+        domain=DOMAIN, data={"webhook_id": "owntracks_test", "secret": "abcd"}
     ).add_to_hass(hass)
 
     with patch.object(owntracks, "OwnTracksContext", ctx_cls):
-        assert await async_setup_component(hass, "owntracks", {"owntracks": config})
+        assert await async_setup_component(hass, DOMAIN, {"owntracks": config})
         await hass.async_block_till_done()
 
 
@@ -1609,7 +1609,7 @@ async def test_restore_state(
 ) -> None:
     """Test that we can restore state."""
     entry = MockConfigEntry(
-        domain="owntracks", data={"webhook_id": "owntracks_test", "secret": "abcd"}
+        domain=DOMAIN, data={"webhook_id": "owntracks_test", "secret": "abcd"}
     )
     entry.add_to_hass(hass)
 
@@ -1661,7 +1661,7 @@ async def test_returns_empty_friends(
 ) -> None:
     """Test that an empty list of persons' locations is returned."""
     entry = MockConfigEntry(
-        domain="owntracks", data={"webhook_id": "owntracks_test", "secret": "abcd"}
+        domain=DOMAIN, data={"webhook_id": "owntracks_test", "secret": "abcd"}
     )
     entry.add_to_hass(hass)
 
@@ -1684,7 +1684,7 @@ async def test_returns_array_friends(
 ) -> None:
     """Test that a list of persons' current locations is returned."""
     otracks = MockConfigEntry(
-        domain="owntracks", data={"webhook_id": "owntracks_test", "secret": "abcd"}
+        domain=DOMAIN, data={"webhook_id": "owntracks_test", "secret": "abcd"}
     )
     otracks.add_to_hass(hass)
 
@@ -1727,3 +1727,22 @@ async def test_returns_array_friends(
     assert response_json[0]["lat"] == 10
     assert response_json[0]["lon"] == 20
     assert response_json[0]["tid"] == "p1"
+
+
+@pytest.mark.usefixtures("context")
+async def test_mobile_beacon_uppercase_name(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that a mobile beacon with uppercase name gets a valid entity ID."""
+    await send_message(hass, LOCATION_TOPIC, LOCATION_MESSAGE)
+
+    message = build_message(
+        {"desc": "Office", "event": "enter"}, DEFAULT_BEACON_TRANSITION_MESSAGE
+    )
+    await send_message(hass, EVENT_TOPIC, message)
+
+    state = hass.states.get("device_tracker.beacon_office")
+    assert state is not None
+    assert state.state == "outer"
+    assert "sets an invalid entity ID" not in caplog.text

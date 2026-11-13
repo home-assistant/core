@@ -6,12 +6,8 @@ import json
 from unittest.mock import patch
 
 import pytest
-
-from homeassistant.components import camera, mqtt
-from homeassistant.components.mqtt.camera import MQTT_CAMERA_ATTRIBUTES_BLOCKED
-from homeassistant.core import HomeAssistant
-
-from .common import (
+from pytest_homeassistant.common import async_fire_mqtt_message
+from pytest_homeassistant.components.mqtt.common import (
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
     help_test_custom_availability_payload,
@@ -37,20 +33,23 @@ from .common import (
     help_test_update_with_json_attrs_bad_json,
     help_test_update_with_json_attrs_not_dict,
 )
-
-from tests.common import async_fire_mqtt_message
-from tests.typing import (
+from pytest_homeassistant.typing import (
     ClientSessionGenerator,
     MqttMockHAClientGenerator,
     MqttMockPahoClient,
 )
 
-DEFAULT_CONFIG = {mqtt.DOMAIN: {camera.DOMAIN: {"name": "test", "topic": "test_topic"}}}
+from homeassistant.components import camera
+from homeassistant.components.mqtt.camera import MQTT_CAMERA_ATTRIBUTES_BLOCKED
+from homeassistant.components.mqtt.const import DOMAIN
+from homeassistant.core import HomeAssistant
+
+DEFAULT_CONFIG = {DOMAIN: {camera.DOMAIN: {"name": "test", "topic": "test_topic"}}}
 
 
 @pytest.mark.parametrize(
     "hass_config",
-    [{mqtt.DOMAIN: {camera.DOMAIN: {"topic": "test/camera", "name": "Test Camera"}}}],
+    [{DOMAIN: {camera.DOMAIN: {"topic": "test/camera", "name": "Test Camera"}}}],
 )
 async def test_run_camera_setup(
     hass: HomeAssistant,
@@ -76,7 +75,7 @@ async def test_run_camera_setup(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 camera.DOMAIN: {
                     "topic": "test/camera",
                     "name": "Test Camera",
@@ -110,7 +109,7 @@ async def test_run_camera_b64_encoded(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 "camera": {
                     "topic": "test/camera",
                     "name": "Test Camera",
@@ -250,7 +249,7 @@ async def test_discovery_update_attr(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 camera.DOMAIN: [
                     {
                         "name": "Test 1",
@@ -278,7 +277,7 @@ async def test_discovery_removal_camera(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test removal of discovered camera."""
-    data = json.dumps(DEFAULT_CONFIG[mqtt.DOMAIN][camera.DOMAIN])
+    data = json.dumps(DEFAULT_CONFIG[DOMAIN][camera.DOMAIN])
     await help_test_discovery_removal(hass, mqtt_mock_entry, camera.DOMAIN, data)
 
 
@@ -360,7 +359,11 @@ async def test_entity_id_update_subscriptions(
 ) -> None:
     """Test MQTT subscriptions are managed when entity_id is updated."""
     await help_test_entity_id_update_subscriptions(
-        hass, mqtt_mock_entry, camera.DOMAIN, DEFAULT_CONFIG, ["test_topic"]
+        hass,
+        mqtt_mock_entry,
+        camera.DOMAIN,
+        DEFAULT_CONFIG,
+        ["test_topic", "avty-topic"],
     )
 
 

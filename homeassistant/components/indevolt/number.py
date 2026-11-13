@@ -1,7 +1,7 @@
 """Number platform for Indevolt integration."""
 
 from dataclasses import dataclass
-from typing import Final
+from typing import Final, override
 
 from indevolt_api import IndevoltConfig
 
@@ -16,9 +16,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import IndevoltConfigEntry
 from .const import DOMAIN
-from .coordinator import IndevoltCoordinator
+from .coordinator import IndevoltConfigEntry, IndevoltCoordinator
 from .entity import IndevoltEntity
 
 PARALLEL_UPDATES = 0
@@ -52,7 +51,7 @@ NUMBERS: Final = (
         read_key=IndevoltConfig.READ_MAX_AC_OUTPUT_POWER,
         write_key=IndevoltConfig.WRITE_MAX_AC_OUTPUT_POWER,
         native_min_value=0,
-        native_max_value=2400,
+        native_max_value=10800,
         native_step=100,
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=NumberDeviceClass.POWER,
@@ -64,7 +63,7 @@ NUMBERS: Final = (
         read_key=IndevoltConfig.READ_INVERTER_INPUT_LIMIT,
         write_key=IndevoltConfig.WRITE_INVERTER_INPUT_LIMIT,
         native_min_value=100,
-        native_max_value=2400,
+        native_max_value=10800,
         native_step=100,
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=NumberDeviceClass.POWER,
@@ -76,7 +75,7 @@ NUMBERS: Final = (
         read_key=IndevoltConfig.READ_FEEDIN_POWER_LIMIT,
         write_key=IndevoltConfig.WRITE_FEEDIN_POWER_LIMIT,
         native_min_value=0,
-        native_max_value=2400,
+        native_max_value=10800,
         native_step=100,
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=NumberDeviceClass.POWER,
@@ -119,6 +118,7 @@ class IndevoltNumberEntity(IndevoltEntity, NumberEntity):
         self._attr_unique_id = f"{self.serial_number}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> int | None:
         """Return the current value of the entity."""
         raw_value = self.coordinator.data.get(self.entity_description.read_key)
@@ -127,6 +127,7 @@ class IndevoltNumberEntity(IndevoltEntity, NumberEntity):
 
         return int(raw_value)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set a new value for the entity."""
 
@@ -136,7 +137,9 @@ class IndevoltNumberEntity(IndevoltEntity, NumberEntity):
         )
 
         if success:
-            await self.coordinator.async_request_refresh()
+            self.coordinator.async_optimistic_update(
+                self.entity_description.read_key, int_value
+            )
 
         else:
             raise HomeAssistantError(

@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass, field
 import logging
+from typing import override
 
 from opendisplay import MANUFACTURER_ID, AdvertisementTracker, parse_advertisement
 from opendisplay.models.advertisement import AdvertisementData, ButtonChangeEvent
@@ -44,6 +45,7 @@ class OpenDisplayCoordinator(PassiveBluetoothDataUpdateCoordinator):
         self._tracker: AdvertisementTracker = AdvertisementTracker()
 
     @callback
+    @override
     def _async_handle_unavailable(
         self, service_info: BluetoothServiceInfoBleak
     ) -> None:
@@ -53,6 +55,7 @@ class OpenDisplayCoordinator(PassiveBluetoothDataUpdateCoordinator):
         super()._async_handle_unavailable(service_info)
 
     @callback
+    @override
     def _async_handle_bluetooth_event(
         self,
         service_info: BluetoothServiceInfoBleak,

@@ -1,8 +1,8 @@
 """Assist Satellite intents."""
 
-from typing import Final
+from typing import Final, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, intent
@@ -24,10 +24,12 @@ class BroadcastIntentHandler(intent.IntentHandler):
     description = "Broadcast a message through the home"
 
     @property
+    @override
     def slot_schema(self) -> dict | None:
         """Return a slot schema."""
-        return {vol.Required("message"): str}
+        return {probatio.Required("message"): str}
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Broadcast a message."""
         hass = intent_obj.hass

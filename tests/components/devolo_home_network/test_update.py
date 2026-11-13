@@ -4,15 +4,16 @@ from devolo_plc_api.device_api import UPDATE_NOT_AVAILABLE, UpdateFirmwareCheck
 from devolo_plc_api.exceptions.device import DevicePasswordProtected, DeviceUnavailable
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.devolo_home_network.const import (
     DOMAIN,
     FIRMWARE_UPDATE_INTERVAL,
 )
-from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN, SERVICE_INSTALL
+from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN, UpdateService
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_UNAVAILABLE
+from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -20,8 +21,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from . import configure_integration
 from .const import FIRMWARE_UPDATE_AVAILABLE
 from .mock import MockDevice
-
-from tests.common import async_fire_time_changed
 
 
 @pytest.mark.usefixtures("mock_device")
@@ -62,8 +61,8 @@ async def test_update_firmware(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: entity_id},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert mock_device.device.async_start_firmware_update.call_count == 1
@@ -83,8 +82,8 @@ async def test_update_firmware(
     assert state is not None
     assert state.state == STATE_OFF
 
-    device_info = device_registry.async_get_device(
-        {(DOMAIN, mock_device.serial_number)}
+    device_info = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_device.serial_number), entry.entry_id
     )
     assert device_info is not None
     assert device_info.sw_version == mock_device.firmware_version
@@ -134,8 +133,8 @@ async def test_device_failure_update(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: entity_id},
+            UpdateService.INSTALL,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -154,8 +153,8 @@ async def test_auth_failed(hass: HomeAssistant, mock_device: MockDevice) -> None
     with pytest.raises(HomeAssistantError):
         assert await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: entity_id},
+            UpdateService.INSTALL,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
     await hass.async_block_till_done()

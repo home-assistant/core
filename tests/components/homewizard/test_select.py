@@ -6,21 +6,20 @@ from homewizard_energy import UnsupportedError
 from homewizard_energy.errors import RequestError, UnauthorizedError
 from homewizard_energy.models import Batteries
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.homewizard.const import UPDATE_INTERVAL
 from homeassistant.components.select import (
-    ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
-
-from tests.common import async_fire_time_changed
 
 pytestmark = [
     pytest.mark.usefixtures("init_integration"),
@@ -33,31 +32,31 @@ pytestmark = [
         (
             "HWE-WTR",
             [
-                "select.device_battery_group_mode",
+                "select.device_battery_group_charging_strategy",
             ],
         ),
         (
             "SDM230",
             [
-                "select.device_battery_group_mode",
+                "select.device_battery_group_charging_strategy",
             ],
         ),
         (
             "SDM630",
             [
-                "select.device_battery_group_mode",
+                "select.device_battery_group_charging_strategy",
             ],
         ),
         (
             "HWE-KWH1",
             [
-                "select.device_battery_group_mode",
+                "select.device_battery_group_charging_strategy",
             ],
         ),
         (
             "HWE-KWH3",
             [
-                "select.device_battery_group_mode",
+                "select.device_battery_group_charging_strategy",
             ],
         ),
     ],
@@ -74,7 +73,7 @@ async def test_entities_not_created_for_device(
 @pytest.mark.parametrize(
     ("device_fixture", "entity_id"),
     [
-        ("HWE-P1", "select.device_battery_group_mode"),
+        ("HWE-P1", "select.device_battery_group_charging_strategy"),
     ],
 )
 async def test_select_entity_snapshots(
@@ -101,17 +100,28 @@ async def test_select_entity_snapshots(
     [
         (
             "HWE-P1",
-            "select.device_battery_group_mode",
+            "select.device_battery_group_charging_strategy",
             "standby",
             Batteries.Mode.STANDBY,
         ),
         (
             "HWE-P1",
-            "select.device_battery_group_mode",
+            "select.device_battery_group_charging_strategy",
             "to_full",
             Batteries.Mode.TO_FULL,
         ),
-        ("HWE-P1", "select.device_battery_group_mode", "zero", Batteries.Mode.ZERO),
+        (
+            "HWE-P1",
+            "select.device_battery_group_charging_strategy",
+            "zero",
+            Batteries.Mode.ZERO,
+        ),
+        (
+            "HWE-P1-predictive",
+            "select.device_battery_group_charging_strategy",
+            "predictive",
+            Batteries.Mode.PREDICTIVE,
+        ),
     ],
 )
 async def test_select_set_option(
@@ -124,22 +134,29 @@ async def test_select_set_option(
     """Test that selecting an option calls the correct API method."""
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_OPTION: option,
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            SelectServiceArgument.OPTION: option,
         },
         blocking=True,
     )
     mock_homewizardenergy.batteries.assert_called_with(mode=expected_mode)
 
 
+@pytest.mark.parametrize("device_fixture", ["HWE-P1-predictive"])
+async def test_select_predictive_mode_is_available(hass: HomeAssistant) -> None:
+    """Test that predictive mode is available when supported by the device."""
+    assert (state := hass.states.get("select.device_battery_group_charging_strategy"))
+    assert "predictive" in state.attributes["options"]
+
+
 @pytest.mark.parametrize(
     ("device_fixture", "entity_id", "option"),
     [
-        ("HWE-P1", "select.device_battery_group_mode", "zero"),
-        ("HWE-P1", "select.device_battery_group_mode", "standby"),
-        ("HWE-P1", "select.device_battery_group_mode", "to_full"),
+        ("HWE-P1", "select.device_battery_group_charging_strategy", "zero"),
+        ("HWE-P1", "select.device_battery_group_charging_strategy", "standby"),
+        ("HWE-P1", "select.device_battery_group_charging_strategy", "to_full"),
     ],
 )
 async def test_select_request_error(
@@ -156,10 +173,10 @@ async def test_select_request_error(
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: entity_id,
-                ATTR_OPTION: option,
+                CommonServiceArgument.ENTITY_ID: entity_id,
+                SelectServiceArgument.OPTION: option,
             },
             blocking=True,
         )
@@ -168,7 +185,7 @@ async def test_select_request_error(
 @pytest.mark.parametrize(
     ("device_fixture", "entity_id", "option"),
     [
-        ("HWE-P1", "select.device_battery_group_mode", "to_full"),
+        ("HWE-P1", "select.device_battery_group_charging_strategy", "to_full"),
     ],
 )
 async def test_select_unauthorized_error(
@@ -189,10 +206,10 @@ async def test_select_unauthorized_error(
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: entity_id,
-                ATTR_OPTION: option,
+                CommonServiceArgument.ENTITY_ID: entity_id,
+                SelectServiceArgument.OPTION: option,
             },
             blocking=True,
         )
@@ -203,7 +220,7 @@ async def test_select_unauthorized_error(
 @pytest.mark.parametrize(
     ("entity_id", "method"),
     [
-        ("select.device_battery_group_mode", "combined"),
+        ("select.device_battery_group_charging_strategy", "combined"),
     ],
 )
 async def test_select_unreachable(
@@ -226,7 +243,7 @@ async def test_select_unreachable(
 @pytest.mark.parametrize(
     ("device_fixture", "entity_id"),
     [
-        ("HWE-P1", "select.device_battery_group_mode"),
+        ("HWE-P1", "select.device_battery_group_charging_strategy"),
     ],
 )
 async def test_select_multiple_state_changes(
@@ -237,10 +254,10 @@ async def test_select_multiple_state_changes(
     """Test changing select state multiple times in sequence."""
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_OPTION: "zero",
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            SelectServiceArgument.OPTION: "zero",
         },
         blocking=True,
     )
@@ -248,10 +265,10 @@ async def test_select_multiple_state_changes(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_OPTION: "to_full",
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            SelectServiceArgument.OPTION: "to_full",
         },
         blocking=True,
     )
@@ -259,10 +276,10 @@ async def test_select_multiple_state_changes(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_OPTION: "standby",
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            SelectServiceArgument.OPTION: "standby",
         },
         blocking=True,
     )
@@ -275,7 +292,7 @@ async def test_select_multiple_state_changes(
         (
             "HWE-P1-no-batteries",
             [
-                "select.device_battery_group_mode",
+                "select.device_battery_group_charging_strategy",
             ],
         ),
     ],

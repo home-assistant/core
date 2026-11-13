@@ -1,6 +1,7 @@
 """Data update coordinator for Snapcast server."""
 
 import logging
+from typing import override
 
 from snapcast.control.server import Snapserver
 
@@ -56,6 +57,7 @@ class SnapcastUpdateCoordinator(DataUpdateCoordinator[None]):
         """Snapsever on_disconnect callback."""
         self.async_set_update_error(ex)
 
+    @override
     async def _async_setup(self) -> None:
         """Perform async setup for the coordinator."""
         # Start the server
@@ -64,6 +66,7 @@ class SnapcastUpdateCoordinator(DataUpdateCoordinator[None]):
         except OSError as ex:
             raise UpdateFailed from ex
 
+    @override
     async def _async_update_data(self) -> None:
         """Empty update method since data is pushed."""
 

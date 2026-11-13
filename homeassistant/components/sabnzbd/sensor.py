@@ -1,6 +1,7 @@
 """Support for monitoring an SABnzbd NZB client."""
 
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -127,6 +128,7 @@ class SabnzbdSensor(SabnzbdEntity, SensorEntity):
     entity_description: SabnzbdSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return latest sensor data."""
         return self.coordinator.data.get(self.entity_description.key)

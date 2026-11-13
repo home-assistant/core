@@ -2,6 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from typing import override
 
 from rokuecp import Roku
 from rokuecp.models import Device as RokuDevice
@@ -137,16 +138,19 @@ class RokuSelectEntity(RokuEntity, SelectEntity):
     entity_description: RokuSelectEntityDescription
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the current value."""
         return self.entity_description.value_fn(self.coordinator.data)
 
     @property
+    @override
     def options(self) -> list[str]:
         """Return a set of selectable options."""
         return self.entity_description.options_fn(self.coordinator.data)
 
     @roku_exception_handler()
+    @override
     async def async_select_option(self, option: str) -> None:
         """Set the option."""
         await self.entity_description.set_fn(

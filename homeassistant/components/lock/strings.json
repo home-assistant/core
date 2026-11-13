@@ -141,7 +141,7 @@
   "title": "Lock",
   "triggers": {
     "jammed": {
-      "description": "Triggers after one or more locks jam.",
+      "description": "Triggers when one or more locks jam.",
       "fields": {
         "behavior": {
           "name": "[%key:component::lock::common::trigger_behavior_name%]"
@@ -153,7 +153,7 @@
       "name": "Lock jammed"
     },
     "locked": {
-      "description": "Triggers after one or more locks lock.",
+      "description": "Triggers when one or more locks lock.",
       "fields": {
         "behavior": {
           "name": "[%key:component::lock::common::trigger_behavior_name%]"
@@ -165,7 +165,7 @@
       "name": "Lock locked"
     },
     "opened": {
-      "description": "Triggers after one or more locks open.",
+      "description": "Triggers when one or more locks open.",
       "fields": {
         "behavior": {
           "name": "[%key:component::lock::common::trigger_behavior_name%]"
@@ -177,7 +177,7 @@
       "name": "Lock opened"
     },
     "unlocked": {
-      "description": "Triggers after one or more locks unlock.",
+      "description": "Triggers when one or more locks unlock.",
       "fields": {
         "behavior": {
           "name": "[%key:component::lock::common::trigger_behavior_name%]"

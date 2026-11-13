@@ -1,8 +1,9 @@
 """The test for the HERE Travel Time integration."""
 
-from datetime import datetime
+from typing import Any
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.here_travel_time.config_flow import (
     DEFAULT_OPTIONS,
@@ -22,8 +23,6 @@ from homeassistant.helpers import issue_registry as ir
 
 from .const import DEFAULT_CONFIG
 
-from tests.common import MockConfigEntry
-
 
 @pytest.mark.usefixtures("valid_response")
 @pytest.mark.parametrize(
@@ -32,18 +31,18 @@ from tests.common import MockConfigEntry
         DEFAULT_OPTIONS,
         {
             CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
-            CONF_DEPARTURE_TIME: datetime.now(),
+            CONF_DEPARTURE_TIME: "08:00:00",
         },
         {
             CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
-            CONF_ARRIVAL_TIME: datetime.now(),
+            CONF_ARRIVAL_TIME: "08:00:00",
         },
         {
             CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
         },
     ],
 )
-async def test_unload_entry(hass: HomeAssistant, options) -> None:
+async def test_unload_entry(hass: HomeAssistant, options: dict[str, Any]) -> None:
     """Test that unloading an entry works."""
     entry = MockConfigEntry(
         domain=DOMAIN,

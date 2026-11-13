@@ -1,104 +1,119 @@
 """Support for openSenseMap Air Quality data."""
 
-from datetime import timedelta
-import logging
-
-from opensensemap_api import OpenSenseMap
-from opensensemap_api.exceptions import OpenSenseMapError
-import voluptuous as vol
+from typing import override
 
 from homeassistant.components.air_quality import (
-    PLATFORM_SCHEMA as AIR_QUALITY_PLATFORM_SCHEMA,
+    DOMAIN as AIR_QUALITY_DOMAIN,
     AirQualityEntity,
 )
-from homeassistant.const import CONF_NAME
+from homeassistant.components.automation import automations_with_entity
+from homeassistant.components.script import scripts_with_entity
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import Throttle
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-_LOGGER = logging.getLogger(__name__)
+from .const import AIR_QUALITY_DEPRECATION_BREAKS_IN_VERSION, CONF_STATION_ID, DOMAIN
+from .coordinator import OpenSenseMapConfigEntry, OpenSenseMapCoordinator
 
 
-CONF_STATION_ID = "station_id"
+def _automations_and_scripts_using_entity(
+    hass: HomeAssistant, entity_id: str
+) -> list[str]:
+    """Return markdown links to automations and scripts referencing an entity."""
+    automations = automations_with_entity(hass, entity_id)
+    scripts = scripts_with_entity(hass, entity_id)
+    if not automations and not scripts:
+        return []
 
-SCAN_INTERVAL = timedelta(minutes=10)
+    entity_registry = er.async_get(hass)
+    items: list[str] = []
+    for integration, entities in (("automation", automations), ("script", scripts)):
+        for used_entity_id in entities:
+            if entry := entity_registry.async_get(used_entity_id):
+                items.append(
+                    f"- [{entry.original_name}]"
+                    f"(/config/{integration}/edit/{entry.unique_id})"
+                )
+            else:
+                items.append(f"- `{used_entity_id}`")
+    return items
 
-PLATFORM_SCHEMA = AIR_QUALITY_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_STATION_ID): cv.string, vol.Optional(CONF_NAME): cv.string}
-)
 
-
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: OpenSenseMapConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the openSenseMap air quality platform."""
+    """Set up the openSenseMap air quality entity from a config entry.
 
-    name = config.get(CONF_NAME)
-    station_id = config[CONF_STATION_ID]
+    The air quality entity is deprecated in favor of the individual particulate
+    matter sensor entities. It is only kept for existing installations that
+    already have it registered; fresh installations no longer create it.
+    """
+    station_id = entry.data[CONF_STATION_ID]
+    issue_id = f"deprecated_air_quality_{entry.entry_id}"
+    entity_registry = er.async_get(hass)
+    entity_id = entity_registry.async_get_entity_id(
+        AIR_QUALITY_DOMAIN, DOMAIN, station_id
+    )
 
-    session = async_get_clientsession(hass)
-    osm_api = OpenSenseMapData(OpenSenseMap(station_id, session))
+    if entity_id is None:
+        ir.async_delete_issue(hass, DOMAIN, issue_id)
+        return
 
-    await osm_api.async_update()
+    items = _automations_and_scripts_using_entity(hass, entity_id)
+    entity_entry = entity_registry.async_get(entity_id)
+    if entity_entry is not None and entity_entry.disabled and not items:
+        # Disabled and unused: clean it up instead of carrying it forward.
+        entity_registry.async_remove(entity_id)
+        ir.async_delete_issue(hass, DOMAIN, issue_id)
+        return
 
-    if "name" not in osm_api.api.data:
-        _LOGGER.error("Station %s is not available", station_id)
-        raise PlatformNotReady
+    translation_key = "deprecated_air_quality"
+    placeholders = {"entity_id": entity_id}
+    if items:
+        translation_key = "deprecated_air_quality_in_use"
+        placeholders["items"] = "\n".join(items)
 
-    station_name = osm_api.api.data["name"] if name is None else name
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        breaks_in_ha_version=AIR_QUALITY_DEPRECATION_BREAKS_IN_VERSION,
+        config_entry_id=entry.entry_id,
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key=translation_key,
+        translation_placeholders=placeholders,
+    )
 
-    async_add_entities([OpenSenseMapQuality(station_name, osm_api)], True)
+    async_add_entities(
+        [OpenSenseMapQuality(entry.runtime_data, station_id, entry.title)]
+    )
 
 
-class OpenSenseMapQuality(AirQualityEntity):
+class OpenSenseMapQuality(CoordinatorEntity[OpenSenseMapCoordinator], AirQualityEntity):
     """Implementation of an openSenseMap air quality entity."""
 
     _attr_attribution = "Data provided by openSenseMap"
 
-    def __init__(self, name, osm):
+    def __init__(
+        self, coordinator: OpenSenseMapCoordinator, station_id: str, name: str
+    ) -> None:
         """Initialize the air quality entity."""
-        self._name = name
-        self._osm = osm
+        super().__init__(coordinator)
+        self._attr_name = name
+        self._attr_unique_id = station_id
 
     @property
-    def name(self):
-        """Return the name of the air quality entity."""
-        return self._name
-
-    @property
-    def particulate_matter_2_5(self):
+    @override
+    def particulate_matter_2_5(self) -> float | None:
         """Return the particulate matter 2.5 level."""
-        return self._osm.api.pm2_5
+        return self.coordinator.data.pm2_5.value
 
     @property
-    def particulate_matter_10(self):
+    @override
+    def particulate_matter_10(self) -> float | None:
         """Return the particulate matter 10 level."""
-        return self._osm.api.pm10
-
-    async def async_update(self):
-        """Get the latest data from the openSenseMap API."""
-        await self._osm.async_update()
-
-
-class OpenSenseMapData:
-    """Get the latest data and update the states."""
-
-    def __init__(self, api):
-        """Initialize the data object."""
-        self.api = api
-
-    @Throttle(SCAN_INTERVAL)
-    async def async_update(self):
-        """Get the latest data from the Pi-hole."""
-
-        try:
-            await self.api.get_data()
-        except OpenSenseMapError as err:
-            _LOGGER.error("Unable to fetch data: %s", err)
+        return self.coordinator.data.pm10.value

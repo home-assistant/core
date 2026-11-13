@@ -7,15 +7,16 @@ from astral import LocationInfo
 import astral.sun
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components import sun
 from homeassistant.components.sun import entity
-from homeassistant.const import EVENT_STATE_CHANGED
+from homeassistant.components.sun.const import SunEntityStateAttribute
+from homeassistant.const import EVENT_STATE_CHANGED, Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_setting_rising(hass: HomeAssistant) -> None:
@@ -88,22 +89,22 @@ async def test_setting_rising(hass: HomeAssistant) -> None:
         mod += 1
 
     assert next_dawn == dt_util.parse_datetime(
-        state.attributes[entity.STATE_ATTR_NEXT_DAWN]
+        state.attributes[SunEntityStateAttribute.NEXT_DAWN]
     )
     assert next_dusk == dt_util.parse_datetime(
-        state.attributes[entity.STATE_ATTR_NEXT_DUSK]
+        state.attributes[SunEntityStateAttribute.NEXT_DUSK]
     )
     assert next_midnight == dt_util.parse_datetime(
-        state.attributes[entity.STATE_ATTR_NEXT_MIDNIGHT]
+        state.attributes[SunEntityStateAttribute.NEXT_MIDNIGHT]
     )
     assert next_noon == dt_util.parse_datetime(
-        state.attributes[entity.STATE_ATTR_NEXT_NOON]
+        state.attributes[SunEntityStateAttribute.NEXT_NOON]
     )
     assert next_rising == dt_util.parse_datetime(
-        state.attributes[entity.STATE_ATTR_NEXT_RISING]
+        state.attributes[SunEntityStateAttribute.NEXT_RISING]
     )
     assert next_setting == dt_util.parse_datetime(
-        state.attributes[entity.STATE_ATTR_NEXT_SETTING]
+        state.attributes[SunEntityStateAttribute.NEXT_SETTING]
     )
 
 
@@ -118,7 +119,9 @@ async def test_state_change(
     await hass.async_block_till_done()
 
     test_time = dt_util.parse_datetime(
-        hass.states.get(entity.ENTITY_ID).attributes[entity.STATE_ATTR_NEXT_RISING]
+        hass.states.get(entity.ENTITY_ID).attributes[
+            SunEntityStateAttribute.NEXT_RISING
+        ]
     )
     assert test_time is not None
 
@@ -132,7 +135,9 @@ async def test_state_change(
     assert hass.states.get(entity.ENTITY_ID).state == sun.STATE_ABOVE_HORIZON
 
     # Update core configuration
-    with patch("homeassistant.helpers.condition.dt_util.utcnow", return_value=now):
+    with patch(
+        "homeassistant.helpers.condition.conditions.dt_util.utcnow", return_value=now
+    ):
         await hass.config.async_update(longitude=hass.config.longitude + 90)
         await hass.async_block_till_done()
 
@@ -140,7 +145,7 @@ async def test_state_change(
 
     # Test listeners are not duplicated after a core configuration change
     test_time = dt_util.parse_datetime(
-        hass.states.get(entity.ENTITY_ID).attributes[entity.STATE_ATTR_NEXT_DUSK]
+        hass.states.get(entity.ENTITY_ID).attributes[SunEntityStateAttribute.NEXT_DUSK]
     )
     assert test_time is not None
 
@@ -165,17 +170,19 @@ async def test_norway_in_june(hass: HomeAssistant) -> None:
 
     june = datetime(2016, 6, 1, tzinfo=dt_util.UTC)
 
-    with patch("homeassistant.helpers.condition.dt_util.utcnow", return_value=june):
+    with patch(
+        "homeassistant.helpers.condition.conditions.dt_util.utcnow", return_value=june
+    ):
         assert await async_setup_component(hass, sun.DOMAIN, {sun.DOMAIN: {}})
 
     state = hass.states.get(entity.ENTITY_ID)
     assert state is not None
 
     assert dt_util.parse_datetime(
-        state.attributes[entity.STATE_ATTR_NEXT_RISING]
+        state.attributes[SunEntityStateAttribute.NEXT_RISING]
     ) == datetime(2016, 7, 24, 22, 59, 45, 689645, tzinfo=dt_util.UTC)
     assert dt_util.parse_datetime(
-        state.attributes[entity.STATE_ATTR_NEXT_SETTING]
+        state.attributes[SunEntityStateAttribute.NEXT_SETTING]
     ) == datetime(2016, 7, 25, 22, 17, 13, 503932, tzinfo=dt_util.UTC)
 
     assert state.state == sun.STATE_ABOVE_HORIZON
@@ -227,7 +234,9 @@ async def test_setup_and_remove_config_entry(hass: HomeAssistant) -> None:
     assert state is not None
 
     test_time = dt_util.parse_datetime(
-        hass.states.get(entity.ENTITY_ID).attributes[entity.STATE_ATTR_NEXT_RISING]
+        hass.states.get(entity.ENTITY_ID).attributes[
+            SunEntityStateAttribute.NEXT_RISING
+        ]
     )
     assert test_time is not None
     assert hass.states.get(entity.ENTITY_ID).state == sun.STATE_BELOW_HORIZON
@@ -245,3 +254,31 @@ async def test_setup_and_remove_config_entry(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert hass.states.get(entity.ENTITY_ID) is None
+
+
+async def test_cleanup_deprecated_solar_rising(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that the deprecated solar_rising entity is removed on setup."""
+    config_entry = MockConfigEntry(domain=sun.DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    entity_registry.async_get_or_create(
+        Platform.SENSOR,
+        sun.DOMAIN,
+        unique_id=f"{config_entry.entry_id}-solar_rising",
+        config_entry=config_entry,
+    )
+    assert entity_registry.async_get_entity_id(
+        Platform.SENSOR, sun.DOMAIN, f"{config_entry.entry_id}-solar_rising"
+    )
+
+    now = datetime(2016, 6, 1, 8, 0, 0, tzinfo=dt_util.UTC)
+    with freeze_time(now):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert not entity_registry.async_get_entity_id(
+        Platform.SENSOR, sun.DOMAIN, f"{config_entry.entry_id}-solar_rising"
+    )

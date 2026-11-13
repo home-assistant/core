@@ -3,30 +3,13 @@
 from typing import Any
 
 import pytest
-
-from homeassistant.components.water_heater import (
-    STATE_ECO,
-    STATE_ELECTRIC,
-    STATE_GAS,
-    STATE_HEAT_PUMP,
-    STATE_HIGH_DEMAND,
-    STATE_PERFORMANCE,
-)
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    ATTR_UNIT_OF_MEASUREMENT,
-    STATE_OFF,
-    STATE_ON,
-    UnitOfTemperature,
-)
-from homeassistant.core import HomeAssistant
-
-from tests.components.common import (
+from pytest_homeassistant.components.common import (
     ConditionStateDescription,
+    TargetSupport,
     assert_condition_behavior_all,
     assert_condition_behavior_any,
-    assert_condition_gated_by_labs_flag,
     assert_condition_options_supported,
+    assert_conditions_target_support,
     assert_numerical_condition_unit_conversion,
     parametrize_condition_states_all,
     parametrize_condition_states_any,
@@ -35,6 +18,25 @@ from tests.components.common import (
     parametrize_target_entities,
     target_entities,
 )
+
+from homeassistant.components.water_heater import (
+    STATE_ECO,
+    STATE_ELECTRIC,
+    STATE_GAS,
+    STATE_HEAT_PUMP,
+    STATE_HIGH_DEMAND,
+    STATE_PERFORMANCE,
+    WaterHeaterCapabilityAttribute,
+)
+from homeassistant.components.water_heater.condition import CONDITIONS
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    ATTR_UNIT_OF_MEASUREMENT,
+    STATE_OFF,
+    STATE_ON,
+    UnitOfTemperature,
+)
+from homeassistant.core import HomeAssistant
 
 _ALL_STATES = [
     STATE_ECO,
@@ -56,22 +58,9 @@ async def target_water_heaters(hass: HomeAssistant) -> dict[str, list[str]]:
     return await target_entities(hass, "water_heater")
 
 
-@pytest.mark.parametrize(
-    "condition",
-    [
-        "water_heater.is_off",
-        "water_heater.is_on",
-        "water_heater.is_operation_mode",
-        "water_heater.is_target_temperature",
-    ],
-)
-async def test_water_heater_conditions_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, condition: str
-) -> None:
-    """Test the water heater conditions are gated by the labs flag."""
-    await assert_condition_gated_by_labs_flag(hass, caplog, condition)
-
-
+_WATER_HEATER_UNIT_ATTRIBUTES = {
+    WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS
+}
 _TEMPERATURE_THRESHOLD = {
     "threshold": {
         "type": "above",
@@ -80,7 +69,14 @@ _TEMPERATURE_THRESHOLD = {
 }
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
+_CONDITION_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "is_off": TargetSupport.STANDARD,
+    "is_on": TargetSupport.STANDARD,
+    "is_operation_mode": TargetSupport.STANDARD,
+    "is_target_temperature": TargetSupport.STANDARD,
+}
+
+
 @pytest.mark.parametrize(
     ("condition_key", "base_options", "supports_behavior", "supports_duration"),
     [
@@ -112,7 +108,11 @@ async def test_water_heater_condition_options_validation(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
+def test_condition_target_support() -> None:
+    """Certify the condition registry matches its declared target support."""
+    assert_conditions_target_support(CONDITIONS, _CONDITION_TARGET_SUPPORT)
+
+
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("water_heater"),
@@ -171,7 +171,6 @@ async def test_water_heater_state_condition_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("water_heater"),
@@ -230,7 +229,6 @@ async def test_water_heater_state_condition_behavior_all(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("water_heater"),
@@ -243,6 +241,7 @@ async def test_water_heater_state_condition_behavior_all(
             "eco",
             ATTR_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            unit_attributes=_WATER_HEATER_UNIT_ATTRIBUTES,
             attribute_required=True,
         ),
     ],
@@ -270,7 +269,6 @@ async def test_water_heater_numerical_condition_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("water_heater"),
@@ -283,6 +281,7 @@ async def test_water_heater_numerical_condition_behavior_any(
             "eco",
             ATTR_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            unit_attributes=_WATER_HEATER_UNIT_ATTRIBUTES,
             attribute_required=True,
         ),
     ],
@@ -310,7 +309,6 @@ async def test_water_heater_numerical_condition_behavior_all(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 async def test_water_heater_numerical_condition_unit_conversion(
     hass: HomeAssistant,
 ) -> None:
@@ -323,12 +321,31 @@ async def test_water_heater_numerical_condition_unit_conversion(
         hass,
         condition="water_heater.is_target_temperature",
         entity_id="water_heater.test",
-        pass_states=[{"state": "eco", "attributes": {ATTR_TEMPERATURE: 55}}],
+        pass_states=[
+            {
+                "state": "eco",
+                "attributes": {ATTR_TEMPERATURE: 55, **_WATER_HEATER_UNIT_ATTRIBUTES},
+            },
+            {
+                "state": "eco",
+                "attributes": {
+                    ATTR_TEMPERATURE: 130,
+                    WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
+                },
+            },
+        ],
         fail_states=[
             {
                 "state": "eco",
-                "attributes": {ATTR_TEMPERATURE: 40},
-            }
+                "attributes": {ATTR_TEMPERATURE: 40, **_WATER_HEATER_UNIT_ATTRIBUTES},
+            },
+            {
+                "state": "eco",
+                "attributes": {
+                    ATTR_TEMPERATURE: 104,
+                    WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
+                },
+            },
         ],
         numerical_condition_options=[
             {

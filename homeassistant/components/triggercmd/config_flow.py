@@ -1,22 +1,23 @@
 """Config flow for TRIGGERcmd integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import jwt
+import probatio
 from triggercmd import TRIGGERcmdConnectionError, client
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import httpx_client
 
-from .const import CONF_TOKEN, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema({(CONF_TOKEN): str})
+DATA_SCHEMA = probatio.Schema({(CONF_TOKEN): str})
 
 
 async def validate_input(hass: HomeAssistant, data: dict) -> str:
@@ -45,6 +46,7 @@ class TriggerCMDConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

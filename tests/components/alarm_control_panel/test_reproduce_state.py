@@ -1,8 +1,9 @@
 """Test reproduce state for Alarm control panel."""
 
 import pytest
+from pytest_homeassistant.common import async_mock_service
 
-from homeassistant.components.alarm_control_panel import AlarmControlPanelState
+from homeassistant.components.alarm_control_panel import DOMAIN, AlarmControlPanelState
 from homeassistant.const import (
     SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_CUSTOM_BYPASS,
@@ -14,8 +15,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.state import async_reproduce_state
-
-from tests.common import async_mock_service
 
 
 async def test_reproducing_states(
@@ -56,25 +55,15 @@ async def test_reproducing_states(
         {},
     )
 
-    arm_away_calls = async_mock_service(
-        hass, "alarm_control_panel", SERVICE_ALARM_ARM_AWAY
-    )
+    arm_away_calls = async_mock_service(hass, DOMAIN, SERVICE_ALARM_ARM_AWAY)
     arm_custom_bypass_calls = async_mock_service(
-        hass, "alarm_control_panel", SERVICE_ALARM_ARM_CUSTOM_BYPASS
+        hass, DOMAIN, SERVICE_ALARM_ARM_CUSTOM_BYPASS
     )
-    arm_home_calls = async_mock_service(
-        hass, "alarm_control_panel", SERVICE_ALARM_ARM_HOME
-    )
-    arm_night_calls = async_mock_service(
-        hass, "alarm_control_panel", SERVICE_ALARM_ARM_NIGHT
-    )
-    arm_vacation_calls = async_mock_service(
-        hass, "alarm_control_panel", SERVICE_ALARM_ARM_VACATION
-    )
-    disarm_calls = async_mock_service(hass, "alarm_control_panel", SERVICE_ALARM_DISARM)
-    trigger_calls = async_mock_service(
-        hass, "alarm_control_panel", SERVICE_ALARM_TRIGGER
-    )
+    arm_home_calls = async_mock_service(hass, DOMAIN, SERVICE_ALARM_ARM_HOME)
+    arm_night_calls = async_mock_service(hass, DOMAIN, SERVICE_ALARM_ARM_NIGHT)
+    arm_vacation_calls = async_mock_service(hass, DOMAIN, SERVICE_ALARM_ARM_VACATION)
+    disarm_calls = async_mock_service(hass, DOMAIN, SERVICE_ALARM_DISARM)
+    trigger_calls = async_mock_service(hass, DOMAIN, SERVICE_ALARM_TRIGGER)
 
     # These calls should do nothing as entities already in desired state
     await async_reproduce_state(

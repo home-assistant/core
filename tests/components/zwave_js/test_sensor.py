@@ -5,6 +5,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from zwave_js_server.const.command_class.meter import MeterType
 from zwave_js_server.event import Event
 from zwave_js_server.exceptions import FailedZWaveCommand
@@ -18,10 +19,9 @@ from homeassistant.components.sensor import (
 from homeassistant.components.zwave_js.const import (
     ATTR_METER_TYPE,
     ATTR_METER_TYPE_NAME,
-    ATTR_VALUE,
     DOMAIN,
-    SERVICE_REFRESH_VALUE,
-    SERVICE_RESET_METER,
+    ZWaveJSService,
+    ZWaveJSServiceArgument,
 )
 from homeassistant.components.zwave_js.helpers import get_valueless_base_unique_id
 from homeassistant.components.zwave_js.sensor import (
@@ -31,12 +31,12 @@ from homeassistant.components.zwave_js.sensor import (
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
-    ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     UV_INDEX,
+    CommonServiceArgument,
     EntityCategory,
     Platform,
     UnitOfElectricCurrent,
@@ -60,8 +60,6 @@ from .common import (
     POWER_SENSOR,
     VOLTAGE_SENSOR,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture
@@ -191,7 +189,7 @@ async def test_numeric_sensor(
     assert ATTR_DEVICE_CLASS not in state.attributes
     assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
 
-    state = hass.states.get("sensor.hsm200_illuminance")
+    state = hass.states.get("sensor.basement_hsm200_illuminance")
 
     assert state
     assert state.state == "61.0"
@@ -219,7 +217,7 @@ async def test_numeric_sensor(
 
     express_controls_ezmultipli.receive_event(event)
     await hass.async_block_till_done()
-    state = hass.states.get("sensor.hsm200_illuminance")
+    state = hass.states.get("sensor.basement_hsm200_illuminance")
     assert state
     assert state.state == STATE_UNKNOWN
 
@@ -440,22 +438,23 @@ async def test_node_status_sensor(
 
     # Assert a node status sensor entity is not created for the controller
     driver = client.driver
-    node = driver.controller.nodes[1]
-    assert node.is_controller_node
+    controller_node = driver.controller.nodes[1]
+    assert controller_node.is_controller_node
     assert (
         entity_registry.async_get_entity_id(
-            DOMAIN,
             "sensor",
-            f"{get_valueless_base_unique_id(driver, node)}.node_status",
+            DOMAIN,
+            f"{get_valueless_base_unique_id(driver, controller_node)}.node_status",
         )
         is None
     )
 
     # Assert a controller status sensor entity is not created for a node
+    assert not node.is_controller_node
     assert (
         entity_registry.async_get_entity_id(
-            DOMAIN,
             "sensor",
+            DOMAIN,
             f"{get_valueless_base_unique_id(driver, node)}.controller_status",
         )
         is None
@@ -498,9 +497,9 @@ async def test_node_status_sensor_not_ready(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_REFRESH_VALUE,
+        ZWaveJSService.REFRESH_VALUE,
         {
-            ATTR_ENTITY_ID: node_status_entity_id,
+            CommonServiceArgument.ENTITY_ID: node_status_entity_id,
         },
         blocking=True,
     )
@@ -529,9 +528,9 @@ async def test_reset_meter(
     # Test successful meter reset call
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_RESET_METER,
+        ZWaveJSService.RESET_METER,
         {
-            ATTR_ENTITY_ID: entity_id,
+            CommonServiceArgument.ENTITY_ID: entity_id,
         },
         blocking=True,
     )
@@ -548,11 +547,11 @@ async def test_reset_meter(
     # Test successful meter reset call with options
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_RESET_METER,
+        ZWaveJSService.RESET_METER,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_METER_TYPE: 1,
-            ATTR_VALUE: 2,
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            ZWaveJSServiceArgument.METER_TYPE: 1,
+            ZWaveJSServiceArgument.VALUE: 2,
         },
         blocking=True,
     )
@@ -573,8 +572,8 @@ async def test_reset_meter(
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_RESET_METER,
-            {ATTR_ENTITY_ID: entity_id},
+            ZWaveJSService.RESET_METER,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -945,7 +944,7 @@ async def test_statistics_sensors_migration(
     node = Node(client, copy.deepcopy(zp3111_state))
     client.driver.controller.nodes[node.node_id] = node
 
-    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
 
     controller_base_unique_id = f"{client.driver.controller.home_id}.1.statistics"
@@ -1120,8 +1119,8 @@ async def test_statistics_sensors(
 
             await hass.services.async_call(
                 DOMAIN,
-                SERVICE_REFRESH_VALUE,
-                {ATTR_ENTITY_ID: entity_id},
+                ZWaveJSService.REFRESH_VALUE,
+                {CommonServiceArgument.ENTITY_ID: entity_id},
                 blocking=True,
             )
     await hass.async_block_till_done()

@@ -1,6 +1,6 @@
 """OAuth2 implementations for Toon."""
 
-from typing import Any, cast
+from typing import Any, cast, override
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -74,11 +74,13 @@ class ToonLocalOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implemen
         )
 
     @property
+    @override
     def name(self) -> str:
         """Name of the implementation."""
         return f"{self._name} via Configuration.yaml"
 
     @property
+    @override
     def extra_authorize_data(self) -> dict:
         """Extra data that needs to be appended to the authorize url."""
         data = {"tenant_id": self.tenant_id}
@@ -88,6 +90,7 @@ class ToonLocalOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implemen
 
         return data
 
+    @override
     async def async_resolve_external_data(self, external_data: Any) -> dict:
         """Initialize local Toon auth implementation."""
         data = {
@@ -102,6 +105,7 @@ class ToonLocalOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implemen
 
         return await self._token_request(data)
 
+    @override
     async def _async_refresh_token(self, token: dict) -> dict:
         """Refresh tokens."""
         data = {
@@ -114,6 +118,7 @@ class ToonLocalOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implemen
         new_token = await self._token_request(data)
         return {**token, **new_token}
 
+    @override
     async def _token_request(self, data: dict) -> dict:
         """Make a token request."""
         session = async_get_clientsession(self.hass)

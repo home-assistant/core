@@ -2,17 +2,18 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import PLUG_AND_CHARGE, BlueCurrentConfigEntry, Connector
+from . import BlueCurrentConfigEntry, Connector
 from .const import (
     AVAILABLE,
     BLOCK,
     LINKED_CHARGE_CARDS,
+    PLUG_AND_CHARGE,
     PUBLIC_CHARGING,
     UNAVAILABLE,
     VALUE,
@@ -152,12 +153,14 @@ class ChargePointSwitch(ChargepointEntity, SwitchEntity):
         """Call the function to set setting."""
         await self.entity_description.function(self.connector, self.evse_id, value)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self.call_function(True)
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self.call_function(False)
@@ -165,6 +168,7 @@ class ChargePointSwitch(ChargepointEntity, SwitchEntity):
         self.async_write_ha_state()
 
     @callback
+    @override
     def update_from_latest_data(self) -> None:
         """Fetch new state data for the switch."""
         new_state = self.entity_description.turn_on_off_fn(self.evse_id, self.connector)

@@ -3,7 +3,9 @@
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Any
+from typing import Any, override
+
+from pynintendoparental.device import Device
 
 from homeassistant.components.number import (
     NumberEntity,
@@ -15,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import NintendoParentalControlsConfigEntry, NintendoUpdateCoordinator
-from .entity import Device, NintendoDevice
+from .entity import NintendoDevice
 
 PARALLEL_UPDATES = 1
 
@@ -80,10 +82,12 @@ class NintendoParentalControlsNumberEntity(NintendoDevice, NumberEntity):
         self.entity_description = description
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the state of the entity."""
         return self.entity_description.value_fn(self._device)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Update entity state."""
         await self.entity_description.set_native_value_fn(self._device, value)

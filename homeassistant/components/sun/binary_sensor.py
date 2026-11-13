@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
@@ -76,16 +77,18 @@ class SunBinarySensor(BinarySensorEntity):
         self._attr_unique_id = f"{entry_id}-{entity_description.key}"
         self.sun = sun
         self._attr_device_info = DeviceInfo(
-            name="Sun",
+            translation_key="sun",
             identifiers={(DOMAIN, entry_id)},
             entry_type=DeviceEntryType.SERVICE,
         )
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return value of binary sensor."""
         return self.entity_description.value_fn(self.sun)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register signal listener when added to hass."""
         await super().async_added_to_hass()

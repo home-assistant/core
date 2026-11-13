@@ -1,12 +1,12 @@
 """Define common test values."""
 
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.drop_connect.const import (
     CONF_COMMAND_TOPIC,
     CONF_DATA_TOPIC,
     CONF_DEVICE_DESC,
-    CONF_DEVICE_ID,
     CONF_DEVICE_NAME,
     CONF_DEVICE_OWNER_ID,
     CONF_DEVICE_TYPE,
@@ -14,11 +14,9 @@ from homeassistant.components.drop_connect.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import CONF_DEVICE_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry
 
 TEST_DATA_HUB_TOPIC = "drop_connect/DROP-1_C0FFEE/255"
 TEST_DATA_HUB = (

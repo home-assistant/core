@@ -10,12 +10,17 @@ from opendisplay import (
     AuthenticationRequiredError,
     BLEConnectionError,
     BLETimeoutError,
+    ColorScheme,
     GlobalConfig,
     OpenDisplayDevice,
     OpenDisplayError,
 )
 
-from homeassistant.components.bluetooth import async_ble_device_from_address
+from homeassistant.components.bluetooth import (
+    BluetoothReachabilityIntent,
+    async_address_reachability_diagnostics,
+    async_ble_device_from_address,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -24,17 +29,17 @@ from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH
 from homeassistant.helpers.typing import ConfigType
 
-if TYPE_CHECKING:
-    from opendisplay.models import FirmwareVersion
-
 from .const import CONF_ENCRYPTION_KEY, DOMAIN
 from .coordinator import OpenDisplayCoordinator
 from .services import async_setup_services
 
+if TYPE_CHECKING:
+    from opendisplay.models import FirmwareVersion
+
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-_BASE_PLATFORMS: list[Platform] = []
-_FLEX_PLATFORMS = [Platform.EVENT, Platform.SENSOR]
+BASE_PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR]
+FLEX_PLATFORMS = [Platform.BINARY_SENSOR, Platform.EVENT, Platform.SENSOR]
 
 
 @dataclass
@@ -58,13 +63,15 @@ def _get_encryption_key(entry: OpenDisplayConfigEntry) -> bytes | None:
         return None
     if len(raw) != 32:
         raise ConfigEntryAuthFailed(
-            "Stored OpenDisplay encryption key is invalid; reauthentication required"
+            translation_domain=DOMAIN,
+            translation_key="authentication_error",
         )
     try:
         return bytes.fromhex(raw)
     except ValueError as err:
         raise ConfigEntryAuthFailed(
-            "Stored OpenDisplay encryption key is invalid; reauthentication required"
+            translation_domain=DOMAIN,
+            translation_key="authentication_error",
         ) from err
 
 
@@ -74,7 +81,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: OpenDisplayConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: OpenDisplayConfigEntry) -> None:
     """Set up OpenDisplay from a config entry."""
     address = entry.unique_id
     if TYPE_CHECKING:
@@ -83,9 +90,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenDisplayConfigEntry) 
     ble_device = async_ble_device_from_address(hass, address, connectable=True)
     if ble_device is None:
         raise ConfigEntryNotReady(
-            f"Could not find OpenDisplay device with address {address}"
+            translation_domain=DOMAIN,
+            translation_key="device_not_found",
+            translation_placeholders={
+                "address": address,
+                "reason": async_address_reachability_diagnostics(
+                    hass,
+                    address.upper(),
+                    BluetoothReachabilityIntent.CONNECTION,
+                ),
+            },
         )
-
     encryption_key = _get_encryption_key(entry)
 
     try:
@@ -96,11 +111,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenDisplayConfigEntry) 
             is_flex = device.is_flex
     except (AuthenticationFailedError, AuthenticationRequiredError) as err:
         raise ConfigEntryAuthFailed(
-            f"Encryption key rejected by OpenDisplay device: {err}"
+            translation_domain=DOMAIN,
+            translation_key="authentication_error",
         ) from err
     except (BLEConnectionError, BLETimeoutError, OpenDisplayError) as err:
         raise ConfigEntryNotReady(
-            f"Failed to connect to OpenDisplay device: {err}"
+            translation_domain=DOMAIN,
+            translation_key="setup_connection_error",
         ) from err
     device_config = device.config
     if TYPE_CHECKING:
@@ -112,9 +129,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenDisplayConfigEntry) 
     display = device_config.displays[0]
     color_scheme_enum = display.color_scheme_enum
     color_scheme = (
-        str(color_scheme_enum)
-        if isinstance(color_scheme_enum, int)
-        else color_scheme_enum.name
+        color_scheme_enum.name
+        if isinstance(color_scheme_enum, ColorScheme)
+        else str(color_scheme_enum)
     )
     size = (
         f'{display.screen_diagonal_inches:.1f}"'
@@ -126,7 +143,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenDisplayConfigEntry) 
         connections={(CONNECTION_BLUETOOTH, address)},
         manufacturer=manufacturer.manufacturer_name,
         model=f"{size} {color_scheme}",
-        sw_version=f"{fw['major']}.{fw['minor']}",
+        sw_version=f"{fw['major']}.{fw['minor']}.{fw['patch']}",
         hw_version=(
             f"{manufacturer.board_type_name or manufacturer.board_type}"
             f" rev. {manufacturer.board_revision}"
@@ -146,22 +163,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenDisplayConfigEntry) 
     )
 
     await hass.config_entries.async_forward_entry_setups(
-        entry, _FLEX_PLATFORMS if is_flex else _BASE_PLATFORMS
+        entry, FLEX_PLATFORMS if is_flex else BASE_PLATFORMS
     )
     entry.async_on_unload(coordinator.async_start())
-
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: OpenDisplayConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
     if (task := entry.runtime_data.upload_task) and not task.done():
         task.cancel()
         with contextlib.suppress(asyncio.CancelledError):
             await task
 
-    return await hass.config_entries.async_unload_platforms(
-        entry, _FLEX_PLATFORMS if entry.runtime_data.is_flex else _BASE_PLATFORMS
+    await hass.config_entries.async_unload_platforms_or_raise(
+        entry, FLEX_PLATFORMS if entry.runtime_data.is_flex else BASE_PLATFORMS
     )

@@ -1,6 +1,7 @@
 """Coordinator for the Casper Glow integration."""
 
 import logging
+from typing import override
 
 from bleak import BleakError
 from bluetooth_data_tools import monotonic_time_coarse
@@ -74,6 +75,7 @@ class CasperGlowCoordinator(ActiveBluetoothDataUpdateCoordinator[None]):
         """Poll device state."""
         await self.device.query_state()
 
+    @override
     async def _async_poll(self) -> None:
         """Poll the device and log availability changes."""
         assert self._last_service_info
@@ -100,6 +102,7 @@ class CasperGlowCoordinator(ActiveBluetoothDataUpdateCoordinator[None]):
         self._async_handle_bluetooth_poll()
 
     @callback
+    @override
     def _async_handle_bluetooth_event(
         self,
         service_info: BluetoothServiceInfoBleak,

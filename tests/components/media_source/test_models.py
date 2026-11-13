@@ -1,6 +1,12 @@
 """Test Media Source model methods."""
 
-from homeassistant.components.media_player import MediaClass, MediaType
+import pytest
+
+from homeassistant.components.media_player import (
+    MediaClass,
+    MediaType,
+    SearchMediaQuery,
+)
 from homeassistant.components.media_source import const, models
 from homeassistant.core import HomeAssistant
 
@@ -84,3 +90,11 @@ async def test_media_source_item_media_source_id(hass: HomeAssistant) -> None:
     # Test with no domain (root)
     item = models.MediaSourceItem(hass, None, "", None)
     assert item.media_source_id == "media-source://"
+
+
+async def test_media_source_search_media_not_implemented(hass: HomeAssistant) -> None:
+    """Test the base MediaSource.async_search_media raises NotImplementedError."""
+    source = models.MediaSource(const.DOMAIN)
+    item = models.MediaSourceItem(hass, const.DOMAIN, "", None)
+    with pytest.raises(NotImplementedError):
+        await source.async_search_media(item, SearchMediaQuery(search_query="test"))

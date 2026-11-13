@@ -1,6 +1,9 @@
 """Intents for the todo integration."""
 
-import voluptuous as vol
+import dataclasses
+from typing import override
+
+import probatio
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
@@ -24,8 +27,8 @@ class ListBaseIntentHandler(intent.IntentHandler):
     """Base class for toto intent handlers."""
 
     slot_schema = {
-        vol.Required("item"): intent.non_empty_string,
-        vol.Required("name"): intent.non_empty_string,
+        probatio.Required("item"): intent.non_empty_string,
+        probatio.Required("name"): intent.non_empty_string,
     }
     platforms = {DOMAIN}
 
@@ -33,6 +36,7 @@ class ListBaseIntentHandler(intent.IntentHandler):
         """Execute action specific to this intent handler."""
         raise NotImplementedError
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         hass = intent_obj.hass
@@ -84,6 +88,7 @@ class ListAddItemIntentHandler(ListBaseIntentHandler):
     intent_type = INTENT_LIST_ADD_ITEM
     description = "Add item to a todo list"
 
+    @override
     async def _async_do_handle(self, target_list: TodoListEntity, item: str) -> None:
         """Execute action specific to this intent handler."""
         # Format item summary with first letter capitalized and rest as-is
@@ -101,6 +106,7 @@ class ListCompleteItemIntentHandler(ListBaseIntentHandler):
     intent_type = INTENT_LIST_COMPLETE_ITEM
     description = "Complete item on a todo list"
 
+    @override
     async def _async_do_handle(self, target_list: TodoListEntity, item: str) -> None:
         """Execute action specific to this intent handler."""
 
@@ -120,11 +126,7 @@ class ListCompleteItemIntentHandler(ListBaseIntentHandler):
 
         # Mark as completed
         await target_list.async_update_todo_item(
-            TodoItem(
-                uid=matching_item.uid,
-                summary=matching_item.summary,
-                status=TodoItemStatus.COMPLETED,
-            )
+            dataclasses.replace(matching_item, status=TodoItemStatus.COMPLETED)
         )
 
 
@@ -134,6 +136,7 @@ class ListRemoveItemIntentHandler(ListBaseIntentHandler):
     intent_type = INTENT_LIST_REMOVE_ITEM
     description = "Remove one or more items from a todo list"
 
+    @override
     async def _async_do_handle(self, target_list: TodoListEntity, item: str) -> None:
         """Execute action specific to this intent handler."""
 

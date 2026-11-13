@@ -1,7 +1,7 @@
 """Support for the Swedish weather institute weather service."""
 
 from collections.abc import Mapping
-from typing import Any, Final
+from typing import Any, Final, override
 
 from pysmhi import SMHIForecast
 
@@ -53,8 +53,10 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import slugify
 
 from .const import ATTR_SMHI_THUNDER_PROBABILITY, ENTITY_ID_SENSOR_FORMAT
-from .coordinator import SMHIConfigEntry
-from .entity import SmhiWeatherEntity
+from .coordinator import SMHIConfigEntry, SMHIDataUpdateCoordinator
+from .entity import SmhiEntity
+
+PARALLEL_UPDATES = 0
 
 # Used to map condition from API results
 CONDITION_CLASSES: Final[dict[str, list[int]]] = {
@@ -88,7 +90,7 @@ async def async_setup_entry(
     """Add a weather entity from map location."""
     location = config_entry.data
 
-    coordinator = config_entry.runtime_data[0]
+    coordinator = config_entry.runtime_data.coordinator
 
     entity = SmhiWeather(
         location[CONF_LOCATION][CONF_LATITUDE],
@@ -100,7 +102,9 @@ async def async_setup_entry(
     async_add_entities([entity])
 
 
-class SmhiWeather(SmhiWeatherEntity, SingleCoordinatorWeatherEntity):
+class SmhiWeather(
+    SmhiEntity[SMHIDataUpdateCoordinator], SingleCoordinatorWeatherEntity
+):
     """Representation of a weather entity."""
 
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
@@ -115,6 +119,7 @@ class SmhiWeather(SmhiWeatherEntity, SingleCoordinatorWeatherEntity):
     )
     _attr_name = None
 
+    @override
     def update_entity_data(self) -> None:
         """Refresh the entity data."""
         if daily_data := self.coordinator.data.daily:
@@ -133,6 +138,7 @@ class SmhiWeather(SmhiWeatherEntity, SingleCoordinatorWeatherEntity):
                 self._attr_condition = ATTR_CONDITION_CLEAR_NIGHT
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return additional attributes."""
         if daily_data := self.coordinator.data.daily:
@@ -142,6 +148,7 @@ class SmhiWeather(SmhiWeatherEntity, SingleCoordinatorWeatherEntity):
         return None
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self.update_entity_data()
@@ -156,7 +163,13 @@ class SmhiWeather(SmhiWeatherEntity, SingleCoordinatorWeatherEntity):
 
         data: list[Forecast] = []
 
-        for forecast in forecast_data[1:]:
+        # The library repeats the current conditions as the first entry of the
+        # daily and twice daily forecasts, so those start one entry in. It does
+        # not do that for the hourly forecast, where the first entry is the
+        # forecast for the current hour.
+        forecasts = forecast_data if forecast_type == "hourly" else forecast_data[1:]
+
+        for forecast in forecasts:
             condition = CONDITION_MAP.get(forecast["symbol"])
             if condition == ATTR_CONDITION_SUNNY and not sun.is_up(
                 self.hass, forecast["valid_time"]
@@ -190,14 +203,20 @@ class SmhiWeather(SmhiWeatherEntity, SingleCoordinatorWeatherEntity):
 
         return data
 
+    @callback
+    @override
     def _async_forecast_daily(self) -> list[Forecast] | None:
         """Service to retrieve the daily forecast."""
         return self._get_forecast_data(self.coordinator.data.daily, "daily")
 
+    @callback
+    @override
     def _async_forecast_hourly(self) -> list[Forecast] | None:
         """Service to retrieve the hourly forecast."""
         return self._get_forecast_data(self.coordinator.data.hourly, "hourly")
 
+    @callback
+    @override
     def _async_forecast_twice_daily(self) -> list[Forecast] | None:
         """Service to retrieve the twice daily forecast."""
         return self._get_forecast_data(self.coordinator.data.twice_daily, "twice_daily")

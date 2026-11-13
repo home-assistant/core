@@ -223,7 +223,6 @@
               "read": true,
               "step": 0.1,
               "type": "number",
-              "unit": "ppm",
               "write": false
             }
           }
@@ -245,7 +244,7 @@
               "read": true,
               "step": 0.1,
               "type": "number",
-              "unit": "kWh",
+              "unit": "A",
               "write": false
             }
           }
@@ -265,7 +264,7 @@
               "read": true,
               "step": 0.1,
               "type": "number",
-              "unit": "A",
+              "unit": "Wh",
               "write": false
             }
           }
@@ -517,6 +516,340 @@
           },
           "refId": "000001/94/1",
           "type": "humidity"
+        },
+        {
+          "id": "UL90",
+          "location": "Living",
+          "locationId": 0,
+          "name": "Stepper",
+          "originalName": "Stepper",
+          "properties": {
+            "value": {
+              "read": true,
+              "type": "number",
+              "valueList": [
+                { "name": "0", "value": 0 },
+                { "name": "Here comes", "value": 1 },
+                { "name": "the hotstepper", "value": 2 },
+                { "name": "3", "value": 3 },
+                { "name": "item 4", "value": 4 },
+                { "name": "5", "value": 5 },
+                { "name": "6", "value": 6 },
+                { "name": "7", "value": 7 },
+                { "name": "8", "value": 8 },
+                { "name": "9", "value": 9 },
+                { "name": "item 10, last", "value": 10 }
+              ],
+              "write": true
+            }
+          },
+          "refId": "000001/68",
+          "type": "stepper"
+        },
+        {
+          "id": "UL100",
+          "location": "Media room",
+          "locationId": 1,
+          "name": "tv",
+          "originalName": "tv",
+          "properties": {
+            "brightness": {
+              "max": 100,
+              "min": 0,
+              "read": true,
+              "step": 0.10000000000000001,
+              "type": "percent",
+              "unit": "%",
+              "write": true
+            },
+            "currRegime": {
+              "enumValues": ["ColorSelect", "ColorWheel", "MovieSelect"],
+              "read": true,
+              "type": "enumString",
+              "write": true
+            },
+            "hue": {
+              "max": 360,
+              "min": 0,
+              "read": true,
+              "step": 0.10000000000000001,
+              "type": "number",
+              "write": true
+            },
+            "on": { "read": true, "type": "boolean", "write": true },
+            "presetColor": {
+              "read": true,
+              "type": "number",
+              "valueList": [
+                {
+                  "extra": { "hue": 0, "saturation": 100 },
+                  "name": "Rood",
+                  "value": 1
+                },
+                {
+                  "extra": { "hue": 20, "saturation": 100 },
+                  "name": "Colour 2",
+                  "value": 2
+                },
+                {
+                  "extra": { "hue": 40, "saturation": 100 },
+                  "name": "Oranje",
+                  "value": 3
+                },
+                {
+                  "extra": { "hue": 60, "saturation": 100 },
+                  "name": "Geel",
+                  "value": 4
+                },
+                {
+                  "extra": { "hue": 80, "saturation": 100 },
+                  "name": "Colour 5",
+                  "value": 5
+                },
+                {
+                  "extra": { "hue": 100, "saturation": 100 },
+                  "name": "Colour 6",
+                  "value": 6
+                },
+                {
+                  "extra": { "hue": 120, "saturation": 100 },
+                  "name": "Groen",
+                  "value": 7
+                },
+                {
+                  "extra": { "hue": 140, "saturation": 100 },
+                  "name": "Colour 8",
+                  "value": 8
+                },
+                {
+                  "extra": { "hue": 160, "saturation": 100 },
+                  "name": "Colour 9",
+                  "value": 9
+                },
+                {
+                  "extra": { "hue": 180, "saturation": 100 },
+                  "name": "Cyaan",
+                  "value": 10
+                },
+                {
+                  "extra": { "hue": 200, "saturation": 100 },
+                  "name": "Colour 11",
+                  "value": 11
+                },
+                {
+                  "extra": { "hue": 220, "saturation": 100 },
+                  "name": "Colour 12",
+                  "value": 12
+                },
+                {
+                  "extra": { "hue": 240, "saturation": 100 },
+                  "name": "Blauw",
+                  "value": 13
+                },
+                {
+                  "extra": { "hue": 260, "saturation": 100 },
+                  "name": "Colour 14",
+                  "value": 14
+                },
+                {
+                  "extra": { "hue": 280, "saturation": 100 },
+                  "name": "Colour 15",
+                  "value": 15
+                },
+                {
+                  "extra": { "hue": 300, "saturation": 100 },
+                  "name": "Paars",
+                  "value": 16
+                },
+                {
+                  "extra": { "hue": 320, "saturation": 100 },
+                  "name": "Colour 17",
+                  "value": 17
+                },
+                {
+                  "extra": { "hue": 340, "saturation": 100 },
+                  "name": "Colour 18",
+                  "value": 18
+                },
+                {
+                  "extra": { "hue": 0, "saturation": 0 },
+                  "name": "Wit",
+                  "value": 19
+                }
+              ],
+              "write": true
+            },
+            "presetMovie": {
+              "read": true,
+              "type": "number",
+              "valueList": [
+                { "name": "Summer", "value": 1 },
+                { "name": "Seq.2", "value": 2 },
+                { "name": "Seq.3", "value": 3 },
+                { "name": "Seq.4", "value": 4 }
+              ],
+              "write": true
+            },
+            "saturation": {
+              "read": true,
+              "step": 0.10000000000000001,
+              "type": "percent",
+              "unit": "%",
+              "write": true
+            }
+          },
+          "refId": "000001/32101",
+          "type": "multicolor"
+        },
+        {
+          "id": "UL101",
+          "location": "Kitchen",
+          "locationId": 8,
+          "name": "Kabinet",
+          "originalName": "Kabinet",
+          "properties": {
+            "brightness": {
+              "max": 100,
+              "min": 0,
+              "read": true,
+              "step": 0.10000000000000001,
+              "type": "percent",
+              "unit": "%",
+              "write": true
+            },
+            "currRegime": {
+              "enumValues": ["ColorSelect", "ColorWheel", "MovieSelect"],
+              "read": true,
+              "type": "enumString",
+              "write": true
+            },
+            "hue": {
+              "max": 360,
+              "min": 0,
+              "read": true,
+              "step": 0.10000000000000001,
+              "type": "number",
+              "write": true
+            },
+            "on": { "read": true, "type": "boolean", "write": true },
+            "presetColor": {
+              "read": true,
+              "type": "number",
+              "valueList": [
+                {
+                  "extra": { "hue": 0, "saturation": 100 },
+                  "name": "Rood",
+                  "value": 1
+                },
+                {
+                  "extra": { "hue": 20, "saturation": 100 },
+                  "name": "Colour 2",
+                  "value": 2
+                },
+                {
+                  "extra": { "hue": 40, "saturation": 100 },
+                  "name": "Oranje",
+                  "value": 3
+                },
+                {
+                  "extra": { "hue": 60, "saturation": 100 },
+                  "name": "Geel",
+                  "value": 4
+                },
+                {
+                  "extra": { "hue": 80, "saturation": 100 },
+                  "name": "Colour 5",
+                  "value": 5
+                },
+                {
+                  "extra": { "hue": 100, "saturation": 100 },
+                  "name": "Colour 6",
+                  "value": 6
+                },
+                {
+                  "extra": { "hue": 120, "saturation": 100 },
+                  "name": "Groen",
+                  "value": 7
+                },
+                {
+                  "extra": { "hue": 140, "saturation": 100 },
+                  "name": "Colour 8",
+                  "value": 8
+                },
+                {
+                  "extra": { "hue": 160, "saturation": 100 },
+                  "name": "Colour 9",
+                  "value": 9
+                },
+                {
+                  "extra": { "hue": 180, "saturation": 100 },
+                  "name": "Cyaan",
+                  "value": 10
+                },
+                {
+                  "extra": { "hue": 200, "saturation": 100 },
+                  "name": "Colour 11",
+                  "value": 11
+                },
+                {
+                  "extra": { "hue": 220, "saturation": 100 },
+                  "name": "Colour 12",
+                  "value": 12
+                },
+                {
+                  "extra": { "hue": 240, "saturation": 100 },
+                  "name": "Blauw",
+                  "value": 13
+                },
+                {
+                  "extra": { "hue": 260, "saturation": 100 },
+                  "name": "Colour 14",
+                  "value": 14
+                },
+                {
+                  "extra": { "hue": 280, "saturation": 100 },
+                  "name": "Colour 15",
+                  "value": 15
+                },
+                {
+                  "extra": { "hue": 300, "saturation": 100 },
+                  "name": "Paars",
+                  "value": 16
+                },
+                {
+                  "extra": { "hue": 320, "saturation": 100 },
+                  "name": "Colour 17",
+                  "value": 17
+                },
+                {
+                  "extra": { "hue": 340, "saturation": 100 },
+                  "name": "Colour 18",
+                  "value": 18
+                },
+                {
+                  "extra": { "hue": 0, "saturation": 0 },
+                  "name": "Wit",
+                  "value": 19
+                }
+              ],
+              "write": true
+            },
+            "presetMovie": {
+              "read": true,
+              "type": "number",
+              "valueList": [],
+              "write": true
+            },
+            "saturation": {
+              "read": true,
+              "step": 0.10000000000000001,
+              "type": "percent",
+              "unit": "%",
+              "write": true
+            }
+          },
+          "refId": "000001/33101",
+          "type": "multicolor"
         }
       ]
     }

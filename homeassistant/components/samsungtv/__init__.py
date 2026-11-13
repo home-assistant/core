@@ -1,11 +1,8 @@
 """The Samsung TV integration."""
 
 from collections.abc import Coroutine, Mapping
-from functools import partial
 from typing import Any
 from urllib.parse import urlparse
-
-import getmac
 
 from homeassistant.components import ssdp
 from homeassistant.const import (
@@ -112,7 +109,7 @@ async def _async_update_ssdp_locations(
         hass.config_entries.async_update_entry(entry, data={**entry.data, **updates})
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SamsungTVConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SamsungTVConfigEntry) -> None:
     """Set up the Samsung TV platform."""
     # Initialize bridge
     if entry.data.get(CONF_METHOD) == METHOD_ENCRYPTED_WEBSOCKET:
@@ -162,8 +159,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SamsungTVConfigEntry) ->
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def _async_create_bridge_with_updated_data(
     hass: HomeAssistant, entry: SamsungTVConfigEntry
@@ -187,11 +182,6 @@ async def _async_create_bridge_with_updated_data(
         LOGGER.debug("Attempting to get mac for %s", host)
         if info:
             mac = mac_from_device_info(info)
-
-        if not mac:
-            mac = await hass.async_add_executor_job(
-                partial(getmac.get_mac_address, ip=host)
-            )
 
         if mac and mac != "none":
             # Samsung sometimes returns a value of "none" for the mac address
@@ -227,28 +217,24 @@ async def _async_create_bridge_with_updated_data(
     return bridge
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: SamsungTVConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SamsungTVConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: SamsungTVConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
     version = config_entry.version
     minor_version = config_entry.minor_version
-
-    if version > 2:
-        # This means the user has downgraded from a future version
-        return False
 
     LOGGER.debug("Migrating from version %s.%s", version, minor_version)
 
     # 1 -> 2: Unique ID format changed, so delete and re-import:
     if version == 1:
         dev_reg = dr.async_get(hass)
-        dev_reg.async_clear_config_entry(config_entry.entry_id)
+        dev_reg.async_clear_config_entry(config_entry.entry_id, config_entry.domain)
 
         en_reg = er.async_get(hass)
         en_reg.async_clear_config_entry(config_entry.entry_id)
@@ -265,5 +251,3 @@ async def async_migrate_entry(
             hass.config_entries.async_update_entry(config_entry, minor_version=2)
 
     LOGGER.debug("Migration to version %s.%s successful", version, minor_version)
-
-    return True

@@ -4,19 +4,21 @@ from unittest.mock import MagicMock, Mock
 
 from aiohttp import ClientResponseError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION, SERVICE_SELECT_OPTION
+from homeassistant.components.select import (
+    DOMAIN as SELECT_DOMAIN,
+    SelectService,
+    SelectServiceArgument,
+)
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, snapshot_platform
-
-TEST_PLATFORM = SELECT_DOMAIN
 pytestmark = [
-    pytest.mark.parametrize("platforms", [(TEST_PLATFORM,)]),
+    pytest.mark.parametrize("platforms", [(Platform.SELECT,)]),
     pytest.mark.parametrize(
         "load_action_file", ["action_freezer.json"], ids=["freezer"]
     ),
@@ -45,9 +47,12 @@ async def test_selecting(
     """Test the select service."""
 
     await hass.services.async_call(
-        TEST_PLATFORM,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_OPTION: "sabbath"},
+        SELECT_DOMAIN,
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+            SelectServiceArgument.OPTION: "sabbath",
+        },
         blocking=True,
     )
     mock_miele_client.send_action.assert_called_once()
@@ -65,9 +70,12 @@ async def test_api_failure(
         HomeAssistantError, match=f"Failed to set state for {ENTITY_ID}"
     ):
         await hass.services.async_call(
-            TEST_PLATFORM,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_OPTION: "sabbath"},
+            SELECT_DOMAIN,
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+                SelectServiceArgument.OPTION: "sabbath",
+            },
             blocking=True,
         )
     mock_miele_client.send_action.assert_called_once()
@@ -85,9 +93,12 @@ async def test_invalid_option(
         ServiceValidationError, match=f'Invalid option: "normal" on {ENTITY_ID}'
     ):
         await hass.services.async_call(
-            TEST_PLATFORM,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_OPTION: "normal"},
+            SELECT_DOMAIN,
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+                SelectServiceArgument.OPTION: "normal",
+            },
             blocking=True,
         )
     mock_miele_client.send_action.assert_not_called()

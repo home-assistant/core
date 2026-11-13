@@ -3,6 +3,8 @@
 from datetime import timedelta
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+
 from homeassistant.components.nuheat.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
@@ -16,8 +18,6 @@ from .mocks import (
     _get_mock_thermostat_schedule_hold_unavailable,
     _get_mock_thermostat_schedule_temporary_hold,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_climate_thermostat_run(hass: HomeAssistant) -> None:
@@ -34,7 +34,7 @@ async def test_climate_thermostat_run(hass: HomeAssistant) -> None:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get("climate.master_bathroom")
+    state = hass.states.get("climate.master_bathroom_master_bathroom")
     assert state.state == "auto"
     expected_attributes = {
         "current_temperature": 22.2,
@@ -69,7 +69,7 @@ async def test_climate_thermostat_schedule_hold_unavailable(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get("climate.guest_bathroom")
+    state = hass.states.get("climate.guest_bathroom_guest_bathroom")
 
     assert state.state == "unavailable"
     expected_attributes = {
@@ -99,7 +99,7 @@ async def test_climate_thermostat_schedule_hold_available(hass: HomeAssistant) -
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get("climate.available_bathroom")
+    state = hass.states.get("climate.available_bathroom_available_bathroom")
 
     assert state.state == "auto"
     expected_attributes = {
@@ -133,7 +133,7 @@ async def test_climate_thermostat_schedule_temporary_hold(hass: HomeAssistant) -
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get("climate.temp_bathroom")
+    state = hass.states.get("climate.temp_bathroom_temp_bathroom")
 
     assert state.state == "auto"
     expected_attributes = {
@@ -155,19 +155,22 @@ async def test_climate_thermostat_schedule_temporary_hold(hass: HomeAssistant) -
     await hass.services.async_call(
         "climate",
         "set_temperature",
-        service_data={ATTR_ENTITY_ID: "climate.temp_bathroom", "temperature": 90},
+        service_data={
+            ATTR_ENTITY_ID: "climate.temp_bathroom_temp_bathroom",
+            "temperature": 90,
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
 
     # opportunistic set
-    state = hass.states.get("climate.temp_bathroom")
+    state = hass.states.get("climate.temp_bathroom_temp_bathroom")
     assert state.attributes["preset_mode"] == "Temporary Hold"
     assert state.attributes["temperature"] == 90.0
 
     # and the api poll returns it to the mock
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=3))
     await hass.async_block_till_done()
-    state = hass.states.get("climate.temp_bathroom")
+    state = hass.states.get("climate.temp_bathroom_temp_bathroom")
     assert state.attributes["preset_mode"] == "Run Schedule"
     assert state.attributes["temperature"] == 37.2

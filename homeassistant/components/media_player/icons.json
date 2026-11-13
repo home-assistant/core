@@ -1,5 +1,8 @@
 {
   "conditions": {
+    "is_current_source": {
+      "condition": "mdi:import"
+    },
     "is_muted": {
       "condition": "mdi:volume-mute"
     },
@@ -32,6 +35,12 @@
         "off": "mdi:cast-off",
         "paused": "mdi:cast-connected",
         "playing": "mdi:cast-connected"
+      }
+    },
+    "projector": {
+      "default": "mdi:projector",
+      "state": {
+        "off": "mdi:projector-off"
       }
     },
     "receiver": {
@@ -107,7 +116,7 @@
       "service": "mdi:shuffle"
     },
     "toggle": {
-      "service": "mdi:play-pause"
+      "service": "mdi:power"
     },
     "turn_off": {
       "service": "mdi:power"

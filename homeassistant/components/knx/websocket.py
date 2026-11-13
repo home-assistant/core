@@ -2,12 +2,19 @@
 
 from collections.abc import Awaitable, Callable
 from contextlib import ExitStack
+from datetime import timedelta
 from functools import wraps
 import inspect
 from typing import TYPE_CHECKING, Any, Final, overload
 
 import knx_frontend as knx_panel
-import voluptuous as vol
+from knx_telegram_store import (
+    BufferedPostgresStore,
+    BufferedSqliteStore,
+    KnxTelegramStoreException,
+    TelegramQuery,
+)
+import probatio
 from xknx.telegram import Telegram
 from xknxproject.exceptions import XknxProjectException
 
@@ -16,12 +23,21 @@ from homeassistant.components.frontend import async_panel_exists
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.const import CONF_ENTITY_ID, CONF_PLATFORM, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.helpers.typing import Undefined
+from homeassistant.util import dt as dt_util
 from homeassistant.util.ulid import ulid_now
 
-from .const import DOMAIN, KNX_MODULE_KEY, SUPPORTED_PLATFORMS_UI
+from .const import (
+    CONF_KNX_TELEGRAM_DB_LOAD_HOURS,
+    DOMAIN,
+    KNX_MODULE_KEY,
+    SIGNAL_KNX_DATA_SECURE_ISSUE_TELEGRAM,
+    SIGNAL_KNX_TELEGRAM,
+    SUPPORTED_PLATFORMS_UI,
+    UI_DEVICE_ID_PREFIX,
+)
 from .dpt import get_supported_dpts
 from .storage.config_store import ConfigStoreException
 from .storage.const import CONF_DATA
@@ -34,14 +50,15 @@ from .storage.entity_store_validation import (
     EntityStoreValidationSuccess,
     validate_entity_data,
 )
+from .storage.entity_suggestions import async_get_entity_suggestions
+from .storage.entity_suggestions.const import SuggestionFilter
 from .storage.expose_controller import validate_expose_data
 from .storage.serialize import get_serialized_schema
 from .storage.time_server import validate_time_server_data
-from .telegrams import (
-    SIGNAL_KNX_DATA_SECURE_ISSUE_TELEGRAM,
-    SIGNAL_KNX_TELEGRAM,
-    TelegramDict,
-)
+from .telegrams import TelegramDict
+
+# Websocket error code while the telegram store is still being initialized.
+ERR_TELEGRAM_STORE_INITIALIZING = "telegram_store_initializing"
 
 if TYPE_CHECKING:
     from .knx_module import KNXModule
@@ -56,8 +73,10 @@ async def register_panel(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_project_file_remove)
     websocket_api.async_register_command(hass, ws_group_monitor_info)
     websocket_api.async_register_command(hass, ws_group_telegrams)
+    websocket_api.async_register_command(hass, ws_query_telegrams)
     websocket_api.async_register_command(hass, ws_subscribe_telegram)
     websocket_api.async_register_command(hass, ws_get_knx_project)
+    websocket_api.async_register_command(hass, ws_get_entity_suggestions)
     websocket_api.async_register_command(hass, ws_validate_entity)
     websocket_api.async_register_command(hass, ws_create_entity)
     websocket_api.async_register_command(hass, ws_update_entity)
@@ -91,6 +110,7 @@ async def register_panel(hass: HomeAssistant) -> None:
             module_url=f"{URL_BASE}/{knx_panel.entrypoint_js}",
             embed_iframe=True,
             require_admin=True,
+            handle_safe_area=True,
         )
 
 
@@ -168,7 +188,7 @@ def provide_knx(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/get_base_data",
+        probatio.Required("type"): "knx/get_base_data",
     }
 )
 @provide_knx
@@ -192,6 +212,19 @@ def ws_get_base_data(
         "version": knx.xknx.version,
         "connected": knx.xknx.connection_manager.connected.is_set(),
         "current_address": str(knx.xknx.current_address),
+        "telegram_backend": (
+            "sqlite"
+            if isinstance(knx.telegrams.store, BufferedSqliteStore)
+            else "postgres"
+            if isinstance(knx.telegrams.store, BufferedPostgresStore)
+            else "unknown"
+        ),
+        "telegram_retention": knx.telegrams.store.retention_days
+        if knx.telegrams.store is not None
+        else None,
+        "telegram_max_count": knx.telegrams.store.max_telegrams
+        if knx.telegrams.store is not None
+        else None,
     }
 
     connection.send_result(
@@ -208,7 +241,7 @@ def ws_get_base_data(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/get_knx_project",
+        probatio.Required("type"): "knx/get_knx_project",
     }
 )
 @websocket_api.async_response
@@ -230,9 +263,39 @@ async def ws_get_knx_project(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/project_file_process",
-        vol.Required("file_id"): str,
-        vol.Required("password"): str,
+        probatio.Required("type"): "knx/get_entity_suggestions",
+        probatio.Optional("platform"): probatio.In(SUPPORTED_PLATFORMS_UI),
+        probatio.Optional("group_id"): str,
+        probatio.Optional("include_configured", default=True): bool,
+    }
+)
+@websocket_api.async_response
+@provide_knx
+async def ws_get_entity_suggestions(
+    hass: HomeAssistant,
+    knx: KNXModule,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+) -> None:
+    """Handle get entity suggestions."""
+    result = await async_get_entity_suggestions(
+        hass,
+        knx,
+        SuggestionFilter(
+            platform=msg.get("platform"),
+            group_id=msg.get("group_id"),
+            include_configured=msg["include_configured"],
+        ),
+    )
+    connection.send_result(msg["id"], result)
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        probatio.Required("type"): "knx/project_file_process",
+        probatio.Required("file_id"): str,
+        probatio.Required("password"): str,
     }
 )
 @websocket_api.async_response
@@ -263,7 +326,7 @@ async def ws_project_file_process(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/project_file_remove",
+        probatio.Required("type"): "knx/project_file_remove",
     }
 )
 @websocket_api.async_response
@@ -282,24 +345,58 @@ async def ws_project_file_remove(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/group_monitor_info",
+        probatio.Required("type"): "knx/group_monitor_info",
     }
 )
+@websocket_api.async_response
 @provide_knx
-@callback
-def ws_group_monitor_info(
+async def ws_group_monitor_info(
     hass: HomeAssistant,
     knx: KNXModule,
     connection: websocket_api.ActiveConnection,
     msg: dict,
 ) -> None:
     """Handle get info command of group monitor."""
-    recent_telegrams = [*knx.telegrams.recent_telegrams]
+    load_hours = knx.entry.options[CONF_KNX_TELEGRAM_DB_LOAD_HOURS]
+    start_time = dt_util.now() - timedelta(hours=load_hours)
+
+    query = TelegramQuery(start_time=start_time, order_descending=True)
+    if knx.telegrams.store is None:
+        if knx.telegrams.store_initializing:
+            connection.send_result(
+                msg["id"],
+                {
+                    "project_loaded": knx.project.loaded,
+                    "telegram_store_status": "initializing",
+                    "recent_telegrams": [],
+                },
+            )
+            return
+        connection.send_error(
+            msg["id"],
+            websocket_api.const.ERR_HOME_ASSISTANT_ERROR,
+            "Telegram storage backend not initialized. "
+            "Check logs/Repairs for initialization errors.",
+        )
+        return
+    try:
+        result = await knx.telegrams.store.query(query, flush_first=True)
+    except KnxTelegramStoreException as err:
+        connection.send_error(
+            msg["id"],
+            websocket_api.const.ERR_HOME_ASSISTANT_ERROR,
+            f"Database error: {err}",
+        )
+        return
+
     connection.send_result(
         msg["id"],
         {
             "project_loaded": knx.project.loaded,
-            "recent_telegrams": recent_telegrams,
+            "telegram_store_status": "ready",
+            "recent_telegrams": [
+                knx.telegrams.model_to_dict(t) for t in result.telegrams
+            ],
         },
     )
 
@@ -307,7 +404,7 @@ def ws_group_monitor_info(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/group_telegrams",
+        probatio.Required("type"): "knx/group_telegrams",
     }
 )
 @provide_knx
@@ -328,7 +425,96 @@ def ws_group_telegrams(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/subscribe_telegrams",
+        probatio.Required("type"): "knx/query_telegrams",
+        probatio.Optional("sources"): [str],
+        probatio.Optional("destinations"): [str],
+        probatio.Optional("telegram_types"): [str],
+        probatio.Optional("directions"): [str],
+        probatio.Optional("dpt_mains"): [probatio.Coerce(int)],
+        probatio.Optional("start_time"): cv.datetime,
+        probatio.Optional("end_time"): cv.datetime,
+        probatio.Optional("delta_before_ms"): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=0)
+        ),
+        probatio.Optional("delta_after_ms"): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=0)
+        ),
+        probatio.Optional("limit"): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=1, max=100_000)
+        ),
+        probatio.Optional("offset"): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=0)
+        ),
+        probatio.Optional("order_descending"): bool,
+    }
+)
+@websocket_api.async_response
+@provide_knx
+async def ws_query_telegrams(
+    hass: HomeAssistant,
+    knx: KNXModule,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+) -> None:
+    """Handle query telegrams command."""
+    start_time = msg.get("start_time")
+    if start_time is None:
+        load_hours = knx.entry.options[CONF_KNX_TELEGRAM_DB_LOAD_HOURS]
+        start_time = dt_util.now() - timedelta(hours=load_hours)
+
+    query = TelegramQuery(
+        sources=msg.get("sources", []),
+        destinations=msg.get("destinations", []),
+        telegram_types=msg.get("telegram_types", []),
+        directions=msg.get("directions", []),
+        dpt_mains=msg.get("dpt_mains", []),
+        start_time=start_time,
+        end_time=msg.get("end_time"),
+        delta_before_ms=msg.get("delta_before_ms", 0),
+        delta_after_ms=msg.get("delta_after_ms", 0),
+        limit=msg.get("limit", 100_000),
+        offset=msg.get("offset", 0),
+        order_descending=msg.get("order_descending", True),
+    )
+    if knx.telegrams.store is None:
+        if knx.telegrams.store_initializing:
+            connection.send_error(
+                msg["id"],
+                ERR_TELEGRAM_STORE_INITIALIZING,
+                "Telegram storage backend is still initializing.",
+            )
+            return
+        connection.send_error(
+            msg["id"],
+            websocket_api.const.ERR_HOME_ASSISTANT_ERROR,
+            "Telegram storage backend not initialized. "
+            "Check logs/Repairs for initialization errors.",
+        )
+        return
+    try:
+        result = await knx.telegrams.store.query(query, flush_first=True)
+    except KnxTelegramStoreException as err:
+        connection.send_error(
+            msg["id"],
+            websocket_api.const.ERR_HOME_ASSISTANT_ERROR,
+            f"Database error: {err}",
+        )
+        return
+
+    connection.send_result(
+        msg["id"],
+        {
+            "telegrams": [knx.telegrams.model_to_dict(t) for t in result.telegrams],
+            "total_count": result.total_count,
+            "limit_reached": result.limit_reached,
+        },
+    )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        probatio.Required("type"): "knx/subscribe_telegrams",
     }
 )
 @callback
@@ -370,7 +556,7 @@ def ws_subscribe_telegram(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/validate_entity",
+        probatio.Required("type"): "knx/validate_entity",
         **CREATE_ENTITY_BASE_SCHEMA,
     }
 )
@@ -394,8 +580,8 @@ def ws_validate_entity(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/get_schema",
-        vol.Required(CONF_PLATFORM): vol.Coerce(Platform),
+        probatio.Required("type"): "knx/get_schema",
+        probatio.Required(CONF_PLATFORM): probatio.Coerce(Platform),
     }
 )
 @websocket_api.async_response
@@ -416,7 +602,7 @@ async def ws_get_schema(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/create_entity",
+        probatio.Required("type"): "knx/create_entity",
         **CREATE_ENTITY_BASE_SCHEMA,
     }
 )
@@ -453,7 +639,7 @@ async def ws_create_entity(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/update_entity",
+        probatio.Required("type"): "knx/update_entity",
         **UPDATE_ENTITY_BASE_SCHEMA,
     }
 )
@@ -490,8 +676,8 @@ async def ws_update_entity(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/delete_entity",
-        vol.Required(CONF_ENTITY_ID): str,
+        probatio.Required("type"): "knx/delete_entity",
+        probatio.Required(CONF_ENTITY_ID): str,
     }
 )
 @websocket_api.async_response
@@ -516,7 +702,7 @@ async def ws_delete_entity(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/get_entities_by_group",
+        probatio.Required("type"): "knx/get_entities_by_group",
     }
 )
 @provide_knx
@@ -527,18 +713,15 @@ def ws_get_entities_by_group(
     connection: websocket_api.ActiveConnection,
     msg: dict,
 ) -> None:
-    """Get entities by group address."""
-    data = {
-        str(ga): identifiers for ga, identifiers in knx.group_address_entities.items()
-    }
-    connection.send_result(msg["id"], data)
+    """Get entities by group address, disabled entities included."""
+    connection.send_result(msg["id"], knx.get_group_address_entities())
 
 
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/get_entity_config",
-        vol.Required(CONF_ENTITY_ID): str,
+        probatio.Required("type"): "knx/get_entity_config",
+        probatio.Required(CONF_ENTITY_ID): str,
     }
 )
 @provide_knx
@@ -563,9 +746,9 @@ def ws_get_entity_config(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/create_device",
-        vol.Required("name"): str,
-        vol.Optional("area_id"): str,
+        probatio.Required("type"): "knx/create_device",
+        probatio.Required("name"): str,
+        probatio.Optional("area_id"): str,
     }
 )
 @provide_knx
@@ -577,7 +760,7 @@ def ws_create_device(
     msg: dict,
 ) -> None:
     """Create a new KNX device."""
-    identifier = f"knx_vdev_{ulid_now()}"
+    identifier = f"{UI_DEVICE_ID_PREFIX}{ulid_now()}"
     device_registry = dr.async_get(hass)
     _device = device_registry.async_get_or_create(
         config_entry_id=knx.entry.entry_id,
@@ -587,7 +770,7 @@ def ws_create_device(
     )
     device_registry.async_update_device(
         _device.id,
-        area_id=msg.get("area_id") or UNDEFINED,
+        area_id=msg.get("area_id") or Undefined,
         configuration_url=f"homeassistant://knx/entities/view?device_id={_device.id}",
     )
     connection.send_result(msg["id"], _device.dict_repr)
@@ -601,7 +784,7 @@ def ws_create_device(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/get_expose_groups",
+        probatio.Required("type"): "knx/get_expose_groups",
     }
 )
 @provide_knx
@@ -619,8 +802,8 @@ def ws_get_expose_groups(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/get_expose_config",
-        vol.Required("entity_id"): str,
+        probatio.Required("type"): "knx/get_expose_config",
+        probatio.Required("entity_id"): str,
     }
 )
 @provide_knx
@@ -640,9 +823,9 @@ def ws_get_expose_config(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/update_expose",
-        vol.Required("entity_id"): str,
-        vol.Required("data"): dict,  # validation done in handler
+        probatio.Required("type"): "knx/update_expose",
+        probatio.Required("entity_id"): str,
+        probatio.Required("data"): dict,  # validation done in handler
     }
 )
 @websocket_api.async_response
@@ -676,8 +859,8 @@ async def ws_update_expose(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/delete_expose",
-        vol.Required("entity_id"): str,
+        probatio.Required("type"): "knx/delete_expose",
+        probatio.Required("entity_id"): str,
     }
 )
 @websocket_api.async_response
@@ -702,9 +885,9 @@ async def ws_delete_expose(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/validate_expose",
-        vol.Required("entity_id"): str,
-        vol.Required("data"): dict,  # validation done in handler
+        probatio.Required("type"): "knx/validate_expose",
+        probatio.Required("entity_id"): str,
+        probatio.Required("data"): dict,  # validation done in handler
     }
 )
 @callback
@@ -732,7 +915,7 @@ def ws_validate_expose(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/get_time_server_config",
+        probatio.Required("type"): "knx/get_time_server_config",
     }
 )
 @provide_knx
@@ -751,8 +934,8 @@ def ws_get_time_server_config(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/update_time_server_config",
-        vol.Required("config"): dict,  # validation done in handler
+        probatio.Required("type"): "knx/update_time_server_config",
+        probatio.Required("config"): dict,  # validation done in handler
     }
 )
 @websocket_api.async_response

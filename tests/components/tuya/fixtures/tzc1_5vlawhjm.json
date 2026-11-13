@@ -1,0 +1,210 @@
+{
+  "endpoint": "https://apigw.tuyaus.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "INTELAR IR288",
+  "category": "tzc1",
+  "product_id": "5vlawhjm",
+  "product_name": "INTELAR IR288",
+  "online": false,
+  "sub": false,
+  "time_zone": "-03:00",
+  "active_time": "2024-05-16T01:44:36+00:00",
+  "create_time": "2024-05-16T01:44:36+00:00",
+  "update_time": "2024-05-16T01:44:36+00:00",
+  "function": {
+    "unit_switch": {
+      "type": "Enum",
+      "value": {
+        "range": ["kg", "lb", "st"]
+      }
+    },
+    "data_report": {
+      "type": "Raw",
+      "value": {}
+    }
+  },
+  "status_range": {
+    "weight": {
+      "type": "Integer",
+      "value": {
+        "unit": "kg",
+        "min": 0,
+        "max": 18300,
+        "scale": 2,
+        "step": 1
+      },
+      "report_type": null
+    },
+    "body_r": {
+      "type": "Integer",
+      "value": {
+        "unit": "欧姆",
+        "min": 0,
+        "max": 65535,
+        "scale": 0,
+        "step": 1
+      },
+      "report_type": null
+    },
+    "realtime_data": {
+      "type": "Integer",
+      "value": {
+        "unit": "kg",
+        "min": 0,
+        "max": 18300,
+        "scale": 2,
+        "step": 1
+      },
+      "report_type": null
+    },
+    "data_identification": {
+      "type": "Enum",
+      "value": {
+        "range": ["reserve_1"]
+      },
+      "report_type": null
+    },
+    "unit_switch": {
+      "type": "Enum",
+      "value": {
+        "range": ["kg", "lb", "st"]
+      },
+      "report_type": null
+    },
+    "heart_rate": {
+      "type": "Integer",
+      "value": {
+        "min": 1,
+        "max": 300,
+        "scale": 0,
+        "step": 1
+      },
+      "report_type": null
+    },
+    "data_report": {
+      "type": "Raw",
+      "value": {},
+      "report_type": null
+    }
+  },
+  "status": {
+    "weight": 9090,
+    "body_r": 0,
+    "realtime_data": 8300,
+    "data_identification": "reserve_1",
+    "unit_switch": "kg",
+    "heart_rate": 93,
+    "data_report": "ATE4ZGFhMTcwNzYwMWMwMDABxSBsAF0="
+  },
+  "set_up": false,
+  "support_local": true,
+  "local_strategy": {
+    "1": {
+      "value_convert": "default",
+      "status_code": "weight",
+      "config_item": {
+        "statusFormat": "{\"weight\":\"$\"}",
+        "valueDesc": {
+          "unit": "kg",
+          "min": 0,
+          "max": 18300,
+          "scale": 2,
+          "step": 1
+        },
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "5vlawhjm"
+      }
+    },
+    "7": {
+      "value_convert": "default",
+      "status_code": "body_r",
+      "config_item": {
+        "statusFormat": "{\"body_r\":\"$\"}",
+        "valueDesc": {
+          "unit": "欧姆",
+          "min": 0,
+          "max": 65535,
+          "scale": 0,
+          "step": 1
+        },
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "5vlawhjm"
+      }
+    },
+    "9": {
+      "value_convert": "default",
+      "status_code": "realtime_data",
+      "config_item": {
+        "statusFormat": "{\"realtime_data\":\"$\"}",
+        "valueDesc": {
+          "unit": "kg",
+          "min": 0,
+          "max": 18300,
+          "scale": 2,
+          "step": 1
+        },
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "5vlawhjm"
+      }
+    },
+    "10": {
+      "value_convert": "default",
+      "status_code": "data_identification",
+      "config_item": {
+        "statusFormat": "{\"data_identification\":\"$\"}",
+        "valueDesc": {
+          "range": ["reserve_1"]
+        },
+        "valueType": "Enum",
+        "enumMappingMap": {},
+        "pid": "5vlawhjm"
+      }
+    },
+    "11": {
+      "value_convert": "default",
+      "status_code": "unit_switch",
+      "config_item": {
+        "statusFormat": "{\"unit_switch\":\"$\"}",
+        "valueDesc": {
+          "range": ["kg", "lb", "st"]
+        },
+        "valueType": "Enum",
+        "enumMappingMap": {},
+        "pid": "5vlawhjm"
+      }
+    },
+    "12": {
+      "value_convert": "default",
+      "status_code": "heart_rate",
+      "config_item": {
+        "statusFormat": "{\"heart_rate\":\"$\"}",
+        "valueDesc": {
+          "min": 1,
+          "max": 300,
+          "scale": 0,
+          "step": 1
+        },
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "5vlawhjm"
+      }
+    },
+    "15": {
+      "value_convert": "default",
+      "status_code": "data_report",
+      "config_item": {
+        "statusFormat": "{\"data_report\":\"$\"}",
+        "valueDesc": {},
+        "valueType": "Raw",
+        "enumMappingMap": {},
+        "pid": "5vlawhjm"
+      }
+    }
+  },
+  "warnings": null
+}

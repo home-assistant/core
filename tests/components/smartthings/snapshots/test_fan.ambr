@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': list([
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'auto',
         'low',
         'medium',
@@ -15,9 +15,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('smartthings', 'c02e8cfa-94ba-86f3-59a0-04a280950f2b')]>,
     'disabled_by': None,
     'domain': 'fan',
     'entity_category': None,
@@ -47,16 +47,16 @@
 # name: test_all_entities[da_ac_air_000001][fan.air_purifier-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Air purifier',
-      'preset_mode': 'auto',
-      'preset_modes': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air purifier',
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'auto',
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'auto',
         'low',
         'medium',
         'high',
         'sleep',
       ]),
-      'supported_features': <FanEntityFeature: 56>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 56>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.air_purifier',
@@ -73,7 +73,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': list([
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'auto',
         'low',
         'medium',
@@ -82,9 +82,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('smartthings', 'a5662f73-57d5-ba89-bf44-8b0008b8b2f3')]>,
     'disabled_by': None,
     'domain': 'fan',
     'entity_category': None,
@@ -114,16 +114,16 @@
 # name: test_all_entities[da_ac_air_01011][fan.air_filter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Air filter',
-      'preset_mode': 'auto',
-      'preset_modes': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air filter',
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'auto',
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'auto',
         'low',
         'medium',
         'high',
         'sleep',
       ]),
-      'supported_features': <FanEntityFeature: 56>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 56>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.air_filter',
@@ -140,14 +140,14 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': list([
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'smart',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('smartthings', 'fa5fca25-fa7a-1807-030a-2f72ee0f7bff')]>,
     'disabled_by': None,
     'domain': 'fan',
     'entity_category': None,
@@ -177,14 +177,14 @@
 # name: test_all_entities[da_ks_hood_01001][fan.range_hood-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Range hood',
-      'percentage': 25,
-      'percentage_step': 25.0,
-      'preset_mode': None,
-      'preset_modes': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Range hood',
+      <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 25,
+      <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 25.0,
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'smart',
       ]),
-      'supported_features': <FanEntityFeature: 57>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 57>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.range_hood',
@@ -194,14 +194,14 @@
     'state': 'on',
   })
 # ---
-# name: test_all_entities[fake_fan][fan.fake_fan-entry]
+# name: test_all_entities[fake_fan][fan.theater_fake_fan-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': list([
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'auto',
         'low',
         'medium',
@@ -210,13 +210,13 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('smartthings', 'f1af21a2-d5a1-437c-b10a-b34a87394b71')]>,
     'disabled_by': None,
     'domain': 'fan',
     'entity_category': None,
-    'entity_id': 'fan.fake_fan',
+    'entity_id': 'fan.theater_fake_fan',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -239,24 +239,24 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[fake_fan][fan.fake_fan-state]
+# name: test_all_entities[fake_fan][fan.theater_fake_fan-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake fan',
-      'percentage': 2000,
-      'percentage_step': 33.333333333333336,
-      'preset_mode': None,
-      'preset_modes': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake fan',
+      <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 2000,
+      <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 33.333333333333336,
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'auto',
         'low',
         'medium',
         'high',
         'turbo',
       ]),
-      'supported_features': <FanEntityFeature: 57>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 57>,
     }),
     'context': <ANY>,
-    'entity_id': 'fan.fake_fan',
+    'entity_id': 'fan.theater_fake_fan',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -270,12 +270,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: None,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('smartthings', '6d95a8b7-4ee3-429a-a13a-00ec9354170c')]>,
     'disabled_by': None,
     'domain': 'fan',
     'entity_category': None,
@@ -305,12 +305,12 @@
 # name: test_all_entities[generic_fan_3_speed][fan.bedroom_fan-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bedroom Fan',
-      'percentage': 0,
-      'percentage_step': 33.333333333333336,
-      'preset_mode': None,
-      'preset_modes': None,
-      'supported_features': <FanEntityFeature: 49>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Fan',
+      <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 0,
+      <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 33.333333333333336,
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 49>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.bedroom_fan',

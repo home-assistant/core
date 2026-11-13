@@ -1,0 +1,123 @@
+# serializer version: 1
+# name: test_sensors
+  dict({
+    'sensor.aqualogic_air_temperature': StateSnapshot({
+      'attributes': ReadOnlyDict({
+        <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AquaLogic Air Temperature',
+        <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.aqualogic_air_temperature',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '25.5',
+    }),
+    'sensor.aqualogic_pool_chlorinator': StateSnapshot({
+      'attributes': ReadOnlyDict({
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AquaLogic Pool Chlorinator',
+        <EntityStateAttribute.ICON: 'icon'>: 'mdi:gauge',
+        <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.aqualogic_pool_chlorinator',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '50.0',
+    }),
+    'sensor.aqualogic_pool_temperature': StateSnapshot({
+      'attributes': ReadOnlyDict({
+        <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AquaLogic Pool Temperature',
+        <EntityStateAttribute.ICON: 'icon'>: 'mdi:oil-temperature',
+        <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.aqualogic_pool_temperature',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '28.0',
+    }),
+    'sensor.aqualogic_pump_power': StateSnapshot({
+      'attributes': ReadOnlyDict({
+        <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AquaLogic Pump Power',
+        <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.aqualogic_pump_power',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '1000.0',
+    }),
+    'sensor.aqualogic_pump_speed': StateSnapshot({
+      'attributes': ReadOnlyDict({
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AquaLogic Pump Speed',
+        <EntityStateAttribute.ICON: 'icon'>: 'mdi:speedometer',
+        <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.aqualogic_pump_speed',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '100.0',
+    }),
+    'sensor.aqualogic_salt_level': StateSnapshot({
+      'attributes': ReadOnlyDict({
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AquaLogic Salt Level',
+        <EntityStateAttribute.ICON: 'icon'>: 'mdi:gauge',
+        <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'g/L',
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.aqualogic_salt_level',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '3.5',
+    }),
+    'sensor.aqualogic_spa_chlorinator': StateSnapshot({
+      'attributes': ReadOnlyDict({
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AquaLogic Spa Chlorinator',
+        <EntityStateAttribute.ICON: 'icon'>: 'mdi:gauge',
+        <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.aqualogic_spa_chlorinator',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '50.0',
+    }),
+    'sensor.aqualogic_spa_temperature': StateSnapshot({
+      'attributes': ReadOnlyDict({
+        <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AquaLogic Spa Temperature',
+        <EntityStateAttribute.ICON: 'icon'>: 'mdi:oil-temperature',
+        <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.aqualogic_spa_temperature',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '30.0',
+    }),
+    'sensor.aqualogic_status': StateSnapshot({
+      'attributes': ReadOnlyDict({
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AquaLogic Status',
+        <EntityStateAttribute.ICON: 'icon'>: 'mdi:alert',
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.aqualogic_status',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'OK',
+    }),
+  })
+# ---

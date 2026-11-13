@@ -5,6 +5,13 @@ import time
 
 from home_assistant_bluetooth import BluetoothServiceInfo
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.components.bluetooth import (
+    generate_advertisement_data,
+    generate_ble_device,
+    inject_advertisement_with_time_and_source_connectable,
+    inject_bluetooth_service_info,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.bluetooth.passive_update_processor import (
@@ -32,6 +39,10 @@ from .fixtures import (
     VICTRON_DC_DC_CONVERTER_UNKNOWN_OFF_REASON_SERVICE_INFO,
     VICTRON_DC_ENERGY_METER_SERVICE_INFO,
     VICTRON_DC_ENERGY_METER_TOKEN,
+    VICTRON_INVERTER_SERVICE_INFO,
+    VICTRON_INVERTER_TOKEN,
+    VICTRON_ORION_XS_SERVICE_INFO,
+    VICTRON_ORION_XS_TOKEN,
     VICTRON_SMART_BATTERY_PROTECT_SERVICE_INFO,
     VICTRON_SMART_BATTERY_PROTECT_TOKEN,
     VICTRON_SMART_LITHIUM_SERVICE_INFO,
@@ -42,14 +53,6 @@ from .fixtures import (
     VICTRON_VEBUS_SERVICE_INFO,
     VICTRON_VEBUS_TOKEN,
     VICTRON_VEBUS_UNRECOGNIZED_MODE_SERVICE_INFO,
-)
-
-from tests.common import MockConfigEntry, snapshot_platform
-from tests.components.bluetooth import (
-    generate_advertisement_data,
-    generate_ble_device,
-    inject_advertisement_with_time_and_source_connectable,
-    inject_bluetooth_service_info,
 )
 
 # Crafted solar charger advertisements with specific charger_error values.
@@ -110,6 +113,8 @@ def test_sensor_descriptions_are_json_serializable() -> None:
         (VICTRON_BATTERY_SENSE_SERVICE_INFO, VICTRON_BATTERY_SENSE_TOKEN),
         (VICTRON_DC_DC_CONVERTER_SERVICE_INFO, VICTRON_DC_DC_CONVERTER_TOKEN),
         (VICTRON_DC_ENERGY_METER_SERVICE_INFO, VICTRON_DC_ENERGY_METER_TOKEN),
+        (VICTRON_INVERTER_SERVICE_INFO, VICTRON_INVERTER_TOKEN),
+        (VICTRON_ORION_XS_SERVICE_INFO, VICTRON_ORION_XS_TOKEN),
         (
             VICTRON_SMART_BATTERY_PROTECT_SERVICE_INFO,
             VICTRON_SMART_BATTERY_PROTECT_TOKEN,
@@ -124,6 +129,8 @@ def test_sensor_descriptions_are_json_serializable() -> None:
         "battery_sense",
         "dc_dc_converter",
         "dc_energy_meter",
+        "inverter",
+        "orion_xs",
         "smart_battery_protect",
         "smart_lithium",
         "solar_charger",

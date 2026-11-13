@@ -1,7 +1,7 @@
 """Stub file for signal_type. Provide overload for type checking."""
 # ruff: noqa: PYI021  # Allow docstring
 
-from typing import Any, assert_type
+from typing import Any, assert_type, override
 
 __all__ = [
     "SignalType",
@@ -15,7 +15,9 @@ class _SignalTypeBase[*_Ts]:
     """
 
     def __init__(self, value: str, /) -> None: ...
+    @override
     def __hash__(self) -> int: ...
+    @override
     def __eq__(self, other: object, /) -> bool: ...
 
 class SignalType[*_Ts](_SignalTypeBase[*_Ts]):

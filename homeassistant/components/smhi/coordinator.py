@@ -2,6 +2,7 @@
 
 import asyncio
 from dataclasses import dataclass
+from typing import override
 
 from pysmhi import (
     SMHIFireForecast,
@@ -20,9 +21,15 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER, TIMEOUT
 
-type SMHIConfigEntry = ConfigEntry[
-    tuple[SMHIDataUpdateCoordinator, SMHIFireDataUpdateCoordinator]
-]
+type SMHIConfigEntry = ConfigEntry[SMHIRuntimeData]
+
+
+@dataclass
+class SMHIRuntimeData:
+    """Runtime data for the SMHI integration."""
+
+    coordinator: SMHIDataUpdateCoordinator
+    fire_coordinator: SMHIFireDataUpdateCoordinator
 
 
 @dataclass
@@ -62,6 +69,7 @@ class SMHIDataUpdateCoordinator(DataUpdateCoordinator[SMHIForecastData]):
             session=aiohttp_client.async_get_clientsession(hass),
         )
 
+    @override
     async def _async_update_data(self) -> SMHIForecastData:
         """Fetch data from SMHI."""
         try:
@@ -73,7 +81,8 @@ class SMHIDataUpdateCoordinator(DataUpdateCoordinator[SMHIForecastData]):
                 )
         except SmhiForecastException as ex:
             raise UpdateFailed(
-                "Failed to retrieve the forecast from the SMHI API"
+                translation_domain=DOMAIN,
+                translation_key="forecast_update_failed",
             ) from ex
 
         return SMHIForecastData(
@@ -108,6 +117,7 @@ class SMHIFireDataUpdateCoordinator(DataUpdateCoordinator[SMHIFireForecastData])
             session=aiohttp_client.async_get_clientsession(hass),
         )
 
+    @override
     async def _async_update_data(self) -> SMHIFireForecastData:
         """Fetch data from SMHI."""
         try:
@@ -120,7 +130,8 @@ class SMHIFireDataUpdateCoordinator(DataUpdateCoordinator[SMHIFireForecastData])
                 )
         except SmhiFireForecastException as ex:
             raise UpdateFailed(
-                "Failed to retrieve the forecast from the SMHI API"
+                translation_domain=DOMAIN,
+                translation_key="fire_forecast_update_failed",
             ) from ex
 
         return SMHIFireForecastData(

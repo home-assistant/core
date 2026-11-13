@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 
 from synology_dsm.api.core.external_usb import (
     SynoCoreExternalUSB,
@@ -33,7 +33,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 
-from . import SynoApi
+from .common import SynoApi
 from .const import CONF_VOLUMES, ENTITY_UNIT_LOAD
 from .coordinator import SynologyDSMCentralUpdateCoordinator, SynologyDSMConfigEntry
 from .entity import (
@@ -260,7 +260,6 @@ STORAGE_DISK_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
     SynologyDSMSensorEntityDescription(
         api_key=SynoStorage.API_KEY,
         key="disk_temp",
-        translation_key="disk_temp",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -319,7 +318,6 @@ INFORMATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
     SynologyDSMSensorEntityDescription(
         api_key=SynoDSMInformation.API_KEY,
         key="temperature",
-        translation_key="temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -430,20 +428,12 @@ class SynoDSMSensor(
 
     entity_description: SynologyDSMSensorEntityDescription
 
-    def __init__(
-        self,
-        api: SynoApi,
-        coordinator: SynologyDSMCentralUpdateCoordinator,
-        description: SynologyDSMSensorEntityDescription,
-    ) -> None:
-        """Initialize the Synology DSM sensor entity."""
-        super().__init__(api, coordinator, description)
-
 
 class SynoDSMUtilSensor(SynoDSMSensor):
     """Representation a Synology Utilisation sensor."""
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state."""
         attr = getattr(self._api.utilisation, self.entity_description.key)
@@ -460,6 +450,7 @@ class SynoDSMUtilSensor(SynoDSMSensor):
         return attr  # type: ignore[no-any-return]
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return bool(self._api.utilisation) and super().available
@@ -481,6 +472,7 @@ class SynoDSMStorageSensor(SynologyDSMDeviceEntity, SynoDSMSensor):
         super().__init__(api, coordinator, description, device_id)
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state."""
         return cast(
@@ -505,6 +497,7 @@ class SynoDSMExternalUSBSensor(SynologyDSMDeviceEntity, SynoDSMSensor):
         super().__init__(api, coordinator, description, device_id)
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state."""
         external_usb = self._api.external_usb
@@ -529,6 +522,7 @@ class SynoDSMExternalUSBSensor(SynologyDSMDeviceEntity, SynoDSMSensor):
         return attr  # type: ignore[no-any-return]
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         external_usb = self._api.external_usb
@@ -549,6 +543,7 @@ class SynoDSMInfoSensor(SynoDSMSensor):
     """Representation a Synology information sensor."""
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state."""
         if self._api.information is None:

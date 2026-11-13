@@ -2,11 +2,13 @@
 
 from dataclasses import dataclass, field
 from enum import IntEnum
+from typing import override
 
 from gardena_bluetooth.const import (
     AquaContour,
     AquaContourPosition,
     AquaContourWatering,
+    AquaContourWateringMode,
 )
 from gardena_bluetooth.parse import CharacteristicInt
 
@@ -47,14 +49,18 @@ class GardenaBluetoothSelectEntityDescription(SelectEntityDescription):
     @property
     def context(self) -> set[str]:
         """Context needed for update coordinator."""
-        return {self.char.uuid}
+        return {self.char.unique_id}
 
 
 DESCRIPTIONS = (
     GardenaBluetoothSelectEntityDescription(
         translation_key="watering_active",
         char=AquaContourWatering.watering_active,
-        option_to_number=_enum_to_int(AquaContourWatering.watering_active.enum),
+        option_to_number={
+            option: value
+            for option, value in _enum_to_int(AquaContourWateringMode).items()
+            if value != AquaContourWateringMode.STEP_TEST
+        },
     ),
     GardenaBluetoothSelectEntityDescription(
         translation_key="operation_mode",
@@ -97,6 +103,7 @@ class GardenaBluetoothSelectEntity(GardenaBluetoothDescriptorEntity, SelectEntit
     entity_description: GardenaBluetoothSelectEntityDescription
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
         char = self.entity_description.char
@@ -105,6 +112,7 @@ class GardenaBluetoothSelectEntity(GardenaBluetoothDescriptorEntity, SelectEntit
             return None
         return self.entity_description.number_to_option.get(value)
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         char = self.entity_description.char

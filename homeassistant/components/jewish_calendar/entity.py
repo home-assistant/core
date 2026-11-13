@@ -2,6 +2,7 @@
 
 from abc import abstractmethod
 import datetime as dt
+from typing import override
 
 from hdate import Zmanim
 
@@ -20,7 +21,6 @@ class JewishCalendarEntity(CoordinatorEntity[JewishCalendarUpdateCoordinator]):
     """An HA implementation for Jewish Calendar entity."""
 
     _attr_has_entity_name = True
-    _attr_should_poll = False
     _update_unsub: CALLBACK_TYPE | None = None
 
     def __init__(
@@ -37,11 +37,13 @@ class JewishCalendarEntity(CoordinatorEntity[JewishCalendarUpdateCoordinator]):
             identifiers={(DOMAIN, config_entry.entry_id)},
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         await super().async_added_to_hass()
         self._schedule_update()
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         if self._update_unsub:
@@ -50,6 +52,7 @@ class JewishCalendarEntity(CoordinatorEntity[JewishCalendarUpdateCoordinator]):
         return await super().async_will_remove_from_hass()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         # When coordinator updates (e.g., from tests forcing

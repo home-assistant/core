@@ -4,17 +4,16 @@ from unittest.mock import MagicMock
 
 from peblar import PeblarAuthenticationError, PeblarConnectionError, PeblarError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.peblar.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 pytestmark = [
     pytest.mark.freeze_time("2024-12-21 21:45:00"),
@@ -35,8 +34,8 @@ async def test_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
     # Ensure all entities are correctly assigned to the Peblar EV charger
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, "23-45-A4O-MOF")}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "23-45-A4O-MOF"), mock_config_entry.entry_id
     )
     assert device_entry
     entity_entries = er.async_entries_for_config_entry(
@@ -51,6 +50,7 @@ async def test_entities(
     [
         ("button.peblar_ev_charger_identify", "identify"),
         ("button.peblar_ev_charger_restart", "reboot"),
+        ("button.peblar_ev_charger_unlock_socket", "socket_unlock"),
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -67,8 +67,8 @@ async def test_buttons(
     # Test normal happy path button press
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: entity_id},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -86,8 +86,8 @@ async def test_buttons(
     ) as excinfo:
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: entity_id},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -106,8 +106,8 @@ async def test_buttons(
     ) as excinfo:
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: entity_id},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -127,8 +127,8 @@ async def test_buttons(
     ) as excinfo:
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: entity_id},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -151,3 +151,10 @@ async def test_buttons(
     assert "context" in flow
     assert flow["context"].get("source") == SOURCE_REAUTH
     assert flow["context"].get("entry_id") == mock_config_entry.entry_id
+
+
+@pytest.mark.parametrize("mock_peblar", [{"HwHasSocket": False}], indirect=True)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_socket_unlock_absent_without_socket(hass: HomeAssistant) -> None:
+    """A charger with a fixed cable has no socket to unlock."""
+    assert hass.states.get("button.peblar_ev_charger_unlock_socket") is None

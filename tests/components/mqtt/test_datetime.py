@@ -1,18 +1,14 @@
 """The tests for the MQTT datetime platform."""
 
-import datetime as datetime_lib
+import datetime as dt
 from typing import Any
 from unittest.mock import patch
 
 from dateutil.tz import UTC
 from freezegun import freeze_time
 import pytest
-
-from homeassistant.components import datetime, mqtt
-from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
-
-from .common import (
+from pytest_homeassistant.common import async_fire_mqtt_message
+from pytest_homeassistant.components.mqtt.common import (
     help_custom_config,
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
@@ -41,17 +37,20 @@ from .common import (
     help_test_update_with_json_attrs_bad_json,
     help_test_update_with_json_attrs_not_dict,
 )
+from pytest_homeassistant.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
-from tests.common import async_fire_mqtt_message
-from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
+from homeassistant.components import datetime
+from homeassistant.components.mqtt.const import DOMAIN
+from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
 
 DEFAULT_CONFIG = {
-    mqtt.DOMAIN: {datetime.DOMAIN: {"name": "test", "command_topic": "test-topic"}}
+    DOMAIN: {datetime.DOMAIN: {"name": "test", "command_topic": "test-topic"}}
 }
 
 
 async def async_set_value(
-    hass: HomeAssistant, entity_id: str, value: datetime_lib.datetime | None
+    hass: HomeAssistant, entity_id: str, value: dt.datetime | None
 ) -> None:
     """Set date and time value."""
     await hass.services.async_call(
@@ -68,7 +67,7 @@ async def async_set_value(
     [
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     datetime.DOMAIN: {
                         "name": "test",
                         "state_topic": "state-topic",
@@ -84,7 +83,7 @@ async def async_set_value(
         ),
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     datetime.DOMAIN: {
                         "name": "test",
                         "state_topic": "state-topic",
@@ -143,7 +142,7 @@ async def test_controlling_state_via_topic(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 datetime.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -186,7 +185,7 @@ async def test_controlling_validation_state_via_topic(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 datetime.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -224,7 +223,7 @@ async def test_ambiguous_date_time_state_update(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 datetime.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -257,7 +256,7 @@ async def test_date_time_with_invalid_timezone_identifier(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 datetime.DOMAIN: {
                     "name": "test",
                     "command_topic": "command-topic",
@@ -281,9 +280,7 @@ async def test_sending_mqtt_commands_and_optimistic(
     await async_set_value(
         hass,
         "datetime.test",
-        datetime_lib.datetime(
-            year=2025, month=12, day=1, hour=10, minute=12, tzinfo=UTC
-        ),
+        dt.datetime(year=2025, month=12, day=1, hour=10, minute=12, tzinfo=UTC),
     )
     await hass.async_block_till_done()
 
@@ -324,7 +321,7 @@ async def test_default_availability_payload(
 ) -> None:
     """Test availability by default payload with defined topic."""
     config = {
-        mqtt.DOMAIN: {
+        DOMAIN: {
             datetime.DOMAIN: {
                 "name": "test",
                 "state_topic": "state-topic",
@@ -348,7 +345,7 @@ async def test_custom_availability_payload(
 ) -> None:
     """Test availability by custom payload with defined topic."""
     config = {
-        mqtt.DOMAIN: {
+        DOMAIN: {
             datetime.DOMAIN: {
                 "name": "test",
                 "state_topic": "state-topic",
@@ -430,7 +427,7 @@ async def test_discovery_update_attr(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 datetime.DOMAIN: [
                     {
                         "name": "Test 1",
@@ -611,7 +608,7 @@ async def test_encoding_subscribable_topics(
         hass,
         mqtt_mock_entry,
         datetime.DOMAIN,
-        DEFAULT_CONFIG[mqtt.DOMAIN][datetime.DOMAIN],
+        DEFAULT_CONFIG[DOMAIN][datetime.DOMAIN],
         topic,
         value,
         attribute,

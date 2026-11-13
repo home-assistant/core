@@ -1,5 +1,7 @@
 """Support for RAPT Pill hydrometers."""
 
+from typing import override
+
 from rapt_ble import DeviceClass, DeviceKey, SensorUpdate, Units
 
 from homeassistant.components.bluetooth.passive_update_processor import (
@@ -26,7 +28,7 @@ from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 
 from . import RAPTBLEConfigEntry
 
-SENSOR_DESCRIPTIONS = {
+SENSOR_DESCRIPTIONS: dict[tuple[str | None, str | None], SensorEntityDescription] = {
     (DeviceClass.TEMPERATURE, Units.TEMP_CELSIUS): SensorEntityDescription(
         key=f"{DeviceClass.TEMPERATURE}_{Units.TEMP_CELSIUS}",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -36,6 +38,16 @@ SENSOR_DESCRIPTIONS = {
     (DeviceClass.SPECIFIC_GRAVITY, Units.SPECIFIC_GRAVITY): SensorEntityDescription(
         key=f"{DeviceClass.SPECIFIC_GRAVITY}_{Units.SPECIFIC_GRAVITY}",
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    (
+        DeviceClass.SPECIFIC_GRAVITY_VELOCITY,
+        Units.SPECIFIC_GRAVITY_POINTS_PER_DAY,
+    ): SensorEntityDescription(
+        key=f"{DeviceClass.SPECIFIC_GRAVITY_VELOCITY}_{Units.SPECIFIC_GRAVITY_POINTS_PER_DAY}",
+        translation_key="specific_gravity_velocity",
+        native_unit_of_measurement=Units.SPECIFIC_GRAVITY_POINTS_PER_DAY,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     (DeviceClass.BATTERY, Units.PERCENTAGE): SensorEntityDescription(
         key=f"{DeviceClass.BATTERY}_{Units.PERCENTAGE}",
@@ -79,7 +91,8 @@ def sensor_update_to_bluetooth_data_update(
                 (description.device_class, description.native_unit_of_measurement)
             ]
             for device_key, description in sensor_update.entity_descriptions.items()
-            if description.device_class and description.native_unit_of_measurement
+            if (description.device_class, description.native_unit_of_measurement)
+            in SENSOR_DESCRIPTIONS
         },
         entity_data={
             _device_key_to_bluetooth_entity_key(device_key): sensor_values.native_value
@@ -105,7 +118,9 @@ async def async_setup_entry(
             RAPTPillBluetoothSensorEntity, async_add_entities
         )
     )
-    entry.async_on_unload(coordinator.async_register_processor(processor))
+    entry.async_on_unload(
+        coordinator.async_register_processor(processor, SensorEntityDescription)
+    )
 
 
 class RAPTPillBluetoothSensorEntity(
@@ -117,6 +132,7 @@ class RAPTPillBluetoothSensorEntity(
     """Representation of a RAPT Pill BLE sensor."""
 
     @property
+    @override
     def native_value(self) -> int | float | None:
         """Return the native value."""
         return self.processor.entity_data.get(self.entity_key)

@@ -4,6 +4,9 @@ from unittest.mock import patch
 
 from httplib2 import Response
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_fixture
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant import config_entries
 from homeassistant.components.google_mail.const import DOMAIN
@@ -13,10 +16,6 @@ from homeassistant.helpers import config_entry_oauth2_flow
 
 from .conftest import CLIENT_ID, GOOGLE_AUTH_URI, GOOGLE_TOKEN_URI, SCOPES, TITLE
 
-from tests.common import MockConfigEntry, async_load_fixture
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
-
 
 @pytest.mark.usefixtures("current_request_with_host")
 async def test_full_flow(
@@ -24,7 +23,7 @@ async def test_full_flow(
 ) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(
-        "google_mail", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -48,7 +47,7 @@ async def test_full_flow(
 
     with (
         patch(
-            "homeassistant.components.google_mail.async_setup_entry", return_value=True
+            "homeassistant.components.google_mail.async_setup_entry", return_value=None
         ) as mock_setup,
         patch(
             "httplib2.Http.request",
@@ -149,7 +148,7 @@ async def test_reauth(
 
     with (
         patch(
-            "homeassistant.components.google_mail.async_setup_entry", return_value=True
+            "homeassistant.components.google_mail.async_setup_entry", return_value=None
         ) as mock_setup,
         patch(
             "httplib2.Http.request",
@@ -188,7 +187,7 @@ async def test_already_configured(
     config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        "google_mail", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,

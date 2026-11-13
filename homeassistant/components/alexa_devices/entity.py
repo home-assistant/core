@@ -1,5 +1,8 @@
 """Defines a base Alexa Devices entity."""
 
+from collections.abc import Callable
+from typing import override
+
 from aioamazondevices.structures import AmazonDevice
 
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -9,6 +12,8 @@ from homeassistant.util import slugify
 
 from .const import DOMAIN
 from .coordinator import AmazonDevicesCoordinator
+
+type DescriptionFn[T] = Callable[[AmazonDevice, str, AmazonDevicesCoordinator], T]
 
 
 class AmazonEntity(CoordinatorEntity[AmazonDevicesCoordinator]):
@@ -44,6 +49,7 @@ class AmazonEntity(CoordinatorEntity[AmazonDevicesCoordinator]):
         return self.coordinator.data[self._serial_num]
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return (

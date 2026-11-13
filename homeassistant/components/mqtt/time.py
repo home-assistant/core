@@ -1,12 +1,12 @@
 """Support for MQTT time platform."""
 
 from collections.abc import Callable
-import datetime
+import datetime as dt
 import logging
-from typing import Any
+from typing import Any, override
 
 from dateutil.parser import ParserError, parse
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import time
 from homeassistant.components.time import TimeEntity
@@ -46,14 +46,14 @@ MQTT_TIME_ATTRIBUTES_BLOCKED: frozenset[str] = frozenset()
 
 PLATFORM_SCHEMA_MODERN = MQTT_RW_SCHEMA.extend(
     {
-        vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        probatio.Optional(CONF_COMMAND_TEMPLATE): cv.template,
+        probatio.Optional(CONF_NAME): probatio.Any(cv.string, None),
+        probatio.Optional(CONF_VALUE_TEMPLATE): cv.template,
     },
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
 
-DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA)
+DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=probatio.REMOVE_EXTRA)
 
 
 async def async_setup_entry(
@@ -76,7 +76,7 @@ async def async_setup_entry(
 class MqttTimeEntity(MqttEntity, TimeEntity):
     """Representation of the MQTT time entity."""
 
-    _attr_native_value: datetime.time | None = None
+    _attr_native_value: dt.time | None = None
     _attributes_extra_blocked = MQTT_TIME_ATTRIBUTES_BLOCKED
     _default_name = DEFAULT_NAME
     _entity_id_format = time.ENTITY_ID_FORMAT
@@ -88,10 +88,12 @@ class MqttTimeEntity(MqttEntity, TimeEntity):
     _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
 
     @staticmethod
+    @override
     def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
+    @override
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._command_template = MqttCommandTemplate(
@@ -133,6 +135,7 @@ class MqttTimeEntity(MqttEntity, TimeEntity):
             self._attr_native_value = value.time()
 
     @callback
+    @override
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         self.add_subscription(
@@ -141,11 +144,13 @@ class MqttTimeEntity(MqttEntity, TimeEntity):
             {"_attr_native_value"},
         )
 
+    @override
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
 
-    async def async_set_value(self, value: datetime.time) -> None:
+    @override
+    async def async_set_value(self, value: dt.time) -> None:
         """Change the time."""
         payload = self._command_template(value.isoformat(), {"value": value})
         await self.async_publish_with_config(self._config[CONF_COMMAND_TOPIC], payload)

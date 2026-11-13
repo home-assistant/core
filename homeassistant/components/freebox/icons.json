@@ -1,7 +1,44 @@
 {
-  "services": {
-    "reboot": {
-      "service": "mdi:restart"
+  "entity": {
+    "sensor": {
+      "bandwidth_down": {
+        "default": "mdi:download-network-outline"
+      },
+      "bandwidth_up": {
+        "default": "mdi:upload-network-outline"
+      },
+      "connection_state": {
+        "default": "mdi:web",
+        "state": {
+          "down": "mdi:web-off"
+        }
+      },
+      "ipv4": {
+        "default": "mdi:ip-network"
+      },
+      "ipv6": {
+        "default": "mdi:ip-network"
+      },
+      "missed": {
+        "default": "mdi:phone-missed"
+      },
+      "partition_free_space": {
+        "default": "mdi:harddisk"
+      },
+      "rate_down": {
+        "default": "mdi:download-network"
+      },
+      "rate_up": {
+        "default": "mdi:upload-network"
+      }
+    },
+    "switch": {
+      "wifi": {
+        "default": "mdi:wifi",
+        "state": {
+          "off": "mdi:wifi-off"
+        }
+      }
     }
   }
 }

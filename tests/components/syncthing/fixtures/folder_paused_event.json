@@ -1,0 +1,10 @@
+{
+  "id": 7,
+  "globalID": 7,
+  "type": "FolderPaused",
+  "time": "2024-01-01T00:06:00.000000000Z",
+  "data": {
+    "id": "test-folder",
+    "label": "Test Folder"
+  }
+}

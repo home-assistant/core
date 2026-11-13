@@ -4,10 +4,18 @@ from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+    setup_test_component_platform,
+)
 from webrtc_models import RTCIceCandidateInit
 
 from homeassistant.components import camera
-from homeassistant.components.camera.const import StreamType
+from homeassistant.components.camera.const import DOMAIN, StreamType
 from homeassistant.components.camera.webrtc import WebRTCAnswer, WebRTCSendMessage
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import Platform
@@ -16,15 +24,6 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.setup import async_setup_component
 
 from .common import STREAM_SOURCE, WEBRTC_ANSWER, SomeTestProvider
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    mock_config_flow,
-    mock_integration,
-    mock_platform,
-    setup_test_component_platform,
-)
 
 
 @pytest.fixture(autouse=True)
@@ -47,7 +46,7 @@ def camera_only() -> Generator[None]:
 async def mock_camera_fixture(hass: HomeAssistant) -> AsyncGenerator[None]:
     """Initialize a demo camera platform."""
     assert await async_setup_component(
-        hass, "camera", {camera.DOMAIN: {"platform": "demo"}}
+        hass, DOMAIN, {camera.DOMAIN: {"platform": "demo"}}
     )
     await hass.async_block_till_done()
 
@@ -158,7 +157,7 @@ def mock_create_stream_fixture() -> Generator[Mock]:
     mock_stream.set_update_callback = Mock()
     mock_stream.available = True
     with patch(
-        "homeassistant.components.camera.create_stream",
+        "homeassistant.components.camera.entity.create_stream",
         return_value=mock_stream,
     ):
         yield mock_stream
@@ -218,21 +217,19 @@ async def mock_test_webrtc_cameras(hass: HomeAssistant) -> None:
 
     async def async_setup_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
             config_entry, [Platform.CAMERA]
         )
-        return True
 
     async def async_unload_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Unload test config entry."""
         await hass.config_entries.async_forward_entry_unload(
             config_entry, Platform.CAMERA
         )
-        return True
 
     mock_integration(
         hass,
@@ -260,7 +257,7 @@ async def register_test_provider(
     hass: HomeAssistant,
 ) -> AsyncGenerator[SomeTestProvider]:
     """Add WebRTC test provider."""
-    await async_setup_component(hass, "camera", {})
+    await async_setup_component(hass, DOMAIN, {})
 
     provider = SomeTestProvider()
     unsub = camera.async_register_webrtc_provider(hass, provider)

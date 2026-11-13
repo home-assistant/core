@@ -1,6 +1,8 @@
 """DataUpdateCoordinator for WeatherKit integration."""
 
-from datetime import datetime, timedelta
+from datetime import timedelta
+import time
+from typing import Any, override
 
 from apple_weatherkit import DataSetType
 from apple_weatherkit.client import WeatherKitApiClient, WeatherKitApiClientError
@@ -19,19 +21,19 @@ REQUESTED_DATA_SETS = [
     DataSetType.HOURLY_FORECAST,
 ]
 
-STALE_DATA_THRESHOLD = timedelta(hours=1)
+STALE_DATA_THRESHOLD = timedelta(hours=1).total_seconds()
 
 HOURLY_FORECAST_DURATION = timedelta(days=7)
 
 type WeatherKitConfigEntry = ConfigEntry[WeatherKitDataUpdateCoordinator]
 
 
-class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator):
+class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching data from the API."""
 
     config_entry: WeatherKitConfigEntry
     supported_data_sets: list[DataSetType] | None = None
-    last_updated_at: datetime | None = None
+    last_updated_at: float | None = None
 
     def __init__(
         self,
@@ -64,7 +66,8 @@ class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator):
 
         LOGGER.debug("Supported data sets: %s", self.supported_data_sets)
 
-    async def _async_update_data(self):
+    @override
+    async def _async_update_data(self) -> dict[str, Any]:
         """Update the current weather and forecasts."""
         try:
             if not self.supported_data_sets:
@@ -81,12 +84,12 @@ class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator):
         except WeatherKitApiClientError as exception:
             if self.data is None or (
                 self.last_updated_at is not None
-                and datetime.now() - self.last_updated_at > STALE_DATA_THRESHOLD
+                and time.time() - self.last_updated_at > STALE_DATA_THRESHOLD
             ):
                 raise UpdateFailed(exception) from exception
 
             LOGGER.debug("Using stale data because update failed: %s", exception)
             return self.data
         else:
-            self.last_updated_at = datetime.now()
+            self.last_updated_at = time.time()
             return updated_data

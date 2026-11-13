@@ -2,6 +2,7 @@
 
 from asyncio import timeout
 import logging
+from typing import override
 
 from aiohttp.client_exceptions import ClientResponseError, ServerDisconnectedError
 from brunt import BruntClientAsync, Thing
@@ -40,6 +41,7 @@ class BruntCoordinator(DataUpdateCoordinator[dict[str | None, Thing]]):
             update_interval=REGULAR_INTERVAL,
         )
 
+    @override
     async def _async_setup(self) -> None:
         session = async_get_clientsession(self.hass)
 
@@ -58,6 +60,7 @@ class BruntCoordinator(DataUpdateCoordinator[dict[str | None, Thing]]):
                 f" {self.config_entry.data[CONF_USERNAME]}."
             ) from exc
 
+    @override
     async def _async_update_data(self) -> dict[str | None, Thing]:
         """Fetch data from the Brunt endpoint for all Things.
 

@@ -3,8 +3,8 @@
 import logging
 from unittest.mock import Mock
 
+from probatio.error import MultipleInvalid
 import pytest
-from voluptuous.error import MultipleInvalid
 
 from homeassistant.components.rflink import (
     CONF_KEEPALIVE_IDLE,
@@ -14,10 +14,10 @@ from homeassistant.components.rflink import (
     DOMAIN,
     EVENT_KEY_COMMAND,
     EVENT_KEY_SENSOR,
-    SERVICE_SEND_COMMAND,
     TMP_ENTITY,
     RflinkCommand,
 )
+from homeassistant.components.rflink.services import RflinkService
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_HOST,
@@ -39,6 +39,7 @@ async def mock_rflink(
     monkeypatch: pytest.MonkeyPatch,
     failures=None,
     failcommand=False,
+    old_yaml=False,
 ):
     """Create mock RFLink asyncio protocol, test component setup."""
     transport, protocol = (Mock(), Mock())
@@ -71,8 +72,11 @@ async def mock_rflink(
         "homeassistant.components.rflink.create_rflink_connection", mock_create
     )
 
-    await async_setup_component(hass, "rflink", config)
-    await async_setup_component(hass, domain, config)
+    await async_setup_component(hass, DOMAIN, config)
+
+    if old_yaml:
+        await async_setup_component(hass, domain, config)
+
     await hass.async_block_till_done()
 
     # hook into mock config for injecting events
@@ -91,10 +95,11 @@ async def test_version_banner(
     # use sensor domain during testing main platform
     domain = "sensor"
     config = {
-        "rflink": {"port": "/dev/ttyABC0"},
-        domain: {
-            "platform": "rflink",
-            "devices": {"test": {"name": "test", "sensor_type": "temperature"}},
+        "rflink": {
+            "port": "/dev/ttyABC0",
+            domain: {
+                "devices": {"test": {"name": "test", "sensor_type": "temperature"}},
+            },
         },
     }
 
@@ -117,11 +122,13 @@ async def test_send_no_wait(
     """Test command sending without ack."""
     domain = "switch"
     config = {
-        "rflink": {"port": "/dev/ttyABC0", "wait_for_ack": False},
-        domain: {
-            "platform": "rflink",
-            "devices": {
-                "protocol_0_0": {"name": "test", "aliases": ["test_alias_0_0"]}
+        "rflink": {
+            "port": "/dev/ttyABC0",
+            "wait_for_ack": False,
+            domain: {
+                "devices": {
+                    "protocol_0_0": {"name": "test", "aliases": ["test_alias_0_0"]}
+                },
             },
         },
     }
@@ -143,11 +150,13 @@ async def test_cover_send_no_wait(
     """Test command sending to a cover device without ack."""
     domain = "cover"
     config = {
-        "rflink": {"port": "/dev/ttyABC0", "wait_for_ack": False},
-        domain: {
-            "platform": "rflink",
-            "devices": {
-                "RTS_0100F2_0": {"name": "test", "aliases": ["test_alias_0_0"]}
+        "rflink": {
+            "port": "/dev/ttyABC0",
+            "wait_for_ack": False,
+            domain: {
+                "devices": {
+                    "RTS_0100F2_0": {"name": "test", "aliases": ["test_alias_0_0"]}
+                },
             },
         },
     }
@@ -175,7 +184,7 @@ async def test_send_command(
 
     await hass.services.async_call(
         domain,
-        SERVICE_SEND_COMMAND,
+        RflinkService.SEND_COMMAND,
         {"device_id": "newkaku_0000c6c2_1", "command": "on"},
     )
     await hass.async_block_till_done()
@@ -195,16 +204,18 @@ async def test_send_command_invalid_arguments(
 
     # one argument missing
     with pytest.raises(MultipleInvalid):
-        await hass.services.async_call(domain, SERVICE_SEND_COMMAND, {"command": "on"})
+        await hass.services.async_call(
+            domain, RflinkService.SEND_COMMAND, {"command": "on"}
+        )
 
     with pytest.raises(MultipleInvalid):
         await hass.services.async_call(
-            domain, SERVICE_SEND_COMMAND, {"device_id": "newkaku_0000c6c2_1"}
+            domain, RflinkService.SEND_COMMAND, {"device_id": "newkaku_0000c6c2_1"}
         )
 
     # no arguments
     with pytest.raises(MultipleInvalid):
-        await hass.services.async_call(domain, SERVICE_SEND_COMMAND, {})
+        await hass.services.async_call(domain, RflinkService.SEND_COMMAND, {})
 
     await hass.async_block_till_done()
     assert protocol.send_command_ack.call_args_list == []
@@ -212,7 +223,7 @@ async def test_send_command_invalid_arguments(
     # bad command (no_command)
     success = await hass.services.async_call(
         domain,
-        SERVICE_SEND_COMMAND,
+        RflinkService.SEND_COMMAND,
         {"device_id": "newkaku_0000c6c2_1", "command": "no_command"},
     )
     assert not success, "send command should not succeed for unknown command"
@@ -224,11 +235,12 @@ async def test_send_command_event_propagation(
     """Test event propagation for send_command service."""
     domain = "light"
     config = {
-        "rflink": {"port": "/dev/ttyABC0"},
-        domain: {
-            "platform": "rflink",
-            "devices": {
-                "protocol_0_1": {"name": "test1"},
+        "rflink": {
+            "port": "/dev/ttyABC0",
+            domain: {
+                "devices": {
+                    "protocol_0_1": {"name": "test1"},
+                },
             },
         },
     }
@@ -241,7 +253,7 @@ async def test_send_command_event_propagation(
 
     await hass.services.async_call(
         "rflink",
-        SERVICE_SEND_COMMAND,
+        RflinkService.SEND_COMMAND,
         {"device_id": "protocol_0_1", "command": "on"},
         blocking=True,
     )
@@ -252,7 +264,7 @@ async def test_send_command_event_propagation(
 
     await hass.services.async_call(
         "rflink",
-        SERVICE_SEND_COMMAND,
+        RflinkService.SEND_COMMAND,
         {"device_id": "protocol_0_1", "command": "alloff"},
         blocking=True,
     )
@@ -268,8 +280,11 @@ async def test_reconnecting_after_disconnect(
     """An unexpected disconnect should cause a reconnect."""
     domain = "sensor"
     config = {
-        "rflink": {"port": "/dev/ttyABC0", CONF_RECONNECT_INTERVAL: 0},
-        domain: {"platform": "rflink"},
+        "rflink": {
+            "port": "/dev/ttyABC0",
+            CONF_RECONNECT_INTERVAL: 0,
+            domain: {},
+        },
     }
 
     # setup mocking rflink module
@@ -294,8 +309,11 @@ async def test_reconnecting_after_failure(
     """A failure to reconnect should be retried."""
     domain = "sensor"
     config = {
-        "rflink": {"port": "/dev/ttyABC0", CONF_RECONNECT_INTERVAL: 0},
-        domain: {"platform": "rflink"},
+        "rflink": {
+            "port": "/dev/ttyABC0",
+            CONF_RECONNECT_INTERVAL: 0,
+            domain: {},
+        },
     }
 
     # success first time but fail second
@@ -323,11 +341,13 @@ async def test_error_when_not_connected(
     """Sending command should error when not connected."""
     domain = "switch"
     config = {
-        "rflink": {"port": "/dev/ttyABC0", CONF_RECONNECT_INTERVAL: 0},
-        domain: {
-            "platform": "rflink",
-            "devices": {
-                "protocol_0_0": {"name": "test", "aliases": ["test_alias_0_0"]}
+        "rflink": {
+            "port": "/dev/ttyABC0",
+            CONF_RECONNECT_INTERVAL: 0,
+            domain: {
+                "devices": {
+                    "protocol_0_0": {"name": "test", "aliases": ["test_alias_0_0"]}
+                },
             },
         },
     }
@@ -363,7 +383,7 @@ async def test_async_send_command_error(
 
     success = await hass.services.async_call(
         domain,
-        SERVICE_SEND_COMMAND,
+        RflinkService.SEND_COMMAND,
         {"device_id": "newkaku_0000c6c2_1", "command": SERVICE_TURN_OFF},
     )
     await hass.async_block_till_done()
@@ -377,7 +397,7 @@ async def test_race_condition(
 ) -> None:
     """Test race condition for unknown components."""
     domain = "light"
-    config = {"rflink": {"port": "/dev/ttyABC0"}, domain: {"platform": "rflink"}}
+    config = {"rflink": {"port": "/dev/ttyABC0", domain: {}}}
     tmp_entity = TMP_ENTITY.format("test3")
 
     # setup mocking rflink module
@@ -528,19 +548,20 @@ async def test_unique_id(
 
     DOMAIN = "sensor"
     config = {
-        "rflink": {"port": "/dev/ttyABC0"},
-        DOMAIN: {
-            "platform": "rflink",
-            "devices": {
-                "my_humidity_device_unique_id": {
-                    "name": "humidity_device",
-                    "sensor_type": "humidity",
-                    "aliases": ["test_alias_02_0"],
-                },
-                "my_temperature_device_unique_id": {
-                    "name": "temperature_device",
-                    "sensor_type": "temperature",
-                    "aliases": ["test_alias_02_0"],
+        "rflink": {
+            "port": "/dev/ttyABC0",
+            DOMAIN: {
+                "devices": {
+                    "my_humidity_device_unique_id": {
+                        "name": "humidity_device",
+                        "sensor_type": "humidity",
+                        "aliases": ["test_alias_02_0"],
+                    },
+                    "my_temperature_device_unique_id": {
+                        "name": "temperature_device",
+                        "sensor_type": "temperature",
+                        "aliases": ["test_alias_02_0"],
+                    },
                 },
             },
         },

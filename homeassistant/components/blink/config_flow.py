@@ -2,11 +2,11 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from blinkpy.auth import Auth, BlinkTwoFARequiredError, LoginError, TokenRefreshFailed
 from blinkpy.blinkpy import Blink, BlinkSetupError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -19,7 +19,7 @@ from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, HARDWARE_ID
+from .const import DOMAIN, LEGACY_HARDWARE_ID
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,49 +27,73 @@ _LOGGER = logging.getLogger(__name__)
 async def validate_input(blink: Blink) -> None:
     """Validate the user input allows us to connect."""
     try:
-        await blink.start()
+        result = await blink.start()
     except (LoginError, TokenRefreshFailed) as err:
         raise InvalidAuth from err
+    if result is False:
+        raise InvalidAuth
 
 
-async def _send_blink_2fa_pin(blink: Blink, pin: str | None) -> bool:
+async def _send_blink_2fa_pin(blink: Blink, pin: str | None) -> None:
     """Send 2FA pin to blink servers."""
-    await blink.send_2fa_code(pin)
-    return True
+    if not await blink.send_2fa_code(pin):
+        raise InvalidAuth
 
 
 class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a Blink config flow."""
 
-    VERSION = 4
+    VERSION = 5
 
     def __init__(self) -> None:
         """Initialize the blink flow."""
         self.auth: Auth | None = None
         self.blink: Blink | None = None
 
+    def _existing_hardware_id(self) -> str | None:
+        """Return the stored hardware_id for a reauth/reconfigure, or None if legacy or absent."""
+        if self.source == SOURCE_REAUTH:
+            entry = self._get_reauth_entry()
+        elif self.source == SOURCE_RECONFIGURE:
+            entry = self._get_reconfigure_entry()
+        else:
+            return None
+        hardware_id = entry.data.get("hardware_id")
+        if hardware_id and hardware_id != LEGACY_HARDWARE_ID:
+            return hardware_id
+        return None
+
+    async def _async_check_unique_id(self, user_input: dict[str, Any]) -> None:
+        """Set the unique ID and abort if the account is already configured."""
+        await self.async_set_unique_id(user_input[CONF_USERNAME])
+        if self.source not in (SOURCE_REAUTH, SOURCE_RECONFIGURE):
+            self._abort_if_unique_id_configured()
+
     async def _handle_user_input(self, user_input: dict[str, Any]):
         """Handle user input."""
+        # Omit hardware_id on new installs so blinkpy mints a per-install UUID;
+        # reuse a stored non-legacy id so device identity stays stable on reauth.
+        login_data: dict[str, Any] = {**user_input}
+        if hardware_id := self._existing_hardware_id():
+            login_data["hardware_id"] = hardware_id
         self.auth = Auth(
-            {**user_input, "hardware_id": HARDWARE_ID},
+            login_data,
             no_prompt=True,
             session=async_get_clientsession(self.hass),
         )
         self.blink = Blink(session=async_get_clientsession(self.hass))
         self.blink.auth = self.auth
-        await self.async_set_unique_id(user_input[CONF_USERNAME])
-        if self.source not in (SOURCE_REAUTH, SOURCE_RECONFIGURE):
-            self._abort_if_unique_id_configured()
-
         await validate_input(self.blink)
         return self._async_finish_flow()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
         if user_input is not None:
+            await self._async_check_unique_id(user_input)
             try:
                 return await self._handle_user_input(user_input)
             except BlinkTwoFARequiredError:
@@ -82,10 +106,10 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_USERNAME): str,
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(CONF_USERNAME): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
             errors=errors,
@@ -103,6 +127,8 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except TokenRefreshFailed:
                 errors["base"] = "invalid_access_token"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -111,8 +137,12 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="2fa",
-            data_schema=vol.Schema(
-                {vol.Optional(CONF_PIN): vol.All(str, vol.Length(min=1))}
+            data_schema=probatio.Schema(
+                {
+                    probatio.Optional(probatio.Secret(CONF_PIN)): probatio.All(
+                        str, probatio.NonEmpty()
+                    )
+                }
             ),
             errors=errors,
         )
@@ -129,6 +159,7 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle reauth confirmation."""
         errors = {}
         if user_input is not None:
+            await self._async_check_unique_id(user_input)
             try:
                 return await self._handle_user_input(user_input)
             except BlinkTwoFARequiredError:
@@ -142,13 +173,14 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry = self._get_reauth_entry()
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_USERNAME, default=config_entry.data[CONF_USERNAME]
                     ): str,
-                    vol.Required(
-                        CONF_PASSWORD, default=config_entry.data[CONF_PASSWORD]
+                    probatio.Required(
+                        probatio.Secret(CONF_PASSWORD),
+                        default=config_entry.data[CONF_PASSWORD],
                     ): str,
                 }
             ),
@@ -162,6 +194,7 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle reconfiguration initiated by the user."""
         errors = {}
         if user_input is not None:
+            await self._async_check_unique_id(user_input)
             try:
                 return await self._handle_user_input(user_input)
             except BlinkTwoFARequiredError:
@@ -175,13 +208,14 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry = self._get_reconfigure_entry()
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_USERNAME, default=config_entry.data[CONF_USERNAME]
                     ): str,
-                    vol.Required(
-                        CONF_PASSWORD, default=config_entry.data[CONF_PASSWORD]
+                    probatio.Required(
+                        probatio.Secret(CONF_PASSWORD),
+                        default=config_entry.data[CONF_PASSWORD],
                     ): str,
                 }
             ),

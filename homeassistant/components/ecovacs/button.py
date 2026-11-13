@@ -1,6 +1,7 @@
 """Ecovacs button module."""
 
 from dataclasses import dataclass
+from typing import override
 
 from deebot_client.capabilities import (
     CapabilityExecute,
@@ -15,8 +16,8 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import EcovacsConfigEntry
 from .const import SUPPORTED_LIFESPANS, SUPPORTED_STATION_ACTIONS
+from .controller import EcovacsConfigEntry
 from .entity import (
     EcovacsCapabilityEntityDescription,
     EcovacsDescriptionEntity,
@@ -116,6 +117,7 @@ class EcovacsButtonEntity(
 
     entity_description: EcovacsLifespanButtonEntityDescription
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         await self._device.execute_command(self._capability.execute())
@@ -129,6 +131,7 @@ class EcovacsResetLifespanButtonEntity(
 
     entity_description: EcovacsLifespanButtonEntityDescription
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         await self._device.execute_command(
@@ -144,6 +147,7 @@ class EcovacsStationActionButtonEntity(
 
     entity_description: EcovacsStationActionButtonEntityDescription
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         await self._device.execute_command(

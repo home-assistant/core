@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from zwave_me_ws import ZWaveMeData
 
@@ -19,6 +20,7 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfPower,
     UnitOfPressure,
+    UnitOfRatio,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -47,13 +49,13 @@ SENSORS_MAP: dict[str, ZWaveMeSensorEntityDescription] = {
     "co": ZWaveMeSensorEntityDescription(
         key="co",
         device_class=SensorDeviceClass.CO,
-        native_unit_of_measurement="ppm",
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "co2": ZWaveMeSensorEntityDescription(
         key="co2",
         device_class=SensorDeviceClass.CO2,
-        native_unit_of_measurement="ppm",
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "humidity": ZWaveMeSensorEntityDescription(
@@ -154,6 +156,7 @@ class ZWaveMeSensor(ZWaveMeEntity, SensorEntity):
         self.entity_description = description
 
     @property
+    @override
     def native_value(self) -> str:
         """Return the state of the sensor."""
         return self.entity_description.value(self.device.level)

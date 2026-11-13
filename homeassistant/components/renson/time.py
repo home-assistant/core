@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, time
+from typing import override
 
 from renson_endura_delta.field_enum import DAYTIME_FIELD, NIGHTTIME_FIELD, FieldEnum
 from renson_endura_delta.renson import RensonVentilation
@@ -74,6 +75,7 @@ class RensonTime(RensonEntity, TimeEntity):
         self.entity_description = description
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
 
@@ -88,6 +90,7 @@ class RensonTime(RensonEntity, TimeEntity):
 
         super()._handle_coordinator_update()
 
+    @override
     def set_value(self, value: time) -> None:
         """Triggers the action."""
 

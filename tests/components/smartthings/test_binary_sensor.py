@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 from pysmartthings import Attribute, Capability
 from pysmartthings.models import HealthStatus
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
@@ -17,8 +18,6 @@ from . import (
     trigger_health_update,
     trigger_update,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_all_entities(
@@ -45,7 +44,10 @@ async def test_state_update(
     """Test state update."""
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get("binary_sensor.refrigerator_fridge_door").state == STATE_OFF
+    assert (
+        hass.states.get("binary_sensor.theater_refrigerator_fridge_door").state
+        == STATE_OFF
+    )
 
     await trigger_update(
         hass,
@@ -57,7 +59,10 @@ async def test_state_update(
         component="cooler",
     )
 
-    assert hass.states.get("binary_sensor.refrigerator_fridge_door").state == STATE_ON
+    assert (
+        hass.states.get("binary_sensor.theater_refrigerator_fridge_door").state
+        == STATE_ON
+    )
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ref_normal_000001"])
@@ -69,14 +74,17 @@ async def test_availability(
     """Test availability."""
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get("binary_sensor.refrigerator_fridge_door").state == STATE_OFF
+    assert (
+        hass.states.get("binary_sensor.theater_refrigerator_fridge_door").state
+        == STATE_OFF
+    )
 
     await trigger_health_update(
         hass, devices, "7db87911-7dce-1cf2-7119-b953432a2f09", HealthStatus.OFFLINE
     )
 
     assert (
-        hass.states.get("binary_sensor.refrigerator_fridge_door").state
+        hass.states.get("binary_sensor.theater_refrigerator_fridge_door").state
         == STATE_UNAVAILABLE
     )
 
@@ -84,7 +92,10 @@ async def test_availability(
         hass, devices, "7db87911-7dce-1cf2-7119-b953432a2f09", HealthStatus.ONLINE
     )
 
-    assert hass.states.get("binary_sensor.refrigerator_fridge_door").state == STATE_OFF
+    assert (
+        hass.states.get("binary_sensor.theater_refrigerator_fridge_door").state
+        == STATE_OFF
+    )
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ref_normal_000001"])
@@ -96,6 +107,6 @@ async def test_availability_at_start(
     """Test unavailable at boot."""
     await setup_integration(hass, mock_config_entry)
     assert (
-        hass.states.get("binary_sensor.refrigerator_fridge_door").state
+        hass.states.get("binary_sensor.theater_refrigerator_fridge_door").state
         == STATE_UNAVAILABLE
     )

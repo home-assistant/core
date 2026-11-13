@@ -1,6 +1,6 @@
 """Event platform for Home Assistant Backup integration."""
 
-from typing import Final
+from typing import Final, override
 
 from homeassistant.components.event import EventEntity
 from homeassistant.core import HomeAssistant, callback
@@ -34,17 +34,15 @@ class AutomaticBackupEvent(BackupManagerBaseEntity, EventEntity):
     def __init__(self, coordinator: BackupDataUpdateCoordinator) -> None:
         """Initialize the automatic backup event."""
         super().__init__(coordinator)
-        self._attr_unique_id = "automatic_backup_event"
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
+        self._attr_unique_id = "automatic_backup_event"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain,home-assistant-entity-unique-id-redundant-platform
         self._attr_translation_key = "automatic_backup_event"
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        if (
-            not (data := self.coordinator.data)
-            or (event := data.last_event) is None
-            or not isinstance(event, CreateBackupEvent)
-        ):
+        if not isinstance(event := self.coordinator.data.last_event, CreateBackupEvent):
             return
 
         self._trigger_event(

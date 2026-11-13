@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 from datetime import date
-from typing import Any
+from typing import Any, override
 
 from aioridwell.model import RidwellAccount
 
@@ -60,6 +60,7 @@ class RidwellSensor(RidwellEntity, SensorEntity):
         self.entity_description = description
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return entity specific state attributes."""
         attrs: dict[str, Any] = {
@@ -76,12 +77,13 @@ class RidwellSensor(RidwellEntity, SensorEntity):
             else:
                 # Ridwell's API will return distinct objects, even if they have the
                 # same name (e.g. two pickups of Latex Paint will show up as two
-                # objects) – so, we sum the quantities:
+                # objects) - so, we sum the quantities:
                 attrs[ATTR_PICKUP_TYPES][pickup.name][ATTR_QUANTITY] += pickup.quantity
 
         return attrs
 
     @property
+    @override
     def native_value(self) -> date:
         """Return the value reported by the sensor."""
         return self.next_pickup_event.pickup_date

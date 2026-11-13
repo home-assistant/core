@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Final
+from typing import Final, override
 
 import aioptdevices
 from aioptdevices.interface import Interface, PTDevicesResponseData
@@ -54,6 +54,7 @@ class PTDevicesCoordinator(DataUpdateCoordinator[PTDevicesResponseData]):
 
         self.interface = ptdevices_interface
 
+    @override
     async def _async_update_data(self) -> PTDevicesResponseData:
         try:
             data = await self.interface.get_data()
@@ -69,20 +70,28 @@ class PTDevicesCoordinator(DataUpdateCoordinator[PTDevicesResponseData]):
                 translation_key="invalid_access_token",
                 translation_placeholders={"error": repr(err)},
             ) from err
+        except aioptdevices.PTDevicesError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={"error": repr(err)},
+            ) from err
 
-        # Purge stale devices
+        # Purge stale devices. Devices that failed to parse are still in the account,
+        # so keep them; their entities become available again once they parse.
         device_reg = dr.async_get(self.hass)
         identifiers = {
             (DOMAIN, f"{device_data['user_id']}_{device_id}")
             for device_id, device_data in data["body"].items()
+        } | {
+            (DOMAIN, f"{self.config_entry.unique_id}_{device_id}")
+            for device_id in data.get("failed", set())
         }
         for device in dr.async_entries_for_config_entry(
             device_reg, self.config_entry.entry_id
         ):
             if not set(device.identifiers) & identifiers:
                 _LOGGER.debug("Removing stale device entry %s", device.name)
-                device_reg.async_update_device(
-                    device.id, remove_config_entry_id=self.config_entry.entry_id
-                )
+                device_reg.async_remove_device(device.id)
 
         return data["body"]

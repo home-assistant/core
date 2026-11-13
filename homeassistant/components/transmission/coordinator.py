@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from functools import partial
 import logging
+from typing import override
 
 import transmission_rpc
 from transmission_rpc.session import SessionStats
@@ -15,14 +16,14 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
-    ATTR_DOWNLOAD_PATH,
-    ATTR_LABELS,
     CONF_LIMIT,
     CONF_ORDER,
     DEFAULT_LIMIT,
     DEFAULT_ORDER,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
+    EVENT_ATTR_DOWNLOAD_PATH,
+    EVENT_ATTR_LABELS,
     EVENT_DOWNLOADED_TORRENT,
     EVENT_REMOVED_TORRENT,
     EVENT_STARTED_TORRENT,
@@ -68,6 +69,7 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
         self._started_torrents: list[transmission_rpc.Torrent] = []
         self._event_listeners: dict[str, EventCallback] = {}
         self.torrents: list[transmission_rpc.Torrent] = []
+        self.download_dir_free_space: int | None = None
         super().__init__(
             hass,
             config_entry=entry,
@@ -103,6 +105,7 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
         for listener in list(self._event_listeners.values()):
             listener(event)
 
+    @override
     async def _async_update_data(self) -> SessionStats:
         """Update transmission data."""
         data = await self.hass.async_add_executor_job(self.update)
@@ -121,6 +124,14 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
             self._session = self.api.get_session()
         except transmission_rpc.TransmissionError as err:
             raise UpdateFailed("Unable to connect to Transmission client") from err
+
+        try:
+            self.download_dir_free_space = self.api.free_space(
+                self._session.download_dir
+            )
+        except (transmission_rpc.TransmissionError, KeyError) as err:
+            _LOGGER.debug("Unable to fetch download directory free space: %s", err)
+            self.download_dir_free_space = None
 
         return data
 
@@ -150,8 +161,8 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
                     {
                         ATTR_NAME: torrent.name,
                         ATTR_ID: torrent.id,
-                        ATTR_DOWNLOAD_PATH: torrent.download_dir,
-                        ATTR_LABELS: torrent.labels,
+                        EVENT_ATTR_DOWNLOAD_PATH: torrent.download_dir,
+                        EVENT_ATTR_LABELS: torrent.labels,
                     },
                 )
                 event = TransmissionEventData(
@@ -181,8 +192,8 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
                     {
                         ATTR_NAME: torrent.name,
                         ATTR_ID: torrent.id,
-                        ATTR_DOWNLOAD_PATH: torrent.download_dir,
-                        ATTR_LABELS: torrent.labels,
+                        EVENT_ATTR_DOWNLOAD_PATH: torrent.download_dir,
+                        EVENT_ATTR_LABELS: torrent.labels,
                     },
                 )
                 event = TransmissionEventData(
@@ -208,8 +219,8 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
                     {
                         ATTR_NAME: torrent.name,
                         ATTR_ID: torrent.id,
-                        ATTR_DOWNLOAD_PATH: torrent.download_dir,
-                        ATTR_LABELS: torrent.labels,
+                        EVENT_ATTR_DOWNLOAD_PATH: torrent.download_dir,
+                        EVENT_ATTR_LABELS: torrent.labels,
                     },
                 )
                 event = TransmissionEventData(

@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from laundrify_aio import LaundrifyAPI
 from laundrify_aio.exceptions import (
@@ -10,7 +10,7 @@ from laundrify_aio.exceptions import (
     InvalidFormat,
     UnknownAuthCode,
 )
-from voluptuous import Required, Schema
+from probatio import Required, Schema
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CODE
@@ -29,6 +29,7 @@ class LaundrifyConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 2
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

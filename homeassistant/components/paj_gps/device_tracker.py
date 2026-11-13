@@ -4,13 +4,13 @@ Reads position data from PajGpsCoordinator and exposes it as a TrackerEntity.
 """
 
 import logging
+from typing import override
 
-from homeassistant.components.device_tracker.config_entry import TrackerEntity
+from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import PajGpsConfigEntry
-from .coordinator import PajGpsCoordinator
+from .coordinator import PajGpsConfigEntry, PajGpsCoordinator
 from .entity import PajGpsEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -60,12 +60,14 @@ class PajGPSDeviceTracker(PajGpsEntity, TrackerEntity):
         self._attr_unique_id = f"{pajgps_coordinator.user_id}_{device_id}"
 
     @property
+    @override
     def latitude(self) -> float | None:
         """Return the latitude of the device."""
         tp = self.coordinator.data.positions.get(self._device_id)
         return float(tp.lat) if tp and tp.lat is not None else None
 
     @property
+    @override
     def longitude(self) -> float | None:
         """Return the longitude of the device."""
         tp = self.coordinator.data.positions.get(self._device_id)

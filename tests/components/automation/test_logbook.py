@@ -1,6 +1,7 @@
 """Test automation logbook."""
 
 from homeassistant.components import automation
+from homeassistant.components.automation import DOMAIN
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -10,7 +11,7 @@ from tests.components.logbook.common import MockRow, mock_humanify
 async def test_humanify_automation_trigger_event(hass: HomeAssistant) -> None:
     """Test humanifying Shelly click event."""
     hass.config.components.add("recorder")
-    assert await async_setup_component(hass, "automation", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     assert await async_setup_component(hass, "logbook", {})
     await hass.async_block_till_done()
     context = Context()
@@ -24,6 +25,8 @@ async def test_humanify_automation_trigger_event(hass: HomeAssistant) -> None:
                     "name": "Bla",
                     "entity_id": "automation.bla",
                     "source": "state change of input_boolean.yo",
+                    "item_id": "1234",
+                    "run_id": "0123456789abcdef0123456789abcdef",
                 },
                 context=context,
             ),
@@ -43,9 +46,13 @@ async def test_humanify_automation_trigger_event(hass: HomeAssistant) -> None:
     assert event1["source"] == "state change of input_boolean.yo"
     assert event1["context_id"] == context.id
     assert event1["entity_id"] == "automation.bla"
+    assert event1["item_id"] == "1234"
+    assert event1["run_id"] == "0123456789abcdef0123456789abcdef"
 
     assert event2["name"] == "Bla"
     assert event2["message"] == "triggered"
     assert event2["source"] is None
     assert event2["context_id"] == context.id
     assert event2["entity_id"] == "automation.bla"
+    assert "item_id" not in event2
+    assert "run_id" not in event2

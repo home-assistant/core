@@ -2,17 +2,15 @@
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, cast
+from typing import Any, cast, override
 
 from homeassistant.components.sensor import (
-    DOMAIN as SENSOR_DOMAIN,
     RestoreSensor,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, UnitOfVolume
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -21,13 +19,7 @@ from homeassistant.util.dt import utc_from_timestamp, utcnow
 from . import RainMachineConfigEntry, RainMachineData
 from .const import DATA_PROGRAMS, DATA_PROVISION_SETTINGS, DATA_ZONES
 from .entity import RainMachineEntity, RainMachineEntityDescription
-from .util import (
-    RUN_STATE_MAP,
-    EntityDomainReplacementStrategy,
-    RunStates,
-    async_finish_entity_domain_replacements,
-    key_exists,
-)
+from .util import RUN_STATE_MAP, RunStates, key_exists
 
 DEFAULT_ZONE_COMPLETION_TIME_WOBBLE_TOLERANCE = timedelta(seconds=5)
 
@@ -156,20 +148,6 @@ async def async_setup_entry(
     """Set up RainMachine sensors based on a config entry."""
     data = entry.runtime_data
 
-    async_finish_entity_domain_replacements(
-        hass,
-        entry,
-        (
-            EntityDomainReplacementStrategy(
-                SENSOR_DOMAIN,
-                f"{data.controller.mac}_freeze_protect_temp",
-                f"select.{data.controller.name.lower()}_freeze_protect_temperature",
-                breaks_in_ha_version="2022.12.0",
-                remove_old_entity=True,
-            ),
-        ),
-    )
-
     api_category_sensor_map = {
         DATA_PROVISION_SETTINGS: ProvisionSettingsSensor,
     }
@@ -229,7 +207,7 @@ class TimeRemainingSensor(RainMachineEntity, RestoreSensor):
 
     def __init__(
         self,
-        entry: ConfigEntry,
+        entry: RainMachineConfigEntry,
         data: RainMachineData,
         description: RainMachineSensorCompletionTimerDescription,
     ) -> None:
@@ -249,6 +227,7 @@ class TimeRemainingSensor(RainMachineEntity, RestoreSensor):
         """Return the data key that contains the activity status."""
         return "state"
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         if restored_data := await self.async_get_last_sensor_data():
@@ -260,6 +239,7 @@ class TimeRemainingSensor(RainMachineEntity, RestoreSensor):
         raise NotImplementedError
 
     @callback
+    @override
     def update_from_latest_data(self) -> None:
         """Update the state."""
         self._previous_run_state = self._current_run_state
@@ -294,10 +274,12 @@ class ProgramTimeRemainingSensor(TimeRemainingSensor):
     """Define a sensor that shows the amount of time remaining for a program."""
 
     @property
+    @override
     def status_key(self) -> str:
         """Return the data key that contains the activity status."""
         return "status"
 
+    @override
     def calculate_seconds_remaining(self) -> int:
         """Calculate the number of seconds remaining."""
         return sum(
@@ -312,6 +294,7 @@ class ProvisionSettingsSensor(RainMachineEntity, SensorEntity):
     entity_description: RainMachineSensorDataDescription
 
     @callback
+    @override
     def update_from_latest_data(self) -> None:
         """Update the state."""
         system = self.coordinator.data.get("system", {})
@@ -349,6 +332,7 @@ class ProvisionSettingsSensor(RainMachineEntity, SensorEntity):
 class ZoneTimeRemainingSensor(TimeRemainingSensor):
     """Define a sensor that shows the amount of time remaining for a zone."""
 
+    @override
     def calculate_seconds_remaining(self) -> int:
         """Calculate the number of seconds remaining."""
         return cast(

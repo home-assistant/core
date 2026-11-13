@@ -3,10 +3,17 @@
 import asyncio
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, NamedTuple, override
 
-from tplink_omada_client import OmadaSiteClient, OmadaSwitchPortDetails
-from tplink_omada_client.clients import OmadaWirelessClient
+from tplink_omada_client import (
+    OmadaClient,
+    OmadaControllerStatus,
+    OmadaControllerUpdateInfo,
+    OmadaSiteClient,
+    OmadaSwitchPortDetails,
+    OmadaVpnPolicy,
+)
+from tplink_omada_client.clients import OmadaNetworkClient, OmadaWirelessClient
 from tplink_omada_client.devices import (
     OmadaFirmwareUpdate,
     OmadaGateway,
@@ -15,19 +22,29 @@ from tplink_omada_client.devices import (
 )
 from tplink_omada_client.exceptions import OmadaClientException
 
+from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+from .config_flow import CONF_SITE
+from .const import DOMAIN
 
 if TYPE_CHECKING:
     from . import OmadaConfigEntry
+    from .controller import OmadaSiteController
 
 _LOGGER = logging.getLogger(__name__)
 
-POLL_SWITCH_PORT = 300
+POLL_SWITCH_PORT = 30
 POLL_GATEWAY = 300
 POLL_CLIENTS = 300
 POLL_DEVICES = 300
+POLL_CONTROLLER = 300
+POLL_CONTROLLER_UPDATE = 3600
 POLL_UPGRADE = 60
+POLL_KNOWN_CLIENTS = 3600
+POLL_VPN = 300
 
 
 class OmadaCoordinator[_T](DataUpdateCoordinator[dict[str, _T]]):
@@ -53,17 +70,91 @@ class OmadaCoordinator[_T](DataUpdateCoordinator[dict[str, _T]]):
         )
         self.omada_client = omada_client
 
+    @override
     async def _async_update_data(self) -> dict[str, _T]:
         """Fetch data from API endpoint."""
         try:
             async with asyncio.timeout(10):
                 return await self.poll_update()
         except OmadaClientException as err:
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+            ) from err
 
     async def poll_update(self) -> dict[str, _T]:
         """Poll the current data from the controller."""
         raise NotImplementedError("Update method not implemented")
+
+
+class OmadaControllerStatusCoordinator(DataUpdateCoordinator[OmadaControllerStatus]):
+    """Coordinator for getting status information about the Omada Controller."""
+
+    config_entry: OmadaConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: OmadaConfigEntry,
+        omada_client: OmadaClient,
+    ) -> None:
+        """Initialize the controller status coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name="Omada API Data - Controller Status",
+            update_interval=timedelta(seconds=POLL_CONTROLLER),
+        )
+        self.omada_client = omada_client
+
+    @override
+    async def _async_update_data(self) -> OmadaControllerStatus:
+        """Fetch controller status from the API."""
+        try:
+            async with asyncio.timeout(10):
+                return await self.omada_client.get_controller_status()
+        except OmadaClientException as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+            ) from err
+
+
+class OmadaControllerUpdateCoordinator(
+    DataUpdateCoordinator[OmadaControllerUpdateInfo]
+):
+    """Coordinator for controller firmware update information."""
+
+    config_entry: OmadaConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: OmadaConfigEntry,
+        omada_client: OmadaClient,
+    ) -> None:
+        """Initialize the controller update coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name="Omada API Data - Controller Firmware Update",
+            update_interval=timedelta(seconds=POLL_CONTROLLER_UPDATE),
+        )
+        self.omada_client = omada_client
+
+    @override
+    async def _async_update_data(self) -> OmadaControllerUpdateInfo:
+        """Fetch controller firmware update information from the API."""
+        try:
+            async with asyncio.timeout(10):
+                return await self.omada_client.check_firmware_updates()
+        except OmadaClientException as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+            ) from err
 
 
 class OmadaSwitchPortCoordinator(OmadaCoordinator[OmadaSwitchPortDetails]):
@@ -86,6 +177,7 @@ class OmadaSwitchPortCoordinator(OmadaCoordinator[OmadaSwitchPortDetails]):
         )
         self._network_switch = network_switch
 
+    @override
     async def poll_update(self) -> dict[str, OmadaSwitchPortDetails]:
         """Poll a switch's current state."""
         ports = await self.omada_client.get_switch_ports(self._network_switch)
@@ -106,6 +198,7 @@ class OmadaGatewayCoordinator(OmadaCoordinator[OmadaGateway]):
         super().__init__(hass, config_entry, omada_client, "Gateway", POLL_GATEWAY)
         self.mac = mac
 
+    @override
     async def poll_update(self) -> dict[str, OmadaGateway]:
         """Poll a the gateway's current state."""
         gateway = await self.omada_client.get_gateway(self.mac)
@@ -124,6 +217,7 @@ class OmadaDevicesCoordinator(OmadaCoordinator[OmadaListDevice]):
         """Initialize my coordinator."""
         super().__init__(hass, config_entry, omada_client, "DeviceList", POLL_CLIENTS)
 
+    @override
     async def poll_update(self) -> dict[str, OmadaListDevice]:
         """Poll the site's current registered Omada devices."""
         return {d.mac: d for d in await self.omada_client.get_devices()}
@@ -141,6 +235,7 @@ class OmadaClientsCoordinator(OmadaCoordinator[OmadaWirelessClient]):
         """Initialize my coordinator."""
         super().__init__(hass, config_entry, omada_client, "ClientsList", POLL_CLIENTS)
 
+    @override
     async def poll_update(self) -> dict[str, OmadaWirelessClient]:
         """Poll the site's current active wi-fi clients."""
         return {
@@ -148,6 +243,61 @@ class OmadaClientsCoordinator(OmadaCoordinator[OmadaWirelessClient]):
             async for c in self.omada_client.get_connected_clients()
             if isinstance(c, OmadaWirelessClient)
         }
+
+
+class OmadaKnownClientsCoordinator(OmadaCoordinator[OmadaNetworkClient]):
+    """Coordinator for getting details about all clients known to the controller."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: OmadaConfigEntry,
+        omada_client: OmadaSiteClient,
+    ) -> None:
+        """Initialize my coordinator."""
+        super().__init__(
+            hass,
+            config_entry,
+            omada_client,
+            "KnownClientsList",
+            POLL_KNOWN_CLIENTS,
+        )
+
+    @override
+    async def _async_update_data(self) -> dict[str, OmadaNetworkClient]:
+        """Fetch known clients and remove trackers the controller dropped."""
+        clients = await super()._async_update_data()
+        if not clients:
+            # A successful but empty response is a controller glitch, not proof
+            # that every client is gone; keep the trackers.
+            return clients
+        cleanup_client_trackers(self.hass, self.config_entry.runtime_data, clients)
+        return clients
+
+    @override
+    async def poll_update(self) -> dict[str, OmadaNetworkClient]:
+        """Poll the site's all-time known clients."""
+        return {
+            client.mac: client async for client in self.omada_client.get_known_clients()
+        }
+
+
+class OmadaVpnPoliciesCoordinator(OmadaCoordinator[OmadaVpnPolicy]):
+    """Coordinator for getting details about the site's VPN policies."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: OmadaConfigEntry,
+        omada_client: OmadaSiteClient,
+    ) -> None:
+        """Initialize my coordinator."""
+        super().__init__(hass, config_entry, omada_client, "VpnPolicies", POLL_VPN)
+
+    @override
+    async def poll_update(self) -> dict[str, OmadaVpnPolicy]:
+        """Poll the site's current VPN policies."""
+        return {p.unique_id: p for p in await self.omada_client.get_vpn_policies()}
 
 
 class FirmwareUpdateStatus(NamedTuple):
@@ -202,6 +352,7 @@ class OmadaFirmwareUpdateCoordinator(OmadaCoordinator[FirmwareUpdateStatus]):
         )
         return updates
 
+    @override
     async def poll_update(self) -> dict[str, FirmwareUpdateStatus]:
         """Poll the state of Omada Devices firmware update availability."""
         return {d.device.mac: d for d in await self._get_firmware_updates()}
@@ -213,3 +364,50 @@ class OmadaFirmwareUpdateCoordinator(OmadaCoordinator[FirmwareUpdateStatus]):
         self._config_entry.async_create_background_task(
             self.hass, self.async_request_refresh(), "Omada Firmware Update Refresh"
         )
+
+
+@callback
+def cleanup_client_trackers(
+    hass: HomeAssistant,
+    controller: OmadaSiteController,
+    known_clients: dict[str, OmadaNetworkClient],
+) -> None:
+    """Remove tracker entities for clients missing from the controller list."""
+    # Trackers are created as scanner_<site>_<client.mac>, with the MAC taken
+    # from the same client list, so comparing unique IDs avoids parsing them.
+    config_entry = controller.known_clients_coordinator.config_entry
+    prefix = f"scanner_{config_entry.data[CONF_SITE]}_"
+    known_unique_ids = {f"{prefix}{mac}" for mac in known_clients}
+    entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)
+
+    for entity in er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    ):
+        if entity.domain != DEVICE_TRACKER_DOMAIN:
+            continue
+        if not entity.unique_id.startswith(prefix):
+            continue
+        if entity.unique_id in known_unique_ids:
+            continue
+        if entity.disabled_by is not er.RegistryEntryDisabler.INTEGRATION:
+            continue
+
+        # The tracker has a device of its own, and removing the device also
+        # removes the tracker. Keep a device that other entities share so they
+        # are not detached.
+        if (
+            (device_id := entity.device_id) is not None
+            and device_registry.async_get(device_id) is not None
+            and len(
+                er.async_entries_for_device(
+                    entity_registry,
+                    device_id,
+                    include_disabled_entities=True,
+                )
+            )
+            == 1
+        ):
+            device_registry.async_remove_device(device_id)
+            continue
+        entity_registry.async_remove(entity.entity_id)

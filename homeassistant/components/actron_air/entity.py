@@ -2,11 +2,12 @@
 
 from collections.abc import Callable, Coroutine
 from functools import wraps
-from typing import Any, Concatenate
+from typing import Any, Concatenate, override
 
-from actron_neo_api import ActronAirAPIError, ActronAirZone
+from actron_neo_api import ActronAirAPIError, ActronAirPeripheral, ActronAirZone
 
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -50,9 +51,10 @@ class ActronAirEntity(CoordinatorEntity[ActronAirSystemCoordinator]):
         self._serial_number = coordinator.serial_number
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
-        return not self.coordinator.is_device_stale()
+        return super().available and self.coordinator.data.is_online
 
 
 class ActronAirAcEntity(ActronAirEntity):
@@ -89,5 +91,53 @@ class ActronAirZoneEntity(ActronAirEntity):
             manufacturer="Actron Air",
             model="Zone",
             suggested_area=zone.title,
-            via_device=(DOMAIN, self._serial_number),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, self._serial_number),
+                config_entry_id=coordinator.config_entry.entry_id,
+            ),
         )
+
+    @property
+    def _zone(self) -> ActronAirZone:
+        """Get the current zone data from the coordinator."""
+        return self.coordinator.data.zones[self._zone_id]
+
+
+class ActronAirPeripheralEntity(ActronAirEntity):
+    """Base class for Actron Air peripheral entities."""
+
+    def __init__(
+        self,
+        coordinator: ActronAirSystemCoordinator,
+        peripheral: ActronAirPeripheral,
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__(coordinator)
+        self._peripheral_serial = peripheral.serial_number
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, peripheral.serial_number)},
+            name=f"Sensor {peripheral.serial_number}",
+            manufacturer="Actron Air",
+            model=peripheral.device_type,
+            serial_number=peripheral.serial_number,
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, self._serial_number),
+                config_entry_id=coordinator.config_entry.entry_id,
+            ),
+        )
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return (
+            super().available
+            and self._peripheral_serial in self.coordinator.peripherals
+        )
+
+    @property
+    def _peripheral(self) -> ActronAirPeripheral:
+        """Get the current peripheral data from the coordinator."""
+        return self.coordinator.peripherals[self._peripheral_serial]

@@ -1,26 +1,26 @@
 """Test the Tesla Fleet select platform."""
 
+from copy import deepcopy
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.const import EnergyExportMode, EnergyOperationMode
 from tesla_fleet_api.exceptions import VehicleOffline
 
 from homeassistant.components.select import (
-    ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.components.tesla_fleet.select import LOW
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
+from homeassistant.components.tesla_fleet.select import HIGH, LOW, OFF
+from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import assert_entities, setup_platform
 from .const import COMMAND_OK, VEHICLE_DATA_ALT
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -49,6 +49,43 @@ async def test_select_offline(
     assert state.state == STATE_UNKNOWN
 
 
+@pytest.mark.parametrize(
+    ("field", "entity_id", "value"),
+    [
+        pytest.param(
+            "steering_wheel_heat_level",
+            "select.test_steering_wheel_heater",
+            3,
+            id="steering_wheel_heater",
+        ),
+        pytest.param(
+            "seat_heater_left",
+            "select.test_seat_heater_front_left",
+            4,
+            id="seat_heater",
+        ),
+    ],
+)
+async def test_select_heat_level_out_of_range(
+    hass: HomeAssistant,
+    mock_vehicle_data: AsyncMock,
+    normal_config_entry: MockConfigEntry,
+    field: str,
+    entity_id: str,
+    value: int,
+) -> None:
+    """Tests that a heat level beyond the last modeled option clamps to it."""
+
+    data = deepcopy(VEHICLE_DATA_ALT)
+    data["response"]["climate_state"][field] = value
+    mock_vehicle_data.return_value = data
+
+    await setup_platform(hass, normal_config_entry, [Platform.SELECT])
+
+    state = hass.states.get(entity_id)
+    assert state.state == HIGH
+
+
 async def test_select_services(
     hass: HomeAssistant,
     mock_vehicle_data: AsyncMock,
@@ -71,8 +108,11 @@ async def test_select_services(
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: LOW},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: entity_id,
+                SelectServiceArgument.OPTION: LOW,
+            },
             blocking=True,
         )
         state = hass.states.get(entity_id)
@@ -93,8 +133,11 @@ async def test_select_services(
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: LOW},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: entity_id,
+                SelectServiceArgument.OPTION: LOW,
+            },
             blocking=True,
         )
         state = hass.states.get(entity_id)
@@ -109,10 +152,10 @@ async def test_select_services(
     ) as call:
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: entity_id,
-                ATTR_OPTION: EnergyOperationMode.AUTONOMOUS.value,
+                CommonServiceArgument.ENTITY_ID: entity_id,
+                SelectServiceArgument.OPTION: EnergyOperationMode.AUTONOMOUS.value,
             },
             blocking=True,
         )
@@ -127,10 +170,56 @@ async def test_select_services(
     ) as call:
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: EnergyExportMode.BATTERY_OK.value},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: entity_id,
+                SelectServiceArgument.OPTION: EnergyExportMode.BATTERY_OK.value,
+            },
             blocking=True,
         )
         state = hass.states.get(entity_id)
         assert state.state == EnergyExportMode.BATTERY_OK.value
         call.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("option", "level"),
+    [
+        pytest.param(OFF, 0, id="off"),
+        pytest.param(LOW, 1, id="low"),
+        pytest.param(HIGH, 3, id="high"),
+    ],
+)
+async def test_select_steering_wheel_heat_level(
+    hass: HomeAssistant,
+    mock_vehicle_data: AsyncMock,
+    normal_config_entry: MockConfigEntry,
+    option: str,
+    level: int,
+) -> None:
+    """Tests that the steering wheel heater sends the levels Tesla expects."""
+    mock_vehicle_data.return_value = VEHICLE_DATA_ALT
+    await setup_platform(hass, normal_config_entry, [Platform.SELECT])
+
+    entity_id = "select.test_steering_wheel_heater"
+    with (
+        patch(
+            "tesla_fleet_api.tesla.VehicleFleet.remote_steering_wheel_heat_level_request",
+            return_value=COMMAND_OK,
+        ) as remote_steering_wheel_heat_level_request,
+        patch(
+            "tesla_fleet_api.tesla.VehicleFleet.auto_conditioning_start",
+            return_value=COMMAND_OK,
+        ),
+    ):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: entity_id,
+                SelectServiceArgument.OPTION: option,
+            },
+            blocking=True,
+        )
+    remote_steering_wheel_heat_level_request.assert_called_once_with(level)
+    assert hass.states.get(entity_id).state == option

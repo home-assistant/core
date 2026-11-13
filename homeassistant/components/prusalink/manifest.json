@@ -1,8 +1,10 @@
 {
   "domain": "prusalink",
   "name": "PrusaLink",
+  "categories": ["computers_network.printers"],
   "codeowners": [],
   "config_flow": true,
+  "connectivity": ["network"],
   "dhcp": [
     {
       "macaddress": "109C70*"
@@ -11,5 +13,5 @@
   "documentation": "https://www.home-assistant.io/integrations/prusalink",
   "integration_type": "device",
   "iot_class": "local_polling",
-  "requirements": ["pyprusalink==2.2.0"]
+  "requirements": ["pyprusalink==3.0.0"]
 }

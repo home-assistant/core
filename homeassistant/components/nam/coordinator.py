@@ -1,7 +1,7 @@
 """The Nettigo Air Monitor coordinator."""
 
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from nettigo_air_monitor import (
     ApiError,
@@ -57,13 +57,14 @@ class NAMDataUpdateCoordinator(DataUpdateCoordinator[NAMSensors]):
             update_interval=DEFAULT_UPDATE_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> NAMSensors:
         """Update data via library."""
         try:
             data = await self.nam.async_update()
         # We do not need to catch AuthFailed exception here because sensor data is
         # always available without authorization.
-        except (ApiError, InvalidSensorDataError, RetryError) as error:
+        except (ApiError, InvalidSensorDataError, RetryError, TimeoutError) as error:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_error",

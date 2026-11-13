@@ -1,21 +1,79 @@
 # serializer version: 1
-# name: test_entities[sensor-l1_constant_temp_relay_summer_stop][sensor.heating_circuit_1_patterilammitys_curve_supply_water_temperature-entry]
+# name: test_entities[sensor-l1_constant_temp_relay_summer_stop][sensor.ouman_eh_800_heating_circuit_1_patterilammitys_autumn_drying_effect-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.heating_circuit_1_patterilammitys_curve_supply_water_temperature',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_1_patterilammitys_autumn_drying_effect',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Autumn drying effect',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE_DELTA: 'temperature_delta'>,
+    'original_icon': None,
+    'original_name': 'Autumn drying effect',
+    'platform': 'ouman_eh_800',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'autumn_drying_effect',
+    'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_l1_autumn_drying_effect',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_entities[sensor-l1_constant_temp_relay_summer_stop][sensor.ouman_eh_800_heating_circuit_1_patterilammitys_autumn_drying_effect-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature_delta',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 1 Patterilämmitys Autumn drying effect',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_1_patterilammitys_autumn_drying_effect',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_entities[sensor-l1_constant_temp_relay_summer_stop][sensor.ouman_eh_800_heating_circuit_1_patterilammitys_curve_supply_water_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_1_patterilammitys_curve_supply_water_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -41,39 +99,39 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor-l1_constant_temp_relay_summer_stop][sensor.heating_circuit_1_patterilammitys_curve_supply_water_temperature-state]
+# name: test_entities[sensor-l1_constant_temp_relay_summer_stop][sensor.ouman_eh_800_heating_circuit_1_patterilammitys_curve_supply_water_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Heating circuit 1 Patterilämmitys Curve supply water temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 1 Patterilämmitys Curve supply water temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.heating_circuit_1_patterilammitys_curve_supply_water_temperature',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_1_patterilammitys_curve_supply_water_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '41.0',
   })
 # ---
-# name: test_entities[sensor-l1_constant_temp_relay_summer_stop][sensor.heating_circuit_1_patterilammitys_fine_adjustment_effect-entry]
+# name: test_entities[sensor-l1_constant_temp_relay_summer_stop][sensor.ouman_eh_800_heating_circuit_1_patterilammitys_fine_adjustment_effect-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.heating_circuit_1_patterilammitys_fine_adjustment_effect',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_1_patterilammitys_fine_adjustment_effect',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -99,39 +157,39 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor-l1_constant_temp_relay_summer_stop][sensor.heating_circuit_1_patterilammitys_fine_adjustment_effect-state]
+# name: test_entities[sensor-l1_constant_temp_relay_summer_stop][sensor.ouman_eh_800_heating_circuit_1_patterilammitys_fine_adjustment_effect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature_delta',
-      'friendly_name': 'Heating circuit 1 Patterilämmitys Fine adjustment effect',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature_delta',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 1 Patterilämmitys Fine adjustment effect',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.heating_circuit_1_patterilammitys_fine_adjustment_effect',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_1_patterilammitys_fine_adjustment_effect',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_entities[sensor-l1_constant_temp_relay_summer_stop][sensor.heating_circuit_1_patterilammitys_supply_water_temperature-entry]
+# name: test_entities[sensor-l1_constant_temp_relay_summer_stop][sensor.ouman_eh_800_heating_circuit_1_patterilammitys_supply_water_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.heating_circuit_1_patterilammitys_supply_water_temperature',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_1_patterilammitys_supply_water_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -157,39 +215,39 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor-l1_constant_temp_relay_summer_stop][sensor.heating_circuit_1_patterilammitys_supply_water_temperature-state]
+# name: test_entities[sensor-l1_constant_temp_relay_summer_stop][sensor.ouman_eh_800_heating_circuit_1_patterilammitys_supply_water_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Heating circuit 1 Patterilämmitys Supply water temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 1 Patterilämmitys Supply water temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.heating_circuit_1_patterilammitys_supply_water_temperature',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_1_patterilammitys_supply_water_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '39.1',
   })
 # ---
-# name: test_entities[sensor-l1_constant_temp_relay_summer_stop][sensor.heating_circuit_1_patterilammitys_supply_water_temperature_setpoint-entry]
+# name: test_entities[sensor-l1_constant_temp_relay_summer_stop][sensor.ouman_eh_800_heating_circuit_1_patterilammitys_supply_water_temperature_setpoint-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.heating_circuit_1_patterilammitys_supply_water_temperature_setpoint',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_1_patterilammitys_supply_water_temperature_setpoint',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -215,39 +273,39 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor-l1_constant_temp_relay_summer_stop][sensor.heating_circuit_1_patterilammitys_supply_water_temperature_setpoint-state]
+# name: test_entities[sensor-l1_constant_temp_relay_summer_stop][sensor.ouman_eh_800_heating_circuit_1_patterilammitys_supply_water_temperature_setpoint-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Heating circuit 1 Patterilämmitys Supply water temperature setpoint',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 1 Patterilämmitys Supply water temperature setpoint',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.heating_circuit_1_patterilammitys_supply_water_temperature_setpoint',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_1_patterilammitys_supply_water_temperature_setpoint',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '43.7',
   })
 # ---
-# name: test_entities[sensor-l1_constant_temp_relay_summer_stop][sensor.heating_circuit_1_patterilammitys_valve_position-entry]
+# name: test_entities[sensor-l1_constant_temp_relay_summer_stop][sensor.ouman_eh_800_heating_circuit_1_patterilammitys_valve_position-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.heating_circuit_1_patterilammitys_valve_position',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_1_patterilammitys_valve_position',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -273,15 +331,15 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_entities[sensor-l1_constant_temp_relay_summer_stop][sensor.heating_circuit_1_patterilammitys_valve_position-state]
+# name: test_entities[sensor-l1_constant_temp_relay_summer_stop][sensor.ouman_eh_800_heating_circuit_1_patterilammitys_valve_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Heating circuit 1 Patterilämmitys Valve position',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 1 Patterilämmitys Valve position',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.heating_circuit_1_patterilammitys_valve_position',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_1_patterilammitys_valve_position',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -295,12 +353,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -333,10 +391,10 @@
 # name: test_entities[sensor-l1_constant_temp_relay_summer_stop][sensor.ouman_eh_800_outside_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Ouman EH-800 Outside temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ouman EH-800 Outside temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ouman_eh_800_outside_temperature',
@@ -346,23 +404,197 @@
     'state': '0.4',
   })
 # ---
-# name: test_entities[sensor-no_room_sensors][sensor.heating_circuit_1_patterilammitys_curve_supply_water_temperature-entry]
+# name: test_entities[sensor-no_room_sensors][sensor.ouman_eh_800_accumulator_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ouman_eh_800_accumulator_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Accumulator temperature',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Accumulator temperature',
+    'platform': 'ouman_eh_800',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'accumulator_temperature',
+    'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_main_accumulator_temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_entities[sensor-no_room_sensors][sensor.ouman_eh_800_accumulator_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ouman EH-800 Accumulator temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ouman_eh_800_accumulator_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '55.0',
+  })
+# ---
+# name: test_entities[sensor-no_room_sensors][sensor.ouman_eh_800_boiler_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ouman_eh_800_boiler_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Boiler temperature',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Boiler temperature',
+    'platform': 'ouman_eh_800',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'boiler_temperature',
+    'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_main_boiler_temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_entities[sensor-no_room_sensors][sensor.ouman_eh_800_boiler_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ouman EH-800 Boiler temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ouman_eh_800_boiler_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '60.0',
+  })
+# ---
+# name: test_entities[sensor-no_room_sensors][sensor.ouman_eh_800_heating_circuit_1_patterilammitys_autumn_drying_effect-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.heating_circuit_1_patterilammitys_curve_supply_water_temperature',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_1_patterilammitys_autumn_drying_effect',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Autumn drying effect',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE_DELTA: 'temperature_delta'>,
+    'original_icon': None,
+    'original_name': 'Autumn drying effect',
+    'platform': 'ouman_eh_800',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'autumn_drying_effect',
+    'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_l1_autumn_drying_effect',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_entities[sensor-no_room_sensors][sensor.ouman_eh_800_heating_circuit_1_patterilammitys_autumn_drying_effect-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature_delta',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 1 Patterilämmitys Autumn drying effect',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_1_patterilammitys_autumn_drying_effect',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_entities[sensor-no_room_sensors][sensor.ouman_eh_800_heating_circuit_1_patterilammitys_curve_supply_water_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_1_patterilammitys_curve_supply_water_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -388,39 +620,39 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor-no_room_sensors][sensor.heating_circuit_1_patterilammitys_curve_supply_water_temperature-state]
+# name: test_entities[sensor-no_room_sensors][sensor.ouman_eh_800_heating_circuit_1_patterilammitys_curve_supply_water_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Heating circuit 1 Patterilämmitys Curve supply water temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 1 Patterilämmitys Curve supply water temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.heating_circuit_1_patterilammitys_curve_supply_water_temperature',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_1_patterilammitys_curve_supply_water_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '41.0',
   })
 # ---
-# name: test_entities[sensor-no_room_sensors][sensor.heating_circuit_1_patterilammitys_fine_adjustment_effect-entry]
+# name: test_entities[sensor-no_room_sensors][sensor.ouman_eh_800_heating_circuit_1_patterilammitys_fine_adjustment_effect-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.heating_circuit_1_patterilammitys_fine_adjustment_effect',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_1_patterilammitys_fine_adjustment_effect',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -446,39 +678,39 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor-no_room_sensors][sensor.heating_circuit_1_patterilammitys_fine_adjustment_effect-state]
+# name: test_entities[sensor-no_room_sensors][sensor.ouman_eh_800_heating_circuit_1_patterilammitys_fine_adjustment_effect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature_delta',
-      'friendly_name': 'Heating circuit 1 Patterilämmitys Fine adjustment effect',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature_delta',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 1 Patterilämmitys Fine adjustment effect',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.heating_circuit_1_patterilammitys_fine_adjustment_effect',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_1_patterilammitys_fine_adjustment_effect',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_entities[sensor-no_room_sensors][sensor.heating_circuit_1_patterilammitys_supply_water_temperature-entry]
+# name: test_entities[sensor-no_room_sensors][sensor.ouman_eh_800_heating_circuit_1_patterilammitys_supply_water_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.heating_circuit_1_patterilammitys_supply_water_temperature',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_1_patterilammitys_supply_water_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -504,39 +736,39 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor-no_room_sensors][sensor.heating_circuit_1_patterilammitys_supply_water_temperature-state]
+# name: test_entities[sensor-no_room_sensors][sensor.ouman_eh_800_heating_circuit_1_patterilammitys_supply_water_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Heating circuit 1 Patterilämmitys Supply water temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 1 Patterilämmitys Supply water temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.heating_circuit_1_patterilammitys_supply_water_temperature',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_1_patterilammitys_supply_water_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '39.1',
   })
 # ---
-# name: test_entities[sensor-no_room_sensors][sensor.heating_circuit_1_patterilammitys_supply_water_temperature_setpoint-entry]
+# name: test_entities[sensor-no_room_sensors][sensor.ouman_eh_800_heating_circuit_1_patterilammitys_supply_water_temperature_setpoint-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.heating_circuit_1_patterilammitys_supply_water_temperature_setpoint',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_1_patterilammitys_supply_water_temperature_setpoint',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -562,39 +794,39 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor-no_room_sensors][sensor.heating_circuit_1_patterilammitys_supply_water_temperature_setpoint-state]
+# name: test_entities[sensor-no_room_sensors][sensor.ouman_eh_800_heating_circuit_1_patterilammitys_supply_water_temperature_setpoint-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Heating circuit 1 Patterilämmitys Supply water temperature setpoint',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 1 Patterilämmitys Supply water temperature setpoint',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.heating_circuit_1_patterilammitys_supply_water_temperature_setpoint',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_1_patterilammitys_supply_water_temperature_setpoint',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '43.7',
   })
 # ---
-# name: test_entities[sensor-no_room_sensors][sensor.heating_circuit_1_patterilammitys_valve_position-entry]
+# name: test_entities[sensor-no_room_sensors][sensor.ouman_eh_800_heating_circuit_1_patterilammitys_valve_position-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.heating_circuit_1_patterilammitys_valve_position',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_1_patterilammitys_valve_position',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -620,38 +852,96 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_entities[sensor-no_room_sensors][sensor.heating_circuit_1_patterilammitys_valve_position-state]
+# name: test_entities[sensor-no_room_sensors][sensor.ouman_eh_800_heating_circuit_1_patterilammitys_valve_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Heating circuit 1 Patterilämmitys Valve position',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 1 Patterilämmitys Valve position',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.heating_circuit_1_patterilammitys_valve_position',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_1_patterilammitys_valve_position',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '11.0',
   })
 # ---
-# name: test_entities[sensor-no_room_sensors][sensor.heating_circuit_2_lattialammitys_curve_supply_water_temperature-entry]
+# name: test_entities[sensor-no_room_sensors][sensor.ouman_eh_800_heating_circuit_2_lattialammitys_autumn_drying_effect-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l2')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.heating_circuit_2_lattialammitys_curve_supply_water_temperature',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_2_lattialammitys_autumn_drying_effect',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Autumn drying effect',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE_DELTA: 'temperature_delta'>,
+    'original_icon': None,
+    'original_name': 'Autumn drying effect',
+    'platform': 'ouman_eh_800',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'autumn_drying_effect',
+    'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_l2_autumn_drying_effect',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_entities[sensor-no_room_sensors][sensor.ouman_eh_800_heating_circuit_2_lattialammitys_autumn_drying_effect-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature_delta',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 2 Lattialämmitys Autumn drying effect',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_2_lattialammitys_autumn_drying_effect',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_entities[sensor-no_room_sensors][sensor.ouman_eh_800_heating_circuit_2_lattialammitys_curve_supply_water_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l2')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_2_lattialammitys_curve_supply_water_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -677,39 +967,39 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor-no_room_sensors][sensor.heating_circuit_2_lattialammitys_curve_supply_water_temperature-state]
+# name: test_entities[sensor-no_room_sensors][sensor.ouman_eh_800_heating_circuit_2_lattialammitys_curve_supply_water_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Heating circuit 2 Lattialämmitys Curve supply water temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 2 Lattialämmitys Curve supply water temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.heating_circuit_2_lattialammitys_curve_supply_water_temperature',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_2_lattialammitys_curve_supply_water_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '30.0',
   })
 # ---
-# name: test_entities[sensor-no_room_sensors][sensor.heating_circuit_2_lattialammitys_delayed_outdoor_temperature_effect-entry]
+# name: test_entities[sensor-no_room_sensors][sensor.ouman_eh_800_heating_circuit_2_lattialammitys_delayed_outdoor_temperature_effect-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l2')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.heating_circuit_2_lattialammitys_delayed_outdoor_temperature_effect',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_2_lattialammitys_delayed_outdoor_temperature_effect',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -735,39 +1025,39 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor-no_room_sensors][sensor.heating_circuit_2_lattialammitys_delayed_outdoor_temperature_effect-state]
+# name: test_entities[sensor-no_room_sensors][sensor.ouman_eh_800_heating_circuit_2_lattialammitys_delayed_outdoor_temperature_effect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature_delta',
-      'friendly_name': 'Heating circuit 2 Lattialämmitys Delayed outdoor temperature effect',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature_delta',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 2 Lattialämmitys Delayed outdoor temperature effect',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.heating_circuit_2_lattialammitys_delayed_outdoor_temperature_effect',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_2_lattialammitys_delayed_outdoor_temperature_effect',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_entities[sensor-no_room_sensors][sensor.heating_circuit_2_lattialammitys_supply_water_temperature-entry]
+# name: test_entities[sensor-no_room_sensors][sensor.ouman_eh_800_heating_circuit_2_lattialammitys_supply_water_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l2')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.heating_circuit_2_lattialammitys_supply_water_temperature',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_2_lattialammitys_supply_water_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -793,39 +1083,39 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor-no_room_sensors][sensor.heating_circuit_2_lattialammitys_supply_water_temperature-state]
+# name: test_entities[sensor-no_room_sensors][sensor.ouman_eh_800_heating_circuit_2_lattialammitys_supply_water_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Heating circuit 2 Lattialämmitys Supply water temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 2 Lattialämmitys Supply water temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.heating_circuit_2_lattialammitys_supply_water_temperature',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_2_lattialammitys_supply_water_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '30.0',
   })
 # ---
-# name: test_entities[sensor-no_room_sensors][sensor.heating_circuit_2_lattialammitys_supply_water_temperature_setpoint-entry]
+# name: test_entities[sensor-no_room_sensors][sensor.ouman_eh_800_heating_circuit_2_lattialammitys_supply_water_temperature_setpoint-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l2')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.heating_circuit_2_lattialammitys_supply_water_temperature_setpoint',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_2_lattialammitys_supply_water_temperature_setpoint',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -851,39 +1141,39 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor-no_room_sensors][sensor.heating_circuit_2_lattialammitys_supply_water_temperature_setpoint-state]
+# name: test_entities[sensor-no_room_sensors][sensor.ouman_eh_800_heating_circuit_2_lattialammitys_supply_water_temperature_setpoint-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Heating circuit 2 Lattialämmitys Supply water temperature setpoint',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 2 Lattialämmitys Supply water temperature setpoint',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.heating_circuit_2_lattialammitys_supply_water_temperature_setpoint',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_2_lattialammitys_supply_water_temperature_setpoint',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '30.0',
   })
 # ---
-# name: test_entities[sensor-no_room_sensors][sensor.heating_circuit_2_lattialammitys_valve_position-entry]
+# name: test_entities[sensor-no_room_sensors][sensor.ouman_eh_800_heating_circuit_2_lattialammitys_valve_position-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l2')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.heating_circuit_2_lattialammitys_valve_position',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_2_lattialammitys_valve_position',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -909,15 +1199,15 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_entities[sensor-no_room_sensors][sensor.heating_circuit_2_lattialammitys_valve_position-state]
+# name: test_entities[sensor-no_room_sensors][sensor.ouman_eh_800_heating_circuit_2_lattialammitys_valve_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Heating circuit 2 Lattialämmitys Valve position',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 2 Lattialämmitys Valve position',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.heating_circuit_2_lattialammitys_valve_position',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_2_lattialammitys_valve_position',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -931,12 +1221,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -969,10 +1259,10 @@
 # name: test_entities[sensor-no_room_sensors][sensor.ouman_eh_800_outside_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Ouman EH-800 Outside temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ouman EH-800 Outside temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ouman_eh_800_outside_temperature',
@@ -989,12 +1279,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1027,10 +1317,10 @@
 # name: test_entities[sensor-relay_temp_difference][sensor.ouman_eh_800_outside_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Ouman EH-800 Outside temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ouman EH-800 Outside temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ouman_eh_800_outside_temperature',
@@ -1047,12 +1337,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1085,10 +1375,10 @@
 # name: test_entities[sensor-relay_temperature][sensor.ouman_eh_800_outside_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Ouman EH-800 Outside temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ouman EH-800 Outside temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ouman_eh_800_outside_temperature',
@@ -1105,12 +1395,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1143,10 +1433,10 @@
 # name: test_entities[sensor-relay_time_program][sensor.ouman_eh_800_outside_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Ouman EH-800 Outside temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ouman EH-800 Outside temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ouman_eh_800_outside_temperature',
@@ -1163,12 +1453,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1201,10 +1491,10 @@
 # name: test_entities[sensor-relay_valve_position][sensor.ouman_eh_800_outside_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Ouman EH-800 Outside temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ouman EH-800 Outside temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ouman_eh_800_outside_temperature',
@@ -1214,23 +1504,81 @@
     'state': '0.4',
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.heating_circuit_1_patterilammitys_curve_supply_water_temperature-entry]
+# name: test_entities[sensor-room_sensors][sensor.ouman_eh_800_heating_circuit_1_patterilammitys_autumn_drying_effect-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.heating_circuit_1_patterilammitys_curve_supply_water_temperature',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_1_patterilammitys_autumn_drying_effect',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Autumn drying effect',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE_DELTA: 'temperature_delta'>,
+    'original_icon': None,
+    'original_name': 'Autumn drying effect',
+    'platform': 'ouman_eh_800',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'autumn_drying_effect',
+    'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_l1_autumn_drying_effect',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_entities[sensor-room_sensors][sensor.ouman_eh_800_heating_circuit_1_patterilammitys_autumn_drying_effect-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature_delta',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 1 Patterilämmitys Autumn drying effect',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_1_patterilammitys_autumn_drying_effect',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_entities[sensor-room_sensors][sensor.ouman_eh_800_heating_circuit_1_patterilammitys_curve_supply_water_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_1_patterilammitys_curve_supply_water_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1256,39 +1604,39 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.heating_circuit_1_patterilammitys_curve_supply_water_temperature-state]
+# name: test_entities[sensor-room_sensors][sensor.ouman_eh_800_heating_circuit_1_patterilammitys_curve_supply_water_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Heating circuit 1 Patterilämmitys Curve supply water temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 1 Patterilämmitys Curve supply water temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.heating_circuit_1_patterilammitys_curve_supply_water_temperature',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_1_patterilammitys_curve_supply_water_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '41.0',
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.heating_circuit_1_patterilammitys_delayed_room_temperature-entry]
+# name: test_entities[sensor-room_sensors][sensor.ouman_eh_800_heating_circuit_1_patterilammitys_delayed_room_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.heating_circuit_1_patterilammitys_delayed_room_temperature',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_1_patterilammitys_delayed_room_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1314,39 +1662,39 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.heating_circuit_1_patterilammitys_delayed_room_temperature-state]
+# name: test_entities[sensor-room_sensors][sensor.ouman_eh_800_heating_circuit_1_patterilammitys_delayed_room_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Heating circuit 1 Patterilämmitys Delayed room temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 1 Patterilämmitys Delayed room temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.heating_circuit_1_patterilammitys_delayed_room_temperature',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_1_patterilammitys_delayed_room_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '21.4',
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.heating_circuit_1_patterilammitys_fine_adjustment_effect-entry]
+# name: test_entities[sensor-room_sensors][sensor.ouman_eh_800_heating_circuit_1_patterilammitys_fine_adjustment_effect-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.heating_circuit_1_patterilammitys_fine_adjustment_effect',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_1_patterilammitys_fine_adjustment_effect',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1372,39 +1720,39 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.heating_circuit_1_patterilammitys_fine_adjustment_effect-state]
+# name: test_entities[sensor-room_sensors][sensor.ouman_eh_800_heating_circuit_1_patterilammitys_fine_adjustment_effect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature_delta',
-      'friendly_name': 'Heating circuit 1 Patterilämmitys Fine adjustment effect',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature_delta',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 1 Patterilämmitys Fine adjustment effect',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.heating_circuit_1_patterilammitys_fine_adjustment_effect',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_1_patterilammitys_fine_adjustment_effect',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.heating_circuit_1_patterilammitys_room_sensor_potentiometer-entry]
+# name: test_entities[sensor-room_sensors][sensor.ouman_eh_800_heating_circuit_1_patterilammitys_room_sensor_potentiometer-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.heating_circuit_1_patterilammitys_room_sensor_potentiometer',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_1_patterilammitys_room_sensor_potentiometer',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1430,39 +1778,39 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.heating_circuit_1_patterilammitys_room_sensor_potentiometer-state]
+# name: test_entities[sensor-room_sensors][sensor.ouman_eh_800_heating_circuit_1_patterilammitys_room_sensor_potentiometer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature_delta',
-      'friendly_name': 'Heating circuit 1 Patterilämmitys Room sensor potentiometer',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature_delta',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 1 Patterilämmitys Room sensor potentiometer',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.heating_circuit_1_patterilammitys_room_sensor_potentiometer',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_1_patterilammitys_room_sensor_potentiometer',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.heating_circuit_1_patterilammitys_room_temperature-entry]
+# name: test_entities[sensor-room_sensors][sensor.ouman_eh_800_heating_circuit_1_patterilammitys_room_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.heating_circuit_1_patterilammitys_room_temperature',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_1_patterilammitys_room_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1488,39 +1836,39 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.heating_circuit_1_patterilammitys_room_temperature-state]
+# name: test_entities[sensor-room_sensors][sensor.ouman_eh_800_heating_circuit_1_patterilammitys_room_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Heating circuit 1 Patterilämmitys Room temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 1 Patterilämmitys Room temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.heating_circuit_1_patterilammitys_room_temperature',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_1_patterilammitys_room_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '21.5',
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.heating_circuit_1_patterilammitys_room_temperature_setpoint-entry]
+# name: test_entities[sensor-room_sensors][sensor.ouman_eh_800_heating_circuit_1_patterilammitys_room_temperature_setpoint-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.heating_circuit_1_patterilammitys_room_temperature_setpoint',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_1_patterilammitys_room_temperature_setpoint',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1546,39 +1894,39 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.heating_circuit_1_patterilammitys_room_temperature_setpoint-state]
+# name: test_entities[sensor-room_sensors][sensor.ouman_eh_800_heating_circuit_1_patterilammitys_room_temperature_setpoint-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Heating circuit 1 Patterilämmitys Room temperature setpoint',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 1 Patterilämmitys Room temperature setpoint',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.heating_circuit_1_patterilammitys_room_temperature_setpoint',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_1_patterilammitys_room_temperature_setpoint',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '21.0',
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.heating_circuit_1_patterilammitys_supply_water_temperature-entry]
+# name: test_entities[sensor-room_sensors][sensor.ouman_eh_800_heating_circuit_1_patterilammitys_supply_water_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.heating_circuit_1_patterilammitys_supply_water_temperature',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_1_patterilammitys_supply_water_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1604,39 +1952,39 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.heating_circuit_1_patterilammitys_supply_water_temperature-state]
+# name: test_entities[sensor-room_sensors][sensor.ouman_eh_800_heating_circuit_1_patterilammitys_supply_water_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Heating circuit 1 Patterilämmitys Supply water temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 1 Patterilämmitys Supply water temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.heating_circuit_1_patterilammitys_supply_water_temperature',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_1_patterilammitys_supply_water_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '39.1',
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.heating_circuit_1_patterilammitys_supply_water_temperature_setpoint-entry]
+# name: test_entities[sensor-room_sensors][sensor.ouman_eh_800_heating_circuit_1_patterilammitys_supply_water_temperature_setpoint-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.heating_circuit_1_patterilammitys_supply_water_temperature_setpoint',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_1_patterilammitys_supply_water_temperature_setpoint',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1662,39 +2010,39 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.heating_circuit_1_patterilammitys_supply_water_temperature_setpoint-state]
+# name: test_entities[sensor-room_sensors][sensor.ouman_eh_800_heating_circuit_1_patterilammitys_supply_water_temperature_setpoint-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Heating circuit 1 Patterilämmitys Supply water temperature setpoint',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 1 Patterilämmitys Supply water temperature setpoint',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.heating_circuit_1_patterilammitys_supply_water_temperature_setpoint',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_1_patterilammitys_supply_water_temperature_setpoint',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '43.7',
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.heating_circuit_1_patterilammitys_valve_position-entry]
+# name: test_entities[sensor-room_sensors][sensor.ouman_eh_800_heating_circuit_1_patterilammitys_valve_position-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.heating_circuit_1_patterilammitys_valve_position',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_1_patterilammitys_valve_position',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1720,38 +2068,96 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.heating_circuit_1_patterilammitys_valve_position-state]
+# name: test_entities[sensor-room_sensors][sensor.ouman_eh_800_heating_circuit_1_patterilammitys_valve_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Heating circuit 1 Patterilämmitys Valve position',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 1 Patterilämmitys Valve position',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.heating_circuit_1_patterilammitys_valve_position',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_1_patterilammitys_valve_position',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '11.0',
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.heating_circuit_2_lattialammitys_curve_supply_water_temperature-entry]
+# name: test_entities[sensor-room_sensors][sensor.ouman_eh_800_heating_circuit_2_lattialammitys_autumn_drying_effect-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l2')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.heating_circuit_2_lattialammitys_curve_supply_water_temperature',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_2_lattialammitys_autumn_drying_effect',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Autumn drying effect',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE_DELTA: 'temperature_delta'>,
+    'original_icon': None,
+    'original_name': 'Autumn drying effect',
+    'platform': 'ouman_eh_800',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'autumn_drying_effect',
+    'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_l2_autumn_drying_effect',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_entities[sensor-room_sensors][sensor.ouman_eh_800_heating_circuit_2_lattialammitys_autumn_drying_effect-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature_delta',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 2 Lattialämmitys Autumn drying effect',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_2_lattialammitys_autumn_drying_effect',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_entities[sensor-room_sensors][sensor.ouman_eh_800_heating_circuit_2_lattialammitys_curve_supply_water_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l2')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_2_lattialammitys_curve_supply_water_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1777,39 +2183,39 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.heating_circuit_2_lattialammitys_curve_supply_water_temperature-state]
+# name: test_entities[sensor-room_sensors][sensor.ouman_eh_800_heating_circuit_2_lattialammitys_curve_supply_water_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Heating circuit 2 Lattialämmitys Curve supply water temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 2 Lattialämmitys Curve supply water temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.heating_circuit_2_lattialammitys_curve_supply_water_temperature',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_2_lattialammitys_curve_supply_water_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '30.0',
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.heating_circuit_2_lattialammitys_delayed_outdoor_temperature_effect-entry]
+# name: test_entities[sensor-room_sensors][sensor.ouman_eh_800_heating_circuit_2_lattialammitys_delayed_outdoor_temperature_effect-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l2')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.heating_circuit_2_lattialammitys_delayed_outdoor_temperature_effect',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_2_lattialammitys_delayed_outdoor_temperature_effect',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1835,39 +2241,39 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.heating_circuit_2_lattialammitys_delayed_outdoor_temperature_effect-state]
+# name: test_entities[sensor-room_sensors][sensor.ouman_eh_800_heating_circuit_2_lattialammitys_delayed_outdoor_temperature_effect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature_delta',
-      'friendly_name': 'Heating circuit 2 Lattialämmitys Delayed outdoor temperature effect',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature_delta',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 2 Lattialämmitys Delayed outdoor temperature effect',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.heating_circuit_2_lattialammitys_delayed_outdoor_temperature_effect',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_2_lattialammitys_delayed_outdoor_temperature_effect',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.heating_circuit_2_lattialammitys_delayed_room_temperature-entry]
+# name: test_entities[sensor-room_sensors][sensor.ouman_eh_800_heating_circuit_2_lattialammitys_delayed_room_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l2')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.heating_circuit_2_lattialammitys_delayed_room_temperature',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_2_lattialammitys_delayed_room_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1893,39 +2299,39 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.heating_circuit_2_lattialammitys_delayed_room_temperature-state]
+# name: test_entities[sensor-room_sensors][sensor.ouman_eh_800_heating_circuit_2_lattialammitys_delayed_room_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Heating circuit 2 Lattialämmitys Delayed room temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 2 Lattialämmitys Delayed room temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.heating_circuit_2_lattialammitys_delayed_room_temperature',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_2_lattialammitys_delayed_room_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '21.9',
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.heating_circuit_2_lattialammitys_room_temperature-entry]
+# name: test_entities[sensor-room_sensors][sensor.ouman_eh_800_heating_circuit_2_lattialammitys_room_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l2')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.heating_circuit_2_lattialammitys_room_temperature',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_2_lattialammitys_room_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1951,39 +2357,39 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.heating_circuit_2_lattialammitys_room_temperature-state]
+# name: test_entities[sensor-room_sensors][sensor.ouman_eh_800_heating_circuit_2_lattialammitys_room_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Heating circuit 2 Lattialämmitys Room temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 2 Lattialämmitys Room temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.heating_circuit_2_lattialammitys_room_temperature',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_2_lattialammitys_room_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '22.0',
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.heating_circuit_2_lattialammitys_room_temperature_setpoint-entry]
+# name: test_entities[sensor-room_sensors][sensor.ouman_eh_800_heating_circuit_2_lattialammitys_room_temperature_setpoint-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l2')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.heating_circuit_2_lattialammitys_room_temperature_setpoint',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_2_lattialammitys_room_temperature_setpoint',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2009,39 +2415,39 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.heating_circuit_2_lattialammitys_room_temperature_setpoint-state]
+# name: test_entities[sensor-room_sensors][sensor.ouman_eh_800_heating_circuit_2_lattialammitys_room_temperature_setpoint-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Heating circuit 2 Lattialämmitys Room temperature setpoint',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 2 Lattialämmitys Room temperature setpoint',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.heating_circuit_2_lattialammitys_room_temperature_setpoint',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_2_lattialammitys_room_temperature_setpoint',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '21.0',
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.heating_circuit_2_lattialammitys_supply_water_temperature-entry]
+# name: test_entities[sensor-room_sensors][sensor.ouman_eh_800_heating_circuit_2_lattialammitys_supply_water_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l2')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.heating_circuit_2_lattialammitys_supply_water_temperature',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_2_lattialammitys_supply_water_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2067,39 +2473,39 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.heating_circuit_2_lattialammitys_supply_water_temperature-state]
+# name: test_entities[sensor-room_sensors][sensor.ouman_eh_800_heating_circuit_2_lattialammitys_supply_water_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Heating circuit 2 Lattialämmitys Supply water temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 2 Lattialämmitys Supply water temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.heating_circuit_2_lattialammitys_supply_water_temperature',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_2_lattialammitys_supply_water_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '30.0',
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.heating_circuit_2_lattialammitys_supply_water_temperature_setpoint-entry]
+# name: test_entities[sensor-room_sensors][sensor.ouman_eh_800_heating_circuit_2_lattialammitys_supply_water_temperature_setpoint-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l2')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.heating_circuit_2_lattialammitys_supply_water_temperature_setpoint',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_2_lattialammitys_supply_water_temperature_setpoint',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2125,39 +2531,39 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.heating_circuit_2_lattialammitys_supply_water_temperature_setpoint-state]
+# name: test_entities[sensor-room_sensors][sensor.ouman_eh_800_heating_circuit_2_lattialammitys_supply_water_temperature_setpoint-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Heating circuit 2 Lattialämmitys Supply water temperature setpoint',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 2 Lattialämmitys Supply water temperature setpoint',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.heating_circuit_2_lattialammitys_supply_water_temperature_setpoint',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_2_lattialammitys_supply_water_temperature_setpoint',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '30.0',
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.heating_circuit_2_lattialammitys_valve_position-entry]
+# name: test_entities[sensor-room_sensors][sensor.ouman_eh_800_heating_circuit_2_lattialammitys_valve_position-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l2')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.heating_circuit_2_lattialammitys_valve_position',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_2_lattialammitys_valve_position',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2183,15 +2589,15 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.heating_circuit_2_lattialammitys_valve_position-state]
+# name: test_entities[sensor-room_sensors][sensor.ouman_eh_800_heating_circuit_2_lattialammitys_valve_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Heating circuit 2 Lattialämmitys Valve position',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 2 Lattialämmitys Valve position',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.heating_circuit_2_lattialammitys_valve_position',
+    'entity_id': 'sensor.ouman_eh_800_heating_circuit_2_lattialammitys_valve_position',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2205,12 +2611,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -2243,10 +2649,10 @@
 # name: test_entities[sensor-room_sensors][sensor.ouman_eh_800_outside_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Ouman EH-800 Outside temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ouman EH-800 Outside temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ouman_eh_800_outside_temperature',
@@ -2254,5 +2660,63 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.4',
+  })
+# ---
+# name: test_entities[sensor-room_sensors][sensor.ouman_eh_800_return_water_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ouman_eh_800_return_water_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Return water temperature',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Return water temperature',
+    'platform': 'ouman_eh_800',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'return_water_temperature',
+    'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_main_return_water_temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_entities[sensor-room_sensors][sensor.ouman_eh_800_return_water_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ouman EH-800 Return water temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ouman_eh_800_return_water_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '32.5',
   })
 # ---

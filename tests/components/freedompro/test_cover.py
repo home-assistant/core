@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import ANY, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -22,8 +23,6 @@ from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util.dt import utcnow
 
 from .conftest import get_states_response_for_uid
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.parametrize(
@@ -49,7 +48,9 @@ async def test_cover_get_state(
 ) -> None:
     """Test states of the cover."""
 
-    device = device_registry.async_get_device(identifiers={("freedompro", uid)})
+    device = device_registry.async_get_device_by_identifier(
+        ("freedompro", uid), init_integration.entry_id
+    )
     assert device is not None
     assert device.identifiers == {("freedompro", uid)}
     assert device.manufacturer == "Freedompro"

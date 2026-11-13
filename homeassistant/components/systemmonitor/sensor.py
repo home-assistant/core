@@ -10,10 +10,11 @@ import logging
 import socket
 import sys
 import time
-from typing import Any, Literal
+from typing import Any, Literal, override
 
 from psutil._common import POWER_TIME_UNKNOWN, POWER_TIME_UNLIMITED
 
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
@@ -39,7 +40,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util, slugify
 
 from . import SystemMonitorConfigEntry
-from .binary_sensor import BINARY_SENSOR_DOMAIN
 from .const import CONF_PROCESS, DOMAIN, NET_IO_TYPES
 from .coordinator import SystemMonitorCoordinator
 from .util import get_all_disk_mounts, get_all_network_interfaces, read_cpu_temperature
@@ -132,6 +132,8 @@ def get_ip_address(
 ) -> str | None:
     """Return network ip address."""
     addresses = entity.coordinator.data.addresses
+    if addresses is None:
+        return None
     if entity.argument in addresses:
         for addr in addresses[entity.argument]:
             if addr.family == IF_ADDRS_FAMILY[entity.entity_description.key]:
@@ -192,7 +194,6 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         key="battery_empty",
         translation_key="battery_empty",
         device_class=SensorDeviceClass.TIMESTAMP,
-        state_class=SensorStateClass.MEASUREMENT,
         value_fn=battery_time_ends,
         none_is_unavailable=True,
         add_to_update=lambda entity: ("battery", ""),
@@ -888,21 +889,24 @@ class SystemMonitorSensor(CoordinatorEntity[SystemMonitorCoordinator], SensorEnt
         self.update_time: float | None = None
         self._attr_native_value = self.entity_description.value_fn(self)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When added to hass."""
         self.coordinator.update_subscribers[
             self.entity_description.add_to_update(self)
-        ].add(self.entity_id)
+        ].add(self._attr_unique_id)
         return await super().async_added_to_hass()
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """When removed from hass."""
         self.coordinator.update_subscribers[
             self.entity_description.add_to_update(self)
-        ].remove(self.entity_id)
+        ].remove(self._attr_unique_id)
         return await super().async_will_remove_from_hass()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         # Set the native value here so we can use it in available property
@@ -911,6 +915,7 @@ class SystemMonitorSensor(CoordinatorEntity[SystemMonitorCoordinator], SensorEnt
         super()._handle_coordinator_update()
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         if self.entity_description.none_is_unavailable:

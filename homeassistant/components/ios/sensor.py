@@ -1,6 +1,6 @@
 """Support for Home Assistant iOS app sensors."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -12,12 +12,8 @@ from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    AddEntitiesCallback,
-)
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import devices
 from .const import (
@@ -50,16 +46,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 
 DEFAULT_ICON_LEVEL = "mdi:battery"
 DEFAULT_ICON_STATE = "mdi:power-plug"
-
-
-def setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the iOS sensor."""
-    # Leave here for if someone accidentally adds platform: ios to config
 
 
 async def async_setup_entry(
@@ -95,6 +81,7 @@ class IOSSensor(SensorEntity):
         self._attr_unique_id = f"{description.key}_{device_id}"
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return information about the device."""
         return DeviceInfo(
@@ -111,6 +98,7 @@ class IOSSensor(SensorEntity):
         )
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         device = self._device[ATTR_DEVICE]
@@ -124,6 +112,7 @@ class IOSSensor(SensorEntity):
         }
 
     @property
+    @override
     def icon(self) -> str:
         """Return the icon to use in the frontend, if any."""
         device_battery = self._device[ATTR_BATTERY]
@@ -155,6 +144,7 @@ class IOSSensor(SensorEntity):
         ]
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle addition to hass: register to dispatch."""
         self._attr_native_value = self._device[ATTR_BATTERY][

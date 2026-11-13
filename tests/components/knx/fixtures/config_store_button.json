@@ -1,0 +1,44 @@
+{
+  "version": 2,
+  "minor_version": 3,
+  "key": "knx/config_store.json",
+  "data": {
+    "entities": {
+      "button": {
+        "knx_es_01KVFEGP54VJW94TR9GQW2XA4R": {
+          "entity": {
+            "name": "test raw",
+            "device_info": null,
+            "entity_category": null
+          },
+          "knx": {
+            "data": {
+              "payload": "0x1",
+              "payload_length": 1
+            },
+            "ga_send": {
+              "write": "1/1/1"
+            }
+          }
+        },
+        "knx_es_01KVFEHE937CQGWP81RZNQ6D8E": {
+          "entity": {
+            "name": "test typed",
+            "device_info": null,
+            "entity_category": null
+          },
+          "knx": {
+            "ga_send": {
+              "write": "1/1/2",
+              "dpt": "1.001"
+            },
+            "data": {
+              "value": "on"
+            }
+          }
+        }
+      }
+    },
+    "time_server": {}
+  }
+}

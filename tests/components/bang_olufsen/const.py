@@ -203,7 +203,7 @@ TEST_PLAYBACK_METADATA_VIDEO = PlaybackContentMetadata(
     title="HDMI A",
     source_internal_id="hdmi_1",
     output_channel_processing="TrueImage",
-    output_Channels="5.0.2",
+    output_channels="5.0.2",
 )
 TEST_PLAYBACK_ERROR = PlaybackError(error="Test error")
 TEST_PLAYBACK_PROGRESS = PlaybackProgress(progress=123)

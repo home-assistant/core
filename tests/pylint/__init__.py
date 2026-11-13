@@ -2,7 +2,19 @@
 
 import contextlib
 
+from astroid import nodes
+from pylint.checkers import BaseChecker
 from pylint.testutils.unittest_linter import UnittestLinter
+from pylint.utils.ast_walker import ASTWalker
+
+
+def walk_checker(
+    linter: UnittestLinter, checker: BaseChecker, node: nodes.NodeNG
+) -> None:
+    """Run the given checker over the parsed node."""
+    walker = ASTWalker(linter)
+    walker.add_checker(checker)
+    walker.walk(node)
 
 
 @contextlib.contextmanager

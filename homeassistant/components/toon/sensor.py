@@ -1,6 +1,7 @@
 """Support for Toon sensors."""
 
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -77,13 +78,15 @@ class ToonSensor(ToonEntity, SensorEntity):
         self.entity_description = description
         super().__init__(coordinator)
 
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = (
             # This unique ID is a bit ugly and contains unneeded information.
             # It is here for legacy / backward compatible reasons.
-            f"{DOMAIN}_{coordinator.data.agreement.agreement_id}_sensor_{description.key}"
+            f"{DOMAIN}_{coordinator.data.agreement.agreement_id}_sensor_{description.key}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain,home-assistant-entity-unique-id-redundant-platform
         )
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the state of the sensor."""
         section = getattr(self.coordinator.data, self.entity_description.section)

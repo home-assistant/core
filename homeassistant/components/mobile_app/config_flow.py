@@ -1,6 +1,6 @@
 """Config flow for Mobile App."""
 
-from typing import Any
+from typing import Any, override
 import uuid
 
 from homeassistant.components import person
@@ -16,6 +16,7 @@ class MobileAppFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -37,6 +38,8 @@ class MobileAppFlowHandler(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(
                 f"{user_input[ATTR_APP_ID]}-{user_input[ATTR_DEVICE_ID]}"
             )
+            # The registration view updates the entry of an app which registers again
+            self._abort_if_unique_id_configured()
         else:
             user_input[ATTR_DEVICE_ID] = str(uuid.uuid4()).replace("-", "")
 

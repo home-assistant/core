@@ -4,7 +4,7 @@ from homeassistant.const import CONF_HOST, CONF_SSL
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, MANUFACTURER, SECTION_ADVANCED_SETTINGS
+from .const import DOMAIN, MANUFACTURER, SECTION_ADDITIONAL_SETTINGS
 from .coordinator import AirOSDataUpdateCoordinator
 
 
@@ -20,7 +20,7 @@ class AirOSEntity(CoordinatorEntity[AirOSDataUpdateCoordinator]):
         airos_data = self.coordinator.data
         url_schema = (
             "https"
-            if coordinator.config_entry.data[SECTION_ADVANCED_SETTINGS][CONF_SSL]
+            if coordinator.config_entry.data[SECTION_ADDITIONAL_SETTINGS][CONF_SSL]
             else "http"
         )
 

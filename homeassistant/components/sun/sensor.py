@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
+from typing import override
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
@@ -127,16 +128,18 @@ class SunSensor(SensorEntity):
         self._attr_unique_id = f"{entry_id}-{entity_description.key}"
         self.sun = sun
         self._attr_device_info = DeviceInfo(
-            name="Sun",
+            translation_key="sun",
             identifiers={(DOMAIN, entry_id)},
             entry_type=DeviceEntryType.SERVICE,
         )
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return value of sensor."""
         return self.entity_description.value_fn(self.sun)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register signal listener when added to hass."""
         await super().async_added_to_hass()

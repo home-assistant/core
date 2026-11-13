@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 import nuheat
 
@@ -40,6 +41,7 @@ class NuHeatCoordinator(DataUpdateCoordinator[None]):
         )
         self.thermostat = thermostat
 
+    @override
     async def _async_update_data(self) -> None:
         """Fetch data from API endpoint."""
         await self.hass.async_add_executor_job(self.thermostat.get_data)

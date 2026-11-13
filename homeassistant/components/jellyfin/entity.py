@@ -1,7 +1,9 @@
 """Base Entity for Jellyfin."""
 
-from typing import Any
+from typing import Any, override
 
+from homeassistant.core import callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -50,7 +52,11 @@ class JellyfinClientEntity(JellyfinEntity):
                 model=self.client_name,
                 name=self.device_name,
                 sw_version=self.app_version,
-                via_device=(DOMAIN, coordinator.server_id),
+                via_device_id=dr.async_get_device_id_by_identifier(
+                    coordinator.hass,
+                    (DOMAIN, coordinator.server_id),
+                    config_entry_id=coordinator.config_entry.entry_id,
+                ),
             )
             self._attr_name = None
         else:
@@ -64,6 +70,17 @@ class JellyfinClientEntity(JellyfinEntity):
         return self.coordinator.data[self.session_id]
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self.session_id in self.coordinator.data
+
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        # A client can post its capabilities after its session starts, or change them
+        # later, while the session ID stays the same.
+        if self.available:
+            self.capabilities = self.session_data["Capabilities"]
+        super()._handle_coordinator_update()

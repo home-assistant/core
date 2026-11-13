@@ -4,19 +4,18 @@ from copy import deepcopy
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.exceptions import NotOnWhitelistFault
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import assert_entities, setup_platform
 from .const import COMMAND_OK
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -33,8 +32,8 @@ async def test_button(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: ["button.test_wake"]},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: ["button.test_wake"]},
         blocking=True,
     )
 
@@ -61,11 +60,35 @@ async def test_press(
     ) as command:
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: [f"button.test_{name}"]},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: [f"button.test_{name}"]},
             blocking=True,
         )
         command.assert_called_once()
+
+
+async def test_homelink_no_location(
+    hass: HomeAssistant, normal_config_entry: MockConfigEntry
+) -> None:
+    """Test pressing homelink without vehicle location raises a translated error."""
+    await setup_platform(hass, normal_config_entry, [Platform.BUTTON])
+
+    coordinator = normal_config_entry.runtime_data.vehicles[0].coordinator
+    coordinator.data.pop("drive_state_latitude", None)
+    coordinator.data.pop("drive_state_longitude", None)
+
+    with (
+        patch("tesla_fleet_api.tesla.VehicleFleet.trigger_homelink") as command,
+        pytest.raises(HomeAssistantError) as error,
+    ):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: ["button.test_homelink"]},
+            blocking=True,
+        )
+    assert error.value.translation_key == "homelink_no_location"
+    command.assert_not_called()
 
 
 async def test_press_signing_error(
@@ -92,8 +115,8 @@ async def test_press_signing_error(
     ):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: ["button.test_flash_lights"]},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: ["button.test_flash_lights"]},
             blocking=True,
         )
     assert error.from_exception(NotOnWhitelistFault)

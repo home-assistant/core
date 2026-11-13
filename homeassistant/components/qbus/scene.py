@@ -1,6 +1,6 @@
 """Support for Qbus scene."""
 
-from typing import Any
+from typing import Any, override
 
 from qbusmqttapi.discovery import QbusMqttOutput
 from qbusmqttapi.state import QbusMqttState, StateAction, StateType
@@ -35,7 +35,7 @@ async def async_setup_entry(
         async_add_entities(entities)
 
     _check_outputs()
-    entry.async_on_unload(coordinator.async_add_listener(_check_outputs))
+    coordinator.async_add_listener(_check_outputs)
 
 
 class QbusScene(QbusEntity, BaseScene):
@@ -48,6 +48,7 @@ class QbusScene(QbusEntity, BaseScene):
 
         self._attr_name = mqtt_output.name.title()
 
+    @override
     async def _async_activate(self, **kwargs: Any) -> None:
         """Activate scene."""
         state = QbusMqttState(
@@ -55,5 +56,6 @@ class QbusScene(QbusEntity, BaseScene):
         )
         await self._async_publish_output_state(state)
 
+    @override
     async def _handle_state_received(self, state: QbusMqttState) -> None:
         self._async_record_activation()

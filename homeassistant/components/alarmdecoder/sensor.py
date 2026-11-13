@@ -1,5 +1,7 @@
 """Support for AlarmDecoder sensors (Shows Panel Display)."""
 
+from typing import override
+
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -33,6 +35,7 @@ class AlarmDecoderSensor(AlarmDecoderEntity, SensorEntity):
         super().__init__(client)
         self._attr_unique_id = f"{client.serial_number}-display"
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(

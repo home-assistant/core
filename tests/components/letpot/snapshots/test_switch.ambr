@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('letpot', 'LPH63ABCD')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -39,7 +39,7 @@
 # name: test_all_entities[switch.garden_alarm_sound-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Garden Alarm sound',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Alarm sound',
     }),
     'context': <ANY>,
     'entity_id': 'switch.garden_alarm_sound',
@@ -57,9 +57,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('letpot', 'LPH63ABCD')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -89,7 +89,7 @@
 # name: test_all_entities[switch.garden_auto_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Garden Auto mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Auto mode',
     }),
     'context': <ANY>,
     'entity_id': 'switch.garden_auto_mode',
@@ -107,9 +107,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('letpot', 'LPH63ABCD')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -139,7 +139,7 @@
 # name: test_all_entities[switch.garden_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Garden Power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Power',
     }),
     'context': <ANY>,
     'entity_id': 'switch.garden_power',
@@ -157,9 +157,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('letpot', 'LPH63ABCD')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -189,7 +189,7 @@
 # name: test_all_entities[switch.garden_pump_cycling-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Garden Pump cycling',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Pump cycling',
     }),
     'context': <ANY>,
     'entity_id': 'switch.garden_pump_cycling',

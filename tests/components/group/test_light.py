@@ -4,6 +4,11 @@ import asyncio
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    async_capture_events,
+    get_fixture_path,
+    setup_test_component_platform,
+)
 
 from homeassistant import config as hass_config
 from homeassistant.components.group import DOMAIN, SERVICE_RELOAD, light as group
@@ -24,6 +29,7 @@ from homeassistant.components.light import (
     ATTR_TRANSITION,
     ATTR_WHITE,
     DOMAIN as LIGHT_DOMAIN,
+    EFFECT_OFF,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -43,11 +49,6 @@ from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from tests.common import (
-    async_capture_events,
-    get_fixture_path,
-    setup_test_component_platform,
-)
 from tests.components.light.common import MockLight
 
 
@@ -971,6 +972,43 @@ async def test_effect_list(hass: HomeAssistant) -> None:
     }
 
 
+async def test_effect_list_pins_off_ahead_of_none(hass: HomeAssistant) -> None:
+    """Test that merged effect lists keep off ahead of None."""
+    await async_setup_component(
+        hass,
+        LIGHT_DOMAIN,
+        {
+            LIGHT_DOMAIN: {
+                "platform": DOMAIN,
+                "entities": ["light.test1", "light.test2"],
+                "all": "false",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    hass.states.async_set(
+        "light.test1",
+        STATE_ON,
+        {ATTR_EFFECT_LIST: ["Rainbow", EFFECT_OFF], ATTR_SUPPORTED_FEATURES: 4},
+    )
+    hass.states.async_set(
+        "light.test2",
+        STATE_ON,
+        {ATTR_EFFECT_LIST: ["None", "Colorloop"], ATTR_SUPPORTED_FEATURES: 4},
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("light.light_group")
+    assert state.attributes[ATTR_EFFECT_LIST] == [
+        EFFECT_OFF,
+        "None",
+        "Colorloop",
+        "Rainbow",
+    ]
+
+
 async def test_effect(hass: HomeAssistant) -> None:
     """Test effect reporting."""
     await async_setup_component(
@@ -1565,7 +1603,7 @@ async def test_reload_with_platform_not_setup(hass: HomeAssistant) -> None:
     )
     assert await async_setup_component(
         hass,
-        "group",
+        DOMAIN,
         {
             "group": {
                 "group_zero": {"entities": "light.Bowl", "icon": "mdi:work"},
@@ -1595,7 +1633,7 @@ async def test_reload_with_base_integration_platform_not_setup(
     """Test the ability to reload lights."""
     assert await async_setup_component(
         hass,
-        "group",
+        DOMAIN,
         {
             "group": {
                 "group_zero": {"entities": "light.Bowl", "icon": "mdi:work"},

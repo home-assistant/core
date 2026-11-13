@@ -3,20 +3,21 @@
 from typing import Any
 
 import pytest
-
-from homeassistant.components.event import ATTR_EVENT_TYPE
-from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
-
-from tests.components.common import (
+from pytest_homeassistant.components.common import (
     BasicTriggerStateDescription,
+    TargetSupport,
     arm_trigger,
-    assert_trigger_gated_by_labs_flag,
     assert_trigger_options_supported,
+    assert_triggers_target_support,
     parametrize_target_entities,
     set_or_remove_state,
     target_entities,
 )
+
+from homeassistant.components.doorbell.trigger import TRIGGERS
+from homeassistant.components.event import EventEntityStateAttribute
+from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
 
 
 @pytest.fixture
@@ -25,19 +26,11 @@ async def target_events(hass: HomeAssistant) -> dict[str, list[str]]:
     return await target_entities(hass, "event")
 
 
-@pytest.mark.parametrize("trigger_key", ["doorbell.rang"])
-async def test_doorbell_triggers_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
-) -> None:
-    """Test the doorbell triggers are gated by the labs flag."""
-    await assert_trigger_gated_by_labs_flag(
-        hass,
-        caplog,
-        trigger_key,
-    )
+_TRIGGER_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "rang": TargetSupport.STANDARD,
+}
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
     [
@@ -61,7 +54,11 @@ async def test_doorbell_trigger_options_validation(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
+def test_trigger_target_support() -> None:
+    """Certify the trigger registry matches its declared target support."""
+    assert_triggers_target_support(TRIGGERS, _TRIGGER_TARGET_SUPPORT)
+
+
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("event"),
@@ -85,7 +82,7 @@ async def test_doorbell_trigger_options_validation(
                         "state": "2026-01-01T00:00:00.000+00:00",
                         "attributes": {
                             ATTR_DEVICE_CLASS: "doorbell",
-                            ATTR_EVENT_TYPE: "ring",
+                            EventEntityStateAttribute.EVENT_TYPE: "ring",
                         },
                     },
                     "count": 0,
@@ -95,7 +92,7 @@ async def test_doorbell_trigger_options_validation(
                         "state": "2026-01-01T00:00:01.000+00:00",
                         "attributes": {
                             ATTR_DEVICE_CLASS: "doorbell",
-                            ATTR_EVENT_TYPE: "ring",
+                            EventEntityStateAttribute.EVENT_TYPE: "ring",
                         },
                     },
                     "count": 1,
@@ -118,7 +115,7 @@ async def test_doorbell_trigger_options_validation(
                         "state": "2026-01-01T00:00:00.000+00:00",
                         "attributes": {
                             ATTR_DEVICE_CLASS: "doorbell",
-                            ATTR_EVENT_TYPE: "ring",
+                            EventEntityStateAttribute.EVENT_TYPE: "ring",
                         },
                     },
                     "count": 1,
@@ -128,7 +125,7 @@ async def test_doorbell_trigger_options_validation(
                         "state": "2026-01-01T00:00:01.000+00:00",
                         "attributes": {
                             ATTR_DEVICE_CLASS: "doorbell",
-                            ATTR_EVENT_TYPE: "ring",
+                            EventEntityStateAttribute.EVENT_TYPE: "ring",
                         },
                     },
                     "count": 1,
@@ -151,7 +148,7 @@ async def test_doorbell_trigger_options_validation(
                         "state": "2026-01-01T00:00:00.000+00:00",
                         "attributes": {
                             ATTR_DEVICE_CLASS: "doorbell",
-                            ATTR_EVENT_TYPE: "ring",
+                            EventEntityStateAttribute.EVENT_TYPE: "ring",
                         },
                     },
                     "count": 0,
@@ -161,7 +158,7 @@ async def test_doorbell_trigger_options_validation(
                         "state": "2026-01-01T00:00:01.000+00:00",
                         "attributes": {
                             ATTR_DEVICE_CLASS: "doorbell",
-                            ATTR_EVENT_TYPE: "ring",
+                            EventEntityStateAttribute.EVENT_TYPE: "ring",
                         },
                     },
                     "count": 1,
@@ -171,7 +168,7 @@ async def test_doorbell_trigger_options_validation(
                         "state": "2026-01-01T00:00:02.000+00:00",
                         "attributes": {
                             ATTR_DEVICE_CLASS: "doorbell",
-                            ATTR_EVENT_TYPE: "ring",
+                            EventEntityStateAttribute.EVENT_TYPE: "ring",
                         },
                     },
                     "count": 1,
@@ -188,7 +185,7 @@ async def test_doorbell_trigger_options_validation(
                         "state": "2026-01-01T00:00:00.000+00:00",
                         "attributes": {
                             ATTR_DEVICE_CLASS: "doorbell",
-                            ATTR_EVENT_TYPE: "ring",
+                            EventEntityStateAttribute.EVENT_TYPE: "ring",
                         },
                     },
                     "count": 0,
@@ -205,7 +202,7 @@ async def test_doorbell_trigger_options_validation(
                         "state": "2026-01-01T00:00:01.000+00:00",
                         "attributes": {
                             ATTR_DEVICE_CLASS: "doorbell",
-                            ATTR_EVENT_TYPE: "ring",
+                            EventEntityStateAttribute.EVENT_TYPE: "ring",
                         },
                     },
                     "count": 0,
@@ -215,7 +212,7 @@ async def test_doorbell_trigger_options_validation(
                         "state": "2026-01-01T00:00:02.000+00:00",
                         "attributes": {
                             ATTR_DEVICE_CLASS: "doorbell",
-                            ATTR_EVENT_TYPE: "ring",
+                            EventEntityStateAttribute.EVENT_TYPE: "ring",
                         },
                     },
                     "count": 1,
@@ -238,7 +235,7 @@ async def test_doorbell_trigger_options_validation(
                         "state": "2026-01-01T00:00:00.000+00:00",
                         "attributes": {
                             ATTR_DEVICE_CLASS: "doorbell",
-                            ATTR_EVENT_TYPE: "other_event",
+                            EventEntityStateAttribute.EVENT_TYPE: "other_event",
                         },
                     },
                     "count": 0,
@@ -248,7 +245,7 @@ async def test_doorbell_trigger_options_validation(
                         "state": "2026-01-01T00:00:01.000+00:00",
                         "attributes": {
                             ATTR_DEVICE_CLASS: "doorbell",
-                            ATTR_EVENT_TYPE: "ring",
+                            EventEntityStateAttribute.EVENT_TYPE: "ring",
                         },
                     },
                     "count": 1,
@@ -258,7 +255,7 @@ async def test_doorbell_trigger_options_validation(
                         "state": "2026-01-01T00:00:00.000+00:00",
                         "attributes": {
                             ATTR_DEVICE_CLASS: "doorbell",
-                            ATTR_EVENT_TYPE: "other_event",
+                            EventEntityStateAttribute.EVENT_TYPE: "other_event",
                         },
                     },
                     "count": 0,

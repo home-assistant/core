@@ -1,7 +1,7 @@
 """Provides the Fully Kiosk Browser DataUpdateCoordinator."""
 
 import asyncio
-from typing import Any, cast
+from typing import Any, cast, override
 
 from fullykiosk import FullyKiosk
 from fullykiosk.exceptions import FullyKioskError
@@ -17,7 +17,7 @@ from .const import DEFAULT_PORT, LOGGER, UPDATE_INTERVAL
 type FullyKioskConfigEntry = ConfigEntry[FullyKioskDataUpdateCoordinator]
 
 
-class FullyKioskDataUpdateCoordinator(DataUpdateCoordinator):
+class FullyKioskDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Define an object to hold Fully Kiosk Browser data."""
 
     config_entry: FullyKioskConfigEntry
@@ -41,6 +41,7 @@ class FullyKioskDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=UPDATE_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
         try:

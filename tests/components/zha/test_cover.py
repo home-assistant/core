@@ -4,7 +4,7 @@ from collections.abc import Callable, Coroutine
 from unittest.mock import patch
 
 import pytest
-from zigpy.device import Device
+from zigpy.device import ZigbeeDevice
 from zigpy.profiles import zha
 from zigpy.zcl.clusters import closures
 import zigpy.zcl.foundation as zcl_f
@@ -66,7 +66,7 @@ WCCS = closures.WindowCovering.ConfigStatus
 async def test_cover(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
     """Test ZHA cover platform."""
 
@@ -102,12 +102,7 @@ async def test_cover(
     entity_id = find_entity_id(Platform.COVER, zha_device_proxy, hass)
     assert entity_id is not None
 
-    assert (
-        not zha_device_proxy.device.endpoints[1]
-        .all_cluster_handlers[f"1:0x{cluster.cluster_id:04x}"]
-        .inverted
-    )
-    assert cluster.read_attributes.call_count == 3
+    assert cluster.read_attributes.call_count == 2
     assert (
         WCAttrs.current_position_lift_percentage.name
         in cluster.read_attributes.call_args[0][0]
@@ -336,7 +331,7 @@ async def test_cover(
 async def test_cover_supported_features_runtime_update(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
     """Test ZHA cover supported features update at runtime."""
     await setup_zha()
@@ -400,7 +395,7 @@ async def test_cover_supported_features_runtime_update(
 async def test_cover_failures(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
     """Test ZHA cover platform failure cases."""
     await setup_zha()

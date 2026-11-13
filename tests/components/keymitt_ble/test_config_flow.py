@@ -2,6 +2,8 @@
 
 from unittest.mock import ANY, AsyncMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_IGNORE, SOURCE_USER
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_ADDRESS
 from homeassistant.core import HomeAssistant
@@ -13,8 +15,6 @@ from . import (
     MockMicroBotApiClientFail,
     patch_async_setup_entry,
 )
-
-from tests.common import MockConfigEntry
 
 DOMAIN = "keymitt_ble"
 
@@ -71,9 +71,14 @@ async def test_bluetooth_discovery_already_setup(hass: HomeAssistant) -> None:
 async def test_user_setup(hass: HomeAssistant) -> None:
     """Test the user initiated form with valid mac."""
 
-    with patch(
-        "homeassistant.components.keymitt_ble.config_flow.async_discovered_service_info",
-        return_value=[SERVICE_INFO],
+    with (
+        patch(
+            "homeassistant.components.keymitt_ble.config_flow.async_discovered_service_info",
+            return_value=[SERVICE_INFO],
+        ),
+        patch(
+            "homeassistant.components.keymitt_ble.config_flow.bluetooth.async_request_active_scan"
+        ) as mock_request_active_scan,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
@@ -81,6 +86,7 @@ async def test_user_setup(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     assert result["errors"] == {}
+    mock_request_active_scan.assert_awaited_once_with(hass)
 
     with patch_microbot_api():
         result2 = await hass.config_entries.flow.async_configure(
@@ -105,6 +111,7 @@ async def test_user_setup(hass: HomeAssistant) -> None:
         CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
         CONF_ACCESS_TOKEN: ANY,
     }
+    assert result3["result"].unique_id == "aa:bb:cc:dd:ee:ff"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -188,6 +195,15 @@ async def test_no_link(hass: HomeAssistant) -> None:
     assert result3["errors"] == {"base": "linking"}
 
     assert len(mock_setup_entry.mock_calls) == 0
+
+    with patch_microbot_api(), patch_async_setup_entry():
+        result4 = await hass.config_entries.flow.async_configure(
+            result3["flow_id"],
+            USER_INPUT,
+        )
+        await hass.async_block_till_done()
+
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_setup_replaces_ignored_device(hass: HomeAssistant) -> None:

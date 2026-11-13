@@ -1,6 +1,6 @@
 """Config flow to configure WiLight."""
 
-from typing import Any
+from typing import Any, override
 from urllib.parse import urlparse
 
 import pywilight
@@ -58,6 +58,7 @@ class WiLightFlowHandler(ConfigFlow, domain=DOMAIN):
         }
         return self.async_create_entry(title=self._title, data=data)
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:

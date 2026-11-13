@@ -5,6 +5,8 @@ from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
 from rokuecp import RokuConnectionError, RokuConnectionTimeoutError, RokuError
 
 from homeassistant.components.media_player import (
@@ -34,7 +36,7 @@ from homeassistant.components.roku.const import (
     DEFAULT_PLAY_MEDIA_APP_ID,
     DOMAIN,
 )
-from homeassistant.components.roku.services import ATTR_KEYWORD, SERVICE_SEARCH
+from homeassistant.components.roku.services import RokuService, RokuServiceArgument
 from homeassistant.components.stream import FORMAT_CONTENT_TYPE, HLS_PROVIDER
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.const import (
@@ -67,11 +69,8 @@ from homeassistant.helpers import (
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.typing import WebSocketGenerator
-
 MAIN_ENTITY_ID = f"{MP_DOMAIN}.my_roku_3"
-TV_ENTITY_ID = f"{MP_DOMAIN}.58_onn_roku_tv"
+TV_ENTITY_ID = f"{MP_DOMAIN}.living_room_58_onn_roku_tv"
 
 
 async def test_setup(
@@ -810,7 +809,8 @@ async def test_media_browse_internal(
     client = await hass_ws_client(hass)
 
     with patch(
-        "homeassistant.helpers.network._get_request_host", return_value="example.local"
+        "homeassistant.helpers.network._get_request_host_port",
+        return_value=("example.local", 8123),
     ):
         await client.send_json(
             {
@@ -955,7 +955,7 @@ async def test_media_browse_local_source(
     assert msg["result"]["title"] == "media"
     assert msg["result"]["media_class"] == MediaClass.DIRECTORY
     assert msg["result"]["media_content_type"] == ""
-    assert len(msg["result"]["children"]) == 2
+    assert len(msg["result"]["children"]) == 3
 
     assert msg["result"]["children"][0]["title"] == "Epic Sax Guy 10 Hours.mp4"
     assert msg["result"]["children"][0]["media_class"] == MediaClass.VIDEO
@@ -1084,8 +1084,8 @@ async def test_integration_services(
     """Test integration services."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SEARCH,
-        {ATTR_ENTITY_ID: MAIN_ENTITY_ID, ATTR_KEYWORD: "Space Jam"},
+        RokuService.SEARCH,
+        {ATTR_ENTITY_ID: MAIN_ENTITY_ID, RokuServiceArgument.KEYWORD: "Space Jam"},
         blocking=True,
     )
     mock_roku.search.assert_called_once_with("Space Jam")

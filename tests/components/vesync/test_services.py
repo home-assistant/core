@@ -4,40 +4,74 @@ from unittest.mock import AsyncMock
 
 import pytest
 from pyvesync import VeSync
+from pyvesync.utils.errors import VeSyncError
 
-from homeassistant.components.vesync import async_setup
-from homeassistant.components.vesync.const import DOMAIN, SERVICE_UPDATE_DEVS
+from homeassistant.components.vesync.const import DOMAIN
+from homeassistant.components.vesync.services import VeSyncService
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 
+@pytest.mark.usefixtures("manager")
 async def test_async_new_device_discovery_no_entry(
     hass: HomeAssistant,
+    config_entry: ConfigEntry,
 ) -> None:
     """Service should raise when no config entry exists."""
 
-    # Ensure the integration is set up so the service is registered
-    assert await async_setup(hass, {})
+    # Set up the config entry so the service is registered, then remove the
+    # entry so the service has no entries to operate on.
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    # No entries for the domain, service should raise
     with pytest.raises(ServiceValidationError, match="Entry not found"):
-        await hass.services.async_call("vesync", SERVICE_UPDATE_DEVS, {}, blocking=True)
+        await hass.services.async_call(
+            DOMAIN, VeSyncService.UPDATE_DEVICES, {}, blocking=True
+        )
 
 
+@pytest.mark.usefixtures("manager")
 async def test_async_new_device_discovery_entry_not_loaded(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
 ) -> None:
     """Service should raise when entry exists but is not loaded."""
 
-    # Add a config entry but do not set it up (state is not LOADED)
+    # Set up the config entry so the service is registered, then unload it.
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.NOT_LOADED
-    # Ensure the integration is set up so the service is registered
-    assert await async_setup(hass, {})
 
     with pytest.raises(ServiceValidationError, match="Entry not loaded"):
-        await hass.services.async_call("vesync", SERVICE_UPDATE_DEVS, {}, blocking=True)
+        await hass.services.async_call(
+            DOMAIN, VeSyncService.UPDATE_DEVICES, {}, blocking=True
+        )
+
+
+async def test_async_new_device_discovery_error(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    manager: VeSync,
+) -> None:
+    """Test VeSync errors are reported as translated Home Assistant errors."""
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    manager.get_devices = AsyncMock(side_effect=VeSyncError("API failure"))
+
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            DOMAIN, VeSyncService.UPDATE_DEVICES, {}, blocking=True
+        )
+
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "api_response_error"
 
 
 async def test_async_new_device_discovery(
@@ -64,7 +98,9 @@ async def test_async_new_device_discovery(
     )
 
     # Call the service that should trigger discovery and platform setup
-    await hass.services.async_call(DOMAIN, SERVICE_UPDATE_DEVS, {}, blocking=True)
+    await hass.services.async_call(
+        DOMAIN, VeSyncService.UPDATE_DEVICES, {}, blocking=True
+    )
     await hass.async_block_till_done()
 
     assert manager.get_devices.call_count == 1

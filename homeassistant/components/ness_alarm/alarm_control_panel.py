@@ -1,6 +1,7 @@
 """Support for Ness D8X/D16X alarm panel."""
 
 import logging
+from typing import override
 
 from nessclient import ArmingMode, ArmingState, Client
 
@@ -15,8 +16,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SIGNAL_ARMING_STATE_CHANGED, NessAlarmConfigEntry
-from .const import CONF_SHOW_HOME_MODE, DOMAIN
+from . import NessAlarmConfigEntry
+from .const import CONF_SHOW_HOME_MODE, DOMAIN, SIGNAL_ARMING_STATE_CHANGED
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,6 +70,7 @@ class NessAlarmPanel(AlarmControlPanelEntity):
             features |= AlarmControlPanelEntityFeature.ARM_HOME
         self._attr_supported_features = features
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
@@ -77,18 +79,22 @@ class NessAlarmPanel(AlarmControlPanelEntity):
             )
         )
 
+    @override
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         await self._client.disarm(code)
 
+    @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         await self._client.arm_away(code)
 
+    @override
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         await self._client.arm_home(code)
 
+    @override
     async def async_alarm_trigger(self, code: str | None = None) -> None:
         """Send trigger/panic command."""
         await self._client.panic(code)

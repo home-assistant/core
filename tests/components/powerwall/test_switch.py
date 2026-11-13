@@ -3,22 +3,22 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from tesla_powerwall import GridStatus, PowerwallError
 
 from homeassistant.components.powerwall.const import DOMAIN
-from homeassistant.components.switch import (
-    DOMAIN as SWITCH_DOMAIN,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
+from homeassistant.const import (
+    CONF_IP_ADDRESS,
+    STATE_OFF,
+    STATE_ON,
+    CommonServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CONF_IP_ADDRESS, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from .mocks import _mock_powerwall_with_fixtures
-
-from tests.common import MockConfigEntry
+from .mocks import _mock_powerwall_restricted, _mock_powerwall_with_fixtures
 
 ENTITY_ID = "switch.mysite_off_grid_operation"
 
@@ -65,8 +65,8 @@ async def test_on(hass: HomeAssistant, mock_powerwall) -> None:
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -81,8 +81,8 @@ async def test_off(hass: HomeAssistant, mock_powerwall) -> None:
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -99,7 +99,29 @@ async def test_exception_on_powerwall_error(
     with pytest.raises(HomeAssistantError, match="Setting off-grid operation to"):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: ENTITY_ID},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
+
+
+async def test_pw3_no_switch(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Switch platform must not create entities for restricted PW3 surface."""
+    mock_powerwall = await _mock_powerwall_restricted(hass)
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_IP_ADDRESS: "1.2.3.4"},
+        unique_id="aa:bb:cc:dd:ee:ff",
+    )
+    config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.powerwall.Powerwall", return_value=mock_powerwall
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("switch.powerwall_1_2_3_4_off_grid_operation") is None
+    assert "switch.powerwall_1_2_3_4_off_grid_operation" not in entity_registry.entities

@@ -1,7 +1,7 @@
 """Support for Victron GX button entities."""
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from victron_mqtt import (
     Device as VictronVenusDevice,
@@ -51,15 +51,17 @@ async def async_setup_entry(
 class VictronButton(VictronBaseEntity, ButtonEntity):
     """Implementation of a Victron GX button entity."""
 
+    _follow_metric_availability = False
+
     @callback
+    @override
     def _on_update_cb(self, _value: Any) -> None:
         # Buttons are stateless in HA; incoming metric
         # updates are intentionally ignored.
         pass
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
-        if TYPE_CHECKING:
-            assert isinstance(self._metric, VictronVenusWritableMetric)
         _LOGGER.debug("Pressing button: %s", self.unique_id)
-        self._metric.set(GenericOnOff.ON)
+        self._set_metric_value(GenericOnOff.ON)

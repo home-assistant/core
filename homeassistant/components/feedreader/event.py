@@ -2,6 +2,7 @@
 
 import html
 import logging
+from typing import override
 
 from feedparser import FeedParserDict
 
@@ -11,9 +12,8 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import FeedReaderConfigEntry
 from .const import DOMAIN, EVENT_FEEDREADER
-from .coordinator import FeedReaderCoordinator
+from .coordinator import FeedReaderConfigEntry, FeedReaderCoordinator
 
 LOGGER = logging.getLogger(__name__)
 
@@ -62,6 +62,7 @@ class FeedReaderEvent(CoordinatorEntity[FeedReaderCoordinator], EventEntity):
         )
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if (data := self.coordinator.data) is None or not data:

@@ -1,18 +1,20 @@
 """Test pi_hole component."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components import pi_hole
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 from . import CONFIG_DATA_DEFAULTS, _create_mocked_hole, _patch_init_hole
 
-from tests.common import MockConfigEntry
-
 
 async def test_update(hass: HomeAssistant) -> None:
     """Tests update entity."""
     mocked_hole = _create_mocked_hole(api_version=6)
-    entry = MockConfigEntry(domain=pi_hole.DOMAIN, data=CONFIG_DATA_DEFAULTS)
+    entry = MockConfigEntry(
+        domain=pi_hole.DOMAIN, title="Pi-Hole", data=CONFIG_DATA_DEFAULTS
+    )
     entry.add_to_hass(hass)
     with _patch_init_hole(mocked_hole):
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -53,7 +55,9 @@ async def test_update(hass: HomeAssistant) -> None:
 async def test_update_no_versions(hass: HomeAssistant) -> None:
     """Tests update entity when no version data available."""
     mocked_hole = _create_mocked_hole(has_versions=False, api_version=6)
-    entry = MockConfigEntry(domain=pi_hole.DOMAIN, data=CONFIG_DATA_DEFAULTS)
+    entry = MockConfigEntry(
+        domain=pi_hole.DOMAIN, title="Pi-Hole", data=CONFIG_DATA_DEFAULTS
+    )
     entry.add_to_hass(hass)
     with _patch_init_hole(mocked_hole):
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -87,7 +91,9 @@ async def test_update_no_updates(hass: HomeAssistant) -> None:
     mocked_hole = _create_mocked_hole(
         has_versions=True, has_update=False, api_version=6
     )
-    entry = MockConfigEntry(domain=pi_hole.DOMAIN, data=CONFIG_DATA_DEFAULTS)
+    entry = MockConfigEntry(
+        domain=pi_hole.DOMAIN, title="Pi-Hole", data=CONFIG_DATA_DEFAULTS
+    )
     entry.add_to_hass(hass)
     with _patch_init_hole(mocked_hole):
         assert await hass.config_entries.async_setup(entry.entry_id)

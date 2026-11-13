@@ -1,5 +1,7 @@
 """Demo platform that offers a fake infrared receiver event entity."""
 
+from typing import override
+
 from infrared_protocols.commands.nec import NECCommand
 
 from homeassistant.components.event import EventEntity
@@ -77,6 +79,7 @@ class DemoInfraredEvent(InfraredReceiverConsumerEntity, EventEntity):
         )
 
     @callback
+    @override
     def _handle_signal(self, signal: InfraredReceivedSignal) -> None:
         """Handle a received IR signal."""
         command = NECCommand.from_raw_timings(signal.timings)

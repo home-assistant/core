@@ -1,30 +1,25 @@
 """The tests for the IPMA weather component."""
 
-import datetime
+import datetime as dt
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pyipma.observation import Observation
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.ipma.const import MIN_TIME_BETWEEN_UPDATES
+from homeassistant.components.ipma.const import DOMAIN, MIN_TIME_BETWEEN_UPDATES
 from homeassistant.components.weather import (
-    ATTR_WEATHER_HUMIDITY,
-    ATTR_WEATHER_PRESSURE,
-    ATTR_WEATHER_TEMPERATURE,
-    ATTR_WEATHER_WIND_BEARING,
-    ATTR_WEATHER_WIND_SPEED,
     DOMAIN as WEATHER_DOMAIN,
-    SERVICE_GET_FORECASTS,
+    WeatherEntityStateAttribute,
+    WeatherService,
 )
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 from . import MockLocation
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 TEST_CONFIG = {
     "name": "HomeTown",
@@ -59,7 +54,7 @@ async def test_setup_config_flow(hass: HomeAssistant) -> None:
         "pyipma.location.Location.get",
         return_value=MockLocation(),
     ):
-        entry = MockConfigEntry(domain="ipma", data=TEST_CONFIG)
+        entry = MockConfigEntry(domain=DOMAIN, data=TEST_CONFIG)
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -68,11 +63,11 @@ async def test_setup_config_flow(hass: HomeAssistant) -> None:
     assert state.state == "rainy"
 
     data = state.attributes
-    assert data.get(ATTR_WEATHER_TEMPERATURE) == 18.0
-    assert data.get(ATTR_WEATHER_HUMIDITY) == 71
-    assert data.get(ATTR_WEATHER_PRESSURE) == 1000.0
-    assert data.get(ATTR_WEATHER_WIND_SPEED) == 3.94
-    assert data.get(ATTR_WEATHER_WIND_BEARING) == "NW"
+    assert data.get(WeatherEntityStateAttribute.TEMPERATURE) == 18.0
+    assert data.get(WeatherEntityStateAttribute.HUMIDITY) == 71
+    assert data.get(WeatherEntityStateAttribute.PRESSURE) == 1000.0
+    assert data.get(WeatherEntityStateAttribute.WIND_SPEED) == 3.94
+    assert data.get(WeatherEntityStateAttribute.WIND_BEARING) == "NW"
     assert state.attributes.get("friendly_name") == "HomeTown"
 
 
@@ -82,7 +77,7 @@ async def test_failed_get_observation_forecast(hass: HomeAssistant) -> None:
         "pyipma.location.Location.get",
         return_value=MockBadLocation(),
     ):
-        entry = MockConfigEntry(domain="ipma", data=TEST_CONFIG)
+        entry = MockConfigEntry(domain=DOMAIN, data=TEST_CONFIG)
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -91,17 +86,17 @@ async def test_failed_get_observation_forecast(hass: HomeAssistant) -> None:
     assert state.state == STATE_UNKNOWN
 
     data = state.attributes
-    assert data.get(ATTR_WEATHER_TEMPERATURE) is None
-    assert data.get(ATTR_WEATHER_HUMIDITY) is None
-    assert data.get(ATTR_WEATHER_PRESSURE) is None
-    assert data.get(ATTR_WEATHER_WIND_SPEED) is None
-    assert data.get(ATTR_WEATHER_WIND_BEARING) is None
+    assert data.get(WeatherEntityStateAttribute.TEMPERATURE) is None
+    assert data.get(WeatherEntityStateAttribute.HUMIDITY) is None
+    assert data.get(WeatherEntityStateAttribute.PRESSURE) is None
+    assert data.get(WeatherEntityStateAttribute.WIND_SPEED) is None
+    assert data.get(WeatherEntityStateAttribute.WIND_BEARING) is None
     assert state.attributes.get("friendly_name") == "HomeTown"
 
 
 @pytest.mark.parametrize(
     ("service"),
-    [SERVICE_GET_FORECASTS],
+    [WeatherService.GET_FORECASTS],
 )
 async def test_forecast_service(
     hass: HomeAssistant,
@@ -114,7 +109,7 @@ async def test_forecast_service(
         "pyipma.location.Location.get",
         return_value=MockLocation(),
     ):
-        entry = MockConfigEntry(domain="ipma", data=TEST_CONFIG)
+        entry = MockConfigEntry(domain=DOMAIN, data=TEST_CONFIG)
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -159,7 +154,7 @@ async def test_forecast_subscription(
         "pyipma.location.Location.get",
         return_value=MockLocation(),
     ):
-        entry = MockConfigEntry(domain="ipma", data=TEST_CONFIG)
+        entry = MockConfigEntry(domain=DOMAIN, data=TEST_CONFIG)
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -183,7 +178,7 @@ async def test_forecast_subscription(
 
     assert forecast1 == snapshot
 
-    freezer.tick(MIN_TIME_BETWEEN_UPDATES + datetime.timedelta(seconds=1))
+    freezer.tick(MIN_TIME_BETWEEN_UPDATES + dt.timedelta(seconds=1))
     await hass.async_block_till_done()
     msg = await client.receive_json()
 

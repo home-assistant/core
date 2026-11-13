@@ -1,8 +1,8 @@
 """Validate device conditions."""
 
-from typing import Any, Protocol
+from typing import Any, Protocol, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_DOMAIN, CONF_OPTIONS
 from homeassistant.core import HomeAssistant
@@ -24,7 +24,7 @@ class DeviceAutomationConditionProtocol(Protocol):
     Each module must define either CONDITION_SCHEMA or async_validate_condition_config.
     """
 
-    CONDITION_SCHEMA: vol.Schema
+    CONDITION_SCHEMA: probatio.Schema
 
     async def async_validate_condition_config(
         self, hass: HomeAssistant, config: ConfigType
@@ -38,7 +38,7 @@ class DeviceAutomationConditionProtocol(Protocol):
 
     async def async_get_condition_capabilities(
         self, hass: HomeAssistant, config: ConfigType
-    ) -> dict[str, vol.Schema]:
+    ) -> dict[str, probatio.Schema]:
         """List condition capabilities."""
 
     async def async_get_conditions(
@@ -54,6 +54,7 @@ class DeviceCondition(Condition):
     _platform_checker: ConditionCheckerType
 
     @classmethod
+    @override
     async def async_validate_complete_config(
         cls, hass: HomeAssistant, complete_config: ConfigType
     ) -> ConfigType:
@@ -70,6 +71,7 @@ class DeviceCondition(Condition):
         return complete_config
 
     @classmethod
+    @override
     async def async_validate_config(
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
@@ -85,6 +87,7 @@ class DeviceCondition(Condition):
         assert config.options is not None
         self._config = config.options
 
+    @override
     async def _async_setup(self) -> None:
         """Set up a device condition."""
         platform = await async_get_device_automation_platform(
@@ -94,6 +97,7 @@ class DeviceCondition(Condition):
             self._hass, self._config
         )
 
+    @override
     def _async_check(self, variables: TemplateVarsType = None, **kwargs: Any) -> bool:
         """Check the condition."""
         result = self._platform_checker(self._hass, variables)

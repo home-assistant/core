@@ -8,6 +8,7 @@ from datetime import timedelta
 
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, mock_restore_cache
 
 from homeassistant.components.rflink import CONF_RECONNECT_INTERVAL
 from homeassistant.const import (
@@ -22,24 +23,22 @@ from homeassistant.util import dt as dt_util
 
 from .test_init import mock_rflink
 
-from tests.common import async_fire_time_changed, mock_restore_cache
-
 DOMAIN = "binary_sensor"
+
 
 CONFIG = {
     "rflink": {
         "port": "/dev/ttyABC0",
         "ignore_devices": ["ignore_wildcard_*", "ignore_sensor"],
-    },
-    DOMAIN: {
-        "platform": "rflink",
-        "devices": {
-            "test": {"name": "test", "device_class": "door"},
-            "test2": {
-                "name": "test2",
-                "device_class": "motion",
-                "off_delay": 30,
-                "force_update": True,
+        DOMAIN: {
+            "devices": {
+                "test": {"name": "test", "device_class": "door"},
+                "test2": {
+                    "name": "test2",
+                    "device_class": "motion",
+                    "off_delay": 30,
+                    "force_update": True,
+                },
             },
         },
     },
@@ -91,7 +90,7 @@ async def test_entity_availability(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """If Rflink device is disconnected, entities should become unavailable."""
-    # Make sure Rflink mock does not 'recover' to quickly from the
+    # Make sure Rflink mock does not 'recover' too quickly from the
     # disconnect or else the unavailability cannot be measured
     config = {
         **CONFIG,
@@ -100,7 +99,7 @@ async def test_entity_availability(
             CONF_RECONNECT_INTERVAL: 60,
         },
     }
-    failures = [False, True]
+    failures = [False, True, False]
 
     # Create platform and entities
     event_callback, _, _, disconnect_callback = await mock_rflink(

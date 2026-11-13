@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 from led_ble import BLEAK_EXCEPTIONS, LEDBLE
 
@@ -48,6 +49,7 @@ class LEDBLECoordinator(DataUpdateCoordinator[None]):
         )
         self.led_ble = led_ble
 
+    @override
     async def _async_update_data(self) -> None:
         """Update the device state."""
         try:

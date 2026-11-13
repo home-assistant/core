@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from aioghost.exceptions import GhostAuthError, GhostConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.ghost.const import (
     CONF_ADMIN_API_KEY,
@@ -15,8 +16,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import API_KEY, API_URL, SITE_UUID
-
-from tests.common import MockConfigEntry
 
 NEW_API_KEY = "new_key_id:new_key_secret"
 NEW_API_URL = "https://new.ghost.io"
@@ -49,6 +48,7 @@ async def test_form_user(hass: HomeAssistant, mock_ghost_api: AsyncMock) -> None
     }
 
 
+@pytest.mark.usefixtures("mock_ghost_api", "mock_setup_entry")
 async def test_form_invalid_api_key_format(hass: HomeAssistant) -> None:
     """Test error on invalid API key format."""
     result = await hass.config_entries.flow.async_init(
@@ -65,6 +65,16 @@ async def test_form_invalid_api_key_format(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_api_key"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_API_URL: API_URL,
+            CONF_ADMIN_API_KEY: API_KEY,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -212,6 +222,7 @@ async def test_reauth_flow_errors_can_recover(
     assert len(hass.config_entries.async_entries()) == 1
 
 
+@pytest.mark.usefixtures("mock_ghost_api", "mock_setup_entry")
 async def test_reauth_flow_invalid_api_key_format(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -228,6 +239,14 @@ async def test_reauth_flow_invalid_api_key_format(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_api_key"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_ADMIN_API_KEY: NEW_API_KEY},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
 
 
 @pytest.mark.usefixtures("mock_ghost_api", "mock_setup_entry")

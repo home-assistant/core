@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from pyrympro import CannotConnectError, OperationError, RymPro, UnauthorizedError
 
@@ -37,6 +38,7 @@ class RymProDataUpdateCoordinator(DataUpdateCoordinator[dict[int, dict]]):
             update_interval=interval,
         )
 
+    @override
     async def _async_update_data(self) -> dict[int, dict]:
         """Fetch data from Rym Pro."""
         try:

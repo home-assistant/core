@@ -1,14 +1,15 @@
 """Support for device tracking of Huawei LTE routers."""
 
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
     ScannerEntity,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -165,39 +166,50 @@ class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
         self._mac_address = mac_address
 
     @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self.hostname or self.mac_address
-
-    @property
+    @override
     def _device_unique_id(self) -> str:
         return self.mac_address
 
     @property
+    @override
+    def device_info(self) -> DeviceInfo:
+        """Return the device info of the tracked device."""
+        return DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, self.mac_address)},
+            name=self._hostname or self.mac_address,
+        )
+
+    @property
+    @override
     def ip_address(self) -> str | None:
         """Return the primary ip address of the device."""
         return self._ip_address
 
     @property
+    @override
     def mac_address(self) -> str:
         """Return the mac address of the device."""
         return self._mac_address
 
     @property
+    @override
     def hostname(self) -> str | None:
         """Return hostname of the device."""
         return self._hostname
 
     @property
+    @override
     def is_connected(self) -> bool:
         """Get whether the entity is connected."""
         return self._is_connected
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Get additional attributes related to entity state."""
         return self._extra_state_attributes
 
+    @override
     async def async_update(self) -> None:
         """Update state."""
         if (hosts := _get_hosts(self.router)) is None:
@@ -214,6 +226,14 @@ class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
             # to which it is fed, parses and expects to see just one.
             self._ip_address = (host.get("IpAddress") or "").split(";", 2)[0] or None
             self._hostname = host.get("HostName")
+            if (
+                self._hostname
+                and (device_entry := self.device_entry)
+                and device_entry.name != self._hostname
+            ):
+                dr.async_get(self.hass).async_update_device(
+                    device_entry.id, name=self._hostname
+                )
             self._extra_state_attributes = {
                 snakecase(k): v
                 for k, v in host.items()

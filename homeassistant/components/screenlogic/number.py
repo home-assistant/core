@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from screenlogicpy.const.common import ScreenLogicCommunicationError, ScreenLogicError
 from screenlogicpy.const.data import ATTR, DEVICE, GROUP, VALUE
@@ -19,14 +20,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import ScreenlogicDataUpdateCoordinator
+from .coordinator import ScreenLogicConfigEntry, ScreenlogicDataUpdateCoordinator
 from .entity import (
     ScreenLogicEntity,
     ScreenLogicEntityDescription,
     ScreenLogicPushEntity,
     ScreenLogicPushEntityDescription,
 )
-from .types import ScreenLogicConfigEntry
 from .util import cleanup_excluded_entity, get_ha_unit
 
 _LOGGER = logging.getLogger(__name__)
@@ -168,10 +168,12 @@ class ScreenLogicNumber(ScreenLogicEntity, NumberEntity):
             self._attr_native_step = step
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the current value."""
         return self.entity_data[ATTR.VALUE]
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         raise NotImplementedError
@@ -186,6 +188,7 @@ class ScreenLogicPushNumber(ScreenLogicPushEntity, ScreenLogicNumber):
 class ScreenLogicChemistryNumber(ScreenLogicPushNumber):
     """Class to represent a ScreenLogic Chemistry Number entity."""
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
 
@@ -205,6 +208,7 @@ class ScreenLogicChemistryNumber(ScreenLogicPushNumber):
 class ScreenLogicSCGNumber(ScreenLogicNumber):
     """Class to represent a ScreenLoigic SCG Number entity."""
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
 

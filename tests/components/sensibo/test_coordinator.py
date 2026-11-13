@@ -8,6 +8,7 @@ from freezegun.api import FrozenDateTimeFactory
 from pysensibo.exceptions import AuthenticationError, SensiboError
 from pysensibo.model import SensiboData
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.climate import HVACMode
 from homeassistant.components.sensibo.const import DOMAIN
@@ -15,8 +16,6 @@ from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from . import ENTRY_CONFIG
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_coordinator(
@@ -47,7 +46,7 @@ async def test_coordinator(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     mock_data.assert_called_once()
-    state = hass.states.get("climate.hallway")
+    state = hass.states.get("climate.hallway_hallway")
     assert state.state == HVACMode.HEAT
     mock_data.reset_mock()
 
@@ -56,7 +55,7 @@ async def test_coordinator(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     mock_data.assert_called_once()
-    state = hass.states.get("climate.hallway")
+    state = hass.states.get("climate.hallway_hallway")
     assert state.state == STATE_UNAVAILABLE
     mock_data.reset_mock()
 
@@ -66,7 +65,7 @@ async def test_coordinator(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     mock_data.assert_called_once()
-    state = hass.states.get("climate.hallway")
+    state = hass.states.get("climate.hallway_hallway")
     assert state.state == STATE_UNAVAILABLE
     mock_data.reset_mock()
 
@@ -76,7 +75,7 @@ async def test_coordinator(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     mock_data.assert_called_once()
-    state = hass.states.get("climate.hallway")
+    state = hass.states.get("climate.hallway_hallway")
     assert state.state == HVACMode.HEAT
     mock_data.reset_mock()
 
@@ -85,7 +84,7 @@ async def test_coordinator(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     mock_data.assert_called_once()
-    state = hass.states.get("climate.hallway")
+    state = hass.states.get("climate.hallway_hallway")
     assert state.state == STATE_UNAVAILABLE
 
     assert "Platform sensibo does not generate unique IDs" not in caplog.text

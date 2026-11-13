@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from thinqconnect import DeviceType
 from thinqconnect.devices.const import Property as ThinQProperty
@@ -243,6 +243,7 @@ class ThinQSwitchEntity(ThinQEntity, SwitchEntity):
     entity_description: ThinQSwitchEntityDescription
     _attr_device_class = SwitchDeviceClass.SWITCH
 
+    @override
     def _update_status(self) -> None:
         """Update status itself."""
         super()._update_status()
@@ -260,6 +261,7 @@ class ThinQSwitchEntity(ThinQEntity, SwitchEntity):
             self.is_on,
         )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         _LOGGER.debug(
@@ -277,6 +279,7 @@ class ThinQSwitchEntity(ThinQEntity, SwitchEntity):
                 self.coordinator.api.async_turn_on(self.property_id)
             )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         _LOGGER.debug(

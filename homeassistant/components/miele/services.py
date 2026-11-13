@@ -1,18 +1,20 @@
 """Services for Miele integration."""
 
 from datetime import timedelta
+from enum import StrEnum
 import logging
 from typing import cast
 
 from aiohttp import ClientResponseError
-import voluptuous as vol
+import probatio
 
-from homeassistant.const import ATTR_DEVICE_ID, ATTR_TEMPERATURE
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
     ServiceResponse,
     SupportsResponse,
+    callback,
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
@@ -21,35 +23,45 @@ from homeassistant.helpers.service import async_extract_config_entry_ids
 from .const import DOMAIN
 from .coordinator import MieleConfigEntry
 
-ATTR_PROGRAM_ID = "program_id"
-ATTR_DURATION = "duration"
+
+class MieleService(StrEnum):
+    """Store keys for Miele services."""
+
+    GET_PROGRAMS = "get_programs"
+    SET_PROGRAM = "set_program"
+    SET_PROGRAM_OVEN = "set_program_oven"
 
 
-SERVICE_SET_PROGRAM = "set_program"
-SERVICE_SET_PROGRAM_SCHEMA = vol.Schema(
+class MieleServiceArgument(StrEnum):
+    """Store keys for Miele service arguments."""
+
+    PROGRAM_ID = "program_id"
+    TEMPERATURE = "temperature"
+    DURATION = "duration"
+
+
+SERVICE_SET_PROGRAM_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): str,
-        vol.Required(ATTR_PROGRAM_ID): cv.positive_int,
+        probatio.Required(CommonServiceArgument.DEVICE_ID): str,
+        probatio.Required(MieleServiceArgument.PROGRAM_ID): cv.positive_int,
     },
 )
 
-SERVICE_SET_PROGRAM_OVEN = "set_program_oven"
-SERVICE_SET_PROGRAM_OVEN_SCHEMA = vol.Schema(
+SERVICE_SET_PROGRAM_OVEN_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): str,
-        vol.Required(ATTR_PROGRAM_ID): cv.positive_int,
-        vol.Optional(ATTR_TEMPERATURE): cv.positive_int,
-        vol.Optional(ATTR_DURATION): vol.All(
+        probatio.Required(CommonServiceArgument.DEVICE_ID): str,
+        probatio.Required(MieleServiceArgument.PROGRAM_ID): cv.positive_int,
+        probatio.Optional(MieleServiceArgument.TEMPERATURE): cv.positive_int,
+        probatio.Optional(MieleServiceArgument.DURATION): probatio.All(
             cv.time_period,
-            vol.Range(min=timedelta(minutes=1), max=timedelta(hours=12)),
+            probatio.Range(min=timedelta(minutes=1), max=timedelta(hours=12)),
         ),
     },
 )
 
-SERVICE_GET_PROGRAMS = "get_programs"
-SERVICE_GET_PROGRAMS_SCHEMA = vol.Schema(
+SERVICE_GET_PROGRAMS_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): str,
+        probatio.Required(CommonServiceArgument.DEVICE_ID): str,
     },
 )
 
@@ -78,7 +90,7 @@ async def _get_serial_number(call: ServiceCall) -> str:
     """Extract the serial number from the device identifier."""
 
     device_reg = dr.async_get(call.hass)
-    device = call.data[ATTR_DEVICE_ID]
+    device = call.data[CommonServiceArgument.DEVICE_ID]
     device_entry = device_reg.async_get(device)
     serial_number = next(
         (
@@ -104,7 +116,7 @@ async def set_program(call: ServiceCall) -> None:
     api = config_entry.runtime_data.api
 
     serial_number = await _get_serial_number(call)
-    data = {"programId": call.data[ATTR_PROGRAM_ID]}
+    data = {"programId": call.data[MieleServiceArgument.PROGRAM_ID]}
     try:
         await api.set_program(serial_number, data)
     except ClientResponseError as ex:
@@ -126,15 +138,15 @@ async def set_program_oven(call: ServiceCall) -> None:
     api = config_entry.runtime_data.api
 
     serial_number = await _get_serial_number(call)
-    data = {"programId": call.data[ATTR_PROGRAM_ID]}
-    if call.data.get(ATTR_DURATION) is not None:
-        td = call.data[ATTR_DURATION]
+    data = {"programId": call.data[MieleServiceArgument.PROGRAM_ID]}
+    if call.data.get(MieleServiceArgument.DURATION) is not None:
+        td = call.data[MieleServiceArgument.DURATION]
         data["duration"] = [
             td.seconds // 3600,  # hours
             (td.seconds // 60) % 60,  # minutes
         ]
-    if call.data.get(ATTR_TEMPERATURE) is not None:
-        data["temperature"] = call.data[ATTR_TEMPERATURE]
+    if call.data.get(MieleServiceArgument.TEMPERATURE) is not None:
+        data["temperature"] = call.data[MieleServiceArgument.TEMPERATURE]
     try:
         await api.set_program(serial_number, data)
     except ClientResponseError as ex:
@@ -213,26 +225,27 @@ async def get_programs(call: ServiceCall) -> ServiceResponse:
     }
 
 
-async def async_setup_services(hass: HomeAssistant) -> None:
+@callback
+def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services."""
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_SET_PROGRAM,
+        MieleService.SET_PROGRAM,
         set_program,
         SERVICE_SET_PROGRAM_SCHEMA,
     )
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_SET_PROGRAM_OVEN,
+        MieleService.SET_PROGRAM_OVEN,
         set_program_oven,
         SERVICE_SET_PROGRAM_OVEN_SCHEMA,
     )
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_GET_PROGRAMS,
+        MieleService.GET_PROGRAMS,
         get_programs,
         SERVICE_GET_PROGRAMS_SCHEMA,
         supports_response=SupportsResponse.ONLY,

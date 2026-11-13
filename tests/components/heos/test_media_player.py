@@ -1,5 +1,6 @@
 """Tests for the Heos Media Player platform."""
 
+from collections.abc import Callable
 from datetime import timedelta
 import re
 from typing import Any
@@ -10,6 +11,7 @@ from pyheos import (
     BrowseResult,
     CommandFailedError,
     HeosError,
+    HeosPlayer,
     MediaItem,
     MediaMusicSource,
     MediaType as HeosMediaType,
@@ -23,20 +25,14 @@ from pyheos import (
 )
 from pyheos.util import mediauri
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.plugins import async_setup_component
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
-from homeassistant.components.heos.const import (
-    ATTR_DESTINATION_POSITION,
-    ATTR_QUEUE_IDS,
-    DOMAIN,
-    SERVICE_GET_QUEUE,
-    SERVICE_GROUP_VOLUME_DOWN,
-    SERVICE_GROUP_VOLUME_SET,
-    SERVICE_GROUP_VOLUME_UP,
-    SERVICE_MOVE_QUEUE_ITEM,
-    SERVICE_REMOVE_FROM_QUEUE,
-)
+from homeassistant.components.heos.const import DOMAIN
+from homeassistant.components.heos.services import HeosService, HeosServiceArgument
 from homeassistant.components.media_player import (
     ATTR_GROUP_MEMBERS,
     ATTR_INPUT_SOURCE,
@@ -75,16 +71,13 @@ from homeassistant.const import (
     STATE_IDLE,
     STATE_PLAYING,
     STATE_UNAVAILABLE,
+    CommonServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import MockHeos
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.conftest import async_setup_component
-from tests.typing import WebSocketGenerator
 
 
 async def test_state_attributes(
@@ -256,7 +249,9 @@ async def test_updates_from_players_changed_new_ids(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
 
     # Assert device registry matches current id
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "1")})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "1"), config_entry.entry_id
+    )
     # Assert entity registry matches current id
     assert (
         entity_registry.async_get_entity_id(MEDIA_PLAYER_DOMAIN, DOMAIN, "1")
@@ -272,7 +267,9 @@ async def test_updates_from_players_changed_new_ids(
 
     # Assert device registry identifiers were updated
     assert len(device_registry.devices) == 2
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "101")})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "101"), config_entry.entry_id
+    )
     # Assert entity registry unique id was updated
     assert len(entity_registry.entities) == 2
     assert (
@@ -713,8 +710,11 @@ async def test_group_volume_set(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_GROUP_VOLUME_SET,
-        {ATTR_ENTITY_ID: "media_player.test_player", ATTR_MEDIA_VOLUME_LEVEL: 1},
+        HeosService.GROUP_VOLUME_SET,
+        {
+            CommonServiceArgument.ENTITY_ID: "media_player.test_player",
+            HeosServiceArgument.VOLUME_LEVEL: 1,
+        },
         blocking=True,
     )
     controller.set_group_volume.assert_called_once_with(999, 100)
@@ -733,8 +733,11 @@ async def test_group_volume_set_error(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GROUP_VOLUME_SET,
-            {ATTR_ENTITY_ID: "media_player.test_player", ATTR_MEDIA_VOLUME_LEVEL: 1},
+            HeosService.GROUP_VOLUME_SET,
+            {
+                CommonServiceArgument.ENTITY_ID: "media_player.test_player",
+                HeosServiceArgument.VOLUME_LEVEL: 1,
+            },
             blocking=True,
         )
     controller.set_group_volume.assert_called_once_with(999, 100)
@@ -754,8 +757,11 @@ async def test_group_volume_set_not_grouped_error(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GROUP_VOLUME_SET,
-            {ATTR_ENTITY_ID: "media_player.test_player", ATTR_MEDIA_VOLUME_LEVEL: 1},
+            HeosService.GROUP_VOLUME_SET,
+            {
+                CommonServiceArgument.ENTITY_ID: "media_player.test_player",
+                HeosServiceArgument.VOLUME_LEVEL: 1,
+            },
             blocking=True,
         )
     controller.set_group_volume.assert_not_called()
@@ -769,8 +775,8 @@ async def test_group_volume_down(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_GROUP_VOLUME_DOWN,
-        {ATTR_ENTITY_ID: "media_player.test_player"},
+        HeosService.GROUP_VOLUME_DOWN,
+        {CommonServiceArgument.ENTITY_ID: "media_player.test_player"},
         blocking=True,
     )
     controller.group_volume_down.assert_called_with(999)
@@ -784,15 +790,15 @@ async def test_group_volume_up(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_GROUP_VOLUME_UP,
-        {ATTR_ENTITY_ID: "media_player.test_player"},
+        HeosService.GROUP_VOLUME_UP,
+        {CommonServiceArgument.ENTITY_ID: "media_player.test_player"},
         blocking=True,
     )
     controller.group_volume_up.assert_called_with(999)
 
 
 @pytest.mark.parametrize(
-    "service", [SERVICE_GROUP_VOLUME_DOWN, SERVICE_GROUP_VOLUME_UP]
+    "service", [HeosService.GROUP_VOLUME_DOWN, HeosService.GROUP_VOLUME_UP]
 )
 async def test_group_volume_down_up_ungrouped_raises(
     hass: HomeAssistant,
@@ -1562,7 +1568,7 @@ async def test_browse_media_invalid_content_id(
     [
         (["media_player.test_player_2"], [1, 2]),
         (["media_player.test_player_2", "media_player.test_player"], [1, 2]),
-        (["media_player.test_player"], [1]),
+        (["media_player.test_player"], [1, 2]),
     ],
 )
 async def test_media_player_join_group(
@@ -1585,6 +1591,30 @@ async def test_media_player_join_group(
         blocking=True,
     )
     controller.set_group.assert_called_once_with(expected)
+
+
+async def test_media_player_join_group_keeps_existing_members(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    controller: MockHeos,
+    players: dict[int, HeosPlayer],
+    player_factory: Callable[[int, str, str], HeosPlayer],
+) -> None:
+    """Test joining a player to a group retains the current members."""
+    players[3] = player_factory(3, "Test Player 3", "Speaker")
+    controller.mock_set_players(players)
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_JOIN,
+        {
+            ATTR_ENTITY_ID: "media_player.test_player",
+            ATTR_GROUP_MEMBERS: ["media_player.test_player_3"],
+        },
+        blocking=True,
+    )
+    controller.set_group.assert_called_once_with([1, 2, 3])
 
 
 async def test_media_player_join_group_error(
@@ -1762,9 +1792,9 @@ async def test_get_queue(
     controller.player_get_queue.return_value = queue
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_QUEUE,
+        HeosService.GET_QUEUE,
         {
-            ATTR_ENTITY_ID: "media_player.test_player",
+            CommonServiceArgument.ENTITY_ID: "media_player.test_player",
         },
         blocking=True,
         return_response=True,
@@ -1781,8 +1811,11 @@ async def test_remove_from_queue(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_REMOVE_FROM_QUEUE,
-        {ATTR_ENTITY_ID: "media_player.test_player", ATTR_QUEUE_IDS: [1, "2"]},
+        HeosService.REMOVE_FROM_QUEUE,
+        {
+            CommonServiceArgument.ENTITY_ID: "media_player.test_player",
+            HeosServiceArgument.QUEUE_IDS: [1, "2"],
+        },
         blocking=True,
     )
     controller.player_remove_from_queue.assert_called_once_with(1, [1, 2])
@@ -1796,11 +1829,11 @@ async def test_move_queue_item_queue(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_MOVE_QUEUE_ITEM,
+        HeosService.MOVE_QUEUE_ITEM,
         {
-            ATTR_ENTITY_ID: "media_player.test_player",
-            ATTR_QUEUE_IDS: [1, "2"],
-            ATTR_DESTINATION_POSITION: 10,
+            CommonServiceArgument.ENTITY_ID: "media_player.test_player",
+            HeosServiceArgument.QUEUE_IDS: [1, "2"],
+            HeosServiceArgument.DESTINATION_POSITION: 10,
         },
         blocking=True,
     )
@@ -1820,11 +1853,11 @@ async def test_move_queue_item_queue_error_raises(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_MOVE_QUEUE_ITEM,
+            HeosService.MOVE_QUEUE_ITEM,
             {
-                ATTR_ENTITY_ID: "media_player.test_player",
-                ATTR_QUEUE_IDS: [1, "2"],
-                ATTR_DESTINATION_POSITION: 10,
+                CommonServiceArgument.ENTITY_ID: "media_player.test_player",
+                HeosServiceArgument.QUEUE_IDS: [1, "2"],
+                HeosServiceArgument.DESTINATION_POSITION: 10,
             },
             blocking=True,
         )

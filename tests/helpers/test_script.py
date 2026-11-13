@@ -12,18 +12,23 @@ from unittest import mock
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 from freezegun import freeze_time
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    async_capture_events,
+    async_fire_time_changed,
+    async_mock_service,
+    mock_integration,
+    mock_platform,
+)
 
 # Otherwise can't test just this file (import order issue)
 from homeassistant import config_entries, exceptions
 from homeassistant.components import scene
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_DEVICE_ID,
-    CONF_DOMAIN,
-    SERVICE_TURN_ON,
-)
+from homeassistant.components.device_automation import InvalidDeviceAutomationConfig
+from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CommonServiceArgument
 from homeassistant.core import (
     Context,
     CoreState,
@@ -44,19 +49,9 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.condition import Condition
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.helpers.typing import Undefined
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    async_capture_events,
-    async_fire_time_changed,
-    async_mock_service,
-    mock_integration,
-    mock_platform,
-)
 
 ENTITY_ID = "script.test"
 
@@ -453,7 +448,7 @@ async def test_service_response_data_errors(
     )
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
 
-    with pytest.raises(vol.Invalid, match=expected_error):
+    with pytest.raises(probatio.Invalid, match=expected_error):
         await script_obj.async_run(context=context)
 
 
@@ -636,7 +631,7 @@ async def test_activating_scene(
 ) -> None:
     """Test the activation of a scene."""
     context = Context()
-    calls = async_mock_service(hass, scene.DOMAIN, SERVICE_TURN_ON)
+    calls = async_mock_service(hass, scene.DOMAIN, scene.SceneService.TURN_ON)
 
     alias = "scene step"
     sequence = cv.SCRIPT_SCHEMA({"alias": alias, "scene": "scene.hello"})
@@ -647,7 +642,7 @@ async def test_activating_scene(
 
     assert len(calls) == 1
     assert calls[0].context is context
-    assert calls[0].data.get(ATTR_ENTITY_ID) == "scene.hello"
+    assert calls[0].data.get(CommonServiceArgument.ENTITY_ID) == "scene.hello"
     assert f"Executing step {alias}" in caplog.text
 
     assert_action_trace(
@@ -868,7 +863,8 @@ async def test_delay_template_invalid(
                 {
                     "error": (
                         "offset  should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F'"
-                    )
+                    ),
+                    "template_errors": ["'invalid_delay' is undefined"],
                 }
             ],
         },
@@ -933,7 +929,12 @@ async def test_delay_template_complex_invalid(
     assert_action_trace(
         {
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
-            "1": [{"error": "expected float for dictionary value @ data['seconds']"}],
+            "1": [
+                {
+                    "error": "expected float at 'seconds'",
+                    "template_errors": ["'invalid_delay' is undefined"],
+                }
+            ],
         },
         expected_script_execution="aborted",
     )
@@ -2646,7 +2647,12 @@ async def test_repeat_for_each_invalid_template(
 
     assert_action_trace(
         {
-            "0": [{"error": "Repeat 'for_each' must be a list of items"}],
+            "0": [
+                {
+                    "error": "Repeat 'for_each' must be a list of items",
+                    "template_errors": ["'Muhaha' is undefined"],
+                }
+            ],
         },
         expected_script_execution="aborted",
     )
@@ -2715,7 +2721,12 @@ async def test_repeat_condition_warning(
     expected_trace[f"0/repeat/{condition}/0"] = [
         {"error": "In 'numeric_state':\n  " + expected_error}
     ]
-    expected_trace[f"0/repeat/{condition}/0/entity_id/0"] = [{"error": expected_error}]
+    expected_trace[f"0/repeat/{condition}/0/entity_id/0"] = [
+        {
+            "error": expected_error,
+            "template_errors": ["'unassigned_variable' is undefined"],
+        }
+    ]
     assert_action_trace(expected_trace)
 
 
@@ -4113,13 +4124,13 @@ async def test_propagate_error_invalid_service_data(hass: HomeAssistant) -> None
     """Test that a script aborts when we send invalid service data."""
     event = "test_event"
     events = async_capture_events(hass, event)
-    calls = async_mock_service(hass, "test", "script", vol.Schema({"text": str}))
+    calls = async_mock_service(hass, "test", "script", probatio.Schema({"text": str}))
     sequence = cv.SCRIPT_SCHEMA(
         [{"action": "test.script", "data": {"text": 1}}, {"event": event}]
     )
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await script_obj.async_run(context=Context())
 
     assert len(events) == 0
@@ -4129,7 +4140,7 @@ async def test_propagate_error_invalid_service_data(hass: HomeAssistant) -> None
     expected_trace = {
         "0": [
             {
-                "error": "expected str for dictionary value @ data['text']",
+                "error": "expected str at 'text'",
                 "result": {
                     "params": {
                         "domain": "test",
@@ -4160,7 +4171,7 @@ async def test_propagate_error_service_exception(hass: HomeAssistant) -> None:
     sequence = cv.SCRIPT_SCHEMA([{"action": "test.script"}, {"event": event}])
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="BROKEN"):
         await script_obj.async_run(context=Context())
 
     assert len(events) == 0
@@ -4292,6 +4303,45 @@ async def test_referenced_labels(hass: HomeAssistant) -> None:
                     ],
                 },
                 {
+                    "repeat": {
+                        "count": 3,
+                        "sequence": [
+                            {
+                                "action": "test.script",
+                                "data": {"label_id": "label_repeat_count_seq"},
+                            }
+                        ],
+                    },
+                },
+                {
+                    "repeat": {
+                        "while": {
+                            "condition": "light.is_on",
+                            "target": {"label_id": "label_repeat_while_cond"},
+                        },
+                        "sequence": [
+                            {
+                                "action": "test.script",
+                                "data": {"label_id": "label_repeat_while_seq"},
+                            }
+                        ],
+                    },
+                },
+                {
+                    "repeat": {
+                        "until": {
+                            "condition": "light.is_on",
+                            "target": {"label_id": "label_repeat_until_cond"},
+                        },
+                        "sequence": [
+                            {
+                                "action": "test.script",
+                                "data": {"label_id": "label_repeat_until_seq"},
+                            }
+                        ],
+                    },
+                },
+                {
                     "wait_for_trigger": {
                         "platform": "state",
                         "entity_id": "sensor.test",
@@ -4329,6 +4379,11 @@ async def test_referenced_labels(hass: HomeAssistant) -> None:
         "label_in_data_template",
         "label_in_target",
         "label_parallel",
+        "label_repeat_count_seq",
+        "label_repeat_until_cond",
+        "label_repeat_until_seq",
+        "label_repeat_while_cond",
+        "label_repeat_while_seq",
         "label_sequence",
         "label_service_list_1",
         "label_service_list_2",
@@ -4446,6 +4501,45 @@ async def test_referenced_floors(hass: HomeAssistant) -> None:
                     ],
                 },
                 {
+                    "repeat": {
+                        "count": 3,
+                        "sequence": [
+                            {
+                                "action": "test.script",
+                                "data": {"floor_id": "floor_repeat_count_seq"},
+                            }
+                        ],
+                    },
+                },
+                {
+                    "repeat": {
+                        "while": {
+                            "condition": "light.is_on",
+                            "target": {"floor_id": "floor_repeat_while_cond"},
+                        },
+                        "sequence": [
+                            {
+                                "action": "test.script",
+                                "data": {"floor_id": "floor_repeat_while_seq"},
+                            }
+                        ],
+                    },
+                },
+                {
+                    "repeat": {
+                        "until": {
+                            "condition": "light.is_on",
+                            "target": {"floor_id": "floor_repeat_until_cond"},
+                        },
+                        "sequence": [
+                            {
+                                "action": "test.script",
+                                "data": {"floor_id": "floor_repeat_until_seq"},
+                            }
+                        ],
+                    },
+                },
+                {
                     "wait_for_trigger": {
                         "platform": "state",
                         "entity_id": "sensor.test",
@@ -4483,6 +4577,11 @@ async def test_referenced_floors(hass: HomeAssistant) -> None:
         "floor_in_data_template",
         "floor_in_target",
         "floor_parallel",
+        "floor_repeat_count_seq",
+        "floor_repeat_until_cond",
+        "floor_repeat_until_seq",
+        "floor_repeat_while_cond",
+        "floor_repeat_while_seq",
         "floor_sequence",
         "floor_service_list",
         "floor_service_not_list",
@@ -4599,6 +4698,45 @@ async def test_referenced_areas(hass: HomeAssistant) -> None:
                     ],
                 },
                 {
+                    "repeat": {
+                        "count": 3,
+                        "sequence": [
+                            {
+                                "action": "test.script",
+                                "data": {"area_id": "area_repeat_count_seq"},
+                            }
+                        ],
+                    },
+                },
+                {
+                    "repeat": {
+                        "while": {
+                            "condition": "light.is_on",
+                            "target": {"area_id": "area_repeat_while_cond"},
+                        },
+                        "sequence": [
+                            {
+                                "action": "test.script",
+                                "data": {"area_id": "area_repeat_while_seq"},
+                            }
+                        ],
+                    },
+                },
+                {
+                    "repeat": {
+                        "until": {
+                            "condition": "light.is_on",
+                            "target": {"area_id": "area_repeat_until_cond"},
+                        },
+                        "sequence": [
+                            {
+                                "action": "test.script",
+                                "data": {"area_id": "area_repeat_until_seq"},
+                            }
+                        ],
+                    },
+                },
+                {
                     "wait_for_trigger": {
                         "platform": "state",
                         "entity_id": "sensor.test",
@@ -4636,6 +4774,11 @@ async def test_referenced_areas(hass: HomeAssistant) -> None:
         "area_in_data_template",
         "area_in_target",
         "area_parallel",
+        "area_repeat_count_seq",
+        "area_repeat_until_cond",
+        "area_repeat_until_seq",
+        "area_repeat_while_cond",
+        "area_repeat_while_seq",
         "area_sequence",
         "area_service_list",
         "area_service_not_list",
@@ -4686,6 +4829,18 @@ async def test_referenced_entities(hass: HomeAssistant) -> None:
                 {"action": "test.script", "data": {"without": "entity_id"}},
                 {"scene": "scene.hello"},
                 {
+                    "domain": "light",
+                    "device_id": "abcdefgh",
+                    "entity_id": "light.device_action",
+                    "type": "turn_on",
+                },
+                {
+                    "domain": "light",
+                    "device_id": "abcdefgh",
+                    "entity_id": "1234567890abcdef1234567890abcdef",
+                    "type": "turn_on",
+                },
+                {
                     "choose": [
                         {
                             "conditions": "{{ states.light.choice_1_cond == 'on' }}",
@@ -4718,6 +4873,14 @@ async def test_referenced_entities(hass: HomeAssistant) -> None:
                     ],
                 },
                 {"event": "test_event"},
+                {
+                    "event": "test_event",
+                    "event_data": {"entity_id": "light.event_data"},
+                },
+                {
+                    "event": "test_event",
+                    "event_data": {"entity_id": "not-a-valid-entity-id"},
+                },
                 {"delay": "{{ delay_period }}"},
                 {
                     "if": [],
@@ -4764,6 +4927,47 @@ async def test_referenced_entities(hass: HomeAssistant) -> None:
                     ],
                 },
                 {
+                    "repeat": {
+                        "count": 3,
+                        "sequence": [
+                            {
+                                "action": "test.script",
+                                "data": {"entity_id": "light.repeat_count_seq"},
+                            }
+                        ],
+                    },
+                },
+                {
+                    "repeat": {
+                        "while": {
+                            "condition": "state",
+                            "entity_id": "sensor.repeat_while_cond",
+                            "state": "100",
+                        },
+                        "sequence": [
+                            {
+                                "action": "test.script",
+                                "data": {"entity_id": "light.repeat_while_seq"},
+                            }
+                        ],
+                    },
+                },
+                {
+                    "repeat": {
+                        "until": {
+                            "condition": "state",
+                            "entity_id": "sensor.repeat_until_cond",
+                            "state": "100",
+                        },
+                        "sequence": [
+                            {
+                                "action": "test.script",
+                                "data": {"entity_id": "light.repeat_until_seq"},
+                            }
+                        ],
+                    },
+                },
+                {
                     "wait_for_trigger": {
                         "platform": "state",
                         "entity_id": ["sensor.wait_trigger_state"],
@@ -4792,15 +4996,22 @@ async def test_referenced_entities(hass: HomeAssistant) -> None:
         "light.condition_list_2",
         "light.condition_target",
         "light.default_seq",
+        "light.device_action",
         "light.direct_entity_referenced",
         "light.entity_in_data_template",
         "light.entity_in_target",
+        "light.event_data",
         "light.service_list",
         "light.service_not_list",
         "light.if_then",
         "light.if_else",
         "light.parallel",
+        "light.repeat_count_seq",
+        "light.repeat_until_seq",
+        "light.repeat_while_seq",
         "light.sequence",
+        "sensor.repeat_until_cond",
+        "sensor.repeat_while_cond",
         # "light.service_template",  # no entity extraction from template
         "scene.hello",
         "sensor.condition",
@@ -4924,11 +5135,57 @@ async def test_referenced_devices(hass: HomeAssistant) -> None:
                     ],
                 },
                 {
+                    "repeat": {
+                        "count": 3,
+                        "sequence": [
+                            {
+                                "action": "test.script",
+                                "target": {"device_id": "repeat-count-seq-device"},
+                            }
+                        ],
+                    },
+                },
+                {
+                    "repeat": {
+                        "while": {
+                            "condition": "device",
+                            "device_id": "repeat-while-cond-dev-id",
+                            "domain": "switch",
+                        },
+                        "sequence": [
+                            {
+                                "action": "test.script",
+                                "target": {"device_id": "repeat-while-seq-device"},
+                            }
+                        ],
+                    },
+                },
+                {
+                    "repeat": {
+                        "until": {
+                            "condition": "device",
+                            "device_id": "repeat-until-cond-dev-id",
+                            "domain": "switch",
+                        },
+                        "sequence": [
+                            {
+                                "action": "test.script",
+                                "target": {"device_id": "repeat-until-seq-device"},
+                            }
+                        ],
+                    },
+                },
+                {
                     "wait_for_trigger": {
                         "platform": "device",
                         "device_id": "wait-trigger-device",
                         "domain": "switch",
                     },
+                },
+                {"event": "test_event"},
+                {
+                    "event": "test_event",
+                    "event_data": {"device_id": "event-data-device"},
                 },
                 {
                     "wait_for_trigger": {
@@ -4966,6 +5223,7 @@ async def test_referenced_devices(hass: HomeAssistant) -> None:
         "data-string-id",
         "data-template-string-id",
         "default-device-target",
+        "event-data-device",
         "script-dev-id",
         "target-list-id-1",
         "target-list-id-2",
@@ -4973,6 +5231,11 @@ async def test_referenced_devices(hass: HomeAssistant) -> None:
         "if-then",
         "if-else",
         "parallel-device",
+        "repeat-count-seq-device",
+        "repeat-until-cond-dev-id",
+        "repeat-until-seq-device",
+        "repeat-while-cond-dev-id",
+        "repeat-while-seq-device",
         "sequence-device",
         "wait-trigger-device",
         "wait-trigger-target",
@@ -5723,7 +5986,7 @@ async def test_validate_action_config(
             validated_config[action_type] = await script.async_validate_action_config(
                 hass, validated_config[action_type]
             )
-        except vol.Invalid as err:
+        except probatio.Invalid as err:
             pytest.fail(f"{action_type} config invalid: {err}")
 
     # Verify non-static actions have validated
@@ -5967,6 +6230,438 @@ async def test_platform_async_validate_action_config(hass: HomeAssistant) -> Non
     ) as device_automation_validate_action_mock:
         await script.async_validate_action_config(hass, config)
         device_automation_validate_action_mock.assert_awaited()
+
+
+_VALID_ACTION = {"event": "test_event"}
+_VALID_CONDITION = {"condition": "state", "entity_id": "light.kitchen", "state": "on"}
+_VALID_TRIGGER = {"trigger": "event", "event_type": "test_event"}
+_INVALID_CONDITION = {
+    "condition": "state",
+    "entity_id": "0123456789abcdef0123456789abcdef",
+    "state": "on",
+}
+_INVALID_CONDITION_ERROR = (
+    "Unknown entity registry entry 0123456789abcdef0123456789abcdef"
+)
+_INVALID_TRIGGER = {"trigger": "non_existing"}
+_INVALID_TRIGGER_ERROR = "Invalid trigger 'non_existing' specified"
+_INVALID_DEVICE_ACTION = {"device_id": "abc", "domain": "light", "type": "turn_on"}
+_INVALID_DEVICE_ACTION_ERROR = "Unknown device 'abc'"
+_NESTED_INVALID_TRIGGER = {
+    "if": [],
+    "then": {
+        "choose": {
+            "conditions": [],
+            "sequence": {
+                "repeat": {
+                    "count": 2,
+                    "sequence": {
+                        "parallel": [
+                            [
+                                {
+                                    "sequence": {
+                                        "if": [],
+                                        "then": [],
+                                        "else": {"wait_for_trigger": _INVALID_TRIGGER},
+                                    }
+                                }
+                            ]
+                        ]
+                    },
+                }
+            },
+        }
+    },
+}
+
+
+@pytest.mark.parametrize(
+    ("actions", "expected_exception", "expected_error", "expected_path"),
+    [
+        pytest.param(
+            [_VALID_ACTION, _INVALID_CONDITION],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [1],
+            id="action_list",
+        ),
+        pytest.param(
+            [{"if": [_VALID_CONDITION, _INVALID_CONDITION], "then": []}],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [0, "if", 1],
+            id="if",
+        ),
+        pytest.param(
+            [{"if": [], "then": [_VALID_ACTION, _INVALID_CONDITION]}],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [0, "then", 1],
+            id="then",
+        ),
+        pytest.param(
+            [{"if": [], "then": [], "else": [_VALID_ACTION, _INVALID_CONDITION]}],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [0, "else", 1],
+            id="else",
+        ),
+        pytest.param(
+            [
+                {
+                    "choose": [
+                        {"conditions": [], "sequence": []},
+                        {"conditions": [_INVALID_CONDITION], "sequence": []},
+                    ]
+                }
+            ],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [0, "choose", 1, "conditions", 0],
+            id="choose_list_conditions",
+        ),
+        pytest.param(
+            [
+                {
+                    "choose": [
+                        {"conditions": [], "sequence": []},
+                        {"conditions": [], "sequence": [_INVALID_CONDITION]},
+                    ]
+                }
+            ],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [0, "choose", 1, "sequence", 0],
+            id="choose_list_sequence",
+        ),
+        pytest.param(
+            [{"choose": {"conditions": _INVALID_CONDITION, "sequence": []}}],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [0, "choose", 0, "conditions", 0],
+            id="choose_single_conditions",
+        ),
+        pytest.param(
+            [{"choose": {"conditions": [], "sequence": _INVALID_CONDITION}}],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [0, "choose", 0, "sequence", 0],
+            id="choose_single_sequence",
+        ),
+        pytest.param(
+            [{"choose": [], "default": [_VALID_ACTION, _INVALID_CONDITION]}],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [0, "default", 1],
+            id="choose_default",
+        ),
+        pytest.param(
+            [{"repeat": {"while": [_INVALID_CONDITION], "sequence": []}}],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [0, "repeat", "while", 0],
+            id="repeat_while",
+        ),
+        pytest.param(
+            [{"repeat": {"until": [_INVALID_CONDITION], "sequence": []}}],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [0, "repeat", "until", 0],
+            id="repeat_until",
+        ),
+        pytest.param(
+            [{"repeat": {"count": 2, "sequence": [_INVALID_CONDITION]}}],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [0, "repeat", "sequence", 0],
+            id="repeat_sequence",
+        ),
+        pytest.param(
+            [{"parallel": [_VALID_ACTION, _INVALID_CONDITION]}],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [0, "parallel", 1, "sequence", 0],
+            id="parallel_action",
+        ),
+        pytest.param(
+            [{"parallel": [[_VALID_ACTION, _INVALID_CONDITION]]}],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [0, "parallel", 0, "sequence", 1],
+            id="parallel_action_list",
+        ),
+        pytest.param(
+            [{"parallel": [{"sequence": [_VALID_ACTION, _INVALID_CONDITION]}]}],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [0, "parallel", 0, "sequence", 1],
+            id="parallel_sequence",
+        ),
+        pytest.param(
+            [{"sequence": [_VALID_ACTION, _INVALID_CONDITION]}],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [0, "sequence", 1],
+            id="sequence",
+        ),
+        pytest.param(
+            [{"wait_for_trigger": [_VALID_TRIGGER, _INVALID_TRIGGER]}],
+            probatio.Invalid,
+            _INVALID_TRIGGER_ERROR,
+            [0, "wait_for_trigger", 1],
+            id="wait_for_trigger",
+        ),
+        pytest.param(
+            [{"wait_for_trigger": [{"trigger": "numeric_state", "above": 1}]}],
+            probatio.MultipleInvalid,
+            "required key not provided",
+            [0, "wait_for_trigger", 0, "entity_id"],
+            id="wait_for_trigger_platform_path",
+        ),
+        pytest.param(
+            [
+                {
+                    "condition": "and",
+                    "conditions": [_VALID_CONDITION, _INVALID_CONDITION],
+                }
+            ],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [0, "conditions", 1],
+            id="condition_and",
+        ),
+        pytest.param(
+            [{"or": [_VALID_CONDITION, _INVALID_CONDITION]}],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [0, "conditions", 1],
+            id="condition_or_shorthand",
+        ),
+        pytest.param(
+            [_NESTED_INVALID_TRIGGER],
+            probatio.Invalid,
+            _INVALID_TRIGGER_ERROR,
+            [
+                *(0, "then"),
+                *(0, "choose", 0, "sequence"),
+                *(0, "repeat", "sequence"),
+                *(0, "parallel", 0, "sequence"),
+                *(0, "sequence"),
+                *(0, "else"),
+                *(0, "wait_for_trigger"),
+                0,
+            ],
+            id="nested_7_levels",
+        ),
+    ],
+)
+async def test_validate_actions_config_error_path(
+    hass: HomeAssistant,
+    actions: list[dict[str, Any]],
+    expected_exception: type[probatio.Invalid],
+    expected_error: str,
+    expected_path: list[str | int],
+) -> None:
+    """Test a probatio.Invalid error is located in the validated actions."""
+    config = cv.SCRIPT_SCHEMA(actions)
+
+    with pytest.raises(probatio.Invalid) as exc_info:
+        await script.async_validate_actions_config(hass, config)
+
+    assert type(exc_info.value) is expected_exception
+    assert exc_info.value.error_message == expected_error
+    assert exc_info.value.path == expected_path
+
+
+@pytest.mark.parametrize(
+    ("actions", "expected_exception", "expected_error"),
+    [
+        pytest.param(
+            [_VALID_ACTION, _INVALID_DEVICE_ACTION],
+            InvalidDeviceAutomationConfig,
+            _INVALID_DEVICE_ACTION_ERROR,
+            id="action_list",
+        ),
+        pytest.param(
+            [{"if": [], "then": [{"parallel": [_INVALID_DEVICE_ACTION]}]}],
+            InvalidDeviceAutomationConfig,
+            _INVALID_DEVICE_ACTION_ERROR,
+            id="nested_action",
+        ),
+        pytest.param(
+            [{"repeat": {"while": [{"condition": "non_existing"}], "sequence": []}}],
+            HomeAssistantError,
+            'Invalid condition "non_existing" specified',
+            id="nested_condition",
+        ),
+    ],
+)
+async def test_validate_actions_config_homeassistant_error(
+    hass: HomeAssistant,
+    actions: list[dict[str, Any]],
+    expected_exception: type[HomeAssistantError],
+    expected_error: str,
+) -> None:
+    """Test a HomeAssistantError keeps its type and message."""
+    config = cv.SCRIPT_SCHEMA(actions)
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await script.async_validate_actions_config(hass, config)
+
+    assert type(exc_info.value) is expected_exception
+    assert str(exc_info.value) == expected_error
+
+
+@pytest.mark.parametrize(
+    ("action_type", "action", "expected_key"),
+    [
+        pytest.param(cv.SCRIPT_ACTION_IF, {"then": []}, "if", id="if"),
+        pytest.param(cv.SCRIPT_ACTION_IF, {"if": []}, "then", id="then"),
+        pytest.param(
+            cv.SCRIPT_ACTION_CHOOSE,
+            {"choose": [{"sequence": []}]},
+            "conditions",
+            id="choose_conditions",
+        ),
+        pytest.param(
+            cv.SCRIPT_ACTION_CHOOSE,
+            {"choose": [{"conditions": []}]},
+            "sequence",
+            id="choose_sequence",
+        ),
+        pytest.param(
+            cv.SCRIPT_ACTION_PARALLEL,
+            {"parallel": [{"sequence": []}, {}]},
+            "sequence",
+            id="parallel_sequence",
+        ),
+        pytest.param(
+            cv.SCRIPT_ACTION_REPEAT,
+            {"repeat": {"count": 2}},
+            "sequence",
+            id="repeat_sequence",
+        ),
+        pytest.param(cv.SCRIPT_ACTION_SEQUENCE, {}, "sequence", id="sequence"),
+        pytest.param(
+            cv.SCRIPT_ACTION_WAIT_FOR_TRIGGER,
+            {},
+            "wait_for_trigger",
+            id="wait_for_trigger",
+        ),
+    ],
+)
+async def test_validate_action_config_missing_required_block(
+    hass: HomeAssistant, action_type: str, action: dict[str, Any], expected_key: str
+) -> None:
+    """Test a block required by the schema is not skipped when it is missing."""
+    with (
+        patch(
+            "homeassistant.helpers.config_validation.determine_script_action",
+            return_value=action_type,
+        ),
+        pytest.raises(KeyError) as exc_info,
+    ):
+        await script.async_validate_action_config(hass, action)
+
+    assert exc_info.value.args == (expected_key,)
+
+
+@pytest.mark.parametrize(
+    ("action", "expected_exception", "expected_error"),
+    [
+        pytest.param(
+            {
+                "if": [_INVALID_CONDITION],
+                "then": [_INVALID_DEVICE_ACTION],
+                "else": [{"wait_for_trigger": [_INVALID_TRIGGER]}],
+            },
+            probatio.Invalid,
+            f"{_INVALID_CONDITION_ERROR} at '[0].if[0]'",
+            id="if_before_then",
+        ),
+        pytest.param(
+            {
+                "if": [],
+                "then": [_INVALID_DEVICE_ACTION],
+                "else": [{"wait_for_trigger": [_INVALID_TRIGGER]}],
+            },
+            InvalidDeviceAutomationConfig,
+            _INVALID_DEVICE_ACTION_ERROR,
+            id="then_before_else",
+        ),
+        pytest.param(
+            {
+                "choose": [
+                    {"conditions": [_INVALID_CONDITION], "sequence": []},
+                ],
+                "default": [_INVALID_DEVICE_ACTION],
+            },
+            InvalidDeviceAutomationConfig,
+            _INVALID_DEVICE_ACTION_ERROR,
+            id="choose_default_before_options",
+        ),
+        pytest.param(
+            {
+                "choose": [
+                    {
+                        "conditions": [_INVALID_CONDITION],
+                        "sequence": [_INVALID_DEVICE_ACTION],
+                    },
+                ],
+            },
+            probatio.Invalid,
+            f"{_INVALID_CONDITION_ERROR} at '[0].choose[0].conditions[0]'",
+            id="choose_conditions_before_sequence",
+        ),
+        pytest.param(
+            {
+                "choose": [
+                    {"conditions": [], "sequence": [_INVALID_DEVICE_ACTION]},
+                    {"conditions": [_INVALID_CONDITION], "sequence": []},
+                ],
+            },
+            InvalidDeviceAutomationConfig,
+            _INVALID_DEVICE_ACTION_ERROR,
+            id="choose_option_sequence_before_next_option_conditions",
+        ),
+        pytest.param(
+            {
+                "repeat": {
+                    "until": [_INVALID_CONDITION],
+                    "sequence": [_INVALID_DEVICE_ACTION],
+                }
+            },
+            probatio.Invalid,
+            f"{_INVALID_CONDITION_ERROR} at '[0].repeat.until[0]'",
+            id="repeat_until_before_sequence",
+        ),
+        pytest.param(
+            {
+                "parallel": [
+                    {"sequence": [_INVALID_DEVICE_ACTION]},
+                    {"sequence": [{"wait_for_trigger": [_INVALID_TRIGGER]}]},
+                ]
+            },
+            InvalidDeviceAutomationConfig,
+            _INVALID_DEVICE_ACTION_ERROR,
+            id="parallel_branches_in_order",
+        ),
+    ],
+)
+async def test_validate_action_config_first_error(
+    hass: HomeAssistant,
+    action: dict[str, Any],
+    expected_exception: type[Exception],
+    expected_error: str,
+) -> None:
+    """Test which error is raised when several nested blocks are invalid."""
+    config = cv.SCRIPT_SCHEMA([action])
+
+    with pytest.raises(expected_exception) as exc_info:
+        await script.async_validate_actions_config(hass, config)
+
+    assert type(exc_info.value) is expected_exception
+    assert str(exc_info.value) == expected_error
 
 
 async def test_stop_action(
@@ -6332,7 +7027,7 @@ async def test_continue_on_error_automation_issue(hass: HomeAssistant) -> None:
 
 
 async def test_continue_on_error_unknown_error(hass: HomeAssistant) -> None:
-    """Test continue on error doesn't block unknown errors from e.g., libraries."""
+    """Test continue_on_error with unknown errors bubbling up from service calls."""
 
     class MyLibraryError(Exception):
         """My custom library error."""
@@ -6354,8 +7049,7 @@ async def test_continue_on_error_unknown_error(hass: HomeAssistant) -> None:
     )
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
 
-    with pytest.raises(MyLibraryError):
-        await script_obj.async_run(context=Context())
+    await script_obj.async_run(context=Context())
 
     assert_action_trace(
         {
@@ -6374,7 +7068,7 @@ async def test_continue_on_error_unknown_error(hass: HomeAssistant) -> None:
                 }
             ],
         },
-        expected_script_execution="error",
+        expected_script_execution="finished",
     )
 
 
@@ -6426,16 +7120,139 @@ async def test_disabled_actions(
     )
 
 
-async def test_enabled_error_non_limited_template(hass: HomeAssistant) -> None:
-    """Test that a script aborts when an action enabled uses non-limited template."""
+async def test_enabled_template_uses_state(hass: HomeAssistant) -> None:
+    """Test an action enabled template is rendered with full access to states."""
     event = "test_event"
     events = async_capture_events(hass, event)
     sequence = cv.SCRIPT_SCHEMA(
         [
             {
                 "event": event,
-                "enabled": "{{ states('sensor.limited') }}",
+                "enabled": "{{ states('input_boolean.run_step') == 'on' }}",
             }
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    hass.states.async_set("input_boolean.run_step", "off")
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert len(events) == 0
+    assert_action_trace({"0": [{"result": {"enabled": False}}]})
+
+    # The template is rendered again on each run, so a state change is picked up
+    hass.states.async_set("input_boolean.run_step", "on")
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    assert_action_trace(
+        {"0": [{"result": {"event": event, "event_data": {}}}]},
+    )
+
+
+async def test_enabled_template_uses_variables(hass: HomeAssistant) -> None:
+    """Test an action enabled template is rendered with the run variables."""
+    event = "test_event"
+    events = async_capture_events(hass, event)
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"variables": {"from_sequence": True}},
+            {
+                "alias": "Sequence variable",
+                "event": event,
+                "event_data": {"step": "sequence"},
+                "enabled": "{{ from_sequence }}",
+            },
+            {
+                "alias": "Run variable",
+                "event": event,
+                "event_data": {"step": "run"},
+                "enabled": "{{ from_run }}",
+            },
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    await script_obj.async_run(run_variables={"from_run": False}, context=Context())
+    await hass.async_block_till_done()
+
+    assert [event.data["step"] for event in events] == ["sequence"]
+
+    await script_obj.async_run(run_variables={"from_run": True}, context=Context())
+    await hass.async_block_till_done()
+
+    assert [event.data["step"] for event in events] == ["sequence", "sequence", "run"]
+
+
+async def test_enabled_template_on_condition_step(hass: HomeAssistant) -> None:
+    """Test the enabled template of a condition step uses states and variables."""
+    event = "test_event"
+    events = async_capture_events(hass, event)
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {
+                "condition": "template",
+                "value_template": "{{ condition_passes }}",
+                "enabled": "{{ check_enabled and is_state('input_boolean.check', 'on') }}",
+            },
+            {"event": event},
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+    hass.states.async_set("input_boolean.check", "on")
+
+    # Enabled and passing, so the run continues
+    await script_obj.async_run(
+        run_variables={"check_enabled": True, "condition_passes": True},
+        context=Context(),
+    )
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+
+    # Enabled and failing, so the run stops
+    await script_obj.async_run(
+        run_variables={"check_enabled": True, "condition_passes": False},
+        context=Context(),
+    )
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+
+    # Disabled by a variable, so the failing condition is skipped
+    await script_obj.async_run(
+        run_variables={"check_enabled": False, "condition_passes": False},
+        context=Context(),
+    )
+    await hass.async_block_till_done()
+
+    assert len(events) == 2
+
+    # Disabled by a state change, so the failing condition is skipped
+    hass.states.async_set("input_boolean.check", "off")
+    await script_obj.async_run(
+        run_variables={"check_enabled": True, "condition_passes": False},
+        context=Context(),
+    )
+    await hass.async_block_till_done()
+
+    assert len(events) == 3
+
+
+async def test_enabled_template_error(hass: HomeAssistant) -> None:
+    """Test that a script aborts when an action enabled template fails to render."""
+    event = "test_event"
+    events = async_capture_events(hass, event)
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {
+                "event": event,
+                "enabled": "{{ states('sensor.missing') | float }}",
+                "continue_on_error": True,
+            },
+            {"event": event},
         ]
     )
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
@@ -6450,8 +7267,10 @@ async def test_enabled_error_non_limited_template(hass: HomeAssistant) -> None:
         "0": [
             {
                 "error": (
-                    "TemplateError: Use of 'states' is not"
-                    " supported in limited templates"
+                    "ValueError: Template error: float got"
+                    " invalid input 'unknown' when rendering template"
+                    " '{{ states('sensor.missing') | float }}' but no default"
+                    " was specified"
                 )
             }
         ],
@@ -6630,7 +7449,7 @@ async def test_conversation_response_not_set(
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
 
     result = await script_obj.async_run(context=Context())
-    assert result.conversation_response is UNDEFINED
+    assert result.conversation_response is Undefined
 
     assert_action_trace({})
 
@@ -6745,6 +7564,32 @@ async def test_conversation_response_not_set_subscript_if(
         "1/if/condition/0": [{"result": {"result": var == 1, "entities": []}}],
     }
     assert_action_trace(expected_trace)
+
+
+async def test_conversation_response_nested_with_stop(
+    hass: HomeAssistant,
+) -> None:
+    """Test setting conversation response in a child block with a stop."""
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {
+                "choose": {
+                    "conditions": {
+                        "condition": "template",
+                        "value_template": "{{ true }}",
+                    },
+                    "sequence": [
+                        {"set_conversation_response": "{{ 'conversation response' }}"},
+                        {"stop": "stop response"},
+                    ],
+                },
+            },
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    result = await script_obj.async_run(context=Context())
+    assert result.conversation_response == "conversation response"
 
 
 async def test_stopping_run_before_starting(

@@ -3,7 +3,7 @@
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from mullvad_api import MullvadAPI
 
@@ -33,6 +33,7 @@ class MullvadCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=timedelta(minutes=1),
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from Mullvad API."""
         async with asyncio.timeout(10):

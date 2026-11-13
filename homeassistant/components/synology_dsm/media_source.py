@@ -2,7 +2,7 @@
 
 from logging import getLogger
 import mimetypes
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from aiohttp import web
 from synology_dsm.api.photos import SynoPhotosAlbum, SynoPhotosItem
@@ -17,7 +17,6 @@ from homeassistant.components.media_source import (
     PlayMedia,
     Unresolvable,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN, SHARED_SUFFIX
@@ -70,12 +69,15 @@ class SynologyPhotosMediaSource(MediaSource):
 
     name = "Synology Photos"
 
-    def __init__(self, hass: HomeAssistant, entries: list[ConfigEntry]) -> None:
+    def __init__(
+        self, hass: HomeAssistant, entries: list[SynologyDSMConfigEntry]
+    ) -> None:
         """Initialize Synology source."""
         super().__init__(DOMAIN)
         self.hass = hass
         self.entries = entries
 
+    @override
     async def async_browse_media(
         self,
         item: MediaSourceItem,
@@ -225,6 +227,7 @@ class SynologyPhotosMediaSource(MediaSource):
                 )
         return ret
 
+    @override
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media to a url."""
         identifier = SynologyPhotosMediaSourceIdentifier(item.identifier)

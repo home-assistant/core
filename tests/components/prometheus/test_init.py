@@ -1,7 +1,7 @@
 """The tests for the Prometheus exporter."""
 
 from dataclasses import dataclass
-import datetime
+import datetime as dt
 from http import HTTPStatus
 from typing import Any
 from unittest import mock
@@ -10,6 +10,8 @@ from freezegun import freeze_time
 import prometheus_client
 from prometheus_client.utils import floatToGoString
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components import (
     alarm_control_panel,
@@ -76,10 +78,8 @@ from homeassistant.const import (
     ATTR_MODE,
     ATTR_TEMPERATURE,
     ATTR_UNIT_OF_MEASUREMENT,
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONTENT_TYPE_TEXT_PLAIN,
     DEGREE,
-    PERCENTAGE,
     STATE_CLOSED,
     STATE_CLOSING,
     STATE_HOME,
@@ -90,8 +90,10 @@ from homeassistant.const import (
     STATE_OPENING,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    UnitOfDensity,
     UnitOfEnergy,
     UnitOfLength,
+    UnitOfRatio,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -103,9 +105,6 @@ from homeassistant.helpers import (
 )
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry
-from tests.typing import ClientSessionGenerator
 
 PROMETHEUS_PATH = "homeassistant.components.prometheus"
 
@@ -833,6 +832,13 @@ async def test_climate(
     ).withValue(0.0).assert_in_metrics(body)
 
     EntityMetric(
+        metric_name="climate_current_temperature_celsius",
+        domain="climate",
+        friendly_name="Fritz!DECT",
+        entity="climate.fritzdect",
+    ).withValue(25.0).assert_in_metrics(body)
+
+    EntityMetric(
         metric_name="climate_preset_mode",
         domain="climate",
         friendly_name="Ecobee",
@@ -947,6 +953,20 @@ async def test_water_heater(
         domain="water_heater",
         friendly_name="Geyser",
         entity="water_heater.geyser",
+    ).withValue(60.0).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="water_heater_current_temperature_celsius",
+        domain="water_heater",
+        friendly_name="Boiler",
+        entity="water_heater.boiler",
+    ).withValue(55.0).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="water_heater_temperature_celsius",
+        domain="water_heater",
+        friendly_name="Boiler",
+        entity="water_heater.boiler",
     ).withValue(60.0).assert_in_metrics(body)
 
     EntityMetric(
@@ -2023,7 +2043,7 @@ async def sensor_fixture(
         domain=sensor.DOMAIN,
         platform="test",
         unique_id="sensor_2",
-        unit_of_measurement=PERCENTAGE,
+        unit_of_measurement=UnitOfRatio.PERCENTAGE,
         original_device_class=SensorDeviceClass.HUMIDITY,
         suggested_object_id="outside_humidity",
         original_name="Outside Humidity",
@@ -2040,7 +2060,7 @@ async def sensor_fixture(
         suggested_object_id="radio_energy",
         original_name="Radio Energy",
     )
-    with freeze_time(datetime.datetime(1970, 1, 2, tzinfo=dt_util.UTC)):
+    with freeze_time(dt.datetime(1970, 1, 2, tzinfo=dt_util.UTC)):
         set_state_with_entry(hass, sensor_3, 14)
     data["sensor_3"] = sensor_3
 
@@ -2081,7 +2101,7 @@ async def sensor_fixture(
         domain=sensor.DOMAIN,
         platform="test",
         unique_id="sensor_7",
-        unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         suggested_object_id="sps30_pm_1um_weight_concentration",
         original_name="SPS30 PM <1µm Weight concentration",
     )
@@ -2163,6 +2183,7 @@ async def climate_fixture(
         ATTR_TEMPERATURE: 20,
         ATTR_CURRENT_TEMPERATURE: 25,
         ATTR_HVAC_ACTION: climate.HVACAction.HEATING,
+        climate.ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
     }
     set_state_with_entry(
         hass, climate_1, climate.HVACAction.HEATING, climate_1_attributes
@@ -2189,6 +2210,7 @@ async def climate_fixture(
         ATTR_PRESET_MODES: ["away", "home", "sleep"],
         ATTR_FAN_MODE: "auto",
         ATTR_FAN_MODES: ["auto", "on"],
+        climate.ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
     }
     set_state_with_entry(
         hass, climate_2, climate.HVACAction.HEATING, climate_2_attributes
@@ -2205,9 +2227,12 @@ async def climate_fixture(
         original_name="Fritz!DECT",
     )
     climate_3_attributes = {
-        ATTR_TEMPERATURE: 0,
-        ATTR_CURRENT_TEMPERATURE: 22,
+        ATTR_TEMPERATURE: 32,
+        ATTR_CURRENT_TEMPERATURE: 77,
         ATTR_HVAC_ACTION: climate.HVACAction.OFF,
+        climate.ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: (
+            UnitOfTemperature.FAHRENHEIT
+        ),
     }
     set_state_with_entry(hass, climate_3, climate.HVACAction.OFF, climate_3_attributes)
     data["climate_3"] = climate_3
@@ -2296,10 +2321,31 @@ async def water_heater_fixture(
         WATER_HEATER_ATTR_OPERATION_MODE: "eco",
         WATER_HEATER_ATTR_OPERATION_LIST: ["eco", "performance"],
         WATER_HEATER_ATTR_AWAY_MODE: "on",
+        water_heater.WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: (
+            UnitOfTemperature.CELSIUS
+        ),
     }
     set_state_with_entry(hass, wh_1, "eco", wh_attributes)
     data["water_heater_1"] = wh_1
     data["water_heater_1_attributes"] = wh_attributes
+
+    wh_2 = entity_registry.async_get_or_create(
+        domain=water_heater.DOMAIN,
+        platform="test",
+        unique_id="water_heater_2",
+        suggested_object_id="boiler",
+        original_name="Boiler",
+    )
+    wh_2_attributes = {
+        WATER_HEATER_ATTR_CURRENT_TEMPERATURE: 131,
+        ATTR_TEMPERATURE: 140,
+        water_heater.WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: (
+            UnitOfTemperature.FAHRENHEIT
+        ),
+    }
+    set_state_with_entry(hass, wh_2, "eco", wh_2_attributes)
+    data["water_heater_2"] = wh_2
+    data["water_heater_2_attributes"] = wh_2_attributes
 
     await hass.async_block_till_done()
     return data
@@ -3274,6 +3320,115 @@ async def test_area_in_device(
     body = await generate_latest_metrics(client)
     entity_area_metric.assert_not_in_metrics(body)
     device_area_metric.assert_not_in_metrics(body)
+
+
+@pytest.mark.parametrize("namespace", [""])
+async def test_area_inherited_from_parent_device(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    client: ClientSessionGenerator,
+) -> None:
+    """Test an entity on a child device inherits the parent device's area."""
+    config_entry = MockConfigEntry()
+    config_entry.add_to_hass(hass)
+
+    area = area_registry.async_create("Parent Area")
+    parent = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("prometheus", "parent")},
+    )
+    device_registry.async_update_device(parent.id, area_id=area.id)
+    child = device_registry.async_get_or_create_child(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("prometheus", "child")},
+        parent_device_id=parent.id,
+    )
+
+    entity = entity_registry.async_get_or_create(
+        domain=sensor.DOMAIN,
+        platform="test",
+        unique_id="child_sensor",
+        unit_of_measurement=UnitOfTemperature.CELSIUS,
+        original_device_class=SensorDeviceClass.TEMPERATURE,
+        suggested_object_id="child_sensor",
+        original_name="Child Sensor",
+        device_id=child.id,
+    )
+    # The entity is seen for the first time only now, so its area is resolved via the
+    # child device, which has no area of its own and inherits the parent's.
+    set_state_with_entry(hass, entity, 21.0)
+    await hass.async_block_till_done()
+
+    body = await generate_latest_metrics(client)
+    InfoMetric(
+        metric_name="entity_info",
+        entity="sensor.child_sensor",
+        area="parent_area",
+    ).assert_in_metrics(body)
+
+
+@pytest.mark.parametrize("namespace", [""])
+async def test_area_of_child_device_updated_when_parent_area_changes(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    client: ClientSessionGenerator,
+) -> None:
+    """Test a child entity's inherited area is refreshed when the parent moves."""
+    config_entry = MockConfigEntry()
+    config_entry.add_to_hass(hass)
+
+    area_a = area_registry.async_create("Area A")
+    area_b = area_registry.async_create("Area B")
+    parent = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("prometheus", "parent")},
+    )
+    device_registry.async_update_device(parent.id, area_id=area_a.id)
+    child = device_registry.async_get_or_create_child(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("prometheus", "child")},
+        parent_device_id=parent.id,
+    )
+
+    entity = entity_registry.async_get_or_create(
+        domain=sensor.DOMAIN,
+        platform="test",
+        unique_id="child_sensor",
+        unit_of_measurement=UnitOfTemperature.CELSIUS,
+        original_device_class=SensorDeviceClass.TEMPERATURE,
+        suggested_object_id="child_sensor",
+        original_name="Child Sensor",
+        device_id=child.id,
+    )
+    set_state_with_entry(hass, entity, 21.0)
+    await hass.async_block_till_done()
+
+    area_a_metric = InfoMetric(
+        metric_name="entity_info",
+        entity="sensor.child_sensor",
+        area="area_a",
+    )
+    area_b_metric = InfoMetric(
+        metric_name="entity_info",
+        entity="sensor.child_sensor",
+        area="area_b",
+    )
+
+    body = await generate_latest_metrics(client)
+    area_a_metric.assert_in_metrics(body)
+    area_b_metric.assert_not_in_metrics(body)
+
+    # Moving the parent must update the child entity's inherited area.
+    device_registry.async_update_device(parent.id, area_id=area_b.id)
+    await hass.async_block_till_done()
+
+    body = await generate_latest_metrics(client)
+    area_a_metric.assert_not_in_metrics(body)
+    area_b_metric.assert_in_metrics(body)
 
 
 @pytest.mark.parametrize("namespace", [""])

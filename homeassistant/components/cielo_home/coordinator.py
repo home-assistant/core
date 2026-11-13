@@ -3,7 +3,7 @@
 from copy import copy
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Any, Final
+from typing import Any, Final, override
 
 from aiohttp import ClientError
 from cieloconnectapi import CieloClient
@@ -59,6 +59,7 @@ class CieloDataUpdateCoordinator(DataUpdateCoordinator[CieloData]):
             ),
         )
 
+    @override
     async def _async_update_data(self) -> CieloData:
         """Fetch data from the API."""
         try:
@@ -85,7 +86,7 @@ class CieloDataUpdateCoordinator(DataUpdateCoordinator[CieloData]):
         Instead, the coordinator applies the action result locally for the affected
         device and schedules a later refresh to reconcile with the backend state.
         """
-        if not self.data or not self.data.parsed or device_id not in self.data.parsed:
+        if not self.data.parsed or device_id not in self.data.parsed:
             await self.async_request_refresh()
             return
 

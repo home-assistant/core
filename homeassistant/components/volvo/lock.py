@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from volvocarsapi.models import VolvoApiException, VolvoCarsApiBaseModel, VolvoCarsValue
 
@@ -12,7 +12,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import VolvoConfigEntry
+from .coordinator import VolvoConfigEntry, schedule_location_update
 from .entity import VolvoEntity, VolvoEntityDescription
 
 PARALLEL_UPDATES = 0
@@ -65,16 +65,23 @@ class VolvoLock(VolvoEntity, LockEntity):
 
     entity_description: VolvoLockDescription
 
+    @override
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the car."""
         await self._async_handle_command(self.entity_description.lock_command, True)
 
+    @override
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the car."""
         await self._async_handle_command(self.entity_description.unlock_command, False)
 
+    @override
     def _update_state(self, api_field: VolvoCarsApiBaseModel | None) -> None:
         """Update the state of the entity."""
+        if api_field is None:
+            self._attr_is_locked = None
+            return
+
         assert isinstance(api_field, VolvoCarsValue)
         self._attr_is_locked = api_field.value == "LOCKED"
 
@@ -112,6 +119,7 @@ class VolvoLock(VolvoEntity, LockEntity):
 
         if locked:
             api_field.value = self.entity_description.api_lock_value
+            schedule_location_update(self.coordinator)
         else:
             api_field.value = self.entity_description.api_unlock_value
 

@@ -4,11 +4,11 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import StrEnum
+from typing import override
 
 from pynecil import LiveDataResponse, OperatingMode, PowerSource
 
 from homeassistant.components.sensor import (
-    EntityCategory,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -16,6 +16,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     PERCENTAGE,
+    EntityCategory,
     UnitOfElectricPotential,
     UnitOfPower,
     UnitOfTemperature,
@@ -26,9 +27,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
-from . import IronOSConfigEntry
 from .const import OHM
-from .coordinator import IronOSLiveDataCoordinator
+from .coordinator import IronOSConfigEntry, IronOSLiveDataCoordinator
 from .entity import IronOSBaseEntity
 
 # Coordinator is used to centralize the data updates
@@ -206,6 +206,7 @@ class IronOSSensorEntity(IronOSBaseEntity, SensorEntity):
     coordinator: IronOSLiveDataCoordinator
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return sensor state."""
         return self.entity_description.value_fn(

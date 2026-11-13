@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('qbittorrent', '01K6E7464PTQKDE24VAJQZPTH2')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -39,8 +39,8 @@
 # name: test_entities[sensor.mock_title_active_torrents-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Active torrents',
-      'unit_of_measurement': 'torrents',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Active torrents',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'torrents',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_active_torrents',
@@ -57,12 +57,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('qbittorrent', '01K6E7464PTQKDE24VAJQZPTH2')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -98,10 +98,10 @@
 # name: test_entities[sensor.mock_title_all_time_download-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'Mock Title All-time download',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfInformation.TEBIBYTES: 'TiB'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title All-time download',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.TEBIBYTES: 'TiB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_all_time_download',
@@ -118,12 +118,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('qbittorrent', '01K6E7464PTQKDE24VAJQZPTH2')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -141,7 +141,7 @@
         'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
-        'suggested_unit_of_measurement': 'TiB',
+        'suggested_unit_of_measurement': <UnitOfInformation.TEBIBYTES: 'TiB'>,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
@@ -153,16 +153,16 @@
     'supported_features': 0,
     'translation_key': 'alltime_upload',
     'unique_id': '01K6E7464PTQKDE24VAJQZPTH2-alltime_upload',
-    'unit_of_measurement': 'TiB',
+    'unit_of_measurement': <UnitOfInformation.TEBIBYTES: 'TiB'>,
   })
 # ---
 # name: test_entities[sensor.mock_title_all_time_upload-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'Mock Title All-time upload',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'TiB',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title All-time upload',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.TEBIBYTES: 'TiB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_all_time_upload',
@@ -180,9 +180,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('qbittorrent', '01K6E7464PTQKDE24VAJQZPTH2')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -212,8 +212,8 @@
 # name: test_entities[sensor.mock_title_all_torrents-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title All torrents',
-      'unit_of_measurement': 'torrents',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title All torrents',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'torrents',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_all_torrents',
@@ -230,16 +230,16 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'connected',
         'firewalled',
         'disconnected',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('qbittorrent', '01K6E7464PTQKDE24VAJQZPTH2')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -269,9 +269,9 @@
 # name: test_entities[sensor.mock_title_connection_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Mock Title Connection status',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Connection status',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'connected',
         'firewalled',
         'disconnected',
@@ -292,12 +292,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('qbittorrent', '01K6E7464PTQKDE24VAJQZPTH2')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -333,10 +333,10 @@
 # name: test_entities[sensor.mock_title_download_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_rate',
-      'friendly_name': 'Mock Title Download speed',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Download speed',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_download_speed',
@@ -353,12 +353,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('qbittorrent', '01K6E7464PTQKDE24VAJQZPTH2')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -394,10 +394,10 @@
 # name: test_entities[sensor.mock_title_download_speed_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_rate',
-      'friendly_name': 'Mock Title Download speed limit',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Download speed limit',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_download_speed_limit',
@@ -415,9 +415,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('qbittorrent', '01K6E7464PTQKDE24VAJQZPTH2')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -447,8 +447,8 @@
 # name: test_entities[sensor.mock_title_errored_torrents-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Errored torrents',
-      'unit_of_measurement': 'torrents',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Errored torrents',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'torrents',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_errored_torrents',
@@ -465,12 +465,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('qbittorrent', '01K6E7464PTQKDE24VAJQZPTH2')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -500,8 +500,8 @@
 # name: test_entities[sensor.mock_title_global_ratio-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Global ratio',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Global ratio',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_global_ratio',
@@ -519,9 +519,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('qbittorrent', '01K6E7464PTQKDE24VAJQZPTH2')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -551,8 +551,8 @@
 # name: test_entities[sensor.mock_title_inactive_torrents-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Inactive torrents',
-      'unit_of_measurement': 'torrents',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Inactive torrents',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'torrents',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_inactive_torrents',
@@ -570,9 +570,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('qbittorrent', '01K6E7464PTQKDE24VAJQZPTH2')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -602,8 +602,8 @@
 # name: test_entities[sensor.mock_title_paused_torrents-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Paused torrents',
-      'unit_of_measurement': 'torrents',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Paused torrents',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'torrents',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_paused_torrents',
@@ -620,7 +620,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'idle',
         'up_down',
         'seeding',
@@ -628,9 +628,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('qbittorrent', '01K6E7464PTQKDE24VAJQZPTH2')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -660,9 +660,9 @@
 # name: test_entities[sensor.mock_title_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Mock Title Status',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Status',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'idle',
         'up_down',
         'seeding',
@@ -684,12 +684,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('qbittorrent', '01K6E7464PTQKDE24VAJQZPTH2')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -725,10 +725,10 @@
 # name: test_entities[sensor.mock_title_upload_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_rate',
-      'friendly_name': 'Mock Title Upload speed',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Upload speed',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_upload_speed',
@@ -745,12 +745,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('qbittorrent', '01K6E7464PTQKDE24VAJQZPTH2')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -786,10 +786,10 @@
 # name: test_entities[sensor.mock_title_upload_speed_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_rate',
-      'friendly_name': 'Mock Title Upload speed limit',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Upload speed limit',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_upload_speed_limit',

@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from lektricowifi import Device
 
@@ -13,7 +13,6 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    ATTR_SERIAL_NUMBER,
     CONF_TYPE,
     PERCENTAGE,
     UnitOfElectricCurrent,
@@ -28,7 +27,8 @@ from homeassistant.exceptions import IntegrationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import LektricoConfigEntry, LektricoDeviceDataUpdateCoordinator
+from .const import CONF_SERIAL_NUMBER
+from .coordinator import LektricoConfigEntry, LektricoDeviceDataUpdateCoordinator
 from .entity import LektricoEntity
 
 
@@ -306,7 +306,7 @@ async def async_setup_entry(
         LektricoSensor(
             description,
             coordinator,
-            f"{entry.data[CONF_TYPE]}_{entry.data[ATTR_SERIAL_NUMBER]}",
+            f"{entry.data[CONF_TYPE]}_{entry.data[CONF_SERIAL_NUMBER]}",
         )
         for description in sensors_to_be_used
     )
@@ -329,6 +329,7 @@ class LektricoSensor(LektricoEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.serial_number}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

@@ -1,6 +1,7 @@
 """Support for UPnP/IGD Binary Sensors."""
 
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -12,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import LOGGER, WAN_STATUS
-from .coordinator import UpnpConfigEntry, UpnpDataUpdateCoordinator
+from .coordinator import UpnpConfigEntry
 from .entity import UpnpEntity, UpnpEntityDescription
 
 
@@ -58,19 +59,13 @@ class UpnpStatusBinarySensor(UpnpEntity, BinarySensorEntity):
 
     entity_description: UpnpBinarySensorEntityDescription
 
-    def __init__(
-        self,
-        coordinator: UpnpDataUpdateCoordinator,
-        entity_description: UpnpBinarySensorEntityDescription,
-    ) -> None:
-        """Initialize the base sensor."""
-        super().__init__(coordinator=coordinator, entity_description=entity_description)
-
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return self.coordinator.data[self.entity_description.key] == "Connected"
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to updates."""
         await super().async_added_to_hass()

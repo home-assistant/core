@@ -1,7 +1,7 @@
 """Tests for the Lutron Caseta integration."""
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
+from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -15,9 +15,9 @@ async def test_button_unique_id(
     await async_setup_integration(hass, MockBridge)
 
     ra3_button_entity_id = (
-        "button.hallway_main_stairs_position_1_keypad_kitchen_pendants"
+        "button.hallway_hallway_main_stairs_position_1_keypad_kitchen_pendants"
     )
-    caseta_button_entity_id = "button.dining_room_pico_stop"
+    caseta_button_entity_id = "button.dining_room_dining_room_pico_stop"
 
     # Assert that Caseta buttons will have the bridge serial hash
     # and the zone id as the uniqueID
@@ -27,12 +27,23 @@ async def test_button_unique_id(
     )
 
 
+async def test_pico_button_disabled_by_default(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test that unnamed caseta pico button entities are disabled by default."""
+    await async_setup_integration(hass, MockBridge)
+
+    entry = entity_registry.async_get("button.dining_room_dining_room_pico_stop")
+    assert entry
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+
 async def test_button_press(hass: HomeAssistant) -> None:
     """Test a button press."""
     await async_setup_integration(hass, MockBridge)
 
     ra3_button_entity_id = (
-        "button.hallway_main_stairs_position_1_keypad_kitchen_pendants"
+        "button.hallway_hallway_main_stairs_position_1_keypad_kitchen_pendants"
     )
 
     state = hass.states.get(ra3_button_entity_id)
@@ -41,8 +52,8 @@ async def test_button_press(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: ra3_button_entity_id},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: ra3_button_entity_id},
         blocking=False,
     )
     await hass.async_block_till_done()

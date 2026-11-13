@@ -1,11 +1,10 @@
 """Helpers for AVM FRITZ!Box."""
 
 from collections.abc import ValuesView
-import logging
+import re
 
+from .const import LOGGER
 from .models import FritzDevice
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def _is_tracked(mac: str, current_devices: ValuesView[set[str]]) -> bool:
@@ -20,13 +19,13 @@ def device_filter_out_from_trackers(
 ) -> bool:
     """Check if device should be filtered out from trackers."""
     reason: str | None = None
-    if device.ip_address == "":
+    if not device.ip_address:
         reason = "Missing IP"
     elif _is_tracked(mac, current_devices):
         reason = "Already tracked"
 
     if reason:
-        _LOGGER.debug(
+        LOGGER.debug(
             "Skip adding device %s [%s], reason: %s", device.hostname, mac, reason
         )
     return bool(reason)
@@ -34,4 +33,13 @@ def device_filter_out_from_trackers(
 
 def ha_is_stopping(activity: str) -> None:
     """Inform that HA is stopping."""
-    _LOGGER.warning("Cannot execute %s: HomeAssistant is shutting down", activity)
+    LOGGER.warning("Cannot execute %s: HomeAssistant is shutting down", activity)
+
+
+def normalize_version(version: str | None) -> str | None:
+    """Normalize FRITZ!OS version strings."""
+    if version is None:
+        return None
+    if (version_normalized := re.search(r"^\d+\.0?(\d+\.\d+.*)$", version)) is not None:
+        return version_normalized.group(1)
+    return version

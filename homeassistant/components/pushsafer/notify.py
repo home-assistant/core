@@ -4,11 +4,11 @@ import base64
 from http import HTTPStatus
 import logging
 import mimetypes
-from typing import Any
+from typing import Any, override
 
+import probatio
 import requests
 from requests.auth import HTTPBasicAuth
-import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -18,7 +18,6 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-from homeassistant.const import ATTR_ICON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -33,6 +32,7 @@ CONF_TIMEOUT = 15
 # Top level attributes in 'data'
 ATTR_SOUND = "sound"
 ATTR_VIBRATION = "vibration"
+ATTR_ICON = "icon"
 ATTR_ICONCOLOR = "iconcolor"
 ATTR_URL = "url"
 ATTR_URLTITLE = "urltitle"
@@ -54,7 +54,7 @@ ATTR_PICTURE1_PASSWORD = "password"
 ATTR_PICTURE1_AUTH = "auth"
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_DEVICE_KEY): cv.string}
+    {probatio.Required(probatio.Secret(CONF_DEVICE_KEY)): cv.string}
 )
 
 
@@ -74,6 +74,7 @@ class PushsaferNotificationService(BaseNotificationService):
         """Initialize the service."""
         self._private_key = private_key
 
+    @override
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to specified target."""
         targets: list[str] | None
@@ -135,7 +136,7 @@ class PushsaferNotificationService(BaseNotificationService):
             if response.status_code != HTTPStatus.OK:
                 _LOGGER.error("Pushsafer failed with: %s", response.text)
             else:
-                _LOGGER.debug("Push send: %s", response.json())
+                _LOGGER.debug("Push send: %s", response.text)
 
     @classmethod
     def get_base64(cls, filebyte, mimetype):

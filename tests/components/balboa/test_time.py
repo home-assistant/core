@@ -4,20 +4,19 @@ from datetime import time
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.time import (
-    ATTR_TIME,
     DOMAIN as TIME_DOMAIN,
-    SERVICE_SET_VALUE,
+    TimeService,
+    TimeServiceArgument,
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
-
-from tests.common import snapshot_platform
 
 ENTITY_TIME = "time.fakespa_"
 
@@ -60,8 +59,8 @@ async def test_time(
 
     await hass.services.async_call(
         TIME_DOMAIN,
-        SERVICE_SET_VALUE,
-        service_data={ATTR_TIME: new_time},
+        TimeService.SET_VALUE,
+        service_data={TimeServiceArgument.TIME: new_time},
         blocking=True,
         target={ATTR_ENTITY_ID: time_entity},
     )

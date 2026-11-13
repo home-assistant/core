@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('omnilogic', 'SCRUBBED')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -39,7 +39,7 @@
 # name: test_switches[switch.scrubbed_spa_filter_pump-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'SCRUBBED Spa  Filter Pump ',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SCRUBBED Spa  Filter Pump ',
     }),
     'context': <ANY>,
     'entity_id': 'switch.scrubbed_spa_filter_pump',
@@ -57,9 +57,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('omnilogic', 'SCRUBBED')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -89,7 +89,7 @@
 # name: test_switches[switch.scrubbed_spa_spa_jets-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'SCRUBBED Spa  Spa Jets ',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SCRUBBED Spa  Spa Jets ',
     }),
     'context': <ANY>,
     'entity_id': 'switch.scrubbed_spa_spa_jets',

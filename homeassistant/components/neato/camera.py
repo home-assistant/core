@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from pybotvac.exceptions import NeatoRobotException
 from pybotvac.robot import Robot
@@ -12,10 +12,9 @@ from homeassistant.components.camera import Camera
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import NeatoConfigEntry
 from .const import SCAN_INTERVAL_MINUTES
 from .entity import NeatoEntity
-from .hub import NeatoHub
+from .hub import NeatoConfigEntry, NeatoHub
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,6 +60,7 @@ class NeatoCleaningMap(NeatoEntity, Camera):
         self._image_url: str | None = None
         self._image: bytes | None = None
 
+    @override
     def camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -110,11 +110,13 @@ class NeatoCleaningMap(NeatoEntity, Camera):
         self._available = True
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the robot is available."""
         return self._available
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the vacuum cleaner."""
         data: dict[str, Any] = {}

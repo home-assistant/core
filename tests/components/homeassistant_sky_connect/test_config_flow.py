@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, Mock, call, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.hassio import AddonInfo, AddonState
 from homeassistant.components.homeassistant_hardware import (
@@ -18,7 +19,6 @@ from homeassistant.components.homeassistant_hardware.helpers import (
 )
 from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (
     CONF_DISABLE_MULTI_PAN,
-    get_flasher_addon_manager,
     get_multiprotocol_addon_manager,
 )
 from homeassistant.components.homeassistant_hardware.util import (
@@ -34,8 +34,6 @@ from homeassistant.helpers.service_info.usb import UsbServiceInfo
 from homeassistant.setup import async_setup_component
 
 from .common import USB_DATA_SKY, USB_DATA_ZBT1
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="supervisor")
@@ -53,7 +51,7 @@ def setup_entry_fixture() -> Generator[AsyncMock]:
     """Mock entry setup."""
     with patch(
         "homeassistant.components.homeassistant_sky_connect.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -141,6 +139,7 @@ async def test_config_flow_zigbee(
         "serial_number": usb_data.serial_number,
         "vid": usb_data.vid,
     }
+    assert create_result["result"].unique_id == usb_data.serial_number
 
     flows = hass.config_entries.flow.async_progress()
 
@@ -241,6 +240,7 @@ async def test_config_flow_thread(
         "serial_number": usb_data.serial_number,
         "vid": usb_data.vid,
     }
+    assert create_result["result"].unique_id == usb_data.serial_number
 
     flows = hass.config_entries.flow.async_progress()
 
@@ -384,15 +384,11 @@ async def test_options_flow_multipan_uninstall(
         version="1.0.0",
     )
 
-    mock_flasher_manager = Mock(spec_set=get_flasher_addon_manager(hass))
-    mock_flasher_manager.async_get_addon_info.return_value = AddonInfo(
-        available=True,
-        hostname=None,
-        options={},
-        state=AddonState.NOT_RUNNING,
-        update_available=False,
-        version="1.0.0",
-    )
+    mock_fw_manifest = Mock()
+    mock_fw_manifest.filename = "skyconnect_zigbee_ncp_7.4.4.0.gbl"
+    mock_fw_client = AsyncMock()
+    mock_fw_client.async_update_data.return_value = Mock(firmwares=[mock_fw_manifest])
+    mock_fw_client.async_fetch_firmware.return_value = b"fake_firmware"
 
     with (
         patch(
@@ -400,8 +396,12 @@ async def test_options_flow_multipan_uninstall(
             return_value=mock_multipan_manager,
         ),
         patch(
-            "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.get_flasher_addon_manager",
-            return_value=mock_flasher_manager,
+            "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.async_flash_silabs_firmware",
+            new_callable=AsyncMock,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.FirmwareUpdateClient",
+            return_value=mock_fw_client,
         ),
         patch(
             "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.is_hassio",
@@ -424,11 +424,15 @@ async def test_options_flow_multipan_uninstall(
             result["flow_id"], user_input={CONF_DISABLE_MULTI_PAN: True}
         )
 
-        # Finish the flow
+        # Uninstall multiprotocol addon
         result = await hass.config_entries.options.async_configure(result["flow_id"])
         await hass.async_block_till_done(wait_background_tasks=True)
+
+        # Flash zigbee firmware
         result = await hass.config_entries.options.async_configure(result["flow_id"])
         await hass.async_block_till_done(wait_background_tasks=True)
+
+        # Flashing complete
         result = await hass.config_entries.options.async_configure(result["flow_id"])
         assert result["type"] is FlowResultType.CREATE_ENTRY
 

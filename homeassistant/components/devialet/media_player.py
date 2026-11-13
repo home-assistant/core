@@ -1,5 +1,7 @@
 """Support for Devialet speakers."""
 
+from typing import override
+
 from devialet.const import NORMAL_INPUTS
 
 from homeassistant.components.media_player import (
@@ -65,6 +67,7 @@ class DevialetMediaPlayerEntity(
         )
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if not self.coordinator.client.is_available:
@@ -88,6 +91,7 @@ class DevialetMediaPlayerEntity(
         self.async_write_ha_state()
 
     @property
+    @override
     def state(self) -> MediaPlayerState | None:
         """Return the state of the device."""
         playing_state = self.coordinator.client.playing_state
@@ -101,11 +105,13 @@ class DevialetMediaPlayerEntity(
         return MediaPlayerState.ON
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the media player is available."""
         return self.coordinator.client.is_available
 
     @property
+    @override
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         features = SUPPORT_DEVIALET
@@ -121,6 +127,7 @@ class DevialetMediaPlayerEntity(
         return features
 
     @property
+    @override
     def source(self) -> str | None:
         """Return the current input source."""
         source = self.coordinator.client.source
@@ -131,6 +138,7 @@ class DevialetMediaPlayerEntity(
         return None
 
     @property
+    @override
     def sound_mode(self) -> str | None:
         """Return the current sound mode."""
         if self.coordinator.client.equalizer is not None:
@@ -145,46 +153,57 @@ class DevialetMediaPlayerEntity(
                 return pretty_name
         return None
 
+    @override
     async def async_volume_up(self) -> None:
         """Volume up media player."""
         await self.coordinator.client.async_volume_up()
 
+    @override
     async def async_volume_down(self) -> None:
         """Volume down media player."""
         await self.coordinator.client.async_volume_down()
 
+    @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         await self.coordinator.client.async_set_volume_level(volume)
 
+    @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute (true) or unmute (false) media player."""
         await self.coordinator.client.async_mute_volume(mute)
 
+    @override
     async def async_media_play(self) -> None:
         """Play media player."""
         await self.coordinator.client.async_media_play()
 
+    @override
     async def async_media_pause(self) -> None:
         """Pause media player."""
         await self.coordinator.client.async_media_pause()
 
+    @override
     async def async_media_stop(self) -> None:
         """Pause media player."""
         await self.coordinator.client.async_media_stop()
 
+    @override
     async def async_media_next_track(self) -> None:
         """Send the next track command."""
         await self.coordinator.client.async_media_next_track()
 
+    @override
     async def async_media_previous_track(self) -> None:
         """Send the previous track command."""
         await self.coordinator.client.async_media_previous_track()
 
+    @override
     async def async_media_seek(self, position: float) -> None:
         """Send seek command."""
         await self.coordinator.client.async_media_seek(position)
 
+    @override
     async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Send sound mode command."""
         for pretty_name, mode in SOUND_MODES.items():
@@ -195,10 +214,12 @@ class DevialetMediaPlayerEntity(
                     await self.coordinator.client.async_set_night_mode(False)
                     await self.coordinator.client.async_set_equalizer(mode)
 
+    @override
     async def async_turn_off(self) -> None:
         """Turn off media player."""
         await self.coordinator.client.async_turn_off()
 
+    @override
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
         await self.coordinator.client.async_select_source(source)

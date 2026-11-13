@@ -16,7 +16,7 @@ from homeassistant.components.cover import (
     SERVICE_STOP_COVER,
     CoverState,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import slugify
@@ -245,17 +245,11 @@ async def test_cover_control_fail(
 
         assert mock_api.call_count == 2
         mock_control_device.assert_called_once_with(44, cover_id)
+        # A single failed command must not flap the entity unavailable.
         state = hass.states.get(entity_id)
-        assert state.state == STATE_UNAVAILABLE
+        assert state.state == CoverState.OPEN
 
-    # Make device available again
-    mock_bridge.mock_callbacks([device])
-    await hass.async_block_till_done()
-
-    state = hass.states.get(entity_id)
-    assert state.state == CoverState.OPEN
-
-    # Test error response during set position
+    # Test error response during set position - the entity stays available.
     with patch(
         "homeassistant.components.switcher_kis.entity.SwitcherApi.set_position",
         return_value=SwitcherBaseResponse(None),
@@ -271,7 +265,7 @@ async def test_cover_control_fail(
         assert mock_api.call_count == 4
         mock_control_device.assert_called_once_with(27, cover_id)
         state = hass.states.get(entity_id)
-        assert state.state == STATE_UNAVAILABLE
+        assert state.state == CoverState.OPEN
 
 
 @pytest.mark.parametrize("mock_bridge", [[DEVICE2, DEVICE3]], indirect=True)

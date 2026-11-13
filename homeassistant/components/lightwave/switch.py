@@ -1,6 +1,6 @@
 """Support for LightwaveRF switches."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import CONF_NAME
@@ -42,12 +42,14 @@ class LWRFSwitch(SwitchEntity):
         self._device_id = device_id
         self._lwlink = lwlink
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the LightWave switch on."""
         self._attr_is_on = True
         self._lwlink.turn_on_switch(self._device_id, self._attr_name)
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the LightWave switch off."""
         self._attr_is_on = False

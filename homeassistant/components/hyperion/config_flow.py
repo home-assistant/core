@@ -4,34 +4,25 @@ import asyncio
 from collections.abc import Mapping
 from contextlib import suppress
 import logging
-from typing import Any
+from typing import Any, override
 from urllib.parse import urlparse
 
 from hyperion import client, const
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
 )
-from homeassistant.const import (
-    CONF_BASE,
-    CONF_HOST,
-    CONF_ID,
-    CONF_PORT,
-    CONF_SOURCE,
-    CONF_TOKEN,
-)
+from homeassistant.const import CONF_BASE, CONF_HOST, CONF_PORT, CONF_SOURCE, CONF_TOKEN
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service_info.ssdp import ATTR_UPNP_SERIAL, SsdpServiceInfo
 
-from . import create_hyperion_client
+from . import HyperionConfigEntry, create_hyperion_client
 from .const import (
-    CONF_AUTH_ID,
     CONF_CREATE_TOKEN,
     CONF_EFFECT_HIDE_LIST,
     CONF_EFFECT_SHOW_LIST,
@@ -151,6 +142,7 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="cannot_connect")
             return await self._advance_to_auth_step_if_necessary(hyperion_client)
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
@@ -223,6 +215,7 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="cannot_connect")
             return await self._advance_to_auth_step_if_necessary(hyperion_client)
 
+    @override
     async def async_step_user(
         self,
         user_input: dict[str, Any] | None = None,
@@ -241,10 +234,10 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_HOST): str,
-                    vol.Optional(CONF_PORT, default=const.DEFAULT_PORT_JSON): int,
+                    probatio.Required(CONF_HOST): str,
+                    probatio.Optional(CONF_PORT, default=const.DEFAULT_PORT_JSON): int,
                 }
             ),
             errors=errors,
@@ -316,10 +309,10 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="auth",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_CREATE_TOKEN): bool,
-                    vol.Optional(CONF_TOKEN): str,
+                    probatio.Required(CONF_CREATE_TOKEN): bool,
+                    probatio.Optional(probatio.Secret(CONF_TOKEN)): str,
                 }
             ),
             errors=errors,
@@ -334,7 +327,7 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="create_token",
                 description_placeholders={
-                    CONF_AUTH_ID: self._auth_id,
+                    "auth_id": self._auth_id,
                 },
             )
 
@@ -347,6 +340,7 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
         self._request_token_task = self.hass.async_create_task(
             self._request_token_task_func(self._auth_id), eager_start=False
         )
+        # pylint: disable-next=home-assistant-step_id-match-method
         return self.async_external_step(
             step_id="create_token_external", url=self._get_hyperion_url()
         )
@@ -396,9 +390,9 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="confirm",
                 description_placeholders={
-                    CONF_HOST: self._data[CONF_HOST],
-                    CONF_PORT: self._data[CONF_PORT],
-                    CONF_ID: self.unique_id,
+                    "host": self._data[CONF_HOST],
+                    "port": self._data[CONF_PORT],
+                    "id": self.unique_id,
                 },
             )
 
@@ -423,8 +417,9 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: HyperionConfigEntry,
     ) -> HyperionOptionsFlow:
         """Get the Hyperion Options flow."""
         return HyperionOptionsFlow()
@@ -472,15 +467,15 @@ class HyperionOptionsFlow(OptionsFlowWithReload):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_PRIORITY,
                         default=self.config_entry.options.get(
                             CONF_PRIORITY, DEFAULT_PRIORITY
                         ),
-                    ): vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
-                    vol.Optional(
+                    ): probatio.All(probatio.Coerce(int), probatio.Byte()),
+                    probatio.Optional(
                         CONF_EFFECT_SHOW_LIST,
                         default=default_effect_show_list,
                     ): cv.multi_select(effects),

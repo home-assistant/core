@@ -1,10 +1,12 @@
 """Coordinator entity base class for CometBlue."""
 
+from typing import override
+
 from homeassistant.components import bluetooth
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DOMAIN
+from .const import DOMAIN
 from .coordinator import CometBlueDataUpdateCoordinator
 
 
@@ -23,6 +25,7 @@ class CometBlueBluetoothEntity(CoordinatorEntity[CometBlueDataUpdateCoordinator]
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         # As long the device is currently connectable via

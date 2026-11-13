@@ -1,12 +1,13 @@
 """Support for govee-ble binary sensors."""
 
+from typing import override
+
 from govee_ble import (
     BinarySensorDeviceClass as GoveeBLEBinarySensorDeviceClass,
     SensorUpdate,
 )
 from govee_ble.parser import ERROR
 
-from homeassistant import config_entries
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -21,7 +22,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 
-from .coordinator import GoveeBLEPassiveBluetoothDataProcessor
+from .coordinator import GoveeBLEConfigEntry, GoveeBLEPassiveBluetoothDataProcessor
 from .device import device_key_to_bluetooth_entity_key
 
 BINARY_SENSOR_DESCRIPTIONS = {
@@ -66,16 +67,17 @@ def sensor_update_to_bluetooth_data_update(
             device_key_to_bluetooth_entity_key(device_key): sensor_values.native_value
             for device_key, sensor_values in sensor_update.binary_entity_values.items()
         },
+        # None overrides names restored from storage, {} would keep them
         entity_names={
-            device_key_to_bluetooth_entity_key(device_key): sensor_values.name
-            for device_key, sensor_values in sensor_update.binary_entity_values.items()
+            device_key_to_bluetooth_entity_key(device_key): None
+            for device_key in sensor_update.binary_entity_values
         },
     )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: config_entries.ConfigEntry,
+    entry: GoveeBLEConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the govee-ble BLE sensors."""
@@ -102,6 +104,7 @@ class GoveeBluetoothBinarySensorEntity(
     processor: GoveeBLEPassiveBluetoothDataProcessor[bool | None]
 
     @property
+    @override
     def available(self) -> bool:
         """Return False if sensor is in error."""
         coordinator = self.processor.coordinator
@@ -111,6 +114,7 @@ class GoveeBluetoothBinarySensorEntity(
         )
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the native value."""
         return self.processor.entity_data.get(self.entity_key)

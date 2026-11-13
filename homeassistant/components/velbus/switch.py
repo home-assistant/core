@@ -1,10 +1,10 @@
 """Support for Velbus switches."""
 
-from typing import Any
+from typing import Any, override
 
 from velbusaio.channels import Relay as VelbusRelay
 
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -31,18 +31,22 @@ class VelbusSwitch(VelbusEntity, SwitchEntity):
     """Representation of a switch."""
 
     _channel: VelbusRelay
+    _attr_device_class = SwitchDeviceClass.SWITCH
 
     @property
-    def is_on(self) -> bool:
+    @override
+    def is_on(self) -> bool | None:
         """Return true if the switch is on."""
         return self._channel.is_on()
 
     @api_call
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the switch to turn on."""
         await self._channel.turn_on()
 
     @api_call
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the switch to turn off."""
         await self._channel.turn_off()

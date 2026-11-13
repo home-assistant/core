@@ -1,12 +1,12 @@
 """Config flow for Airzone."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
-from aioairzone.const import DEFAULT_PORT, DEFAULT_SYSTEM_ID
+from aioairzone.const import DEFAULT_PORT_HTTP, DEFAULT_SYSTEM_ID
 from aioairzone.exceptions import AirzoneError, InvalidSystem
 from aioairzone.localapi import AirzoneLocalApi, ConnectionOptions
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_ID, CONF_PORT
@@ -19,15 +19,15 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT_HTTP): int,
     }
 )
 SYSTEM_ID_SCHEMA = CONFIG_SCHEMA.extend(
     {
-        vol.Required(CONF_ID, default=1): int,
+        probatio.Required(CONF_ID, default=1): int,
     }
 )
 
@@ -44,6 +44,7 @@ class AirZoneConfigFlow(ConfigFlow, domain=DOMAIN):
     _discovered_mac: str | None = None
     MINOR_VERSION = 2
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -60,8 +61,7 @@ class AirZoneConfigFlow(ConfigFlow, domain=DOMAIN):
             airzone = AirzoneLocalApi(
                 aiohttp_client.async_get_clientsession(self.hass),
                 ConnectionOptions(
-                    user_input[CONF_HOST],
-                    user_input[CONF_PORT],
+                    f"http://{user_input[CONF_HOST]}:{user_input[CONF_PORT]}",
                     user_input[CONF_ID],
                 ),
             )
@@ -97,6 +97,7 @@ class AirZoneConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -113,7 +114,9 @@ class AirZoneConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(format_mac(self._discovered_mac))
         self._abort_if_unique_id_configured()
 
-        options = ConnectionOptions(self._discovered_ip)
+        options = ConnectionOptions(
+            f"http://{self._discovered_ip}:{DEFAULT_PORT_HTTP}",
+        )
         airzone = AirzoneLocalApi(
             aiohttp_client.async_get_clientsession(self.hass), options
         )
@@ -132,14 +135,13 @@ class AirZoneConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self._discovered_mac is not None
 
         errors = {}
-        base_schema = {vol.Required(CONF_PORT, default=DEFAULT_PORT): int}
+        base_schema = {probatio.Required(CONF_PORT, default=DEFAULT_PORT_HTTP): int}
 
         if user_input is not None:
             airzone = AirzoneLocalApi(
                 aiohttp_client.async_get_clientsession(self.hass),
                 ConnectionOptions(
-                    self._discovered_ip,
-                    user_input[CONF_PORT],
+                    f"http://{self._discovered_ip}:{user_input[CONF_PORT]}",
                     user_input.get(CONF_ID, DEFAULT_SYSTEM_ID),
                 ),
             )
@@ -147,7 +149,7 @@ class AirZoneConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 mac = await airzone.validate()
             except InvalidSystem:
-                base_schema[vol.Required(CONF_ID, default=1)] = int
+                base_schema[probatio.Required(CONF_ID, default=1)] = int
                 errors[CONF_ID] = "invalid_system_id"
             except AirzoneError:
                 errors["base"] = "cannot_connect"
@@ -170,6 +172,6 @@ class AirZoneConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="discovered_connection",
-            data_schema=vol.Schema(base_schema),
+            data_schema=probatio.Schema(base_schema),
             errors=errors,
         )

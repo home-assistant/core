@@ -2,13 +2,12 @@
 
 import astroid
 from pylint.testutils import UnittestLinter
-from pylint.utils.ast_walker import ASTWalker
 from pylint_home_assistant.checkers.sequential_executor_jobs import (
     SequentialExecutorJobsChecker,
 )
 import pytest
 
-from . import assert_no_messages
+from . import assert_no_messages, walk_checker
 
 
 @pytest.fixture(name="executor_checker")
@@ -56,11 +55,9 @@ def test_no_warning(
 ) -> None:
     """Test cases that should not trigger a warning."""
     root_node = astroid.parse(code, "homeassistant.components.test_integration")
-    walker = ASTWalker(linter)
-    walker.add_checker(executor_checker)
 
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, executor_checker, root_node)
 
 
 def test_two_sequential_flagged(
@@ -76,9 +73,7 @@ async def async_setup(hass, config):
 """,
         "homeassistant.components.test_integration",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(executor_checker)
-    walker.walk(root_node)
+    walk_checker(linter, executor_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 1
@@ -99,9 +94,7 @@ async def async_setup(hass, config):
 """,
         "homeassistant.components.test_integration",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(executor_checker)
-    walker.walk(root_node)
+    walk_checker(linter, executor_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 2
@@ -120,9 +113,7 @@ async def async_setup(hass, config):
 """,
         "homeassistant.components.test_integration",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(executor_checker)
-    walker.walk(root_node)
+    walk_checker(linter, executor_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 1
@@ -144,9 +135,7 @@ async def async_setup(hass, config):
 """,
         "homeassistant.components.test_integration",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(executor_checker)
-    walker.walk(root_node)
+    walk_checker(linter, executor_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 1
@@ -168,9 +157,7 @@ async def async_setup(hass, config):
 """,
         "homeassistant.components.test_integration",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(executor_checker)
-    walker.walk(root_node)
+    walk_checker(linter, executor_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 1
@@ -193,9 +180,7 @@ async def async_setup(hass, config):
 """,
         "homeassistant.components.test_integration",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(executor_checker)
-    walker.walk(root_node)
+    walk_checker(linter, executor_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 1
@@ -218,9 +203,7 @@ async def async_setup(hass, config):
 """,
         "homeassistant.components.test_integration",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(executor_checker)
-    walker.walk(root_node)
+    walk_checker(linter, executor_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 1
@@ -240,9 +223,7 @@ async def async_setup(hass, config):
 """,
         "homeassistant.components.test_integration",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(executor_checker)
-    walker.walk(root_node)
+    walk_checker(linter, executor_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 1
@@ -262,8 +243,6 @@ async def async_setup(hass, config):
 """,
         "tests.components.test_integration",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(executor_checker)
 
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, executor_checker, root_node)

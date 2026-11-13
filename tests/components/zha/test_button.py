@@ -5,15 +5,15 @@ from unittest.mock import patch
 
 import pytest
 from zigpy.const import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
-from zigpy.device import Device
+from zigpy.device import ZigbeeDevice
 from zigpy.profiles import zha
 from zigpy.zcl.clusters import general
 import zigpy.zcl.foundation as zcl_f
 
 from homeassistant.components.button import (
     DOMAIN as BUTTON_DOMAIN,
-    SERVICE_PRESS,
     ButtonDeviceClass,
+    ButtonService,
 )
 from homeassistant.components.zha.helpers import (
     ZHADeviceProxy,
@@ -23,8 +23,8 @@ from homeassistant.components.zha.helpers import (
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
-    ATTR_ENTITY_ID,
     STATE_UNKNOWN,
+    CommonServiceArgument,
     EntityCategory,
     Platform,
 )
@@ -64,7 +64,7 @@ async def test_button(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
     """Test ZHA button platform."""
     await setup_zha()
@@ -111,8 +111,8 @@ async def test_button(
     ):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: entity_id},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
         await hass.async_block_till_done()

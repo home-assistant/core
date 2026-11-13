@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from pyopenweathermap import (
     CurrentAirPollution,
@@ -25,9 +25,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import sun
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
-
-if TYPE_CHECKING:
-    from . import OpenweathermapConfigEntry
 
 from .const import (
     ATTR_API_AIRPOLLUTION_AQI,
@@ -72,12 +69,15 @@ from .const import (
     WEATHER_CODE_SUNNY_OR_CLEAR_NIGHT,
 )
 
+if TYPE_CHECKING:
+    from . import OpenweathermapConfigEntry
+
 _LOGGER = logging.getLogger(__name__)
 
 OWM_UPDATE_INTERVAL = timedelta(minutes=10)
 
 
-class OWMUpdateCoordinator(DataUpdateCoordinator):
+class OWMUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """OWM data update coordinator."""
 
     config_entry: OpenweathermapConfigEntry
@@ -105,14 +105,18 @@ class OWMUpdateCoordinator(DataUpdateCoordinator):
 class WeatherUpdateCoordinator(OWMUpdateCoordinator):
     """Weather data update coordinator."""
 
-    async def _async_update_data(self):
+    @override
+    async def _async_update_data(self) -> dict[str, Any]:
         """Update the data."""
         try:
             weather_report = await self._owm_client.get_weather(
                 self._latitude, self._longitude
             )
         except RequestError as error:
-            raise UpdateFailed(error) from error
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_error",
+            ) from error
         return self._convert_weather_response(weather_report)
 
     def _convert_weather_response(self, weather_report: WeatherReport):
@@ -269,6 +273,7 @@ class WeatherUpdateCoordinator(OWMUpdateCoordinator):
 class AirPollutionUpdateCoordinator(OWMUpdateCoordinator):
     """Air Pollution data update coordinator."""
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update the data."""
         try:
@@ -276,7 +281,10 @@ class AirPollutionUpdateCoordinator(OWMUpdateCoordinator):
                 self._latitude, self._longitude
             )
         except RequestError as error:
-            raise UpdateFailed(error) from error
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_error",
+            ) from error
         current_air_pollution = (
             self._get_current_air_pollution_data(air_pollution_report.current)
             if air_pollution_report.current is not None

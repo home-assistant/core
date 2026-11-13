@@ -9,12 +9,18 @@ rules:
   appropriate-polling: done
   entity-unique-id: done
   has-entity-name: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   entity-event-setup: done
   dependency-transparency: done
   action-setup:
     status: exempt
     comment: The integration does not register services
   common-modules: done
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
@@ -56,7 +62,9 @@ rules:
     status: exempt
     comment: The integration uses ring cloud api to identify devices and \
       does not use network identifiers
-  repair-issues: done
+  repair-issues:
+    status: exempt
+    comment: The integration has no repairs
   docs-use-cases: done
   docs-supported-devices: done
   docs-supported-functions: done

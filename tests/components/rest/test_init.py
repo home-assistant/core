@@ -5,26 +5,25 @@ import ssl
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import (
+    assert_setup_component,
+    async_fire_time_changed,
+    get_fixture_path,
+)
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant import config as hass_config
 from homeassistant.components.rest.const import DOMAIN
+from homeassistant.components.rest.services import RestService
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_PACKAGES,
-    SERVICE_RELOAD,
     STATE_UNAVAILABLE,
     UnitOfInformation,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
-
-from tests.common import (
-    assert_setup_component,
-    async_fire_time_changed,
-    get_fixture_path,
-)
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_setup_with_endpoint_timeout_with_recovery(
@@ -274,8 +273,8 @@ async def test_reload(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) 
 
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
-            "rest",
-            SERVICE_RELOAD,
+            DOMAIN,
+            RestService.RELOAD,
             {},
             blocking=True,
         )
@@ -324,8 +323,8 @@ async def test_reload_and_remove_all(
 
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
-            "rest",
-            SERVICE_RELOAD,
+            DOMAIN,
+            RestService.RELOAD,
             {},
             blocking=True,
         )
@@ -369,8 +368,8 @@ async def test_reload_fails_to_read_configuration(
     yaml_path = get_fixture_path("configuration_invalid.notyaml", "rest")
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
-            "rest",
-            SERVICE_RELOAD,
+            DOMAIN,
+            RestService.RELOAD,
             {},
             blocking=True,
         )

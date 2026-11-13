@@ -6,18 +6,21 @@ from unittest.mock import AsyncMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from indevolt_api import IndevoltConfig, IndevoltEnergyMode
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.indevolt.coordinator import SCAN_INTERVAL
-from homeassistant.components.select import SERVICE_SELECT_OPTION
+from homeassistant.components.select import DOMAIN as SELECT_DOMAIN, SelectService
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -59,15 +62,11 @@ async def test_select_option(
     # Reset mock call count for this iteration
     mock_indevolt.set_data.reset_mock()
 
-    # Update mock data to reflect the new value
-    mock_indevolt.fetch_data.return_value[IndevoltConfig.READ_ENERGY_MODE] = (
-        expected_value
-    )
-
     # Attempt to change option
+    fetch_count_before = mock_indevolt.fetch_data.call_count
     await hass.services.async_call(
-        Platform.SELECT,
-        SERVICE_SELECT_OPTION,
+        SELECT_DOMAIN,
+        SelectService.SELECT_OPTION,
         {"entity_id": "select.cms_sf2000_energy_mode", "option": option},
         blocking=True,
     )
@@ -77,7 +76,8 @@ async def test_select_option(
         IndevoltConfig.WRITE_ENERGY_MODE, expected_value
     )
 
-    # Verify updated state
+    # Verify state updated optimistically without a new fetch
+    assert mock_indevolt.fetch_data.call_count == fetch_count_before
     assert (state := hass.states.get("select.cms_sf2000_energy_mode")) is not None
     assert state.state == option
 
@@ -97,8 +97,8 @@ async def test_select_set_option_error(
     # Attempt to change option
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
-            Platform.SELECT,
-            SERVICE_SELECT_OPTION,
+            SELECT_DOMAIN,
+            SelectService.SELECT_OPTION,
             {
                 "entity_id": "select.cms_sf2000_energy_mode",
                 "option": "real_time_control",

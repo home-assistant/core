@@ -3,8 +3,10 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
+from pyvesync.const import TemperatureUnits
 from pyvesync.device_container import DeviceContainer
 
 from homeassistant.components.sensor import (
@@ -14,12 +16,12 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    PERCENTAGE,
     EntityCategory,
+    UnitOfDensity,
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfPower,
+    UnitOfRatio,
     UnitOfTemperature,
     UnitOfTime,
 )
@@ -28,7 +30,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .common import is_air_fryer, is_humidifier, is_outlet, rgetattr
+from .common import is_air_fryer, is_humidifier, is_outlet, is_purifier, rgetattr
 from .const import AIR_FRYER_MODE_MAP, VS_DEVICES, VS_DISCOVERY
 from .coordinator import VesyncConfigEntry, VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
@@ -49,11 +51,20 @@ class VeSyncSensorEntityDescription(SensorEntityDescription):
     use_device_temperature_unit: bool = False
 
 
+def _get_cook_status(device: VeSyncBaseDevice) -> str | None:
+    """Return the normalized cook status if available."""
+    if (cook_status := device.state.cook_status) is None:
+        return None
+
+    cook_status = cook_status.lower()
+    return AIR_FRYER_MODE_MAP.get(cook_status, cook_status)
+
+
 SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
     VeSyncSensorEntityDescription(
         key="filter-life",
         translation_key="filter_life",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.state.filter_life,
@@ -70,7 +81,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
     VeSyncSensorEntityDescription(
         key="pm1",
         device_class=SensorDeviceClass.PM1,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.state.pm1,
         exists_fn=lambda device: rgetattr(device, "state.pm1") is not None,
@@ -78,7 +89,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
     VeSyncSensorEntityDescription(
         key="pm10",
         device_class=SensorDeviceClass.PM10,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.state.pm10,
         exists_fn=lambda device: rgetattr(device, "state.pm10") is not None,
@@ -86,10 +97,18 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
     VeSyncSensorEntityDescription(
         key="pm25",
         device_class=SensorDeviceClass.PM25,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.state.pm25,
         exists_fn=lambda device: rgetattr(device, "state.pm25") is not None,
+    ),
+    VeSyncSensorEntityDescription(
+        key="co2",
+        device_class=SensorDeviceClass.CO2,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda device: device.state.co2,
+        exists_fn=lambda device: is_purifier(device) and device.state.co2 is not None,
     ),
     VeSyncSensorEntityDescription(
         key="power",
@@ -154,7 +173,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
     VeSyncSensorEntityDescription(
         key="humidity",
         device_class=SensorDeviceClass.HUMIDITY,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.state.humidity,
         exists_fn=is_humidifier,
@@ -173,15 +192,16 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         key="cook_status",
         translation_key="cook_status",
         device_class=SensorDeviceClass.ENUM,
-        value_fn=lambda device: AIR_FRYER_MODE_MAP.get(
-            device.state.cook_status.lower(), device.state.cook_status.lower()
-        ),
+        value_fn=_get_cook_status,
         exists_fn=is_air_fryer,
         options=[
             "cooking_end",
             "cooking",
             "cooking_stop",
             "heating",
+            "ready",
+            "appointing",
+            "hold",
             "preheat_end",
             "preheat_stop",
             "pull_out",
@@ -210,7 +230,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         key="cook_set_time",
         translation_key="cook_set_time",
         device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.MINUTES,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
         value_fn=lambda device: device.state.cook_set_time,
         exists_fn=is_air_fryer,
     ),
@@ -218,7 +238,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         key="preheat_set_time",
         translation_key="preheat_set_time",
         device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.MINUTES,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
         value_fn=lambda device: device.state.preheat_set_time,
         exists_fn=is_air_fryer,
     ),
@@ -284,16 +304,18 @@ class VeSyncSensorEntity(VeSyncBaseEntity, SensorEntity):
         self._attr_unique_id = f"{super().unique_id}-{description.key}"
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.device)
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit the value was reported in by the sensor."""
         if self.entity_description.use_device_temperature_unit:
-            if self.device.temp_unit == "celsius":
+            if self.device.temp_unit == TemperatureUnits.CELSIUS:
                 return UnitOfTemperature.CELSIUS
-            if self.device.temp_unit == "fahrenheit":
+            if self.device.temp_unit == TemperatureUnits.FAHRENHEIT:
                 return UnitOfTemperature.FAHRENHEIT
         return super().native_unit_of_measurement

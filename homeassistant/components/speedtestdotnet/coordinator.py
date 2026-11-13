@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 import speedtest
 
@@ -74,11 +74,18 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.api.upload()
         return cast(dict[str, Any], self.api.results.dict())
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update Speedtest data."""
         try:
             return await self.hass.async_add_executor_job(self.update_data)
         except speedtest.NoMatchedServers as err:
-            raise UpdateFailed("Selected server is not found.") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="server_not_found",
+            ) from err
         except speedtest.SpeedtestException as err:
-            raise UpdateFailed(err) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+            ) from err

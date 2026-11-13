@@ -1,18 +1,24 @@
 """Support for RFXtrx sirens."""
 
 from datetime import datetime
-from typing import Any
+from typing import Any, override
 
 import RFXtrx as rfxtrxmod
 
 from homeassistant.components.siren import ATTR_TONE, SirenEntity, SirenEntityFeature
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
-from . import DEFAULT_OFF_DELAY, DeviceTuple, async_setup_platform_entry
+from . import (
+    DEFAULT_OFF_DELAY,
+    DeviceTuple,
+    RfxtrxConfigEntry,
+    async_setup_platform_entry,
+    get_device_tuple_from_device,
+)
 from .const import CONF_OFF_DELAY
 from .entity import RfxtrxCommandEntity
 
@@ -44,7 +50,7 @@ def get_first_key(data: dict[int, str], entry: str) -> int:
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RfxtrxConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up config entry."""
@@ -52,17 +58,19 @@ async def async_setup_entry(
     def _constructor(
         event: rfxtrxmod.RFXtrxEvent,
         auto: rfxtrxmod.RFXtrxEvent | None,
-        device_id: DeviceTuple,
-        entity_info: dict[str, Any],
+        subentry: ConfigSubentry,
     ) -> list[Entity]:
         """Construct a entity from an event."""
         device = event.device
+        entity_info = subentry.data
+        device_id = get_device_tuple_from_device(event.device)
 
         if isinstance(device, rfxtrxmod.ChimeDevice):
             return [
                 RfxtrxChime(
                     event.device,
                     device_id,
+                    subentry.subentry_id,
                     entity_info.get(CONF_OFF_DELAY, DEFAULT_OFF_DELAY),
                     auto,
                 )
@@ -76,6 +84,7 @@ async def async_setup_entry(
                     RfxtrxSecurityPanic(
                         event.device,
                         device_id,
+                        subentry.subentry_id,
                         entity_info.get(CONF_OFF_DELAY, DEFAULT_OFF_DELAY),
                         auto,
                     )
@@ -114,6 +123,7 @@ class RfxtrxOffDelayMixin(Entity):  # pylint: disable=home-assistant-enforce-cla
             self._timeout()
             self._timeout = None
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         self._cancel_timeout()
@@ -130,20 +140,23 @@ class RfxtrxChime(RfxtrxCommandEntity, SirenEntity, RfxtrxOffDelayMixin):
         self,
         device: rfxtrxmod.RFXtrxDevice,
         device_id: DeviceTuple,
+        subentry_id: str,
         off_delay: float | None = None,
         event: rfxtrxmod.RFXtrxEvent | None = None,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(device, device_id, event)
+        super().__init__(device, device_id, subentry_id, event)
         self._attr_available_tones = list(self._device.COMMANDS.values())
         self._default_tone = next(iter(self._device.COMMANDS))
         self._off_delay = off_delay
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on."""
         return self._timeout is not None
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         self._cancel_timeout()
@@ -159,6 +172,7 @@ class RfxtrxChime(RfxtrxCommandEntity, SirenEntity, RfxtrxOffDelayMixin):
 
         self.async_write_ha_state()
 
+    @override
     def _apply_event(self, event: rfxtrxmod.ControlEvent) -> None:
         """Apply a received event."""
         super()._apply_event(event)
@@ -169,6 +183,7 @@ class RfxtrxChime(RfxtrxCommandEntity, SirenEntity, RfxtrxOffDelayMixin):
             self._setup_timeout()
 
     @callback
+    @override
     def _handle_event(
         self, event: rfxtrxmod.RFXtrxEvent, device_id: DeviceTuple
     ) -> None:
@@ -189,20 +204,23 @@ class RfxtrxSecurityPanic(RfxtrxCommandEntity, SirenEntity, RfxtrxOffDelayMixin)
         self,
         device: rfxtrxmod.RFXtrxDevice,
         device_id: DeviceTuple,
+        subentry_id: str,
         off_delay: float | None = None,
         event: rfxtrxmod.RFXtrxEvent | None = None,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(device, device_id, event)
+        super().__init__(device, device_id, subentry_id, event)
         self._on_value = get_first_key(self._device.STATUS, SECURITY_PANIC_ON)
         self._off_value = get_first_key(self._device.STATUS, SECURITY_PANIC_OFF)
         self._off_delay = off_delay
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on."""
         return self._timeout is not None
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         self._cancel_timeout()
@@ -213,6 +231,7 @@ class RfxtrxSecurityPanic(RfxtrxCommandEntity, SirenEntity, RfxtrxOffDelayMixin)
 
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         self._cancel_timeout()
@@ -221,6 +240,7 @@ class RfxtrxSecurityPanic(RfxtrxCommandEntity, SirenEntity, RfxtrxOffDelayMixin)
 
         self.async_write_ha_state()
 
+    @override
     def _apply_event(self, event: rfxtrxmod.SensorEvent) -> None:
         """Apply a received event."""
         super()._apply_event(event)
@@ -234,6 +254,7 @@ class RfxtrxSecurityPanic(RfxtrxCommandEntity, SirenEntity, RfxtrxOffDelayMixin)
             self._cancel_timeout()
 
     @callback
+    @override
     def _handle_event(
         self, event: rfxtrxmod.RFXtrxEvent, device_id: DeviceTuple
     ) -> None:

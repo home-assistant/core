@@ -1,7 +1,7 @@
 """Support for the Nissan Leaf Carwings/Nissan Connect API."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -29,6 +29,7 @@ class LeafEntity(Entity):
         )
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return default attributes for Nissan leaf entities."""
         return {
@@ -39,6 +40,7 @@ class LeafEntity(Entity):
             "vin": self.car.leaf.vin,
         }
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.log_registration()

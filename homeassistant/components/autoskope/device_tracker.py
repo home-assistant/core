@@ -1,5 +1,7 @@
 """Support for Autoskope device tracking."""
 
+from typing import override
+
 from autoskope_client.constants import MANUFACTURER
 from autoskope_client.models import Vehicle
 
@@ -60,6 +62,7 @@ class AutoskopeDeviceTracker(
         self._attr_unique_id = vehicle_id
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if (
@@ -74,6 +77,7 @@ class AutoskopeDeviceTracker(
         super()._handle_coordinator_update()
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device info for the vehicle."""
         vehicle = self.coordinator.data[self._vehicle_id]
@@ -86,6 +90,7 @@ class AutoskopeDeviceTracker(
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return (
@@ -100,30 +105,33 @@ class AutoskopeDeviceTracker(
         return self.coordinator.data[self._vehicle_id]
 
     @property
+    @override
     def latitude(self) -> float | None:
         """Return latitude value of the device."""
-        if (vehicle := self._vehicle_data) and vehicle.position:
-            return float(vehicle.position.latitude)
+        if position := self._vehicle_data.position:
+            return float(position.latitude)
         return None
 
     @property
+    @override
     def longitude(self) -> float | None:
         """Return longitude value of the device."""
-        if (vehicle := self._vehicle_data) and vehicle.position:
-            return float(vehicle.position.longitude)
+        if position := self._vehicle_data.position:
+            return float(position.longitude)
         return None
 
     @property
+    @override
     def location_accuracy(self) -> float:
         """Return the location accuracy of the device in meters."""
-        if (vehicle := self._vehicle_data) and vehicle.gps_quality:
-            if vehicle.gps_quality > 0:
-                # HDOP to estimated accuracy in meters
-                # HDOP of 1-2 = good (5-10m), 2-5 = moderate (10-25m), >5 = poor (>25m)
-                return float(max(5, int(vehicle.gps_quality * 5.0)))
+        if (gps_quality := self._vehicle_data.gps_quality) and gps_quality > 0:
+            # HDOP to estimated accuracy in meters
+            # HDOP of 1-2 = good (5-10m), 2-5 = moderate (10-25m), >5 = poor (>25m)
+            return float(max(5, int(gps_quality * 5.0)))
         return 0.0
 
     @property
+    @override
     def icon(self) -> str:
         """Return the icon based on the vehicle's activity."""
         if self._vehicle_id not in self.coordinator.data:

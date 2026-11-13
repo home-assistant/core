@@ -1,9 +1,9 @@
 """Config flow for Modern Forms."""
 
-from typing import Any
+from typing import Any, override
 
 from aiomodernforms import ModernFormsConnectionError, ModernFormsDevice
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import SOURCE_ZEROCONF, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MAC
@@ -12,7 +12,7 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN
 
-USER_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
+USER_SCHEMA = probatio.Schema({probatio.Required(CONF_HOST): str})
 
 
 class ModernFormsFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -24,6 +24,7 @@ class ModernFormsFlowHandler(ConfigFlow, domain=DOMAIN):
     mac: str | None = None
     name: str
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -36,6 +37,7 @@ class ModernFormsFlowHandler(ConfigFlow, domain=DOMAIN):
         self.host = user_input[CONF_HOST]
         return await self._handle_config_flow()
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

@@ -3,6 +3,12 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.diagnostics import (
+    get_diagnostics_for_config_entry,
+    get_diagnostics_for_device,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
@@ -12,13 +18,6 @@ from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
 from .const import SUBENTRY_ID_1
-
-from tests.common import MockConfigEntry
-from tests.components.diagnostics import (
-    get_diagnostics_for_config_entry,
-    get_diagnostics_for_device,
-)
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.freeze_time("2025-09-15 14:30:00+00:00")
@@ -32,10 +31,6 @@ async def test_entry_diagnostics(
     """Test config entry diagnostics."""
     mock_config_entry.add_to_hass(hass)
     await setup_integration(hass, mock_config_entry)
-
-    # Trigger update for all coordinators before diagnostics
-    for coordinator in mock_config_entry.runtime_data.values():
-        await coordinator.async_refresh()
 
     result = await get_diagnostics_for_config_entry(
         hass, hass_client, mock_config_entry
@@ -56,12 +51,10 @@ async def test_device_diagnostics(
     # Ensure integration is set up so device exists
     await setup_integration(hass, mock_config_entry)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, SUBENTRY_ID_1)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, SUBENTRY_ID_1), mock_config_entry.entry_id
+    )
     assert device is not None
-
-    # Trigger update for the coordinator before diagnostics
-    coordinator = mock_config_entry.runtime_data[SUBENTRY_ID_1]
-    await coordinator.async_refresh()
 
     result = await get_diagnostics_for_device(
         hass, hass_client, mock_config_entry, device

@@ -8,9 +8,9 @@ from python_snoo.containers import SnooDevice
 from python_snoo.exceptions import SnooCommandException
 
 from homeassistant.components.switch import (
-    SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    SwitchService,
 )
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -50,12 +50,12 @@ async def test_update_success(hass: HomeAssistant, bypass_api: AsyncMock) -> Non
     bypass_api.set_sticky_white_noise.side_effect = set_sticky_white_noise
     await hass.services.async_call(
         "switch",
-        SERVICE_TOGGLE,
+        SwitchService.TOGGLE,
         blocking=True,
         target={"entity_id": "switch.test_snoo_sleepytime_sounds"},
     )
 
-    assert bypass_api.set_sticky_white_noise.assert_called_once
+    bypass_api.set_sticky_white_noise.assert_called_once()
     assert hass.states.get("switch.test_snoo_sleepytime_sounds").state == STATE_ON
 
 
@@ -84,5 +84,5 @@ async def test_update_failed(
             target={"entity_id": "switch.test_snoo_sleepytime_sounds"},
         )
 
-    assert bypass_api.set_level.assert_called_once
+    bypass_api.set_sticky_white_noise.assert_called_once()
     assert hass.states.get("switch.test_snoo_sleepytime_sounds").state == STATE_OFF

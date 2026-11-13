@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 import aiohttp
 from moehlenhoff_alpha2 import Alpha2Base
@@ -36,6 +37,7 @@ class Alpha2BaseCoordinator(DataUpdateCoordinator[dict[str, dict]]):
             update_interval=UPDATE_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, dict[str, dict]]:
         """Fetch the latest data from the source."""
         await self.base.update_data()

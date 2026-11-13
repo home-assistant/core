@@ -1,8 +1,8 @@
 """Support for switching devices via Pilight to on and off."""
 
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -21,13 +21,13 @@ from .entity import SWITCHES_SCHEMA, PilightBaseDevice
 
 LIGHTS_SCHEMA = SWITCHES_SCHEMA.extend(
     {
-        vol.Optional(CONF_DIMLEVEL_MIN, default=0): cv.positive_int,
-        vol.Optional(CONF_DIMLEVEL_MAX, default=15): cv.positive_int,
+        probatio.Optional(CONF_DIMLEVEL_MIN, default=0): cv.positive_int,
+        probatio.Optional(CONF_DIMLEVEL_MAX, default=15): cv.positive_int,
     }
 )
 
 PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_LIGHTS): vol.Schema({cv.string: LIGHTS_SCHEMA})}
+    {probatio.Required(CONF_LIGHTS): probatio.Schema({cv.string: LIGHTS_SCHEMA})}
 )
 
 
@@ -60,10 +60,12 @@ class PilightLight(PilightBaseDevice, LightEntity):
         self._dimlevel_max: int = config[CONF_DIMLEVEL_MAX]
 
     @property
+    @override
     def brightness(self) -> int | None:
         """Return the brightness."""
         return self._brightness
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on by calling pilight.send service with on code."""
         # Update brightness only if provided as an argument.

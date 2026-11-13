@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 from actron_neo_api import ActronAirAPIError
 from actron_neo_api.models.settings import ActronAirModeSupport
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.actron_air.climate import (
@@ -28,8 +29,6 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def test_climate_entities(
@@ -213,7 +212,7 @@ async def test_zone_set_temperature(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: "climate.living_room", ATTR_TEMPERATURE: 23.0},
+        {ATTR_ENTITY_ID: "climate.living_room_living_room", ATTR_TEMPERATURE: 23.0},
         blocking=True,
     )
 
@@ -232,7 +231,7 @@ async def test_zone_set_temperature_api_error(
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: "climate.living_room", ATTR_TEMPERATURE: 23.0},
+            {ATTR_ENTITY_ID: "climate.living_room_living_room", ATTR_TEMPERATURE: 23.0},
             blocking=True,
         )
 
@@ -269,7 +268,10 @@ async def test_zone_set_hvac_mode_on(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: "climate.living_room", ATTR_HVAC_MODE: HVACMode.COOL},
+        {
+            ATTR_ENTITY_ID: "climate.living_room_living_room",
+            ATTR_HVAC_MODE: HVACMode.COOL,
+        },
         blocking=True,
     )
 
@@ -285,7 +287,10 @@ async def test_zone_set_hvac_mode_off(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: "climate.living_room", ATTR_HVAC_MODE: HVACMode.OFF},
+        {
+            ATTR_ENTITY_ID: "climate.living_room_living_room",
+            ATTR_HVAC_MODE: HVACMode.OFF,
+        },
         blocking=True,
     )
 
@@ -304,7 +309,10 @@ async def test_zone_set_hvac_mode_api_error(
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: "climate.living_room", ATTR_HVAC_MODE: HVACMode.OFF},
+            {
+                ATTR_ENTITY_ID: "climate.living_room_living_room",
+                ATTR_HVAC_MODE: HVACMode.OFF,
+            },
             blocking=True,
         )
 
@@ -342,7 +350,7 @@ async def test_zone_hvac_mode_unmapped(
     with patch("homeassistant.components.actron_air.PLATFORMS", [Platform.CLIMATE]):
         await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("climate.living_room")
+    state = hass.states.get("climate.living_room_living_room")
     assert state.state == "unknown"
 
 
@@ -361,7 +369,7 @@ async def test_zone_hvac_mode_inactive(
     with patch("homeassistant.components.actron_air.PLATFORMS", [Platform.CLIMATE]):
         await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("climate.living_room")
+    state = hass.states.get("climate.living_room_living_room")
     assert state.state == "off"
 
 
@@ -449,7 +457,7 @@ async def test_zone_hvac_modes_with_dry(
     with patch("homeassistant.components.actron_air.PLATFORMS", [Platform.CLIMATE]):
         await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("climate.living_room")
+    state = hass.states.get("climate.living_room_living_room")
     assert state.attributes["hvac_modes"] == [
         HVACMode.COOL,
         HVACMode.HEAT,
@@ -474,7 +482,7 @@ async def test_zone_hvac_modes_no_mode_support(
     with patch("homeassistant.components.actron_air.PLATFORMS", [Platform.CLIMATE]):
         await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("climate.living_room")
+    state = hass.states.get("climate.living_room_living_room")
     assert state.attributes["hvac_modes"] == [
         HVACMode.COOL,
         HVACMode.HEAT,

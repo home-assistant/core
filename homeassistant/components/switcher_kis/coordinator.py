@@ -2,16 +2,19 @@
 
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING, override
 
 from aioswitcher.device import SwitcherBase
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, update_coordinator
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import DOMAIN, MAX_UPDATE_INTERVAL_SEC, SIGNAL_DEVICE_ADD
+
+if TYPE_CHECKING:
+    from . import SwitcherConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,12 +24,12 @@ class SwitcherDataUpdateCoordinator(
 ):
     """Switcher device data update coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: SwitcherConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: SwitcherConfigEntry,
         device: SwitcherBase,
     ) -> None:
         """Initialize the Switcher device coordinator."""
@@ -40,11 +43,16 @@ class SwitcherDataUpdateCoordinator(
         self.data = device
         self.token = entry.data.get(CONF_TOKEN)
 
+    @override
     async def _async_update_data(self) -> SwitcherBase:
         """Mark device offline if no data."""
         raise update_coordinator.UpdateFailed(
-            f"Device {self.name} did not send update for"
-            f" {MAX_UPDATE_INTERVAL_SEC} seconds"
+            translation_domain=DOMAIN,
+            translation_key="device_update_timeout",
+            translation_placeholders={
+                "device": self.name,
+                "seconds": str(MAX_UPDATE_INTERVAL_SEC),
+            },
         )
 
     @property

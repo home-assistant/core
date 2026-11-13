@@ -2,9 +2,9 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 
-from pytradfri.command import Command
+from pytradfri.api.aiocoap_api import APIRequestProtocol
 from pytradfri.device import Device
 
 from homeassistant.components.sensor import (
@@ -13,12 +13,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    PERCENTAGE,
-    Platform,
-    UnitOfTime,
-)
+from homeassistant.const import Platform, UnitOfDensity, UnitOfRatio, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -37,24 +32,22 @@ class TradfriSensorEntityDescription(SensorEntityDescription):
 
 def _get_air_quality(device: Device) -> int | None:
     """Fetch the air quality value."""
-    assert device.air_purifier_control is not None
+    if TYPE_CHECKING:
+        assert device.air_purifier_control is not None
     if (
         device.air_purifier_control.air_purifiers[0].air_quality == 65535
     ):  # The sensor returns 65535 if the fan is turned off
         return None
 
-    return cast(int, device.air_purifier_control.air_purifiers[0].air_quality)
+    return device.air_purifier_control.air_purifiers[0].air_quality
 
 
-def _get_filter_time_left(device: Device) -> int:
+def _get_filter_time_left(device: Device) -> int | None:
     """Fetch the filter's remaining lifetime (in hours)."""
-    assert device.air_purifier_control is not None
-    return round(
-        cast(
-            int, device.air_purifier_control.air_purifiers[0].filter_lifetime_remaining
-        )
-        / 60
-    )
+    if TYPE_CHECKING:
+        assert device.air_purifier_control is not None
+    remaining = device.air_purifier_control.air_purifiers[0].filter_lifetime_remaining
+    return None if remaining is None else round(remaining / 60)
 
 
 SENSOR_DESCRIPTIONS_BATTERY: tuple[TradfriSensorEntityDescription, ...] = (
@@ -62,7 +55,7 @@ SENSOR_DESCRIPTIONS_BATTERY: tuple[TradfriSensorEntityDescription, ...] = (
         key="battery_level",
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         value=lambda device: cast(int, device.device_info.battery_level),
     ),
 )
@@ -73,7 +66,7 @@ SENSOR_DESCRIPTIONS_FAN: tuple[TradfriSensorEntityDescription, ...] = (
         key="aqi",
         translation_key="aqi",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         value=_get_air_quality,
     ),
     TradfriSensorEntityDescription(
@@ -168,7 +161,7 @@ class TradfriSensor(TradfriBaseEntity, SensorEntity):
     def __init__(
         self,
         device_coordinator: TradfriDeviceDataUpdateCoordinator,
-        api: Callable[[Command | list[Command]], Any],
+        api: APIRequestProtocol,
         gateway_id: str,
         description: TradfriSensorEntityDescription,
     ) -> None:
@@ -185,6 +178,8 @@ class TradfriSensor(TradfriBaseEntity, SensorEntity):
 
         self._refresh()  # Set initial state
 
+    @callback
+    @override
     def _refresh(self) -> None:
         """Refresh the device."""
         self._attr_native_value = self.entity_description.value(self.coordinator.data)

@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime
 import logging
 import os
-from typing import TYPE_CHECKING, Any, NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple, override
 
 from psutil import Process
 from psutil._ntuples import sbattery, sdiskusage, shwtemp, snetio, snicaddr, sswap
@@ -17,11 +17,10 @@ from homeassistant.helpers.update_coordinator import TimestampDataUpdateCoordina
 from homeassistant.util import dt as dt_util
 
 from .const import CONF_PROCESS, PROCESS_ERRORS
-from .util import get_all_pressure_info
+from .util import get_all_pressure_info, read_fan_speed
 
 if TYPE_CHECKING:
     from . import SystemMonitorConfigEntry
-from .util import read_fan_speed
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 class SensorData:
     """Sensor data."""
 
-    addresses: dict[str, list[snicaddr]]
+    addresses: dict[str, list[snicaddr]] | None
     battery: sbattery | None
     boot_time: datetime
     cpu_percent: float | None
@@ -148,6 +147,7 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
             ("temperatures", ""): set(),
         }
 
+    @override
     async def _async_update_data(self) -> SensorData:
         """Fetch data."""
         _LOGGER.debug("Update list is: %s", self.update_subscribers)

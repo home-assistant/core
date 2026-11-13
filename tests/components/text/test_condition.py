@@ -3,8 +3,20 @@
 from typing import Any
 
 import pytest
+from pytest_homeassistant.components.common import (
+    ConditionStateDescription,
+    TargetSupport,
+    assert_condition_behavior_all,
+    assert_condition_behavior_any,
+    assert_condition_options_supported,
+    assert_conditions_target_support,
+    parametrize_condition_states_all,
+    parametrize_condition_states_any,
+    parametrize_target_entities,
+    target_entities,
+)
 
-from homeassistant.components.text.condition import CONF_VALUE
+from homeassistant.components.text.condition import CONDITIONS, CONF_VALUE
 from homeassistant.const import (
     CONF_CONDITION,
     CONF_ENTITY_ID,
@@ -14,18 +26,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.condition import (
     async_from_config as async_condition_from_config,
-)
-
-from tests.components.common import (
-    ConditionStateDescription,
-    assert_condition_behavior_all,
-    assert_condition_behavior_any,
-    assert_condition_gated_by_labs_flag,
-    assert_condition_options_supported,
-    parametrize_condition_states_all,
-    parametrize_condition_states_any,
-    parametrize_target_entities,
-    target_entities,
 )
 
 
@@ -41,15 +41,11 @@ async def target_input_texts(hass: HomeAssistant) -> dict[str, list[str]]:
     return await target_entities(hass, "input_text")
 
 
-@pytest.mark.parametrize("condition", ["text.is_equal_to"])
-async def test_text_conditions_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, condition: str
-) -> None:
-    """Test the text conditions are gated by the labs flag."""
-    await assert_condition_gated_by_labs_flag(hass, caplog, condition)
+_CONDITION_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "is_equal_to": TargetSupport.STANDARD,
+}
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_key", "base_options", "supports_behavior", "supports_duration"),
     [
@@ -73,6 +69,11 @@ async def test_text_condition_options_validation(
     )
 
 
+def test_condition_target_support() -> None:
+    """Certify the condition registry matches its declared target support."""
+    assert_conditions_target_support(CONDITIONS, _CONDITION_TARGET_SUPPORT)
+
+
 CONDITION_STATES_ANY = [
     *parametrize_condition_states_any(
         condition="text.is_equal_to",
@@ -92,7 +93,6 @@ CONDITION_STATES_ALL = [
 ]
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("text"),
@@ -123,7 +123,6 @@ async def test_text_condition_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("input_text"),
@@ -154,7 +153,6 @@ async def test_input_text_condition_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("text"),
@@ -185,7 +183,6 @@ async def test_text_condition_behavior_all(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("input_text"),
@@ -219,7 +216,6 @@ async def test_input_text_condition_behavior_all(
 # --- Cross-domain test ---
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 async def test_text_condition_fires_for_both_domains(
     hass: HomeAssistant,
 ) -> None:

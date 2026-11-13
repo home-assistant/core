@@ -1,5 +1,7 @@
 """Support for BlueMaestro sensors."""
 
+from typing import override
+
 from bluemaestro_ble import (
     SensorDeviceClass as BlueMaestroSensorDeviceClass,
     SensorUpdate,
@@ -124,7 +126,9 @@ async def async_setup_entry(
             BlueMaestroBluetoothSensorEntity, async_add_entities
         )
     )
-    entry.async_on_unload(coordinator.async_register_processor(processor))
+    entry.async_on_unload(
+        coordinator.async_register_processor(processor, SensorEntityDescription)
+    )
 
 
 class BlueMaestroBluetoothSensorEntity(
@@ -136,6 +140,7 @@ class BlueMaestroBluetoothSensorEntity(
     """Representation of a BlueMaestro sensor."""
 
     @property
+    @override
     def native_value(self) -> int | float | None:
         """Return the native value."""
         return self.processor.entity_data.get(self.entity_key)

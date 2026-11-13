@@ -1,0 +1,166 @@
+"""Coordinator for the ZhongHong integration."""
+
+from dataclasses import dataclass
+from datetime import datetime
+from typing import Final, override
+
+from zhong_hong_hvac.hub import ZhongHongGateway
+from zhong_hong_hvac.hvac import HVAC as ZhongHongHVAC
+
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+from .const import LOGGER, SCAN_INTERVAL
+
+# A unit acts on a command and then reports the new state unprompted. This is
+# how long to wait before asking for it anyway, to cover the reports that never
+# arrive. Ten runs against a Haier unit took between one and 3.4 seconds to
+# act, so this sits past the slowest of them: asking before the unit has moved
+# would read back the state the command was meant to change.
+READBACK_DELAY: Final = 5
+
+type DeviceAddress = tuple[int, int]
+
+
+@dataclass
+class ZhongHongData:
+    """What a loaded config entry holds.
+
+    The air conditioners are found once, when the entry is set up: discovery
+    needs the listener thread stopped, so the gateway cannot be asked again
+    while the entry is running. They belong to the entry that found them
+    rather than to whatever happens to be updating them.
+    """
+
+    hub: ZhongHongGateway
+    devices: dict[DeviceAddress, ZhongHongHVAC]
+    coordinator: ZhongHongCoordinator
+
+
+type ZhongHongConfigEntry = ConfigEntry[ZhongHongData]
+
+
+def device_unique_id(entry: ZhongHongConfigEntry, address: DeviceAddress) -> str:
+    """Return the unique ID of the air conditioner at an address."""
+    return f"{entry.entry_id}_{address[0]}_{address[1]}"
+
+
+def legacy_device_unique_id(address: DeviceAddress) -> str:
+    """Return the identifier the YAML platform gave the air conditioner.
+
+    It carried only the address on the bus, so two gateways with an air
+    conditioner at the same address, which `(1, 1)` commonly is, produced the
+    same one and the second entity was dropped. Entities are moved off it on
+    setup; it is still needed to find them.
+    """
+    return f"zhong_hong_hvac_{address[0]}_{address[1]}"
+
+
+class ZhongHongCoordinator(DataUpdateCoordinator[None]):
+    """Tell the entities when to look at their air conditioner again.
+
+    There is no data to hand out. The gateway pushes state on its own socket
+    and the library writes it into the device objects in place, so all this
+    has to carry is that something changed; the entities read the device they
+    were given. Polling remains as a fallback for pushes missed while the
+    connection was down, and is what decides availability.
+
+    The connection and the devices belong to the config entry, which hands
+    them over already listening.
+    """
+
+    config_entry: ZhongHongConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: ZhongHongConfigEntry,
+        hub: ZhongHongGateway,
+        devices: dict[DeviceAddress, ZhongHongHVAC],
+    ) -> None:
+        """Initialize the coordinator."""
+        super().__init__(
+            hass,
+            LOGGER,
+            config_entry=config_entry,
+            name=config_entry.data[CONF_HOST],
+            update_interval=SCAN_INTERVAL,
+        )
+        self.hub = hub
+        self._readback_cancel: CALLBACK_TYPE | None = None
+
+        for device in devices.values():
+            device.register_update_callback(self._handle_device_update)
+
+    @callback
+    def async_schedule_readback(self) -> None:
+        """Re-read the gateway shortly after it has been commanded.
+
+        A unit takes a second or three to act on a command, and the gateway
+        pushes the new state once it has. That push is the only thing the
+        state comes from, so if it goes missing the entity keeps showing what
+        the unit was doing before, until the next poll a minute later. Asking
+        again a few seconds in costs one round trip and closes that window.
+        """
+        # A command sits in the executor while it is sent, and the entry can
+        # be unloaded in the meantime, so this can be reached afterwards.
+        # Scheduling then would put back the timer the shutdown has just
+        # taken away.
+        if self._shutdown_requested:
+            return
+
+        if self._readback_cancel is not None:
+            self._readback_cancel()
+
+        @callback
+        def _readback(_now: datetime) -> None:
+            self._readback_cancel = None
+            # Refreshed rather than requested: a request goes through the
+            # coordinator's debouncer, whose cooldown is twice this delay, so
+            # a command given shortly after a re-read would have its own one
+            # held back past the point the unit has acted. The timer above is
+            # the rate limit this needs.
+            self.config_entry.async_create_background_task(
+                self.hass,
+                self.async_refresh(),
+                name=f"{self.name} readback",
+            )
+
+        self._readback_cancel = async_call_later(self.hass, READBACK_DELAY, _readback)
+
+    def _handle_device_update(self, device: ZhongHongHVAC) -> None:
+        """Handle a state push from the gateway.
+
+        Called on the library's listener thread, so the update has to be handed
+        back to the event loop before touching any coordinator state.
+
+        The listeners are told directly rather than through
+        `async_set_updated_data`, which would also push the next poll back a
+        full interval. A push says one unit changed, not that every unit was
+        accounted for, so a gateway with something on it that reports often
+        would keep postponing the poll the units that went quiet depend on.
+        """
+        self.hass.loop.call_soon_threadsafe(self.async_update_listeners)
+
+    @override
+    async def _async_update_data(self) -> None:
+        """Ask the gateway to re-send the state of every device."""
+        if not self.hub.connected:
+            raise UpdateFailed(f"Lost connection to the gateway at {self.hub.ip_addr}")
+
+        if not await self.hass.async_add_executor_job(self.hub.query_all_status):
+            raise UpdateFailed(f"Failed to query the gateway at {self.hub.ip_addr}")
+
+    @override
+    async def async_shutdown(self) -> None:
+        """Drop the pending re-read, which would outlive the entry."""
+        # Shutting down first, so that anything on its way here from the
+        # executor finds the door already closed.
+        await super().async_shutdown()
+
+        if self._readback_cancel is not None:
+            self._readback_cancel()
+            self._readback_cancel = None

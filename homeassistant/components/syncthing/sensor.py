@@ -1,7 +1,7 @@
 """Support for Syncthing sensors."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 import aiosyncthing
 
@@ -117,16 +117,19 @@ class FolderSensor(SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the state of the sensor."""
         return self._state["state"] if self._state else None
 
     @property
+    @override
     def available(self) -> bool:
         """Could the device be accessed during the last update call."""
         return self._state is not None
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes."""
         return self._state
@@ -160,6 +163,7 @@ class FolderSensor(SensorEntity):
             self._unsub_timer()
             self._unsub_timer = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
 

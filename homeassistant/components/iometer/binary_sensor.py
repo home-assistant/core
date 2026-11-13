@@ -2,17 +2,17 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import IOMeterCoordinator, IOmeterData
+from .coordinator import IOmeterConfigEntry, IOMeterCoordinator, IOmeterData
 from .entity import IOmeterEntity
 
 
@@ -51,7 +51,7 @@ SENSOR_TYPES: list[IOmeterBinarySensorDescription] = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: IOmeterConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Sensors."""
@@ -82,6 +82,7 @@ class IOmeterBinarySensor(IOmeterEntity, BinarySensorEntity):
         self._attr_unique_id = f"{coordinator.identifier}_{description.key}"
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the binary sensor state."""
         return self.entity_description.value_fn(self.coordinator.data)

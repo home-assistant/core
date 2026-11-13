@@ -3,7 +3,7 @@
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -156,11 +156,13 @@ class TrainSensor(CoordinatorEntity[TVDataUpdateCoordinator], SensorEntity):
         )
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         self._update_attr()
         return super()._handle_coordinator_update()
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return additional attributes for Trafikverket Train sensor."""
         if self.coordinator.data.product_filter:

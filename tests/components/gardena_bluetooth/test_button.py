@@ -5,21 +5,20 @@ from unittest.mock import Mock, call
 
 from gardena_bluetooth.const import Reset
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 
 from . import setup_entry
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
 def mock_switch_chars(mock_read_char_raw):
     """Mock data on device."""
-    mock_read_char_raw[Reset.factory_reset.uuid] = b"\x00"
+    mock_read_char_raw[Reset.factory_reset.unique_id] = b"\x00"
     return mock_read_char_raw
 
 
@@ -36,7 +35,7 @@ async def test_setup(
     await setup_entry(hass, mock_entry, [Platform.BUTTON])
     assert hass.states.get(entity_id) == snapshot
 
-    mock_switch_chars[Reset.factory_reset.uuid] = b"\x01"
+    mock_switch_chars[Reset.factory_reset.unique_id] = b"\x01"
     await scan_step()
     assert hass.states.get(entity_id) == snapshot
 
@@ -55,8 +54,8 @@ async def test_switching(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: entity_id},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
 

@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Final
+from typing import Final, override
 
 from hdfury import HDFuryAPI, HDFuryError
 
@@ -47,6 +47,7 @@ class HDFuryCoordinator(DataUpdateCoordinator[HDFuryData]):
         self.host: str = entry.data[CONF_HOST]
         self.client = HDFuryAPI(self.host, async_get_clientsession(hass))
 
+    @override
     async def _async_update_data(self) -> HDFuryData:
         """Fetch the latest device data."""
 

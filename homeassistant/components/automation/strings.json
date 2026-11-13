@@ -1,5 +1,6 @@
 {
   "common": {
+    "validation_failed_short_title": "Automation failed to set up",
     "validation_failed_title": "Automation {name} failed to set up"
   },
   "entity_component": {
@@ -48,31 +49,28 @@
     },
     "validation_failed_actions": {
       "description": "The automation \"{name}\" (`{entity_id}`) is not active because its actions could not be set up.\n\nError:`{error}`.\n\nTo fix this error, [edit the automation]({edit}) to correct it, then save and reload the automation configuration.",
+      "short_title": "[%key:component::automation::common::validation_failed_short_title%]",
       "title": "[%key:component::automation::common::validation_failed_title%]"
     },
     "validation_failed_blueprint": {
       "description": "The blueprinted automation \"{name}\" (`{entity_id}`) failed to set up.\n\nError:`{error}`.\n\nTo fix this error, [edit the automation]({edit}) to correct it, then save and reload the automation configuration.",
+      "short_title": "[%key:component::automation::common::validation_failed_short_title%]",
       "title": "[%key:component::automation::common::validation_failed_title%]"
     },
     "validation_failed_conditions": {
       "description": "The automation \"{name}\" (`{entity_id}`) is not active because its conditions could not be set up.\n\nError:`{error}`.\n\nTo fix this error, [edit the automation]({edit}) to correct it, then save and reload the automation configuration.",
+      "short_title": "[%key:component::automation::common::validation_failed_short_title%]",
       "title": "[%key:component::automation::common::validation_failed_title%]"
     },
     "validation_failed_schema": {
       "description": "The automation \"{name}\" (`{entity_id}`) is not active because the configuration has errors.\n\nError:`{error}`.\n\nTo fix this error, [edit the automation]({edit}) to correct it, then save and reload the automation configuration.",
+      "short_title": "[%key:component::automation::common::validation_failed_short_title%]",
       "title": "[%key:component::automation::common::validation_failed_title%]"
     },
     "validation_failed_triggers": {
       "description": "The automation \"{name}\" (`{entity_id}`) is not active because its triggers could not be set up.\n\nError:`{error}`.\n\nTo fix this error, [edit the automation]({edit}) to correct it, then save and reload the automation configuration.",
+      "short_title": "[%key:component::automation::common::validation_failed_short_title%]",
       "title": "[%key:component::automation::common::validation_failed_title%]"
-    }
-  },
-  "preview_features": {
-    "new_triggers_conditions": {
-      "description": "Enables new purpose-specific triggers and conditions that are more user-friendly than technical state-based options.\n\nThese new automation features support targets across your entire home, letting you trigger automations for any entity, device, area, floor, or label (for example, when any light in your living room turned on). Integrations can now also provide their own purpose-specific triggers and conditions, just like actions.\n\nThis preview also includes a new tree view to help you navigate your home when adding triggers, conditions, and actions.",
-      "disable_confirmation": "Disabling this preview will cause automations and scripts that use the new purpose-specific triggers and conditions to fail.\n\nBefore disabling, ensure that your automations or scripts do not rely on this feature.",
-      "enable_confirmation": "This feature is still in development and may change. These new purpose-specific triggers and conditions are being refined based on user feedback and are not yet complete.\n\nBy enabling this preview, you'll have early access to these new capabilities, but be aware that they may be modified or updated in future releases.",
-      "name": "Purpose-specific triggers and conditions"
     }
   },
   "services": {

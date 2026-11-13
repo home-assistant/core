@@ -5,11 +5,10 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.prusalink import DOMAIN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -49,6 +48,8 @@ def mock_info_api() -> Generator[dict[str, Any]]:
         "hostname": "PrusaXL",
         "min_extrusion_temp": 170,
         "location": "Workshop",
+        "sd_ready": True,
+        "farm_mode": False,
     }
     with patch("pyprusalink.PrusaLink.get_info", return_value=resp):
         yield resp
@@ -84,6 +85,7 @@ def mock_get_status_idle() -> Generator[dict[str, Any]]:
             "speed": 100,
             "fan_hotend": 100,
             "fan_print": 75,
+            "status_connect": {"ok": True, "message": ""},
         },
     }
     with patch("pyprusalink.PrusaLink.get_status", return_value=resp):
@@ -112,6 +114,7 @@ def mock_get_status_printing() -> Generator[dict[str, Any]]:
             "speed": 100,
             "fan_hotend": 5000,
             "fan_print": 2500,
+            "status_connect": {"ok": True, "message": ""},
         },
     }
     with patch("pyprusalink.PrusaLink.get_status", return_value=resp):
@@ -119,11 +122,14 @@ def mock_get_status_printing() -> Generator[dict[str, Any]]:
 
 
 @pytest.fixture
-def mock_job_api_idle() -> Generator[dict[str, Any]]:
-    """Mock PrusaLink job API having no job."""
-    resp = {}
-    with patch("pyprusalink.PrusaLink.get_job", return_value=resp):
-        yield resp
+def mock_job_api_idle() -> Generator[None]:
+    """Mock PrusaLink job API having no job.
+
+    pyprusalink >= 3.0.0 returns `None` from `get_job()` on HTTP 204 when
+    no job is running, rather than an empty dict as in 2.x.
+    """
+    with patch("pyprusalink.PrusaLink.get_job", return_value=None):
+        yield None
 
 
 @pytest.fixture
@@ -202,6 +208,6 @@ def mock_api(
     mock_info_api: dict[str, Any],
     mock_get_legacy_printer: dict[str, Any],
     mock_get_status_idle: dict[str, Any],
-    mock_job_api_idle: dict[str, Any],
+    mock_job_api_idle: None,
 ) -> None:
     """Mock PrusaLink API."""

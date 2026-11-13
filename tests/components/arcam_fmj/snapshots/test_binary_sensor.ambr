@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('arcam_fmj', '456789abcdef')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -39,7 +39,7 @@
 # name: test_setup[binary_sensor.arcam_fmj_127_0_0_1_incoming_video_interlaced-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Arcam FMJ (127.0.0.1) Incoming video interlaced',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Arcam FMJ (127.0.0.1) Incoming video interlaced',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.arcam_fmj_127_0_0_1_incoming_video_interlaced',
@@ -57,9 +57,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('arcam_fmj', '456789abcdef-2')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -89,7 +89,7 @@
 # name: test_setup[binary_sensor.arcam_fmj_127_0_0_1_zone_2_incoming_video_interlaced-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Arcam FMJ (127.0.0.1) Zone 2 Incoming video interlaced',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Arcam FMJ (127.0.0.1) Zone 2 Incoming video interlaced',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.arcam_fmj_127_0_0_1_zone_2_incoming_video_interlaced',

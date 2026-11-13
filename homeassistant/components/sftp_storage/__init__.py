@@ -8,17 +8,14 @@ from pathlib import Path
 
 from homeassistant.components.backup import BackupAgentError
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 
-from .client import BackupAgentClient
+from .client import BackupAgentClient, SFTPConnectionError
 from .const import (
     CONF_BACKUP_LOCATION,
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
     CONF_PRIVATE_KEY_FILE,
-    CONF_USERNAME,
     DATA_BACKUP_AGENT_LISTENERS,
     DOMAIN,
     LOGGER,
@@ -39,7 +36,7 @@ class SFTPConfigEntryData:
     backup_location: str
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SFTPConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SFTPConfigEntry) -> None:
     """Set up SFTP Storage from a config entry."""
 
     cfg = SFTPConfigEntryData(
@@ -58,6 +55,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SFTPConfigEntry) -> bool
     try:
         client = BackupAgentClient(entry, hass)
         await client.open()
+    except SFTPConnectionError as e:
+        raise ConfigEntryNotReady(str(e)) from e
     except BackupAgentError as e:
         raise ConfigEntryError from e
 
@@ -67,8 +66,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SFTPConfigEntry) -> bool
             listener()
 
     entry.async_on_unload(entry.async_on_state_change(_async_notify_backup_listeners))
-
-    return True
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: SFTPConfigEntry) -> None:
@@ -130,7 +127,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: SFTPConfigEntry) -> Non
                 )
         else:
             LOGGER.debug(
-                "Removed storage directory for %s integration",
+                "Removed storage directory for %s integration for host %s@%s",
                 DOMAIN,
                 entry.data[CONF_USERNAME],
                 entry.data[CONF_HOST],
@@ -146,7 +143,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: SFTPConfigEntry) -> Non
         await hass.async_add_executor_job(remove_files, entry)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: SFTPConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SFTPConfigEntry) -> None:
     """Unload SFTP Storage config entry."""
     LOGGER.debug(
         "Unloading %s integration for host %s@%s",
@@ -154,4 +151,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: SFTPConfigEntry) -> boo
         entry.data[CONF_USERNAME],
         entry.data[CONF_HOST],
     )
-    return True

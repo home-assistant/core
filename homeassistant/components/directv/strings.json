@@ -21,5 +21,10 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "send_command_failed": {
+      "message": "Sending command {command} to device {device} failed."
+    }
   }
 }

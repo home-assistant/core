@@ -28,13 +28,13 @@ from aiohomekit.model.services import Service, ServicesTypes
 
 from homeassistant.components.thread import async_get_preferred_dataset
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_VIA_DEVICE, EVENT_HOMEASSISTANT_STARTED
-from homeassistant.core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
+from homeassistant.helpers.start import async_at_started
 
 from .config_flow import normalize_hkid
 from .const import (
@@ -140,9 +140,6 @@ class HKDevice:
         self._polling_lock = asyncio.Lock()
         self._polling_lock_warned = False
         self._poll_failures = 0
-
-        # This is set to True if we can't rely on serial numbers to be unique
-        self.unreliable_serial_numbers = False
 
         self.watchable_characteristics: set[tuple[int, int]] = set()
 
@@ -258,7 +255,7 @@ class HKDevice:
         for callback_ in self._availability_callbacks:
             callback_()
 
-    async def _async_populate_ble_accessory_state(self, event: Event) -> None:
+    async def _async_populate_ble_accessory_state(self, hass: HomeAssistant) -> None:
         """Populate the BLE accessory state without blocking startup.
 
         If the accessory was asleep at startup we need to retry
@@ -298,7 +295,7 @@ class HKDevice:
         # yet.
         attempts = None if self.hass.state is CoreState.running else 1
         if (
-            transport == Transport.BLE
+            transport is Transport.BLE
             and pairing.accessories
             and pairing.accessories.has_aid(1)
         ):
@@ -309,10 +306,7 @@ class HKDevice:
             # previously we force an update after startup
             # is complete.
             entry.async_on_unload(
-                self.hass.bus.async_listen(
-                    EVENT_HOMEASSISTANT_STARTED,
-                    self._async_populate_ble_accessory_state,
-                )
+                async_at_started(self.hass, self._async_populate_ble_accessory_state)
             )
         else:
             await self.pairing.async_populate_accessories_state(
@@ -328,7 +322,7 @@ class HKDevice:
         )
         entry.async_on_unload(self._async_cancel_subscription_timer)
 
-        if transport != Transport.BLE:
+        if transport is not Transport.BLE:
             # Although async_populate_accessories_state fetched the accessory database,
             # the /accessories endpoint may return cached values from the accessory's
             # perspective. For example, Ecobee thermostats may report stale temperature
@@ -349,7 +343,7 @@ class HKDevice:
 
         await self.async_process_entity_map()
 
-        if transport != Transport.BLE:
+        if transport is not Transport.BLE:
             # Start regular polling after entity map is processed
             self._async_start_polling()
 
@@ -359,7 +353,7 @@ class HKDevice:
 
         self.async_set_available_state(self.pairing.is_available)
 
-        if transport == Transport.BLE:
+        if transport is Transport.BLE:
             # If we are using BLE, we need to periodically check of the
             # BLE device is available since we won't get callbacks
             # when it goes away since we HomeKit supports disconnected
@@ -407,20 +401,14 @@ class HKDevice:
         await self.async_load_platforms()
         self.add_entities()
 
+    def accessory_identifier(self, accessory: Accessory) -> tuple[str, str]:
+        """Return the device registry identifier of an accessory."""
+        return (IDENTIFIER_ACCESSORY_ID, f"{self.unique_id}:aid:{accessory.aid}")
+
     def device_info_for_accessory(self, accessory: Accessory) -> DeviceInfo:
         """Build a DeviceInfo for a given accessory."""
-        identifiers = {
-            (
-                IDENTIFIER_ACCESSORY_ID,
-                f"{self.unique_id}:aid:{accessory.aid}",
-            )
-        }
-
-        if not self.unreliable_serial_numbers:
-            identifiers.add((IDENTIFIER_SERIAL_NUMBER, accessory.serial_number))
-
         connections: set[tuple[str, str]] = set()
-        if self.pairing.transport == Transport.BLE and (
+        if self.pairing.transport is Transport.BLE and (
             discovery := self.pairing.controller.discoveries.get(
                 normalize_hkid(self.unique_id)
             )
@@ -429,13 +417,8 @@ class HKDevice:
                 (dr.CONNECTION_BLUETOOTH, cast(BleDiscovery, discovery).device.address),
             }
 
-        device_info = DeviceInfo(
-            identifiers={
-                (
-                    IDENTIFIER_ACCESSORY_ID,
-                    f"{self.unique_id}:aid:{accessory.aid}",
-                )
-            },
+        return DeviceInfo(
+            identifiers={self.accessory_identifier(accessory)},
             connections=connections,
             name=accessory.name,
             manufacturer=accessory.manufacturer,
@@ -444,17 +427,6 @@ class HKDevice:
             hw_version=accessory.hardware_revision,
             serial_number=accessory.serial_number,
         )
-
-        if accessory.aid != 1:
-            # Every pairing has an accessory 1
-            # It *doesn't* have a via_device, as it is the device we are connecting to
-            # Every other accessory should use it as its via device.
-            device_info[ATTR_VIA_DEVICE] = (
-                IDENTIFIER_ACCESSORY_ID,
-                f"{self.unique_id}:aid:1",
-            )
-
-        return device_info
 
     @callback
     def async_migrate_devices(self) -> None:
@@ -484,19 +456,29 @@ class HKDevice:
                     (DOMAIN, IDENTIFIER_LEGACY_SERIAL_NUMBER, accessory.serial_number)
                 )
 
-            device = device_registry.async_get_device(identifiers=identifiers)  # type: ignore[arg-type]
+            # Resolve to this config entry's own device. Several config entries can share
+            # the legacy identifier, in which case async_get_device returns a read-only
+            # composite spanning them and async_update_device would silently drop the
+            # identifier rename; scope the lookup to this entry instead.
+            candidates = device_registry.async_get_devices(identifiers=identifiers)  # type: ignore[arg-type]
+            device = next(
+                (
+                    candidate
+                    for candidate in candidates
+                    if candidate.config_entry_id == self.config_entry.entry_id
+                ),
+                None,
+            )
             if not device:
-                continue
-
-            if self.config_entry.entry_id not in device.config_entries:
-                _LOGGER.warning(
-                    (
-                        "Found candidate device for %s:aid:%s, but owned by a different"
-                        " config entry, skipping"
-                    ),
-                    self.unique_id,
-                    accessory.aid,
-                )
+                if candidates:
+                    _LOGGER.warning(
+                        (
+                            "Found candidate device for %s:aid:%s, but owned by a"
+                            " different config entry, skipping"
+                        ),
+                        self.unique_id,
+                        accessory.aid,
+                    )
                 continue
 
             _LOGGER.debug(
@@ -575,22 +557,22 @@ class HKDevice:
 
         device_registry = dr.async_get(self.hass)
         for accessory in self.entity_map.accessories:
-            identifiers = {
-                (
-                    IDENTIFIER_ACCESSORY_ID,
-                    f"{self.unique_id}:aid:{accessory.aid}",
-                )
-            }
+            identifier = (
+                IDENTIFIER_ACCESSORY_ID,
+                f"{self.unique_id}:aid:{accessory.aid}",
+            )
             legacy_serial_identifier = (
                 IDENTIFIER_SERIAL_NUMBER,
                 accessory.serial_number,
             )
 
-            device = device_registry.async_get_device(identifiers=identifiers)
+            device = device_registry.async_get_device_by_identifier(
+                identifier, self.config_entry.entry_id
+            )
             if not device or legacy_serial_identifier not in device.identifiers:
                 continue
 
-            device_registry.async_update_device(device.id, new_identifiers=identifiers)
+            device_registry.async_update_device(device.id, new_identifiers={identifier})
 
     @callback
     def async_reap_stale_entity_registry_entries(self) -> None:
@@ -622,7 +604,7 @@ class HKDevice:
                 current_unique_id.add((accessory.aid, service.iid, None))
 
                 for char in service.characteristics:
-                    if self.pairing.transport != Transport.BLE:
+                    if self.pairing.transport is not Transport.BLE:
                         if char.type == CharacteristicsTypes.THREAD_CONTROL_POINT:
                             continue
 
@@ -669,63 +651,28 @@ class HKDevice:
         device_registry = dr.async_get(self.hass)
 
         devices = {}
+        bridge_device_id: str | None = None
 
-        # Accessories need to be created in the correct order or setting up
-        # relationships with ATTR_VIA_DEVICE may fail.
+        # Accessories are sorted by their HomeKit accessory id (aid). The bridge is
+        # always aid 1, so it is registered before the accessories that link back to
+        # it via via_device_id.
         for accessory in sorted(self.entity_map.accessories, key=attrgetter("aid")):
             device_info = self.device_info_for_accessory(accessory)
 
-            device = device_registry.async_get_or_create(
+            if accessory.aid != 1 and bridge_device_id is not None:
+                device_info.via_device_id = bridge_device_id
+
+            device = device_registry.async_get_or_create_from_info(
                 config_entry_id=self.config_entry.entry_id,
-                **device_info,
+                device_info=device_info,
             )
+
+            if accessory.aid == 1:
+                bridge_device_id = device.id
 
             devices[accessory.aid] = device.id
 
         self.devices = devices
-
-    @callback
-    def async_detect_workarounds(self) -> None:
-        """Detect any workarounds that are needed for this pairing."""
-        unreliable_serial_numbers = False
-
-        devices = set()
-
-        for accessory in self.entity_map.accessories:
-            if not valid_serial_number(accessory.serial_number):
-                _LOGGER.debug(
-                    (
-                        "Serial number %r is not valid, it cannot be used as a unique"
-                        " identifier"
-                    ),
-                    accessory.serial_number,
-                )
-                unreliable_serial_numbers = True
-
-            elif accessory.serial_number in devices:
-                _LOGGER.debug(
-                    (
-                        "Serial number %r is duplicated within this pairing, it cannot"
-                        " be used as a unique identifier"
-                    ),
-                    accessory.serial_number,
-                )
-                unreliable_serial_numbers = True
-
-            elif accessory.serial_number == accessory.hardware_revision:
-                # This is a known bug with some devices (e.g. RYSE SmartShades)
-                _LOGGER.debug(
-                    (
-                        "Serial number %r is actually the hardware revision, it cannot"
-                        " be used as a unique identifier"
-                    ),
-                    accessory.serial_number,
-                )
-                unreliable_serial_numbers = True
-
-            devices.add(accessory.serial_number)
-
-        self.unreliable_serial_numbers = unreliable_serial_numbers
 
     async def async_process_entity_map(self) -> None:
         """Process the entity map and load any platforms or entities that need adding.
@@ -734,13 +681,6 @@ class HKDevice:
         we detect metadata changes via the c# counter on the
         zeroconf record.
         """
-        # Ensure the Pairing object has access to the latest
-        # version of the entity map. This is especially important
-        # for BLE, as the Pairing instance relies on the entity
-        # map to map aid/iid to GATT characteristics. So push it
-        # to there as well.
-        self.async_detect_workarounds()
-
         # Migrate to new device ids
         self.async_migrate_devices()
 
@@ -1057,7 +997,7 @@ class HKDevice:
     @property
     def is_unprovisioned_thread_device(self) -> bool:
         """Is this a thread capable device not connected by CoAP."""
-        if self.pairing.controller.transport_type != TransportType.BLE:
+        if self.pairing.controller.transport_type is not TransportType.BLE:
             return False
 
         if not self.entity_map.aid(1).services.first(
@@ -1069,7 +1009,7 @@ class HKDevice:
 
     async def async_thread_provision(self) -> None:
         """Migrate a HomeKit pairing to CoAP (Thread)."""
-        if self.pairing.controller.transport_type == TransportType.COAP:
+        if self.pairing.controller.transport_type is TransportType.COAP:
             raise HomeAssistantError("Already connected to a thread network")
 
         if not (dataset := await async_get_preferred_dataset(self.hass)):

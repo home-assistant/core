@@ -22,8 +22,8 @@
       'subentries': list([
       ]),
       'title': 'Test Omada Controller',
-      'unique_id': '12345',
-      'version': 1,
+      'unique_id': '12345_Default',
+      'version': 2,
     }),
     'runtime': dict({
       'clients': dict({
@@ -1251,6 +1251,14 @@
         'uptime': '5day(s) 3h 29m 49s',
         'uptimeLong': 444589,
         'version': '1.1.1',
+        'wlan': dict({
+          'ssids': list([
+            dict({
+              'psk': '**REDACTED**',
+              'ssid': '**REDACTED**',
+            }),
+          ]),
+        }),
       }),
     }),
   })

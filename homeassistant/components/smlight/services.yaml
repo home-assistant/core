@@ -1,0 +1,73 @@
+play_rtttl:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          filter:
+            - integration: smlight
+              model: SLZB-Ultima3
+            - integration: smlight
+              model: SLZB-Ultima4
+    duration:
+      required: false
+      example: 4
+      selector:
+        select:
+          options:
+            - "1"
+            - "2"
+            - "4"
+            - "8"
+            - "16"
+            - "32"
+    octave:
+      required: true
+      example: 5
+      selector:
+        number:
+          min: 4
+          max: 7
+    bpm:
+      required: false
+      example: 63
+      selector:
+        select:
+          options:
+            - "25"
+            - "28"
+            - "31"
+            - "35"
+            - "40"
+            - "45"
+            - "50"
+            - "56"
+            - "63"
+            - "70"
+            - "80"
+            - "90"
+            - "100"
+            - "112"
+            - "125"
+            - "140"
+            - "160"
+            - "180"
+            - "200"
+            - "225"
+            - "250"
+            - "285"
+            - "320"
+            - "355"
+            - "400"
+            - "450"
+            - "500"
+            - "565"
+            - "635"
+            - "715"
+            - "800"
+            - "900"
+    notes:
+      required: true
+      example: "8d,8d#,8e,c6,8e,c6,8e"
+      selector:
+        text:

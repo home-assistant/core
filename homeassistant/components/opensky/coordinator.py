@@ -1,17 +1,12 @@
 """DataUpdateCoordinator for the OpenSky integration."""
 
 from datetime import timedelta
+from typing import override
 
 from python_opensky import OpenSky, OpenSkyError, StateVector
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_RADIUS,
-)
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -29,6 +24,10 @@ from .const import (
 )
 
 type OpenSkyConfigEntry = ConfigEntry[OpenSkyDataUpdateCoordinator]
+
+
+ATTR_LATITUDE = "latitude"
+ATTR_LONGITUDE = "longitude"
 
 
 class OpenSkyDataUpdateCoordinator(DataUpdateCoordinator[int]):
@@ -59,11 +58,15 @@ class OpenSkyDataUpdateCoordinator(DataUpdateCoordinator[int]):
         )
         self._altitude = config_entry.options.get(CONF_ALTITUDE, DEFAULT_ALTITUDE)
 
+    @override
     async def _async_update_data(self) -> int:
         try:
             response = await self._opensky.get_states(bounding_box=self._bounding_box)
         except OpenSkyError as exc:
-            raise UpdateFailed from exc
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_error",
+            ) from exc
         currently_tracked = set()
         flight_metadata: dict[str, StateVector] = {}
         for flight in response.states:

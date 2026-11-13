@@ -1,7 +1,10 @@
 """The Nibe Heat Pump coordinator."""
 
+from typing import override
+
 from nibe.coil import Coil, CoilData
 
+from homeassistant.core import callback
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -28,6 +31,7 @@ class CoilEntity(CoordinatorEntity[CoilCoordinator]):
         self._coil = coil
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return self.coordinator.last_update_success and self._coil.address in (
@@ -41,6 +45,8 @@ class CoilEntity(CoordinatorEntity[CoilCoordinator]):
         """Write coil and update state."""
         await self.coordinator.async_write_coil(self._coil, value)
 
+    @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         data = self.coordinator.data.get(self._coil.address)
         if data is not None:

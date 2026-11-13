@@ -1,10 +1,10 @@
 """Support for the Opple light."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 from pyoppleio.OppleLightDevice import OppleLightDevice
-import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -25,8 +25,8 @@ DEFAULT_NAME = "opple light"
 
 PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 
@@ -63,15 +63,18 @@ class OppleLight(LightEntity):
         self._attr_name = name
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if light is available."""
         return self._device.is_online
 
     @property
+    @override
     def unique_id(self):
         """Return unique ID for light."""
         return self._device.mac
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         _LOGGER.debug("Turn on light %s %s", self._device.ip, kwargs)
@@ -87,6 +90,7 @@ class OppleLight(LightEntity):
         ):
             self._device.color_temperature = kwargs[ATTR_COLOR_TEMP_KELVIN]
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         self._device.power_on = False

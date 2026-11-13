@@ -1,4 +1,11 @@
 {
+  "entity": {
+    "number": {
+      "fan_min_on_time": {
+        "default": "mdi:fan-clock"
+      }
+    }
+  },
   "services": {
     "create_vacation": {
       "service": "mdi:umbrella-beach"

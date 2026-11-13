@@ -1,15 +1,23 @@
 """Connected Wi-Fi device scanners for TP-Link Omada access points."""
 
+from typing import override
+
 from tplink_omada_client.clients import OmadaWirelessClient
 
-from homeassistant.components.device_tracker import ScannerEntity
+from homeassistant.components.device_tracker import (
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
+    ScannerEntity,
+)
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import OmadaConfigEntry
 from .config_flow import CONF_SITE
-from .controller import OmadaClientsCoordinator
+from .const import DOMAIN
+from .coordinator import OmadaClientsCoordinator
 
 PARALLEL_UPDATES = 0
 
@@ -24,18 +32,59 @@ async def async_setup_entry(
     controller = config_entry.runtime_data
 
     site_id = config_entry.data[CONF_SITE]
+    known_clients_coordinator = controller.known_clients_coordinator
+
+    added_unique_ids: set[str] = set()
+
+    def _should_add(unique_id: str) -> bool:
+        """Return if a tracker should be added by this platform run.
+
+        Existing registry entries are submitted again so the entity platform
+        refreshes their metadata before it skips a disabled entry. Entries
+        removed by stale tracker cleanup are created again when their client
+        returns.
+        """
+        entity_registry = er.async_get(hass)
+        if (
+            unique_id in added_unique_ids
+            and entity_registry.async_get_entity_id(
+                DEVICE_TRACKER_DOMAIN, DOMAIN, unique_id
+            )
+            is not None
+        ):
+            return False
+        added_unique_ids.add(unique_id)
+        return True
+
+    def _new_trackers() -> list[OmadaClientScannerEntity]:
+        """Return trackers for known clients that this platform has not added."""
+        entities: list[OmadaClientScannerEntity] = []
+        for client in (known_clients_coordinator.data or {}).values():
+            if not isinstance(client, OmadaWirelessClient):
+                continue
+            unique_id = f"scanner_{site_id}_{client.mac}"
+            if not _should_add(unique_id):
+                continue
+            entities.append(
+                OmadaClientScannerEntity(
+                    site_id, client.mac, client.name, controller.clients_coordinator
+                )
+            )
+        return entities
+
+    @callback
+    def _handle_known_clients_update() -> None:
+        """Add trackers for clients that reappeared on the controller."""
+        if entities := _new_trackers():
+            async_add_entities(entities)
+
+    config_entry.async_on_unload(
+        known_clients_coordinator.async_add_listener(_handle_known_clients_update)
+    )
 
     # Add all known WiFi devices as potentially tracked devices. They will only be
     # tracked if the user enables the entity.
-    async_add_entities(
-        [
-            OmadaClientScannerEntity(
-                site_id, client.mac, client.name, controller.clients_coordinator
-            )
-            async for client in controller.omada_client.get_known_clients()
-            if isinstance(client, OmadaWirelessClient)
-        ]
-    )
+    async_add_entities(_new_trackers())
 
 
 class OmadaClientScannerEntity(
@@ -43,6 +92,7 @@ class OmadaClientScannerEntity(
 ):
     """Entity for a client connected to the Omada network."""
 
+    _attr_has_entity_name = True
     _client_details: OmadaWirelessClient | None = None
 
     def __init__(
@@ -56,43 +106,52 @@ class OmadaClientScannerEntity(
         super().__init__(coordinator)
         self._site_id = site_id
         self._client_id = client_id
-        self._attr_name = display_name
+        self._attr_device_info = DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, client_id)}, name=display_name
+        )
 
     def _do_update(self) -> None:
         self._client_details = self.coordinator.data.get(self._client_id)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
         self._do_update()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._do_update()
         self.async_write_ha_state()
 
     @property
+    @override
     def ip_address(self) -> str | None:
         """Return the primary ip address of the device."""
         return self._client_details.ip if self._client_details else None
 
     @property
+    @override
     def mac_address(self) -> str | None:
         """Return the mac address of the device."""
         return self._client_id
 
     @property
+    @override
     def hostname(self) -> str | None:
         """Return hostname of the device."""
         return self._client_details.host_name if self._client_details else None
 
     @property
+    @override
     def is_connected(self) -> bool:
         """Return true if the device is connected to the network."""
         return self._client_details.is_active if self._client_details else False
 
     @property
+    @override
     def unique_id(self) -> str | None:
         """Return the unique id of the device."""
         return f"scanner_{self._site_id}_{self._client_id}"

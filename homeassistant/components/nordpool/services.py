@@ -2,23 +2,22 @@
 
 from collections.abc import Callable
 from datetime import date, datetime
+from enum import StrEnum
 from functools import partial
 import logging
 from typing import TYPE_CHECKING
 
+import probatio
 from pynordpool import (
     AREAS,
     Currency,
     DeliveryPeriodData,
     NordPoolAuthenticationError,
-    NordPoolClient,
     NordPoolEmptyResponseError,
     NordPoolError,
     PriceIndicesData,
 )
-import voluptuous as vol
 
-from homeassistant.const import ATTR_DATE
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -32,9 +31,11 @@ from homeassistant.helpers.selector import ConfigEntrySelector
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonValueType
 
+from .const import DOMAIN
+from .coordinator import NordPoolDataUpdateCoordinator
+
 if TYPE_CHECKING:
     from . import NordPoolConfigEntry
-from .const import ATTR_RESOLUTION, DOMAIN
 
 
 def _validate_areas(areas: list[str]) -> list[str]:
@@ -45,7 +46,7 @@ def _validate_areas(areas: list[str]) -> list[str]:
         validated_area = cv.string(area)
         validated_area = validated_area.upper()
         if validated_area not in AREAS:
-            raise vol.Invalid(f"Area {area} is not valid")
+            raise probatio.Invalid(f"Area {area} is not valid")
 
         validated_areas.append(validated_area)
 
@@ -53,28 +54,48 @@ def _validate_areas(areas: list[str]) -> list[str]:
 
 
 _LOGGER = logging.getLogger(__name__)
-ATTR_CONFIG_ENTRY = "config_entry"
 ATTR_AREAS = "areas"
 ATTR_CURRENCY = "currency"
 
-SERVICE_GET_PRICES_FOR_DATE = "get_prices_for_date"
-SERVICE_GET_PRICE_INDICES_FOR_DATE = "get_price_indices_for_date"
-SERVICE_GET_PRICES_SCHEMA = vol.Schema(
+
+class NordPoolService(StrEnum):
+    """Store keys for Nord Pool services."""
+
+    GET_PRICES_FOR_DATE = "get_prices_for_date"
+    GET_PRICE_INDICES_FOR_DATE = "get_price_indices_for_date"
+
+
+class NordPoolServiceArgument(StrEnum):
+    """Store keys for Nord Pool service arguments."""
+
+    CONFIG_ENTRY = "config_entry"
+    DATE = "date"
+    AREAS = "areas"
+    CURRENCY = "currency"
+    RESOLUTION = "resolution"
+
+
+SERVICE_GET_PRICES_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
-        vol.Required(ATTR_DATE): cv.date,
-        vol.Optional(ATTR_AREAS, default=[]): vol.All(cv.ensure_list, _validate_areas),
-        vol.Optional(ATTR_CURRENCY): vol.All(
+        probatio.Required(NordPoolServiceArgument.CONFIG_ENTRY): ConfigEntrySelector(
+            {"integration": DOMAIN}
+        ),
+        probatio.Required(NordPoolServiceArgument.DATE): cv.date,
+        probatio.Optional(NordPoolServiceArgument.AREAS, default=[]): probatio.All(
+            probatio.EnsureList(), _validate_areas
+        ),
+        probatio.Optional(NordPoolServiceArgument.CURRENCY): probatio.All(
             cv.string,
-            vol.Upper,
-            vol.In([currency.value for currency in Currency]),
+            probatio.Upper,
+            probatio.In([currency.value for currency in Currency]),
         ),
     }
 )
 SERVICE_GET_PRICE_INDICES_SCHEMA = SERVICE_GET_PRICES_SCHEMA.extend(
     {
-        vol.Optional(ATTR_RESOLUTION, default=60): vol.All(
-            cv.positive_int, vol.All(vol.Coerce(int), vol.In((15, 30, 60)))
+        probatio.Optional(NordPoolServiceArgument.RESOLUTION, default=60): probatio.All(
+            cv.positive_int,
+            probatio.All(probatio.Coerce(int), probatio.In((15, 30, 60))),
         ),
     }
 )
@@ -86,48 +107,55 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     def get_service_params(
         call: ServiceCall,
-    ) -> tuple[NordPoolClient, date, str, list[str], int]:
+    ) -> tuple[NordPoolDataUpdateCoordinator, date, str, list[str], int]:
         """Return the parameters for the service."""
         entry: NordPoolConfigEntry = service.async_get_config_entry(
-            hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY]
+            hass, DOMAIN, call.data[NordPoolServiceArgument.CONFIG_ENTRY]
         )
-        client = entry.runtime_data.client
-        asked_date: date = call.data[ATTR_DATE]
+        coordinator = entry.runtime_data
+        asked_date: date = call.data[NordPoolServiceArgument.DATE]
 
-        areas = call.data.get(ATTR_AREAS)
+        areas = call.data.get(NordPoolServiceArgument.AREAS)
         areas = areas or entry.data[ATTR_AREAS]
 
-        currency = call.data.get(ATTR_CURRENCY)
+        currency = call.data.get(NordPoolServiceArgument.CURRENCY)
         currency = currency or entry.data[ATTR_CURRENCY]
 
-        resolution = call.data.get(ATTR_RESOLUTION)
+        resolution = call.data.get(NordPoolServiceArgument.RESOLUTION)
         resolution = resolution or 60
 
-        return (client, asked_date, currency, areas, resolution)
+        return (coordinator, asked_date, currency, areas, resolution)
 
     async def get_prices_for_date(
-        client: NordPoolClient,
+        coordinator: NordPoolDataUpdateCoordinator,
         asked_date: date,
         currency: str,
         areas: list[str],
         resolution: int,
     ) -> DeliveryPeriodData:
         """Get prices."""
-        return await client.async_get_delivery_period(
+        entry_data = coordinator.config_entry.data
+        if (
+            currency == entry_data[ATTR_CURRENCY]
+            and set(areas).issubset(entry_data[ATTR_AREAS])
+            and (stored_data := coordinator.data.entries.get(asked_date))
+        ):
+            return stored_data
+        return await coordinator.client.async_get_delivery_period(
             datetime.combine(asked_date, dt_util.utcnow().time()),
             Currency(currency),
             areas,
         )
 
     async def get_price_indices_for_date(
-        client: NordPoolClient,
+        coordinator: NordPoolDataUpdateCoordinator,
         asked_date: date,
         currency: str,
         areas: list[str],
         resolution: int,
     ) -> PriceIndicesData:
         """Get prices."""
-        return await client.async_get_price_indices(
+        return await coordinator.client.async_get_price_indices(
             datetime.combine(asked_date, dt_util.utcnow().time()),
             Currency(currency),
             areas,
@@ -136,11 +164,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     async def get_prices(func: Callable, call: ServiceCall) -> ServiceResponse:
         """Get price service."""
-        client, asked_date, currency, areas, resolution = get_service_params(call)
+        coordinator, asked_date, currency, areas, resolution = get_service_params(call)
 
         try:
             price_data = await func(
-                client,
+                coordinator,
                 asked_date,
                 currency,
                 areas,
@@ -173,14 +201,14 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_GET_PRICES_FOR_DATE,
+        NordPoolService.GET_PRICES_FOR_DATE,
         partial(get_prices, get_prices_for_date),
         schema=SERVICE_GET_PRICES_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
     hass.services.async_register(
         DOMAIN,
-        SERVICE_GET_PRICE_INDICES_FOR_DATE,
+        NordPoolService.GET_PRICE_INDICES_FOR_DATE,
         partial(get_prices, get_price_indices_for_date),
         schema=SERVICE_GET_PRICE_INDICES_SCHEMA,
         supports_response=SupportsResponse.ONLY,

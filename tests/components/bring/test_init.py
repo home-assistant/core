@@ -11,6 +11,11 @@ from bring_api import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_fixture,
+)
 
 from homeassistant.components.bring.const import DOMAIN
 from homeassistant.config_entries import (
@@ -22,8 +27,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import UUID
-
-from tests.common import MockConfigEntry, async_fire_time_changed, async_load_fixture
 
 
 async def setup_integration(
@@ -72,7 +75,7 @@ async def test_init_failure(
     """Test an initialization error on integration load."""
     mock_bring_client.login.side_effect = exception
     await setup_integration(hass, bring_config_entry)
-    assert bring_config_entry.state == status
+    assert bring_config_entry.state is status
 
     assert (
         any(
@@ -197,8 +200,9 @@ async def test_coordinator_skips_deactivated(
 
     assert mock_bring_client.get_list.await_count == 2
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{UUID}_b4776778-7f6c-496e-951b-92a35d3db0dd")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{UUID}_b4776778-7f6c-496e-951b-92a35d3db0dd"),
+        bring_config_entry.entry_id,
     )
     device_registry.async_update_device(device.id, disabled_by=ConfigEntryDisabler.USER)
 
@@ -224,8 +228,9 @@ async def test_purge_devices(
 
     assert bring_config_entry.state is ConfigEntryState.LOADED
 
-    assert device_registry.async_get_device(
-        {(DOMAIN, f"{bring_config_entry.unique_id}_{list_uuid}")}
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{bring_config_entry.unique_id}_{list_uuid}"),
+        bring_config_entry.entry_id,
     )
 
     mock_bring_client.load_lists.return_value = BringListResponse.from_json(
@@ -237,8 +242,9 @@ async def test_purge_devices(
     await hass.async_block_till_done()
 
     assert (
-        device_registry.async_get_device(
-            {(DOMAIN, f"{bring_config_entry.unique_id}_{list_uuid}")}
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{bring_config_entry.unique_id}_{list_uuid}"),
+            bring_config_entry.entry_id,
         )
         is None
     )
@@ -261,8 +267,9 @@ async def test_create_devices(
     assert bring_config_entry.state is ConfigEntryState.LOADED
 
     assert (
-        device_registry.async_get_device(
-            {(DOMAIN, f"{bring_config_entry.unique_id}_{list_uuid}")}
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{bring_config_entry.unique_id}_{list_uuid}"),
+            bring_config_entry.entry_id,
         )
         is None
     )
@@ -274,8 +281,9 @@ async def test_create_devices(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert device_registry.async_get_device(
-        {(DOMAIN, f"{bring_config_entry.unique_id}_{list_uuid}")}
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{bring_config_entry.unique_id}_{list_uuid}"),
+        bring_config_entry.entry_id,
     )
 
 

@@ -3,15 +3,16 @@
 from contextlib import suppress
 from pathlib import Path
 import shutil
-from typing import Any, cast
+from typing import Any, cast, override
 
 from asyncssh import KeyImportError, SSHClientConnectionOptions, connect
 from asyncssh.misc import PermissionDenied
 from asyncssh.sftp import SFTPNoSuchFile, SFTPPermissionDenied
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.file_upload import process_uploaded_file
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.selector import (
     FileSelector,
@@ -27,28 +28,24 @@ from . import SFTPConfigEntryData
 from .client import get_client_options
 from .const import (
     CONF_BACKUP_LOCATION,
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
     CONF_PRIVATE_KEY_FILE,
-    CONF_USERNAME,
     DEFAULT_PKEY_NAME,
     DOMAIN,
     LOGGER,
 )
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PORT, default=22): int,
-        vol.Required(CONF_USERNAME): str,
-        vol.Optional(CONF_PASSWORD): TextSelector(
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_PORT, default=22): int,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Optional(probatio.Secret(CONF_PASSWORD)): TextSelector(
             config=TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
-        vol.Optional(CONF_PRIVATE_KEY_FILE): FileSelector(
+        probatio.Optional(CONF_PRIVATE_KEY_FILE): FileSelector(
             FileSelectorConfig(accept="*")
         ),
-        vol.Required(CONF_BACKUP_LOCATION): str,
+        probatio.Required(CONF_BACKUP_LOCATION): str,
     }
 )
 
@@ -104,6 +101,7 @@ class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return user_input
 
+    @override
     async def async_step_user(
         self,
         user_input: dict[str, Any] | None = None,

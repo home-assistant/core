@@ -1,12 +1,17 @@
 """Test Enphase Envoy select."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from pyenphase.exceptions import EnvoyError
+from pyenphase.models.acb import ACBChargeStatus, EnvoyACB
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.enphase_envoy.const import Platform
+from homeassistant.components.enphase_envoy.const import (
+    DEFAULT_ACB_SLEEP_SOC_BAND,
+    Platform,
+)
 from homeassistant.components.enphase_envoy.select import (
     RELAY_ACTION_MAP,
     RELAY_MODE_MAP,
@@ -15,20 +20,22 @@ from homeassistant.components.enphase_envoy.select import (
     REVERSE_STORAGE_MODE_MAP,
     STORAGE_MODE_MAP,
 )
-from homeassistant.components.select import ATTR_OPTION, DOMAIN as SELECT_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_SELECT_OPTION
+from homeassistant.components.select import (
+    DOMAIN as SELECT_DOMAIN,
+    SelectService,
+    SelectServiceArgument,
+)
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, snapshot_platform
-
 
 @pytest.mark.parametrize(
     "mock_envoy",
-    ["envoy_metered_batt_relay", "envoy_eu_batt"],
+    ["envoy_metered_batt_relay", "envoy_eu_batt", "envoy_acb_batt"],
     indirect=True,
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -43,6 +50,37 @@ async def test_select(
     with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SELECT]):
         await setup_integration(hass, config_entry)
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
+
+
+@pytest.mark.parametrize("mock_envoy", ["envoy_acb_batt"], indirect=True)
+async def test_acb_sleep_soc_band_default(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test the ACB sleep SOC band falls back to the default when unconfigured."""
+    await setup_integration(hass, config_entry)
+    coordinator = config_entry.runtime_data
+
+    unconfigured = EnvoyACB(
+        serial_num="1",
+        part_num="800-00930-r03",
+        sleep_enabled=False,
+        charge_status=ACBChargeStatus.IDLE,
+        device_status=[],
+        percent_full=50,
+        max_cell_temp=20,
+        communicating=True,
+        operating=True,
+        producing=False,
+        sleep_min_soc=None,
+        sleep_max_soc=None,
+        last_report_date=None,
+        last_report_watts=None,
+        max_report_watts=None,
+    )
+    mock_envoy.data = Mock(acb_inventory={"1": unconfigured})
+    assert coordinator.acb_sleep_soc_band == DEFAULT_ACB_SLEEP_SOC_BAND
 
 
 @pytest.mark.parametrize(
@@ -109,10 +147,10 @@ async def test_select_relay_actions(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: test_entity,
-            ATTR_OPTION: action,
+            CommonServiceArgument.ENTITY_ID: test_entity,
+            SelectServiceArgument.OPTION: action,
         },
         blocking=True,
     )
@@ -147,10 +185,10 @@ async def test_select_relay_modes(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: test_entity,
-            ATTR_OPTION: relay_mode,
+            CommonServiceArgument.ENTITY_ID: test_entity,
+            SelectServiceArgument.OPTION: relay_mode,
         },
         blocking=True,
     )
@@ -190,10 +228,10 @@ async def test_update_dry_contact_actions_with_error(
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: test_entity,
-                ATTR_OPTION: action,
+                CommonServiceArgument.ENTITY_ID: test_entity,
+                SelectServiceArgument.OPTION: action,
             },
             blocking=True,
         )
@@ -229,10 +267,10 @@ async def test_select_storage_modes(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: test_entity,
-            ATTR_OPTION: mode,
+            CommonServiceArgument.ENTITY_ID: test_entity,
+            SelectServiceArgument.OPTION: mode,
         },
         blocking=True,
     )
@@ -268,10 +306,10 @@ async def test_set_storage_modes_with_error(
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: test_entity,
-                ATTR_OPTION: mode,
+                CommonServiceArgument.ENTITY_ID: test_entity,
+                SelectServiceArgument.OPTION: mode,
             },
             blocking=True,
         )

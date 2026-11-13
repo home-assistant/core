@@ -1,0 +1,439 @@
+"""Tests for the Apple TV media player."""
+
+import asyncio
+from pathlib import Path
+from unittest.mock import AsyncMock, patch
+
+from pyatv.const import DeviceState, FeatureName, FeatureState, PowerState
+from pyatv.exceptions import (
+    BlockedStateError,
+    ConnectionLostError,
+    InvalidStateError,
+    NotSupportedError,
+    OperationTimeoutError,
+    PlaybackError,
+    ProtocolError,
+)
+from pyatv.interface import Playing
+import pytest
+from pytest_homeassistant.typing import WebSocketGenerator
+
+from homeassistant.components.apple_tv.const import DOMAIN
+from homeassistant.components.media_player import (
+    ATTR_MEDIA_CONTENT_ID,
+    ATTR_MEDIA_CONTENT_TYPE,
+    ATTR_MEDIA_VOLUME_LEVEL,
+    DOMAIN as MP_DOMAIN,
+    SERVICE_PLAY_MEDIA,
+    BrowseMedia,
+    MediaClass,
+    MediaType,
+)
+from homeassistant.components.media_source import PlayMedia
+from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_MEDIA_NEXT_TRACK,
+    SERVICE_MEDIA_PAUSE,
+    SERVICE_TURN_OFF,
+    SERVICE_VOLUME_SET,
+    STATE_OFF,
+    STATE_PLAYING,
+    STATE_UNKNOWN,
+)
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.event import async_track_state_change_event
+
+from .common import create_conf, mrp_service
+
+ENTITY_ID = "media_player.living_room_living_room"
+REMOTE_ENTITY_ID = "remote.living_room_living_room"
+_MUSIC_URL = "http://example.local:8123/api/tts_proxy/abc.mp3"
+_VIDEO_URL = "http://example.local:8123/video.mp4"
+
+pytestmark = pytest.mark.usefixtures("init_integration")
+
+
+@pytest.mark.parametrize(
+    ("play_item", "expected_stream_arg"),
+    [
+        (
+            PlayMedia(
+                url="/api/media_source_proxy/song.mp3",
+                mime_type="audio/mp3",
+                path=Path("/media/song.mp3"),
+            ),
+            "/media/song.mp3",
+        ),
+        (
+            PlayMedia(
+                url="https://example.com/song.mp3",
+                mime_type="audio/mp3",
+            ),
+            "https://example.com/song.mp3",
+        ),
+    ],
+)
+async def test_play_media_from_media_source(
+    hass: HomeAssistant,
+    mock_atv: AsyncMock,
+    play_item: PlayMedia,
+    expected_stream_arg: str,
+) -> None:
+    """Stream resolved media via its local path when present, otherwise via the URL."""
+    with patch(
+        "homeassistant.components.apple_tv.media_player.media_source.async_resolve_media",
+        return_value=play_item,
+    ):
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+                ATTR_MEDIA_CONTENT_ID: "media-source://local/song.mp3",
+            },
+            blocking=True,
+        )
+
+    mock_atv.stream.stream_file.assert_awaited_once_with(expected_stream_arg)
+
+
+@pytest.mark.parametrize("media_type", [MediaType.APP, MediaType.URL])
+async def test_play_media_launches_app(
+    hass: HomeAssistant,
+    mock_atv: AsyncMock,
+    media_type: MediaType,
+) -> None:
+    """App and URL media types launch the corresponding app on the device."""
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            ATTR_MEDIA_CONTENT_TYPE: media_type,
+            ATTR_MEDIA_CONTENT_ID: "com.netflix.Netflix",
+        },
+        blocking=True,
+    )
+
+    mock_atv.apps.launch_app.assert_awaited_once_with("com.netflix.Netflix")
+    mock_atv.stream.stream_file.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("media_type", "media_id", "called_method", "stream_file_state"),
+    [
+        pytest.param(
+            MediaType.MUSIC,
+            _MUSIC_URL,
+            "stream_file",
+            FeatureState.Available,
+            id="music_via_raop",
+        ),
+        pytest.param(
+            MediaType.VIDEO,
+            _VIDEO_URL,
+            "play_url",
+            FeatureState.Unsupported,
+            id="video_via_airplay",
+        ),
+    ],
+)
+async def test_play_media_selects_streaming_method(
+    hass: HomeAssistant,
+    mock_atv: AsyncMock,
+    media_type: MediaType,
+    media_id: str,
+    called_method: str,
+    stream_file_state: FeatureState,
+) -> None:
+    """Streaming path is selected from device feature state, not _playing."""
+    mock_atv.features.set_state(FeatureName.StreamFile, stream_file_state)
+
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            ATTR_MEDIA_CONTENT_TYPE: media_type,
+            ATTR_MEDIA_CONTENT_ID: media_id,
+        },
+        blocking=True,
+    )
+
+    getattr(mock_atv.stream, called_method).assert_awaited_once_with(media_id)
+
+
+async def test_play_media_falls_back_to_play_url(
+    hass: HomeAssistant,
+    mock_atv: AsyncMock,
+) -> None:
+    """When StreamFile is unavailable, play_url is used for video."""
+    mock_atv.features.set_state(FeatureName.StreamFile, FeatureState.Unsupported)
+
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            ATTR_MEDIA_CONTENT_TYPE: MediaType.VIDEO,
+            ATTR_MEDIA_CONTENT_ID: _VIDEO_URL,
+        },
+        blocking=True,
+    )
+
+    mock_atv.stream.play_url.assert_awaited_once_with(_VIDEO_URL)
+    mock_atv.stream.stream_file.assert_not_called()
+
+
+async def test_play_media_raises_when_no_streaming_method(
+    hass: HomeAssistant,
+    mock_atv: AsyncMock,
+) -> None:
+    """Raise HomeAssistantError when no streaming method is available."""
+    mock_atv.features.set_state(FeatureName.StreamFile, FeatureState.Unsupported)
+    mock_atv.features.set_state(FeatureName.PlayUrl, FeatureState.Unsupported)
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+                ATTR_MEDIA_CONTENT_ID: _MUSIC_URL,
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "streaming_not_supported"
+    assert exc_info.value.translation_domain == DOMAIN
+    mock_atv.stream.stream_file.assert_not_called()
+    mock_atv.stream.play_url.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("stream_attr", "media_type", "media_id", "stream_file_state"),
+    [
+        (
+            "stream_file",
+            MediaType.MUSIC,
+            _MUSIC_URL,
+            FeatureState.Available,
+        ),
+        (
+            "play_url",
+            MediaType.VIDEO,
+            _VIDEO_URL,
+            FeatureState.Unsupported,
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    ("exc_class", "expected_translation_key"),
+    [
+        (BlockedStateError, "stream_failed"),
+        (ConnectionLostError, "stream_failed"),
+        (InvalidStateError, "stream_failed"),
+        (NotSupportedError, "streaming_not_supported"),
+        (OperationTimeoutError, "stream_failed"),
+        (PlaybackError, "stream_failed"),
+        (ProtocolError, "stream_failed"),
+    ],
+)
+async def test_play_media_raises_ha_error_on_pyatv_failure(
+    hass: HomeAssistant,
+    mock_atv: AsyncMock,
+    stream_attr: str,
+    media_type: MediaType,
+    media_id: str,
+    stream_file_state: FeatureState,
+    exc_class: type[Exception],
+    expected_translation_key: str,
+) -> None:
+    """Pyatv streaming exceptions surface as a translated HomeAssistantError."""
+    mock_atv.features.set_state(FeatureName.StreamFile, stream_file_state)
+    getattr(mock_atv.stream, stream_attr).side_effect = exc_class("error")
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                ATTR_MEDIA_CONTENT_TYPE: media_type,
+                ATTR_MEDIA_CONTENT_ID: media_id,
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == expected_translation_key
+    assert exc_info.value.translation_domain == DOMAIN
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data", "interface", "method"),
+    [
+        pytest.param(SERVICE_MEDIA_PAUSE, {}, "remote_control", "pause", id="pause"),
+        pytest.param(
+            SERVICE_MEDIA_NEXT_TRACK, {}, "remote_control", "next", id="next_track"
+        ),
+        pytest.param(
+            SERVICE_VOLUME_SET,
+            {ATTR_MEDIA_VOLUME_LEVEL: 0.5},
+            "audio",
+            "set_volume",
+            id="volume_set",
+        ),
+    ],
+)
+@pytest.mark.parametrize("exc_class", [TimeoutError, ConnectionLostError])
+async def test_command_raises_ha_error_on_failure(
+    hass: HomeAssistant,
+    mock_atv: AsyncMock,
+    service: str,
+    service_data: dict[str, float],
+    interface: str,
+    method: str,
+    exc_class: type[Exception],
+) -> None:
+    """Test a failing command surfaces as a translated HomeAssistantError."""
+    getattr(getattr(mock_atv, interface), method).side_effect = exc_class("error")
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            MP_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: ENTITY_ID, **service_data},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "command_failed"
+    assert exc_info.value.translation_domain == DOMAIN
+
+
+async def test_browse_media_uses_media_source(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """async_browse_media routes to media_source when streaming is available."""
+    browse_result = BrowseMedia(
+        title="Media",
+        media_class=MediaClass.DIRECTORY,
+        media_content_id="",
+        media_content_type="",
+        can_play=False,
+        can_expand=True,
+        children=[],
+    )
+
+    with patch(
+        "homeassistant.components.apple_tv.media_player.media_source.async_browse_media",
+        new_callable=AsyncMock,
+        return_value=browse_result,
+    ) as mock_browse:
+        client = await hass_ws_client()
+        await client.send_json(
+            {
+                "id": 1,
+                "type": "media_player/browse_media",
+                "entity_id": ENTITY_ID,
+            }
+        )
+        response = await client.receive_json()
+
+    assert response["success"]
+    mock_browse.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("callback_name", "callback_args"),
+    [
+        pytest.param(
+            "connection_lost",
+            (ConnectionError("Control connection lost"),),
+            id="connection-lost",
+        ),
+        pytest.param("connection_closed", (), id="connection-closed"),
+    ],
+)
+async def test_disconnect_does_not_report_power_off(
+    hass: HomeAssistant,
+    mock_atv: AsyncMock,
+    callback_name: str,
+    callback_args: tuple[Exception, ...],
+) -> None:
+    """A transport failure is unknown until playback status returns."""
+    playing = Playing(device_state=DeviceState.Playing)
+    mock_atv.push_updater.listener.playstatus_update(mock_atv.push_updater, playing)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == STATE_PLAYING
+
+    observed_states: list[str] = []
+    reconnect_ready = asyncio.Event()
+
+    @callback
+    def record_state(event: Event[EventStateChangedData]) -> None:
+        observed_states.append(event.data["new_state"].state)
+
+    async def reconnect(*args: object, **kwargs: object) -> AsyncMock:
+        await reconnect_ready.wait()
+        return mock_atv
+
+    remove_listener = async_track_state_change_event(hass, ENTITY_ID, record_state)
+    scan_result = create_conf("127.0.0.1", "Living Room", mrp_service())
+    with (
+        patch("homeassistant.components.apple_tv.scan", return_value=[scan_result]),
+        patch("homeassistant.components.apple_tv.connect", side_effect=reconnect),
+    ):
+        getattr(mock_atv.listener, callback_name)(*callback_args)
+        await hass.async_block_till_done()
+
+        assert hass.states.get(ENTITY_ID).state == STATE_UNKNOWN
+
+        reconnect_ready.set()
+        await hass.async_block_till_done(wait_background_tasks=True)
+        mock_atv.push_updater.listener.playstatus_update(mock_atv.push_updater, playing)
+        await hass.async_block_till_done()
+
+    remove_listener()
+    assert hass.states.get(ENTITY_ID).state == STATE_PLAYING
+    assert STATE_OFF not in observed_states
+
+
+async def test_remote_turn_off_reports_off(
+    hass: HomeAssistant, mock_atv: AsyncMock
+) -> None:
+    """Closing the connection after turning the remote off reports off."""
+    await hass.services.async_call(
+        REMOTE_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: REMOTE_ENTITY_ID},
+        blocking=True,
+    )
+    mock_atv.listener.connection_closed()
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
+
+
+@pytest.mark.parametrize(
+    "device_state",
+    [
+        pytest.param(DeviceState.Idle, id="idle"),
+        pytest.param(DeviceState.Paused, id="paused"),
+    ],
+)
+async def test_connected_power_off_remains_immediate(
+    hass: HomeAssistant, mock_atv: AsyncMock, device_state: DeviceState
+) -> None:
+    """A connected device's genuine power-off still takes effect immediately."""
+    mock_atv.power.power_state = PowerState.Off
+    mock_atv.push_updater.listener.playstatus_update(
+        mock_atv.push_updater, Playing(device_state=device_state)
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF

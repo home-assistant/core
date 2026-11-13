@@ -1,6 +1,8 @@
 {
   "domain": "switchbot_cloud",
   "name": "SwitchBot Cloud",
+  "after_dependencies": ["cloud"],
+  "categories": ["sensors", "blinds_curtains", "plugs_switches"],
   "codeowners": [
     "@SeraphicRav",
     "@laurence-presland",
@@ -8,10 +10,11 @@
     "@XiaoLing-git"
   ],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["webhook"],
   "documentation": "https://www.home-assistant.io/integrations/switchbot_cloud",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["switchbot_api"],
-  "requirements": ["switchbot-api==2.11.0"]
+  "requirements": ["switchbot-api==2.13.0"]
 }

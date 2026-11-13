@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('lcn', 'lcn/config_entry_pchk_json-g000005')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -39,7 +39,7 @@
 # name: test_setup_lcn_switch[switch.testgroup_switch_group5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TestGroup Switch_Group5',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TestGroup Switch_Group5',
     }),
     'context': <ANY>,
     'entity_id': 'switch.testgroup_switch_group5',
@@ -57,9 +57,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('lcn', 'lcn/config_entry_pchk_json-m000007')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -89,7 +89,7 @@
 # name: test_setup_lcn_switch[switch.testmodule_switch_keylock1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TestModule Switch_KeyLock1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TestModule Switch_KeyLock1',
     }),
     'context': <ANY>,
     'entity_id': 'switch.testmodule_switch_keylock1',
@@ -107,9 +107,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('lcn', 'lcn/config_entry_pchk_json-m000007')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -139,7 +139,7 @@
 # name: test_setup_lcn_switch[switch.testmodule_switch_output1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TestModule Switch_Output1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TestModule Switch_Output1',
     }),
     'context': <ANY>,
     'entity_id': 'switch.testmodule_switch_output1',
@@ -157,9 +157,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('lcn', 'lcn/config_entry_pchk_json-m000007')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -189,7 +189,7 @@
 # name: test_setup_lcn_switch[switch.testmodule_switch_output2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TestModule Switch_Output2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TestModule Switch_Output2',
     }),
     'context': <ANY>,
     'entity_id': 'switch.testmodule_switch_output2',
@@ -207,9 +207,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('lcn', 'lcn/config_entry_pchk_json-m000007')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -239,7 +239,7 @@
 # name: test_setup_lcn_switch[switch.testmodule_switch_regulator1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TestModule Switch_Regulator1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TestModule Switch_Regulator1',
     }),
     'context': <ANY>,
     'entity_id': 'switch.testmodule_switch_regulator1',
@@ -257,9 +257,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('lcn', 'lcn/config_entry_pchk_json-m000007')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -289,7 +289,7 @@
 # name: test_setup_lcn_switch[switch.testmodule_switch_relay1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TestModule Switch_Relay1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TestModule Switch_Relay1',
     }),
     'context': <ANY>,
     'entity_id': 'switch.testmodule_switch_relay1',
@@ -307,9 +307,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('lcn', 'lcn/config_entry_pchk_json-m000007')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -339,7 +339,7 @@
 # name: test_setup_lcn_switch[switch.testmodule_switch_relay2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TestModule Switch_Relay2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TestModule Switch_Relay2',
     }),
     'context': <ANY>,
     'entity_id': 'switch.testmodule_switch_relay2',

@@ -1,6 +1,6 @@
 """Support for INSTEON dimmers via PowerLinc Modem."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -46,14 +46,17 @@ class InsteonSwitchEntity(InsteonEntity, SwitchEntity):
     """A Class for an Insteon switch entity."""
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the boolean response if the node is on."""
         return bool(self._insteon_device_group.value)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn switch on."""
         await self._insteon_device.async_on(group=self._insteon_device_group.group)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn switch off."""
         await self._insteon_device.async_off(group=self._insteon_device_group.group)

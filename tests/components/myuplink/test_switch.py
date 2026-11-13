@@ -4,8 +4,10 @@ from unittest.mock import MagicMock
 
 from aiohttp import ClientError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -16,10 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, snapshot_platform
-
-TEST_PLATFORM = Platform.SWITCH
-pytestmark = pytest.mark.parametrize("platforms", [(TEST_PLATFORM,)])
+pytestmark = pytest.mark.parametrize("platforms", [(Platform.SWITCH,)])
 
 ENTITY_ID = "switch.gotham_city_temporary_lux"
 ENTITY_FRIENDLY_NAME = "Gotham City Tempo\xadrary lux"
@@ -54,7 +53,7 @@ async def test_switching(
     """Test the switch can be turned on/off."""
 
     await hass.services.async_call(
-        TEST_PLATFORM, service, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        SWITCH_DOMAIN, service, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
     )
     await hass.async_block_till_done()
     mock_myuplink_client.async_set_device_points.assert_called_once()
@@ -78,7 +77,7 @@ async def test_api_failure(
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
-            TEST_PLATFORM, service, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+            SWITCH_DOMAIN, service, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
         )
     mock_myuplink_client.async_set_device_points.assert_called_once()
 

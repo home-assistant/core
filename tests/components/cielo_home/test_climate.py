@@ -2,10 +2,10 @@
 
 from unittest.mock import MagicMock
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def test_climate_set_temperature_calls_library(
@@ -20,7 +20,7 @@ async def test_climate_set_temperature_calls_library(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_id = "climate.living_room"
+    entity_id = "climate.living_room_living_room"
 
     await hass.services.async_call(
         "climate",

@@ -3,18 +3,23 @@
 from unittest.mock import AsyncMock
 
 from fluss_api import FlussApiClient, FlussApiClientError
+from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
+from homeassistant.components.fluss.const import UPDATE_INTERVAL
+from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def test_buttons(
@@ -40,8 +45,8 @@ async def test_button_press(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.device_1"},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: "button.device_1"},
         blocking=True,
     )
 
@@ -80,13 +85,18 @@ async def test_button_unavailable_on_status_error(
     hass: HomeAssistant,
     mock_api_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Buttons become unavailable when the status call errors."""
+    """Buttons become unavailable when a status refresh errors."""
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get("button.device_1").state != STATE_UNAVAILABLE
+
     mock_api_client.async_get_device_status.side_effect = FlussApiClientError(
         "device offline"
     )
-
-    await setup_integration(hass, mock_config_entry)
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get("button.device_1").state == STATE_UNAVAILABLE
     assert hass.states.get("button.device_2").state == STATE_UNAVAILABLE
@@ -121,7 +131,7 @@ async def test_button_press_error(
     with pytest.raises(HomeAssistantError, match="Failed to trigger device: API Boom"):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.device_1"},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: "button.device_1"},
             blocking=True,
         )

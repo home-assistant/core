@@ -2,12 +2,16 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 import jwt
-import voluptuous as vol
+import probatio
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
+    ConfigFlowResult,
+)
 from homeassistant.helpers import config_entry_oauth2_flow, device_registry as dr
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
@@ -24,6 +28,7 @@ class OAuth2FlowHandler(
     MINOR_VERSION = 3
 
     @property
+    @override
     def logger(self) -> logging.Logger:
         """Return logger."""
         return logging.getLogger(__name__)
@@ -41,10 +46,17 @@ class OAuth2FlowHandler(
         if user_input is None:
             return self.async_show_form(
                 step_id="reauth_confirm",
-                data_schema=vol.Schema({}),
+                data_schema=probatio.Schema({}),
             )
         return await self.async_step_user()
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration by re-running the OAuth flow."""
+        return await self.async_step_user()
+
+    @override
     async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
         """Create an oauth config entry or update existing entry for reauth."""
         await self.async_set_unique_id(
@@ -57,22 +69,28 @@ class OAuth2FlowHandler(
             return self.async_update_reload_and_abort(
                 self._get_reauth_entry(), data_updates=data
             )
+        if self.source == SOURCE_RECONFIGURE:
+            self._abort_if_unique_id_mismatch(reason="wrong_account")
+            return self.async_update_reload_and_abort(
+                self._get_reconfigure_entry(), data_updates=data
+            )
         self._abort_if_unique_id_configured()
         return await super().async_oauth_create_entry(data)
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a DHCP discovery."""
         device_registry = dr.async_get(self.hass)
-        if device_entry := device_registry.async_get_device(
+        for device in device_registry.async_get_devices(
             identifiers={
                 (DOMAIN, discovery_info.hostname),
                 (DOMAIN, discovery_info.hostname.split("-")[-1]),
             }
         ):
             device_registry.async_update_device(
-                device_entry.id,
+                device.id,
                 new_connections={
                     (dr.CONNECTION_NETWORK_MAC, discovery_info.macaddress)
                 },
