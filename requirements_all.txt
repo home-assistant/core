@@ -2594,7 +2594,7 @@ pyotp==2.10.0
 pyoverkiz[nexity]==2.3.1
 
 # homeassistant.components.powershades
-pyowershades==0.4.1
+pyowershades==0.5.0
 
 # homeassistant.components.palazzetti
 pypalazzetti==0.1.21
