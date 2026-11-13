@@ -10,8 +10,8 @@ from homeassistant.components.telegram_bot.const import (
     CONF_CHAT_ID,
     DEFAULT_API_ENDPOINT,
     DOMAIN,
-    PARSER_MD,
     PLATFORM_BROADCAST,
+    TelegramBotParseMode,
 )
 from homeassistant.config_entries import ConfigEntryState, ConfigSubentryData
 from homeassistant.const import CONF_API_KEY, CONF_PLATFORM
@@ -32,7 +32,7 @@ async def test_migration_error(
             CONF_PLATFORM: PLATFORM_BROADCAST,
             CONF_API_KEY: "mock api key",
         },
-        options={ATTR_PARSER: PARSER_MD},
+        options={ATTR_PARSER: TelegramBotParseMode.MARKDOWN},
         version=99,
     )
 
@@ -56,7 +56,7 @@ async def test_migrate_entry_from_1_1(
             CONF_PLATFORM: PLATFORM_BROADCAST,
             CONF_API_KEY: "mock api key",
         },
-        options={ATTR_PARSER: PARSER_MD},
+        options={ATTR_PARSER: TelegramBotParseMode.MARKDOWN},
     )
 
     mock_config_entry.add_to_hass(hass)
@@ -101,7 +101,7 @@ async def test_migrate_entry_to_per_chat_devices(
             CONF_API_KEY: "mock api key",
             CONF_API_ENDPOINT: DEFAULT_API_ENDPOINT,
         },
-        options={ATTR_PARSER: PARSER_MD},
+        options={ATTR_PARSER: TelegramBotParseMode.MARKDOWN},
         subentries_data=[
             ConfigSubentryData(
                 unique_id="123456",

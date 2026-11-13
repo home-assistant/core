@@ -46,6 +46,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.components.media_source import PlayMedia
 from homeassistant.components.sonos.const import (
+    ATTR_QUEUE_POSITION,
     DOMAIN,
     MEDIA_TYPE_DIRECTORY,
     SOURCE_LINEIN,
@@ -55,21 +56,10 @@ from homeassistant.components.sonos.media_player import (
     LONG_SERVICE_TIMEOUT,
     VOLUME_INCREMENT,
 )
-from homeassistant.components.sonos.services import (
-    ATTR_ALARM_ID,
-    ATTR_ENABLED,
-    ATTR_INCLUDE_LINKED_ZONES,
-    ATTR_QUEUE_POSITION,
-    ATTR_VOLUME,
-    SERVICE_GET_QUEUE,
-    SERVICE_RESTORE,
-    SERVICE_SNAPSHOT,
-    SERVICE_UPDATE_ALARM,
-)
+from homeassistant.components.sonos.services import SonosService, SonosServiceArgument
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_ENTITY_PICTURE,
-    ATTR_TIME,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
@@ -80,6 +70,7 @@ from homeassistant.const import (
     SERVICE_VOLUME_DOWN,
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
+    CommonServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -1350,9 +1341,12 @@ async def test_service_snapshot_restore(
     ) as mock_snapshot:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SNAPSHOT,
+            SonosService.SNAPSHOT,
             {
-                ATTR_ENTITY_ID: ["media_player.living_room", "media_player.bedroom"],
+                CommonServiceArgument.ENTITY_ID: [
+                    "media_player.living_room",
+                    "media_player.bedroom",
+                ],
             },
             blocking=True,
         )
@@ -1363,9 +1357,12 @@ async def test_service_snapshot_restore(
     ) as mock_restore:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_RESTORE,
+            SonosService.RESTORE,
             {
-                ATTR_ENTITY_ID: ["media_player.living_room", "media_player.bedroom"],
+                CommonServiceArgument.ENTITY_ID: [
+                    "media_player.living_room",
+                    "media_player.bedroom",
+                ],
             },
             blocking=True,
         )
@@ -1636,9 +1633,9 @@ async def test_media_get_queue(
     soco_mock = soco_factory.mock_list.get("192.168.42.2")
     result = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_QUEUE,
+        SonosService.GET_QUEUE,
         {
-            ATTR_ENTITY_ID: "media_player.zone_a",
+            CommonServiceArgument.ENTITY_ID: "media_player.zone_a",
         },
         blocking=True,
         return_response=True,
@@ -1748,14 +1745,14 @@ async def test_service_update_alarm(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_UPDATE_ALARM,
+        SonosService.UPDATE_ALARM,
         {
-            ATTR_ENTITY_ID: "media_player.zone_a",
-            ATTR_ALARM_ID: 14,
-            ATTR_TIME: "07:15:00",
-            ATTR_VOLUME: 0.25,
-            ATTR_INCLUDE_LINKED_ZONES: True,
-            ATTR_ENABLED: True,
+            CommonServiceArgument.ENTITY_ID: "media_player.zone_a",
+            SonosServiceArgument.ALARM_ID: 14,
+            SonosServiceArgument.TIME: "07:15:00",
+            SonosServiceArgument.VOLUME: 0.25,
+            SonosServiceArgument.INCLUDE_LINKED_ZONES: True,
+            SonosServiceArgument.ENABLED: True,
         },
         blocking=True,
     )
@@ -1789,14 +1786,14 @@ async def test_service_update_alarm_dne(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_UPDATE_ALARM,
+            SonosService.UPDATE_ALARM,
             {
-                ATTR_ENTITY_ID: "media_player.zone_a",
-                ATTR_ALARM_ID: 99,
-                ATTR_TIME: "07:15:00",
-                ATTR_VOLUME: 0.25,
-                ATTR_INCLUDE_LINKED_ZONES: True,
-                ATTR_ENABLED: True,
+                CommonServiceArgument.ENTITY_ID: "media_player.zone_a",
+                SonosServiceArgument.ALARM_ID: 99,
+                SonosServiceArgument.TIME: "07:15:00",
+                SonosServiceArgument.VOLUME: 0.25,
+                SonosServiceArgument.INCLUDE_LINKED_ZONES: True,
+                SonosServiceArgument.ENABLED: True,
             },
             blocking=True,
         )

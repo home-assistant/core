@@ -311,6 +311,7 @@ homeassistant.components.homewizard.*
 homeassistant.components.homeworks.*
 homeassistant.components.hortimax.*
 homeassistant.components.hotspring.*
+homeassistant.components.hp_printer.*
 homeassistant.components.hr_energy_qube.*
 homeassistant.components.http.*
 homeassistant.components.huawei_lte.*
