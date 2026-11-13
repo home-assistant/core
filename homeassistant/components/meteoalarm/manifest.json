@@ -10,5 +10,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["meteoalarmapi"],
   "quality_scale": "silver",
-  "requirements": ["meteoalarmapi==0.5.0"]
+  "requirements": ["meteoalarmapi==0.9.0"]
 }
