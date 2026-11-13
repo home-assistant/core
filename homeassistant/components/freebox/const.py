@@ -79,7 +79,6 @@ class FreeboxHomeCategory(enum.StrEnum):
     DWS = "dws"
     IOHOME = "iohome"
     KFB = "kfb"
-    OPENER = "opener"
     PIR = "pir"
     RTS = "rts"
     SHUTTER = "shutter"
@@ -103,7 +102,6 @@ HOME_COMPATIBLE_CATEGORIES = [
     FreeboxHomeCategory.DWS,
     FreeboxHomeCategory.IOHOME,
     FreeboxHomeCategory.KFB,
-    FreeboxHomeCategory.OPENER,
     FreeboxHomeCategory.PIR,
     FreeboxHomeCategory.RTS,
     FreeboxHomeCategory.SHUTTER,

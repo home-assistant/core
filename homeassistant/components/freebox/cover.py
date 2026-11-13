@@ -19,6 +19,9 @@ from .router import FreeboxConfigEntry, FreeboxRouter
 
 _LOGGER = logging.getLogger(__name__)
 
+# Slot names that accept a position command
+POSITION_SLOT_NAMES = ("position_set", "position")
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -34,10 +37,23 @@ async def async_setup_entry(
         """Add newly discovered covers."""
         add_entities(router, async_add_entities, tracked)
 
-    router.listeners.append(
+    entry.async_on_unload(
         async_dispatcher_connect(hass, router.signal_home_device_new, update_callback)
     )
     update_callback()
+
+
+def _position_slot_name(node: dict[str, Any]) -> str | None:
+    """Return the name of the slot used to set the position, if any."""
+    return next(
+        (
+            endpoint["name"]
+            for endpoint in node.get("type", {}).get("endpoints", [])
+            if endpoint.get("ep_type") == "slot"
+            and endpoint["name"] in POSITION_SLOT_NAMES
+        ),
+        None,
+    )
 
 
 @callback
@@ -56,15 +72,9 @@ def add_entities(
         if category == FreeboxHomeCategory.BASIC_SHUTTER:
             new_entities.append(FreeboxBasicShutter(router, node))
             tracked.add(node_id)
-        elif category in (FreeboxHomeCategory.SHUTTER, FreeboxHomeCategory.OPENER):
-            endpoints = node.get("type", {}).get("endpoints", [])
-            has_position = any(
-                ep.get("name") in ("position_set", "position")
-                and ep.get("ep_type") == "slot"
-                for ep in endpoints
-            )
-            if has_position:
-                new_entities.append(FreeboxCover(router, node))
+        elif category == FreeboxHomeCategory.SHUTTER:
+            if position_slot := _position_slot_name(node):
+                new_entities.append(FreeboxCover(router, node, position_slot))
             else:
                 new_entities.append(FreeboxBasicShutter(router, node))
             tracked.add(node_id)
@@ -140,32 +150,30 @@ class FreeboxCover(FreeboxHomeEntity, CoverEntity):
         | CoverEntityFeature.SET_POSITION
     )
 
-    def __init__(self, router: FreeboxRouter, node: dict[str, Any]) -> None:
+    def __init__(
+        self,
+        router: FreeboxRouter,
+        node: dict[str, Any],
+        position_slot: str,
+    ) -> None:
         """Initialize the cover."""
         super().__init__(router, node)
 
         endpoints = node["type"]["endpoints"]
         self._command_set_position = self.get_command_id(
-            endpoints, "slot", "position_set"
+            endpoints, "slot", position_slot
         )
         self._command_stop = self.get_command_id(endpoints, "slot", "stop")
-        self._invert_position = True
-        if node["category"] == FreeboxHomeCategory.OPENER:
-            if "Porte_Garage" in node.get("type", {}).get("icon", ""):
-                self._invert_position = False
-                self._attr_device_class = CoverDeviceClass.GARAGE
-            else:
-                self._attr_device_class = CoverDeviceClass.AWNING
 
         self._update_current_position()
 
     def _to_freebox(self, position: int) -> int:
-        """Convert HA position to Freebox position."""
-        return 100 - position if self._invert_position else position
+        """Convert HA position to Freebox position (0 is fully open)."""
+        return 100 - position
 
     def _to_ha(self, position: int) -> int:
-        """Convert Freebox position to HA position."""
-        return 100 - position if self._invert_position else position
+        """Convert Freebox position to HA position (100 is fully open)."""
+        return 100 - position
 
     @property
     @override
@@ -224,11 +232,11 @@ class FreeboxCover(FreeboxHomeEntity, CoverEntity):
     @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        ha_position = kwargs["position"]
         await self.set_home_endpoint_value(
-            self._command_set_position, self._to_freebox(ha_position)
+            self._command_set_position, self._to_freebox(kwargs["position"])
         )
-        self._attr_current_cover_position = ha_position
+        # The position stays unknown until the device reports the move.
+        self._attr_current_cover_position = None
         self.async_write_ha_state()
 
     @override
@@ -245,5 +253,6 @@ class FreeboxCover(FreeboxHomeEntity, CoverEntity):
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover movement."""
         await self.set_home_endpoint_value(self._command_stop, None)
-        self._update_current_position()
+        # The position stays unknown until the device reports the move.
+        self._attr_current_cover_position = None
         self.async_write_ha_state()
