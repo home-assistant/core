@@ -662,23 +662,56 @@ async def test_remove_entry_refreshes_an_expired_token_without_saving_it(
     assert "Error calling entry remove callback" not in caplog.text
 
 
-async def test_remove_entry_logs_failed_delete(
+async def test_remove_entry_logs_failed_delete_and_deletes_the_rest(
     hass: HomeAssistant,
     mock_trmnl_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test a failed delete on removal is logged and does not block the removal."""
+    """Test a failed delete on removal is logged and the next plugin is still deleted."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         version=2,
         data=mock_config_entry.data,
-        options={CONF_HOME_PLUGIN_SETTING_ID: 42},
+        options={CONF_HOME_PLUGIN_SETTING_ID: 42, CONF_MESSAGES_PLUGIN_SETTING_ID: 7},
     )
-    mock_trmnl_client.delete_plugin_setting.side_effect = TRMNLError("status 404")
+    mock_trmnl_client.delete_plugin_setting.side_effect = [
+        TRMNLError("status 500"),
+        None,
+    ]
     await setup_integration(hass, entry)
 
     await hass.config_entries.async_remove(entry.entry_id)
 
-    mock_trmnl_client.delete_plugin_setting.assert_awaited_once_with(42)
+    assert mock_trmnl_client.delete_plugin_setting.await_args_list == [
+        call(42),
+        call(7),
+    ]
+    assert "Could not delete TRMNL plugin setting 42: status 500" in caplog.text
+
+
+async def test_remove_entry_logs_failed_token_refresh(
+    hass: HomeAssistant,
+    mock_trmnl_client: AsyncMock,
+    home_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a token refresh that fails on removal is logged and deletes nothing."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=2,
+        data=home_entry.data,
+        options={CONF_HOME_PLUGIN_SETTING_ID: 42},
+    )
+    await setup_integration(hass, entry)
+    hass.config_entries.async_update_entry(
+        entry,
+        data={**entry.data, "token": {**entry.data["token"], "expires_at": 0}},
+    )
+    aioclient_mock.post(OAUTH2_TOKEN, status=500)
+
+    await hass.config_entries.async_remove(entry.entry_id)
+
+    mock_trmnl_client.delete_plugin_setting.assert_not_called()
     assert "Could not delete the TRMNL plugin settings" in caplog.text
