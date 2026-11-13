@@ -52,27 +52,19 @@ from homeassistant.util import raise_if_invalid_filename, raise_if_invalid_path
 from homeassistant.util.json import JsonValueType
 
 from .const import (
-    ATTR_AUTHENTICATION,
-    ATTR_CAPTION,
     ATTR_DISABLE_NOTIF,
     ATTR_DISABLE_WEB_PREV,
-    ATTR_FILE,
     ATTR_FILE_ID,
     ATTR_FILE_MIME_TYPE,
     ATTR_FILE_NAME,
     ATTR_FILE_PATH,
     ATTR_FILE_SIZE,
     ATTR_INLINE_MESSAGE_ID,
-    ATTR_MEDIA_TYPE,
     ATTR_MESSAGE_TAG,
     ATTR_MESSAGE_THREAD_ID,
     ATTR_PARSER,
-    ATTR_PASSWORD,
     ATTR_REPLY_TO_MSGID,
     ATTR_REPLYMARKUP,
-    ATTR_URL,
-    ATTR_USERNAME,
-    ATTR_VERIFY_SSL,
     CONF_API_ENDPOINT,
     CONF_CHAT_ID,
     CONF_PROXY_URL,
@@ -569,26 +561,32 @@ class TelegramNotificationService:
         for entry in input_media:
             file_content = await load_data(
                 self.hass,
-                url=entry.get(ATTR_URL),
-                filepath=entry.get(ATTR_FILE),
-                username=entry.get(ATTR_USERNAME, ""),
-                password=entry.get(ATTR_PASSWORD, ""),
-                authentication=entry.get(ATTR_AUTHENTICATION),
-                verify_ssl=entry[ATTR_VERIFY_SSL],
+                url=entry.get(TelegramBotServiceArgument.URL),
+                filepath=entry.get(TelegramBotServiceArgument.FILE),
+                username=entry.get(TelegramBotServiceArgument.USERNAME, ""),
+                password=entry.get(TelegramBotServiceArgument.PASSWORD, ""),
+                authentication=entry.get(TelegramBotServiceArgument.AUTHENTICATION),
+                verify_ssl=entry[TelegramBotServiceArgument.VERIFY_SSL],
             )
-            _LOGGER.debug("downloaded: %s", entry.get(ATTR_URL) or entry.get(ATTR_FILE))
+            _LOGGER.debug(
+                "downloaded: %s",
+                entry.get(TelegramBotServiceArgument.URL)
+                or entry.get(TelegramBotServiceArgument.FILE),
+            )
 
             # The parse mode of the media group itself only applies to a caption
             # of the whole group, so each caption needs its own
             caption_kwargs: dict[str, Any] = {
-                "caption": entry.get(ATTR_CAPTION),
+                "caption": entry.get(TelegramBotServiceArgument.CAPTION),
                 "parse_mode": params[ATTR_PARSER],
             }
-            if entry[ATTR_MEDIA_TYPE] == InputMediaType.AUDIO:
+            if entry[TelegramBotServiceArgument.MEDIA_TYPE] == InputMediaType.AUDIO:
                 media.append(InputMediaAudio(file_content, **caption_kwargs))
-            elif entry[ATTR_MEDIA_TYPE] == InputMediaType.DOCUMENT:
+            elif (
+                entry[TelegramBotServiceArgument.MEDIA_TYPE] == InputMediaType.DOCUMENT
+            ):
                 media.append(InputMediaDocument(file_content, **caption_kwargs))
-            elif entry[ATTR_MEDIA_TYPE] == InputMediaType.PHOTO:
+            elif entry[TelegramBotServiceArgument.MEDIA_TYPE] == InputMediaType.PHOTO:
                 media.append(InputMediaPhoto(file_content, **caption_kwargs))
             else:
                 media.append(InputMediaVideo(file_content, **caption_kwargs))

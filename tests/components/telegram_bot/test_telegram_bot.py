@@ -37,14 +37,11 @@ from homeassistant.components.telegram_bot.bot import (
     _read_file_as_bytesio,
 )
 from homeassistant.components.telegram_bot.const import (
-    ATTR_CAPTION,
     ATTR_CHAT_ID,
-    ATTR_MEDIA_TYPE,
     ATTR_MESSAGE_ID,
     ATTR_MESSAGE_THREAD_ID,
     ATTR_PARSER,
     ATTR_REPLY_TO_MSGID,
-    ATTR_URL,
     DOMAIN,
     PLATFORM_BROADCAST,
     SECTION_ADDITIONAL_SETTINGS,
@@ -2661,24 +2658,24 @@ async def test_send_media_group(
             {
                 TelegramBotServiceArgument.MEDIA: [
                     {
-                        ATTR_MEDIA_TYPE: InputMediaType.PHOTO,
-                        ATTR_URL: "https://mock/photo.jpg",
-                        ATTR_CAPTION: "mock photo",
+                        TelegramBotServiceArgument.MEDIA_TYPE: InputMediaType.PHOTO,
+                        TelegramBotServiceArgument.URL: "https://mock/photo.jpg",
+                        TelegramBotServiceArgument.CAPTION: "mock photo",
                     },
                     {
-                        ATTR_MEDIA_TYPE: InputMediaType.VIDEO,
-                        ATTR_URL: "https://mock/video.mp4",
-                        ATTR_CAPTION: "mock video",
+                        TelegramBotServiceArgument.MEDIA_TYPE: InputMediaType.VIDEO,
+                        TelegramBotServiceArgument.URL: "https://mock/video.mp4",
+                        TelegramBotServiceArgument.CAPTION: "mock video",
                     },
                     {
-                        ATTR_MEDIA_TYPE: InputMediaType.AUDIO,
-                        ATTR_URL: "https://mock/audio.mp3",
-                        ATTR_CAPTION: "mock url",
+                        TelegramBotServiceArgument.MEDIA_TYPE: InputMediaType.AUDIO,
+                        TelegramBotServiceArgument.URL: "https://mock/audio.mp3",
+                        TelegramBotServiceArgument.CAPTION: "mock url",
                     },
                     {
-                        ATTR_MEDIA_TYPE: InputMediaType.DOCUMENT,
-                        ATTR_URL: "https://mock/doc.pdf",
-                        ATTR_CAPTION: "mock document",
+                        TelegramBotServiceArgument.MEDIA_TYPE: InputMediaType.DOCUMENT,
+                        TelegramBotServiceArgument.URL: "https://mock/doc.pdf",
+                        TelegramBotServiceArgument.CAPTION: "mock document",
                     },
                 ],
             },
@@ -2733,13 +2730,13 @@ async def test_send_media_group_caption_parse_mode(
                 TelegramBotServiceArgument.PARSE_MODE: TelegramBotParseMode.MARKDOWN,
                 TelegramBotServiceArgument.MEDIA: [
                     {
-                        ATTR_MEDIA_TYPE: InputMediaType.PHOTO,
-                        ATTR_URL: "https://mock/photo.jpg",
-                        ATTR_CAPTION: "*bold*",
+                        TelegramBotServiceArgument.MEDIA_TYPE: InputMediaType.PHOTO,
+                        TelegramBotServiceArgument.URL: "https://mock/photo.jpg",
+                        TelegramBotServiceArgument.CAPTION: "*bold*",
                     },
                     {
-                        ATTR_MEDIA_TYPE: InputMediaType.PHOTO,
-                        ATTR_URL: "https://mock/photo2.jpg",
+                        TelegramBotServiceArgument.MEDIA_TYPE: InputMediaType.PHOTO,
+                        TelegramBotServiceArgument.URL: "https://mock/photo2.jpg",
                     },
                 ],
             },
