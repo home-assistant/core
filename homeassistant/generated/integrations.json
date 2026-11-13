@@ -14475,6 +14475,17 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "sugar_valley": {
+      "name": "Sugar Valley",
+      "integration_type": "virtual",
+      "categories": [
+        "water.pools_spas"
+      ],
+      "connectivity": [
+        "modbus"
+      ],
+      "supported_by": "neopool"
+    },
     "sun": {
       "integration_type": "service",
       "categories": [
