@@ -381,13 +381,13 @@ async def test_ip_bans_file_creation(
         assert len(notifications) == 2
         assert (
             notifications["http-login"]["message"]
-            == "Login attempt or request with invalid authentication"
+            == "API request with invalid authentication"
             " from example.com (200.201.202.204)."
             " See the log for details."
         )
 
         assert (
-            "Login attempt or request with invalid authentication"
+            "API request with invalid authentication"
             " from example.com (200.201.202.204)."
             " Requested URL: '/example'." in caplog.text
         )
@@ -530,13 +530,13 @@ async def test_failed_login_reverse_dns_failure(
     assert resp.status == HTTPStatus.UNAUTHORIZED
     assert app[KEY_FAILED_LOGIN_ATTEMPTS][ip_address("200.201.202.204")] == 1
     assert (
-        "Login attempt or request with invalid authentication"
+        "API request with invalid authentication"
         " from 200.201.202.204 (200.201.202.204)." in caplog.text
     )
     notifications = async_get_persistent_notifications(hass)
     assert (
         notifications["http-login"]["message"]
-        == "Login attempt or request with invalid authentication"
+        == "API request with invalid authentication"
         " from 200.201.202.204 (200.201.202.204)."
         " See the log for details."
     )

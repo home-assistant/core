@@ -8,7 +8,11 @@ import probatio
 from probatio.humanize import humanize_error
 
 from homeassistant.components.http.auth_util import async_user_not_allowed_do_auth
-from homeassistant.components.http.ban import process_success_login, process_wrong_login
+from homeassistant.components.http.ban import (
+    AccessMethod,
+    process_success_login,
+    process_wrong_login,
+)
 from homeassistant.components.http.const import KEY_HASS_USER
 from homeassistant.const import __version__
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
@@ -101,7 +105,7 @@ class AuthPhase:
                 self._hass, refresh_token.user, self._request
             ):
                 await self._send_bytes_text(auth_invalid_message(user_access_error))
-                await process_wrong_login(self._request)
+                await process_wrong_login(self._request, AccessMethod.WEBSOCKET)
                 raise Disconnect
 
             self._hass.auth.async_log_access_token_usage(
@@ -129,5 +133,5 @@ class AuthPhase:
         await self._send_bytes_text(
             auth_invalid_message("Invalid access token or password")
         )
-        await process_wrong_login(self._request)
+        await process_wrong_login(self._request, AccessMethod.WEBSOCKET)
         raise Disconnect
