@@ -135,6 +135,10 @@ async def test_turn_on_restores_last_mode(
     await hass.services.async_call(
         "climate", "turn_off", {ATTR_ENTITY_ID: AIR_CONDITIONER}, blocking=True
     )
+    coordinator.async_set_updated_data(coordinator.gateway_set)
+    coordinator._handle_fastcon_report(6, bytes([0, AC_MODE_COOL, 26, 0]))
+    await hass.async_block_till_done()
+    assert hass.states.get(AIR_CONDITIONER).state == HVACMode.OFF
     await hass.services.async_call(
         "climate", "turn_on", {ATTR_ENTITY_ID: AIR_CONDITIONER}, blocking=True
     )

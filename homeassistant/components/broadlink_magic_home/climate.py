@@ -182,9 +182,7 @@ class BroadLinkMagicClimate(BroadLinkMagicEntity, ClimateEntity):
         serial = self._report_serial(self._device)
         await self.coordinator.async_send_ac(self._device, commands)
         self._pending_state.set("power", 0 if hvac_mode is HVACMode.OFF else 1, serial)
-        if hvac_mode is HVACMode.OFF:
-            self._pending_state.discard("mode")
-        else:
+        if hvac_mode is not HVACMode.OFF:
             self._pending_state.set("mode", _HVAC_TO_RM[hvac_mode], serial)
             self._last_hvac_mode = hvac_mode
         self._attr_hvac_mode = hvac_mode

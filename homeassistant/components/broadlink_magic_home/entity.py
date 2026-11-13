@@ -29,10 +29,6 @@ class PendingCommands:
             time.monotonic() + PENDING_COMMAND_TIMEOUT,
         )
 
-    def discard(self, key: str) -> None:
-        """Forget a commanded value."""
-        self._values.pop(key, None)
-
     def confirmed(self, reported: dict[str, Any], serial: int) -> dict[str, Any]:
         """Return reported values that do not contradict pending commands.
 
