@@ -109,7 +109,6 @@ RULE_URL = (
 
 INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "abode",
-    "accuweather",
     "acmeda",
     "actiontec",
     "adax",
@@ -489,7 +488,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "kitchen_sink",
     "kiwi",
     "kmtronic",
-    "kodi",
     "konnected",
     "kostal_plenticore",
     "kraken",
@@ -993,7 +991,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
 
 INTEGRATIONS_WITHOUT_SCALE = [
     "abode",
-    "accuweather",
     "acmeda",
     "actiontec",
     "adax",

@@ -6,6 +6,7 @@ from watergate_local_api.models import (
     AutoShutOffState,
     DeviceStateV2,
     NetworkingData,
+    PowerSupply,
     TelemetryData,
 )
 from watergate_local_api.models.water_meter import WaterMeter
@@ -95,6 +96,17 @@ def _auto_shut_off(auto_shut_off: AutoShutOffState) -> dict[str, Any]:
     }
 
 
+def _power(power: PowerSupply | None) -> dict[str, Any] | None:
+    """Return the power supply as a dict (only read from devices with a battery)."""
+    if power is None:
+        return None
+    return {
+        "battery": power.battery,
+        "external": power.external,
+        "batteries_voltage": power.batteries_voltage,
+    }
+
+
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: WatergateConfigEntry
 ) -> dict[str, Any]:
@@ -113,6 +125,7 @@ async def async_get_config_entry_diagnostics(
                     "telemetry": _telemetry(data.telemetry),
                     "networking": _networking(data.networking),
                     "auto_shut_off": _auto_shut_off(data.auto_shut_off),
+                    "power": _power(data.power),
                 },
                 TO_REDACT,
             )

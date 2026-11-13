@@ -152,6 +152,11 @@ def get_webhook_handler(
 
         coordinator.async_set_updated_data(coordinator_data)
 
+        if isinstance(data, PowerSupplyChangedEventData):
+            # A battery may have been inserted or removed, which changes whether
+            # (and what) /power reports.
+            await coordinator.async_request_refresh()
+
         return HomeAssistantView.json(result="OK", status_code=HTTPStatus.OK)
 
     return async_webhook_handler

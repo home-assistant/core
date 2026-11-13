@@ -1,7 +1,7 @@
 """Stream the raw Home Assistant log to websocket subscribers."""
 
 from collections import deque
-from collections.abc import Awaitable, Callable, Iterable
+from collections.abc import AsyncIterator, Callable, Iterable
 import logging
 import os
 import re
@@ -25,6 +25,7 @@ from .const import (
     RAW_BACKLOG_LINES,
     RAW_BUFFER_LINES,
     RAW_INTEGRATION_BACKLOG_LINES,
+    RAW_INTEGRATION_READER_LINES,
     RAW_UPDATE_COOLDOWN,
 )
 
@@ -32,7 +33,8 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_RAW_LOG_STREAM: HassKey[RawLogStreamHandler] = HassKey("system_log_raw")
 
-type LogReader = Callable[[], Awaitable[list[str]]]
+# Streams the last lines of the log since Home Assistant started
+type LogReader = Callable[[int], AsyncIterator[str]]
 
 # Logs every message it sends, including the streamed lines
 WEBSOCKET_CONNECTION_LOGGER = "homeassistant.components.websocket_api.http.connection"
@@ -83,19 +85,37 @@ def _matches_loggers(name: str, loggers: tuple[str, ...]) -> bool:
     return any(name == logger or name.startswith(f"{logger}.") for logger in loggers)
 
 
+class _LogRecordFilter:
+    """Keep the last lines logged by the loggers."""
+
+    def __init__(self, loggers: tuple[str, ...], lines: int) -> None:
+        """Initialize the filter."""
+        self._loggers = loggers
+        self._matches = False
+        self._backlog: deque[str] = deque(maxlen=lines)
+
+    def add(self, line: str) -> None:
+        """Keep the line if it belongs to a record of the loggers."""
+        if record := LOG_FILE_RECORD.match(line):
+            self._matches = _matches_loggers(record.group(1), self._loggers)
+        # Lines without a record start belong to the previous record
+        if self._matches:
+            self._backlog.append(line.rstrip("\n"))
+
+    @property
+    def lines(self) -> list[str]:
+        """Return the kept lines."""
+        return list(self._backlog)
+
+
 def _filter_log_records(
     log_lines: Iterable[str], loggers: tuple[str, ...], lines: int
 ) -> list[str]:
     """Return the last lines logged by the loggers."""
-    backlog: deque[str] = deque(maxlen=lines)
-    matches = False
+    log_filter = _LogRecordFilter(loggers, lines)
     for line in log_lines:
-        if record := LOG_FILE_RECORD.match(line):
-            matches = _matches_loggers(record.group(1), loggers)
-        # Lines without a record start belong to the previous record
-        if matches:
-            backlog.append(line.rstrip("\n"))
-    return list(backlog)
+        log_filter.add(line)
+    return log_filter.lines
 
 
 def _read_log_records(path: str, loggers: tuple[str, ...], lines: int) -> list[str]:
@@ -225,7 +245,10 @@ def async_setup_raw_log_stream(hass: HomeAssistant) -> RawLogStreamHandler:
 
 @callback
 def async_register_log_reader(hass: HomeAssistant, reader: LogReader) -> None:
-    """Register a reader of the log since start, used when there is no log file."""
+    """Register a reader of the log since start, used when there is no log file.
+
+    The reader is called with the number of lines wanted from the end of the log.
+    """
     if (stream := hass.data.get(DATA_RAW_LOG_STREAM)) is not None:
         stream.log_reader = reader
 
@@ -244,12 +267,12 @@ async def _async_read_backlog(
         )
     if (reader := hass.data[DATA_RAW_LOG_STREAM].log_reader) is None:
         return []
-    log_lines = await reader()
     if loggers:
-        return await hass.async_add_executor_job(
-            _filter_log_records, log_lines, loggers, RAW_INTEGRATION_BACKLOG_LINES
-        )
-    return log_lines[-RAW_BACKLOG_LINES:]
+        log_filter = _LogRecordFilter(loggers, RAW_INTEGRATION_BACKLOG_LINES)
+        async for line in reader(RAW_INTEGRATION_READER_LINES):
+            log_filter.add(line)
+        return log_filter.lines
+    return [line async for line in reader(RAW_BACKLOG_LINES)]
 
 
 @websocket_api.require_admin
