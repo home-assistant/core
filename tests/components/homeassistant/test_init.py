@@ -41,6 +41,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     CommonServiceArgument,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
@@ -381,8 +382,8 @@ async def test_turn_on_exclude(hass: HomeAssistant) -> None:
         ha.DOMAIN,
         SERVICE_TURN_ON,
         {
-            CommonServiceArgument.ENTITY_ID: ["light.ceiling", "light.kitchen"],
-            CONF_EXCLUDE: {ATTR_ENTITY_ID: "light.kitchen"},
+            TargetKey.ENTITY_ID: ["light.ceiling", "light.kitchen"],
+            TargetKey.EXCLUDE: {TargetKey.ENTITY_ID: "light.kitchen"},
         },
         blocking=True,
     )

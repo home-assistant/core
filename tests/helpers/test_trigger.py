@@ -42,6 +42,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     EntityStateAttribute,
+    TargetKey,
     UnitOfTemperature,
 )
 from homeassistant.core import (
@@ -5357,8 +5358,8 @@ async def test_entity_trigger_target_exclude_registry_update(
         calls,
         duration=None,
         target={
-            CONF_ENTITY_ID: _INCLUDED_ENTITY_ID,
-            CONF_EXCLUDE: {ATTR_LABEL_ID: excluded_label.label_id},
+            TargetKey.ENTITY_ID: _INCLUDED_ENTITY_ID,
+            TargetKey.EXCLUDE: {TargetKey.LABEL_ID: excluded_label.label_id},
         },
     )
 
