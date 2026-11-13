@@ -151,6 +151,31 @@ class TelegramBotEvent(StrEnum):
     SENT = "telegram_sent"
 
 
+class TelegramBotEventData(StrEnum):
+    """Keys of the data of the Telegram bot events."""
+
+    BOT = "bot"
+    CHAT_ID = "chat_id"
+    CHAT_INSTANCE = "chat_instance"
+    MESSAGE_THREAD_ID = "message_thread_id"
+    ID = "id"
+    MESSAGE_ID = "message_id"
+    MESSAGE_TAG = "message_tag"
+    REPLY_TO_MESSAGE_ID = "reply_to_message_id"
+    DATE = "date"
+    TEXT = "text"
+    MESSAGE = "message"
+    DATA = "data"
+    COMMAND = "command"
+    ARGS = "args"
+    FILE_ID = "file_id"
+    FILE_MIME_TYPE = "file_mime_type"
+    FILE_SIZE = "file_size"
+    USER_ID = "user_id"
+    FROM_FIRST = "from_first"
+    FROM_LAST = "from_last"
+
+
 PARSER_HTML = "html"
 PARSER_MD = "markdown"
 PARSER_MD2 = "markdownv2"
