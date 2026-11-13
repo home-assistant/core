@@ -825,7 +825,7 @@ clx-sdk-xms==1.0.0
 coinbase-advanced-py==1.2.2
 
 # homeassistant.scripts.check_config
-colorlog==6.10.1
+colorlog==6.12.0
 
 # homeassistant.components.color_extractor
 colorthief==0.2.1
