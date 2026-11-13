@@ -96,10 +96,7 @@ from .const import (
     EVENT_TELEGRAM_COMMAND,
     EVENT_TELEGRAM_SENT,
     EVENT_TELEGRAM_TEXT,
-    PARSER_HTML,
-    PARSER_MD,
-    PARSER_MD2,
-    PARSER_PLAIN_TEXT,
+    TelegramBotParseMode,
     TelegramBotService,
     TelegramBotServiceArgument,
 )
@@ -311,10 +308,10 @@ class TelegramNotificationService:
         self.config = config
         self.old_config_data = config.data.copy()
         self._parsers: dict[str, str | None] = {
-            PARSER_HTML: ParseMode.HTML,
-            PARSER_MD: ParseMode.MARKDOWN,
-            PARSER_MD2: ParseMode.MARKDOWN_V2,
-            PARSER_PLAIN_TEXT: None,
+            TelegramBotParseMode.HTML: ParseMode.HTML,
+            TelegramBotParseMode.MARKDOWN: ParseMode.MARKDOWN,
+            TelegramBotParseMode.MARKDOWN_V2: ParseMode.MARKDOWN_V2,
+            TelegramBotParseMode.PLAIN_TEXT: None,
         }
         self.parse_mode = self._parsers[parser]
         self.bot = bot
@@ -449,7 +446,7 @@ class TelegramNotificationService:
                 params[ATTR_REPLYMARKUP] = InlineKeyboardMarkup(
                     [_make_row_inline_keyboard(row) for row in keys]
                 )
-        if params[ATTR_PARSER] == PARSER_PLAIN_TEXT:
+        if params[ATTR_PARSER] == TelegramBotParseMode.PLAIN_TEXT:
             params[ATTR_PARSER] = None
         return params
 

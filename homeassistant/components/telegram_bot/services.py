@@ -49,10 +49,7 @@ from .const import (
     CHAT_ACTION_UPLOAD_VIDEO_NOTE,
     CHAT_ACTION_UPLOAD_VOICE,
     DOMAIN,
-    PARSER_HTML,
-    PARSER_MD,
-    PARSER_MD2,
-    PARSER_PLAIN_TEXT,
+    TelegramBotParseMode,
     TelegramBotService,
     TelegramBotServiceArgument,
 )
@@ -61,7 +58,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_PARSER_SCHEMA = probatio.All(
     cv.string,
-    probatio.In([PARSER_HTML, PARSER_MD, PARSER_MD2, PARSER_PLAIN_TEXT]),
+    probatio.In(list(TelegramBotParseMode)),
 )
 
 BASE_SERVICE_SCHEMA = probatio.Schema(
