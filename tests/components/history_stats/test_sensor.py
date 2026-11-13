@@ -1,6 +1,7 @@
 """The test for the History Statistics sensor platform."""
 
 from datetime import datetime, timedelta
+from typing import Any
 from unittest.mock import patch
 
 from freezegun import freeze_time
@@ -15,11 +16,17 @@ from pytest_homeassistant.components.recorder.common import async_wait_recording
 from pytest_homeassistant.typing import RecorderInstanceGenerator
 
 from homeassistant import config as hass_config, core as ha
+from homeassistant.components.history_stats.config_flow import (
+    HistoryStatsConfigFlowHandler,
+)
 from homeassistant.components.history_stats.const import (
+    CONF_DURATION,
     CONF_END,
+    CONF_PERIOD,
     CONF_START,
     DEFAULT_NAME,
     DOMAIN,
+    Period,
 )
 from homeassistant.components.history_stats.sensor import (
     PLATFORM_SCHEMA as SENSOR_SCHEMA,
@@ -70,6 +77,95 @@ async def test_setup_config_entry(
 
     state = hass.states.get("sensor.unnamed_statistics")
     assert state.state == "2"
+
+
+@pytest.mark.parametrize(
+    ("options", "expected_state", "expected_state_class"),
+    [
+        pytest.param({CONF_PERIOD: Period.TODAY}, "2", "total_increasing", id="today"),
+        pytest.param(
+            {CONF_PERIOD: Period.TODAY, CONF_TYPE: "ratio"},
+            "91.7",
+            "measurement",
+            id="today_ratio",
+        ),
+        pytest.param(
+            {CONF_PERIOD: Period.YESTERDAY}, "1", "measurement", id="yesterday"
+        ),
+        pytest.param(
+            {CONF_PERIOD: Period.ROLLING_WINDOW, CONF_DURATION: {"hours": 12}},
+            "2",
+            "measurement",
+            id="rolling_window",
+        ),
+    ],
+)
+async def test_setup_config_entry_period_preset(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    options: dict[str, Any],
+    expected_state: str,
+    expected_state_class: str,
+) -> None:
+    """Test a config entry using a period preset."""
+    await hass.config.async_set_time_zone("UTC")
+    now = dt_util.parse_datetime("2026-11-13 12:00:00+00:00")
+    yesterday_start = now.replace(day=12, hour=0)
+
+    def _fake_states(*args, **kwargs):
+        return {
+            "binary_sensor.test_monitored": [
+                ha.State(
+                    "binary_sensor.test_monitored",
+                    "off",
+                    last_changed=yesterday_start,
+                ),
+                ha.State(
+                    "binary_sensor.test_monitored",
+                    "on",
+                    last_changed=yesterday_start.replace(hour=20),
+                ),
+                ha.State(
+                    "binary_sensor.test_monitored",
+                    "off",
+                    last_changed=now.replace(hour=1),
+                ),
+                ha.State(
+                    "binary_sensor.test_monitored",
+                    "on",
+                    last_changed=now.replace(hour=2),
+                ),
+            ]
+        }
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=DEFAULT_NAME,
+        options={
+            CONF_NAME: DEFAULT_NAME,
+            CONF_ENTITY_ID: "binary_sensor.test_monitored",
+            CONF_STATE: ["on"],
+            CONF_TYPE: "count",
+            **options,
+        },
+        version=HistoryStatsConfigFlowHandler.VERSION,
+        minor_version=HistoryStatsConfigFlowHandler.MINOR_VERSION,
+    )
+    config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.recorder.history.state_changes_during_period",
+            _fake_states,
+        ),
+        freeze_time(now),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.unnamed_statistics")
+    assert state.state == expected_state
+    assert state.attributes["state_class"] == expected_state_class
 
 
 async def test_setup_multiple_states(

@@ -10,8 +10,9 @@ from homeassistant.components import websocket_api
 from homeassistant.components.sensor import CONF_STATE_CLASS, SensorStateClass
 from homeassistant.const import CONF_ENTITY_ID, CONF_NAME, CONF_STATE, CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import section
+from homeassistant.data_entry_flow import Optional, Required, section
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.field_visibility import ConditionOperator, FieldCondition
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
@@ -39,6 +40,7 @@ from .const import (
     CONF_DURATION,
     CONF_END,
     CONF_MIN_STATE_DURATION,
+    CONF_PERIOD,
     CONF_PERIOD_KEYS,
     CONF_START,
     CONF_TYPE_KEYS,
@@ -47,22 +49,35 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
     SECTION_ADDITIONAL_SETTINGS,
+    Period,
 )
 from .coordinator import HistoryStatsUpdateCoordinator
 from .data import HistoryStats
+from .helpers import resolve_period_config
 from .sensor import HistoryStatsSensor
 
+VISIBLE_IF_CUSTOM: FieldCondition = {"field": CONF_PERIOD, "value": Period.CUSTOM}
+VISIBLE_IF_DURATION: FieldCondition = {
+    "field": CONF_PERIOD,
+    "operator": ConditionOperator.IN,
+    "value": [Period.ROLLING_WINDOW, Period.CUSTOM],
+}
 
-def _validate_two_period_keys(user_input: dict[str, Any]) -> None:
-    if sum(param in user_input for param in CONF_PERIOD_KEYS) != 2:
-        raise SchemaFlowError("only_two_keys_allowed")
+
+def _validate_period(user_input: dict[str, Any]) -> None:
+    period = user_input[CONF_PERIOD]
+    if period == Period.CUSTOM:
+        if sum(param in user_input for param in CONF_PERIOD_KEYS) != 2:
+            raise SchemaFlowError("only_two_keys_allowed")
+    elif period == Period.ROLLING_WINDOW and not user_input.get(CONF_DURATION):
+        raise SchemaFlowError("duration_required")
 
 
 async def validate_options(
     handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
 ) -> dict[str, Any]:
     """Validate options selected."""
-    _validate_two_period_keys(user_input)
+    _validate_period(user_input)
 
     handler.parent_handler._async_abort_entries_match({**handler.options, **user_input})  # noqa: SLF001
 
@@ -139,12 +154,19 @@ def _get_options_schema_with_entity_id(entity_id: str, type: str) -> probatio.Sc
                     read_only=True,
                 )
             ),
-            probatio.Optional(CONF_START): TemplateSelector(),
-            probatio.Optional(CONF_END): TemplateSelector(),
-            probatio.Optional(CONF_DURATION): DurationSelector(
+            Required(CONF_PERIOD, default=Period.TODAY): SelectSelector(
+                SelectSelectorConfig(
+                    options=list(Period),
+                    mode=SelectSelectorMode.DROPDOWN,
+                    translation_key=CONF_PERIOD,
+                )
+            ),
+            Optional(CONF_START, visible=VISIBLE_IF_CUSTOM): TemplateSelector(),
+            Optional(CONF_END, visible=VISIBLE_IF_CUSTOM): TemplateSelector(),
+            Optional(CONF_DURATION, visible=VISIBLE_IF_DURATION): DurationSelector(
                 DurationSelectorConfig(enable_day=True, allow_negative=False),
             ),
-            probatio.Optional(CONF_STATE_CLASS): StateClassSelector(
+            Optional(CONF_STATE_CLASS, visible=VISIBLE_IF_CUSTOM): StateClassSelector(
                 StateClassSelectorConfig(state_classes=state_class_options),
             ),
             probatio.Optional(SECTION_ADDITIONAL_SETTINGS): section(
@@ -188,6 +210,7 @@ class HistoryStatsConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     """Handle a config flow for History stats."""
 
     VERSION = 2
+    MINOR_VERSION = 2
 
     config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW
@@ -204,6 +227,12 @@ class HistoryStatsConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     async def async_setup_preview(hass: HomeAssistant) -> None:
         """Set up preview WS API."""
         websocket_api.async_register_command(hass, ws_start_preview)
+
+
+PREVIEW_ERRORS = {
+    "only_two_keys_allowed": f"Exactly two of {', '.join(CONF_PERIOD_KEYS)} required",
+    "duration_required": "Duration is required for a rolling window",
+}
 
 
 @websocket_api.websocket_command(
@@ -275,31 +304,24 @@ async def ws_start_preview(
         return
 
     try:
-        _validate_two_period_keys(validated_data)
-    except SchemaFlowError:
-        connection.send_error(
-            msg["id"],
-            "invalid_schema",
-            f"Exactly two of {', '.join(CONF_PERIOD_KEYS)} required",
-        )
+        _validate_period(validated_data)
+    except SchemaFlowError as err:
+        connection.send_error(msg["id"], "invalid_schema", PREVIEW_ERRORS[str(err)])
         return
 
     sensor_type = validated_data.get(CONF_TYPE)
     entity_states = validated_data.get(CONF_STATE)
-    start = validated_data.get(CONF_START)
-    end = validated_data.get(CONF_END)
-    duration = validated_data.get(CONF_DURATION)
     additional_settings = validated_data.get(SECTION_ADDITIONAL_SETTINGS, {})
     min_state_duration = additional_settings.get(CONF_MIN_STATE_DURATION)
-    state_class = validated_data.get(CONF_STATE_CLASS)
+    period_config = resolve_period_config(validated_data, conf_type)
 
     history_stats = HistoryStats(
         hass,
         entity_id,
         entity_states,
-        Template(start, hass) if start else None,
-        Template(end, hass) if end else None,
-        timedelta(**duration) if duration else None,
+        Template(period_config.start, hass) if period_config.start else None,
+        Template(period_config.end, hass) if period_config.end else None,
+        period_config.duration,
         timedelta(**min_state_duration) if min_state_duration else timedelta(0),
         True,
     )
@@ -310,7 +332,7 @@ async def ws_start_preview(
         sensor_type=sensor_type,
         name=name,
         unique_id=None,
-        state_class=state_class,
+        state_class=period_config.state_class,
     )
     preview_entity.hass = hass
 
