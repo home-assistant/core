@@ -28,12 +28,12 @@ from homeassistant.util.json import JsonValueType
 from .bot import TelegramBotConfigEntry, TelegramNotificationService
 from .const import (
     ATTR_CHAT_ID,
-    ATTR_MESSAGE_ID,
     DOMAIN,
     TelegramBotChatAction,
     TelegramBotParseMode,
     TelegramBotService,
     TelegramBotServiceArgument,
+    TelegramBotServiceResponse,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -428,13 +428,15 @@ async def _async_send_telegram_message(service: ServiceCall) -> ServiceResponse:
             if service_response is not None:
                 formatted_responses: list[JsonValueType] = []
                 for chat_id, message_id in service_response.items():
-                    formatted_response = {
-                        ATTR_CHAT_ID: int(chat_id),
-                        ATTR_MESSAGE_ID: message_id,
+                    formatted_response: dict[str, JsonValueType] = {
+                        TelegramBotServiceResponse.CHAT_ID: int(chat_id),
+                        TelegramBotServiceResponse.MESSAGE_ID: message_id,
                     }
 
                     if target_notify_entity_id:
-                        formatted_response[ATTR_ENTITY_ID] = target_notify_entity_id
+                        formatted_response[TelegramBotServiceResponse.ENTITY_ID] = (
+                            target_notify_entity_id
+                        )
 
                     formatted_responses.append(formatted_response)
 
@@ -466,7 +468,7 @@ async def _async_send_telegram_message(service: ServiceCall) -> ServiceResponse:
         )
 
     if service.return_response:
-        return {"chats": service_responses}
+        return {TelegramBotServiceResponse.CHATS: service_responses}
 
     return None
 
