@@ -62,7 +62,8 @@ rules:
   test-coverage: done
   # Gold
   devices: done
-  diagnostics: done
+  diagnostics: todo
+  # Diagnostics are added in a follow-up PR, as required for new integrations.
   discovery-update-info:
     status: exempt
     comment: |

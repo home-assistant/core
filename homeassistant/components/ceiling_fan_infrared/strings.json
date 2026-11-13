@@ -28,26 +28,5 @@
         "title": "Set up Ceiling Fan Infrared device"
       }
     }
-  },
-  "entity": {
-    "button": {
-      "brightness_down": {
-        "name": "Brightness down"
-      },
-      "brightness_up": {
-        "name": "Brightness up"
-      },
-      "color_cooler": {
-        "name": "Color cooler"
-      },
-      "color_warmer": {
-        "name": "Color warmer"
-      }
-    },
-    "light": {
-      "light": {
-        "name": "Light"
-      }
-    }
   }
 }
