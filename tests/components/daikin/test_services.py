@@ -4,35 +4,15 @@ from unittest.mock import AsyncMock
 
 import probatio
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.daikin.const import DOMAIN, KEY_MAC
+from homeassistant.components.daikin.const import DOMAIN
 from homeassistant.components.daikin.services import DaikinServiceArgument
-from homeassistant.const import CONF_HOST, CommonServiceArgument
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
-from .conftest import ZoneDevice
-
-HOST = "127.0.0.1"
-
-
-async def _async_setup_daikin(
-    hass: HomeAssistant, zone_device: ZoneDevice
-) -> MockConfigEntry:
-    """Set up a Daikin config entry with a mocked library device."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=zone_device.mac,
-        data={CONF_HOST: HOST, KEY_MAC: zone_device.mac},
-    )
-    config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    return config_entry
+from .conftest import ZoneDevice, async_setup_daikin
 
 
 def _device_id(
@@ -53,7 +33,7 @@ async def test_set_demand_control(
     zone_device.support_demand_control = True
     zone_device.set_demand_control = AsyncMock()
 
-    config_entry = await _async_setup_daikin(hass, zone_device)
+    config_entry = await async_setup_daikin(hass, zone_device)
 
     await hass.services.async_call(
         DOMAIN,
@@ -91,7 +71,7 @@ async def test_set_demand_control_with_mode(
     zone_device.support_demand_control = True
     zone_device.set_demand_control = AsyncMock()
 
-    config_entry = await _async_setup_daikin(hass, zone_device)
+    config_entry = await async_setup_daikin(hass, zone_device)
 
     await hass.services.async_call(
         DOMAIN,
@@ -124,7 +104,7 @@ async def test_set_demand_control_disabled(
     zone_device.support_demand_control = True
     zone_device.set_demand_control = AsyncMock()
 
-    config_entry = await _async_setup_daikin(hass, zone_device)
+    config_entry = await async_setup_daikin(hass, zone_device)
 
     await hass.services.async_call(
         DOMAIN,
@@ -154,7 +134,7 @@ async def test_set_demand_control_invalid_max_pow(
     zone_device.support_demand_control = True
     zone_device.set_demand_control = AsyncMock()
 
-    config_entry = await _async_setup_daikin(hass, zone_device)
+    config_entry = await async_setup_daikin(hass, zone_device)
 
     with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
@@ -181,7 +161,7 @@ async def test_set_demand_control_unsupported(
     """Test the set_demand_control service on a device that does not support it."""
     zone_device.support_demand_control = False
 
-    config_entry = await _async_setup_daikin(hass, zone_device)
+    config_entry = await async_setup_daikin(hass, zone_device)
 
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(

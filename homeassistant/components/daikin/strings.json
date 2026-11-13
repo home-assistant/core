@@ -36,6 +36,14 @@
       "cool_energy_consumption": {
         "name": "Cool energy consumption (last hour)"
       },
+      "demand_control_mode": {
+        "name": "Demand control mode",
+        "state": {
+          "auto": "Auto",
+          "manual": "Manual",
+          "off": "Off"
+        }
+      },
       "energy_consumption": {
         "name": "Energy consumption (today)"
       },
