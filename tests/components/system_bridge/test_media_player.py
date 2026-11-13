@@ -773,3 +773,61 @@ async def test_media_player_image_invalid_or_none(
     client = await hass_client()
     resp = await client.get(f"/api/media_player_proxy/{ENTITY_ID}")
     assert resp.status == HTTPStatus.NOT_FOUND
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_media_player_image_follows_source(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
+    """Test media player artwork follows the selected player source."""
+    b64_png = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+    png_bytes = base64.b64decode(b64_png)
+    data_url_png = f"data:image/png;base64,{b64_png}"
+
+    coordinator = mock_config_entry.runtime_data
+    vlc = replace(FIXTURE_MEDIA.players[0], thumbnail=None)
+    spotify = replace(
+        vlc,
+        id="spotify",
+        name="Spotify",
+        title="Spotify Song",
+        thumbnail=data_url_png,
+    )
+    await coordinator.async_handle_module(
+        Module.MEDIA,
+        replace(FIXTURE_MEDIA, thumbnail=None, players=[vlc, spotify]),
+    )
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.attributes.get("entity_picture") is None
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_SELECT_SOURCE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: "Spotify"},
+        blocking=True,
+    )
+
+    assert (state := hass.states.get(ENTITY_ID))
+    entity_picture = state.attributes.get("entity_picture")
+    assert entity_picture is not None
+    assert entity_picture.startswith(f"/api/media_player_proxy/{ENTITY_ID}?")
+
+    client = await hass_client_no_auth()
+    resp = await client.get(entity_picture)
+    assert resp.status == HTTPStatus.OK
+    assert resp.headers["Content-Type"] == "image/png"
+    assert await resp.read() == png_bytes
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_SELECT_SOURCE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: "Automatic"},
+        blocking=True,
+    )
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.attributes.get("entity_picture") is None

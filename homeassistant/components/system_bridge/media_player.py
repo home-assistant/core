@@ -392,10 +392,8 @@ class SystemBridgeMediaPlayer(SystemBridgeEntity, MediaPlayerEntity):
     @override
     def media_image_url(self) -> str | None:
         """Return the image URL of current playing media."""
-        if (
-            (media := self._systembridge_data.media) is not None
-            and (thumb := media.thumbnail) is not None
-            and thumb.startswith(("http://", "https://"))
+        if (thumb := self._media.thumbnail) is not None and thumb.startswith(
+            ("http://", "https://")
         ):
             return thumb
 
@@ -405,11 +403,9 @@ class SystemBridgeMediaPlayer(SystemBridgeEntity, MediaPlayerEntity):
     @override
     def media_image_hash(self) -> str | None:
         """Hash value for media image."""
-        if (
-            (media := self._systembridge_data.media) is not None
-            and (thumb := media.thumbnail) is not None
-            and self._decode_image_data(thumb) is not None
-        ):
+        if (thumb := self._media.thumbnail) is not None and self._decode_image_data(
+            thumb
+        ) is not None:
             return self._cached_thumb_hash
 
         return super().media_image_hash
@@ -417,11 +413,9 @@ class SystemBridgeMediaPlayer(SystemBridgeEntity, MediaPlayerEntity):
     @override
     async def async_get_media_image(self) -> tuple[bytes | None, str | None]:
         """Fetch media image of current playing track."""
-        if (
-            (media := self._systembridge_data.media) is not None
-            and (thumb := media.thumbnail) is not None
-            and (result := self._decode_image_data(thumb)) is not None
-        ):
+        if (thumb := self._media.thumbnail) is not None and (
+            result := self._decode_image_data(thumb)
+        ) is not None:
             return result
 
         return await super().async_get_media_image()
