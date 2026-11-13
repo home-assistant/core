@@ -11,7 +11,12 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from pytest_homeassistant.plugins import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
-from trmnl.exceptions import TRMNLError, TRMNLForbiddenError, TRMNLNotFoundError
+from trmnl.exceptions import (
+    TRMNLError,
+    TRMNLForbiddenError,
+    TRMNLNotFoundError,
+    TRMNLRateLimitError,
+)
 from trmnl.models import PluginSetting
 
 from homeassistant.components.trmnl.const import (
@@ -52,7 +57,7 @@ def home_entry(mock_config_entry: MockConfigEntry) -> MockConfigEntry:
 
 async def tick(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
     """Move past the push cooldown."""
-    freezer.tick(timedelta(seconds=61))
+    freezer.tick(timedelta(seconds=91))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -139,13 +144,13 @@ async def test_setup_creates_plugin_setting_and_pushes_the_home(
     assert mock_trmnl_client.update_plugin_setting_data.await_args.args == snapshot
 
 
-async def test_changes_push_at_most_once_a_minute(
+async def test_changes_push_at_most_once_per_cooldown(
     hass: HomeAssistant,
     mock_trmnl_client: AsyncMock,
     home_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test changes in the minute after a push share one push, and no change sends none."""
+    """Test changes in the cooldown after a push share one push, and no change sends none."""
     hass.states.async_set("light.lamp", "on")
     await setup_integration(hass, home_entry)
 
@@ -172,13 +177,14 @@ async def test_changes_push_at_most_once_a_minute(
 @pytest.mark.parametrize(
     "error",
     [
-        TRMNLError("Rate limit exceeded"),
+        TRMNLError("status 500"),
+        TRMNLRateLimitError("Rate limit exceeded", None),
         ClientError("Connection reset"),
         TimeoutError(),
         OAuth2TokenRequestConnectionError(domain=DOMAIN),
     ],
 )
-async def test_failed_push_is_logged_once_and_sent_on_the_next_change(
+async def test_failed_push_is_retried_with_the_current_home(
     hass: HomeAssistant,
     mock_trmnl_client: AsyncMock,
     home_entry: MockConfigEntry,
@@ -186,18 +192,106 @@ async def test_failed_push_is_logged_once_and_sent_on_the_next_change(
     caplog: pytest.LogCaptureFixture,
     error: Exception,
 ) -> None:
-    """Test a failing push logs one warning, and the push after it logs the recovery."""
+    """Test a failed push logs once and is retried after the cooldown with no change needed."""
     mock_trmnl_client.update_plugin_setting_data.side_effect = [error, error, None]
     hass.states.async_set("light.lamp", "on")
     await setup_integration(hass, home_entry)
+    hass.states.async_set("light.lamp", "off")
 
-    for state in ("off", "on"):
-        hass.states.async_set("light.lamp", state)
+    for _ in range(3):
         await tick(hass, freezer)
 
     assert mock_trmnl_client.update_plugin_setting_data.await_count == 3
+    assert (
+        mock_trmnl_client.update_plugin_setting_data.await_args.args[1]["entities"][0][
+            "state"
+        ]
+        == "off"
+    )
     assert caplog.text.count("Could not send the home to TRMNL") == 1
     assert "Sent the home to TRMNL again" in caplog.text
+
+
+async def test_rate_limited_push_waits_as_long_as_trmnl_asks(
+    hass: HomeAssistant,
+    mock_trmnl_client: AsyncMock,
+    home_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a 429 with Retry-After is retried only once that time has passed."""
+    mock_trmnl_client.update_plugin_setting_data.side_effect = [
+        TRMNLRateLimitError("Rate limit exceeded", 600),
+        None,
+    ]
+    hass.states.async_set("light.lamp", "on")
+    await setup_integration(hass, home_entry)
+
+    await tick(hass, freezer)
+    assert mock_trmnl_client.update_plugin_setting_data.await_count == 1
+
+    freezer.tick(timedelta(seconds=600))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_trmnl_client.update_plugin_setting_data.await_count == 2
+
+
+async def test_successful_push_sends_no_retry(
+    hass: HomeAssistant,
+    mock_trmnl_client: AsyncMock,
+    home_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a push that succeeds after a failure leaves no retry behind."""
+    mock_trmnl_client.update_plugin_setting_data.side_effect = [TimeoutError(), None]
+    hass.states.async_set("light.lamp", "on")
+    await setup_integration(hass, home_entry)
+
+    hass.states.async_set("light.lamp", "off")
+    for _ in range(3):
+        await tick(hass, freezer)
+
+    assert mock_trmnl_client.update_plugin_setting_data.await_count == 2
+
+
+async def test_area_moves_and_renames_are_pushed(
+    hass: HomeAssistant,
+    mock_trmnl_client: AsyncMock,
+    home_entry: MockConfigEntry,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test moving a picked entity's device or the entity, and renaming its area, each push."""
+    other_entry = MockConfigEntry(domain="test")
+    other_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id, identifiers={("test", "lamp")}
+    )
+    entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "lamp",
+        suggested_object_id="lamp",
+        device_id=device.id,
+        original_name="Lamp",
+    )
+    kitchen = area_registry.async_create("Kitchen")
+    hall = area_registry.async_create("Hall")
+    hass.states.async_set("light.lamp", "on")
+    await setup_integration(hass, home_entry)
+
+    device_registry.async_update_device(device.id, area_id=kitchen.id)
+    await tick(hass, freezer)
+    area_registry.async_update(kitchen.id, name="Galley")
+    await tick(hass, freezer)
+    entity_registry.async_update_entity("light.lamp", area_id=hall.id)
+    await tick(hass, freezer)
+
+    assert [
+        call.args[1]["areas"]
+        for call in mock_trmnl_client.update_plugin_setting_data.await_args_list
+    ] == [{}, {kitchen.id: "Kitchen"}, {kitchen.id: "Galley"}, {hall.id: "Hall"}]
 
 
 @pytest.mark.parametrize(

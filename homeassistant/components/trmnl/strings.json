@@ -82,7 +82,7 @@
         "data_description": {
           "home_entities": "The first time, Home Assistant creates a Home Assistant plugin on your TRMNL account. Add it to a playlist."
         },
-        "description": "Home Assistant sends the entities you pick to TRMNL when it starts and at most once a minute after they change. Nothing is sent until you pick at least one.",
+        "description": "Home Assistant sends the entities you pick to TRMNL when it starts and at most once every 90 seconds after they change. Nothing is sent until you pick at least one.",
         "title": "Show your home on TRMNL"
       }
     }
