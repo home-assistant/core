@@ -281,6 +281,7 @@ SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
     ),
     "Smart Radiator Thermostat": (BATTERY_DESCRIPTION,),
     "AI Art Frame": (BATTERY_DESCRIPTION,),
+    "AI Art Frame 2": (BATTERY_DESCRIPTION,),
     "WeatherStation": (
         BATTERY_DESCRIPTION,
         TEMPERATURE_DESCRIPTION,

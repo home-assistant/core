@@ -103,6 +103,8 @@ async def test_switchmode_bot_no_button_entity(
     [
         ("AI Art Frame", ArtFrameCommands.PREVIOUS),
         ("AI Art Frame", ArtFrameCommands.NEXT),
+        ("AI Art Frame 2", ArtFrameCommands.PREVIOUS),
+        ("AI Art Frame 2", ArtFrameCommands.NEXT),
     ],
 )
 async def test_loaded_buttons(

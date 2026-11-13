@@ -59,7 +59,7 @@ class SwitchBotCloudImage(SwitchBotCloudEntity, ImageEntity):
     @override
     def _set_attributes(self) -> None:
         """Set attributes from coordinator data."""
-        if self.coordinator.data is None:
+        if self.coordinator.data is None or "imageUrl" not in self.coordinator.data:
             return
         self._attr_image_last_updated = dt_util.utcnow()
         self._attr_image_url = self.coordinator.data.get("imageUrl")
