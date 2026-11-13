@@ -329,7 +329,7 @@ class EDL21:
         self._update_interval = config.get(
             CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL
         )
-        self._last_forwarded: float | None = None
+        self._last_forwarded: dict[tuple[str, str], float] = {}
         self._proto = SmlProtocol(config[CONF_SERIAL_PORT])
         self._proto.add_listener(self.event, ["SmlGetListResponse"])
         LOGGER.debug(
@@ -366,34 +366,14 @@ class EDL21:
             return
         electricity_id = electricity_id.replace(" ", "")
 
-        # Throttle: forward at most one telegram per update interval.
-        # A value of 0 (the default) forwards every telegram.
         now = time.monotonic()
-        forward = (
-            self._update_interval == 0
-            or self._last_forwarded is None
-            or (now - self._last_forwarded) >= self._update_interval
-        )
-        if forward:
-            self._last_forwarded = now
-        else:
-            LOGGER.debug(
-                "Throttled sml message on %s (interval %s s)",
-                self._serial_port,
-                self._update_interval,
-            )
-
         new_entities: list[EDL21Entity] = []
         for telegram in message_body.get("valList", []):
             if not (obis := telegram.get("objName")):
                 continue
 
-            if (electricity_id, obis) in self._registered_obis:
-                if forward:
-                    async_dispatcher_send(
-                        self._hass, SIGNAL_EDL21_TELEGRAM, electricity_id, telegram
-                    )
-            else:
+            key = (electricity_id, obis)
+            if key not in self._registered_obis:
                 entity_description = SENSORS.get(obis)
                 if entity_description:
                     new_entities.append(
@@ -404,7 +384,10 @@ class EDL21:
                             telegram,
                         )
                     )
-                    self._registered_obis.add((electricity_id, obis))
+                    self._registered_obis.add(key)
+                    # The registration telegram starts the stream's throttle
+                    # window; its value is already applied to the new entity.
+                    self._last_forwarded[key] = now
                 elif obis not in self._OBIS_BLACKLIST:
                     LOGGER.warning(
                         "Unhandled sensor %s detected. Please report at %s",
@@ -412,6 +395,26 @@ class EDL21:
                         "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+edl21%22",
                     )
                     self._OBIS_BLACKLIST.add(obis)
+                continue
+
+            # Throttle each OBIS stream independently so meters that
+            # interleave different sensors across telegrams keep every
+            # stream updating: an interval of 0 forwards every telegram.
+            if (
+                self._update_interval == 0
+                or (now - self._last_forwarded[key]) >= self._update_interval
+            ):
+                self._last_forwarded[key] = now
+                async_dispatcher_send(
+                    self._hass, SIGNAL_EDL21_TELEGRAM, electricity_id, telegram
+                )
+            else:
+                LOGGER.debug(
+                    "Throttled sml value on %s for %s (interval %s s)",
+                    self._serial_port,
+                    obis,
+                    self._update_interval,
+                )
 
         if new_entities:
             self._async_add_entities(new_entities, update_before_add=True)

@@ -46,6 +46,10 @@ def _telegram(value: float) -> dict:
     return {"objName": "1-0:16.7.0*255", "value": value, "unit": "W"}
 
 
+def _energy_telegram(value: float) -> dict:
+    return {"objName": "1-0:1.8.0*255", "value": value, "unit": "Wh"}
+
+
 def _get_state(hass: HomeAssistant, entity_id: str) -> State:
     """Return the current state of an entity, asserting it exists."""
     state = hass.states.get(entity_id)
@@ -53,15 +57,22 @@ def _get_state(hass: HomeAssistant, entity_id: str) -> State:
     return state
 
 
-async def _get_power_entity_id(hass: HomeAssistant, entry: MockConfigEntry) -> str:
-    """Return the entity id of the sum active instantaneous power sensor."""
+async def _get_entity_id(
+    hass: HomeAssistant, entry: MockConfigEntry, obis_fragment: str
+) -> str:
+    """Return the entity id of the sensor matching an OBIS fragment."""
     registry = er.async_get(hass)
     entries = er.async_entries_for_config_entry(registry, entry.entry_id)
     return next(
         registry_entity.entity_id
         for registry_entity in entries
-        if "16.7" in registry_entity.unique_id
+        if obis_fragment in registry_entity.unique_id
     )
+
+
+async def _get_power_entity_id(hass: HomeAssistant, entry: MockConfigEntry) -> str:
+    """Return the entity id of the sum active instantaneous power sensor."""
+    return await _get_entity_id(hass, entry, "16.7")
 
 
 async def _setup_entry(
@@ -227,3 +238,51 @@ async def test_options_change_reloads_and_reconnects(
     # connection, a second connect for the reloaded one.
     assert sml_protocol.return_value.connect.await_count == 2
     assert sml_protocol.return_value._impl._disconnect.await_count == 1
+
+
+async def test_update_interval_throttles_obis_streams_independently(
+    hass: HomeAssistant, sml_protocol: MagicMock
+) -> None:
+    """Test that interleaved telegrams keep every OBIS stream updating."""
+    entry = await _setup_entry(
+        hass,
+        sml_protocol,
+        {CONF_SERIAL_PORT: "/dev/ttyUSB1", CONF_UPDATE_INTERVAL: 10},
+    )
+    listener = _get_listener(sml_protocol)
+
+    with patch("homeassistant.components.edl21.sensor.time") as mock_time:
+        clock = [1000.0]
+        mock_time.monotonic.side_effect = lambda: clock[0]
+
+        # Registration consumes each stream's throttle window.
+        listener(_message(_energy_telegram(100)))
+        await hass.async_block_till_done()
+        clock[0] = 1001.0
+        listener(_message(_telegram(1000)))
+        await hass.async_block_till_done()
+
+        energy_entity = await _get_entity_id(hass, entry, "1.8.0")
+        power_entity = await _get_entity_id(hass, entry, "16.7")
+        assert _get_state(hass, energy_entity).state == "100"
+        assert _get_state(hass, power_entity).state == "1000"
+
+        # Inside the window both streams are held back.
+        clock[0] = 1005.0
+        listener(_message(_energy_telegram(101)))
+        await hass.async_block_till_done()
+        assert _get_state(hass, energy_entity).state == "100"
+
+        # Each stream unlocks on its own schedule.
+        clock[0] = 1010.0
+        listener(_message(_energy_telegram(102)))
+        await hass.async_block_till_done()
+        assert _get_state(hass, energy_entity).state == "102"
+
+        # The power stream is one second behind and still gets its own
+        # update; a telegram-wide throttle would drop it and leave the
+        # power sensor stale.
+        clock[0] = 1012.0
+        listener(_message(_telegram(1100)))
+        await hass.async_block_till_done()
+        assert _get_state(hass, power_entity).state == "1100"
