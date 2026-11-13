@@ -191,6 +191,44 @@
     }),
   })
 # ---
+# name: test_air_quality_forecast[daily]
+  dict({
+    'weather.helsinki': dict({
+      'forecast': list([
+        dict({
+          'aqi': 26,
+          'aqi_co': 2,
+          'aqi_no2': 6,
+          'aqi_o3': 26,
+          'aqi_pm10': 5,
+          'aqi_pm25': 8,
+          'aqi_so2': 0,
+          'datetime': '2026-11-06T00:00:00-08:00',
+          'dominant_pollutant': 'ozone',
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_air_quality_forecast[hourly]
+  dict({
+    'weather.helsinki': dict({
+      'forecast': list([
+        dict({
+          'aqi': 31,
+          'aqi_co': 1,
+          'aqi_no2': 3,
+          'aqi_o3': 31,
+          'aqi_pm10': 4,
+          'aqi_pm25': 8,
+          'aqi_so2': 0,
+          'datetime': '2026-11-05T10:00:00+02:00',
+          'dominant_pollutant': 'ozone',
+        }),
+      ]),
+    }),
+  })
+# ---
 # name: test_forecast[daily]
   dict({
     'weather.helsinki': dict({
