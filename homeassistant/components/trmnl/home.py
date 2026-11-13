@@ -108,12 +108,18 @@ def _onoff(state: State) -> dict[str, dict[str, Any]]:
     return capabilities
 
 
-def _climate(state: State) -> dict[str, dict[str, Any]]:
+def _climate(state: State, temperature_unit: str) -> dict[str, dict[str, Any]]:
     capabilities: dict[str, dict[str, Any]] = {}
     if (current := _number(state.attributes.get("current_temperature"))) is not None:
-        capabilities["measure_temperature"] = {"value": current}
+        capabilities["measure_temperature"] = {
+            "value": current,
+            "units": temperature_unit,
+        }
     if (target := _number(state.attributes.get("temperature"))) is not None:
-        capabilities["target_temperature"] = {"value": target}
+        capabilities["target_temperature"] = {
+            "value": target,
+            "units": temperature_unit,
+        }
     if state.state in THERMOSTAT_MODES:
         capabilities["thermostat_mode"] = {"value": state.state}
     return capabilities
@@ -149,7 +155,6 @@ CAPABILITIES_BY_DOMAIN: dict[str, Callable[[State], dict[str, dict[str, Any]]]] 
     "switch": _onoff,
     "fan": _onoff,
     "humidifier": _onoff,
-    "climate": _climate,
     "cover": _cover,
     "lock": lambda state: {"locked": {"value": state.state == "locked"}},
     "media_player": lambda state: {
@@ -161,10 +166,12 @@ CAPABILITIES_BY_DOMAIN: dict[str, Callable[[State], dict[str, dict[str, Any]]]] 
 }
 
 
-def capabilities_of(state: State) -> dict[str, dict[str, Any]]:
+def capabilities_of(state: State, temperature_unit: str) -> dict[str, dict[str, Any]]:
     """Return the TRMNL capabilities one entity state maps to."""
     if state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
         return {}
+    if state.domain == "climate":
+        return _climate(state, temperature_unit)
     mapper = CAPABILITIES_BY_DOMAIN.get(state.domain)
     return mapper(state) if mapper else {}
 
@@ -172,13 +179,16 @@ def capabilities_of(state: State) -> dict[str, dict[str, Any]]:
 def build_snapshot(hass: HomeAssistant, entity_ids: list[str]) -> dict[str, Any]:
     """Return the picked entities in the wire shape TRMNL's Homey recipes read."""
     area_names = {area.id: area.name for area in ar.async_get(hass).async_list_areas()}
+    temperature_unit = hass.config.units.temperature_unit
     devices = dr.async_get(hass)
     entities = er.async_get(hass)
     grouped: dict[str, dict[str, Any]] = {}
     used_area_names: dict[str, str] = {}
     for entity_id in entity_ids:
         state = hass.states.get(entity_id)
-        if state is None or not (capabilities := capabilities_of(state)):
+        if state is None or not (
+            capabilities := capabilities_of(state, temperature_unit)
+        ):
             continue
         entry = entities.async_get(entity_id)
         device = (
