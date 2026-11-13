@@ -8,7 +8,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.plugins import AiohttpClientMocker
 from pytest_homeassistant.typing import ClientSessionGenerator
-from trmnl.exceptions import TRMNLError
+from trmnl.exceptions import TRMNLAuthenticationError, TRMNLError
 from yarl import URL
 
 from homeassistant.components.trmnl.const import (
@@ -148,14 +148,24 @@ async def test_flow_without_account_identity(
 
 
 @pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.parametrize(
+    ("error", "reason"),
+    [
+        (TRMNLError, "cannot_connect"),
+        (TimeoutError, "cannot_connect"),
+        (TRMNLAuthenticationError, "oauth_unauthorized"),
+    ],
+)
 async def test_flow_cannot_read_devices(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     mock_trmnl_client: AsyncMock,
+    error: type[Exception],
+    reason: str,
 ) -> None:
     """Test the flow aborts when the token cannot list devices."""
-    mock_trmnl_client.get_devices.side_effect = TRMNLError
+    mock_trmnl_client.get_devices.side_effect = error
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -165,7 +175,7 @@ async def test_flow_cannot_read_devices(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
+    assert result["reason"] == reason
 
 
 @pytest.mark.usefixtures("current_request_with_host", "mock_trmnl_client")

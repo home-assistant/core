@@ -6,7 +6,7 @@ from typing import Any, override
 
 import jwt
 from trmnl import TRMNLClient
-from trmnl.exceptions import TRMNLError
+from trmnl.exceptions import TRMNLAuthenticationError, TRMNLError
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
@@ -88,7 +88,9 @@ class TRMNLConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         try:
             await client.get_devices()
             user = await client.get_me() if "profile" in granted else None
-        except TRMNLError:
+        except TRMNLAuthenticationError:
+            return self.async_abort(reason="oauth_unauthorized")
+        except TRMNLError, TimeoutError:
             return self.async_abort(reason="cannot_connect")
 
         await self.async_set_unique_id(subject)
