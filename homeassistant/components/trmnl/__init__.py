@@ -1,6 +1,7 @@
 """The TRMNL integration."""
 
 from collections.abc import Callable, Coroutine
+from contextlib import suppress
 from typing import Any
 
 from aiohttp import ClientError
@@ -171,9 +172,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: TRMNLConfigEntry) -> N
 async def async_remove_entry(hass: HomeAssistant, entry: TRMNLConfigEntry) -> None:
     """Delete the plugin settings the integration created, if the user granted delete."""
     plugin_setting_ids = [
-        entry.options[key]
+        plugin_setting_id
         for key in (CONF_HOME_PLUGIN_SETTING_ID, CONF_MESSAGES_PLUGIN_SETTING_ID)
-        if key in entry.options
+        if (plugin_setting_id := entry.options.get(key)) is not None
     ]
     if not plugin_setting_ids or not scope_granted(entry, "delete"):
         return
@@ -187,6 +188,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: TRMNLConfigEntry) -> No
             token=token["access_token"], session=async_get_clientsession(hass)
         )
         for plugin_setting_id in plugin_setting_ids:
-            await client.delete_plugin_setting(plugin_setting_id)
+            with suppress(TRMNLNotFoundError):
+                await client.delete_plugin_setting(plugin_setting_id)
     except (ClientError, TRMNLError) as err:
         LOGGER.warning("Could not delete the TRMNL plugin settings: %s", err)

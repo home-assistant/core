@@ -595,6 +595,34 @@ async def test_remove_entry_deletes_plugin_setting_when_allowed(
     )
 
 
+async def test_remove_entry_deletes_the_rest_when_one_is_gone(
+    hass: HomeAssistant,
+    mock_trmnl_client: AsyncMock,
+    home_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a plugin setting the user already deleted does not stop the next delete."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=2,
+        data=home_entry.data,
+        options={CONF_HOME_PLUGIN_SETTING_ID: 42, CONF_MESSAGES_PLUGIN_SETTING_ID: 7},
+    )
+    mock_trmnl_client.delete_plugin_setting.side_effect = [
+        TRMNLNotFoundError("Plugin setting not found"),
+        None,
+    ]
+    await setup_integration(hass, entry)
+
+    await hass.config_entries.async_remove(entry.entry_id)
+
+    assert mock_trmnl_client.delete_plugin_setting.await_args_list == [
+        call(42),
+        call(7),
+    ]
+    assert "Could not delete" not in caplog.text
+
+
 async def test_remove_entry_refreshes_an_expired_token_without_saving_it(
     hass: HomeAssistant,
     mock_trmnl_client: AsyncMock,
