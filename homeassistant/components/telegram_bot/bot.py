@@ -91,11 +91,7 @@ from .const import (
     CONF_PROXY_URL,
     DEFAULT_TIMEOUT_SECONDS,
     DOMAIN,
-    EVENT_TELEGRAM_ATTACHMENT,
-    EVENT_TELEGRAM_CALLBACK,
-    EVENT_TELEGRAM_COMMAND,
-    EVENT_TELEGRAM_SENT,
-    EVENT_TELEGRAM_TEXT,
+    TelegramBotEvent,
     TelegramBotParseMode,
     TelegramBotService,
     TelegramBotServiceArgument,
@@ -206,14 +202,14 @@ class BaseTelegramBot:
         if filters.COMMAND.filter(message):
             # This is a command message - set event type
             # to command and split data into command and args
-            event_type = EVENT_TELEGRAM_COMMAND
+            event_type = TelegramBotEvent.COMMAND
             event_data.update(self._get_command_event_data(message.text))
         elif filters.ATTACHMENT.filter(message):
-            event_type = EVENT_TELEGRAM_ATTACHMENT
+            event_type = TelegramBotEvent.ATTACHMENT
             event_data[ATTR_TEXT] = message.caption
             event_data.update(self._get_file_id_event_data(message))
         else:
-            event_type = EVENT_TELEGRAM_TEXT
+            event_type = TelegramBotEvent.TEXT
             event_data[ATTR_TEXT] = message.text
 
         if message.from_user:
@@ -251,7 +247,7 @@ class BaseTelegramBot:
     def _get_callback_query_event_data(
         self, callback_query: CallbackQuery
     ) -> tuple[str, dict[str, Any]]:
-        event_type = EVENT_TELEGRAM_CALLBACK
+        event_type = TelegramBotEvent.CALLBACK
         event_data: dict[str, Any] = {
             ATTR_MSGID: callback_query.id,
             ATTR_CHAT_INSTANCE: callback_query.chat_instance,
@@ -515,9 +511,9 @@ class TelegramNotificationService:
 
             event_data["bot"] = _get_bot_info(self.bot, self.config)
 
-            self.hass.bus.async_fire(EVENT_TELEGRAM_SENT, event_data, context=context)
+            self.hass.bus.async_fire(TelegramBotEvent.SENT, event_data, context=context)
             async_dispatcher_send(
-                self.hass, signal(self.bot), EVENT_TELEGRAM_SENT, event_data
+                self.hass, signal(self.bot), TelegramBotEvent.SENT, event_data
             )
 
         return out
