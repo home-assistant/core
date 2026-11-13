@@ -36,7 +36,7 @@ from homeassistant.helpers import entity_registry as er
 from . import entity_unique_ids, fire_hub_update
 from .conftest import SERIAL
 
-CLIMATE_ENTITY = "climate.living_room_living_room"
+CLIMATE_ENTITY = "climate.living_room_heating"
 BEDROOM_ZONE = {
     "zone_id": "2",
     "name": "Bedroom",
