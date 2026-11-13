@@ -6,7 +6,8 @@ from typing import Any, override
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
 from aiohue.v2.controllers.groups import GroupedLight, Room, Zone
-from aiohue.v2.models.feature import DynamicStatus
+from aiohue.v2.models.feature import DynamicStatus, SignalingFeaturePut
+from aiohue.v2.models.grouped_light import GroupedLightPut
 from aiohue.v2.models.resource import ResourceTypes
 
 from homeassistant.components.light import (
@@ -225,6 +226,14 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
             self.controller.set_flash,
             id=self.resource.id,
             short=flash == FLASH_SHORT,
+        )
+
+    async def async_set_signal(self, signaling: SignalingFeaturePut) -> None:
+        """Send signal command to grouped light."""
+        await self.bridge.async_request_call(
+            self.controller.update,
+            self.resource.id,
+            GroupedLightPut(signaling=signaling),
         )
 
     @callback

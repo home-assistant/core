@@ -44,3 +44,30 @@ activate_scene:
             number:
               min: 1
               max: 255
+
+# entity services to flash Hue lights, rooms and zones (V2)
+flash:
+  target:
+    entity:
+      domain: light
+      integration: hue
+  fields:
+    duration:
+      required: true
+      example: 5
+      selector:
+        duration:
+    rgb_color:
+      example: "[255, 100, 100]"
+      selector:
+        color_rgb:
+    second_rgb_color:
+      example: "[100, 100, 255]"
+      selector:
+        color_rgb:
+
+stop_flash:
+  target:
+    entity:
+      domain: light
+      integration: hue
