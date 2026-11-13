@@ -99,6 +99,7 @@ TARGET_TEMP_ACTIONS = (
     "setTargetLevel",
     "setThermostatSetpoint",
     "setHeatingThermostatSetpoint",
+    "setCoolingThermostatSetpoint",
 )
 
 OP_MODE_ACTIONS = ("setMode", "setOperatingMode", "setThermostatMode")
@@ -147,7 +148,11 @@ class FibaroThermostat(FibaroEntity, ClimateEntity):
             if device.type == "com.fibaro.temperatureSensor" or (
                 self._temp_sensor_device is None
                 and device.has_unit
-                and (device.value.has_value or device.has_heating_thermostat_setpoint)
+                and (
+                    device.value.has_value
+                    or device.has_heating_thermostat_setpoint
+                    or device.has_cooling_thermostat_setpoint
+                )
                 and device.unit in ("C", "F")
             ):
                 self._temp_sensor_device = device
@@ -363,6 +368,11 @@ class FibaroThermostat(FibaroEntity, ClimateEntity):
         """Return the current temperature."""
         if self._temp_sensor_device:
             device = self._temp_sensor_device
+            if (
+                device.has_cooling_thermostat_setpoint
+                and self.hvac_mode == HVACMode.COOL
+            ):
+                return device.cooling_thermostat_setpoint
             if device.has_heating_thermostat_setpoint:
                 return device.heating_thermostat_setpoint
             return device.value.float_value()
@@ -374,6 +384,11 @@ class FibaroThermostat(FibaroEntity, ClimateEntity):
         """Return the temperature we try to reach."""
         if self._target_temp_device:
             device = self._target_temp_device
+            if (
+                device.has_cooling_thermostat_setpoint_future
+                and self.hvac_mode == HVACMode.COOL
+            ):
+                return device.cooling_thermostat_setpoint_future
             if device.has_heating_thermostat_setpoint_future:
                 return device.heating_thermostat_setpoint_future
             return device.target_level
@@ -389,6 +404,11 @@ class FibaroThermostat(FibaroEntity, ClimateEntity):
                 target.execute_action(
                     "setThermostatSetpoint", [self.fibaro_op_mode, temperature]
                 )
+            elif (
+                "setCoolingThermostatSetpoint" in target.actions
+                and self.hvac_mode == HVACMode.COOL
+            ):
+                target.execute_action("setCoolingThermostatSetpoint", [temperature])
             elif "setHeatingThermostatSetpoint" in target.actions:
                 target.execute_action("setHeatingThermostatSetpoint", [temperature])
             else:

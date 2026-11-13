@@ -432,6 +432,53 @@ def mock_fan_device() -> Mock:
 
 
 @pytest.fixture
+def mock_hvac_system() -> Mock:
+    """Fixture for an HC3 fan coil thermostat with a cooling setpoint."""
+    climate = Mock()
+    climate.fibaro_id = 8
+    climate.endpoint_id = 1
+    climate.parent_fibaro_id = 5
+    climate.name = "Test climate"
+    climate.room_id = 1
+    climate.dead = False
+    climate.visible = True
+    climate.enabled = True
+    climate.type = "com.fibaro.hvacSystem"
+    climate.base_type = "com.fibaro.device"
+    climate.properties = {
+        "manufacturer": "",
+        "coolingThermostatSetpoint": 25,
+        "coolingThermostatSetpointFuture": 24,
+    }
+    climate.actions = {
+        "setThermostatMode": 1,
+        "setHeatingThermostatSetpoint": 1,
+        "setCoolingThermostatSetpoint": 1,
+    }
+    climate.supported_features = {}
+    climate.has_supported_thermostat_modes = True
+    climate.supported_thermostat_modes = ["Off", "Heat", "Cool"]
+    climate.has_operating_mode = False
+    climate.has_thermostat_mode = True
+    climate.thermostat_mode = "Heat"
+    climate.has_thermostat_operating_state = False
+    climate.has_unit = True
+    climate.unit = "C"
+    climate.has_heating_thermostat_setpoint = True
+    climate.heating_thermostat_setpoint = 20.5
+    climate.has_heating_thermostat_setpoint_future = True
+    climate.heating_thermostat_setpoint_future = 21.5
+    climate.has_cooling_thermostat_setpoint = True
+    climate.cooling_thermostat_setpoint = 25.0
+    climate.has_cooling_thermostat_setpoint_future = True
+    climate.cooling_thermostat_setpoint_future = 24.0
+    value_mock = Mock()
+    value_mock.has_value = False
+    climate.value = value_mock
+    return climate
+
+
+@pytest.fixture
 def mock_button_device() -> Mock:
     """Fixture for a button device."""
     climate = Mock()
