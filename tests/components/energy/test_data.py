@@ -6,6 +6,7 @@ import probatio
 import pytest
 
 from homeassistant.components.energy.data import (
+    BATTERY_SOURCE_SCHEMA,
     ENERGY_SOURCE_SCHEMA,
     FLOW_FROM_GRID_SOURCE_SCHEMA,
     FLOW_TO_GRID_SOURCE_SCHEMA,
@@ -241,8 +242,16 @@ async def test_battery_stat_soc_round_trip(
     assert source["stat_soc"] == "sensor.battery_state_of_charge"
 
 
+@pytest.mark.parametrize(
+    "capacity_config",
+    [
+        pytest.param({"capacity": 13.5}, id="manual"),
+        pytest.param({"entity_capacity": "sensor.battery_capacity"}, id="sensor"),
+    ],
+)
 async def test_battery_capacity_round_trip(
     hass: HomeAssistant,
+    capacity_config: dict[str, float | str],
 ) -> None:
     """Test that battery capacity is preserved through async_update."""
     manager = EnergyManager(hass)
@@ -253,18 +262,41 @@ async def test_battery_capacity_round_trip(
         "type": "battery",
         "stat_energy_from": "sensor.battery_energy_from",
         "stat_energy_to": "sensor.battery_energy_to",
-        "capacity": 13.5,
+        **capacity_config,
     }
     sources = ENERGY_SOURCE_SCHEMA([battery_source])
 
     await manager.async_update({"energy_sources": sources})
 
     assert manager.data is not None
-    assert manager.data["energy_sources"][0]["capacity"] == 13.5
+    assert manager.data["energy_sources"][0] == battery_source
+
+
+@pytest.mark.parametrize(
+    "capacity_config",
+    [
+        pytest.param({"capacity": 0}, id="zero"),
+        pytest.param({"capacity": -1}, id="negative"),
+        pytest.param(
+            {"capacity": 13.5, "entity_capacity": "sensor.battery_capacity"},
+            id="both",
+        ),
+        pytest.param({"entity_capacity": "invalid"}, id="invalid-entity"),
+        pytest.param({"entity_capacity": ""}, id="empty-entity"),
+        pytest.param({"entity_capacity": "number.capacity"}, id="wrong-domain"),
+    ],
+)
+def test_battery_capacity_invalid(capacity_config: dict[str, float | str]) -> None:
+    """Reject invalid or ambiguous battery capacity sources."""
     with pytest.raises(probatio.Invalid):
-        ENERGY_SOURCE_SCHEMA([{**battery_source, "capacity": 0}])
-    with pytest.raises(probatio.Invalid):
-        ENERGY_SOURCE_SCHEMA([{**battery_source, "capacity": -1}])
+        BATTERY_SOURCE_SCHEMA(
+            {
+                "type": "battery",
+                "stat_energy_from": "sensor.battery_energy_from",
+                "stat_energy_to": "sensor.battery_energy_to",
+                **capacity_config,
+            }
+        )
 
 
 async def test_grid_power_config_inverted_sets_stat_rate(
