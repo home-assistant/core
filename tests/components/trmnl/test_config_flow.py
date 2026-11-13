@@ -3,6 +3,7 @@
 from http import HTTPStatus
 from unittest.mock import AsyncMock
 
+from aiohttp import ClientError
 import jwt
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -15,6 +16,7 @@ from homeassistant.components.trmnl.const import (
     CLIENT_ID,
     DOMAIN,
     OAUTH2_AUTHORIZE,
+    OAUTH2_REVOKE,
     OAUTH2_TOKEN,
 )
 from homeassistant.config_entries import (
@@ -50,6 +52,7 @@ async def complete_oauth_flow(
     resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
     assert resp.status == HTTPStatus.OK
 
+    aioclient_mock.post(OAUTH2_REVOKE)
     token = {
         "access_token": "access",
         "refresh_token": "refresh",
@@ -91,6 +94,7 @@ async def test_full_flow(
     assert result["result"].unique_id == ACCOUNT_SUBJECT
     assert result["data"]["token"]["access_token"] == "access"
     assert len(mock_setup_entry.mock_calls) == 1
+    assert aioclient_mock.call_count == 1
 
 
 @pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
@@ -202,6 +206,10 @@ async def test_duplicate_entry(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+    assert aioclient_mock.mock_calls[-1][2] == {
+        "token": "access",
+        "client_id": CLIENT_ID,
+    }
 
 
 DHCP_DISCOVERY = DhcpServiceInfo(
@@ -359,6 +367,29 @@ async def test_reconfigure_flow_wrong_account(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unique_id_mismatch"
     assert mock_config_entry.data["token"]["access_token"] == "access"
+    assert aioclient_mock.mock_calls[-1][1] == URL(OAUTH2_REVOKE)
+
+
+@pytest.mark.usefixtures("current_request_with_host", "mock_trmnl_client")
+async def test_abort_when_token_cannot_be_revoked(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the flow still aborts when TRMNL cannot be reached to revoke the token."""
+    mock_config_entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    aioclient_mock.post(OAUTH2_REVOKE, exc=ClientError)
+
+    result = await complete_oauth_flow(
+        hass, hass_client_no_auth, aioclient_mock, result
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 @pytest.mark.usefixtures("mock_trmnl_client")
