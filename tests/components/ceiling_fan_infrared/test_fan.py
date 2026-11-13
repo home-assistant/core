@@ -58,7 +58,7 @@ async def test_setup(
 _FAN_ACTIONS: list[
     tuple[str, dict[str, int], GenericCeilingFanCode, str, int | None]
 ] = [
-    (SERVICE_TURN_ON, {}, GenericCeilingFanCode.FAN_TOGGLE, STATE_ON, 0),
+    (SERVICE_TURN_ON, {}, GenericCeilingFanCode.FAN_TOGGLE, STATE_ON, None),
     (
         SERVICE_TURN_ON,
         {ATTR_PERCENTAGE: 0},
@@ -151,6 +151,61 @@ async def test_fan_actions(
     assert state is not None
     assert state.state == expected_state
     assert state.attributes.get(ATTR_PERCENTAGE) == expected_percentage
+
+
+@pytest.mark.usefixtures("infrared_codes")
+async def test_fan_toggle_is_only_sent_when_the_state_changes(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the toggle key is not sent again for an unchanged assumed state."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        FAN_DOMAIN, "ceiling_fan_infrared", config_entry.entry_id
+    )
+    assert entity_id is not None
+
+    mock_infrared_emitter_entity.send_command_calls.clear()
+
+    for _ in range(2):
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+    assert mock_infrared_emitter_entity.send_command_calls == [
+        GenericCeilingFanCode.FAN_TOGGLE
+    ]
+
+    for _ in range(2):
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+    assert mock_infrared_emitter_entity.send_command_calls == [
+        GenericCeilingFanCode.FAN_TOGGLE,
+        GenericCeilingFanCode.FAN_TOGGLE,
+    ]
+
+    # Setting the percentage to 0 turns the fan off, which is a no-op here.
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_SET_PERCENTAGE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_PERCENTAGE: 0},
+        blocking=True,
+    )
+    assert mock_infrared_emitter_entity.send_command_calls == [
+        GenericCeilingFanCode.FAN_TOGGLE,
+        GenericCeilingFanCode.FAN_TOGGLE,
+    ]
 
 
 async def test_fan_unavailable_when_emitter_is(
