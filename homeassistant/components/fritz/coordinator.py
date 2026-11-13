@@ -684,12 +684,12 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             consider_home = _default_consider_home
 
         new_device = False
-        hosts = await self._async_update_hosts_info()
 
         if not self.fritz_status.device_has_mesh_support or (
             self._options
             and self._options.get(CONF_OLD_DISCOVERY, DEFAULT_CONF_OLD_DISCOVERY)
         ):
+            hosts = await self._async_update_hosts_info()
             LOGGER.debug(
                 "Using old hosts discovery method. (Mesh not supported or user option)"
             )
@@ -741,6 +741,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                     self.mesh_role = MeshRoles(node["mesh_role"])
 
         # second get all client devices
+        hosts = await self._async_update_hosts_info()
         for node in topology.get("nodes", []):
             if node["is_meshed"]:
                 continue

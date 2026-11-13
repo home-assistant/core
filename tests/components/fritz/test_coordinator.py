@@ -23,6 +23,7 @@ from homeassistant.components.fritz.const import (
     DEFAULT_SSL,
     DOMAIN,
     SCAN_INTERVAL,
+    MeshRoles,
 )
 from homeassistant.components.fritz.coordinator import (
     FRITZ_DATA_KEY,
@@ -414,6 +415,41 @@ async def test_async_scan_devices_empty_mesh_topology_raises(
         await fritz_tools.async_scan_devices()
 
     assert "ERROR" not in caplog.text
+
+
+async def test_async_scan_devices_mesh_topology_not_accessible(
+    fritz_tools: FritzBoxTools,
+) -> None:
+    """Test hosts are not fetched when the device has no access to the mesh topology."""
+
+    with (
+        patch.object(
+            type(fritz_tools.fritz_status),
+            "device_has_mesh_support",
+            new_callable=PropertyMock,
+            return_value=True,
+        ),
+        patch.object(
+            fritz_tools.fritz_hosts,
+            "get_mesh_topology",
+            MagicMock(
+                side_effect=FritzActionError(
+                    "Error 404: Device has no access to topology information."
+                )
+            ),
+        ),
+        patch.object(
+            fritz_tools, "_async_update_hosts_info", AsyncMock(return_value={})
+        ) as update_hosts_info,
+        patch.object(
+            fritz_tools, "async_send_signal_device_update", AsyncMock()
+        ) as signal_update,
+    ):
+        await fritz_tools.async_scan_devices()
+
+    assert fritz_tools.mesh_role is MeshRoles.SLAVE
+    update_hosts_info.assert_not_awaited()
+    signal_update.assert_not_awaited()
 
 
 async def test_async_scan_devices_mesh_guest_and_missing_host(
