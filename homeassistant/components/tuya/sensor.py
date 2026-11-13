@@ -1448,6 +1448,16 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             entity_category=EntityCategory.DIAGNOSTIC,
             state_class=SensorStateClass.MEASUREMENT,
         ),
+        # Pet feeders with a camera are reported as "sp"
+        TuyaSensorEntityDescription(
+            key=DPCode.FEED_REPORT,
+            translation_key="last_amount",
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.FOOD_STORAGE_STATUS,
+            translation_key="food_level",
+        ),
     ),
     DeviceCategory.SWTZ: (
         TuyaSensorEntityDescription(
