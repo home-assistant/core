@@ -474,14 +474,10 @@ async def test_config_flow_preview_success(
     [
         pytest.param({CONF_PERIOD: Period.TODAY}, "2", "total_increasing", id="today"),
         pytest.param(
-            {
-                CONF_PERIOD: Period.TODAY,
-                CONF_START: "{{ today_at('4:30') }}",
-                CONF_STATE_CLASS: "measurement",
-            },
+            {CONF_PERIOD: Period.TODAY, CONF_START: "{{ today_at( }}"},
             "2",
             "total_increasing",
-            id="today_ignores_hidden_fields",
+            id="today_ignores_invalid_hidden_template",
         ),
         pytest.param(
             {

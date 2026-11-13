@@ -12,7 +12,11 @@ from homeassistant.const import CONF_ENTITY_ID, CONF_NAME, CONF_STATE, CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import Optional, Required, section
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.field_visibility import ConditionOperator, FieldCondition
+from homeassistant.helpers.field_visibility import (
+    ConditionOperator,
+    FieldCondition,
+    get_hidden_fields,
+)
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
@@ -71,6 +75,19 @@ def _validate_period(user_input: dict[str, Any]) -> None:
             raise SchemaFlowError("only_two_keys_allowed")
     elif period == Period.ROLLING_WINDOW and not user_input.get(CONF_DURATION):
         raise SchemaFlowError("duration_required")
+
+
+def _remove_hidden_fields(
+    data_schema: probatio.Schema, user_input: dict[str, Any]
+) -> dict[str, Any]:
+    """Remove the input of fields hidden by their visible condition."""
+    visible_by_field = {
+        key.schema: visible
+        for key in data_schema.schema
+        if (visible := getattr(key, "visible", None)) is not None
+    }
+    hidden = get_hidden_fields(visible_by_field, user_input)
+    return {key: value for key, value in user_input.items() if key not in hidden}
 
 
 async def validate_options(
@@ -294,10 +311,12 @@ async def ws_start_preview(
         if param in msg["user_input"] and not bool(msg["user_input"][param]):
             del msg["user_input"][param]  # Remove falsy values before counting keys
 
+    # The preview bypasses the flow manager, which drops hidden fields on submit
+    data_schema = _get_options_schema_with_entity_id(entity_id, conf_type)
     validated_data: Any = None
     try:
-        validated_data = (_get_options_schema_with_entity_id(entity_id, conf_type))(
-            msg["user_input"]
+        validated_data = data_schema(
+            _remove_hidden_fields(data_schema, msg["user_input"])
         )
     except probatio.Invalid as ex:
         connection.send_error(msg["id"], "invalid_schema", str(ex))
