@@ -117,17 +117,20 @@ def log_validation_result_error(
 
     # in some cases, like `preview` entities, the entity_id does not exist.
     if entity.entity_id is None:
+        logger = logging.getLogger(__package__)
         message = f"Received invalid {attribute}: {value} for entity {entity.name}"
     else:
+        domain = entity.entity_id.split(".", maxsplit=1)[0]
+        logger = logging.getLogger(f"{__package__}.{domain}")
         message = (
-            f"Received invalid {entity.entity_id.split('.')[0]} {attribute}"
+            f"Received invalid {domain} {attribute}"
             f": {value} for entity {entity.entity_id}"
         )
 
     if template is not None:
         message = f"{message} from template '{template.template}'"
 
-    _LOGGER.error(
+    logger.error(
         "%s, %s",
         message,
         expected
