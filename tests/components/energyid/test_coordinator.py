@@ -15,6 +15,7 @@ from energyid_webhooks.directives import (
     DirectiveSignal,
     SignalProvider,
 )
+from energyid_webhooks.exceptions import EnergyIDAuthenticationError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
@@ -655,6 +656,66 @@ async def test_claim_lost_while_polling_starts_reauth(
     getattr(mock_webhook_client, method).side_effect = partial(
         lose_claim, mock_webhook_client
     )
+    freezer.tick(DIRECTIVE_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert not coordinator.last_update_success
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert [flow["context"]["source"] for flow in flows] == ["reauth"]
+
+
+@pytest.mark.parametrize("status", [401, 403])
+@pytest.mark.parametrize("method", ["get_directives", "get_directive_data"])
+async def test_refused_credentials_while_polling_start_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_webhook_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    method: str,
+    status: int,
+) -> None:
+    """Test credentials refused during the client's own sign-in start reauth."""
+    resource, schedule = _directive_fixture()
+    mock_webhook_client.api_access_token = "device-token"
+    mock_webhook_client.get_directives = AsyncMock(return_value=[resource])
+    mock_webhook_client.get_directive_data = AsyncMock(return_value=schedule)
+    coordinator = await _setup_with_directives(hass, mock_config_entry)
+
+    getattr(mock_webhook_client, method).side_effect = EnergyIDAuthenticationError(
+        request_info=MagicMock(), history=(), status=status
+    )
+    freezer.tick(DIRECTIVE_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert not coordinator.last_update_success
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert [flow["context"]["source"] for flow in flows] == ["reauth"]
+
+
+async def test_refused_credentials_outrank_another_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_webhook_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test credentials refused for one schedule start reauth when another got a 401."""
+    resource, schedule = _directive_fixture()
+    other = replace(resource, id="22222222-2222-2222-2222-222222222222")
+    mock_webhook_client.api_access_token = "device-token"
+    mock_webhook_client.get_directives = AsyncMock(return_value=[resource, other])
+    mock_webhook_client.get_directive_data = AsyncMock(return_value=schedule)
+    coordinator = await _setup_with_directives(hass, mock_config_entry)
+
+    async def get_directive_data(directive_id: str) -> DirectiveData:
+        if directive_id == DIRECTIVE_ID:
+            raise ClientResponseError(request_info=MagicMock(), history=(), status=401)
+        raise EnergyIDAuthenticationError(
+            request_info=MagicMock(), history=(), status=401
+        )
+
+    mock_webhook_client.get_directive_data = AsyncMock(side_effect=get_directive_data)
     freezer.tick(DIRECTIVE_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)

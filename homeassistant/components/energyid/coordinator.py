@@ -1,7 +1,6 @@
 """Coordinator for EnergyID directives."""
 
 import asyncio
-from bisect import bisect_right
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from http import HTTPStatus
@@ -13,8 +12,9 @@ from energyid_webhooks.client_v2 import WebhookClient
 from energyid_webhooks.directives import (
     DirectiveData,
     DirectiveResource,
-    DirectiveSignal,
+    DirectiveState,
 )
+from energyid_webhooks.exceptions import EnergyIDAuthenticationError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -39,47 +39,15 @@ def async_directives_enabled(entry: ConfigEntry) -> bool:
 
 
 @dataclass(frozen=True)
-class EnergyIDDirectiveState:
-    """Signal of a directive at one moment and when it changes next."""
-
-    current: DirectiveSignal | None
-    next_change: datetime | None
-    next_signal: DirectiveSignal | None
-
-
-@dataclass(frozen=True)
 class EnergyIDDirectiveSnapshot:
     """Fetched schedule of one directive."""
 
     resource: DirectiveResource
     schedule: DirectiveData
 
-    def state_at(self, moment: datetime) -> EnergyIDDirectiveState:
+    def state_at(self, moment: datetime) -> DirectiveState:
         """Return the signal at a moment and the first change after it."""
-        points = sorted(self.schedule.data, key=lambda point: point.timestamp)
-        timestamps = [point.timestamp for point in points]
-        interval = dt_util.parse_duration(self.schedule.interval)
-
-        def signal_at(when: datetime) -> DirectiveSignal | None:
-            index = bisect_right(timestamps, when)
-            if not index:
-                return None
-            point = points[index - 1]
-            if interval and when >= point.timestamp + interval:
-                return None
-            return point
-
-        current = signal_at(moment)
-        boundaries = set(timestamps)
-        if interval:
-            boundaries.update(timestamp + interval for timestamp in timestamps)
-        for boundary in sorted(boundaries):
-            if boundary <= moment:
-                continue
-            signal = signal_at(boundary)
-            if _signal_value(signal) != _signal_value(current):
-                return EnergyIDDirectiveState(current, boundary, signal)
-        return EnergyIDDirectiveState(current, None, None)
+        return self.schedule.state_at(moment)
 
 
 @dataclass(frozen=True)
@@ -123,6 +91,11 @@ class EnergyIDDirectiveCoordinator(DataUpdateCoordinator[EnergyIDDirectivesData]
 
         try:
             resources = await self.client.get_directives()
+        except EnergyIDAuthenticationError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_credentials",
+            ) from err
         except PermissionError:
             # A denied list can also come from a re-authentication that lost the claim.
             self._raise_if_unclaimed()
@@ -148,12 +121,16 @@ class EnergyIDDirectiveCoordinator(DataUpdateCoordinator[EnergyIDDirectivesData]
             *(self._async_get_schedule(resource) for resource in resources),
             return_exceptions=True,
         )
-        # A claim lost by any request outranks the failure of another request.
+        # A claim lost or credentials refused by any request outrank the failure
+        # of another request.
         self._raise_if_unclaimed()
         if errors := [
             result for result in results if isinstance(result, BaseException)
         ]:
-            raise errors[0]
+            raise next(
+                (err for err in errors if isinstance(err, ConfigEntryAuthFailed)),
+                errors[0],
+            )
         schedules = [
             result for result in results if not isinstance(result, BaseException)
         ]
@@ -215,6 +192,11 @@ class EnergyIDDirectiveCoordinator(DataUpdateCoordinator[EnergyIDDirectivesData]
         """Return the schedule of one directive, or None when it is unavailable."""
         try:
             schedule = await self.client.get_directive_data(resource.id)
+        except EnergyIDAuthenticationError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_credentials",
+            ) from err
         except ClientResponseError as err:
             if err.status == HTTPStatus.UNAUTHORIZED:
                 self._raise_if_unclaimed()
@@ -245,11 +227,6 @@ class EnergyIDDirectiveCoordinator(DataUpdateCoordinator[EnergyIDDirectivesData]
                 translation_domain=DOMAIN,
                 translation_key="device_not_claimed",
             )
-
-
-def _signal_value(point: DirectiveSignal | None) -> str | None:
-    """Return the signal of a point, or None when no slot is active."""
-    return point.signal if point else None
 
 
 @dataclass
