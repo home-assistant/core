@@ -18,12 +18,14 @@ from homeassistant.components.cover import (
     ATTR_POSITION,
     DOMAIN as COVER_DOMAIN,
     SCAN_INTERVAL,
+    CoverDeviceClass,
     CoverEntityFeature,
     CoverState,
 )
 from homeassistant.components.ryse.const import MANUFACTURER_NAME, SERVICE_UUID
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     SERVICE_CLOSE_COVER,
@@ -109,6 +111,7 @@ async def test_cover_entity(
 
     state = hass.states.get(ENTITY_ID)
     assert state
+    assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.SHADE
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == (
         CoverEntityFeature.OPEN
         | CoverEntityFeature.CLOSE

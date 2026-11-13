@@ -15,6 +15,7 @@ from homeassistant.components.bluetooth import (
 )
 from homeassistant.components.cover import (
     ATTR_POSITION,
+    CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
 )
@@ -52,6 +53,7 @@ async def async_setup_entry(
 class RyseCoverEntity(CoverEntity):
     """Representation of a RYSE Smart Shade BLE cover entity."""
 
+    _attr_device_class = CoverDeviceClass.SHADE
     _attr_has_entity_name = True
     _attr_name = None
     _attr_supported_features = (
