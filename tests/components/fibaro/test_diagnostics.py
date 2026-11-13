@@ -58,7 +58,7 @@ async def test_device_diagnostics(
     mock_fibaro_client.read_devices.return_value = [mock_light]
     # Act
     await init_integration(hass, mock_config_entry)
-    entry = entity_registry.async_get("light.room_1_test_light_3")
+    entry = entity_registry.async_get("light.test_light_room_1_test_light")
     device = device_registry.async_get(entry.device_id)
     # Assert
     assert device

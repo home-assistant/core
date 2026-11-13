@@ -18,7 +18,7 @@ from .normalized_name_base_registry import (
 from .registry import BaseRegistry
 from .singleton import singleton
 from .storage import Store
-from .typing import UNDEFINED, UndefinedType
+from .typing import Undefined
 
 DATA_REGISTRY: HassKey[LabelRegistry] = HassKey("label_registry")
 EVENT_LABEL_REGISTRY_UPDATED: EventType[EventLabelRegistryUpdatedData] = EventType(
@@ -184,10 +184,10 @@ class LabelRegistry(BaseRegistry[LabelRegistryStoreData]):
         self,
         label_id: str,
         *,
-        color: str | UndefinedType | None = UNDEFINED,
-        description: str | UndefinedType | None = UNDEFINED,
-        icon: str | UndefinedType | None = UNDEFINED,
-        name: str | UndefinedType = UNDEFINED,
+        color: str | Undefined | None = Undefined,
+        description: str | Undefined | None = Undefined,
+        icon: str | Undefined | None = Undefined,
+        name: str | Undefined = Undefined,
     ) -> LabelEntry:
         """Update name of label."""
         old = self.labels[label_id]
@@ -198,10 +198,10 @@ class LabelRegistry(BaseRegistry[LabelRegistryStoreData]):
                 ("description", description),
                 ("icon", icon),
             )
-            if value is not UNDEFINED and getattr(old, attr_name) != value
+            if value is not Undefined and getattr(old, attr_name) != value
         }
 
-        if name is not UNDEFINED and name != old.name:
+        if name is not Undefined and name != old.name:
             changes["name"] = name
 
         if not changes:

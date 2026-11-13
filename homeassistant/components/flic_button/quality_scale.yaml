@@ -40,7 +40,11 @@ rules:
     comment: Pairing uses discovery and does not require user-supplied setup parameters.
   entity-unavailable: done
   integration-owner: done
-  log-when-unavailable: done
+  log-when-unavailable:
+    status: done
+    comment: |
+      pyflic-ble logs once when the connection is lost and once when the session
+      is back. The entities don't log.
   parallel-updates: done
   reauthentication-flow: todo
   test-coverage: done

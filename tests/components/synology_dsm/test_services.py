@@ -5,11 +5,10 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, MockUser
 
-from homeassistant.components.synology_dsm.const import (
-    CONF_SERIAL,
-    DOMAIN,
-    SERVICE_REBOOT,
-    SERVICE_SHUTDOWN,
+from homeassistant.components.synology_dsm.const import DOMAIN
+from homeassistant.components.synology_dsm.services import (
+    SynologyDSMService,
+    SynologyDSMServiceArgument,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -20,7 +19,13 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.exceptions import Unauthorized, UnknownUser
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    ServiceValidationError,
+    Unauthorized,
+    UnknownUser,
+)
+from homeassistant.helpers import issue_registry as ir
 
 from .common import mock_dsm_hardware, mock_dsm_information
 from .consts import HOST, MACS, PASSWORD, PORT, SERIAL, USE_SSL, USERNAME
@@ -77,7 +82,9 @@ async def setup_dsm(hass: HomeAssistant, mock_dsm: MagicMock) -> MockConfigEntry
     return entry
 
 
-@pytest.mark.parametrize("service", [SERVICE_REBOOT, SERVICE_SHUTDOWN])
+@pytest.mark.parametrize(
+    "service", [SynologyDSMService.REBOOT, SynologyDSMService.SHUTDOWN]
+)
 @pytest.mark.usefixtures("setup_dsm")
 async def test_service_without_user_context(
     hass: HomeAssistant,
@@ -90,7 +97,9 @@ async def test_service_without_user_context(
     assert getattr(mock_dsm.system, service).call_count == 1
 
 
-@pytest.mark.parametrize("service", [SERVICE_REBOOT, SERVICE_SHUTDOWN])
+@pytest.mark.parametrize(
+    "service", [SynologyDSMService.REBOOT, SynologyDSMService.SHUTDOWN]
+)
 @pytest.mark.usefixtures("setup_dsm")
 async def test_service_as_admin(
     hass: HomeAssistant,
@@ -110,7 +119,9 @@ async def test_service_as_admin(
     assert getattr(mock_dsm.system, service).call_count == 1
 
 
-@pytest.mark.parametrize("service", [SERVICE_REBOOT, SERVICE_SHUTDOWN])
+@pytest.mark.parametrize(
+    "service", [SynologyDSMService.REBOOT, SynologyDSMService.SHUTDOWN]
+)
 @pytest.mark.usefixtures("setup_dsm")
 async def test_service_as_non_admin(
     hass: HomeAssistant,
@@ -131,7 +142,9 @@ async def test_service_as_non_admin(
     assert getattr(mock_dsm.system, service).call_count == 0
 
 
-@pytest.mark.parametrize("service", [SERVICE_REBOOT, SERVICE_SHUTDOWN])
+@pytest.mark.parametrize(
+    "service", [SynologyDSMService.REBOOT, SynologyDSMService.SHUTDOWN]
+)
 @pytest.mark.usefixtures("setup_dsm")
 async def test_service_as_unknown_user(
     hass: HomeAssistant,
@@ -151,7 +164,9 @@ async def test_service_as_unknown_user(
     assert getattr(mock_dsm.system, service).call_count == 0
 
 
-@pytest.mark.parametrize("service", [SERVICE_REBOOT, SERVICE_SHUTDOWN])
+@pytest.mark.parametrize(
+    "service", [SynologyDSMService.REBOOT, SynologyDSMService.SHUTDOWN]
+)
 @pytest.mark.usefixtures("setup_dsm")
 async def test_service_with_serial(
     hass: HomeAssistant,
@@ -163,9 +178,80 @@ async def test_service_with_serial(
     await hass.services.async_call(
         DOMAIN,
         service,
-        {CONF_SERIAL: SERIAL},
+        {SynologyDSMServiceArgument.SERIAL: SERIAL},
         blocking=True,
         context=Context(user_id=hass_admin_user.id),
     )
 
     assert getattr(mock_dsm.system, service).call_count == 1
+
+
+@pytest.mark.parametrize(
+    "service", [SynologyDSMService.REBOOT, SynologyDSMService.SHUTDOWN]
+)
+async def test_service_with_serial_of_unloaded_entry(
+    hass: HomeAssistant,
+    mock_dsm: MagicMock,
+    setup_dsm: MockConfigEntry,
+    hass_admin_user: MockUser,
+    service: str,
+) -> None:
+    """Test the action rejects a serial whose entry is not loaded."""
+    await hass.config_entries.async_unload(setup_dsm.entry_id)
+    await hass.async_block_till_done()
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {SynologyDSMServiceArgument.SERIAL: SERIAL},
+            blocking=True,
+            context=Context(user_id=hass_admin_user.id),
+        )
+
+    assert err.value.translation_key == "entry_not_loaded"
+    assert getattr(mock_dsm.system, service).call_count == 0
+
+
+@pytest.mark.parametrize(
+    "service", [SynologyDSMService.REBOOT, SynologyDSMService.SHUTDOWN]
+)
+@pytest.mark.usefixtures("setup_dsm")
+async def test_service_with_unknown_serial(
+    hass: HomeAssistant,
+    mock_dsm: MagicMock,
+    hass_admin_user: MockUser,
+    service: str,
+) -> None:
+    """Test the action rejects a serial that is not configured."""
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {SynologyDSMServiceArgument.SERIAL: "unknown"},
+            blocking=True,
+            context=Context(user_id=hass_admin_user.id),
+        )
+
+    assert err.value.translation_key == "serial_not_found"
+    assert getattr(mock_dsm.system, service).call_count == 0
+
+
+@pytest.mark.parametrize(
+    "service", [SynologyDSMService.REBOOT, SynologyDSMService.SHUTDOWN]
+)
+@pytest.mark.usefixtures("setup_dsm")
+async def test_deprecated_action_still_works_and_raises_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_dsm: MagicMock,
+    service: str,
+) -> None:
+    """Test the deprecated actions still run and raise a repair issue."""
+    await hass.services.async_call(DOMAIN, service, {}, blocking=True)
+
+    assert getattr(mock_dsm.system, service).call_count == 1
+    issue = issue_registry.async_get_issue(DOMAIN, f"deprecated_action_{service}")
+    assert issue is not None
+    assert issue.breaks_in_ha_version == "2027.6.0"
+    assert issue.translation_placeholders == {"action": f"{DOMAIN}.{service}"}

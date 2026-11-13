@@ -80,13 +80,14 @@ class NWSConfigFlow(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
             try:
                 info = await validate_input(self.hass, user_input)
-                user_input[CONF_STATION] = info["title"]
-                return self.async_create_entry(title=info["title"], data=user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
+            else:
+                user_input[CONF_STATION] = info["title"]
+                return self.async_create_entry(title=info["title"], data=user_input)
 
         data_schema = self.add_suggested_values_to_schema(
             probatio.Schema(
@@ -151,12 +152,13 @@ class NWSConfigFlow(ConfigFlow, domain=DOMAIN):
                                 },
                             },
                         )
-                        return self.async_create_entry(title=location_entity, data=data)
                     except CannotConnect:
                         errors["base"] = "cannot_connect"
                     except Exception:
                         _LOGGER.exception("Unexpected exception")
                         errors["base"] = "unknown"
+                    else:
+                        return self.async_create_entry(title=location_entity, data=data)
 
         data_schema = probatio.Schema(
             {

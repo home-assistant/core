@@ -29,8 +29,14 @@
       "air_demand": {
         "name": "Air demand"
       },
+      "cold_demand": {
+        "name": "Cold demand"
+      },
       "floor_demand": {
         "name": "Floor demand"
+      },
+      "heat_demand": {
+        "name": "Heat demand"
       }
     },
     "select": {
@@ -92,6 +98,16 @@
       }
     },
     "sensor": {
+      "eco_adapt": {
+        "name": "Eco-Adapt",
+        "state": {
+          "a": "A",
+          "a_p": "A+",
+          "a_pp": "A++",
+          "manual": "Manual",
+          "off": "[%key:common::state::off%]"
+        }
+      },
       "rssi": {
         "name": "RSSI"
       },

@@ -360,7 +360,12 @@ async def test_model_lifecycle_refresh(
     ]
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
-    assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is None
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"model_deprecated_{mock_config_entry.entry_id}"
+        )
+        is None
+    )
     mock_create_stream.return_value = [create_content_block(0, ["Hello"])] * 2
 
     freezer.tick(dt.timedelta(hours=4))
@@ -390,7 +395,12 @@ async def test_model_lifecycle_refresh(
         ]
         * 2
     )
-    assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is not None
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"model_deprecated_{mock_config_entry.entry_id}"
+        )
+        is not None
+    )
 
 
 @pytest.mark.freeze_time("2026-10-16T00:00:00Z")

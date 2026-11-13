@@ -29,7 +29,9 @@ async def test_binary_sensor_setup(
         # Act
         await init_integration(hass, mock_config_entry)
         # Assert
-        entry = entity_registry.async_get("binary_sensor.room_1_test_motion_sensor_10")
+        entry = entity_registry.async_get(
+            "binary_sensor.test_motion_sensor_room_1_test_motion_sensor"
+        )
         assert entry
         assert entry.unique_id == "hc2_111111.10"
         assert entry.original_name == "Room 1 Test motion sensor"

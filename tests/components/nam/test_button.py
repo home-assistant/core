@@ -9,12 +9,12 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.button import (
     DOMAIN as BUTTON_DOMAIN,
-    SERVICE_PRESS,
     ButtonDeviceClass,
+    ButtonService,
 )
 from homeassistant.components.nam import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNKNOWN, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -54,8 +54,8 @@ async def test_button_press(
     with patch("homeassistant.core.dt_util.utcnow", return_value=now):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.nettigo_air_monitor_restart"},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: "button.nettigo_air_monitor_restart"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -85,8 +85,8 @@ async def test_button_press_exc(
     ):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.nettigo_air_monitor_restart"},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: "button.nettigo_air_monitor_restart"},
             blocking=True,
         )
 
@@ -100,12 +100,16 @@ async def test_button_press_auth_error(
     await setup_integration(hass, mock_config_entry)
 
     mock_nam_client.async_restart.side_effect = AuthFailedError("auth error")
-    await hass.services.async_call(
-        BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.nettigo_air_monitor_restart"},
-        blocking=True,
-    )
+    with pytest.raises(
+        HomeAssistantError,
+        match="Authentication failed for 10.10.2.3",
+    ):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: "button.nettigo_air_monitor_restart"},
+            blocking=True,
+        )
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 

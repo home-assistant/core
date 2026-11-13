@@ -9,17 +9,19 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 from systembridgeconnector.const import EventType
 from systembridgeconnector.exceptions import ConnectionClosedException
+from systembridgeconnector.models.audio_control import AudioControl
 from systembridgeconnector.models.display_control import DisplayControl
+from systembridgeconnector.models.fixtures.modules.audio import FIXTURE_AUDIO
 from systembridgeconnector.models.fixtures.modules.displays import FIXTURE_DISPLAYS
 from systembridgeconnector.models.modules import Module
 from systembridgeconnector.models.response import Response
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -105,7 +107,75 @@ async def test_brightness_display_disconnected(
                 entity_registry, mock_config_entry.entry_id
             )
         )
-        == 1
+        == 2
+    )
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_input_volume_added_once_reported(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test an input without a volume gets its number once it reports one."""
+    coordinator = mock_config_entry.runtime_data
+    headset = replace(FIXTURE_AUDIO.inputs[0], id="headset", name="Headset")
+
+    await coordinator.async_handle_module(
+        Module.AUDIO,
+        replace(
+            FIXTURE_AUDIO,
+            inputs=[*FIXTURE_AUDIO.inputs, replace(headset, volume=None)],
+        ),
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("number.hostname_headset_input_volume") is None
+
+    await coordinator.async_handle_module(
+        Module.AUDIO,
+        replace(FIXTURE_AUDIO, inputs=[*FIXTURE_AUDIO.inputs, headset]),
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("number.hostname_headset_input_volume")
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_input_volume_amplified(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test an amplified input volume stays within the number's range."""
+    coordinator = mock_config_entry.runtime_data
+    microphone = replace(FIXTURE_AUDIO.inputs[0], volume=150)
+
+    await coordinator.async_handle_module(
+        Module.AUDIO, replace(FIXTURE_AUDIO, inputs=[microphone])
+    )
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("number.hostname_microphone_input_volume"))
+    assert state.state == "100"
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_set_input_volume(
+    hass: HomeAssistant,
+    mock_websocket_client: MagicMock,
+) -> None:
+    """Test setting an input's volume sends an audio control."""
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: "number.hostname_microphone_input_volume",
+            NumberServiceArgument.VALUE: 40,
+        },
+        blocking=True,
+    )
+
+    mock_websocket_client.audio_control.assert_awaited_once_with(
+        AudioControl(id=FIXTURE_AUDIO.inputs[0].id, volume=40)
     )
 
 
@@ -117,8 +187,8 @@ async def test_set_brightness(
     """Test setting the brightness sends a display control."""
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_VALUE: 50},
+        NumberService.SET_VALUE,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_ID, NumberServiceArgument.VALUE: 50},
         blocking=True,
     )
 
@@ -146,8 +216,11 @@ async def test_set_brightness_error(
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_VALUE: 50},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+                NumberServiceArgument.VALUE: 50,
+            },
             blocking=True,
         )
 
@@ -168,7 +241,10 @@ async def test_set_brightness_connection_closed(
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_VALUE: 50},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+                NumberServiceArgument.VALUE: 50,
+            },
             blocking=True,
         )

@@ -5,13 +5,13 @@ from unittest.mock import Mock
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.motionblinds_ble.const import (
     ATTR_CONNECT,
     ATTR_DISCONNECT,
     ATTR_FAVORITE,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
@@ -39,8 +39,8 @@ async def test_button(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: f"button.{name}_{button}"},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: f"button.{name}_{button}"},
         blocking=True,
     )
     getattr(mock_motion_device, button).assert_called_once()
