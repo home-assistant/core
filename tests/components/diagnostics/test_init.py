@@ -16,6 +16,7 @@ from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerat
 
 from homeassistant.components.diagnostics import _DIAGNOSTICS_DATA, DOMAIN
 from homeassistant.components.websocket_api import TYPE_RESULT
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.system_info import async_get_system_info
@@ -102,7 +103,9 @@ async def test_download_diagnostics(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test download diagnostics."""
-    config_entry = MockConfigEntry(domain="fake_integration")
+    config_entry = MockConfigEntry(
+        domain="fake_integration", state=ConfigEntryState.LOADED
+    )
     config_entry.add_to_hass(hass)
     hass_sys_info = await async_get_system_info(hass)
     hass_sys_info["run_as_root"] = hass_sys_info["user"] == "root"
@@ -343,7 +346,9 @@ async def test_download_diagnostics_requires_admin(
     hass_read_only_access_token: str,
 ) -> None:
     """Test diagnostics download is restricted to admin users."""
-    config_entry = MockConfigEntry(domain="fake_integration")
+    config_entry = MockConfigEntry(
+        domain="fake_integration", state=ConfigEntryState.LOADED
+    )
     config_entry.add_to_hass(hass)
 
     client = await hass_client(hass_read_only_access_token)
@@ -367,7 +372,9 @@ async def test_failure_scenarios(
     response = await client.get("/api/diagnostics/config_entry/fake_id")
     assert response.status == HTTPStatus.NOT_FOUND
 
-    config_entry = MockConfigEntry(domain="integration_without_diagnostics")
+    config_entry = MockConfigEntry(
+        domain="integration_without_diagnostics", state=ConfigEntryState.LOADED
+    )
     config_entry.add_to_hass(hass)
 
     # test valid d_type and d_id but no config entry diagnostics
@@ -376,7 +383,9 @@ async def test_failure_scenarios(
     )
     assert response.status == HTTPStatus.NOT_FOUND
 
-    config_entry = MockConfigEntry(domain="fake_integration")
+    config_entry = MockConfigEntry(
+        domain="fake_integration", state=ConfigEntryState.LOADED
+    )
     config_entry.add_to_hass(hass)
 
     # test invalid sub_type
@@ -390,6 +399,33 @@ async def test_failure_scenarios(
         f"/api/diagnostics/config_entry/{config_entry.entry_id}/device/fake_id"
     )
     assert response.status == HTTPStatus.NOT_FOUND
+
+
+@pytest.mark.parametrize(
+    "state",
+    [
+        ConfigEntryState.NOT_LOADED,
+        ConfigEntryState.SETUP_ERROR,
+        ConfigEntryState.SETUP_RETRY,
+    ],
+)
+async def test_download_diagnostics_config_entry_not_loaded(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator, state: ConfigEntryState
+) -> None:
+    """Test diagnostics are not downloaded for a config entry that is not loaded."""
+    config_entry = MockConfigEntry(domain="fake_integration", state=state)
+    config_entry.add_to_hass(hass)
+    client = await hass_client()
+
+    response = await client.get(
+        f"/api/diagnostics/config_entry/{config_entry.entry_id}"
+    )
+    assert response.status == HTTPStatus.BAD_REQUEST
+
+    response = await client.get(
+        f"/api/diagnostics/config_entry/{config_entry.entry_id}/device/fake_id"
+    )
+    assert response.status == HTTPStatus.BAD_REQUEST
 
 
 @pytest.mark.parametrize(
@@ -410,9 +446,13 @@ async def test_download_diagnostics_device_not_owned_by_config_entry(
     A device (main or child) belonging to another config entry must be rejected
     with a not-found response, never handed to the URL entry's integration.
     """
-    owner_entry = MockConfigEntry(domain="fake_integration")
+    owner_entry = MockConfigEntry(
+        domain="fake_integration", state=ConfigEntryState.LOADED
+    )
     owner_entry.add_to_hass(hass)
-    other_entry = MockConfigEntry(domain="fake_integration")
+    other_entry = MockConfigEntry(
+        domain="fake_integration", state=ConfigEntryState.LOADED
+    )
     other_entry.add_to_hass(hass)
 
     parent = device_registry.async_get_or_create(
@@ -447,9 +487,9 @@ async def test_download_diagnostics_composite_device_rejected(
     so it must be rejected with a not-found response and never handed to the
     integration's device diagnostics handler.
     """
-    entry_1 = MockConfigEntry(domain="fake_integration")
+    entry_1 = MockConfigEntry(domain="fake_integration", state=ConfigEntryState.LOADED)
     entry_1.add_to_hass(hass)
-    entry_2 = MockConfigEntry(domain="fake_integration")
+    entry_2 = MockConfigEntry(domain="fake_integration", state=ConfigEntryState.LOADED)
     entry_2.add_to_hass(hass)
     device_1 = device_registry.async_get_or_create(
         config_entry_id=entry_1.entry_id, identifiers={("test", "1")}
