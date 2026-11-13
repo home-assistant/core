@@ -541,6 +541,71 @@ async def test_create_task_service_call_with_date_and_location_reminder(
     assert args[0]["due"] == {"date": "2024-05-25T16:30:00.000000Z"}
 
 
+@pytest.mark.parametrize(
+    ("reminder_data", "expected_due"),
+    [
+        pytest.param(
+            {
+                TodoistServiceArgument.REMINDER_DATE_STRING: "tomorrow at 9am",
+                TodoistServiceArgument.REMINDER_DATE_LANG: "en",
+            },
+            {"string": "tomorrow at 9am", "lang": "en"},
+            id="date_string",
+        ),
+        pytest.param(
+            {TodoistServiceArgument.REMINDER_DATE: "2024-05-25"},
+            # Midnight in the local time zone (UTC-6).
+            {"date": "2024-05-25T06:00:00.000000Z"},
+            id="date_only",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("created_task")
+async def test_create_task_service_call_with_date_reminder(
+    hass: HomeAssistant,
+    api: AsyncMock,
+    aioclient_mock: AiohttpClientMocker,
+    reminder_data: dict[str, str],
+    expected_due: dict[str, str],
+) -> None:
+    """Test a date reminder is created from each supported date format."""
+    aioclient_mock.post(SYNC_URL, json={})
+
+    await hass.services.async_call(
+        DOMAIN,
+        TodoistService.NEW_TASK,
+        {
+            TodoistServiceArgument.CONTENT: "task",
+            TodoistServiceArgument.PROJECT: "Name",
+            **reminder_data,
+        },
+        blocking=True,
+    )
+
+    assert reminder_args(aioclient_mock) == [
+        {"item_id": NEW_TASK_ID, "type": "absolute", "due": expected_due}
+    ]
+
+
+async def test_create_task_service_call_with_invalid_reminder_date(
+    hass: HomeAssistant, api: AsyncMock
+) -> None:
+    """Test an invalid reminder date is rejected before the task is created."""
+    with pytest.raises(ValueError, match="Invalid reminder_date: not a date"):
+        await hass.services.async_call(
+            DOMAIN,
+            TodoistService.NEW_TASK,
+            {
+                TodoistServiceArgument.CONTENT: "task",
+                TodoistServiceArgument.PROJECT: "Name",
+                TodoistServiceArgument.REMINDER_DATE: "not a date",
+            },
+            blocking=True,
+        )
+
+    api.add_task.assert_not_called()
+
+
 async def test_create_task_service_call_with_unknown_zone(
     hass: HomeAssistant, api: AsyncMock
 ) -> None:
