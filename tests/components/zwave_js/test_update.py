@@ -665,8 +665,8 @@ async def test_update_entity_install_multiple_nodes_in_parallel(
     install_task = hass.async_create_task(
         hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: list(entity_ids)},
+            UpdateService.INSTALL,
+            {CommonServiceArgument.ENTITY_ID: list(entity_ids)},
             blocking=True,
         )
     )
@@ -769,8 +769,13 @@ async def test_update_entity_controller_install_waits_for_node_installs(
     install_task = hass.async_create_task(
         hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: [CONTROLLER_UPDATE_ENTITY, NODE_UPDATE_ENTITY]},
+            UpdateService.INSTALL,
+            {
+                CommonServiceArgument.ENTITY_ID: [
+                    CONTROLLER_UPDATE_ENTITY,
+                    NODE_UPDATE_ENTITY,
+                ]
+            },
             blocking=True,
         )
     )
@@ -838,8 +843,8 @@ async def test_update_entity_node_install_during_controller_install_raises(
     install_task = hass.async_create_task(
         hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: CONTROLLER_UPDATE_ENTITY},
+            UpdateService.INSTALL,
+            {CommonServiceArgument.ENTITY_ID: CONTROLLER_UPDATE_ENTITY},
             blocking=True,
         )
     )
@@ -849,8 +854,8 @@ async def test_update_entity_node_install_during_controller_install_raises(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: NODE_UPDATE_ENTITY},
+            UpdateService.INSTALL,
+            {CommonServiceArgument.ENTITY_ID: NODE_UPDATE_ENTITY},
             blocking=True,
         )
     assert exc_info.value.translation_key == "controller_firmware_update_in_progress"
