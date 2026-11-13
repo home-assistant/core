@@ -23,7 +23,7 @@ from telegram import (
     Message,
     Update,
 )
-from telegram.constants import ChatType, InputMediaType
+from telegram.constants import ChatAction, ChatType, InputMediaType
 from telegram.error import (
     InvalidToken,
     NetworkError,
@@ -45,10 +45,10 @@ from homeassistant.components.telegram_bot.const import (
     ATTR_PARSER,
     ATTR_REPLY_TO_MSGID,
     ATTR_URL,
-    CHAT_ACTION_TYPING,
     DOMAIN,
     PLATFORM_BROADCAST,
     SECTION_ADDITIONAL_SETTINGS,
+    TelegramBotChatAction,
     TelegramBotParseMode,
     TelegramBotService,
     TelegramBotServiceArgument,
@@ -560,7 +560,7 @@ async def test_send_chat_action(
             {
                 CommonServiceArgument.CONFIG_ENTRY_ID: mock_broadcast_config_entry.entry_id,
                 TelegramBotServiceArgument.CHAT_ID: [123456],
-                TelegramBotServiceArgument.CHAT_ACTION: CHAT_ACTION_TYPING,
+                TelegramBotServiceArgument.CHAT_ACTION: TelegramBotChatAction.TYPING,
                 TelegramBotServiceArgument.MESSAGE_THREAD_ID: 123,
             },
             blocking=True,
@@ -570,7 +570,7 @@ async def test_send_chat_action(
     await hass.async_block_till_done()
     mock.assert_called_once()
     mock.assert_called_with(
-        chat_id=123456, action=CHAT_ACTION_TYPING, message_thread_id=123
+        chat_id=123456, action=ChatAction.TYPING, message_thread_id=123
     )
 
 

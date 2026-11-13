@@ -173,6 +173,23 @@ CHAT_ACTION_FIND_LOCATION = "find_location"
 CHAT_ACTION_RECORD_VIDEO_NOTE = "record_video_note"
 CHAT_ACTION_UPLOAD_VIDEO_NOTE = "upload_video_note"
 
+
+class TelegramBotChatAction(StrEnum):
+    """Chat actions of the Telegram bot send_chat_action action."""
+
+    TYPING = "typing"
+    UPLOAD_PHOTO = "upload_photo"
+    RECORD_VIDEO = "record_video"
+    UPLOAD_VIDEO = "upload_video"
+    RECORD_VOICE = "record_voice"
+    UPLOAD_VOICE = "upload_voice"
+    UPLOAD_DOCUMENT = "upload_document"
+    CHOOSE_STICKER = "choose_sticker"
+    FIND_LOCATION = "find_location"
+    RECORD_VIDEO_NOTE = "record_video_note"
+    UPLOAD_VIDEO_NOTE = "upload_video_note"
+
+
 ATTR_ARGS = "args"
 ATTR_AUTHENTICATION = "authentication"
 ATTR_CALLBACK_QUERY = "callback_query"

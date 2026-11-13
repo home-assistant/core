@@ -31,7 +31,7 @@ from telegram import (
     Update,
     User,
 )
-from telegram.constants import InputMediaType, ParseMode
+from telegram.constants import ChatAction, InputMediaType, ParseMode
 from telegram.error import TelegramError
 from telegram.ext import CallbackContext, filters
 from telegram.request import HTTPXRequest
@@ -91,6 +91,7 @@ from .const import (
     CONF_PROXY_URL,
     DEFAULT_TIMEOUT_SECONDS,
     DOMAIN,
+    TelegramBotChatAction,
     TelegramBotEvent,
     TelegramBotParseMode,
     TelegramBotService,
@@ -100,6 +101,20 @@ from .helpers import signal
 
 _FILE_TYPES = ("animation", "document", "photo", "sticker", "video", "voice")
 _LOGGER = logging.getLogger(__name__)
+
+_CHAT_ACTIONS: dict[str, ChatAction] = {
+    TelegramBotChatAction.TYPING: ChatAction.TYPING,
+    TelegramBotChatAction.UPLOAD_PHOTO: ChatAction.UPLOAD_PHOTO,
+    TelegramBotChatAction.RECORD_VIDEO: ChatAction.RECORD_VIDEO,
+    TelegramBotChatAction.UPLOAD_VIDEO: ChatAction.UPLOAD_VIDEO,
+    TelegramBotChatAction.RECORD_VOICE: ChatAction.RECORD_VOICE,
+    TelegramBotChatAction.UPLOAD_VOICE: ChatAction.UPLOAD_VOICE,
+    TelegramBotChatAction.UPLOAD_DOCUMENT: ChatAction.UPLOAD_DOCUMENT,
+    TelegramBotChatAction.CHOOSE_STICKER: ChatAction.CHOOSE_STICKER,
+    TelegramBotChatAction.FIND_LOCATION: ChatAction.FIND_LOCATION,
+    TelegramBotChatAction.RECORD_VIDEO_NOTE: ChatAction.RECORD_VIDEO_NOTE,
+    TelegramBotChatAction.UPLOAD_VIDEO_NOTE: ChatAction.UPLOAD_VIDEO_NOTE,
+}
 
 # Telegram keeps this per bot, server side, and keeps whatever it was told last
 # when the setting is omitted, so a bot narrowed by an earlier consumer of the
@@ -787,7 +802,7 @@ class TelegramNotificationService:
             self.bot.send_chat_action,
             None,
             chat_id=chat_id,
-            action=chat_action,
+            action=_CHAT_ACTIONS[chat_action],
             message_thread_id=kwargs.get(TelegramBotServiceArgument.MESSAGE_THREAD_ID),
             context=context,
         )
