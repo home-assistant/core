@@ -140,6 +140,7 @@ class TelegramBotEventData(StrEnum):
     COMMAND = "command"
     ARGS = "args"
     FILE_ID = "file_id"
+    FILE_NAME = "file_name"
     FILE_MIME_TYPE = "file_mime_type"
     FILE_SIZE = "file_size"
     USER_ID = "user_id"
