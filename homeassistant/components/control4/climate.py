@@ -24,7 +24,6 @@ from .entity import Control4Entity
 _LOGGER = logging.getLogger(__name__)
 
 CONTROL4_CATEGORY = "comfort"
-CONTROL4_PROXY = {"control4_thermostat_proxy", "thermostatV2"}
 
 CONTROL4_HVAC_MODE_OFF = "Off"
 CONTROL4_HVAC_MODE_HEAT = "Heat"
@@ -79,7 +78,7 @@ async def async_setup_entry(
 
     for item in items_of_category:
         try:
-            if item["type"] == CONTROL4_ENTITY_TYPE and item["proxy"] in CONTROL4_PROXY:
+            if item["type"] == CONTROL4_ENTITY_TYPE:
                 item_name = item["name"]
                 item_id = item["id"]
                 item_parent_id = item["parentId"]
@@ -240,7 +239,7 @@ class Control4Climate(Control4Entity, ClimateEntity):
         """Returns HVAC modes."""
         active_modes = []
         c4modes_str = self._extra_state_attributes.get(ATTR_HVAC_MODES_LIST, "")
-        c4modes = c4modes_str.split(",") if c4modes_str else []
+        c4modes = [m.strip() for m in c4modes_str.split(",")] if c4modes_str else []
         for mode in c4modes:
             if mode in HVAC_MODES and HVAC_MODES[mode] not in active_modes:
                 active_modes.append(HVAC_MODES[mode])

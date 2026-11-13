@@ -11,7 +11,7 @@ from aiohttp import client_exceptions
 from pyControl4.error_handling import BadToken
 
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, PlatformNotReady
 
 from .const import Control4ConfigEntry
 
@@ -91,7 +91,10 @@ async def gather_entry_variables(
     )
     variables_by_id: dict[int, dict] = {}
     for item_id, result in zip(item_ids, results, strict=True):
-        if isinstance(result, (TimeoutError, client_exceptions.ClientError)):
+        if isinstance(
+            result,
+            (TimeoutError, client_exceptions.ClientError, ConfigEntryNotReady),
+        ):
             raise PlatformNotReady(
                 f"Failed to fetch initial variables for item {item_id}"
             ) from result

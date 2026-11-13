@@ -24,6 +24,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.color import brightness_to_value, value_to_brightness
 
@@ -302,16 +303,18 @@ async def test_light_not_created_when_no_initial_data(hass: HomeAssistant) -> No
     assert hass.states.get(SWITCH_ENTITY_ID) is None
 
 
+@pytest.mark.parametrize("error", [TimeoutError, ConfigEntryNotReady])
 @pytest.mark.usefixtures("mock_c4_account", "mock_light_update_variables")
 async def test_light_setup_retried_after_initial_timeout(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_c4_director: MagicMock,
+    error: type[Exception],
 ) -> None:
-    """A timeout on the initial variable read retries light setup."""
+    """A transient failure on the initial variable read retries light setup."""
     get_item_variables = mock_c4_director.get_item_variables.side_effect
-    mock_c4_director.get_item_variables.side_effect = TimeoutError
+    mock_c4_director.get_item_variables.side_effect = error
     await setup_integration(hass, mock_config_entry)
     assert hass.states.get(DIMMER_ENTITY_ID) is None
 

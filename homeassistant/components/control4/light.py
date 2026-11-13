@@ -43,11 +43,7 @@ async def async_setup_entry(
     pending = []
     for item in items_of_category:
         try:
-            if not (
-                item["type"] == CONTROL4_ENTITY_TYPE
-                and item["id"]
-                and item["proxy"] != "fan"
-            ):
+            if not (item["type"] == CONTROL4_ENTITY_TYPE and item["id"]):
                 continue
             item_name = str(item["name"])
             item_id = item["id"]
