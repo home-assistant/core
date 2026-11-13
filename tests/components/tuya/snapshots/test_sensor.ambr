@@ -18289,7 +18289,7 @@
     'device_id': <DeviceEntry identifiers=[('tuya', 'lr7th3bpx7masmsdzdccq')]>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_category': None,
     'entity_id': 'sensor.ev_charger_temperature',
     'has_entity_name': True,
     'hidden_by': None,
