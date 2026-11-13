@@ -8,7 +8,6 @@
     'capabilities': dict({
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Default',
-        'Winter',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -48,7 +47,6 @@
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'MYHOME Schedule',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Default',
-        'Winter',
       ]),
     }),
     'context': <ANY>,
