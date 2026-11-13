@@ -1465,7 +1465,7 @@ iperf3==0.1.11
 irm-kmi-api==1.1.1
 
 # homeassistant.components.isal
-isal==1.8.0
+isal==1.9.1
 
 # homeassistant.components.iseo_argo_ble
 iseo-argo-ble==0.9.10
