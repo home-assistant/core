@@ -74,6 +74,7 @@ from .exceptions import (
     NotModifiedError,
     RepositoryArchivedError,
     RepositoryExistsError,
+    VersionNotInRepositoryError,
 )
 from .profiles import (
     DownloadProfile,
@@ -447,6 +448,7 @@ class MarketplaceManager:
         self.unreachable_feeds: set[str] = set()
         self.recurring_tasks: list[Callable[[], None]] = []
         self.recurring_runs: set[asyncio.Task[None]] = set()
+        self._stop_checking_selected_tags: Callable[[], None] | None = None
         self.startup_task: asyncio.Task[None] | None = None
         self.repositories = Repositories()
         self.status = MarketplaceStatus()
@@ -456,7 +458,7 @@ class MarketplaceManager:
         self,
         action: Callable[[datetime], Coroutine[Any, Any, None]],
         interval: timedelta,
-    ) -> None:
+    ) -> Callable[[], None]:
         """Run an action on an interval, as a task an unload can stop."""
 
         @callback
@@ -467,9 +469,9 @@ class MarketplaceManager:
             self.recurring_runs.add(run)
             run.add_done_callback(self.recurring_runs.discard)
 
-        self.recurring_tasks.append(
-            async_track_time_interval(self.hass, _async_run, interval)
-        )
+        remove = async_track_time_interval(self.hass, _async_run, interval)
+        self.recurring_tasks.append(remove)
+        return remove
 
     @property
     def github_connected(self) -> bool:
@@ -946,6 +948,7 @@ class MarketplaceManager:
         self._async_track_interval(
             self.async_handle_critical_repositories, timedelta(hours=6)
         )
+        self.async_schedule_unchecked_selected_tags_check()
 
         self.configuration.config_entry.async_on_unload(
             self.hass.bus.async_listen_once(
@@ -971,6 +974,8 @@ class MarketplaceManager:
         self.async_dispatch(MarketplaceSignal.RELOAD, {"force": True})
 
         await self.async_handle_critical_repositories()
+        # The refreshes this run of the queue makes read the selections
+        await self.async_check_unchecked_selected_tags()
         await self.async_process_queue()
 
         self.async_dispatch(MarketplaceSignal.STATUS, {})
@@ -1416,6 +1421,76 @@ class MarketplaceManager:
             repository.data.full_name,
             removed.reason,
         )
+
+    @callback
+    def async_schedule_unchecked_selected_tags_check(self) -> None:
+        """Check the selections stored before checking until none is left."""
+        if self._stop_checking_selected_tags is None:
+            self._stop_checking_selected_tags = self._async_track_interval(
+                self.async_check_unchecked_selected_tags, timedelta(hours=6)
+            )
+
+    async def async_check_unchecked_selected_tags(
+        self, _: datetime | None = None
+    ) -> None:
+        """Select again the versions stored before they were checked, if upstream.
+
+        A selection GitHub fails to check is checked again on a later run.
+        """
+        checked = False
+        for repository in self.repositories.list_installed:
+            # A GitHub account found invalid meanwhile disables the Marketplace
+            if self.system.disabled:
+                break
+            if (
+                selected_tag := repository.data.unchecked_selected_tag
+            ) is None or repository.installing:
+                continue
+            try:
+                version: str | None = await repository.async_ensure_repository_version(
+                    selected_tag
+                )
+            except VersionNotInRepositoryError:
+                LOGGER.warning(
+                    "%s Selected version %s is not a branch, tag or commit of the "
+                    "repository, it is no longer selected",
+                    repository.string,
+                    selected_tag,
+                )
+                version = None
+            # The other checks would run out too
+            except GitHubRateLimitError:
+                break
+            except MarketplaceError as exception:
+                LOGGER.debug(
+                    "%s Selected version %s could not be checked yet: %s",
+                    repository.string,
+                    selected_tag,
+                    exception,
+                )
+                continue
+            # Picked again or installed while checking, that choice counts now
+            if (
+                repository.data.unchecked_selected_tag != selected_tag
+                or repository.installing
+            ):
+                continue
+            repository.data.selected_tag = version
+            repository.data.unchecked_selected_tag = None
+            checked = True
+
+        if checked:
+            await self.data.async_write()
+
+        # Besides the migration, only a failed pick puts one back, it schedules
+        # the check again
+        if (stop := self._stop_checking_selected_tags) is not None and not any(
+            repository.data.unchecked_selected_tag is not None
+            for repository in self.repositories.list_installed
+        ):
+            stop()
+            self.recurring_tasks.remove(stop)
+            self._stop_checking_selected_tags = None
 
     async def async_update_installed_custom_repositories(
         self, _: datetime | None = None

@@ -291,6 +291,34 @@ async def test_restore_an_entry_with_an_unreadable_field(
 
 
 @pytest.mark.usefixtures("init_integration")
+async def test_restore_keeps_what_checking_a_selection_needs(
+    marketplace: MarketplaceManager, config_dir: Path
+) -> None:
+    """Test a selection waiting for its check, and what it is checked with, survive."""
+    create_install_folders(config_dir, RESTORED_REPOSITORIES)
+    data = MarketplaceData(marketplace)
+    kept = {"default_branch": "main", "unchecked_selected_tag": "1.0.0"}
+    stored = {
+        entry: dict(repo_data) for entry, repo_data in RESTORED_REPOSITORIES.items()
+    }
+    stored["1296269"].update(kept)
+
+    async def mocked_load(hass: HomeAssistant, storage_key: str) -> Any:
+        """Return the stored repositories."""
+        return stored if storage_key == "repositories" else {}
+
+    with patch(
+        "homeassistant.components.marketplace.utils.data.async_load_from_storage",
+        side_effect=mocked_load,
+    ):
+        assert await data.restore()
+
+    repository = marketplace.repositories.get_by_id("1296269")
+    data.async_store_repository_data(repository)
+    assert {key: data.content["1296269"][key] for key in kept} == kept
+
+
+@pytest.mark.usefixtures("init_integration")
 async def test_unrestorable_entry_is_kept_in_storage(
     hass: HomeAssistant, marketplace: MarketplaceManager, config_dir: Path
 ) -> None:

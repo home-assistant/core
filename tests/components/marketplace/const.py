@@ -1,5 +1,7 @@
 """Constants for the Marketplace tests."""
 
+import pytest
+
 from homeassistant.components.marketplace.enums import RepositoryCategory
 
 TOKEN = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
@@ -18,6 +20,24 @@ FROZEN_TIME = "2019-02-26T15:02:39+00:00"
 
 REPOSITORY_INTEGRATION_ID = "1296269"
 REPOSITORY_INTEGRATION = "hacs-test-org/integration-basic"
+
+# Commits of the recorded integration repository, and one only its fork holds
+COMMIT_ON_MAIN = "1111111111111111111111111111111111111111"
+COMMIT_ON_FEATURE = "2222222222222222222222222222222222222222"
+COMMIT_ON_FORK = "3333333333333333333333333333333333333333"
+COMMIT_MISSING = "0123456789abcdef0123456789abcdef01234567"
+
+# Refs that are not a branch, tag or branch commit of the repository. GitHub
+# serves pull requests, also those from forks, under the name of the repository.
+NOT_UPSTREAM_VERSIONS = (
+    pytest.param("pull/1/head", id="pull_request_head"),
+    pytest.param("refs/pull/1/head", id="pull_request_ref"),
+    pytest.param("pull/1/merge", id="pull_request_merge"),
+    pytest.param(COMMIT_ON_FORK, id="commit_on_fork"),
+    pytest.param(COMMIT_ON_FORK[:7], id="short_commit_on_fork"),
+    pytest.param(COMMIT_MISSING, id="missing_commit"),
+    pytest.param("9.9.9", id="missing_tag"),
+)
 
 REPOSITORY_PLUGIN_ID = "1296267"
 REPOSITORY_PLUGIN = "hacs-test-org/plugin-basic"

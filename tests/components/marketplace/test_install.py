@@ -467,6 +467,7 @@ async def test_older_version_checks_the_domain_it_writes_to(
     candidate.data.id = "8002"
     candidate.data.domain = "new_domain"
     candidate.data.last_version = "2.0.0"
+    candidate.data.published_tags = ["2.0.0", "1.0.0"]
     candidate.data.releases = True
     candidate.content.path.remote = "custom_components/existing_domain"
     marketplace.repositories.register(candidate)

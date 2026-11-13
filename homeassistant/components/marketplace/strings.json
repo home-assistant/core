@@ -310,6 +310,9 @@
     "version_already_installed": {
       "message": "Version {version} of {repository} is already installed."
     },
+    "version_not_in_repository": {
+      "message": "{version} is not a branch, tag or commit of {repository}."
+    },
     "version_unknown": {
       "message": "It is not known which version to install."
     },
