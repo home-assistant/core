@@ -74,7 +74,7 @@ class RyseCoverEntity(CoverEntity):
         self._reconnect_debouncer: Debouncer[Coroutine[Any, Any, None]] | None = None
 
         self._attr_unique_id = device.address
-        self._current_position: int | None = None
+        self._attr_current_cover_position: int | None = None
         self._attr_is_closed: bool | None = None
         self._attr_available = True
         self._attr_device_info = DeviceInfo(
@@ -288,20 +288,21 @@ class RyseCoverEntity(CoverEntity):
 
     def _clear_cached_position(self) -> None:
         """Drop cached cover state so a later poll will request a fresh position."""
-        self._current_position = None
+        self._attr_current_cover_position = None
         self._attr_is_closed = None
 
     def _cached_position_is_valid(self) -> bool:
         """Return True when the cached Home Assistant position is still usable."""
-        return self._current_position is not None and self._device.is_valid_position(
-            self._current_position
+        return (
+            self._attr_current_cover_position is not None
+            and self._device.is_valid_position(self._attr_current_cover_position)
         )
 
     async def _update_position(self, position: int) -> None:
         """Update cover position when receiving notification."""
         if self._device.is_valid_position(position):
             real_position = self._device.get_real_position(position)
-            self._current_position = real_position
+            self._attr_current_cover_position = real_position
             self._attr_is_closed = self._device.is_closed(position)
             self._set_available(True)
             _LOGGER.debug(
@@ -421,12 +422,12 @@ class RyseCoverEntity(CoverEntity):
             return
         try:
             if (
-                self._current_position is not None
+                self._attr_current_cover_position is not None
                 and not self._cached_position_is_valid()
             ):
                 self._clear_cached_position()
 
-            if self._current_position is None:
+            if self._attr_current_cover_position is None:
                 await self._device.send_get_position()
 
             self._reconnect_when_seen = False
@@ -434,9 +435,3 @@ class RyseCoverEntity(CoverEntity):
 
         except (TimeoutError, OSError, EOFError, BleakError) as err:
             await self._async_drop_client(str(err))
-
-    @property
-    @override
-    def current_cover_position(self) -> int | None:
-        """Return current cover position."""
-        return self._current_position
