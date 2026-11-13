@@ -282,6 +282,16 @@ async def test_set_project_with_semantics(
             "project_data_invalid",
         ),
         (
+            # the address is read from the field, but links refer to the key
+            lambda data: {
+                **data,
+                "group_addresses": {
+                    "0/0/1": {**data["group_addresses"]["0/0/1"], "address": "0/0/2"}
+                },
+            },
+            "project_data_invalid",
+        ),
+        (
             lambda data: {
                 **data,
                 "group_addresses": {

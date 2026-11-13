@@ -49,6 +49,16 @@ def _group_address(value: Any) -> str:
     return value
 
 
+def _keyed_by_address(value: dict[str, Any]) -> dict[str, Any]:
+    """Validate that group addresses are keyed by their address."""
+    for key, group_address in value.items():
+        if key != group_address["address"]:
+            raise probatio.Invalid(
+                f"group address `{group_address['address']}` is keyed as `{key}`"
+            )
+    return value
+
+
 _DPT_SCHEMA = probatio.Schema(
     {
         probatio.Required("main"): int,
@@ -82,17 +92,20 @@ PROJECT_DATA_SCHEMA: Final = probatio.Schema(
                 extra=probatio.ALLOW_EXTRA,
             )
         },
-        probatio.Required("group_addresses"): {
-            str: probatio.Schema(
-                {
-                    probatio.Required("address"): _group_address,
-                    probatio.Required("name"): str,
-                    probatio.Required("description"): str,
-                    probatio.Required("dpt"): probatio.Maybe(_DPT_SCHEMA),
-                },
-                extra=probatio.ALLOW_EXTRA,
-            )
-        },
+        probatio.Required("group_addresses"): probatio.All(
+            {
+                str: probatio.Schema(
+                    {
+                        probatio.Required("address"): _group_address,
+                        probatio.Required("name"): str,
+                        probatio.Required("description"): str,
+                        probatio.Required("dpt"): probatio.Maybe(_DPT_SCHEMA),
+                    },
+                    extra=probatio.ALLOW_EXTRA,
+                )
+            },
+            _keyed_by_address,
+        ),
         probatio.Required("communication_objects"): dict,
         probatio.Required("topology"): dict,
         probatio.Required("locations"): dict,
