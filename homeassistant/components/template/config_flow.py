@@ -197,6 +197,7 @@ _SCHEMA_STATE: dict[probatio.Marker, Any] = {
 _MEDIA_PLAYER_REQUIRED_OPTIONS = (
     (CONF_SOURCE, CONF_SOURCE_LIST, "source_list_required"),
     (SERVICE_SELECT_SOURCE, CONF_SOURCE_LIST, "source_list_required"),
+    (CONF_SOURCE_LIST, SERVICE_SELECT_SOURCE, "select_source_required"),
     (SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN, "volume_up_and_down_required"),
     (SERVICE_VOLUME_DOWN, SERVICE_VOLUME_UP, "volume_up_and_down_required"),
 )

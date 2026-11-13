@@ -1653,6 +1653,16 @@ REQUIRED_OPTION_ERROR = (
         (
             "media_player",
             "",
+            {"source_list": "{{ ['TV'] }}"},
+            {
+                "source_list": REQUIRED_OPTION_ERROR.format(
+                    "select_source", "source_list"
+                )
+            },
+        ),
+        (
+            "media_player",
+            "",
             {"volume_up": []},
             {"volume_up": REQUIRED_OPTION_ERROR.format("volume_down", "volume_up")},
         ),
@@ -1772,10 +1782,16 @@ async def test_config_flow_preview_bad_input(
     ("user_input", "error", "missing_option"),
     [
         pytest.param(
-            {"source": "{{ 'TV' }}"},
+            {"source": "{{ 'TV' }}", "select_source": []},
             "source_list_required",
             {"source_list": "{{ ['TV'] }}"},
             id="source_without_list",
+        ),
+        pytest.param(
+            {"source_list": "{{ ['TV'] }}"},
+            "select_source_required",
+            {"select_source": []},
+            id="source_list_without_select_source",
         ),
         pytest.param(
             {"select_source": []},

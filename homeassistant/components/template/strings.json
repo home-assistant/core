@@ -15,6 +15,7 @@
   },
   "config": {
     "error": {
+      "select_source_required": "A select source action is required when a source list is set.",
       "source_list_required": "A source list is required when a source or the select source actions are set.",
       "volume_up_and_down_required": "Volume up and volume down actions must be set together."
     },
@@ -772,6 +773,7 @@
   },
   "options": {
     "error": {
+      "select_source_required": "[%key:component::template::config::error::select_source_required%]",
       "source_list_required": "[%key:component::template::config::error::source_list_required%]",
       "volume_up_and_down_required": "[%key:component::template::config::error::volume_up_and_down_required%]"
     },
