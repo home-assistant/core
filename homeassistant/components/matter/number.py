@@ -25,12 +25,13 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import color as color_util
 
-from .const import MATTER_MAX_MIREDS
+from .const import DOMAIN, MATTER_MAX_MIREDS
 from .entity import MatterEntity, MatterEntityDescription
-from .helpers import MatterConfigEntry
+from .helpers import MatterConfigEntry, write_error_status
 from .models import MatterDiscoverySchema
 
 # Thermostat ClusterRevision (Matter spec 7.13.1) at which the
@@ -188,6 +189,81 @@ class MatterRangeNumber(MatterEntity, NumberEntity):
             if step_value and step_value > 0:
                 step_convert = self.entity_description.format_step_value
                 self._attr_native_step = step_convert(step_value)
+
+
+@dataclass(frozen=True, kw_only=True)
+class MatterThermostatSetpointNumberEntityDescription(
+    MatterRangeNumberEntityDescription
+):
+    """Describe a Thermostat setpoint with the cluster's layered limits."""
+
+    # Used when min_attribute/max_attribute isn't reported
+    abs_min_attribute: type[ClusterAttributeDescriptor]
+    abs_max_attribute: type[ClusterAttributeDescriptor]
+
+
+class MatterThermostatSetpointNumber(MatterRangeNumber):
+    """Matter Thermostat setpoint as a Number entity.
+
+    In the Matter Thermostat cluster, the Min/Max...SetpointLimit attributes
+    are optional, defaulting to the Abs...SetpointLimit attributes, which are
+    also optional and default to fixed values (native_min_value and
+    native_max_value).
+    """
+
+    entity_description: MatterThermostatSetpointNumberEntityDescription
+
+    @override
+    async def async_set_native_value(self, value: float) -> None:
+        """Update the current value."""
+        result = await self.write_attribute(
+            value=self.entity_description.ha_to_device(value)
+        )
+        if status := write_error_status(result):
+            # some thermostats accept a narrower range than their reported limits
+            out_of_range = status == clusters.Globals.Enums.status.kConstraintError
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key=(
+                    "setpoint_out_of_range" if out_of_range else "setpoint_write_failed"
+                ),
+                translation_placeholders={
+                    "name": str(self.name),
+                    "status": str(status),
+                },
+            )
+
+    @callback
+    @override
+    def _update_from_device(self) -> None:
+        """Update from device."""
+        description = self.entity_description
+        if description.native_min_value is not None:
+            self._attr_native_min_value = description.native_min_value
+        if description.native_max_value is not None:
+            self._attr_native_max_value = description.native_max_value
+        super()._update_from_device()
+        if (
+            description.min_attribute is not None
+            and self.get_matter_attribute_value(description.min_attribute) is None
+            and (
+                abs_min := self.get_matter_attribute_value(
+                    description.abs_min_attribute
+                )
+            )
+            is not None
+        ):
+            self._attr_native_min_value = description.format_min_value(abs_min)
+        if (
+            self.get_matter_attribute_value(description.max_attribute) is None
+            and (
+                abs_max := self.get_matter_attribute_value(
+                    description.abs_max_attribute
+                )
+            )
+            is not None
+        ):
+            self._attr_native_max_value = description.format_max_value(abs_max)
 
 
 class MatterStartUpColorTemperatureNumber(MatterRangeNumber):
@@ -405,6 +481,76 @@ DISCOVERY_SCHEMAS = [
             clusters.Thermostat.Attributes.OccupiedSetbackMax,
         ),
         featuremap_contains=(clusters.Thermostat.Bitmaps.Feature.kSetback),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.NUMBER,
+        entity_description=MatterThermostatSetpointNumberEntityDescription(
+            key="ThermostatUnoccupiedHeatingSetpoint",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="unoccupied_heating_setpoint",
+            device_class=NumberDeviceClass.TEMPERATURE,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            device_to_ha=lambda x: None if x is None else x / 100,
+            ha_to_device=lambda x: round(x * 100),
+            format_min_value=lambda x: x / 100,
+            format_max_value=lambda x: x / 100,
+            min_attribute=clusters.Thermostat.Attributes.MinHeatSetpointLimit,
+            max_attribute=clusters.Thermostat.Attributes.MaxHeatSetpointLimit,
+            abs_min_attribute=clusters.Thermostat.Attributes.AbsMinHeatSetpointLimit,
+            abs_max_attribute=clusters.Thermostat.Attributes.AbsMaxHeatSetpointLimit,
+            # Spec defaults for AbsMinHeatSetpointLimit and AbsMaxHeatSetpointLimit
+            native_min_value=7,
+            native_max_value=30,
+            native_step=0.01,
+            mode=NumberMode.BOX,
+        ),
+        entity_class=MatterThermostatSetpointNumber,
+        required_attributes=(clusters.Thermostat.Attributes.UnoccupiedHeatingSetpoint,),
+        optional_attributes=(
+            clusters.Thermostat.Attributes.MinHeatSetpointLimit,
+            clusters.Thermostat.Attributes.MaxHeatSetpointLimit,
+            clusters.Thermostat.Attributes.AbsMinHeatSetpointLimit,
+            clusters.Thermostat.Attributes.AbsMaxHeatSetpointLimit,
+        ),
+        featuremap_contains=(
+            clusters.Thermostat.Bitmaps.Feature.kOccupancy
+            | clusters.Thermostat.Bitmaps.Feature.kHeating
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.NUMBER,
+        entity_description=MatterThermostatSetpointNumberEntityDescription(
+            key="ThermostatUnoccupiedCoolingSetpoint",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="unoccupied_cooling_setpoint",
+            device_class=NumberDeviceClass.TEMPERATURE,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            device_to_ha=lambda x: None if x is None else x / 100,
+            ha_to_device=lambda x: round(x * 100),
+            format_min_value=lambda x: x / 100,
+            format_max_value=lambda x: x / 100,
+            min_attribute=clusters.Thermostat.Attributes.MinCoolSetpointLimit,
+            max_attribute=clusters.Thermostat.Attributes.MaxCoolSetpointLimit,
+            abs_min_attribute=clusters.Thermostat.Attributes.AbsMinCoolSetpointLimit,
+            abs_max_attribute=clusters.Thermostat.Attributes.AbsMaxCoolSetpointLimit,
+            # Spec defaults for AbsMinCoolSetpointLimit and AbsMaxCoolSetpointLimit
+            native_min_value=16,
+            native_max_value=32,
+            native_step=0.01,
+            mode=NumberMode.BOX,
+        ),
+        entity_class=MatterThermostatSetpointNumber,
+        required_attributes=(clusters.Thermostat.Attributes.UnoccupiedCoolingSetpoint,),
+        optional_attributes=(
+            clusters.Thermostat.Attributes.MinCoolSetpointLimit,
+            clusters.Thermostat.Attributes.MaxCoolSetpointLimit,
+            clusters.Thermostat.Attributes.AbsMinCoolSetpointLimit,
+            clusters.Thermostat.Attributes.AbsMaxCoolSetpointLimit,
+        ),
+        featuremap_contains=(
+            clusters.Thermostat.Bitmaps.Feature.kOccupancy
+            | clusters.Thermostat.Bitmaps.Feature.kCooling
+        ),
     ),
     # Matter 1.3 and earlier (ClusterRevision <= 6) limit LocalTemperatureCalibration
     # to ±2.5°C; this schema also matches when ClusterRevision is unreadable.
