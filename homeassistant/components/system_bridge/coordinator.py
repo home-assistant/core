@@ -320,7 +320,8 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
                 eager_start=False,
             )
             self.logger.debug("Listening for data from %s", self.title)
-            self._awaiting_displays = True
+            # Setup has already fetched the display list for the first connection
+            self._awaiting_displays = self.config_entry.state is ConfigEntryState.LOADED
 
             try:
                 await self._register_data_listener()

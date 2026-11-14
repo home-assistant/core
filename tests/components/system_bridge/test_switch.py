@@ -109,8 +109,7 @@ async def test_display_power_removed_on_reconnect(
     await hass.async_block_till_done()
 
     coordinator = mock_config_entry.runtime_data
-    # The first display list after connecting
-    await coordinator.async_handle_module(Module.DISPLAYS, FIXTURE_DISPLAYS)
+    # Unplugged before the first pushed display list
     await coordinator.async_handle_module(Module.DISPLAYS, [])
     await hass.async_block_till_done()
 

@@ -698,7 +698,8 @@ async def test_sensor_display_gpu_partition_added(
             [SECOND_GPU],
             [SECOND_DISK],
             {
-                "sensor.hostname_display_abc123_resolution_x": None,
+                # Displays stay until a reconnect
+                "sensor.hostname_display_abc123_resolution_x": STATE_UNKNOWN,
                 "sensor.hostname_name_usage": None,
                 "sensor.hostname_mountpoint_space_used": None,
             },
@@ -819,8 +820,7 @@ async def test_sensor_display_removed_on_reconnect(
 
     entity_id = "sensor.hostname_display_abc123_resolution_x"
     coordinator = mock_config_entry.runtime_data
-    # The first display list after connecting
-    await coordinator.async_handle_module(Module.DISPLAYS, FIXTURE_DISPLAYS)
+    # Unplugged before the first pushed display list
     await coordinator.async_handle_module(Module.DISPLAYS, [])
     await hass.async_block_till_done()
 
