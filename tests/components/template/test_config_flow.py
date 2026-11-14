@@ -549,7 +549,7 @@ async def test_config_flow(
 async def test_config_flow_sensor_unit_of_measurement_context(
     hass: HomeAssistant,
 ) -> None:
-    """Test the unit of measurement field context refers to fields in the form."""
+    """Test the unit and device class field contexts refer to fields in the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -582,6 +582,15 @@ async def test_config_flow_sensor_unit_of_measurement_context(
             next(iter(fields[field_name]["selector"]))
             in allowed_context_keys[context_key]
         )
+    assert fields["device_class"]["selector"]["device_class"]["context"] == {
+        "filter_unit_of_measurement": "unit_of_measurement"
+    }
+    assert (
+        next(iter(fields["unit_of_measurement"]["selector"]))
+        in selector.DeviceClassSelector.allowed_context_keys[
+            "filter_unit_of_measurement"
+        ]
+    )
 
 
 @pytest.mark.parametrize(
@@ -1336,7 +1345,7 @@ async def test_options_remove_device_class(
 
 
 def _assert_number_unit_of_measurement_context(data_schema: probatio.Schema) -> None:
-    """Assert the unit of measurement selector is filtered by the device class."""
+    """Assert the unit of measurement and device class selectors filter each other."""
     # Serialize the form the way it is sent to the frontend
     fields = {
         field["name"]: field
@@ -1352,6 +1361,15 @@ def _assert_number_unit_of_measurement_context(data_schema: probatio.Schema) -> 
         next(iter(fields["device_class"]["selector"]))
         in selector.UnitOfMeasurementSelector().allowed_context_keys[
             "filter_device_class"
+        ]
+    )
+    assert fields["device_class"]["selector"]["device_class"]["context"] == {
+        "filter_unit_of_measurement": "unit_of_measurement"
+    }
+    assert (
+        next(iter(fields["unit_of_measurement"]["selector"]))
+        in selector.DeviceClassSelector.allowed_context_keys[
+            "filter_unit_of_measurement"
         ]
     )
 
