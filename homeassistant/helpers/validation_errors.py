@@ -14,10 +14,12 @@ from enum import Enum
 from typing import Any, TypedDict, override
 
 import probatio
+from probatio import VirtualPathComponent
 from probatio.error import render_path
-from probatio.markers import VirtualPathComponent
 
 from homeassistant.exceptions import HomeAssistantError
+
+_SECRET_MESSAGE = "invalid value"
 
 
 @dataclass(slots=True, frozen=True)
@@ -26,6 +28,10 @@ class ValidationErrorInfo:
 
     The segments of the path are kept as they are in the config, so the path
     can be used to look up the value. They are not always str or int.
+
+    The message of a translated HomeAssistantError can only be looked up in
+    the event loop, so message and __str__ must be used there when the record
+    may hold one.
     """
 
     exception: probatio.Invalid | HomeAssistantError
@@ -33,23 +39,30 @@ class ValidationErrorInfo:
 
     @property
     def message(self) -> str:
-        """Return the error message, without the path."""
+        """Return the error message, without the path.
+
+        The message of a secret error may echo the value, it is replaced.
+        """
         if isinstance(self.exception, probatio.Invalid) and not isinstance(
             self.exception, probatio.MultipleInvalid
         ):
+            if self.exception.secret:
+                return _SECRET_MESSAGE
             return self.exception.error_message
-        # Only an empty MultipleInvalid is kept in a record
+        # A HomeAssistantError, or a MultipleInvalid without errors
         return str(self.exception)
 
     @override
     def __str__(self) -> str:
         """Return the error message with the path, like probatio.Invalid."""
-        if isinstance(self.exception, probatio.Invalid) and not isinstance(
-            self.exception, probatio.MultipleInvalid
+        if (
+            isinstance(self.exception, probatio.Invalid)
+            and not isinstance(self.exception, probatio.MultipleInvalid)
+            and not self.exception.secret
         ):
             message = self.exception.msg
         else:
-            message = str(self.exception)
+            message = self.message
         if not self.path:
             return message
         return f"{message} at '{render_path(list(self.path))}'"
@@ -67,10 +80,27 @@ class ValidationErrors(HomeAssistantError):
 
     @override
     def __str__(self) -> str:
-        """Return the first error, with its path."""
+        """Return the first error, with its path.
+
+        Must be called in the event loop when the first error may be a
+        translated HomeAssistantError.
+        """
         # Not rendered in __init__: the message of a translated error can
         # only be looked up in the event loop
         return str(self.errors[0])
+
+
+def _clear_tracebacks(err: BaseException) -> None:
+    """Clear the traceback of err and of the exceptions it is chained to."""
+    seen: set[int] = set()
+    pending: list[BaseException | None] = [err]
+    while pending:
+        exc = pending.pop()
+        if exc is None or id(exc) in seen:
+            continue
+        seen.add(id(exc))
+        exc.__traceback__ = None
+        pending += (exc.__cause__, exc.__context__)
 
 
 def iter_validation_errors(
@@ -78,8 +108,9 @@ def iter_validation_errors(
 ) -> Iterator[ValidationErrorInfo]:
     """Yield the errors in err, located below path.
 
-    At least one error is yielded. The traceback of an error is cleared when
-    it is put in a record, to not keep the frames which raised it alive.
+    At least one error is yielded. The traceback of an error, and of the
+    exceptions it is chained to, is cleared when it is put in a record, to not
+    keep the frames which raised them alive.
     """
     if isinstance(err, ValidationErrors):
         for info in err.errors:
@@ -89,13 +120,13 @@ def iter_validation_errors(
             yield from iter_validation_errors(sub_err, path)
     elif isinstance(err, probatio.MultipleInvalid):
         # Without errors it is still an error: something was rejected
-        err.__traceback__ = None
+        _clear_tracebacks(err)
         yield ValidationErrorInfo(err, tuple(path))
     elif isinstance(err, probatio.Invalid):
-        err.__traceback__ = None
+        _clear_tracebacks(err)
         yield ValidationErrorInfo(err, (*path, *err.path))
     else:
-        err.__traceback__ = None
+        _clear_tracebacks(err)
         yield ValidationErrorInfo(err, tuple(path))
 
 
@@ -142,7 +173,11 @@ def _json_placeholders(placeholders: Mapping[str, Any] | None) -> dict[str, Any]
 
 
 def validation_error_as_dict(info: ValidationErrorInfo) -> ValidationErrorDict:
-    """Return a validation error as a JSON serializable dict."""
+    """Return a validation error as a JSON serializable dict.
+
+    Must be called in the event loop when the record may hold a translated
+    HomeAssistantError.
+    """
     err = info.exception
     path = _json_path(info.path)
     if not isinstance(err, probatio.Invalid):
@@ -159,7 +194,7 @@ def validation_error_as_dict(info: ValidationErrorInfo) -> ValidationErrorDict:
     if err.secret:
         # The message and the placeholders may echo the value
         return {
-            "message": "invalid value",
+            "message": info.message,
             "path": path,
             "code": err.code,
             "translation_key": None,
@@ -179,5 +214,9 @@ def validation_error_as_dict(info: ValidationErrorInfo) -> ValidationErrorDict:
 def validation_errors_as_dicts(
     err: probatio.Invalid | HomeAssistantError,
 ) -> list[ValidationErrorDict]:
-    """Return the errors in err as JSON serializable dicts."""
+    """Return the errors in err as JSON serializable dicts.
+
+    Must be called in the event loop when err may hold a translated
+    HomeAssistantError.
+    """
     return [validation_error_as_dict(info) for info in iter_validation_errors(err)]
