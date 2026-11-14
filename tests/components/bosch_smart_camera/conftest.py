@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 from bosch_shc_camera_client.cameras import Camera, CameraModel
+from bosch_shc_camera_client.states import WifiInfo
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -49,6 +50,17 @@ def mock_list_cameras() -> Generator[AsyncMock]:
         "bosch_shc_camera_client.client.list_cameras",
         autospec=True,
         return_value=list(CAMERAS),
+    ) as mock:
+        yield mock
+
+
+@pytest.fixture(autouse=True)
+def mock_get_wifi_info() -> Generator[AsyncMock]:
+    """Mock the Wi-Fi signal strength of the library."""
+    with patch(
+        "homeassistant.components.bosch_smart_camera.coordinator.get_wifi_info",
+        autospec=True,
+        return_value=WifiInfo(signal_strength=72),
     ) as mock:
         yield mock
 
