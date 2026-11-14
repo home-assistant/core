@@ -1,9 +1,11 @@
 """Test the History stats config flow."""
 
 import logging
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from freezegun import freeze_time
+import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.typing import WebSocketGenerator
 
@@ -11,10 +13,12 @@ from homeassistant import config_entries
 from homeassistant.components.history_stats.const import (
     CONF_DURATION,
     CONF_END,
+    CONF_PERIOD,
     CONF_START,
     CONF_TYPE_COUNT,
     DEFAULT_NAME,
     DOMAIN,
+    Period,
 )
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.sensor import CONF_STATE_CLASS
@@ -54,6 +58,7 @@ async def test_form(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
+            CONF_PERIOD: Period.CUSTOM,
             CONF_START: "{{ as_timestamp(utcnow()) - 3600 }}",
             CONF_END: "{{ utcnow() }}",
         },
@@ -67,10 +72,76 @@ async def test_form(
         CONF_ENTITY_ID: "binary_sensor.test_monitored",
         CONF_STATE: ["on"],
         CONF_TYPE: "count",
+        CONF_PERIOD: Period.CUSTOM,
         CONF_START: "{{ as_timestamp(utcnow()) - 3600 }}",
         CONF_END: "{{ utcnow() }}",
     }
 
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("user_input", "expected_options"),
+    [
+        pytest.param(
+            {CONF_PERIOD: Period.TODAY},
+            {CONF_PERIOD: Period.TODAY},
+            id="today",
+        ),
+        pytest.param(
+            {CONF_PERIOD: Period.ROLLING_WINDOW, CONF_DURATION: {"hours": 24}},
+            {CONF_PERIOD: Period.ROLLING_WINDOW, CONF_DURATION: {"hours": 24}},
+            id="rolling_window",
+        ),
+        pytest.param(
+            {
+                CONF_PERIOD: Period.TODAY,
+                CONF_START: "{{ 0 }}",
+                CONF_END: "{{ 1 }}",
+                CONF_DURATION: {"hours": 1},
+                CONF_STATE_CLASS: "measurement",
+            },
+            {CONF_PERIOD: Period.TODAY},
+            id="hidden_fields_dropped",
+        ),
+        pytest.param({}, {CONF_PERIOD: Period.TODAY}, id="default_today"),
+    ],
+)
+async def test_form_period_preset(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    user_input: dict[str, Any],
+    expected_options: dict[str, Any],
+) -> None:
+    """Test creating an entry with a period preset."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_NAME: DEFAULT_NAME,
+            CONF_ENTITY_ID: "binary_sensor.test_monitored",
+            CONF_TYPE: "count",
+        },
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_STATE: ["on"]}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["options"] == {
+        CONF_NAME: DEFAULT_NAME,
+        CONF_ENTITY_ID: "binary_sensor.test_monitored",
+        CONF_STATE: ["on"],
+        CONF_TYPE: "count",
+        **expected_options,
+    }
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -87,6 +158,7 @@ async def test_options_flow(
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
+            CONF_PERIOD: Period.CUSTOM,
             CONF_END: "{{ utcnow() }}",
             CONF_DURATION: {"hours": 8, "minutes": 0, "seconds": 0, "days": 20},
             CONF_STATE_CLASS: "total_increasing",
@@ -100,6 +172,7 @@ async def test_options_flow(
         CONF_ENTITY_ID: "binary_sensor.test_monitored",
         CONF_STATE: ["on"],
         CONF_TYPE: "count",
+        CONF_PERIOD: Period.CUSTOM,
         CONF_END: "{{ utcnow() }}",
         CONF_DURATION: {"hours": 8, "minutes": 0, "seconds": 0, "days": 20},
         CONF_STATE_CLASS: "total_increasing",
@@ -112,6 +185,34 @@ async def test_options_flow(
 
     state = hass.states.get("sensor.unnamed_statistics")
     assert state is not None
+
+
+async def test_options_flow_change_to_preset(
+    recorder_mock: Recorder, hass: HomeAssistant, loaded_entry: MockConfigEntry
+) -> None:
+    """Test switching an entry from a custom period to a preset."""
+    result = await hass.config_entries.options.async_init(loaded_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_PERIOD: Period.TODAY,
+            CONF_START: "{{ as_timestamp(utcnow()) - 3600 }}",
+            CONF_END: "{{ utcnow() }}",
+            CONF_STATE_CLASS: "measurement",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_NAME: DEFAULT_NAME,
+        CONF_ENTITY_ID: "binary_sensor.test_monitored",
+        CONF_STATE: ["on"],
+        CONF_TYPE: "count",
+        CONF_PERIOD: Period.TODAY,
+    }
+    state = hass.states.get("sensor.unnamed_statistics")
+    assert state.attributes[CONF_STATE_CLASS] == "total_increasing"
 
 
 async def test_validation_options(
@@ -152,6 +253,7 @@ async def test_validation_options(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
+            CONF_PERIOD: Period.CUSTOM,
             CONF_START: "{{ as_timestamp(utcnow()) - 3600 }}",
             CONF_END: "{{ utcnow() }}",
             CONF_DURATION: {"hours": 8, "minutes": 0, "seconds": 0, "days": 20},
@@ -166,6 +268,7 @@ async def test_validation_options(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
+            CONF_PERIOD: Period.CUSTOM,
             CONF_START: "{{ as_timestamp(utcnow()) - 3600 }}",
             CONF_END: "{{ utcnow() }}",
         },
@@ -179,10 +282,47 @@ async def test_validation_options(
         CONF_ENTITY_ID: "binary_sensor.test_monitored",
         CONF_STATE: ["on"],
         CONF_TYPE: "count",
+        CONF_PERIOD: Period.CUSTOM,
         CONF_START: "{{ as_timestamp(utcnow()) - 3600 }}",
         CONF_END: "{{ utcnow() }}",
     }
 
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_validation_rolling_window_duration(
+    recorder_mock: Recorder, hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test a rolling window requires a duration."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_NAME: DEFAULT_NAME,
+            CONF_ENTITY_ID: "binary_sensor.test_monitored",
+            CONF_TYPE: "count",
+        },
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_STATE: ["on"]}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PERIOD: Period.ROLLING_WINDOW}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "options"
+    assert result["errors"] == {"base": "duration_required"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PERIOD: Period.ROLLING_WINDOW, CONF_DURATION: {"hours": 24}},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -218,6 +358,7 @@ async def test_entry_already_exist(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
+            CONF_PERIOD: Period.CUSTOM,
             CONF_START: "{{ as_timestamp(utcnow()) - 3600 }}",
             CONF_END: "{{ utcnow() }}",
         },
@@ -314,6 +455,7 @@ async def test_config_flow_preview_success(
                     CONF_ENTITY_ID: monitored_entity,
                     CONF_TYPE: CONF_TYPE_COUNT,
                     CONF_STATE: ["on"],
+                    CONF_PERIOD: Period.CUSTOM,
                     CONF_END: "{{now()}}",
                     CONF_START: "{{ today_at() }}",
                 },
@@ -325,6 +467,94 @@ async def test_config_flow_preview_success(
 
         msg = await client.receive_json()
         assert msg["event"]["state"] == "2"
+
+
+@pytest.mark.parametrize(
+    ("user_input", "expected_state", "expected_state_class"),
+    [
+        pytest.param({CONF_PERIOD: Period.TODAY}, "2", "total_increasing", id="today"),
+        pytest.param(
+            {CONF_PERIOD: Period.TODAY, CONF_START: "{{ today_at( }}"},
+            "2",
+            "total_increasing",
+            id="today_ignores_invalid_hidden_template",
+        ),
+        pytest.param(
+            {
+                CONF_PERIOD: Period.ROLLING_WINDOW,
+                CONF_DURATION: {"hours": 1, "minutes": 30},
+            },
+            "1",
+            "measurement",
+            id="rolling_window",
+        ),
+    ],
+)
+async def test_config_flow_preview_period_preset(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    user_input: dict[str, Any],
+    expected_state: str,
+    expected_state_class: str,
+) -> None:
+    """Test the config flow preview with a period preset."""
+    client = await hass_ws_client(hass)
+
+    await hass.config.async_set_time_zone("UTC")
+    start_time = dt_util.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    monitored_entity = "binary_sensor.state"
+
+    def _fake_states(*args, **kwargs):
+        return {
+            monitored_entity: [
+                State(monitored_entity, "on", last_changed=start_time),
+                State(monitored_entity, "off", last_changed=start_time.replace(hour=3)),
+                State(monitored_entity, "on", last_changed=start_time.replace(hour=4)),
+            ]
+        }
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_NAME: DEFAULT_NAME,
+            CONF_ENTITY_ID: monitored_entity,
+            CONF_TYPE: CONF_TYPE_COUNT,
+        },
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_STATE: ["on"]}
+    )
+
+    with (
+        patch(
+            "homeassistant.components.recorder.history.state_changes_during_period",
+            _fake_states,
+        ),
+        freeze_time(start_time.replace(hour=5)),
+    ):
+        await client.send_json_auto_id(
+            {
+                "type": "history_stats/start_preview",
+                "flow_id": result["flow_id"],
+                "flow_type": "config_flow",
+                "user_input": {
+                    CONF_ENTITY_ID: monitored_entity,
+                    CONF_TYPE: CONF_TYPE_COUNT,
+                    CONF_STATE: ["on"],
+                    **user_input,
+                },
+            }
+        )
+        msg = await client.receive_json()
+        assert msg["success"]
+
+        msg = await client.receive_json()
+        assert msg["event"]["state"] == expected_state
+        assert msg["event"]["attributes"]["state_class"] == expected_state_class
 
 
 async def test_options_flow_preview(
@@ -385,6 +615,7 @@ async def test_options_flow_preview(
             CONF_ENTITY_ID: monitored_entity,
             CONF_TYPE: CONF_TYPE_COUNT,
             CONF_STATE: ["on"],
+            CONF_PERIOD: Period.CUSTOM,
             CONF_END: "{{ now() }}",
             CONF_START: "{{ today_at() }}",
             CONF_STATE_CLASS: "measurement",
@@ -421,6 +652,7 @@ async def test_options_flow_preview(
                         CONF_ENTITY_ID: monitored_entity,
                         CONF_TYPE: CONF_TYPE_COUNT,
                         CONF_STATE: ["on"],
+                        CONF_PERIOD: Period.CUSTOM,
                         CONF_END: end,
                         CONF_START: "{{ today_at() }}",
                         CONF_STATE_CLASS: "measurement",
@@ -462,6 +694,7 @@ async def test_options_flow_preview_errors(
             CONF_ENTITY_ID: monitored_entity,
             CONF_TYPE: CONF_TYPE_COUNT,
             CONF_STATE: ["on"],
+            CONF_PERIOD: Period.CUSTOM,
             CONF_END: "{{ now() }}",
             CONF_START: "{{ today_at() }}",
         },
@@ -481,6 +714,7 @@ async def test_options_flow_preview_errors(
         {CONF_START: "{{ today_at( }}"},  # Missing ')' in template function
         {CONF_DURATION: {"hours": 1}},  # Specified 3 period keys (1 too many)
         {CONF_START: ""},  # Specified 1 period keys (1 too few)
+        {CONF_PERIOD: Period.ROLLING_WINDOW},  # Rolling window without duration
     ):
         await client.send_json_auto_id(
             {
@@ -491,6 +725,7 @@ async def test_options_flow_preview_errors(
                     CONF_ENTITY_ID: monitored_entity,
                     CONF_TYPE: CONF_TYPE_COUNT,
                     CONF_STATE: ["on"],
+                    CONF_PERIOD: Period.CUSTOM,
                     CONF_END: "{{ now() }}",
                     CONF_START: "{{ today_at() }}",
                     **schema,
@@ -516,6 +751,7 @@ async def test_options_flow_preview_errors(
                     CONF_ENTITY_ID: monitored_entity,
                     CONF_TYPE: CONF_TYPE_COUNT,
                     CONF_STATE: ["on"],
+                    CONF_PERIOD: Period.CUSTOM,
                     CONF_END: "{{ now() }}",
                     CONF_START: "{{ today_at() }}",
                     **schema,
@@ -546,6 +782,7 @@ async def test_options_flow_sensor_preview_config_entry_removed(
             CONF_ENTITY_ID: "sensor.test_monitored",
             CONF_TYPE: CONF_TYPE_COUNT,
             CONF_STATE: ["on"],
+            CONF_PERIOD: Period.CUSTOM,
             CONF_START: "0",
             CONF_END: "1",
         },
@@ -571,6 +808,7 @@ async def test_options_flow_sensor_preview_config_entry_removed(
                 CONF_ENTITY_ID: "sensor.test_monitored",
                 CONF_TYPE: CONF_TYPE_COUNT,
                 CONF_STATE: ["on"],
+                CONF_PERIOD: Period.CUSTOM,
                 CONF_START: "0",
                 CONF_END: "1",
             },

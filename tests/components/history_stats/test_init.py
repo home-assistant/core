@@ -12,10 +12,12 @@ from homeassistant.components.history_stats.config_flow import (
 from homeassistant.components.history_stats.const import (
     CONF_END,
     CONF_MIN_STATE_DURATION,
+    CONF_PERIOD,
     CONF_START,
     DEFAULT_NAME,
     DOMAIN,
     SECTION_ADDITIONAL_SETTINGS,
+    Period,
 )
 from homeassistant.components.sensor import CONF_STATE_CLASS, SensorStateClass
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
@@ -75,6 +77,7 @@ def history_stats_config_entry(
             CONF_ENTITY_ID: sensor_entity_entry.entity_id,
             CONF_STATE: ["on"],
             CONF_TYPE: "count",
+            CONF_PERIOD: Period.CUSTOM,
             CONF_START: "{{ as_timestamp(utcnow()) - 3600 }}",
             CONF_END: "{{ utcnow() }}",
         },
@@ -511,6 +514,48 @@ async def test_migration_1_3(
         history_stats_config_entry.minor_version
         == HistoryStatsConfigFlowHandler.MINOR_VERSION
     )
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_migration_2_1(
+    hass: HomeAssistant,
+    sensor_entity_entry: er.RegistryEntry,
+) -> None:
+    """Test migration from v2.1 keeps the existing period as custom."""
+
+    history_stats_config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            CONF_NAME: DEFAULT_NAME,
+            CONF_ENTITY_ID: sensor_entity_entry.entity_id,
+            CONF_STATE: ["on"],
+            CONF_TYPE: "count",
+            CONF_START: "{{ as_timestamp(utcnow()) - 3600 }}",
+            CONF_END: "{{ utcnow() }}",
+            CONF_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
+        },
+        title="My history stats",
+        version=2,
+        minor_version=1,
+    )
+    history_stats_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(history_stats_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert history_stats_config_entry.state is ConfigEntryState.LOADED
+    assert history_stats_config_entry.options == {
+        CONF_NAME: DEFAULT_NAME,
+        CONF_ENTITY_ID: sensor_entity_entry.entity_id,
+        CONF_STATE: ["on"],
+        CONF_TYPE: "count",
+        CONF_PERIOD: Period.CUSTOM,
+        CONF_START: "{{ as_timestamp(utcnow()) - 3600 }}",
+        CONF_END: "{{ utcnow() }}",
+        CONF_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
+    }
+    assert history_stats_config_entry.version == 2
+    assert history_stats_config_entry.minor_version == 2
 
 
 @pytest.mark.usefixtures("recorder_mock")
