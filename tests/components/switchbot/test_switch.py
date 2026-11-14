@@ -16,7 +16,7 @@ from homeassistant.components.switch import (
     STATE_ON,
     SwitchService,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CommonServiceArgument
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, CommonServiceArgument
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 
@@ -26,12 +26,15 @@ from . import (
     AIR_PURIFIER_TABLE_US_SERVICE_INFO,
     AIR_PURIFIER_US_SERVICE_INFO,
     CIRCULATOR_FAN_PRO_SERVICE_INFO,
+    LOCK_ULTRA_QUICK_KEY_SETTINGS,
+    LOCK_ULTRA_SERVICE_INFO,
     PLUG_MINI_EU_SERVICE_INFO,
     RELAY_SWITCH_1_SERVICE_INFO,
     RELAY_SWITCH_2PM_SERVICE_INFO,
     STANDING_FAN_SERVICE_INFO,
     WOHAND_SERVICE_INFO,
     WORELAY_SWITCH_1PM_SERVICE_INFO,
+    patch_lock_ultra_quick_key,
 )
 
 
@@ -496,3 +499,76 @@ async def test_circulator_fan_pro_vertical_oscillation_switch(
         )
 
         mocked_instance.assert_awaited_once_with(expected_arg)
+
+
+QUICK_KEY_SWITCH_ENTITY_ID = "switch.test_name_quick_key"
+
+
+@pytest.mark.parametrize(
+    ("enabled", "initial_state", "service", "final_state"),
+    [
+        pytest.param(False, STATE_OFF, SERVICE_TURN_ON, STATE_ON, id="turn_on"),
+        pytest.param(True, STATE_ON, SERVICE_TURN_OFF, STATE_OFF, id="turn_off"),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_quick_key_switch(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+    enabled: bool,
+    initial_state: str,
+    service: str,
+    final_state: str,
+) -> None:
+    """Test the Quick Key switch reads and writes the enable bit."""
+    inject_bluetooth_service_info(hass, LOCK_ULTRA_SERVICE_INFO)
+    entry = mock_entry_encrypted_factory("lock_ultra")
+    entry.add_to_hass(hass)
+
+    patcher, mock_set_quick_key = patch_lock_ultra_quick_key(
+        LOCK_ULTRA_QUICK_KEY_SETTINGS | {"enabled": enabled}
+    )
+    with patcher:
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        assert hass.states.get(QUICK_KEY_SWITCH_ENTITY_ID).state == initial_state
+
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: QUICK_KEY_SWITCH_ENTITY_ID},
+            blocking=True,
+        )
+
+    mock_set_quick_key.assert_awaited_once_with(enabled=not enabled)
+    assert hass.states.get(QUICK_KEY_SWITCH_ENTITY_ID).state == final_state
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_quick_key_switch_not_applied(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+) -> None:
+    """Test a write the lock does not confirm raises and keeps the old state."""
+    inject_bluetooth_service_info(hass, LOCK_ULTRA_SERVICE_INFO)
+    entry = mock_entry_encrypted_factory("lock_ultra")
+    entry.add_to_hass(hass)
+
+    patcher, _ = patch_lock_ultra_quick_key(
+        LOCK_ULTRA_QUICK_KEY_SETTINGS, write_result=False
+    )
+    with patcher:
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        with pytest.raises(HomeAssistantError) as exc_info:
+            await hass.services.async_call(
+                SWITCH_DOMAIN,
+                SERVICE_TURN_OFF,
+                {ATTR_ENTITY_ID: QUICK_KEY_SWITCH_ENTITY_ID},
+                blocking=True,
+            )
+
+    assert exc_info.value.translation_key == "quick_key_not_applied"
+    assert hass.states.get(QUICK_KEY_SWITCH_ENTITY_ID).state == STATE_ON

@@ -383,6 +383,21 @@
           "soft": "Soft"
         }
       },
+      "quick_key_function": {
+        "name": "Quick Key function",
+        "state": {
+          "lock_and_unlock": "Lock and unlock",
+          "lock_only": "Lock only",
+          "unlock_only": "Unlock only"
+        }
+      },
+      "quick_key_trigger": {
+        "name": "Quick Key trigger",
+        "state": {
+          "double_press": "Double press",
+          "single_press": "Single press"
+        }
+      },
       "time_format": {
         "name": "Time format",
         "state": {
@@ -421,6 +436,9 @@
       },
       "pir_triggered_level": {
         "name": "PIR triggered level"
+      },
+      "quick_key_config_byte": {
+        "name": "Quick Key config byte"
       },
       "radar_triggered_distance": {
         "name": "Radar triggered distance"
@@ -464,6 +482,9 @@
       "horizontal_oscillation": {
         "name": "Horizontal oscillation"
       },
+      "quick_key": {
+        "name": "Quick Key"
+      },
       "vertical_oscillation": {
         "name": "Vertical oscillation"
       },
@@ -502,6 +523,9 @@
     },
     "operation_error": {
       "message": "An error occurred while performing the action: {error}"
+    },
+    "quick_key_not_applied": {
+      "message": "The lock did not apply the Quick Key setting."
     },
     "set_fan_state_failed": {
       "message": "Failed to send the command to the fan."
