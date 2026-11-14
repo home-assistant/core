@@ -4,7 +4,7 @@ from collections.abc import AsyncIterable
 from datetime import datetime, timedelta
 import logging
 
-from homeassistant.components.hassio import AddonError
+from homeassistant.components.hassio import AddonError, AddonState
 from homeassistant.components.labs import (
     EventLabsUpdatedData,
     async_is_preview_feature_enabled,
@@ -125,6 +125,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Connect to the app at the entry's address."""
+    if entry.data.get(CONF_INTEGRATION_CREATED_APP):
+        app_manager = get_app_manager(hass)
+        try:
+            app_info = await app_manager.async_get_addon_info()
+            if app_info.state is AddonState.NOT_RUNNING:
+                await app_manager.async_schedule_start_addon()
+        except AddonError as err:
+            raise ConfigEntryNotReady(err) from err
+
     client = VoiceSupportClient(hass, entry.data[CONF_HOST], entry.data[CONF_PORT])
     try:
         await client.async_update_info()
