@@ -638,6 +638,177 @@ async def test_multiple_llm_apis(
     assert chat_log.llm_api.api.id == "assist|my-api"
 
 
+def _intent_tool(name: str, intent_type: str = "HassTurnOn") -> llm.IntentTool:
+    """Return an intent tool with the given name."""
+    handler = Mock(intent_type=intent_type, description=None, slot_schema=None)
+    return llm.IntentTool(name, handler)
+
+
+def _other_tool(name: str) -> llm.Tool:
+    """Return a tool that does not handle an intent."""
+    tool = Mock(spec=llm.Tool)
+    tool.name = name
+    return tool
+
+
+@pytest.mark.parametrize(
+    ("offered_tools", "history_name", "expected_name"),
+    [
+        pytest.param(
+            [_intent_tool("intent__HassTurnOn")],
+            "HassTurnOn",
+            "intent__HassTurnOn",
+            id="single_api",
+        ),
+        pytest.param(
+            [llm.NamespacedTool("assist", _intent_tool("intent__HassTurnOn"))],
+            "HassTurnOn",
+            "assist__intent__HassTurnOn",
+            id="merged_api",
+        ),
+        pytest.param(
+            [_intent_tool("HassTurnOn")], "HassTurnOn", "HassTurnOn", id="matching"
+        ),
+        pytest.param(
+            [_intent_tool("intent__HassTurnOn")],
+            "device-control__intent__HassTurnOn",
+            "intent__HassTurnOn",
+            id="merged_to_single_api",
+        ),
+        pytest.param(
+            [llm.NamespacedTool("assist", _intent_tool("intent__HassTurnOn"))],
+            "intent__HassTurnOn",
+            "assist__intent__HassTurnOn",
+            id="single_to_merged_api",
+        ),
+        pytest.param(
+            [_intent_tool("intent__HassTurnOn"), _intent_tool("other__HassTurnOn")],
+            "HassTurnOn",
+            "HassTurnOn",
+            id="ambiguous",
+        ),
+        pytest.param(
+            [_other_tool("script__web_search_call")],
+            "web_search_call",
+            "web_search_call",
+            id="not_an_intent_tool",
+        ),
+        pytest.param(
+            [_intent_tool("intent_script__Tell_a_joke", "Tell a joke")],
+            "Tell a joke",
+            "intent_script__Tell_a_joke",
+            id="slugified_intent",
+        ),
+        pytest.param(
+            [
+                llm.NamespacedTool(
+                    "assist",
+                    _intent_tool("intent_script__Tell_a_joke", "Tell a joke"),
+                )
+            ],
+            "Tell a joke",
+            "assist__intent_script__Tell_a_joke",
+            id="namespaced_slugified_intent",
+        ),
+        pytest.param(
+            [_intent_tool("intent__HassTurnOn")],
+            "Room__HassTurnOn",
+            "Room__HassTurnOn",
+            id="intent_type_with_separator",
+        ),
+        pytest.param(
+            [_intent_tool("intent_script__Room_HassTurnOn", "Room__HassTurnOn")],
+            "Room__HassTurnOn",
+            "intent_script__Room_HassTurnOn",
+            id="custom_intent_type_with_separator",
+        ),
+        pytest.param(
+            [
+                _intent_tool(
+                    "intent__Room__intent__HassTurnOn", "Room__intent__HassTurnOn"
+                ),
+                _intent_tool("intent__HassTurnOn"),
+            ],
+            "Room__intent__HassTurnOn",
+            "intent__Room__intent__HassTurnOn",
+            id="exact_intent_type_beats_suffix_match",
+        ),
+    ],
+)
+async def test_external_tool_calls_match_offered_tool_names(
+    hass: HomeAssistant,
+    mock_conversation_input: ConversationInput,
+    offered_tools: list[llm.Tool],
+    history_name: str,
+    expected_name: str,
+) -> None:
+    """Test that external intent calls in the history use the offered tool name."""
+
+    class MyAPI(llm.API):
+        """Test API."""
+
+        instances = 0
+
+        async def async_get_api_instance(
+            self, llm_context: llm.LLMContext
+        ) -> llm.APIInstance:
+            """Return the offered tools."""
+            self.instances += 1
+            return llm.APIInstance(self, "My API Prompt", llm_context, offered_tools)
+
+    api = MyAPI(hass=hass, id="my-api", name="My API")
+    llm.async_register_api(hass, api)
+
+    with (
+        chat_session.async_get_chat_session(hass, context=None) as session,
+        async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+    ):
+        llm_context = mock_conversation_input.as_llm_context("test")
+        tool_input = llm.ToolInput(
+            tool_name=history_name, tool_args={"name": "Test Light"}, external=True
+        )
+        chat_log.async_add_assistant_content_without_tools(
+            AssistantContent(agent_id="test", content=None, tool_calls=[tool_input])
+        )
+        chat_log.async_add_assistant_content_without_tools(
+            ToolResultContent(
+                agent_id="test",
+                tool_call_id=tool_input.id,
+                tool_name=history_name,
+                result=llm.ToolResult(data={}),
+            )
+        )
+        await chat_log.async_provide_llm_data(llm_context, user_llm_hass_api="my-api")
+
+        # A command handled locally adds another external call. The next turn
+        # reuses the LLM API, so the fast path must rename it the same way.
+        tool_input2 = llm.ToolInput(
+            tool_name=history_name, tool_args={"name": "Test Light"}, external=True
+        )
+        chat_log.async_add_assistant_content_without_tools(
+            AssistantContent(agent_id="test", content=None, tool_calls=[tool_input2])
+        )
+        chat_log.async_add_assistant_content_without_tools(
+            ToolResultContent(
+                agent_id="test",
+                tool_call_id=tool_input2.id,
+                tool_name=history_name,
+                result=llm.ToolResult(data={}),
+            )
+        )
+        await chat_log.async_provide_llm_data(llm_context, user_llm_hass_api="my-api")
+
+    # The second call reuses the API instance, so it takes the fast path.
+    assert api.instances == 1
+    assert chat_log.content[-4].tool_calls[0].tool_name == expected_name
+    assert chat_log.content[-3].tool_name == expected_name
+    assert chat_log.content[-2].tool_calls[0].tool_name == expected_name
+    assert chat_log.content[-1].tool_name == expected_name
+    # The stored chat log shares these objects, so they must not change.
+    assert tool_input.tool_name == history_name
+    assert tool_input2.tool_name == history_name
+
+
 async def test_dynamic_time_injection(
     hass: HomeAssistant, mock_conversation_input: ConversationInput
 ) -> None:
