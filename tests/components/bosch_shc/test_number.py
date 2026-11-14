@@ -15,6 +15,7 @@ from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 
 from .conftest import (
+    heating_circuit_device,
     micromodule_dimmer_device,
     micromodule_relay_device,
     setup_integration,
@@ -36,6 +37,8 @@ LED_BRIGHTNESS_ENTITY_ID = "number.smart_plug_led_brightness"
 LED_BRIGHTNESS_COMPACT_ENTITY_ID = "number.smart_plug_compact_led_brightness"
 DISPLAY_BRIGHTNESS_ENTITY_ID = "number.thermostat_gen2_display_brightness"
 DISPLAY_ON_TIME_ENTITY_ID = "number.thermostat_gen2_display_on_time"
+ECO_TEMPERATURE_ENTITY_ID = "number.floor_heating_eco_temperature"
+COMFORT_TEMPERATURE_ENTITY_ID = "number.floor_heating_comfort_temperature"
 DIMMER_SPEED_ENTITY_ID = "number.dimmer_dimming_speed"
 ENTER_DURATION_ENTITY_ID = "number.smart_plug_energy_saving_enter_duration"
 ENTER_DURATION_COMPACT_ENTITY_ID = (
@@ -755,3 +758,101 @@ async def test_dimmer_without_configuration_has_no_speed_number(
     await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get(DIMMER_SPEED_ENTITY_ID) is None
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "heating_circuits": [
+                heating_circuit_device(
+                    eco_temperature=17.5,
+                    comfort_temperature=22.0,
+                    eco_temperature_range=(10.0, 20.0),
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_heating_circuit_setpoints(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The eco and comfort setpoints and their bounds are reported."""
+    await setup_integration(hass, mock_config_entry)
+
+    eco = hass.states.get(ECO_TEMPERATURE_ENTITY_ID)
+    comfort = hass.states.get(COMFORT_TEMPERATURE_ENTITY_ID)
+    assert eco is not None
+    assert eco.state == "17.5"
+    assert eco.attributes["min"] == 10.0
+    assert eco.attributes["max"] == 20.0
+    assert comfort is not None
+    assert comfort.state == "22.0"
+    assert comfort.attributes["min"] == 5.0
+    assert comfort.attributes["max"] == 30.0
+
+
+@pytest.mark.parametrize(
+    "device_buckets", [{"heating_circuits": [heating_circuit_device()]}], indirect=True
+)
+@pytest.mark.parametrize(
+    ("entity_id", "setter"),
+    [
+        (ECO_TEMPERATURE_ENTITY_ID, "set_setpoint_temperature_eco"),
+        (COMFORT_TEMPERATURE_ENTITY_ID, "set_setpoint_temperature_comfort"),
+    ],
+)
+async def test_heating_circuit_setpoints_set_value(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_id: str,
+    setter: str,
+) -> None:
+    """Setting a value writes it to the matching setpoint."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.heating_circuits[0]
+    getattr(device, setter).reset_mock()
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 19.5},
+        blocking=True,
+    )
+    getattr(device, setter).assert_called_once_with(19.5)
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "heating_circuits": [
+                heating_circuit_device(
+                    eco_temperature=None,
+                    comfort_temperature=None,
+                    eco_temperature_range=None,
+                    comfort_temperature_range=None,
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_heating_circuit_setpoints_not_configured(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Unconfigured setpoints are unknown and fall back to the default bounds."""
+    await setup_integration(hass, mock_config_entry)
+
+    for entity_id in (ECO_TEMPERATURE_ENTITY_ID, COMFORT_TEMPERATURE_ENTITY_ID):
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == "unknown"
+        assert state.attributes["min"] == 5.0
+        assert state.attributes["max"] == 30.0
