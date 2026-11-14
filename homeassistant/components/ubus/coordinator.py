@@ -86,7 +86,12 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
         PermissionError is left to propagate so the caller can re-authenticate.
         """
         clients = self._fetch_hostapd_clients()
-        authorized = [mac for mac, client in clients.items() if client["authorized"]]
+        # Filter list of client MAC addresses by authorization status, then
+        # make sure they are unique to preserve the assumptions the rest of
+        # this code probably has.  Sort the set so it is stable.
+        authorized = sorted(
+            {client["mac"] for client in clients if client["authorized"]}
+        )
         known = self._mac2name or {}
         unnamed = {mac.upper() for mac in authorized} - known.keys()
         now = dt_util.utcnow()
@@ -104,17 +109,30 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
                 self._unnamed = unnamed - mac2name.keys()
         return {mac: self._name_for(mac) for mac in authorized}
 
-    def _fetch_hostapd_clients(self) -> dict[str, dict]:
-        """Return the raw hostapd client table merged across all interfaces."""
+    def _fetch_hostapd_clients(self) -> list[dict]:
+        """Return the raw hostapd client table from all interfaces."""
         try:
             if not self._hostapd:
                 if not (hostapd := self.ubus.get_hostapd()):
                     raise UpdateFailed(f"No hostapd data from ubus at {self.host}")
                 self._hostapd = list(hostapd)
-            clients: dict[str, dict] = {}
+            clients: list[dict] = []
             for interface in self._hostapd:
                 if result := self.ubus.get_hostapd_clients(interface):
-                    clients.update(result["clients"])
+                    # Add the client to the client list, remembering the MAC
+                    # address of each client.
+                    #
+                    # We do this rather than (as we used to) merge client data
+                    # into a dictionary keyed by MAC address, because sometimes
+                    # the same client MAC address appears for a few seconds
+                    # across both interfaces (e.g. the client is under the effect
+                    # of band steering and is in the process of changing bands)
+                    # which causes the client to appear in two WLAN interfaces,
+                    # in one WLAN interface as authorized=False, and in another
+                    # WLAN interface as authorized=True.
+                    for mac, client_data in result["clients"].items():
+                        client_data["mac"] = mac
+                        clients.append(client_data)
         except ConnectionError as err:
             raise UpdateFailed(f"Error querying ubus at {self.host}") from err
         return clients
