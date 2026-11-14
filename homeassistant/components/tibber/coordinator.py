@@ -1,6 +1,7 @@
 """Coordinator for Tibber sensors."""
 
 import asyncio
+from collections.abc import Awaitable, Callable
 from datetime import datetime, timedelta
 import logging
 import random
@@ -136,23 +137,58 @@ class TibberDataCoordinator(TibberCoordinator[None]):
             name=f"Tibber {tibber_connection.name}",
             update_interval=timedelta(minutes=20),
         )
+        self._failed_updates: set[str] = set()
 
     @override
     async def _async_update_data(self) -> None:
-        """Update data via API."""
+        """Update data via API.
+
+        Consumption and production data only back optional sensors and the
+        statistics. A Tibber backend error while fetching them must not fail
+        the coordinator, as that would prevent the integration from loading.
+        """
         tibber_connection = await self._async_get_client()
 
         try:
-            await tibber_connection.fetch_consumption_data_active_homes()
-            await tibber_connection.fetch_production_data_active_homes()
-            await self._insert_statistics()
-        except tibber.RetryableHttpExceptionError as err:
-            raise UpdateFailed(f"Error communicating with API ({err.status})") from err
+            await self._async_update_optional(
+                "consumption data",
+                tibber_connection.fetch_consumption_data_active_homes,
+            )
+            await self._async_update_optional(
+                "production data",
+                tibber_connection.fetch_production_data_active_homes,
+            )
+            await self._async_update_optional("statistics", self._insert_statistics)
         except tibber.FatalHttpExceptionError:
             # Fatal error. Reload config entry to show correct error.
             self.hass.async_create_task(
                 self.hass.config_entries.async_reload(self.config_entry.entry_id)
             )
+
+    async def _async_update_optional(
+        self, name: str, update: Callable[[], Awaitable[None]]
+    ) -> None:
+        """Run an update step and log, instead of raise, Tibber backend errors.
+
+        The warning is only logged once until the step succeeds again.
+        """
+        try:
+            await update()
+        except tibber.RetryableHttpExceptionError as err:
+            if name in self._failed_updates:
+                _LOGGER.debug("Still unable to update Tibber %s: %s", name, err)
+            else:
+                self._failed_updates.add(name)
+                _LOGGER.warning(
+                    "Unable to update Tibber %s, the other Tibber data is not"
+                    " affected and the update will be retried: %s",
+                    name,
+                    err,
+                )
+        else:
+            if name in self._failed_updates:
+                self._failed_updates.discard(name)
+                _LOGGER.info("Updating Tibber %s recovered", name)
 
     async def _insert_statistics(self) -> None:
         """Insert Tibber statistics."""
