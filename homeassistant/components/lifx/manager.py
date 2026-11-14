@@ -15,9 +15,11 @@ from lifx import (
     LifxError,
     Light,
     MatrixLight,
+    MatrixLightState,
     MirrorLight,
     MultiZoneEffect,
     MultiZoneLight,
+    MultiZoneLightState,
     Theme,
     ThemeLibrary,
     TileEffectSkyType,
@@ -27,7 +29,7 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 
 from .const import DOMAIN, LIFXService, LIFXServiceArgument
-from .coordinator import LIFXUpdateCoordinator
+from .coordinator import LIFXState, LIFXUpdateCoordinator
 from .util import (
     device_error,
     overwrites_existing_color,
@@ -69,6 +71,14 @@ EFFECT_SKY_TYPE = {
 PAINT_THEME_DEFAULT_TRANSITION = 1
 
 
+async def _async_stop_firmware_effect(device: Light) -> None:
+    """Stop the firmware effect of a device that can run one."""
+    if isinstance(device, MatrixLight):
+        await device.set_effect(FirmwareEffect.OFF)
+    elif isinstance(device, MultiZoneLight):
+        await device.stop_effect()
+
+
 class LIFXManager:
     """Representation of all known LIFX entities."""
 
@@ -82,6 +92,18 @@ class LIFXManager:
         """Stop any software effect still running on a device."""
         if isinstance(device, Light):
             await self.effects_conductor.stop([device])
+
+    @staticmethod
+    async def async_stop_firmware_effect(device: Light, state: LIFXState) -> None:
+        """Stop the firmware effect a device's state reports as running."""
+        if (
+            isinstance(state, (MultiZoneLightState, MatrixLightState))
+            and state.effect is not FirmwareEffect.OFF
+        ):
+            try:
+                await _async_stop_firmware_effect(device)
+            except LifxError as err:
+                raise device_error(err) from err
 
     @callback
     def async_register_entity(
@@ -401,18 +423,7 @@ class LIFXManager:
     ) -> None:
         """Stop any running software or firmware effect."""
         await self.effects_conductor.stop(devices)
-        await asyncio.gather(
-            *(
-                device.set_effect(FirmwareEffect.OFF)
-                for device in devices
-                if isinstance(device, MatrixLight)
-            ),
-            *(
-                device.stop_effect()
-                for device in devices
-                if isinstance(device, MultiZoneLight)
-            ),
-        )
+        await asyncio.gather(*map(_async_stop_firmware_effect, devices))
 
     _effect_dispatch: dict[
         str,

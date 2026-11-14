@@ -917,6 +917,121 @@ async def test_effect_stop_uses_compatible_public_firmware_api(
 
 
 @pytest.mark.parametrize(
+    ("factory", "running_effect", "method", "args"),
+    [
+        pytest.param(
+            create_mock_matrix_light,
+            FirmwareEffect.MORPH,
+            "set_effect",
+            (FirmwareEffect.OFF,),
+            id="matrix",
+        ),
+        pytest.param(
+            create_mock_multizone_light,
+            FirmwareEffect.MOVE,
+            "stop_effect",
+            (),
+            id="multizone",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    ("domain", "service", "data"),
+    [
+        pytest.param(
+            LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_BRIGHTNESS: 178}, id="brightness"
+        ),
+        pytest.param(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_COLOR_TEMP_KELVIN: 3500},
+            id="kelvin",
+        ),
+        pytest.param(
+            DOMAIN,
+            LIFXService.SET_STATE,
+            {ATTR_HS_COLOR: (120, 100)},
+            id="set_state",
+        ),
+    ],
+)
+async def test_color_change_stops_a_firmware_effect(
+    hass: HomeAssistant,
+    factory: Callable[[], MockDevice],
+    running_effect: FirmwareEffect,
+    method: str,
+    args: tuple[object, ...],
+    domain: str,
+    service: str,
+    data: dict[str, Any],
+) -> None:
+    """Test a color change stops the firmware effect that would draw over it."""
+    device = factory()
+    device.state.effect = running_effect
+    await async_setup_lifx_entry(hass, device)
+
+    await hass.services.async_call(
+        domain, service, {ATTR_ENTITY_ID: ENTITY_ID, **data}, blocking=True
+    )
+
+    getattr(device, method).assert_awaited_once_with(*args)
+
+
+@pytest.mark.parametrize(
+    ("running_effect", "service", "data"),
+    [
+        pytest.param(FirmwareEffect.MORPH, SERVICE_TURN_ON, {}, id="turn_on"),
+        pytest.param(FirmwareEffect.MORPH, SERVICE_TURN_OFF, {}, id="turn_off"),
+        pytest.param(
+            FirmwareEffect.MORPH,
+            SERVICE_TURN_ON,
+            {ATTR_EFFECT: LIFXService.EFFECT_PULSE},
+            id="new_effect",
+        ),
+        pytest.param(
+            FirmwareEffect.OFF,
+            SERVICE_TURN_ON,
+            {ATTR_BRIGHTNESS: 178},
+            id="no_effect_running",
+        ),
+    ],
+)
+async def test_firmware_effect_not_stopped(
+    hass: HomeAssistant,
+    running_effect: FirmwareEffect,
+    service: str,
+    data: dict[str, Any],
+) -> None:
+    """Test the firmware effect is only stopped by a color change."""
+    device = create_mock_matrix_light()
+    device.state.effect = running_effect
+    await async_setup_lifx_entry(hass, device)
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN, service, {ATTR_ENTITY_ID: ENTITY_ID, **data}, blocking=True
+    )
+
+    device.set_effect.assert_not_awaited()
+
+
+async def test_stopping_a_firmware_effect_can_fail(hass: HomeAssistant) -> None:
+    """Test a failure to stop a firmware effect is reported and no color is set."""
+    device = create_mock_matrix_light()
+    device.state.effect = FirmwareEffect.MORPH
+    device.set_effect.side_effect = LifxError("stop boom")
+    await async_setup_lifx_entry(hass, device)
+
+    with pytest.raises(HomeAssistantError, match="stop boom"):
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_BRIGHTNESS: 178},
+            blocking=True,
+        )
+    device.set_matrix_colors.assert_not_awaited()
+
+
+@pytest.mark.parametrize(
     ("service_data", "expected_colors"),
     [
         pytest.param(
