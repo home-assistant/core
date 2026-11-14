@@ -1,0 +1,36 @@
+{
+  "entity": {
+    "sensor": {
+      "active_tariff": {
+        "default": "mdi:calendar-clock"
+      },
+      "current_average_demand": {
+        "default": "mdi:gauge"
+      },
+      "long_power_failure_count": {
+        "default": "mdi:transmission-tower-off"
+      },
+      "maximum_demand_month": {
+        "default": "mdi:gauge"
+      },
+      "p1_message_timestamp": {
+        "default": "mdi:clock"
+      },
+      "short_power_failure_count": {
+        "default": "mdi:transmission-tower-off"
+      },
+      "total_energy_exported": {
+        "default": "mdi:transmission-tower-export"
+      },
+      "total_energy_imported": {
+        "default": "mdi:transmission-tower-import"
+      },
+      "voltage_sag_count_phase": {
+        "default": "mdi:trending-down"
+      },
+      "voltage_swell_count_phase": {
+        "default": "mdi:trending-up"
+      }
+    }
+  }
+}

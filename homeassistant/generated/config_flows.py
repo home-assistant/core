@@ -359,6 +359,7 @@ FLOWS = {
         "homevolt",
         "homewizard",
         "homeworks",
+        "homey_energy_dongle",
         "honeywell",
         "honeywell_string_lights",
         "hortimax",

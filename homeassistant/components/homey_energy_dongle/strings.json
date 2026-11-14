@@ -1,0 +1,162 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_dsmr_version": "The selected meter format does not match this telegram.",
+      "local_api_disabled": "The local API of the Homey Energy Dongle is disabled. Enable it in the Homey app under the dongle's advanced settings.",
+      "too_many_connections": "The dongle allows at most two connections. Close another app or integration that is connected to the dongle and try again.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "flow_title": "{name}",
+    "step": {
+      "dsmr_version": {
+        "data": {
+          "dsmr_version": "DSMR version"
+        },
+        "data_description": {
+          "dsmr_version": "The telegram format of your smart meter, for example 5 for the Netherlands or 5B for Belgium."
+        },
+        "description": "The meter format could not be detected from the telegram."
+      },
+      "reconfigure": {
+        "data": {
+          "dsmr_version": "[%key:component::homey_energy_dongle::config::step::dsmr_version::data::dsmr_version%]",
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "dsmr_version": "[%key:component::homey_energy_dongle::config::step::dsmr_version::data_description::dsmr_version%]",
+          "host": "[%key:component::homey_energy_dongle::config::step::user::data_description::host%]"
+        }
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The IP address of the dongle, shown in the Homey app under the dongle's advanced settings."
+        },
+        "description": "Enable the local API of the dongle in the Homey app before continuing."
+      },
+      "zeroconf_confirm": {
+        "description": "Do you want to add `{name}`? The meter format is {version}.",
+        "title": "Discovered Homey Energy Dongle"
+      },
+      "zeroconf_meter": {
+        "description": "Do you want to add `{name}`?",
+        "title": "[%key:component::homey_energy_dongle::config::step::zeroconf_confirm::title%]"
+      }
+    }
+  },
+  "device": {
+    "electricity_meter": {
+      "name": "Electricity meter"
+    },
+    "gas_meter": {
+      "name": "Gas meter"
+    },
+    "heat_meter": {
+      "name": "Heat meter"
+    },
+    "water_meter": {
+      "name": "Water meter"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "active_tariff": {
+        "name": "Active tariff",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]"
+        }
+      },
+      "current_average_demand": {
+        "name": "Current average demand"
+      },
+      "current_phase": {
+        "name": "Current (phase {phase})"
+      },
+      "long_power_failure_count": {
+        "name": "Long power failures"
+      },
+      "maximum_demand_month": {
+        "name": "Maximum demand this month"
+      },
+      "meter_reading": {
+        "name": "Meter reading"
+      },
+      "p1_message_timestamp": {
+        "name": "Telegram timestamp"
+      },
+      "power_phase": {
+        "name": "Power (phase {phase})"
+      },
+      "short_power_failure_count": {
+        "name": "Short power failures"
+      },
+      "total_energy_exported": {
+        "name": "Total energy exported"
+      },
+      "total_energy_exported_high": {
+        "name": "Total energy exported (high tariff)"
+      },
+      "total_energy_exported_low": {
+        "name": "Total energy exported (low tariff)"
+      },
+      "total_energy_exported_tariff": {
+        "name": "Total energy exported (tariff {tariff})"
+      },
+      "total_energy_imported": {
+        "name": "Total energy imported"
+      },
+      "total_energy_imported_high": {
+        "name": "Total energy imported (high tariff)"
+      },
+      "total_energy_imported_low": {
+        "name": "Total energy imported (low tariff)"
+      },
+      "total_energy_imported_tariff": {
+        "name": "Total energy imported (tariff {tariff})"
+      },
+      "voltage_phase": {
+        "name": "Voltage (phase {phase})"
+      },
+      "voltage_sag_count_phase": {
+        "name": "Voltage sags (phase {phase})"
+      },
+      "voltage_swell_count_phase": {
+        "name": "Voltage swells (phase {phase})"
+      }
+    }
+  },
+  "exceptions": {
+    "connection_error": {
+      "message": "Lost the connection to the dongle: {error}"
+    },
+    "connection_limit": {
+      "message": "The dongle allows at most two connections."
+    },
+    "local_api_disabled": {
+      "message": "The local API of the dongle is disabled."
+    },
+    "not_connected": {
+      "message": "The dongle is not connected."
+    },
+    "telegram_timeout": {
+      "message": "No telegram received from the dongle in {timeout} seconds."
+    }
+  },
+  "issues": {
+    "connection_limit": {
+      "description": "Home Assistant can't read {name} because the dongle allows at most two connections and both are in use. Close another app or integration that is connected to the dongle. Home Assistant reconnects automatically.",
+      "title": "{name} has too many connections"
+    },
+    "local_api_disabled": {
+      "description": "Home Assistant can't read {name} because its local API is disabled. Enable the local API in the Homey app under the dongle's advanced settings. Home Assistant reconnects automatically.",
+      "title": "Local API of {name} is disabled"
+    }
+  }
+}

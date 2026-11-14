@@ -286,6 +286,8 @@ FORBIDDEN_PACKAGE_FILES_EXCEPTIONS = {
         # Coloredlogs, unmaintained - coloredlogs.pth
         "locationsharinglib": {"coloredlogs"},
     },
+    # https://github.com/u9n/dlms-cosem
+    "homey_energy_dongle": {"dsmr-parser": {"dlms-cosem"}},
     # https://github.com/basnijholt/aiokef
     "kef": {"homeassistant": {"aiokef"}},
     # https://github.com/hthiery/python-lacrosse
