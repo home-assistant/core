@@ -40,14 +40,14 @@ def mock_tellduslive() -> Generator[MagicMock]:
     device.state = 0
     device.battery = None
     device.lastUpdated = None
-    device.info.return_value = {
+    device.device = {
         "model": "selflearning-switch",
         "protocol": "arctech",
-        "client": HUB_ID,
     }
 
     session = MagicMock()
     session.is_authorized = True
+    session.hub_id = HUB_ID
     session.get_clients.return_value = [
         {
             "id": HUB_ID,
