@@ -118,20 +118,37 @@ async def test_broadcast_area_or_floor(
     entity2: MockAssistSatellite,
     target: dict[str, str],
 ) -> None:
-    """Test a broadcast to an area or floor skips the satellite that asked."""
+    """Test a broadcast to an area or floor only reaches the satellites there."""
     floor = floor_registry.async_create("Upstairs")
     kitchen = area_registry.async_create("Kitchen", floor_id=floor.floor_id)
-    area_registry.async_create("Living room")
-    device_registry.async_update_device(entity.device_entry.id, area_id=kitchen.id)
+    living_room = area_registry.async_create("Living room")
+    device_registry.async_update_device(entity.device_entry.id, area_id=living_room.id)
     device_registry.async_update_device(entity2.device_entry.id, area_id=kitchen.id)
 
-    result = await _async_broadcast(
-        hass, {"message": "Hello", **target}, entity.device_entry.id
-    )
+    result = await _async_broadcast(hass, {"message": "Hello", **target}, None)
 
     assert result == llm.ToolResult(data={"satellites": ["Test Entity 2"]})
     assert len(entity.announcements) == 0
     assert len(entity2.announcements) == 1
+
+
+@pytest.mark.usefixtures("mock_tts_engine")
+async def test_broadcast_area_skips_asking_satellite(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity: MockAssistSatellite,
+) -> None:
+    """Test a broadcast to an area skips the satellite that asked."""
+    kitchen = area_registry.async_create("Kitchen")
+    device_registry.async_update_device(entity.device_entry.id, area_id=kitchen.id)
+
+    with pytest.raises(intent.MatchFailedError, match="No entities were in the area"):
+        await _async_broadcast(
+            hass, {"message": "Hello", "area": "Kitchen"}, entity.device_entry.id
+        )
+
+    assert len(entity.announcements) == 0
 
 
 @pytest.mark.parametrize(
