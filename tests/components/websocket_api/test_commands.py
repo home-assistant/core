@@ -1,10 +1,12 @@
 """Tests for WebSocket API commands."""
 
 import asyncio
+from collections.abc import Iterable
 from copy import deepcopy
 import io
 import logging
 import math
+import threading
 from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
@@ -46,8 +48,8 @@ from homeassistant.components.websocket_api.automation import (
 )
 from homeassistant.components.websocket_api.commands import (
     ALL_CONDITION_DESCRIPTIONS_JSON_CACHE,
-    ALL_SERVICE_DESCRIPTIONS_JSON_CACHE,
     ALL_TRIGGER_DESCRIPTIONS_JSON_CACHE,
+    REGISTERED_SERVICE_DESCRIPTIONS_JSON_CACHE,
 )
 from homeassistant.components.websocket_api.const import FEATURE_COALESCE_MESSAGES, URL
 from homeassistant.config_entries import ConfigEntryState
@@ -63,6 +65,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
     label_registry as lr,
+    service,
     system_state,
     trace,
 )
@@ -942,17 +945,17 @@ async def test_get_services(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test get_services command."""
-    assert ALL_SERVICE_DESCRIPTIONS_JSON_CACHE not in hass.data
+    assert REGISTERED_SERVICE_DESCRIPTIONS_JSON_CACHE not in hass.data
     await websocket_client.send_json_auto_id({"type": "get_services"})
     msg = await websocket_client.receive_json()
     assert msg == {"id": 1, "result": {}, "success": True, "type": "result"}
 
     # Check cache is reused
-    old_cache = hass.data[ALL_SERVICE_DESCRIPTIONS_JSON_CACHE]
+    old_cache = hass.data[REGISTERED_SERVICE_DESCRIPTIONS_JSON_CACHE]
     await websocket_client.send_json_auto_id({"type": "get_services"})
     msg = await websocket_client.receive_json()
     assert msg == {"id": 2, "result": {}, "success": True, "type": "result"}
-    assert hass.data[ALL_SERVICE_DESCRIPTIONS_JSON_CACHE] is old_cache
+    assert hass.data[REGISTERED_SERVICE_DESCRIPTIONS_JSON_CACHE] is old_cache
 
     # Set up an integration that has services and check cache is updated
     assert await async_setup_component(hass, GROUP_DOMAIN, {GROUP_DOMAIN: {}})
@@ -966,10 +969,10 @@ async def test_get_services(
     }
     group_services = msg["result"][GROUP_DOMAIN]
     assert group_services == snapshot
-    assert hass.data[ALL_SERVICE_DESCRIPTIONS_JSON_CACHE] is not old_cache
+    assert hass.data[REGISTERED_SERVICE_DESCRIPTIONS_JSON_CACHE] is not old_cache
 
     # Check cache is reused
-    old_cache = hass.data[ALL_SERVICE_DESCRIPTIONS_JSON_CACHE]
+    old_cache = hass.data[REGISTERED_SERVICE_DESCRIPTIONS_JSON_CACHE]
     await websocket_client.send_json_auto_id({"type": "get_services"})
     msg = await websocket_client.receive_json()
     assert msg == {
@@ -978,7 +981,7 @@ async def test_get_services(
         "success": True,
         "type": "result",
     }
-    assert hass.data[ALL_SERVICE_DESCRIPTIONS_JSON_CACHE] is old_cache
+    assert hass.data[REGISTERED_SERVICE_DESCRIPTIONS_JSON_CACHE] is old_cache
 
     # Set up an integration with legacy translations in services.yaml
     def _load_services_file(integration: Integration) -> JSON_TYPE:
@@ -1203,6 +1206,157 @@ async def test_subscribe_triggers(
     }
 
     assert hass.data[ALL_TRIGGER_DESCRIPTIONS_JSON_CACHE] is old_cache
+
+
+@patch("annotatedyaml.loader.load_yaml")
+async def test_subscribe_services(
+    mock_load_yaml: Mock,
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """Test services/subscribe command."""
+    service_descriptions = """
+        declared:
+          fields:
+            topic:
+              selector:
+                text:
+        """
+
+    def _load_yaml(fname, secrets=None):
+        if not fname.endswith("test_domain/services.yaml"):
+            raise FileNotFoundError
+        with io.StringIO(service_descriptions) as file:
+            return parse_yaml(file)
+
+    mock_load_yaml.side_effect = _load_yaml
+    mock_integration(hass, MockModule("test_domain"), top_level_files={"services.yaml"})
+    declared_fields = {
+        "topic": {"selector": {"text": {"multiple": False, "multiline": False}}}
+    }
+
+    await websocket_client.send_json_auto_id({"type": "services/subscribe"})
+
+    # Test start subscription with initial event
+    msg = await websocket_client.receive_json()
+    assert msg == {"id": 1, "result": None, "success": True, "type": "result"}
+    msg = await websocket_client.receive_json()
+    assert msg == {"event": {}, "id": 1, "type": "event"}
+
+    # Test a declared service is sent before it is registered
+    await service.async_declare_service(hass, "test_domain.declared")
+    msg = await websocket_client.receive_json()
+    assert msg == {
+        "event": {
+            "services": {
+                "test_domain": {
+                    "declared": {
+                        "fields": declared_fields,
+                        "response": None,
+                        "description_placeholders": None,
+                    }
+                }
+            }
+        },
+        "id": 1,
+        "type": "event",
+    }
+
+    # Test get_services only returns registered services
+    await websocket_client.send_json_auto_id({"type": "get_services"})
+    msg = await websocket_client.receive_json()
+    assert msg == {"id": 2, "result": {}, "success": True, "type": "result"}
+
+    # Test registrations are sent, coalesced in one event
+    hass.services.async_register(
+        "test_domain",
+        "declared",
+        lambda call: None,
+        supports_response=SupportsResponse.ONLY,
+    )
+    hass.services.async_register("test_domain", "dynamic", lambda call: None)
+    msg = await websocket_client.receive_json()
+    assert msg == {
+        "event": {
+            "services": {
+                "test_domain": {
+                    "declared": {
+                        "fields": declared_fields,
+                        "response": {"optional": False},
+                    },
+                    "dynamic": {"fields": {}},
+                }
+            }
+        },
+        "id": 1,
+        "type": "event",
+    }
+
+    # Test removing an undeclared service is sent, removing a declared one is not
+    hass.services.async_remove("test_domain", "dynamic")
+    hass.services.async_remove("test_domain", "declared")
+    msg = await websocket_client.receive_json()
+    assert msg == {
+        "event": {"removed": {"test_domain": ["dynamic"]}},
+        "id": 1,
+        "type": "event",
+    }
+
+    # Initiate a second subscription to check the removed service is gone and the
+    # declared one kept what it learnt
+    await websocket_client.send_json_auto_id({"type": "services/subscribe"})
+    msg = await websocket_client.receive_json()
+    assert msg == {"id": 3, "result": None, "success": True, "type": "result"}
+    msg = await websocket_client.receive_json()
+    assert msg == {
+        "event": {
+            "services": {
+                "test_domain": {
+                    "declared": {
+                        "fields": declared_fields,
+                        "response": {"optional": False},
+                    }
+                }
+            }
+        },
+        "id": 3,
+        "type": "event",
+    }
+
+
+async def test_subscribe_services_shared_event(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """Test subscribers in the same round share one event."""
+    mock_integration(hass, MockModule("test_domain"), top_level_files={"services.yaml"})
+    hass.services.async_register("test_domain", "declared", lambda call: None)
+    load_called = threading.Event()
+    load_wait = threading.Event()
+
+    def _load_services_files(integrations: Iterable[Integration]) -> dict[str, Any]:
+        load_called.set()
+        load_wait.wait()
+        return {"test_domain": {"declared": None}}
+
+    with patch(
+        "homeassistant.helpers.service._load_services_files", _load_services_files
+    ):
+        await websocket_client.send_json_auto_id({"type": "services/subscribe"})
+        msg = await websocket_client.receive_json()
+        assert msg == {"id": 1, "result": None, "success": True, "type": "result"}
+        # The second subscription lands while the first event is being prepared
+        await hass.async_add_executor_job(load_called.wait)
+        await websocket_client.send_json_auto_id({"type": "services/subscribe"})
+        msg = await websocket_client.receive_json()
+        assert msg == {"id": 2, "result": None, "success": True, "type": "result"}
+        load_wait.set()
+
+        event = {"services": {"test_domain": {"declared": {"fields": {}}}}}
+        msg = await websocket_client.receive_json()
+        assert msg == {"event": event, "id": 1, "type": "event"}
+        msg = await websocket_client.receive_json()
+        assert msg == {"event": event, "id": 2, "type": "event"}
 
 
 @pytest.mark.parametrize(

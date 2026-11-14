@@ -25,6 +25,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FLOOR_ID,
     ATTR_LABEL_ID,
+    CONF_ACTION,
     CONF_ALIAS,
     CONF_CHOOSE,
     CONF_CONDITION,
@@ -54,6 +55,7 @@ from homeassistant.const import (
     CONF_SERVICE,
     CONF_SERVICE_DATA,
     CONF_SERVICE_DATA_TEMPLATE,
+    CONF_SERVICE_TEMPLATE,
     CONF_SET_CONVERSATION_RESPONSE,
     CONF_STOP,
     CONF_TARGET,
@@ -321,7 +323,6 @@ def make_script_schema(
 
 STATIC_VALIDATION_ACTION_TYPES = (
     cv.SCRIPT_ACTION_ACTIVATE_SCENE,
-    cv.SCRIPT_ACTION_CALL_SERVICE,
     cv.SCRIPT_ACTION_DELAY,
     cv.SCRIPT_ACTION_FIRE_EVENT,
     cv.SCRIPT_ACTION_SET_CONVERSATION_RESPONSE,
@@ -438,6 +439,13 @@ async def async_validate_action_config(
     action_type = cv.determine_script_action(config)
 
     if action_type in STATIC_VALIDATION_ACTION_TYPES:
+        return config
+
+    if action_type == cv.SCRIPT_ACTION_CALL_SERVICE:
+        # Templated actions are only known when run
+        action = config.get(CONF_ACTION, config.get(CONF_SERVICE_TEMPLATE))
+        if isinstance(action, str):
+            await service.async_declare_service(hass, action)
         return config
 
     if action_type == cv.SCRIPT_ACTION_DEVICE_AUTOMATION:

@@ -5953,6 +5953,7 @@ async def test_validate_action_config(
         },
     }
     expected_templates = {
+        cv.SCRIPT_ACTION_CALL_SERVICE: None,
         cv.SCRIPT_ACTION_CHECK_CONDITION: None,
         cv.SCRIPT_ACTION_DEVICE_AUTOMATION: [[]],
         cv.SCRIPT_ACTION_REPEAT: [["repeat", "sequence", 0]],
@@ -5998,6 +5999,31 @@ async def test_validate_action_config(
                 operator.getitem, path_to_template, validated_config[action_type]
             )
             assert isinstance(device_action["message"], template.Template)
+
+
+@pytest.mark.parametrize(
+    ("action", "declared_services"),
+    [
+        pytest.param({"action": "light.turn_on"}, ["light.turn_on"], id="literal"),
+        pytest.param({"action": "{{ 'light.turn_on' }}"}, [], id="template"),
+        pytest.param(
+            {"service_template": "light.turn_on"},
+            ["light.turn_on"],
+            id="literal_service_template",
+        ),
+        pytest.param(
+            {"service_template": "{{ 'light.turn_on' }}"}, [], id="service_template"
+        ),
+    ],
+)
+async def test_validate_action_config_declares_service(
+    hass: HomeAssistant, action: dict[str, str], declared_services: list[str]
+) -> None:
+    """Test validating a service action declares the service."""
+    config = cv.SERVICE_SCHEMA(action)
+    with patch("homeassistant.helpers.service.async_declare_service") as mock_declare:
+        await script.async_validate_action_config(hass, config)
+    assert [call.args[1] for call in mock_declare.mock_calls] == declared_services
 
 
 async def test_embedded_wait_for_trigger_in_automation(hass: HomeAssistant) -> None:
