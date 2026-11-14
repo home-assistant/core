@@ -50,6 +50,17 @@
       }
     }
   },
+  "device": {
+    "light": {
+      "name": "Light {index}"
+    },
+    "outlet": {
+      "name": "Outlet {index}"
+    },
+    "switch": {
+      "name": "Switch {index}"
+    }
+  },
   "device_automation": {
     "trigger_subtype": {
       "button1": "Button 1",
