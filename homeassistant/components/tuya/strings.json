@@ -63,6 +63,9 @@
       "fall": {
         "name": "Fall"
       },
+      "feed_blocked": {
+        "name": "Feed blocked"
+      },
       "feeding": {
         "name": "Feeding"
       },
@@ -71,6 +74,9 @@
       },
       "fire": {
         "name": "Fire"
+      },
+      "food_stuck": {
+        "name": "Food stuck"
       },
       "formaldehyde": {
         "name": "Formaldehyde"
@@ -297,6 +303,9 @@
       },
       "heat_preservation_time": {
         "name": "Heat preservation time"
+      },
+      "height": {
+        "name": "Height"
       },
       "indexed_cook_temperature": {
         "name": "Cooking temperature {index}"
@@ -858,6 +867,14 @@
       },
       "flow_temperature": {
         "name": "Flow temperature"
+      },
+      "food_level": {
+        "name": "Food level",
+        "state": {
+          "full": "Full",
+          "lack": "Empty",
+          "less": "Low"
+        }
       },
       "formaldehyde": {
         "name": "[%key:component::tuya::entity::binary_sensor::formaldehyde::name%]"

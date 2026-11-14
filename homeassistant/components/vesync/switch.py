@@ -5,7 +5,12 @@ from dataclasses import dataclass
 import logging
 from typing import Any, Final, override
 
-from pyvesync.base_devices import VeSyncBaseDevice, VeSyncHumidifier, VeSyncPurifier
+from pyvesync.base_devices import (
+    VeSyncBaseDevice,
+    VeSyncFanBase,
+    VeSyncHumidifier,
+    VeSyncPurifier,
+)
 from pyvesync.const import DeviceStatus
 from pyvesync.device_container import DeviceContainer
 
@@ -20,7 +25,14 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .common import is_humidifier, is_outlet, is_purifier, is_wall_switch, rgetattr
+from .common import (
+    is_fan,
+    is_humidifier,
+    is_outlet,
+    is_purifier,
+    is_wall_switch,
+    rgetattr,
+)
 from .const import VS_DEVICES, VS_DISCOVERY
 from .coordinator import VesyncConfigEntry, VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
@@ -82,6 +94,15 @@ def _toggle_light_detection(device: VeSyncBaseDevice, target: bool) -> Awaitable
             raise HomeAssistantError(
                 "Device does not support toggling light detection."
             )
+
+
+def _toggle_mute(device: VeSyncBaseDevice, target: bool) -> Awaitable[bool]:
+    """Toggle mute on fan devices."""
+    match device:
+        case VeSyncFanBase() as sw if hasattr(sw, "toggle_mute"):
+            return sw.toggle_mute(target)
+        case _:
+            raise HomeAssistantError("Device does not support toggling mute.")
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -155,6 +176,15 @@ SENSOR_DESCRIPTIONS: Final[tuple[VeSyncSwitchEntityDescription, ...]] = (
         translation_key="light_detection",
         on_fn=lambda device: _toggle_light_detection(device, True),
         off_fn=lambda device: _toggle_light_detection(device, False),
+        entity_category=EntityCategory.CONFIG,
+    ),
+    VeSyncSwitchEntityDescription(
+        key="mute",
+        is_on=lambda device: device.state.mute_status == DeviceStatus.ON,
+        exists_fn=lambda device: is_fan(device) and device.supports_mute,
+        translation_key="mute",
+        on_fn=lambda device: _toggle_mute(device, True),
+        off_fn=lambda device: _toggle_mute(device, False),
         entity_category=EntityCategory.CONFIG,
     ),
 )

@@ -43,6 +43,9 @@ from homeassistant.helpers import (
 from homeassistant.loader import async_get_integrations
 
 from .const import (
+    CAMERA_MODE_STANDARD,
+    CAMERA_MODES,
+    CONF_CAMERA_MODE,
     CONF_ENTITY_CONFIG,
     CONF_EXCLUDE_ACCESSORY_MODE,
     CONF_FILTER,
@@ -566,6 +569,12 @@ class OptionsFlowHandler(OptionsFlow):
                 elif CONF_SUPPORT_AUDIO in entity_config:
                     del entity_config[CONF_SUPPORT_AUDIO]
 
+                camera_mode = user_input.get(CONF_CAMERA_MODE, CAMERA_MODE_STANDARD)
+                if camera_mode != CAMERA_MODE_STANDARD:
+                    entity_config[CONF_CAMERA_MODE] = camera_mode
+                else:
+                    entity_config.pop(CONF_CAMERA_MODE, None)
+
                 if not entity_config:
                     all_entity_config.pop(entity_id)
 
@@ -581,26 +590,32 @@ class OptionsFlowHandler(OptionsFlow):
             if entity_config.get(CONF_SUPPORT_AUDIO):
                 cameras_with_audio.append(entity)
 
-        data_schema = probatio.Schema(
-            {
-                probatio.Optional(
-                    CONF_CAMERA_COPY, default=cameras_with_copy
-                ): selector.EntitySelector(
-                    selector.EntitySelectorConfig(
-                        multiple=True,
-                        include_entities=(self.included_cameras),
-                    )
-                ),
-                probatio.Optional(
-                    CONF_CAMERA_AUDIO, default=cameras_with_audio
-                ): selector.EntitySelector(
-                    selector.EntitySelectorConfig(
-                        multiple=True,
-                        include_entities=(self.included_cameras),
-                    )
-                ),
-            }
+        camera_selector = selector.EntitySelector(
+            selector.EntitySelectorConfig(
+                multiple=True, include_entities=self.included_cameras
+            )
         )
+        schema: dict[probatio.Marker, selector.Selector] = {
+            probatio.Optional(
+                CONF_CAMERA_COPY, default=cameras_with_copy
+            ): camera_selector,
+            probatio.Optional(
+                CONF_CAMERA_AUDIO, default=cameras_with_audio
+            ): camera_selector,
+        }
+        # Accessory mode has a single camera.
+        if hk_options[CONF_HOMEKIT_MODE] == HOMEKIT_MODE_ACCESSORY:
+            camera_mode = all_entity_config.get(self.included_cameras[0], {}).get(
+                CONF_CAMERA_MODE, CAMERA_MODE_STANDARD
+            )
+            schema[probatio.Required(CONF_CAMERA_MODE, default=camera_mode)] = (
+                selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=CAMERA_MODES, translation_key=CONF_CAMERA_MODE
+                    )
+                )
+            )
+        data_schema = probatio.Schema(schema)
         return self.async_show_form(step_id="cameras", data_schema=data_schema)
 
     async def async_step_accessory(

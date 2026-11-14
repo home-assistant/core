@@ -57,6 +57,9 @@
       },
       "light_detection": {
         "default": "mdi:brightness-auto"
+      },
+      "mute": {
+        "default": "mdi:volume-off"
       }
     }
   },

@@ -36,6 +36,7 @@ from pytest_homeassistant.typing import (
 from homeassistant import core as ha
 from homeassistant.components import binary_sensor, mqtt, sensor
 from homeassistant.components.mqtt import debug_info
+from homeassistant.components.mqtt.client import MQTT
 from homeassistant.components.mqtt.const import DOMAIN, MqttService, MqttServiceArgument
 from homeassistant.components.mqtt.models import (
     MessageCallbackType,
@@ -1052,6 +1053,174 @@ async def test_reload_entry_with_restored_subscriptions(
     assert recorded_calls[0].payload == "test-payload3"
     assert recorded_calls[1].topic == "wild/any/card"
     assert recorded_calls[1].payload == "wild-card-payload3"
+
+
+@pytest.mark.parametrize(
+    ("topic", "message_topic"),
+    [
+        pytest.param("test-topic", "test-topic", id="simple"),
+        pytest.param("wild/+/card", "wild/any/card", id="wildcard"),
+    ],
+)
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.UNSUBSCRIBE_COOLDOWN", 0.0)
+async def test_unsubscribe_after_reload(
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+    mock_debouncer: asyncio.Event,
+    record_calls: MessageCallbackType,
+    recorded_calls: list[ReceiveMessage],
+    topic: str,
+    message_topic: str,
+) -> None:
+    """Test unsubscribing a subscription that was restored after a reload."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={mqtt.CONF_BROKER: "test-broker"},
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
+    )
+    entry.add_to_hass(hass)
+    hass.config.components.add(DOMAIN)
+    with patch("homeassistant.config.load_yaml_config_file", return_value={}):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+
+    mock_debouncer.clear()
+    unsub = await mqtt.async_subscribe(hass, topic, record_calls)
+    await mock_debouncer.wait()
+    original_client = hass.data[mqtt.DATA_MQTT].client
+
+    # Reload twice, so the subscription is restored from a restored subscription
+    for _ in range(2):
+        with patch("homeassistant.config.load_yaml_config_file", return_value={}):
+            mock_debouncer.clear()
+            assert await hass.config_entries.async_reload(entry.entry_id)
+            await mock_debouncer.wait()
+
+    # The paho mock does not call on_disconnect when the client disconnects
+    original_client.connected = False
+
+    async_fire_mqtt_message(hass, message_topic, "before-unsub")
+    assert len(recorded_calls) == 1
+
+    mqtt_client_mock.unsubscribe.reset_mock()
+    mock_debouncer.clear()
+    unsub()
+    await mock_debouncer.wait()
+    mqtt_client_mock.unsubscribe.assert_called_once_with([topic])
+
+    async_fire_mqtt_message(hass, message_topic, "after-unsub")
+    assert len(recorded_calls) == 1
+
+    with pytest.raises(HomeAssistantError, match="twice"):
+        unsub()
+
+
+@pytest.mark.parametrize(
+    ("topic", "message_topic"),
+    [
+        pytest.param("test-topic", "test-topic", id="simple"),
+        pytest.param("wild/+/card", "wild/any/card", id="wildcard"),
+    ],
+)
+@pytest.mark.usefixtures("mqtt_client_mock")
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
+async def test_unsubscribe_while_entry_unloaded(
+    hass: HomeAssistant,
+    mock_debouncer: asyncio.Event,
+    record_calls: MessageCallbackType,
+    recorded_calls: list[ReceiveMessage],
+    topic: str,
+    message_topic: str,
+) -> None:
+    """Test a subscription removed while the entry is unloaded is not restored."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={mqtt.CONF_BROKER: "test-broker"},
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
+    )
+    entry.add_to_hass(hass)
+    hass.config.components.add(DOMAIN)
+    with patch("homeassistant.config.load_yaml_config_file", return_value={}):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+
+    mock_debouncer.clear()
+    unsub = await mqtt.async_subscribe(hass, topic, record_calls)
+    await mock_debouncer.wait()
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    unsub()
+
+    with patch("homeassistant.config.load_yaml_config_file", return_value={}):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, message_topic, "after-unsub")
+    assert not recorded_calls
+
+
+@pytest.mark.parametrize(
+    ("topic", "message_topic"),
+    [
+        pytest.param("test-topic", "test-topic", id="simple"),
+        pytest.param("wild/+/card", "wild/any/card", id="wildcard"),
+    ],
+)
+@pytest.mark.usefixtures("mqtt_client_mock")
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
+async def test_unsubscribe_before_subscriptions_are_restored(
+    hass: HomeAssistant,
+    mock_debouncer: asyncio.Event,
+    record_calls: MessageCallbackType,
+    recorded_calls: list[ReceiveMessage],
+    topic: str,
+    message_topic: str,
+) -> None:
+    """Test unsubscribing while the reloaded client is not started yet."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={mqtt.CONF_BROKER: "test-broker"},
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
+    )
+    entry.add_to_hass(hass)
+    hass.config.components.add(DOMAIN)
+    with patch("homeassistant.config.load_yaml_config_file", return_value={}):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+
+    mock_debouncer.clear()
+    unsub = await mqtt.async_subscribe(hass, topic, record_calls)
+    await mock_debouncer.wait()
+
+    original_init_client = MQTT.async_init_client
+    init_started = asyncio.Event()
+    resume_init = asyncio.Event()
+
+    async def _paused_init_client(self: MQTT) -> None:
+        init_started.set()
+        await resume_init.wait()
+        await original_init_client(self)
+
+    with (
+        patch("homeassistant.config.load_yaml_config_file", return_value={}),
+        patch.object(MQTT, "async_init_client", _paused_init_client),
+    ):
+        reload_task = hass.async_create_task(
+            hass.config_entries.async_reload(entry.entry_id)
+        )
+        await init_started.wait()
+        # The new client is set, but the saved subscriptions are not restored yet
+        unsub()
+        resume_init.set()
+        assert await reload_task
+        await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, message_topic, "after-unsub")
+    assert not recorded_calls
 
 
 @pytest.mark.usefixtures("mqtt_client_mock")

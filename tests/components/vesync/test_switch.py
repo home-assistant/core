@@ -184,6 +184,14 @@ async def test_turn_on_off_display_raises_error(
             "Device does not support toggling light detection.",
             id="light_detection",
         ),
+        pytest.param(
+            "SmartTowerFan",
+            "switch.smarttowerfan_mute",
+            SERVICE_TURN_ON,
+            "pyvesync.devices.vesyncfan.VeSyncTowerFan.toggle_mute",
+            "Device does not support toggling mute.",
+            id="mute",
+        ),
     ],
 )
 async def test_switch_unsupported_command(
@@ -295,6 +303,19 @@ async def test_switch_unsupported_command(
             "switch.air_purifier_vital_200s_light_detection",
             SERVICE_TURN_OFF,
             "pyvesync.devices.vesyncpurifier.VeSyncAirBaseV2.toggle_light_detection",
+        ),
+        # mute switch for fan
+        (
+            "SmartTowerFan",
+            "switch.smarttowerfan_mute",
+            SERVICE_TURN_ON,
+            "pyvesync.devices.vesyncfan.VeSyncTowerFan.toggle_mute",
+        ),
+        (
+            "SmartTowerFan",
+            "switch.smarttowerfan_mute",
+            SERVICE_TURN_OFF,
+            "pyvesync.devices.vesyncfan.VeSyncTowerFan.toggle_mute",
         ),
     ],
 )
