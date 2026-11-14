@@ -88,12 +88,12 @@ async def test_reminder_is_created_inside_window(
 
 
 @pytest.mark.parametrize("reminder_enabled", [False, True])
-async def test_expired_key_starts_reauth(
+async def test_expired_key_does_not_start_reauth(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     reminder_enabled: bool,
 ) -> None:
-    """Test an expired key starts reauthentication."""
+    """Test an expired date does not start reauthentication."""
 
     await hass.config.async_set_time_zone("UTC")
     freezer.move_to("2021-04-02 12:00:00+00:00")
@@ -108,17 +108,21 @@ async def test_expired_key_starts_reauth(
     ):
         async_schedule_api_key_reminder(hass, entry)
 
-    dismiss.assert_called_once()
-    create.assert_not_called()
+    start_reauth.assert_not_called()
     track.assert_not_called()
-    start_reauth.assert_called_once_with(hass)
+    if reminder_enabled:
+        create.assert_called_once()
+        dismiss.assert_not_called()
+    else:
+        create.assert_not_called()
+        dismiss.assert_called_once()
 
 
 async def test_disabled_reminder(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test a disabled reminder schedules expiry without a notification."""
+    """Test a disabled reminder schedules nothing."""
 
     await hass.config.async_set_time_zone("UTC")
     freezer.move_to("2021-03-30 12:00:00+00:00")
@@ -134,9 +138,7 @@ async def test_disabled_reminder(
 
     dismiss.assert_called_once()
     create.assert_not_called()
-    assert [call.args[2] for call in track.call_args_list] == [
-        dt_util.as_utc(dt_util.start_of_local_day(datetime(2021, 4, 1))),
-    ]
+    track.assert_not_called()
 
 
 async def test_missing_date(

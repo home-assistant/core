@@ -55,14 +55,25 @@ def _async_create_api_key_expiry_notification(
 
 
 @callback
-def _async_handle_api_key_expired(
+def _async_create_api_key_expired_notification(
     hass: HomeAssistant,
     entry: ConfigEntry,
+    expiry_date: date,
     _now: datetime | None = None,
 ) -> None:
-    """Dismiss the reminder and request reauthentication for an expired key."""
-    async_dismiss_api_key_reminder(hass, entry)
-    entry.async_start_reauth(hass)
+    """Create a notification when the estimated expiry date has passed."""
+    persistent_notification.async_create(
+        hass,
+        (
+            "The configured expiry date for your AEMET API key was "
+            f"{expiry_date.isoformat()}. AEMET may still accept the key for now, "
+            "but it can stop working at any time. Request a new key at "
+            f"{API_KEY_URL} and update it in the integration options. Home "
+            "Assistant will start reauthentication when AEMET rejects the key."
+        ),
+        title="AEMET API key expiry date passed",
+        notification_id=_notification_id(entry),
+    )
 
 
 @callback
@@ -88,8 +99,12 @@ def async_schedule_api_key_reminder(
     expiry_date = issue_date + relativedelta(months=API_KEY_VALIDITY_MONTHS)
     now = dt_util.now()
 
+    if not entry.options.get(CONF_API_KEY_REMINDER, False):
+        async_dismiss_api_key_reminder(hass, entry)
+        return None
+
     if now.date() >= expiry_date:
-        _async_handle_api_key_expired(hass, entry)
+        _async_create_api_key_expired_notification(hass, entry, expiry_date)
         return None
 
     async_dismiss_api_key_reminder(hass, entry)
@@ -97,13 +112,15 @@ def async_schedule_api_key_reminder(
     unsubs: list[Callable[[], None]] = [
         async_track_point_in_utc_time(
             hass,
-            partial(_async_handle_api_key_expired, hass, entry),
+            partial(
+                _async_create_api_key_expired_notification,
+                hass,
+                entry,
+                expiry_date,
+            ),
             dt_util.as_utc(dt_util.start_of_local_day(expiry_date)),
         )
     ]
-
-    if not entry.options.get(CONF_API_KEY_REMINDER, False):
-        return partial(_async_cancel_reminders, unsubs)
 
     reminder_date = expiry_date - timedelta(days=API_KEY_REMINDER_DAYS)
     reminder_dt = dt_util.start_of_local_day(reminder_date) + timedelta(hours=9)

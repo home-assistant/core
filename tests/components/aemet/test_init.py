@@ -14,7 +14,7 @@ from homeassistant.components.aemet.const import (
     CONF_RADAR_UPDATES,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -208,10 +208,17 @@ async def test_api_key_expiry_lifecycle(
         async_fire_time_changed(hass, dt_util.utcnow())
         await hass.async_block_till_done()
 
-    assert not pn._async_get_or_create_notifications(hass)
-    reauth_flows = hass.config_entries.flow.async_progress()
-    assert len(reauth_flows) == 1
-    assert reauth_flows[0]["context"]["source"] == SOURCE_REAUTH
+        notifications = pn._async_get_or_create_notifications(hass)
+        if reminder_enabled:
+            notification = notifications[
+                f"{DOMAIN}_api_key_expiry_{config_entry.entry_id}"
+            ]
+            assert notification["title"] == "AEMET API key expiry date passed"
+            assert "may still accept the key" in notification["message"]
+        else:
+            assert not notifications
+
+    assert not hass.config_entries.flow.async_progress()
 
 
 async def test_api_key_reminder_dismissed_on_unload(
