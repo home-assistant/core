@@ -45,11 +45,11 @@ def _async_create_api_key_expiry_notification(
     persistent_notification.async_create(
         hass,
         (
-            f"Your AEMET API key expires on {expiry_date.isoformat()}. "
+            f"Your AEMET API key is expected to expire on {expiry_date.isoformat()}. "
             f"Request a new one at {API_KEY_URL} and update it in the "
             "integration options."
         ),
-        title="AEMET API key expiring soon",
+        title="AEMET API key may be expiring soon",
         notification_id=_notification_id(entry),
     )
 

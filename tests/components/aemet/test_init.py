@@ -1,6 +1,6 @@
 """Define tests for the AEMET OpenData init."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from aemet_opendata.exceptions import AemetTimeout, AuthError
 from freezegun.api import FrozenDateTimeFactory
@@ -17,6 +17,7 @@ from homeassistant.components.aemet.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
@@ -163,6 +164,60 @@ async def test_update_options_failed_reload_cancels_pending_reminder(
     assert notification_id not in pn._async_get_or_create_notifications(hass)
 
 
+async def test_reauth_clears_reminder_through_update_listener(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test reauthentication clears reminders through the update listener."""
+    await hass.config.async_set_time_zone("UTC")
+    freezer.move_to("2021-03-30 12:00:00+00:00")
+    entry = await async_init_integration(
+        hass,
+        data={CONF_API_KEY_DATE: "2021-01-01"},
+        options={CONF_API_KEY_REMINDER: True},
+    )
+    notification_id = f"{DOMAIN}_api_key_expiry_{entry.entry_id}"
+    assert notification_id in pn._async_get_or_create_notifications(hass)
+
+    mocked_aemet = MagicMock()
+    mocked_aemet.select_coordinates = AsyncMock()
+
+    with (
+        patch(
+            "homeassistant.components.aemet.AEMET.api_call",
+            side_effect=mock_api_call,
+        ),
+        patch(
+            "homeassistant.components.aemet.config_flow.AEMET",
+            return_value=mocked_aemet,
+        ),
+    ):
+        result = await entry.start_reauth_flow(hass)
+        assert result["type"] is FlowResultType.FORM
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_API_KEY: "new-key",
+                CONF_API_KEY_DATE: "2021-03-30",
+            },
+        )
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "reauth_successful"
+        assert entry.data[CONF_API_KEY] == "new-key"
+        assert entry.data[CONF_API_KEY_DATE] == "2021-03-30"
+        assert entry.state is ConfigEntryState.LOADED
+        assert notification_id not in pn._async_get_or_create_notifications(hass)
+
+        freezer.move_to("2021-04-01 00:00:01+00:00")
+        async_fire_time_changed(hass, dt_util.utcnow())
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert notification_id not in pn._async_get_or_create_notifications(hass)
+
+
 @pytest.mark.parametrize("reminder_enabled", [False, True])
 async def test_api_key_expiry_lifecycle(
     hass: HomeAssistant,
@@ -200,7 +255,8 @@ async def test_api_key_expiry_lifecycle(
             notification = notifications[
                 f"{DOMAIN}_api_key_expiry_{config_entry.entry_id}"
             ]
-            assert notification["title"] == "AEMET API key expiring soon"
+            assert notification["title"] == "AEMET API key may be expiring soon"
+            assert "is expected to expire" in notification["message"]
         else:
             assert not notifications
 
