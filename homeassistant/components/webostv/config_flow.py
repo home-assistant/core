@@ -6,23 +6,31 @@ from urllib.parse import urlparse
 
 from aiowebostv import WebOsClient, WebOsTvPairError
 import probatio
+from wakeonlan import create_magic_packet
 
 from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
 )
-from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST
+from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST, CONF_MAC
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import TextSelector
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_UDN,
     SsdpServiceInfo,
 )
 
-from .const import CONF_SOURCES, DEFAULT_NAME, DOMAIN, WEBOSTV_EXCEPTIONS
+from .const import (
+    CONF_MAC_ADDRESSES,
+    CONF_SOURCES,
+    DEFAULT_NAME,
+    DOMAIN,
+    WEBOSTV_EXCEPTIONS,
+)
 from .coordinator import WebOsTvConfigEntry
 from .helpers import get_sources
 
@@ -163,7 +171,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             else:
                 reauth_entry = self._get_reauth_entry()
                 data = {CONF_HOST: self._host, CONF_CLIENT_SECRET: client.client_key}
-                return self.async_update_reload_and_abort(reauth_entry, data=data)
+                return self.async_update_reload_and_abort(
+                    reauth_entry, data_updates=data
+                )
 
         return self.async_show_form(step_id="reauth_confirm", errors=errors)
 
@@ -188,7 +198,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(client.tv_info.hello["deviceUUID"])
                 self._abort_if_unique_id_mismatch(reason="wrong_device")
                 data = {CONF_HOST: host, CONF_CLIENT_SECRET: client.client_key}
-                return self.async_update_reload_and_abort(reconfigure_entry, data=data)
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, data_updates=data
+                )
 
         return self.async_show_form(
             step_id="reconfigure",
@@ -215,10 +227,25 @@ class OptionsFlowHandler(OptionsFlowWithReload):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the options."""
+        return await self._async_options(user_input)
+
+    async def _async_options(
+        self, user_input: dict[str, Any] | None
+    ) -> ConfigFlowResult:
+        """Show and save the options for the active Wake-on-LAN mode."""
         errors = {}
         if user_input is not None:
-            options_input = {CONF_SOURCES: user_input[CONF_SOURCES]}
-            return self.async_create_entry(title="", data=options_input)
+            mac = user_input.get(CONF_MAC)
+            try:
+                if mac:
+                    create_magic_packet(mac)
+            except ValueError:
+                errors[CONF_MAC] = "invalid_mac"
+            else:
+                options_input = {CONF_SOURCES: user_input[CONF_SOURCES]}
+                if mac:
+                    options_input[CONF_MAC] = dr.format_mac(mac)
+                return self.async_create_entry(title="", data=options_input)
         # Get sources
         sources_list = []
         try:
@@ -240,9 +267,35 @@ class OptionsFlowHandler(OptionsFlowWithReload):
                     CONF_SOURCES,
                     description={"suggested_value": sources},
                 ): cv.multi_select({source: source for source in sources_list}),
+                probatio.Optional(
+                    CONF_MAC,
+                    description={
+                        "suggested_value": self.config_entry.options.get(CONF_MAC)
+                    },
+                ): TextSelector(),
             }
         )
 
+        step_id = "init"
+        placeholders = {}
+        if mac := self.config_entry.options.get(CONF_MAC):
+            step_id = "manual"
+            placeholders = {"mac_address": mac}
+        elif (
+            isinstance(macs := self.config_entry.data.get(CONF_MAC_ADDRESSES), dict)
+            and macs
+        ):
+            step_id = "automatic"
+            placeholders = {
+                "wired_mac": macs.get("wiredInfo", "—"),
+                "wifi_mac": macs.get("wifiInfo", "—"),
+            }
         return self.async_show_form(
-            step_id="init", data_schema=options_schema, errors=errors
+            step_id=step_id,
+            data_schema=options_schema,
+            errors=errors,
+            description_placeholders=placeholders,
         )
+
+    async_step_automatic = async_step_init
+    async_step_manual = async_step_init
