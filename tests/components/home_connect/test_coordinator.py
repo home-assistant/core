@@ -230,13 +230,13 @@ async def test_coordinator_not_fetching_on_disconnected_appliance(
     """Test that the coordinator does not fetch anything on disconnected appliance."""
     appliance.connected = False
 
-    with caplog.at_level("ERROR"):
-        await integration_setup(client)
+    await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
 
     for method in INITIAL_FETCH_CLIENT_METHODS:
         assert getattr(client, method).call_count == 0
-    assert not any(record.levelname == "ERROR" for record in caplog.records)
+    assert "is unavailable" in caplog.text
+    assert "Error fetching" not in caplog.text
 
 
 @pytest.mark.parametrize(
