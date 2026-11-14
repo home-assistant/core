@@ -3,6 +3,7 @@
 import logging
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
 from sentry_sdk.utils import BadDsn
 
 from homeassistant.components.sentry.const import (
@@ -20,8 +21,6 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
-
 
 async def test_full_user_flow_implementation(hass: HomeAssistant) -> None:
     """Test we get the form."""
@@ -36,7 +35,7 @@ async def test_full_user_flow_implementation(hass: HomeAssistant) -> None:
         patch("homeassistant.components.sentry.config_flow.Dsn"),
         patch(
             "homeassistant.components.sentry.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -83,6 +82,20 @@ async def test_user_flow_bad_dsn(hass: HomeAssistant) -> None:
     assert result2.get("type") is FlowResultType.FORM
     assert result2.get("errors") == {"base": "bad_dsn"}
 
+    with (
+        patch("homeassistant.components.sentry.config_flow.Dsn"),
+        patch(
+            "homeassistant.components.sentry.async_setup_entry",
+            return_value=None,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"dsn": "http://public@sentry.local/1"},
+        )
+
+    assert result3.get("type") is FlowResultType.CREATE_ENTRY
+
 
 async def test_user_flow_unknown_exception(hass: HomeAssistant) -> None:
     """Test we handle any unknown exception error."""
@@ -102,6 +115,20 @@ async def test_user_flow_unknown_exception(hass: HomeAssistant) -> None:
     assert result2.get("type") is FlowResultType.FORM
     assert result2.get("errors") == {"base": "unknown"}
 
+    with (
+        patch("homeassistant.components.sentry.config_flow.Dsn"),
+        patch(
+            "homeassistant.components.sentry.async_setup_entry",
+            return_value=None,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"dsn": "http://public@sentry.local/1"},
+        )
+
+    assert result3.get("type") is FlowResultType.CREATE_ENTRY
+
 
 async def test_options_flow(hass: HomeAssistant) -> None:
     """Test options config flow."""
@@ -111,7 +138,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.sentry.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.sentry.async_setup_entry", return_value=None):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 

@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import MagicMock, PropertyMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.camera import CameraState
 from homeassistant.components.zoneminder.const import DOMAIN
@@ -11,8 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .conftest import create_mock_monitor, create_mock_zm_client
-
-from tests.common import async_fire_time_changed
 
 
 async def _setup_zm_with_cameras(

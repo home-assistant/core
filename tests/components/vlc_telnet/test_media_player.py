@@ -6,6 +6,7 @@ from unittest.mock import MagicMock
 from aiovlc.exceptions import CommandError, ConnectError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
@@ -35,8 +36,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-
-from tests.common import async_fire_time_changed
 
 ENTITY_ID = "media_player.vlc_telnet"
 

@@ -78,6 +78,7 @@ class OpenGarageCover(OpenGarageEntity, CoverEntity):
             return
         self._state_before_move = self._state
         self._state = CoverState.CLOSING
+        self.async_write_ha_state()
         await self._push_button()
 
     @override
@@ -87,6 +88,7 @@ class OpenGarageCover(OpenGarageEntity, CoverEntity):
             return
         self._state_before_move = self._state
         self._state = CoverState.OPENING
+        self.async_write_ha_state()
         await self._push_button()
 
     @callback
@@ -103,6 +105,16 @@ class OpenGarageCover(OpenGarageEntity, CoverEntity):
         else:
             self._state = state
 
+    @property
+    @override
+    def current_cover_position(self) -> int | None:
+        """Return current position of cover (0=closed, 100=open)."""
+        if self._state == CoverState.CLOSED:
+            return 0
+        if self._state == CoverState.OPEN:
+            return 100
+        return None
+
     async def _push_button(self):
         """Send commands to API."""
         result = await self.coordinator.open_garage_connection.push_button()
@@ -118,3 +130,4 @@ class OpenGarageCover(OpenGarageEntity, CoverEntity):
 
         self._state = self._state_before_move
         self._state_before_move = None
+        self.async_write_ha_state()

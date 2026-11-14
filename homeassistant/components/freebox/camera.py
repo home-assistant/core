@@ -1,13 +1,18 @@
 """Support for Freebox cameras."""
 
 from typing import Any, override
+from urllib.parse import quote
 
 from aiohttp import web
 from haffmpeg.camera import CameraMjpeg
 from haffmpeg.tools import IMAGE_JPEG
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
-from homeassistant.components.ffmpeg import DATA_FFMPEG, FFmpegManager, async_get_image
+from homeassistant.components.ffmpeg import (
+    FFmpegManager,
+    async_get_image,
+    get_ffmpeg_manager,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
@@ -62,6 +67,23 @@ def add_entities(
         async_add_entities(new_tracked, True)
 
 
+def _quote_credentials(url: str) -> str:
+    """Quote the credentials in a stream URL.
+
+    The Freebox generates the camera password, which can contain characters like
+    a slash that break parsing the URL if they are not percent-encoded.
+    """
+    scheme, separator, rest = url.partition("://")
+    credentials, at_sign, location = rest.rpartition("@")
+    if not separator or not at_sign:
+        return url
+
+    user, colon, password = credentials.partition(":")
+    return (
+        f"{scheme}://{quote(user, safe='')}{colon}{quote(password, safe='')}@{location}"
+    )
+
+
 class FreeboxCamera(FreeboxHomeEntity, Camera):
     """Representation of a Freebox camera."""
 
@@ -75,7 +97,7 @@ class FreeboxCamera(FreeboxHomeEntity, Camera):
         super().__init__(router, node)
         Camera.__init__(self)
 
-        self._ffmpeg: FFmpegManager = hass.data[DATA_FFMPEG]
+        self._ffmpeg: FFmpegManager = get_ffmpeg_manager(hass)
         self._input: str = node["props"]["Stream"]
 
         self._command_motion_detection = self.get_command_id(
@@ -87,7 +109,7 @@ class FreeboxCamera(FreeboxHomeEntity, Camera):
     @override
     async def stream_source(self) -> str:
         """Return the stream source."""
-        return self._input.split(" ")[-1]
+        return _quote_credentials(self._input.split(" ")[-1])
 
     @override
     async def async_camera_image(

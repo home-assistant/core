@@ -4,12 +4,8 @@ from unittest.mock import call
 
 from aioesphomeapi import APIClient, SubDeviceInfo, SwitchInfo, SwitchState
 
-from homeassistant.components.switch import (
-    DOMAIN as SWITCH_DOMAIN,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-)
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
+from homeassistant.const import STATE_OFF, STATE_ON, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 
 from .conftest import MockESPHomeDeviceType, MockGenericDeviceEntryType
@@ -42,16 +38,16 @@ async def test_switch_generic_entity(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.test_my_switch"},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: "switch.test_my_switch"},
         blocking=True,
     )
     mock_client.switch_command.assert_has_calls([call(1, True, device_id=0)])
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.test_my_switch"},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: "switch.test_my_switch"},
         blocking=True,
     )
     mock_client.switch_command.assert_has_calls([call(1, False, device_id=0)])
@@ -110,8 +106,8 @@ async def test_switch_sub_device_non_zero_device_id(
     # Test turning on the sub-device switch - should pass device_id=11111111
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.sub_device_sub_switch"},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: "switch.sub_device_sub_switch"},
         blocking=True,
     )
     mock_client.switch_command.assert_has_calls([call(2, True, device_id=11111111)])
@@ -120,8 +116,8 @@ async def test_switch_sub_device_non_zero_device_id(
     # Test turning off the sub-device switch - should pass device_id=11111111
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.sub_device_sub_switch"},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: "switch.sub_device_sub_switch"},
         blocking=True,
     )
     mock_client.switch_command.assert_has_calls([call(2, False, device_id=11111111)])
@@ -130,8 +126,8 @@ async def test_switch_sub_device_non_zero_device_id(
     # Test main device switch still uses device_id=0
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.test_main_switch"},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: "switch.test_main_switch"},
         blocking=True,
     )
     mock_client.switch_command.assert_has_calls([call(1, True, device_id=0)])
@@ -139,8 +135,8 @@ async def test_switch_sub_device_non_zero_device_id(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.test_main_switch"},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: "switch.test_main_switch"},
         blocking=True,
     )
     mock_client.switch_command.assert_has_calls([call(1, False, device_id=0)])

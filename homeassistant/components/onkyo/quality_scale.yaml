@@ -47,7 +47,7 @@ rules:
 
   # Gold
   devices: todo
-  diagnostics: todo
+  diagnostics: done
   discovery: done
   discovery-update-info: done
   docs-data-update: todo
@@ -65,7 +65,7 @@ rules:
   entity-device-class: todo
   entity-disabled-by-default: done
   entity-translations: todo
-  exception-translations: todo
+  exception-translations: done
   icon-translations: todo
   reconfiguration-flow: done
   repair-issues: done

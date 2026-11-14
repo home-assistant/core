@@ -2,19 +2,11 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
       "cloud_not_enabled": "Please make sure you run Home Assistant with `{default_config}` enabled in your configuration.yaml.",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "missing_scopes": "Authentication failed. Please make sure you have granted all required permissions.",
-      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
-      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
-      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
-      "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
-      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
-      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "reauth_account_mismatch": "Authenticated account does not match the account to be reauthenticated. Please log in with the correct account and pick the right location.",
-      "reauth_location_mismatch": "Authenticated location does not match the location to be reauthenticated. Please log in with the correct account and pick the right location.",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_location_mismatch": "Authenticated location does not match the location to be reauthenticated. Please log in with the correct account and pick the right location."
     },
     "error": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
@@ -137,6 +129,7 @@
           },
           "preset_mode": {
             "state": {
+              "dry_comfort": "Dry comfort",
               "long_wind": "Long wind",
               "motion_direct": "Motion direct",
               "motion_indirect": "Motion indirect",
@@ -200,6 +193,15 @@
     "media_player": {
       "media_player": {
         "state_attributes": {
+          "sound_mode": {
+            "state": {
+              "adaptive_sound": "Adaptive sound",
+              "amplify": "Amplify",
+              "game": "Game",
+              "standard": "Standard",
+              "surround": "Surround"
+            }
+          },
           "source": {
             "state": {
               "am": "AM",
@@ -265,6 +267,41 @@
           "standard": "Standard"
         }
       },
+      "dishwasher_washing_course": {
+        "name": "Cycle",
+        "state": {
+          "ai": "AI Wash",
+          "auto": "Auto",
+          "baby_bottle": "Baby bottle",
+          "babycare": "Baby care",
+          "chef": "Chef",
+          "cold_rinse": "Cold rinse",
+          "daily": "Daily",
+          "delicate": "Delicate",
+          "drinkware": "Drinkware",
+          "dry_only": "Dry only",
+          "eco": "Eco",
+          "express": "Express",
+          "extra_silence": "Extra silence",
+          "glasses": "Delicate",
+          "heavy": "Heavy",
+          "intensive": "Intensive",
+          "machine_care": "Machine care",
+          "night": "Night",
+          "night_silence": "Night silence",
+          "normal": "Normal",
+          "plastics": "Plastic",
+          "pots_and_pans": "Pots and pans",
+          "pre_blast": "Pre blast",
+          "pre_wash": "Pre wash",
+          "quick": "Quick",
+          "rinse_dry": "Rinse dry",
+          "rinse_only": "Rinse only",
+          "self_clean": "Self clean",
+          "steam_soak": "Steam soak",
+          "upper_express": "Upper express"
+        }
+      },
       "dust_filter_alarm": {
         "name": "Dust filter alarm threshold",
         "unit_of_measurement": "hours"
@@ -295,6 +332,15 @@
           "pause": "[%key:common::state::paused%]",
           "run": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::state::run%]",
           "stop": "[%key:common::state::stopped%]"
+        }
+      },
+      "picture_mode": {
+        "name": "Picture mode",
+        "state": {
+          "dynamic": "Dynamic",
+          "movie": "Movie",
+          "natural": "Natural",
+          "standard": "[%key:component::smartthings::entity::media_player::media_player::state_attributes::sound_mode::state::standard%]"
         }
       },
       "robot_cleaner_cleaning_type": {
@@ -535,6 +581,9 @@
       },
       "dryer_mode": {
         "name": "Dryer mode"
+      },
+      "dryer_progress": {
+        "name": "Progress"
       },
       "energy_difference": {
         "name": "Energy difference"
@@ -950,6 +999,9 @@
       "washer_mode": {
         "name": "Washer mode"
       },
+      "washer_progress": {
+        "name": "[%key:component::smartthings::entity::sensor::dryer_progress::name%]"
+      },
       "washer_sub_completion_time": {
         "name": "Upper washer completion time"
       },
@@ -981,6 +1033,9 @@
           "run": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::state::run%]",
           "stop": "[%key:common::state::stopped%]"
         }
+      },
+      "washer_sub_progress": {
+        "name": "Upper washer progress"
       },
       "water_consumption": {
         "name": "Water consumption"
@@ -1117,8 +1172,26 @@
     }
   },
   "exceptions": {
-    "oauth2_implementation_unavailable": {
-      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    "authentication_failed": {
+      "message": "Authentication with SmartThings failed"
+    },
+    "cannot_connect": {
+      "message": "An error occurred while communicating with SmartThings: {error}"
+    },
+    "create_subscription_error": {
+      "message": "Could not create a new SmartThings subscription: {error}"
+    },
+    "delete_subscription_error": {
+      "message": "Could not delete the old SmartThings subscription: {error}"
+    },
+    "dishwasher_machine_state": {
+      "message": "Can only be changed when the dishwasher machine state is {machine_state}"
+    },
+    "missing_token": {
+      "message": "The configuration entry is missing a token, please reauthenticate"
+    },
+    "option_not_supported": {
+      "message": "Option is not supported by the selected cycle"
     },
     "remote_control_status": {
       "message": "Can only be changed when remote control is enabled"

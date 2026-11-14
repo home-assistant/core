@@ -3,15 +3,18 @@
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    SnapshotAssertion,
+    snapshot_platform,
+)
 
-from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN, SERVICE_TURN_ON
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN, SceneService
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import trigger_availability_callback
-
-from tests.common import MockConfigEntry, SnapshotAssertion, snapshot_platform
 
 TEST_SCENE_1_ENTITY_ID = "scene.test_gateway_living_room_evening"
 TEST_SCENE_2_ENTITY_ID = "scene.test_gateway_kitchen_bright"
@@ -60,16 +63,21 @@ async def test_activate_scenes(
     """Test activating single and multiple scenes."""
     await hass.services.async_call(
         SCENE_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: TEST_SCENE_1_ENTITY_ID},
+        SceneService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: TEST_SCENE_1_ENTITY_ID},
         blocking=True,
     )
     mock_scenes[0].activate.assert_called_once()
 
     await hass.services.async_call(
         SCENE_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: [TEST_SCENE_1_ENTITY_ID, TEST_SCENE_2_ENTITY_ID]},
+        SceneService.TURN_ON,
+        {
+            CommonServiceArgument.ENTITY_ID: [
+                TEST_SCENE_1_ENTITY_ID,
+                TEST_SCENE_2_ENTITY_ID,
+            ]
+        },
         blocking=True,
     )
     assert mock_scenes[0].activate.call_count == 2

@@ -47,8 +47,9 @@ async def async_validate_trigger_config(
     ) is None:
         raise InvalidDeviceAutomationConfig(f"Device ID {device_id} is not valid")
 
+    entry_ids = _device_config_entry_ids(device_entry)
     for entry in entries:
-        if entry.entry_id not in device_entry.config_entries:
+        if entry.entry_id not in entry_ids:
             continue
         bridge = entry.runtime_data
         if bridge.api_version == 1:
@@ -72,11 +73,12 @@ async def async_attach_trigger(
     ) is None:
         raise InvalidDeviceAutomationConfig(f"Device ID {device_id} is not valid")
 
+    entry_ids = _device_config_entry_ids(device_entry)
     entry: HueConfigEntry | None = next(
         (
             entry
             for entry in hass.config_entries.async_entries(DOMAIN)
-            if entry.entry_id in device_entry.config_entries
+            if entry.entry_id in entry_ids
         ),
         None,
     )
@@ -112,8 +114,9 @@ async def async_get_triggers(
 
     # Iterate all config entries for this device
     # and work out the bridge version
+    entry_ids = _device_config_entry_ids(device_entry)
     for entry in entries:
-        if entry.entry_id not in device_entry.config_entries:
+        if entry.entry_id not in entry_ids:
             continue
         bridge = entry.runtime_data
 
@@ -121,6 +124,17 @@ async def async_get_triggers(
             return async_get_triggers_v1(bridge, device_entry)
         return async_get_triggers_v2(bridge, device_entry)
     return []
+
+
+def _device_config_entry_ids(device_entry: dr.DeviceEntry) -> set[str]:
+    """Return the ids of the config entries the device belongs to.
+
+    A restored composite has no single owning config entry; the union of the
+    split devices' config entries covers every owning domain.
+    """
+    if device_entry.is_composite_device:
+        return device_entry.config_entries
+    return {device_entry.config_entry_id}
 
 
 async def _async_attach_bridge_trigger(

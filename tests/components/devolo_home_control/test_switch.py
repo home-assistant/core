@@ -2,18 +2,15 @@
 
 from unittest.mock import patch
 
+from devolo_home_control_api.exceptions import SwitchingProtected
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_ON,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.components.devolo_home_control.const import DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
+from homeassistant.const import ATTR_ENTITY_ID, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import configure_integration
@@ -53,7 +50,7 @@ async def test_switch(
     ) as set_value:
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
+            SwitchService.TURN_ON,
             {ATTR_ENTITY_ID: f"{SWITCH_DOMAIN}.test_test"},
             blocking=True,
         )  # In reality, this leads to a websocket message like already tested above
@@ -62,11 +59,43 @@ async def test_switch(
         set_value.reset_mock()
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
+            SwitchService.TURN_OFF,
             {ATTR_ENTITY_ID: f"{SWITCH_DOMAIN}.test_test"},
             blocking=True,
         )  # In reality, this leads to a websocket message like already tested above
         set_value.assert_called_once_with(state=False)
+
+    with (
+        patch(
+            "devolo_home_control_api.properties.binary_switch_property.BinarySwitchProperty.set",
+            return_value=False,
+        ),
+        pytest.raises(HomeAssistantError) as error,
+    ):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SwitchService.TURN_OFF,
+            {ATTR_ENTITY_ID: f"{SWITCH_DOMAIN}.test_test"},
+            blocking=True,
+        )
+    assert error.value.translation_key == "set_failed"
+    assert error.value.translation_domain == DOMAIN
+
+    with (
+        patch(
+            "devolo_home_control_api.properties.binary_switch_property.BinarySwitchProperty.set",
+            side_effect=SwitchingProtected,
+        ),
+        pytest.raises(ServiceValidationError) as error,
+    ):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SwitchService.TURN_OFF,
+            {ATTR_ENTITY_ID: f"{SWITCH_DOMAIN}.test_test"},
+            blocking=True,
+        )
+    assert error.value.translation_key == "switch_protected"
+    assert error.value.translation_domain == DOMAIN
 
     # Emulate websocket message: device went offline
     test_gateway.devices["Test"].status = 1

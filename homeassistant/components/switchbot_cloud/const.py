@@ -24,8 +24,6 @@ VACUUM_FAN_SPEED_MAX = "max"
 
 CLIMATE_PRESET_SCHEDULE = "schedule"
 
-AI_ART_FRAME_UPLOAD_IMAGE_SERVICE = "upload_art_frame_image"
-
 AFTER_COMMAND_REFRESH = 5
 COVER_ENTITY_AFTER_COMMAND_REFRESH = 10
 SMART_RADIATOR_THERMOSTAT_AFTER_COMMAND_REFRESH = 30
@@ -34,6 +32,25 @@ HUMIDITY_LEVELS = {
     34: 101,  # Low humidity mode
     67: 102,  # Medium humidity mode
     100: 103,  # High humidity mode
+}
+
+NIGHT_LIGHT_ON = "on"
+NIGHT_LIGHT_OFF = "off"
+NIGHT_LIGHT_BRIGHT = "bright"
+NIGHT_LIGHT_SOFT = "soft"
+
+STANDING_FAN_NIGHT_LIGHT_PARAMETERS_MAP = {
+    NIGHT_LIGHT_ON: "on",
+    NIGHT_LIGHT_OFF: "off",
+    NIGHT_LIGHT_BRIGHT: "1",
+    NIGHT_LIGHT_SOFT: "2",
+}
+
+BATTERY_CIRCULATOR_FAN_2_PRO_NIGHT_LIGHT_PARAMETERS_MAP = {
+    NIGHT_LIGHT_ON: "on",
+    NIGHT_LIGHT_OFF: "off",
+    NIGHT_LIGHT_BRIGHT: "0",
+    NIGHT_LIGHT_SOFT: "1",
 }
 
 
@@ -58,6 +75,9 @@ DEVICE_SUPPORT_MAP: Final[dict[str, SwitchbotCloudDeviceConfig]] = {
     "Hub 3": SwitchbotCloudDeviceConfig(
         True, entity_config=(Platform.BINARY_SENSOR, Platform.SENSOR)
     ),
+    "Hub 4": SwitchbotCloudDeviceConfig(
+        True, entity_config=(Platform.BINARY_SENSOR, Platform.SENSOR)
+    ),
     "Home Climate Panel": SwitchbotCloudDeviceConfig(
         True, entity_config=(Platform.BINARY_SENSOR, Platform.SENSOR)
     ),
@@ -73,6 +93,9 @@ DEVICE_SUPPORT_MAP: Final[dict[str, SwitchbotCloudDeviceConfig]] = {
         True, entity_config=(Platform.BINARY_SENSOR, Platform.SENSOR, Platform.LOCK)
     ),
     "Smart Lock Ultra": SwitchbotCloudDeviceConfig(
+        True, entity_config=(Platform.SENSOR, Platform.BINARY_SENSOR, Platform.LOCK)
+    ),
+    "Smart Lock Ultra Max": SwitchbotCloudDeviceConfig(
         True, entity_config=(Platform.SENSOR, Platform.BINARY_SENSOR, Platform.LOCK)
     ),
     "Smart Lock Vision": SwitchbotCloudDeviceConfig(
@@ -128,13 +151,13 @@ DEVICE_SUPPORT_MAP: Final[dict[str, SwitchbotCloudDeviceConfig]] = {
     ),
     "Circulator Fan": SwitchbotCloudDeviceConfig(True, entity_config=(Platform.FAN,)),
     "Standing Fan": SwitchbotCloudDeviceConfig(
-        True, entity_config=(Platform.SENSOR, Platform.FAN)
+        True, entity_config=(Platform.SENSOR, Platform.FAN, Platform.SELECT)
     ),
     "Battery Circulator Fan": SwitchbotCloudDeviceConfig(
-        True, entity_config=(Platform.SENSOR, Platform.FAN)
+        True, entity_config=(Platform.SENSOR, Platform.FAN, Platform.SELECT)
     ),
     "Battery Circulator Fan 2 Pro": SwitchbotCloudDeviceConfig(
-        True, entity_config=(Platform.SENSOR, Platform.FAN)
+        True, entity_config=(Platform.SENSOR, Platform.FAN, Platform.SELECT)
     ),
     "Water Detector": SwitchbotCloudDeviceConfig(
         True, entity_config=(Platform.SENSOR, Platform.BINARY_SENSOR)
@@ -143,6 +166,9 @@ DEVICE_SUPPORT_MAP: Final[dict[str, SwitchbotCloudDeviceConfig]] = {
         True, entity_config=(Platform.SENSOR, Platform.BINARY_SENSOR, Platform.COVER)
     ),
     "Curtain3": SwitchbotCloudDeviceConfig(
+        True, entity_config=(Platform.SENSOR, Platform.BINARY_SENSOR, Platform.COVER)
+    ),
+    "Curtain4": SwitchbotCloudDeviceConfig(
         True, entity_config=(Platform.SENSOR, Platform.BINARY_SENSOR, Platform.COVER)
     ),
     "Roller Shade": SwitchbotCloudDeviceConfig(

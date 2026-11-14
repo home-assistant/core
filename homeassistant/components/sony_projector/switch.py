@@ -3,8 +3,8 @@
 import logging
 from typing import Any, override
 
+import probatio
 import pysdcp
-import voluptuous as vol
 
 from homeassistant.components.switch import (
     PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
@@ -22,8 +22,8 @@ DEFAULT_NAME = "Sony Projector"
 
 PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 

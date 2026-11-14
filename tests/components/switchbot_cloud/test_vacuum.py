@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
+from pytest_homeassistant.typing import ClientSessionGenerator
 from switchbot_api import (
     Device,
     VacuumCleanerV2Commands,
@@ -32,8 +33,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 
 from . import configure_integration
-
-from tests.typing import ClientSessionGenerator
 
 
 async def test_coordinator_data_is_none(

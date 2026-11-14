@@ -14,14 +14,19 @@ from pylamarzocco.models import (
 )
 from pylamarzocco.util import InstallationKey
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.lamarzocco.const import CONF_INSTALLATION_KEY, DOMAIN
 from homeassistant.const import CONF_ADDRESS, CONF_MAC, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 
-from . import MOCK_INSTALLATION_KEY, SERIAL_DICT, USER_INPUT, async_init_integration
-
-from tests.common import MockConfigEntry, load_json_object_fixture
+from . import (
+    MOCK_INSTALLATION_KEY,
+    SERIAL_DICT,
+    USER_INPUT,
+    async_init_integration,
+    configure_machine_mock,
+)
 
 
 @pytest.fixture
@@ -102,16 +107,6 @@ def mock_cloud_client() -> Generator[MagicMock]:
 def mock_lamarzocco(device_fixture: ModelName) -> Generator[MagicMock]:
     """Return a mocked LM client."""
 
-    if device_fixture == ModelName.LINEA_MINI:
-        config = load_json_object_fixture("config_mini.json", DOMAIN)
-    elif device_fixture == ModelName.LINEA_MICRA:
-        config = load_json_object_fixture("config_micra.json", DOMAIN)
-    else:
-        config = load_json_object_fixture("config_gs3.json", DOMAIN)
-    schedule = load_json_object_fixture("schedule.json", DOMAIN)
-    settings = load_json_object_fixture("settings.json", DOMAIN)
-    statistics = load_json_object_fixture("statistics.json", DOMAIN)
-
     with (
         patch(
             "homeassistant.components.lamarzocco.LaMarzoccoMachine",
@@ -119,23 +114,9 @@ def mock_lamarzocco(device_fixture: ModelName) -> Generator[MagicMock]:
         ) as machine_mock_init,
     ):
         machine_mock = machine_mock_init.return_value
-
-        machine_mock.serial_number = SERIAL_DICT[device_fixture]
-        machine_mock.dashboard = ThingDashboardConfig.from_dict(config)
-        machine_mock.schedule = ThingSchedulingSettings.from_dict(schedule)
-        machine_mock.settings = ThingSettings.from_dict(settings)
-        machine_mock.statistics = ThingStatistics.from_dict(statistics)
-        machine_mock.dashboard.model_name = device_fixture
-        machine_mock.to_dict.return_value = {
-            "serial_number": machine_mock.serial_number,
-            "dashboard": machine_mock.dashboard.to_dict(),
-            "schedule": machine_mock.schedule.to_dict(),
-            "settings": machine_mock.settings.to_dict(),
-        }
-        machine_mock.connect_dashboard_websocket = AsyncMock()
-        machine_mock.websocket = MagicMock()
-        machine_mock.websocket.connected = True
-        machine_mock.websocket.disconnect = AsyncMock()
+        configure_machine_mock(
+            machine_mock, device_fixture, SERIAL_DICT[device_fixture]
+        )
         yield machine_mock
 
 

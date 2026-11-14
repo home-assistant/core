@@ -2,9 +2,9 @@
 
 from datetime import date
 
-from homeassistant.components.date import DateEntity
+from pytest_homeassistant.common import MockEntity
 
-from tests.common import MockEntity
+from homeassistant.components.date import DateEntity
 
 
 class MockDateEntity(MockEntity, DateEntity):

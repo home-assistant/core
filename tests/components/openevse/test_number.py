@@ -6,18 +6,20 @@ from aiohttp import ContentTypeError, ServerTimeoutError
 from openevsehttp.exceptions import (
     AuthenticationError,
     ParseJSONError,
+    UnknownError,
     UnsupportedFeature,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
 from homeassistant.components.openevse.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -25,8 +27,6 @@ from homeassistant.exceptions import (
     ServiceValidationError,
 )
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -57,8 +57,11 @@ async def test_set_value(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: "number.openevse_mock_config_charge_rate", ATTR_VALUE: 32.0},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: "number.openevse_mock_config_charge_rate",
+            NumberServiceArgument.VALUE: 32.0,
+        },
         blocking=True,
     )
     mock_charger.set_current.assert_called_once_with(32.0)
@@ -67,47 +70,68 @@ async def test_set_value(
 @pytest.mark.parametrize(
     ("raised", "expected", "translation_key", "translation_placeholders"),
     [
-        (
+        pytest.param(
             ValueError("out of range"),
             ServiceValidationError,
             "invalid_value",
             {"value": "32.0"},
+            id="value_error",
         ),
-        (
+        pytest.param(
             AuthenticationError("bad creds"),
             ConfigEntryAuthFailed,
             "authentication_error",
             None,
+            id="auth_error",
         ),
-        (
+        pytest.param(
             TimeoutError("timed out"),
             HomeAssistantError,
             "communication_error",
             None,
+            id="timeout_error",
         ),
-        (
+        pytest.param(
             ServerTimeoutError("timed out"),
             HomeAssistantError,
             "communication_error",
             None,
+            id="server_timeout_error",
         ),
-        (
+        pytest.param(
             ParseJSONError("bad json"),
             HomeAssistantError,
             "communication_error",
             None,
+            id="parse_json_error",
         ),
-        (
+        pytest.param(
             UnsupportedFeature("old firmware"),
             HomeAssistantError,
             "unsupported_feature",
             None,
+            id="unsupported_feature",
         ),
-        (
+        pytest.param(
             ContentTypeError(MagicMock(), (), message="bad content"),
             HomeAssistantError,
             "communication_error",
             None,
+            id="content_type_error",
+        ),
+        pytest.param(
+            UnknownError("unknown error"),
+            HomeAssistantError,
+            "communication_error",
+            None,
+            id="unknown_error",
+        ),
+        pytest.param(
+            RuntimeError("runtime error"),
+            HomeAssistantError,
+            "communication_error",
+            None,
+            id="runtime_error",
         ),
     ],
 )
@@ -130,10 +154,10 @@ async def test_set_value_raises(
     with pytest.raises(expected) as exc_info:
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: "number.openevse_mock_config_charge_rate",
-                ATTR_VALUE: 32.0,
+                CommonServiceArgument.ENTITY_ID: "number.openevse_mock_config_charge_rate",
+                NumberServiceArgument.VALUE: 32.0,
             },
             blocking=True,
         )

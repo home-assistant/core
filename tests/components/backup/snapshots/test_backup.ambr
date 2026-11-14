@@ -3,6 +3,8 @@
   dict({
     'id': 1,
     'result': dict({
+      'agent_error_translations': dict({
+      }),
       'agent_errors': dict({
       }),
     }),
@@ -14,6 +16,8 @@
   dict({
     'id': 1,
     'result': dict({
+      'agent_error_translations': dict({
+      }),
       'agent_errors': dict({
       }),
     }),
@@ -25,6 +29,8 @@
   dict({
     'id': 1,
     'result': dict({
+      'agent_error_translations': dict({
+      }),
       'agent_errors': dict({
       }),
     }),
@@ -51,6 +57,8 @@
   dict({
     'id': 2,
     'result': dict({
+      'agent_error_translations': dict({
+      }),
       'agent_errors': dict({
       }),
       'backups': list([
@@ -152,6 +160,8 @@
   dict({
     'id': 2,
     'result': dict({
+      'agent_error_translations': dict({
+      }),
       'agent_errors': dict({
       }),
       'backups': list([
@@ -186,6 +196,8 @@
   dict({
     'id': 2,
     'result': dict({
+      'agent_error_translations': dict({
+      }),
       'agent_errors': dict({
       }),
       'backups': list([
@@ -220,6 +232,8 @@
   dict({
     'id': 2,
     'result': dict({
+      'agent_error_translations': dict({
+      }),
       'agent_errors': dict({
       }),
       'backups': list([
@@ -254,6 +268,8 @@
   dict({
     'id': 2,
     'result': dict({
+      'agent_error_translations': dict({
+      }),
       'agent_errors': dict({
       }),
       'backups': list([

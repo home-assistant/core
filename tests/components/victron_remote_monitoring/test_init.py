@@ -1,12 +1,11 @@
 """Tests for Victron Remote Monitoring integration setup and auth handling."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from victron_vrm.exceptions import AuthenticationError, VictronVRMError
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(

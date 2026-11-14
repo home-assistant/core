@@ -1,8 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
@@ -56,12 +55,29 @@
       }
     }
   },
+  "entity": {
+    "light": {
+      "button_light": {
+        "name": "LED {channel_name}"
+      }
+    },
+    "select": {
+      "select_program": {
+        "name": "Program"
+      }
+    },
+    "sensor": {
+      "counter": {
+        "name": "{channel_name} counter"
+      }
+    }
+  },
   "exceptions": {
     "api_call_failed": {
       "message": "Action execute for {entity} failed."
     },
     "clear_cache_failed": {
-      "message": "Could not clear the Velbus cache: {error}"
+      "message": "Cannot clear the Velbus cache at {path}."
     },
     "connection_failed": {
       "message": "Could not connect to Velbus."
@@ -71,6 +87,9 @@
     },
     "module_not_found": {
       "message": "Module with address {address} not found."
+    },
+    "no_modules": {
+      "message": "No Velbus modules found, please check your VLP file."
     },
     "scan_failed": {
       "message": "Scan service: {error}."

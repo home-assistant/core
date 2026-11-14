@@ -3,6 +3,7 @@
 from collections.abc import Mapping
 from typing import Any, NamedTuple, override
 
+import probatio
 from simplipy import API
 from simplipy.errors import InvalidCredentialsError, SimplipyError
 from simplipy.util.auth import (
@@ -10,10 +11,9 @@ from simplipy.util.auth import (
     get_auth0_code_verifier,
     get_auth_url,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
-from homeassistant.const import CONF_CODE, CONF_TOKEN, CONF_URL, CONF_USERNAME
+from homeassistant.const import CONF_CODE, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
@@ -21,14 +21,13 @@ from . import SimpliSafeConfigEntry
 from .const import DOMAIN, LOGGER
 
 CONF_AUTH_CODE = "auth_code"
-CONF_DOCUMENTATION_URL = "documentation_url"
 DOCUMENTATION_URL = (
     "https://home-assistant.io/integrations/simplisafe#getting-an-authorization-code"
 )
 
-STEP_USER_SCHEMA = vol.Schema(
+STEP_USER_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_AUTH_CODE): cv.string,
+        probatio.Required(probatio.Secret(CONF_AUTH_CODE)): cv.string,
     }
 )
 
@@ -85,8 +84,8 @@ class SimpliSafeFlowHandler(ConfigFlow, domain=DOMAIN):
                 step_id="user",
                 data_schema=STEP_USER_SCHEMA,
                 description_placeholders={
-                    CONF_URL: self._oauth_values.auth_url,
-                    CONF_DOCUMENTATION_URL: DOCUMENTATION_URL,
+                    "url": self._oauth_values.auth_url,
+                    "documentation_url": DOCUMENTATION_URL,
                 },
             )
 
@@ -106,8 +105,8 @@ class SimpliSafeFlowHandler(ConfigFlow, domain=DOMAIN):
                 data_schema=STEP_USER_SCHEMA,
                 errors={CONF_AUTH_CODE: "invalid_auth_code_length"},
                 description_placeholders={
-                    CONF_URL: self._oauth_values.auth_url,
-                    CONF_DOCUMENTATION_URL: DOCUMENTATION_URL,
+                    "url": self._oauth_values.auth_url,
+                    "documentation_url": DOCUMENTATION_URL,
                 },
             )
 
@@ -131,8 +130,8 @@ class SimpliSafeFlowHandler(ConfigFlow, domain=DOMAIN):
                 data_schema=STEP_USER_SCHEMA,
                 errors=errors,
                 description_placeholders={
-                    CONF_URL: self._oauth_values.auth_url,
-                    CONF_DOCUMENTATION_URL: DOCUMENTATION_URL,
+                    "url": self._oauth_values.auth_url,
+                    "documentation_url": DOCUMENTATION_URL,
                 },
             )
 
@@ -171,9 +170,9 @@ class SimpliSafeOptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_CODE,
                         description={
                             "suggested_value": self.config_entry.options.get(CONF_CODE)

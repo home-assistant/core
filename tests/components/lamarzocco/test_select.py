@@ -9,16 +9,16 @@ from pylamarzocco.const import (
     SmartStandByType,
     SteamTargetLevel,
 )
-from pylamarzocco.exceptions import RequestNotSuccessful
+from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
-    ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -50,10 +50,10 @@ async def test_steam_boiler_level(
     # on/off service calls
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: f"select.{serial_number}_steam_level",
-            ATTR_OPTION: "2",
+            CommonServiceArgument.ENTITY_ID: f"select.{serial_number}_steam_level",
+            SelectServiceArgument.OPTION: "2",
         },
         blocking=True,
     )
@@ -105,10 +105,10 @@ async def test_pre_brew_infusion_select(
     # on/off service calls
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: f"select.{serial_number}_prebrew_infusion_mode",
-            ATTR_OPTION: "prebrew",
+            CommonServiceArgument.ENTITY_ID: f"select.{serial_number}_prebrew_infusion_mode",
+            SelectServiceArgument.OPTION: "prebrew",
         },
         blocking=True,
     )
@@ -156,10 +156,10 @@ async def test_smart_standby_mode(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: f"select.{serial_number}_smart_standby_mode",
-            ATTR_OPTION: "last_brewing",
+            CommonServiceArgument.ENTITY_ID: f"select.{serial_number}_smart_standby_mode",
+            SelectServiceArgument.OPTION: "last_brewing",
         },
         blocking=True,
     )
@@ -169,10 +169,19 @@ async def test_smart_standby_mode(
     )
 
 
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        pytest.param(RequestNotSuccessful("Boom"), id="request_not_successful"),
+        pytest.param(AuthFail("Boom"), id="auth_fail"),
+        pytest.param(TimeoutError, id="timeout"),
+    ],
+)
 @pytest.mark.usefixtures("init_integration")
 async def test_select_errors(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
+    side_effect: Exception | type[Exception],
 ) -> None:
     """Test select errors."""
     serial_number = mock_lamarzocco.serial_number
@@ -180,16 +189,16 @@ async def test_select_errors(
     state = hass.states.get(f"select.{serial_number}_prebrew_infusion_mode")
     assert state
 
-    mock_lamarzocco.set_pre_extraction_mode.side_effect = RequestNotSuccessful("Boom")
+    mock_lamarzocco.set_pre_extraction_mode.side_effect = side_effect
 
     # Test setting invalid option
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: f"select.{serial_number}_prebrew_infusion_mode",
-                ATTR_OPTION: "prebrew",
+                CommonServiceArgument.ENTITY_ID: f"select.{serial_number}_prebrew_infusion_mode",
+                SelectServiceArgument.OPTION: "prebrew",
             },
             blocking=True,
         )
@@ -220,10 +229,10 @@ async def test_bbw_dose_mode(
     # on/off service calls
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: f"select.{serial_number}_brew_by_weight_dose_mode",
-            ATTR_OPTION: "dose2",
+            CommonServiceArgument.ENTITY_ID: f"select.{serial_number}_brew_by_weight_dose_mode",
+            SelectServiceArgument.OPTION: "dose2",
         },
         blocking=True,
     )

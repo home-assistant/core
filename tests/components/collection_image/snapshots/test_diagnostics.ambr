@@ -1,0 +1,173 @@
+# serializer version: 1
+# name: test_diagnostics[path]
+  dict({
+    'current_image': dict({
+      'entity_id': 'image.random_image',
+      'media_content_id': 'media-source://mymedia/photo',
+      'resolved': dict({
+        'mime_type': 'image/png',
+        'path': '/media/photo.png',
+        'url': None,
+      }),
+      'state': '2025-11-08T12:00:00+00:00',
+    }),
+    'entry': dict({
+      'data': dict({
+        'media': list([
+          dict({
+            'media_content_id': 'media-source://mymedia',
+            'media_content_type': '',
+            'metadata': dict({
+              'a': 'b',
+            }),
+          }),
+          dict({
+            'media_content_id': 'media-source://mymedia_empty',
+            'media_content_type': '',
+            'metadata': dict({
+              'a': 'b',
+            }),
+          }),
+          dict({
+            'media_content_id': 'media-source://mymedia_error',
+            'media_content_type': '',
+            'metadata': dict({
+              'a': 'b',
+            }),
+          }),
+        ]),
+      }),
+      'title': 'Random Image',
+    }),
+    'media_sources': list([
+      dict({
+        'children': list([
+          dict({
+            'can_expand': False,
+            'can_play': True,
+            'media_class': 'music',
+            'media_content_id': 'media-source://mymedia/music',
+            'media_content_type': 'audio/mp3',
+            'title': 'a music track',
+          }),
+          dict({
+            'can_expand': False,
+            'can_play': True,
+            'media_class': 'image',
+            'media_content_id': 'media-source://mymedia/photo',
+            'media_content_type': 'image/png',
+            'title': 'a picture',
+          }),
+        ]),
+        'children_count': 2,
+        'image_count': 1,
+        'media_class': '',
+        'media_content_id': 'media-source://mymedia',
+        'title': 'My pictures',
+      }),
+      dict({
+        'children': list([
+        ]),
+        'children_count': 0,
+        'image_count': 0,
+        'media_class': '',
+        'media_content_id': 'media-source://mymedia_empty',
+        'title': 'Empty folder',
+      }),
+      dict({
+        'error': 'Mock directory failed to browse',
+        'media_content_id': 'media-source://mymedia_error',
+      }),
+    ]),
+  })
+# ---
+# name: test_diagnostics[unavailable]
+  dict({
+    'current_image': dict({
+      'entity_id': 'image.random_image',
+      'media_content_id': None,
+      'resolved': None,
+      'state': 'unavailable',
+    }),
+    'entry': dict({
+      'data': dict({
+        'media': list([
+          dict({
+            'media_content_id': 'media-source://mymedia_empty',
+            'media_content_type': '',
+            'metadata': dict({
+              'a': 'b',
+            }),
+          }),
+        ]),
+      }),
+      'title': 'Random Image',
+    }),
+    'media_sources': list([
+      dict({
+        'children': list([
+        ]),
+        'children_count': 0,
+        'image_count': 0,
+        'media_class': '',
+        'media_content_id': 'media-source://mymedia_empty',
+        'title': 'Empty folder',
+      }),
+    ]),
+  })
+# ---
+# name: test_diagnostics[url]
+  dict({
+    'current_image': dict({
+      'entity_id': 'image.random_image',
+      'media_content_id': 'media-source://mymedia/photo',
+      'resolved': dict({
+        'mime_type': 'image/png',
+        'path': None,
+        'url': 'https://example.com/photo.png',
+      }),
+      'state': '2025-11-08T12:00:00+00:00',
+    }),
+    'entry': dict({
+      'data': dict({
+        'media': list([
+          dict({
+            'media_content_id': 'media-source://mymedia',
+            'media_content_type': '',
+            'metadata': dict({
+              'a': 'b',
+            }),
+          }),
+        ]),
+      }),
+      'title': 'Random Image',
+    }),
+    'media_sources': list([
+      dict({
+        'children': list([
+          dict({
+            'can_expand': False,
+            'can_play': True,
+            'media_class': 'music',
+            'media_content_id': 'media-source://mymedia/music',
+            'media_content_type': 'audio/mp3',
+            'title': 'a music track',
+          }),
+          dict({
+            'can_expand': False,
+            'can_play': True,
+            'media_class': 'image',
+            'media_content_id': 'media-source://mymedia/photo',
+            'media_content_type': 'image/png',
+            'title': 'a picture',
+          }),
+        ]),
+        'children_count': 2,
+        'image_count': 1,
+        'media_class': '',
+        'media_content_id': 'media-source://mymedia',
+        'title': 'My pictures',
+      }),
+    ]),
+  })
+# ---

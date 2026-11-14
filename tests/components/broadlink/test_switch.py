@@ -1,16 +1,25 @@
 """Tests for Broadlink switches."""
 
+from unittest.mock import MagicMock
+
+import pytest
+
 from homeassistant.components.broadlink.const import DOMAIN
-from homeassistant.components.switch import (
-    DOMAIN as SWITCH_DOMAIN,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
+from homeassistant.components.broadlink.switch import (
+    PLATFORM_SCHEMA,
+    async_setup_platform,
 )
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import get_device
+
+IR_PACKET = (
+    "JgBGAJKVETkRORA6ERQRFBEUERQRFBE5ETkQOhAVEBUQFREUEBUQ"
+    "OhEUERQRORE5EBURFBA6EBUQOhE5EBUQFRA6EDoRFBEADQUAAA=="
+)
 
 
 async def test_switch_setup_works(
@@ -56,7 +65,7 @@ async def test_switch_turn_off_turn_on(
     switch = switches[0]
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
+        SwitchService.TURN_OFF,
         {"entity_id": switch.entity_id},
         blocking=True,
     )
@@ -64,7 +73,7 @@ async def test_switch_turn_off_turn_on(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
+        SwitchService.TURN_ON,
         {"entity_id": switch.entity_id},
         blocking=True,
     )
@@ -117,7 +126,7 @@ async def test_slots_switch_turn_off_turn_on(
     for switch in switches:
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
+            SwitchService.TURN_OFF,
             {"entity_id": switch.entity_id},
             blocking=True,
         )
@@ -125,10 +134,44 @@ async def test_slots_switch_turn_off_turn_on(
 
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
+            SwitchService.TURN_ON,
             {"entity_id": switch.entity_id},
             blocking=True,
         )
         assert hass.states.get(switch.entity_id).state == STATE_ON
 
         assert mock_setup.api.auth.call_count == 1
+
+
+@pytest.mark.parametrize(
+    "device_name", ["Entrance", "Living Room", "Office", "Garage", "Study"]
+)
+async def test_custom_ir_switch_setup_works(
+    hass: HomeAssistant, device_name: str
+) -> None:
+    """Test a custom IR switch from YAML is added to each type of remote."""
+    device = get_device(device_name)
+    mock_setup = await device.setup_entry(hass)
+
+    config = PLATFORM_SCHEMA(
+        {
+            "platform": DOMAIN,
+            "mac": device.mac,
+            "switches": [
+                {"name": "Fan", "command_on": IR_PACKET, "command_off": IR_PACKET}
+            ],
+        }
+    )
+    await async_setup_platform(hass, config, MagicMock())
+    await hass.async_block_till_done()
+
+    entity_ids = hass.states.async_entity_ids(SWITCH_DOMAIN)
+    assert len(entity_ids) == 1
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SwitchService.TURN_ON,
+        {"entity_id": entity_ids[0]},
+        blocking=True,
+    )
+    assert mock_setup.api.send_data.call_count == 1

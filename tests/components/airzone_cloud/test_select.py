@@ -1,41 +1,46 @@
 """The select tests for the Airzone Cloud platform."""
 
+from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import snapshot_platform
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.select import ATTR_OPTIONS, DOMAIN as SELECT_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION, SERVICE_SELECT_OPTION
+from homeassistant.components.select import (
+    DOMAIN as SELECT_DOMAIN,
+    SelectService,
+    SelectServiceArgument,
+)
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 
 from .util import async_init_integration
 
 
+@pytest.fixture(autouse=True)
+def override_platforms() -> Generator[None]:
+    """Override PLATFORMS."""
+    with patch("homeassistant.components.airzone_cloud.PLATFORMS", [Platform.SELECT]):
+        yield
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_airzone_create_selects(hass: HomeAssistant) -> None:
+async def test_airzone_create_selects(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
     """Test creation of selects."""
 
-    await async_init_integration(hass)
+    config_entry = await async_init_integration(hass)
 
-    # Zones
-    state = hass.states.get("select.dormitorio_air_quality_mode")
-    assert state.state == "auto"
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
-    state = hass.states.get("select.dormitorio_mode")
-    assert state is None
-
-    state = hass.states.get("select.salon_air_quality_mode")
-    assert state.state == "auto"
-
-    state = hass.states.get("select.salon_mode")
-    assert state.state == "cool"
-    assert state.attributes.get(ATTR_OPTIONS) == [
-        "cool",
-        "dry",
-        "fan",
-        "heat",
-    ]
+    # Mode selects are only created for master zones
+    assert hass.states.get("select.dormitorio_mode") is None
 
 
 async def test_airzone_select_air_quality_mode(hass: HomeAssistant) -> None:
@@ -46,10 +51,10 @@ async def test_airzone_select_air_quality_mode(hass: HomeAssistant) -> None:
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: "select.dormitorio_air_quality_mode",
-                ATTR_OPTION: "Invalid",
+                CommonServiceArgument.ENTITY_ID: "select.dormitorio_air_quality_mode",
+                SelectServiceArgument.OPTION: "Invalid",
             },
             blocking=True,
         )
@@ -60,10 +65,10 @@ async def test_airzone_select_air_quality_mode(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: "select.dormitorio_air_quality_mode",
-                ATTR_OPTION: "off",
+                CommonServiceArgument.ENTITY_ID: "select.dormitorio_air_quality_mode",
+                SelectServiceArgument.OPTION: "off",
             },
             blocking=True,
         )
@@ -80,10 +85,10 @@ async def test_airzone_select_mode(hass: HomeAssistant) -> None:
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: "select.salon_mode",
-                ATTR_OPTION: "Invalid",
+                CommonServiceArgument.ENTITY_ID: "select.salon_mode",
+                SelectServiceArgument.OPTION: "Invalid",
             },
             blocking=True,
         )
@@ -94,10 +99,10 @@ async def test_airzone_select_mode(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: "select.salon_mode",
-                ATTR_OPTION: "heat",
+                CommonServiceArgument.ENTITY_ID: "select.salon_mode",
+                SelectServiceArgument.OPTION: "heat",
             },
             blocking=True,
         )

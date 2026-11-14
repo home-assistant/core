@@ -2,8 +2,14 @@
   "domain": "netatmo",
   "name": "Netatmo",
   "after_dependencies": ["cloud", "media_source"],
+  "categories": [
+    "climate.thermostats_heating",
+    "security_safety.cameras",
+    "weather_alerts"
+  ],
   "codeowners": ["@cgtobi"],
   "config_flow": true,
+  "connectivity": ["cloud", "network"],
   "dependencies": ["application_credentials", "webhook"],
   "documentation": "https://www.home-assistant.io/integrations/netatmo",
   "homekit": {
@@ -13,6 +19,6 @@
   "iot_class": "cloud_polling",
   "loggers": ["pyatmo"],
   "quality_scale": "bronze",
-  "requirements": ["pyatmo==9.7.0"],
+  "requirements": ["pyatmo==9.9.0"],
   "single_config_entry": true
 }

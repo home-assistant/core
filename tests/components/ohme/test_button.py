@@ -5,21 +5,24 @@ from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from ohme import ChargerStatus
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 async def test_buttons(
@@ -69,9 +72,9 @@ async def test_button_press(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
+        ButtonService.PRESS,
         {
-            ATTR_ENTITY_ID: "button.ohme_home_pro_approve_charge",
+            CommonServiceArgument.ENTITY_ID: "button.ohme_home_pro_approve_charge",
         },
         blocking=True,
     )

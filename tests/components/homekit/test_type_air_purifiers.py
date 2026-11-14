@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 from pyhap.const import HAP_REPR_AID, HAP_REPR_CHARS, HAP_REPR_IID, HAP_REPR_VALUE
 import pytest
+from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
@@ -41,8 +42,6 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import Event, HomeAssistant
-
-from tests.common import async_mock_service
 
 
 @pytest.mark.parametrize(

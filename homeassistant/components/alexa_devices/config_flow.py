@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Mapping
+from pathlib import Path
 from typing import Any, override
 
 from aioamazondevices.api import AmazonEchoApi
@@ -10,33 +11,59 @@ from aioamazondevices.exceptions import (
     CannotConnect,
     CannotRetrieveData,
 )
-import voluptuous as vol
+from aioamazondevices.structures import AmazonSaveDataConfig
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_CODE, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
+from homeassistant.helpers.storage import STORAGE_DIR
 
 from .const import CONF_LOGIN_DATA, DOMAIN
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_CODE): cv.string,
+        probatio.Required(CONF_USERNAME): TextSelector(
+            TextSelectorConfig(type=TextSelectorType.EMAIL, autocomplete="username")
+        ),
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD, autocomplete="current-password"
+            )
+        ),
+        probatio.Required(CONF_CODE): TextSelector(
+            TextSelectorConfig(autocomplete="one-time-code")
+        ),
     }
 )
-STEP_REAUTH_DATA_SCHEMA = vol.Schema(
+STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_CODE): cv.string,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD, autocomplete="current-password"
+            )
+        ),
+        probatio.Required(CONF_CODE): TextSelector(
+            TextSelectorConfig(autocomplete="one-time-code")
+        ),
     }
 )
-STEP_RECONFIGURE = vol.Schema(
+STEP_RECONFIGURE = probatio.Schema(
     {
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_CODE): cv.string,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD, autocomplete="current-password"
+            )
+        ),
+        probatio.Required(CONF_CODE): TextSelector(
+            TextSelectorConfig(autocomplete="one-time-code")
+        ),
     }
 )
 
@@ -49,6 +76,9 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         session,
         data[CONF_USERNAME],
         data[CONF_PASSWORD],
+        save_data=AmazonSaveDataConfig(
+            path=Path(hass.config.path(STORAGE_DIR, DOMAIN)),
+        ),
     )
 
     return await api.login.login_mode_interactive(data[CONF_CODE])
@@ -58,7 +88,7 @@ class AmazonDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Alexa Devices."""
 
     VERSION = 1
-    MINOR_VERSION = 3
+    MINOR_VERSION = 4
 
     _login_data: dict[str, Any]
 
@@ -131,7 +161,7 @@ class AmazonDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reauth flow."""
-        self.context["title_placeholders"] = {CONF_USERNAME: entry_data[CONF_USERNAME]}
+        self.context["title_placeholders"] = {"username": entry_data[CONF_USERNAME]}
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -167,7 +197,7 @@ class AmazonDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            description_placeholders={CONF_USERNAME: entry_data[CONF_USERNAME]},
+            description_placeholders={"username": entry_data[CONF_USERNAME]},
             data_schema=STEP_REAUTH_DATA_SCHEMA,
             errors=errors,
         )

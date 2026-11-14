@@ -1,0 +1,50 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "offer": "Offer"
+        },
+        "data_description": {
+          "offer": "The Hydro-Québec peak savings offer you are enrolled in. The list comes from Hydro-Québec's open data for the current season."
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "peak_active": {
+        "name": "Peak event in progress"
+      },
+      "peak_today_am": {
+        "name": "Peak event today AM"
+      },
+      "peak_today_pm": {
+        "name": "Peak event today PM"
+      },
+      "peak_tomorrow_am": {
+        "name": "Peak event tomorrow AM"
+      },
+      "peak_tomorrow_pm": {
+        "name": "Peak event tomorrow PM"
+      }
+    },
+    "sensor": {
+      "event_begin": {
+        "name": "Peak event begins"
+      },
+      "event_end": {
+        "name": "Peak event ends"
+      }
+    }
+  },
+  "exceptions": {
+    "update_failed": {
+      "message": "Error fetching peak events: {error}"
+    }
+  }
+}

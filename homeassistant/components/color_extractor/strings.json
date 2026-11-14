@@ -7,8 +7,23 @@
     }
   },
   "exceptions": {
+    "fetch_failed": {
+      "message": "Failed to fetch the image from {url}: {error}"
+    },
+    "http_error": {
+      "message": "Failed to fetch the image from {url}: the server responded with HTTP status {status}."
+    },
     "invalid_image": {
       "message": "Bad image {image_reference} from {image_type} provided, are you sure it's an image?"
+    },
+    "path_not_allowed": {
+      "message": "Path {file_path} is not allowed, add it to allowlist_external_dirs."
+    },
+    "timeout": {
+      "message": "Timed out fetching the image from {url}."
+    },
+    "url_not_allowed": {
+      "message": "URL {url} is not allowed, add it to allowlist_external_urls."
     }
   },
   "services": {

@@ -10,14 +10,20 @@ from homeassistant.components.select import (
     ATTR_OPTION,
     ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, EntityCategory
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_UNKNOWN,
+    CommonServiceArgument,
+    EntityCategory,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import setup_integration
+from .conftest import create_mock_account, setup_integration
 
 SELECT_ENTITY_ID = "select.test_clean_cycle_wait_time_minutes"
 
@@ -42,7 +48,7 @@ async def test_wait_time_select(
 
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             data,
             blocking=True,
         )
@@ -62,7 +68,7 @@ async def test_invalid_wait_time_select(hass: HomeAssistant, mock_account) -> No
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             data,
             blocking=True,
         )
@@ -107,7 +113,7 @@ async def test_litterrobot_4_select(
 
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             data,
             blocking=True,
         )
@@ -124,8 +130,11 @@ async def test_select_command_exception(
     with pytest.raises(HomeAssistantError, match="Invalid command: oops"):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: SELECT_ENTITY_ID, ATTR_OPTION: "7"},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: SELECT_ENTITY_ID,
+                SelectServiceArgument.OPTION: "7",
+            },
             blocking=True,
         )
 
@@ -157,7 +166,7 @@ async def test_litterrobot_5_globe_light(
 
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             data,
             blocking=True,
         )
@@ -196,9 +205,33 @@ async def test_litterrobot_5_panel_brightness(
 
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             data,
             blocking=True,
         )
 
         assert robot.set_panel_brightness.call_count == count + 1
+
+
+async def test_globe_brightness_unmapped_level(hass: HomeAssistant) -> None:
+    """A brightness matching no level leaves the select unknown, not "None".
+
+    The LR5 firmware accepts any 0-100 brightness, so a value set outside the
+    discrete levels has no matching option. current_option must return None so
+    the entity reads as unknown, rather than the string "None".
+    """
+    mock_account = create_mock_account(
+        robot_data={
+            "nightLightSettings": {
+                "brightness": 60,
+                "color": "#FFFFFF",
+                "mode": "Auto",
+            }
+        },
+        v5=True,
+    )
+    await setup_integration(hass, mock_account, SELECT_DOMAIN)
+
+    select = hass.states.get("select.test_globe_brightness")
+    assert select
+    assert select.state == STATE_UNKNOWN

@@ -1,8 +1,10 @@
 {
   "domain": "sharkiq",
   "name": "Shark IQ",
-  "codeowners": ["@JeffResc", "@funkybunch", "@TheOneOgre"],
+  "categories": ["appliances_cleaning.cleaning"],
+  "codeowners": ["@JeffResc", "@funkybunch"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/sharkiq",
   "integration_type": "hub",
   "iot_class": "cloud_polling",

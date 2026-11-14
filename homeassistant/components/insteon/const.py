@@ -1,5 +1,6 @@
 """Constants used by insteon component."""
 
+from enum import StrEnum
 import re
 
 from pyinsteon.groups import (
@@ -77,23 +78,8 @@ CONF_DEV_PATH = "dev_path"
 PORT_HUB_V1 = 9761
 PORT_HUB_V2 = 25105
 
-SRV_ADD_ALL_LINK = "add_all_link"
-SRV_DEL_ALL_LINK = "delete_all_link"
-SRV_LOAD_ALDB = "load_all_link_database"
-SRV_PRINT_ALDB = "print_all_link_database"
-SRV_PRINT_IM_ALDB = "print_im_all_link_database"
-SRV_X10_ALL_UNITS_OFF = "x10_all_units_off"
-SRV_X10_ALL_LIGHTS_OFF = "x10_all_lights_off"
-SRV_X10_ALL_LIGHTS_ON = "x10_all_lights_on"
-SRV_ALL_LINK_GROUP = "group"
-SRV_ALL_LINK_MODE = "mode"
-SRV_LOAD_DB_RELOAD = "reload"
 SRV_CONTROLLER = "controller"
 SRV_RESPONDER = "responder"
-SRV_HOUSECODE = "housecode"
-SRV_SCENE_ON = "scene_on"
-SRV_SCENE_OFF = "scene_off"
-SRV_ADD_DEFAULT_LINKS = "add_default_links"
 
 SIGNAL_LOAD_ALDB = "load_aldb"
 SIGNAL_PRINT_ALDB = "print_aldb"
@@ -179,3 +165,28 @@ INSTEON_DEVICE_NOT_FOUND = "insteon_device_not_found"
 MULTIPLE = "multiple"
 
 INSTEON_ADDR_REGEX = re.compile(r"([A-Fa-f0-9]{2}\.?[A-Fa-f0-9]{2}\.?[A-Fa-f0-9]{2})$")
+
+
+class InsteonService(StrEnum):
+    """Store keys for Insteon services."""
+
+    ADD_ALL_LINK = "add_all_link"
+    DELETE_ALL_LINK = "delete_all_link"
+    LOAD_ALL_LINK_DATABASE = "load_all_link_database"
+    PRINT_ALL_LINK_DATABASE = "print_all_link_database"
+    PRINT_IM_ALL_LINK_DATABASE = "print_im_all_link_database"
+    X10_ALL_UNITS_OFF = "x10_all_units_off"
+    X10_ALL_LIGHTS_ON = "x10_all_lights_on"
+    X10_ALL_LIGHTS_OFF = "x10_all_lights_off"
+    SCENE_ON = "scene_on"
+    SCENE_OFF = "scene_off"
+    ADD_DEFAULT_LINKS = "add_default_links"
+
+
+class InsteonServiceArgument(StrEnum):
+    """Store keys for Insteon service arguments."""
+
+    GROUP = "group"
+    MODE = "mode"
+    RELOAD = "reload"
+    HOUSECODE = "housecode"

@@ -2,6 +2,7 @@
 # name: test_sensor[bedrock_mock_config_entry-BedrockServer-lookup-status_response1-entity_ids1]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mc.dummyserver.com:25566 Latency',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
@@ -122,6 +123,7 @@
 # name: test_sensor[java_mock_config_entry-JavaServer-async_lookup-status_response0-entity_ids0]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mc.dummyserver.com:25566 Latency',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
@@ -208,6 +210,7 @@
 # name: test_sensor[legacy_java_mock_config_entry-LegacyServer-async_lookup-status_response2-entity_ids2]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mc.dummyserver.com:25566 Latency',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
@@ -289,6 +292,7 @@
 # name: test_sensor_update[bedrock_mock_config_entry-BedrockServer-lookup-status_response1-entity_ids1]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mc.dummyserver.com:25566 Latency',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
@@ -409,6 +413,7 @@
 # name: test_sensor_update[java_mock_config_entry-JavaServer-async_lookup-status_response0-entity_ids0]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mc.dummyserver.com:25566 Latency',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
@@ -495,6 +500,7 @@
 # name: test_sensor_update[legacy_java_mock_config_entry-LegacyServer-async_lookup-status_response2-entity_ids2]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mc.dummyserver.com:25566 Latency',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MILLISECONDS: 'ms'>,
     }),

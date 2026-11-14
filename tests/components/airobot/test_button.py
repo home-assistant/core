@@ -8,15 +8,14 @@ from pyairobotrest.exceptions import (
     AirobotTimeoutError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture
@@ -44,8 +43,8 @@ async def test_restart_button(
     """Test restart button."""
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.test_thermostat_restart"},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: "button.test_thermostat_restart"},
         blocking=True,
     )
 
@@ -63,8 +62,8 @@ async def test_restart_button_error(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.test_thermostat_restart"},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: "button.test_thermostat_restart"},
             blocking=True,
         )
 
@@ -79,8 +78,10 @@ async def test_recalibrate_co2_button(
     """Test recalibrate CO2 sensor button."""
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.test_thermostat_recalibrate_co2_sensor"},
+        ButtonService.PRESS,
+        {
+            CommonServiceArgument.ENTITY_ID: "button.test_thermostat_recalibrate_co2_sensor"
+        },
         blocking=True,
     )
 
@@ -107,8 +108,10 @@ async def test_recalibrate_co2_button_error(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.test_thermostat_recalibrate_co2_sensor"},
+            ButtonService.PRESS,
+            {
+                CommonServiceArgument.ENTITY_ID: "button.test_thermostat_recalibrate_co2_sensor"
+            },
             blocking=True,
         )
 

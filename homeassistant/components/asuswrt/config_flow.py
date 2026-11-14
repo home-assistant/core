@@ -6,13 +6,13 @@ import socket
 from typing import Any, cast, override
 
 from asusrouter import AsusRouterError
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
     DEFAULT_CONSIDER_HOME,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_BASE,
     CONF_HOST,
@@ -24,7 +24,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import SectionConfig, section
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
     SchemaFlowFormStep,
@@ -32,6 +31,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
 )
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
+from . import AsusWrtConfigEntry
 from .bridge import AsusWrtBridge
 from .const import (
     CONF_DNSMASQ,
@@ -65,25 +65,42 @@ RESULT_UNKNOWN = "unknown"
 
 _LOGGER = logging.getLogger(__name__)
 
-LEGACY_SCHEMA = vol.Schema(
+LEGACY_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_MODE, default=MODE_ROUTER): vol.In(
+        probatio.Required(CONF_MODE, default=MODE_ROUTER): probatio.In(
             {MODE_ROUTER: "Router", MODE_AP: "Access Point"}
         ),
     }
 )
 
-OPTIONS_SCHEMA = vol.Schema(
+RECONFIGURE_SCHEMA = probatio.Schema(
     {
-        vol.Optional(
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Optional(probatio.Secret(CONF_PASSWORD)): str,
+        probatio.Required(CONF_MORE_OPTIONS): section(
+            probatio.Schema(
+                {
+                    probatio.Optional(CONF_PORT): probatio.Port(),
+                    probatio.Optional(CONF_SSH_KEY): str,
+                }
+            ),
+            SectionConfig(collapsed=True),
+        ),
+    }
+)
+
+OPTIONS_SCHEMA = probatio.Schema(
+    {
+        probatio.Optional(
             CONF_CONSIDER_HOME, default=DEFAULT_CONSIDER_HOME.total_seconds()
-        ): vol.All(vol.Coerce(int), vol.Clamp(min=0, max=900)),
-        vol.Optional(CONF_TRACK_UNKNOWN, default=DEFAULT_TRACK_UNKNOWN): bool,
+        ): probatio.All(probatio.Coerce(int), probatio.Clamp(min=0, max=900)),
+        probatio.Optional(CONF_TRACK_UNKNOWN, default=DEFAULT_TRACK_UNKNOWN): bool,
     }
 )
 
 
-async def get_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
+async def get_options_schema(handler: SchemaCommonFlowHandler) -> probatio.Schema:
     """Get options schema."""
     options_flow: SchemaOptionsFlowHandler
     options_flow = cast(SchemaOptionsFlowHandler, handler.parent_handler)
@@ -91,14 +108,14 @@ async def get_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
     if used_protocol in [PROTOCOL_SSH, PROTOCOL_TELNET]:
         data_schema = OPTIONS_SCHEMA.extend(
             {
-                vol.Required(CONF_INTERFACE, default=DEFAULT_INTERFACE): str,
-                vol.Required(CONF_DNSMASQ, default=DEFAULT_DNSMASQ): str,
+                probatio.Required(CONF_INTERFACE, default=DEFAULT_INTERFACE): str,
+                probatio.Required(CONF_DNSMASQ, default=DEFAULT_DNSMASQ): str,
             }
         )
         if options_flow.config_entry.data[CONF_MODE] == MODE_AP:
             return data_schema.extend(
                 {
-                    vol.Optional(CONF_REQUIRE_IP, default=True): bool,
+                    probatio.Optional(CONF_REQUIRE_IP, default=True): bool,
                 }
             )
         return data_schema
@@ -141,10 +158,12 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
         user_input = self._config_data
 
         schema = {
-            vol.Required(CONF_HOST, default=user_input.get(CONF_HOST, "")): str,
-            vol.Required(CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")): str,
-            vol.Optional(CONF_PASSWORD): str,
-            vol.Required(
+            probatio.Required(CONF_HOST, default=user_input.get(CONF_HOST, "")): str,
+            probatio.Required(
+                CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")
+            ): str,
+            probatio.Optional(probatio.Secret(CONF_PASSWORD)): str,
+            probatio.Required(
                 CONF_PROTOCOL,
                 default=user_input.get(CONF_PROTOCOL, PROTOCOL_HTTPS),
             ): SelectSelector(
@@ -152,11 +171,11 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
                     options=ALLOWED_PROTOCOL, translation_key="protocols"
                 )
             ),
-            vol.Required(CONF_MORE_OPTIONS): section(
-                vol.Schema(
+            probatio.Required(CONF_MORE_OPTIONS): section(
+                probatio.Schema(
                     {
-                        vol.Optional(CONF_PORT): cv.port,
-                        vol.Optional(CONF_SSH_KEY): str,
+                        probatio.Optional(CONF_PORT): probatio.Port(),
+                        probatio.Optional(CONF_SSH_KEY): str,
                     }
                 ),
                 SectionConfig(collapsed=True),
@@ -165,7 +184,7 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(schema),
+            data_schema=probatio.Schema(schema),
             errors={CONF_BASE: error} if error else None,
         )
 
@@ -241,41 +260,95 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
         user_input.update(more_options)
 
         self._config_data = user_input
+        error, unique_id = await self._async_validate_input(user_input)
+        if error is not None:
+            return self._show_setup_form(error=error)
+
+        if unique_id:
+            await self.async_set_unique_id(unique_id)
+        # we allow to configure a single instance without unique id
+        elif self._async_current_entries():
+            return self.async_abort(reason="invalid_unique_id")
+        else:
+            _LOGGER.warning(
+                "This device does not provide a valid Unique ID."
+                " Configuration of multiple instance will not be possible"
+            )
+
+        if user_input[CONF_PROTOCOL] in [PROTOCOL_SSH, PROTOCOL_TELNET]:
+            return await self.async_step_legacy()
+        return await self._async_save_entry()
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the router connection."""
+        entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            user_input = user_input.copy()
+            user_input.update(user_input.pop(CONF_MORE_OPTIONS, {}))
+            data = {
+                key: value
+                for key, value in entry.data.items()
+                if key not in (CONF_PASSWORD, CONF_PORT, CONF_SSH_KEY)
+            } | user_input
+            error, unique_id = await self._async_validate_input(data)
+            if error is None:
+                await self.async_set_unique_id(unique_id)
+                self._abort_if_unique_id_mismatch()
+                # A loaded entry is reloaded by its update listener
+                if entry.update_listeners:
+                    return self.async_update_and_abort(entry, data=data)
+                return self.async_update_reload_and_abort(entry, data=data)
+            errors[CONF_BASE] = error
+            suggested_values = data
+        else:
+            suggested_values = dict(entry.data)
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                RECONFIGURE_SCHEMA,
+                {
+                    CONF_HOST: suggested_values[CONF_HOST],
+                    CONF_USERNAME: suggested_values[CONF_USERNAME],
+                    CONF_MORE_OPTIONS: {
+                        key: suggested_values[key]
+                        for key in (CONF_PORT, CONF_SSH_KEY)
+                        if key in suggested_values
+                    },
+                },
+            ),
+            errors=errors,
+        )
+
+    async def _async_validate_input(
+        self, user_input: dict[str, Any]
+    ) -> tuple[str | None, str | None]:
+        """Validate the input and return an error or the unique ID."""
         pwd: str | None = user_input.get(CONF_PASSWORD)
         ssh: str | None = user_input.get(CONF_SSH_KEY)
         protocol: str = user_input[CONF_PROTOCOL]
 
         if not pwd and protocol != PROTOCOL_SSH:
-            return self._show_setup_form(error="pwd_required")
+            return "pwd_required", None
         if not (pwd or ssh):
-            return self._show_setup_form(error="pwd_or_ssh")
+            return "pwd_or_ssh", None
         if pwd and ssh:
-            return self._show_setup_form(error="pwd_and_ssh")
+            return "pwd_and_ssh", None
         if ssh and not await self.hass.async_add_executor_job(_is_file, ssh):
-            return self._show_setup_form(error="ssh_not_file")
+            return "ssh_not_file", None
 
         host: str = user_input[CONF_HOST]
         if not await self.hass.async_add_executor_job(_get_ip, host):
-            return self._show_setup_form(error="invalid_host")
+            return "invalid_host", None
 
         result, unique_id = await self._async_check_connection(user_input)
-        if result == RESULT_SUCCESS:
-            if unique_id:
-                await self.async_set_unique_id(unique_id)
-            # we allow to configure a single instance without unique id
-            elif self._async_current_entries():
-                return self.async_abort(reason="invalid_unique_id")
-            else:
-                _LOGGER.warning(
-                    "This device does not provide a valid Unique ID."
-                    " Configuration of multiple instance will not be possible"
-                )
-
-            if protocol in [PROTOCOL_SSH, PROTOCOL_TELNET]:
-                return await self.async_step_legacy()
-            return await self._async_save_entry()
-
-        return self._show_setup_form(error=result)
+        if result != RESULT_SUCCESS:
+            return result, None
+        return None, unique_id
 
     async def async_step_legacy(
         self, user_input: dict[str, Any] | None = None
@@ -298,7 +371,7 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: AsusWrtConfigEntry,
     ) -> SchemaOptionsFlowHandler:
         """Get options flow for this handler."""
         return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)

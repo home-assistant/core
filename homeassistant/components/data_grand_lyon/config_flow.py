@@ -7,16 +7,16 @@ from typing import Any, override
 from aiohttp import ClientError, ClientResponseError
 from data_grand_lyon_ha import (
     DataGrandLyonClient,
+    TclLinePictogram,
     TclParkAndRide,
     TclStop,
     VelovStation,
     find_tcl_park_and_ride_by_id,
     find_tcl_stop_by_id,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
@@ -38,23 +38,25 @@ from .const import (
     CONF_STATION_ID,
     CONF_STOP_ID,
     DOMAIN,
+    SUBENTRY_TYPE_LINE,
     SUBENTRY_TYPE_PARK_AND_RIDE,
     SUBENTRY_TYPE_STOP,
     SUBENTRY_TYPE_VELOV_STATION,
 )
+from .coordinator import DataGrandLyonConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
     }
 )
 
-STEP_RECONFIGURE_SCHEMA = vol.Schema(
+STEP_RECONFIGURE_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
     }
 )
 
@@ -68,13 +70,14 @@ class DataGrandLyonConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: DataGrandLyonConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentry types supported by this integration."""
         return {
             SUBENTRY_TYPE_STOP: StopSubentryFlowHandler,
             SUBENTRY_TYPE_VELOV_STATION: VelovStationSubentryFlowHandler,
             SUBENTRY_TYPE_PARK_AND_RIDE: ParkAndRideSubentryFlowHandler,
+            SUBENTRY_TYPE_LINE: LineSubentryFlowHandler,
         }
 
     @override
@@ -215,9 +218,9 @@ class StopSubentryFlowHandler(ConfigSubentryFlow):
                 self._stops, key=lambda s: (s.nom, s.commune or "", s.id or 0)
             )
         ]
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Required(CONF_STOP_ID): SelectSelector(
+                probatio.Required(CONF_STOP_ID): SelectSelector(
                     SelectSelectorConfig(
                         options=options,
                         mode=SelectSelectorMode.DROPDOWN,
@@ -244,9 +247,9 @@ class StopSubentryFlowHandler(ConfigSubentryFlow):
             )
 
         options = self._selected_stop.desserte if self._selected_stop else []
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Required(CONF_LINE): SelectSelector(
+                probatio.Required(CONF_LINE): SelectSelector(
                     SelectSelectorConfig(
                         options=options,
                         mode=SelectSelectorMode.DROPDOWN,
@@ -349,9 +352,9 @@ class VelovStationSubentryFlowHandler(ConfigSubentryFlow):
                 key=lambda s: (s.name, s.commune or "", s.number or 0),
             )
         ]
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Required(CONF_STATION_ID): SelectSelector(
+                probatio.Required(CONF_STATION_ID): SelectSelector(
                     SelectSelectorConfig(
                         options=options,
                         mode=SelectSelectorMode.DROPDOWN,
@@ -438,9 +441,9 @@ class ParkAndRideSubentryFlowHandler(ConfigSubentryFlow):
             SelectOptionDict(value=park.id, label=_park_and_ride_label(park))
             for park in sorted(self._parks, key=lambda p: (p.nom, p.id))
         ]
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Required(CONF_PARK_ID): SelectSelector(
+                probatio.Required(CONF_PARK_ID): SelectSelector(
                     SelectSelectorConfig(
                         options=options,
                         mode=SelectSelectorMode.DROPDOWN,
@@ -479,3 +482,77 @@ class ParkAndRideSubentryFlowHandler(ConfigSubentryFlow):
 
 def _park_and_ride_label(park: TclParkAndRide) -> str:
     return f"{park.nom} - {park.id}"
+
+
+class LineSubentryFlowHandler(ConfigSubentryFlow):
+    """Handle a subentry flow for adding a TCL line."""
+
+    def __init__(self) -> None:
+        """Initialize the flow."""
+        self._lines: list[TclLinePictogram] = []
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Pick a line from the list fetched from the API, or enter one manually."""
+        if not self._lines:
+            if error := await self._async_load_lines():
+                return self.async_abort(reason=error)
+
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            line_code = user_input[CONF_LINE].strip()
+            if not line_code:
+                errors[CONF_LINE] = "invalid_line"
+            else:
+                return self._create_line(line_code)
+
+        schema = probatio.Schema(
+            {
+                probatio.Required(CONF_LINE): SelectSelector(
+                    SelectSelectorConfig(
+                        options=sorted({line.code_ligne for line in self._lines}),
+                        mode=SelectSelectorMode.DROPDOWN,
+                        sort=False,
+                        custom_value=True,
+                    )
+                )
+            }
+        )
+        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
+
+    async def _async_load_lines(self) -> str | None:
+        """Fetch TCL lines from the API, returning an error key on failure."""
+        entry = self._get_entry()
+        session = async_get_clientsession(self.hass)
+        client = DataGrandLyonClient(
+            session=session,
+            username=entry.data[CONF_USERNAME],
+            password=entry.data[CONF_PASSWORD],
+        )
+        try:
+            self._lines = await client.get_tcl_line_pictograms()
+        except ClientResponseError as err:
+            if err.status in (401, 403):
+                return "invalid_auth"
+            return "cannot_connect"
+        except ClientError, TimeoutError:
+            return "cannot_connect"
+        except Exception:
+            _LOGGER.exception("Unexpected error fetching Data Grand Lyon TCL lines")
+            return "unknown"
+        return None
+
+    def _create_line(self, line: str) -> SubentryFlowResult:
+        """Create the line subentry, aborting on duplicate."""
+        entry = self._get_entry()
+        unique_id = f"line_{line}"
+        for subentry in entry.subentries.values():
+            if subentry.unique_id == unique_id:
+                return self.async_abort(reason="already_configured")
+
+        return self.async_create_entry(
+            title=f"Line {line}",
+            data={CONF_LINE: line},
+            unique_id=unique_id,
+        )

@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import async_setup_unit_entities
-from .coordinator import MelCloudHomeConfigEntry, MelCloudHomeCoordinator
+from .coordinator import MelCloudHomeConfigEntry
 from .entity import MelCloudHomeATAUnitEntity, MelCloudHomeATWUnitEntity
 
 PARALLEL_UPDATES = 0
@@ -53,7 +53,7 @@ def _common_sensor_descriptions[_UnitT: ATAUnit | ATWUnit](
             key="holiday_mode",
             translation_key="holiday_mode",
             state_fn=lambda unit: (
-                unit.holiday_mode.enabled if unit.holiday_mode else None
+                unit.holiday_mode.active if unit.holiday_mode else None
             ),
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
@@ -70,6 +70,24 @@ def _common_sensor_descriptions[_UnitT: ATAUnit | ATWUnit](
             translation_key="overheat_protection",
             state_fn=lambda unit: (
                 unit.overheat_protection.enabled if unit.overheat_protection else None
+            ),
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        MelCloudHomeBinarySensorEntityDescription(
+            key="frost_protection_active",
+            translation_key="frost_protection_active",
+            device_class=BinarySensorDeviceClass.RUNNING,
+            state_fn=lambda unit: (
+                unit.frost_protection.active if unit.frost_protection else None
+            ),
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        MelCloudHomeBinarySensorEntityDescription(
+            key="overheat_protection_active",
+            translation_key="overheat_protection_active",
+            device_class=BinarySensorDeviceClass.RUNNING,
+            state_fn=lambda unit: (
+                unit.overheat_protection.active if unit.overheat_protection else None
             ),
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
@@ -120,17 +138,6 @@ class ATABinarySensor(MelCloudHomeATAUnitEntity, BinarySensorEntity):
 
     entity_description: MelCloudHomeBinarySensorEntityDescription[ATAUnit]
 
-    def __init__(
-        self,
-        coordinator: MelCloudHomeCoordinator,
-        entity_description: MelCloudHomeBinarySensorEntityDescription[ATAUnit],
-        unit: ATAUnit,
-    ) -> None:
-        """Initialize the entity."""
-        super().__init__(coordinator, unit)
-        self.entity_description = entity_description
-        self._attr_unique_id = f"{unit.id}_{entity_description.key}"
-
     @property
     @override
     def is_on(self) -> bool | None:
@@ -142,17 +149,6 @@ class ATWBinarySensor(MelCloudHomeATWUnitEntity, BinarySensorEntity):
     """Representation of a MELCloud Home ATW binary sensor."""
 
     entity_description: MelCloudHomeBinarySensorEntityDescription[ATWUnit]
-
-    def __init__(
-        self,
-        coordinator: MelCloudHomeCoordinator,
-        entity_description: MelCloudHomeBinarySensorEntityDescription[ATWUnit],
-        unit: ATWUnit,
-    ) -> None:
-        """Initialize the entity."""
-        super().__init__(coordinator, unit)
-        self.entity_description = entity_description
-        self._attr_unique_id = f"{unit.id}_{entity_description.key}"
 
     @property
     @override

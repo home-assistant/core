@@ -4,13 +4,12 @@ from http import HTTPStatus
 from unittest.mock import Mock
 
 from aiohttp import web
-import voluptuous as vol
+import probatio
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.helpers.http import KEY_ALLOW_CONFIGURED_CORS
-
-from tests.typing import ClientSessionGenerator
 
 
 async def get_client(aiohttp_client, validator):
@@ -36,7 +35,8 @@ async def get_client(aiohttp_client, validator):
 async def test_validator(aiohttp_client: ClientSessionGenerator) -> None:
     """Test the validator."""
     client = await get_client(
-        aiohttp_client, RequestDataValidator(vol.Schema({vol.Required("test"): str}))
+        aiohttp_client,
+        RequestDataValidator(probatio.Schema({probatio.Required("test"): str})),
     )
 
     resp = await client.post("/", json={"test": "bla"})
@@ -54,11 +54,11 @@ async def test_validator_allow_empty(aiohttp_client: ClientSessionGenerator) -> 
     client = await get_client(
         aiohttp_client,
         RequestDataValidator(
-            vol.Schema(
+            probatio.Schema(
                 {
                     # Although we allow empty, our schema should still be able
                     # to validate an empty dict.
-                    vol.Optional("test"): str
+                    probatio.Optional("test"): str
                 }
             ),
             allow_empty=True,

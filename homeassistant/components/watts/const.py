@@ -17,7 +17,8 @@ OAUTH2_TOKEN = "https://visionlogin.b2clogin.com/visionlogin.onmicrosoft.com/B2C
 OAUTH2_SCOPES = [
     "openid",
     "offline_access",
-    "https://visionlogin.onmicrosoft.com/homeassistant-api/homeassistant.read",
+    "https://visionlogin.onmicrosoft.com/vision/homeassistant.read",
+    "https://visionlogin.onmicrosoft.com/vision/brand.watts",
 ]
 
 # Update intervals
@@ -69,5 +70,3 @@ HVAC_ACTION_TO_HA: dict[str, HVACAction] = {
 SUPPORTED_DEVICE_TYPES = (ThermostatDevice, SwitchDevice)
 
 # Timer service
-SERVICE_ACTIVATE_TIMER_MODE = "activate_timer_mode"
-ATTR_DURATION = "duration"

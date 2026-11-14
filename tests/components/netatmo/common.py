@@ -6,6 +6,8 @@ import json
 from typing import Any
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMockResponse
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.netatmo.const import DOMAIN
@@ -14,9 +16,6 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.aiohttp import MockRequest
-
-from tests.common import MockConfigEntry, async_load_fixture
-from tests.test_util.aiohttp import AiohttpClientMockResponse
 
 HOME_ID = "91763b24c43d3e344f424e8b"
 
@@ -78,12 +77,12 @@ async def fake_post_request(hass: HomeAssistant, *args: Any, **kwargs: Any):
 
     elif endpoint == "homestatus":
         home_id = kwargs.get("params", {}).get("home_id")
-        payload = json.loads(
-            await async_load_fixture(hass, f"{endpoint}_{home_id}.json", DOMAIN)
+        payload = await async_load_json_object_fixture(
+            hass, f"{endpoint}_{home_id}.json", DOMAIN
         )
 
     else:
-        payload = json.loads(await async_load_fixture(hass, f"{endpoint}.json", DOMAIN))
+        payload = await async_load_json_object_fixture(hass, f"{endpoint}.json", DOMAIN)
 
     # Apply test-specific modifications to the payload
     if "msg_callback" in kwargs:

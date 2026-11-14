@@ -1,6 +1,7 @@
 """Test reproduce state for Water heater."""
 
 import pytest
+from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components.water_heater import (
     ATTR_AWAY_MODE,
@@ -16,8 +17,6 @@ from homeassistant.components.water_heater import (
 from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.state import async_reproduce_state
-
-from tests.common import async_mock_service
 
 
 async def test_reproducing_states(

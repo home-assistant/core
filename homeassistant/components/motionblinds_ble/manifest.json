@@ -7,12 +7,14 @@
       "local_name": "MOTION_*"
     }
   ],
+  "categories": ["blinds_curtains"],
   "codeowners": ["@LennP", "@jerrybboy"],
   "config_flow": true,
+  "connectivity": ["bluetooth"],
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/motionblinds_ble",
   "integration_type": "device",
   "iot_class": "assumed_state",
   "loggers": ["motionblindsble"],
-  "requirements": ["motionblindsble==0.1.3"]
+  "requirements": ["motionblindsble==0.1.4"]
 }

@@ -39,6 +39,7 @@ class WhirlpoolEntity(Entity):
     async def async_added_to_hass(self) -> None:
         """Register attribute updates callback."""
         self._appliance.register_attr_callback(self._async_attr_callback)
+        self._async_attr_callback()
 
     @override
     async def async_will_remove_from_hass(self) -> None:
@@ -48,7 +49,7 @@ class WhirlpoolEntity(Entity):
     @callback
     def _async_attr_callback(self) -> None:
         _LOGGER.debug("Attribute update for entity %s", self.entity_id)
-        self._attr_available = self._appliance.get_online()
+        self._attr_available = self._appliance.get_online() or False
 
         if not self._attr_available:
             if not self._unavailable_logged:
@@ -81,7 +82,7 @@ class WhirlpoolOvenEntity(WhirlpoolEntity):
         if oven.get_oven_cavity_exists(
             OvenCavity.Upper
         ) and oven.get_oven_cavity_exists(OvenCavity.Lower):
-            return "_upper" if cavity == OvenCavity.Upper else "_lower"
+            return "_upper" if cavity is OvenCavity.Upper else "_lower"
         return ""
 
     def __init__(

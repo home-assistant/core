@@ -8,6 +8,11 @@ from pyairobotrest.const import MODE_AWAY, MODE_HOME
 from pyairobotrest.exceptions import AirobotConnectionError, AirobotError
 from pyairobotrest.models import ThermostatSettings, ThermostatStatus
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -21,8 +26,6 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 import homeassistant.helpers.entity_registry as er
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.fixture

@@ -3,7 +3,7 @@
 import logging
 from typing import TYPE_CHECKING, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.button import (
     DEVICE_CLASSES_SCHEMA,
@@ -12,7 +12,7 @@ from homeassistant.components.button import (
     ButtonEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE_CLASS
+from homeassistant.const import CONF_DEVICE_CLASS, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
@@ -21,7 +21,8 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_PRESS, DOMAIN
+from . import validators as tcv
+from .const import CONF_PRESS, DEFAULT_NAMES, DOMAIN
 from .helpers import async_setup_template_entry, async_setup_template_platform
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
@@ -31,26 +32,28 @@ from .template_entity import TemplateEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = "Template Button"
+DEFAULT_NAME = DEFAULT_NAMES[Platform.BUTTON]
 DEFAULT_OPTIMISTIC = False
 
 SCRIPT_FIELDS = (CONF_PRESS,)
 
-BUTTON_YAML_SCHEMA = vol.Schema(
+_BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(device_class=True)
+
+BUTTON_YAML_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_PRESS): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        probatio.Required(CONF_PRESS): cv.SCRIPT_SCHEMA,
+        probatio.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
     }
 ).extend(
     make_template_entity_common_schema(
-        BUTTON_DOMAIN, DEFAULT_NAME, block_device_class=True
+        BUTTON_DOMAIN, DEFAULT_NAME, _BLOCKED_ATTRIBUTES
     ).schema
 )
 
-BUTTON_CONFIG_ENTRY_SCHEMA = vol.Schema(
+BUTTON_CONFIG_ENTRY_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_PRESS): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        probatio.Optional(CONF_PRESS): cv.SCRIPT_SCHEMA,
+        probatio.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
     }
 ).extend(TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema)
 
@@ -95,6 +98,7 @@ class StateButtonEntity(TemplateEntity, ButtonEntity):
 
     _attr_should_poll = False
     _entity_id_format = ENTITY_ID_FORMAT
+    _blocked_attributes = _BLOCKED_ATTRIBUTES
 
     def __init__(
         self,

@@ -1,8 +1,10 @@
 {
   "domain": "sanix",
   "name": "Sanix",
+  "categories": ["water"],
   "codeowners": ["@tomaszsluszniak"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/sanix",
   "integration_type": "device",
   "iot_class": "cloud_polling",

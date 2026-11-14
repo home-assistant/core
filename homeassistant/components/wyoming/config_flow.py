@@ -4,7 +4,7 @@ import logging
 from typing import Any, override
 from urllib.parse import urlparse
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import SOURCE_HASSIO, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -16,10 +16,10 @@ from .data import WyomingService
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PORT): int,
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_PORT): int,
     }
 )
 
@@ -82,7 +82,7 @@ class WyomingConfigFlow(ConfigFlow, domain=DOMAIN):
         self.context.update(
             {
                 "title_placeholders": {"name": discovery_info.name},
-                "configuration_url": f"homeassistant://hassio/addon/{discovery_info.slug}/info",
+                "configuration_url": f"homeassistant://config/app/{discovery_info.slug}/info",
             }
         )
         return await self.async_step_hassio_confirm()

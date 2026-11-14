@@ -20,8 +20,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import FullyKioskConfigEntry
-from .coordinator import FullyKioskDataUpdateCoordinator
+from .coordinator import FullyKioskConfigEntry, FullyKioskDataUpdateCoordinator
 from .entity import FullyKioskEntity
 
 

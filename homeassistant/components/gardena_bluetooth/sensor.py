@@ -23,7 +23,6 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
-    StateType,
 )
 from homeassistant.const import (
     DEGREE,
@@ -34,8 +33,9 @@ from homeassistant.const import (
     UnitOfVolume,
     UnitOfVolumeFlowRate,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
 from .coordinator import GardenaBluetoothConfigEntry, GardenaBluetoothCoordinator
@@ -214,10 +214,40 @@ DESCRIPTIONS = (
         char=EventHistory.error,
         get=lambda x: (
             x.error_code.name.lower()
-            if x and isinstance(x.error_code, EventHistory.error.enum)
+            if x is not None and isinstance(x.error_code, EventHistory.error.enum)
             else None
         ),
         options=[member.name.lower() for member in EventHistory.error.enum],
+    ),
+    GardenaBluetoothSensorEntityDescription(
+        key="aqua_contour_activation_reason",
+        translation_key="activation_reason",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.ENUM,
+        char=AquaContourWatering.activation_reason,
+        get=lambda x: (
+            x.name.lower()
+            if isinstance(x, AquaContourWatering.activation_reason.enum)
+            else None
+        ),
+        options=[
+            member.name.lower() for member in AquaContourWatering.activation_reason.enum
+        ],
+    ),
+    GardenaBluetoothSensorEntityDescription(
+        key="aqua_contour_skipped_reason",
+        translation_key="skipped_reason",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.ENUM,
+        char=AquaContourWatering.skipped_reason,
+        get=lambda x: (
+            x.name.lower()
+            if isinstance(x, AquaContourWatering.skipped_reason.enum)
+            else None
+        ),
+        options=[
+            member.name.lower() for member in AquaContourWatering.skipped_reason.enum
+        ],
     ),
     GardenaBluetoothSensorEntityDescription(
         key="aqua_contour_error_timestamp",
@@ -267,6 +297,7 @@ class GardenaBluetoothSensor(GardenaBluetoothDescriptorEntity, SensorEntity):
 
     entity_description: GardenaBluetoothSensorEntityDescription
 
+    @callback
     @override
     def _handle_coordinator_update(self) -> None:
         value = self.coordinator.get_cached(self.entity_description.char)
@@ -300,6 +331,7 @@ class GardenaBluetoothRemainSensor(GardenaBluetoothEntity, SensorEntity):
         self._attr_translation_key = key
         self._char = char
 
+    @callback
     @override
     def _handle_coordinator_update(self) -> None:
         value = self.coordinator.get_cached(self._char)

@@ -4,11 +4,10 @@ from collections.abc import Awaitable, Callable
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.trend.const import DOMAIN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 type ComponentSetup = Callable[[dict[str, Any]], Awaitable[None]]
 

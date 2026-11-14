@@ -32,8 +32,9 @@ def async_handle_source_entity_changes(
       entity is identified by an entity ID, the set_source_entity_id_or_uuid is
       called. If the source entity is identified by a UUID, the helper config entry
       is reloaded.
-    - Source entity moved to another device: The helper entity is updated to link
-      to the new device. Then the helper config entry is reloaded.
+    - Source entity moved to another device, or added to a device when it had none:
+      The helper entity is updated to link to the new device. Then the helper config
+      entry is reloaded.
     - Source entity removed from the device: The helper entity is updated to link
       to no device. Then the helper config entry is reloaded.
 
@@ -92,21 +93,27 @@ def async_handle_source_entity_changes(
             else:
                 await hass.config_entries.async_reload(helper_config_entry_id)
 
-        if not source_device_id or "device_id" not in data["changes"]:
+        if "device_id" not in data["changes"]:
             return
 
-        # Handle the source entity being moved to a different device or removed
-        # from the device
+        if (
+            source_device_id is not None
+            and device_registry.async_get(source_device_id) is None
+        ):
+            source_device_id = None
+
+        # Handle the source entity being added to a device, moved to a different
+        # device or removed from the device
         if (
             not (source_entity_entry := entity_registry.async_get(data["entity_id"]))
-            or not device_registry.async_get(source_device_id)
             or source_entity_entry.device_id == source_device_id
         ):
             # No need to do any cleanup
             return
 
         # The source entity has been moved to a different device; relink the helper
-        # entities to the new device.
+        # The source entity was added to, moved to or removed from a device.
+        # Relink the helper entities accordingly.
         for helper_entity in entity_registry.entities.get_entries_for_config_entry_id(
             helper_config_entry_id
         ):
@@ -172,7 +179,7 @@ def async_remove_helper_devices(
         if source_device_id is not None
         else None
     )
-    if source_device is None:
+    if source_device_id is None or source_device is None:
         # No source device (gone, or none selected). In remove-all mode the helper's devices
         # are still removed, leaving its entities without a device; targeted mode has no
         # duplicate to match.
@@ -190,8 +197,8 @@ def async_remove_helper_devices(
     # synthesized composite) or a concrete device - a main device or a child device. A main
     # device's splits, if any, share this id as their composite_device_id.
     source_is_concrete = (
-        source_device_id in device_registry.devices
-        or source_device_id in device_registry.child_devices
+        device_registry.async_get(source_device_id, include_composite_devices=False)
+        is not None
     )
     composite_device_id = (
         (

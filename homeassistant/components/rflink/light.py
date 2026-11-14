@@ -4,12 +4,10 @@ import logging
 import re
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    DOMAIN as PLATFORM_DOMAIN,
-    PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
     ColorMode,
     LightEntity,
     LightEntityStateAttribute,
@@ -35,11 +33,7 @@ from .const import (
     EVENT_KEY_ID,
 )
 from .entity import SwitchableRflinkDevice
-from .utils import (
-    brightness_to_rflink,
-    create_issue_yaml_migration,
-    rflink_to_brightness,
-)
+from .utils import brightness_to_rflink, rflink_to_brightness
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,38 +45,33 @@ TYPE_HYBRID = "hybrid"
 TYPE_TOGGLE = "toggle"
 
 RFLINK_PLATFORM = {
-    vol.Optional(
+    probatio.Optional(
         CONF_DEVICE_DEFAULTS, default=DEVICE_DEFAULTS_SCHEMA({})
     ): DEVICE_DEFAULTS_SCHEMA,
-    vol.Optional(CONF_AUTOMATIC_ADD, default=True): cv.boolean,
-    vol.Optional(CONF_DEVICES, default={}): {
-        cv.string: vol.Schema(
+    probatio.Optional(CONF_AUTOMATIC_ADD, default=True): cv.boolean,
+    probatio.Optional(CONF_DEVICES, default={}): {
+        cv.string: probatio.Schema(
             {
-                vol.Optional(CONF_NAME): cv.string,
-                vol.Optional(CONF_TYPE): vol.Any(
+                probatio.Optional(CONF_NAME): cv.string,
+                probatio.Optional(CONF_TYPE): probatio.Any(
                     TYPE_DIMMABLE, TYPE_SWITCHABLE, TYPE_HYBRID, TYPE_TOGGLE
                 ),
-                vol.Optional(CONF_ALIASES, default=[]): vol.All(
-                    cv.ensure_list, [cv.string]
+                probatio.Optional(CONF_ALIASES, default=[]): probatio.All(
+                    probatio.EnsureList(), [cv.string]
                 ),
-                vol.Optional(CONF_GROUP_ALIASES, default=[]): vol.All(
-                    cv.ensure_list, [cv.string]
+                probatio.Optional(CONF_GROUP_ALIASES, default=[]): probatio.All(
+                    probatio.EnsureList(), [cv.string]
                 ),
-                vol.Optional(CONF_NOGROUP_ALIASES, default=[]): vol.All(
-                    cv.ensure_list, [cv.string]
+                probatio.Optional(CONF_NOGROUP_ALIASES, default=[]): probatio.All(
+                    probatio.EnsureList(), [cv.string]
                 ),
-                vol.Optional(CONF_FIRE_EVENT): cv.boolean,
-                vol.Optional(CONF_SIGNAL_REPETITIONS): vol.Coerce(int),
-                vol.Optional(CONF_GROUP, default=True): cv.boolean,
+                probatio.Optional(CONF_FIRE_EVENT): cv.boolean,
+                probatio.Optional(CONF_SIGNAL_REPETITIONS): probatio.Coerce(int),
+                probatio.Optional(CONF_GROUP, default=True): cv.boolean,
             }
         )
     },
 }
-
-PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
-    RFLINK_PLATFORM,
-    extra=vol.ALLOW_EXTRA,
-)
 
 
 def entity_type_for_device_id(device_id):
@@ -184,14 +173,10 @@ async def async_setup_platform(
             hass.data[DATA_DEVICE_REGISTER][EVENT_KEY_COMMAND] = add_new_device
 
     if discovery_info is None:
-        create_issue_yaml_migration(hass, PLATFORM_DOMAIN)
-        device_config = config[CONF_DEVICE_DEFAULTS]
-        async_add_entities(devices_from_config(config))
-        automatic_add_config(hass, config)
-    else:
-        device_config = discovery_info[CONF_DEVICE_DEFAULTS]
-        async_add_entities(devices_from_config(discovery_info))
-        automatic_add_config(hass, discovery_info)
+        return
+    device_config = discovery_info[CONF_DEVICE_DEFAULTS]
+    async_add_entities(devices_from_config(discovery_info))
+    automatic_add_config(hass, discovery_info)
 
 
 class RflinkLight(SwitchableRflinkDevice, LightEntity):

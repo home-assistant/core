@@ -1,8 +1,10 @@
 {
   "domain": "simplisafe",
   "name": "SimpliSafe",
+  "categories": ["security_safety.alarm_systems"],
   "codeowners": ["@bachya"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dhcp": [
     {
       "hostname": "simplisafe*",
@@ -13,5 +15,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["simplipy"],
-  "requirements": ["simplisafe-python==2024.01.0"]
+  "requirements": ["simplisafe-python==2026.06.0"]
 }

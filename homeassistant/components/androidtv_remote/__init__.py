@@ -18,7 +18,7 @@ PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER, Platform.REMOTE]
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: AndroidTVRemoteConfigEntry
-) -> bool:
+) -> None:
     """Set up Android TV Remote from a config entry."""
     _LOGGER.debug("async_setup_entry: %s", entry.data)
     api = create_api(hass, entry.data[CONF_HOST], get_enable_ime(entry))
@@ -69,12 +69,10 @@ async def async_setup_entry(
     )
     entry.async_on_unload(api.disconnect)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: AndroidTVRemoteConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
     _LOGGER.debug("async_unload_entry: %s", entry.data)
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

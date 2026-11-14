@@ -12,14 +12,12 @@ from pycec.network import PhysicalAddress
 import pytest
 
 from homeassistant.components.hdmi_cec import EVENT_HDMI_CEC_UNAVAILABLE
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    CommonServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 
@@ -86,7 +84,10 @@ async def test_service_on(
     assert state.state != STATE_ON
 
     await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: "switch.hdmi_3"}, blocking=True
+        SWITCH_DOMAIN,
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: "switch.hdmi_3"},
+        blocking=True,
     )
 
     mock_hdmi_device.turn_on.assert_called_once_with()
@@ -109,8 +110,8 @@ async def test_service_off(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.hdmi_3"},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: "switch.hdmi_3"},
         blocking=True,
     )
 
@@ -155,13 +156,6 @@ async def test_device_status_change(
     await hass.async_block_till_done()
 
     state = hass.states.get("switch.hdmi_3")
-    if power_status in (POWER_ON, 4) and status is not None:
-        pytest.xfail(
-            reason=(
-                "`CecSwitchEntity.is_on` returns `False` here"
-                " instead of `true` as expected."
-            )
-        )
     assert state.state == expected_state
 
 

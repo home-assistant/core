@@ -5,16 +5,22 @@ from unittest.mock import AsyncMock, call
 from pysmartthings import Attribute, Capability, Command
 from pysmartthings.models import HealthStatus
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
-    ATTR_OPTION,
     ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
 from homeassistant.components.smartthings import MAIN
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import (
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    CommonServiceArgument,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -26,8 +32,6 @@ from . import (
     trigger_health_update,
     trigger_update,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -84,8 +88,11 @@ async def test_select_option(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.theater_dryer", ATTR_OPTION: "run"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: "select.theater_dryer",
+            SelectServiceArgument.OPTION: "run",
+        },
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -116,8 +123,11 @@ async def test_select_option_map(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.vulcan_lamp", ATTR_OPTION: "extra_high"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: "select.vulcan_lamp",
+            SelectServiceArgument.OPTION: "extra_high",
+        },
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -126,6 +136,110 @@ async def test_select_option_map(
         Command.SET_BRIGHTNESS_LEVEL,
         MAIN,
         argument="extraHigh",
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["vd_stv_2017_k"])
+@pytest.mark.parametrize(
+    ("entity_id", "option", "capability", "command", "argument"),
+    [
+        pytest.param(
+            "select.theater_tv_samsung_8_series_49_picture_mode",
+            "movie",
+            Capability.CUSTOM_PICTURE_MODE,
+            Command.SET_PICTURE_MODE,
+            "Movie",
+            id="picture_mode",
+        ),
+    ],
+)
+async def test_select_tv_mode(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_id: str,
+    option: str,
+    capability: Capability,
+    command: Command,
+    argument: str,
+) -> None:
+    """Test selecting a TV picture mode sends the device's own name."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            SelectServiceArgument.OPTION: option,
+        },
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "4588d2d9-a8cf-40f4-9a0b-ed5dfbaccda1",
+        capability,
+        command,
+        MAIN,
+        argument=argument,
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["vd_stv_2017_k"])
+async def test_tv_picture_mode_unmapped_name(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a picture mode name without a mapping, like a localized one, passes through."""
+    set_attribute_value(
+        devices,
+        Capability.CUSTOM_PICTURE_MODE,
+        Attribute.SUPPORTED_PICTURE_MODES,
+        ["Dynamisch", "Film"],
+    )
+    set_attribute_value(
+        devices, Capability.CUSTOM_PICTURE_MODE, Attribute.PICTURE_MODE, "Film"
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("select.theater_tv_samsung_8_series_49_picture_mode")
+    assert state
+    assert state.state == "Film"
+    assert state.attributes[ATTR_OPTIONS] == ["Dynamisch", "Film"]
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: "select.theater_tv_samsung_8_series_49_picture_mode",
+            SelectServiceArgument.OPTION: "Dynamisch",
+        },
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "4588d2d9-a8cf-40f4-9a0b-ed5dfbaccda1",
+        Capability.CUSTOM_PICTURE_MODE,
+        Command.SET_PICTURE_MODE,
+        MAIN,
+        argument="Dynamisch",
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["vd_stv_2017_k"])
+async def test_tv_picture_mode_not_in_supported_list(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a picture mode the TV does not list, like its art mode one, is unknown."""
+    set_attribute_value(
+        devices, Capability.CUSTOM_PICTURE_MODE, Attribute.PICTURE_MODE, "Optimised"
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    assert (
+        hass.states.get("select.theater_tv_samsung_8_series_49_picture_mode").state
+        == STATE_UNKNOWN
     )
 
 
@@ -146,12 +260,15 @@ async def test_select_option_without_remote_control(
 
     with pytest.raises(
         ServiceValidationError,
-        match="Can only be updated when remote control is enabled",
+        match="Can only be changed when remote control is enabled",
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: "select.theater_dryer", ATTR_OPTION: "run"},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: "select.theater_dryer",
+                SelectServiceArgument.OPTION: "run",
+            },
             blocking=True,
         )
     devices.execute_device_command.assert_not_called()
@@ -207,10 +324,10 @@ async def test_select_option_as_integer(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: "select.clim_salon_dust_filter_alarm_threshold",
-            ATTR_OPTION: "300",
+            CommonServiceArgument.ENTITY_ID: "select.clim_salon_dust_filter_alarm_threshold",
+            SelectServiceArgument.OPTION: "300",
         },
         blocking=True,
     )
@@ -224,7 +341,7 @@ async def test_select_option_as_integer(
 
 
 @pytest.mark.parametrize("device_fixture", ["da_wm_dw_01011"])
-async def test_select_option_with_wrong_dishwasher_machine_state(
+async def test_select_dishwasher_washing_course_with_wrong_machine_state(
     hass: HomeAssistant,
     devices: AsyncMock,
     mock_config_entry: MockConfigEntry,
@@ -246,12 +363,84 @@ async def test_select_option_with_wrong_dishwasher_machine_state(
 
     with pytest.raises(
         ServiceValidationError,
-        match="Can only be updated when dishwasher machine state is stop",
+        match="Can only be changed when the dishwasher machine state is stop",
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: "select.dishwasher_1_selected_zone", ATTR_OPTION: "lower"},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: "select.dishwasher_1_cycle",
+                SelectServiceArgument.OPTION: "eco",
+            },
+            blocking=True,
+        )
+    devices.execute_device_command.assert_not_called()
+
+
+@pytest.mark.parametrize("device_fixture", ["da_wm_dw_01011"])
+async def test_select_dishwasher_washing_course(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test state update."""
+    set_attribute_value(
+        devices,
+        Capability.REMOTE_CONTROL_STATUS,
+        Attribute.REMOTE_CONTROL_ENABLED,
+        "true",
+    )
+    await setup_integration(hass, mock_config_entry)
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: "select.dishwasher_1_cycle",
+            SelectServiceArgument.OPTION: "eco",
+        },
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "7ff318f3-3772-524d-3c9f-72fcd26413ed",
+        Capability.SAMSUNG_CE_DISHWASHER_WASHING_COURSE,
+        Command.SET_WASHING_COURSE,
+        MAIN,
+        argument="eco",
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_wm_dw_01011"])
+async def test_select_dishwasher_washing_option_with_wrong_machine_state(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test state update."""
+    set_attribute_value(
+        devices,
+        Capability.REMOTE_CONTROL_STATUS,
+        Attribute.REMOTE_CONTROL_ENABLED,
+        "true",
+    )
+    set_attribute_value(
+        devices,
+        Capability.DISHWASHER_OPERATING_STATE,
+        Attribute.MACHINE_STATE,
+        "run",
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(
+        ServiceValidationError,
+        match="Can only be changed when the dishwasher machine state is stop",
+    ):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: "select.dishwasher_1_selected_zone",
+                SelectServiceArgument.OPTION: "lower",
+            },
             blocking=True,
         )
     devices.execute_device_command.assert_not_called()
@@ -274,8 +463,11 @@ async def test_select_dishwasher_washing_option(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.dishwasher_1_selected_zone", ATTR_OPTION: "lower"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: "select.dishwasher_1_selected_zone",
+            SelectServiceArgument.OPTION: "lower",
+        },
         blocking=True,
     )
     device_id = "7ff318f3-3772-524d-3c9f-72fcd26413ed"

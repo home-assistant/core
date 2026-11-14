@@ -1,0 +1,18 @@
+{
+  "type": "file",
+  "encoding": "base64",
+  "size": 5362,
+  "name": "manifest.json",
+  "path": "custom_components/hacs/manifest.json",
+  "content": "ewogICJuYW1lIjogIkhBQ1MiLAogICJkb21haW4iOiAiaGFjcyIKfQ==",
+  "sha": "3d21ec53a331a6f037a91c368710b99387d012c1",
+  "url": "https://api.github.com/repos/hacs/integration/contents/custom_components/hacs/manifest.json",
+  "git_url": "https://api.github.com/repos/hacs/integration/git/blobs/3d21ec53a331a6f037a91c368710b99387d012c1",
+  "html_url": "https://github.com/hacs/integration/blob/maincustom_components/hacs/manifest.json",
+  "download_url": "https://raw.githubusercontent.com/hacs/integration/main/custom_components/hacs/manifest.json",
+  "_links": {
+    "git": "https://api.github.com/repos/hacs/integration/git/blobs/3d21ec53a331a6f037a91c368710b99387d012c1",
+    "self": "https://api.github.com/repos/hacs/integration/contents/custom_components/hacs/manifest.json",
+    "html": "https://github.com/hacs/integration/blob/main/custom_components/hacs/manifest.json"
+  }
+}

@@ -1,17 +1,20 @@
 """Tests for the TechnoVE switch platform."""
 
+from dataclasses import replace
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 from technove import TechnoVEConnectionError, TechnoVEError
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_UNAVAILABLE,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -19,8 +22,6 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_with_selected_platforms
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_technove")
@@ -45,54 +46,57 @@ async def test_switches(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "method", "called_with_on", "called_with_off"),
+    ("entity_id", "service", "method", "called_with"),
     [
         (
             "switch.technove_station_auto_charge",
+            SERVICE_TURN_ON,
             "set_auto_charge",
             {"enabled": True},
+        ),
+        (
+            "switch.technove_station_auto_charge",
+            SERVICE_TURN_OFF,
+            "set_auto_charge",
             {"enabled": False},
         ),
         (
             "switch.technove_station_charging_enabled",
+            SERVICE_TURN_ON,
             "set_charging_enabled",
             {"enabled": True},
+        ),
+        (
+            "switch.technove_station_charging_enabled",
+            SERVICE_TURN_OFF,
+            "set_charging_enabled",
             {"enabled": False},
         ),
     ],
 )
 @pytest.mark.usefixtures("init_integration")
-async def test_switch_on_off(
+async def test_switch_services(
     hass: HomeAssistant,
     mock_technove: MagicMock,
     entity_id: str,
+    service: str,
     method: str,
-    called_with_on: dict[str, bool | int],
-    called_with_off: dict[str, bool | int],
+    called_with: dict[str, bool | int],
 ) -> None:
-    """Test on/off services."""
+    """Test switch services."""
     state = hass.states.get(entity_id)
     method_mock = getattr(mock_technove, method)
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
+        service,
         {ATTR_ENTITY_ID: state.entity_id},
         blocking=True,
     )
 
     assert method_mock.call_count == 1
-    method_mock.assert_called_with(**called_with_on)
-
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: state.entity_id},
-        blocking=True,
-    )
-
-    assert method_mock.call_count == 2
-    method_mock.assert_called_with(**called_with_off)
+    method_mock.assert_called_with(**called_with)
+    assert mock_technove.update.call_count == 2
 
 
 @pytest.mark.parametrize(
@@ -123,8 +127,8 @@ async def test_invalid_response(
     with pytest.raises(HomeAssistantError, match="Invalid response from TechnoVE API"):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: state.entity_id},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: state.entity_id},
             blocking=True,
         )
 
@@ -163,8 +167,8 @@ async def test_connection_error(
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: state.entity_id},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: state.entity_id},
             blocking=True,
         )
 
@@ -184,7 +188,7 @@ async def test_disable_charging_auto_charge(
 
     # Enable auto-charge mode
     device = mock_technove.update.return_value
-    device.info.auto_charge = True
+    device.info = replace(device.info, auto_charge=True)
 
     with pytest.raises(
         ServiceValidationError,
@@ -192,8 +196,8 @@ async def test_disable_charging_auto_charge(
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: entity_id},
+            SwitchService.TURN_OFF,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
 

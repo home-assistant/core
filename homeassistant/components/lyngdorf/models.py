@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 
-from lyngdorf.device import Receiver
+from lyngdorf import LyngdorfReceiver
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -12,7 +12,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 class LyngdorfRuntimeData:
     """Runtime data for Lyngdorf integration."""
 
-    receiver: Receiver
+    receiver: LyngdorfReceiver
     device_info: DeviceInfo
     zone_b_device_info: DeviceInfo | None
 

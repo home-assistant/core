@@ -1,6 +1,5 @@
 """Test the swiss_public_transport service."""
 
-import json
 import logging
 from unittest.mock import AsyncMock, patch
 
@@ -8,26 +7,27 @@ from opendata_transport.exceptions import (
     OpendataTransportConnectionError,
     OpendataTransportError,
 )
+import probatio
 import pytest
-from voluptuous import error as vol_er
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_array_fixture
 
 from homeassistant.components.swiss_public_transport.const import (
-    ATTR_LIMIT,
     CONF_DESTINATION,
     CONF_START,
     CONNECTIONS_COUNT,
     CONNECTIONS_MAX,
     DOMAIN,
-    SERVICE_FETCH_CONNECTIONS,
 )
 from homeassistant.components.swiss_public_transport.helper import unique_id_from_config
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID
+from homeassistant.components.swiss_public_transport.services import (
+    SwissPublicTransportService,
+    SwissPublicTransportServiceArgument,
+)
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_load_fixture
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,10 +40,13 @@ MOCK_DATA_STEP_BASE = {
 @pytest.mark.parametrize(
     ("data", "config_data"),
     [
-        ({ATTR_LIMIT: 1}, MOCK_DATA_STEP_BASE),
-        ({ATTR_LIMIT: 2}, MOCK_DATA_STEP_BASE),
-        ({ATTR_LIMIT: 3}, MOCK_DATA_STEP_BASE),
-        ({ATTR_LIMIT: CONNECTIONS_MAX}, MOCK_DATA_STEP_BASE),
+        ({SwissPublicTransportServiceArgument.LIMIT: 1}, MOCK_DATA_STEP_BASE),
+        ({SwissPublicTransportServiceArgument.LIMIT: 2}, MOCK_DATA_STEP_BASE),
+        ({SwissPublicTransportServiceArgument.LIMIT: 3}, MOCK_DATA_STEP_BASE),
+        (
+            {SwissPublicTransportServiceArgument.LIMIT: CONNECTIONS_MAX},
+            MOCK_DATA_STEP_BASE,
+        ),
         ({}, MOCK_DATA_STEP_BASE),
     ],
 )
@@ -68,35 +71,42 @@ async def test_service_call_fetch_connections_success(
         "homeassistant.components.swiss_public_transport.OpendataTransport",
         return_value=AsyncMock(),
     ) as mock:
-        mock().connections = json.loads(
-            await async_load_fixture(hass, "connections.json", DOMAIN)
-        )[0 : data.get(ATTR_LIMIT, CONNECTIONS_COUNT) + 2]
+        mock().connections = (
+            await async_load_json_array_fixture(hass, "connections.json", DOMAIN)
+        )[
+            0 : data.get(SwissPublicTransportServiceArgument.LIMIT, CONNECTIONS_COUNT)
+            + 2
+        ]
 
         await setup_integration(hass, config_entry)
 
-        data[ATTR_CONFIG_ENTRY_ID] = config_entry.entry_id
-        assert hass.services.has_service(DOMAIN, SERVICE_FETCH_CONNECTIONS)
+        data[CommonServiceArgument.CONFIG_ENTRY_ID] = config_entry.entry_id
+        assert hass.services.has_service(
+            DOMAIN, SwissPublicTransportService.FETCH_CONNECTIONS
+        )
         response = await hass.services.async_call(
             domain=DOMAIN,
-            service=SERVICE_FETCH_CONNECTIONS,
+            service=SwissPublicTransportService.FETCH_CONNECTIONS,
             service_data=data,
             blocking=True,
             return_response=True,
         )
         await hass.async_block_till_done()
         assert response["connections"] is not None
-        assert len(response["connections"]) == data.get(ATTR_LIMIT, CONNECTIONS_COUNT)
+        assert len(response["connections"]) == data.get(
+            SwissPublicTransportServiceArgument.LIMIT, CONNECTIONS_COUNT
+        )
 
 
 @pytest.mark.parametrize(
     ("limit", "config_data", "expected_result", "raise_error"),
     [
-        (-1, MOCK_DATA_STEP_BASE, pytest.raises(vol_er.MultipleInvalid), None),
-        (0, MOCK_DATA_STEP_BASE, pytest.raises(vol_er.MultipleInvalid), None),
+        (-1, MOCK_DATA_STEP_BASE, pytest.raises(probatio.error.MultipleInvalid), None),
+        (0, MOCK_DATA_STEP_BASE, pytest.raises(probatio.error.MultipleInvalid), None),
         (
             CONNECTIONS_MAX + 1,
             MOCK_DATA_STEP_BASE,
-            pytest.raises(vol_er.MultipleInvalid),
+            pytest.raises(probatio.error.MultipleInvalid),
             None,
         ),
         (
@@ -136,21 +146,23 @@ async def test_service_call_fetch_connections_error(
         "homeassistant.components.swiss_public_transport.OpendataTransport",
         return_value=AsyncMock(),
     ) as mock:
-        mock().connections = json.loads(
-            await async_load_fixture(hass, "connections.json", DOMAIN)
+        mock().connections = await async_load_json_array_fixture(
+            hass, "connections.json", DOMAIN
         )
 
         await setup_integration(hass, config_entry)
 
-        assert hass.services.has_service(DOMAIN, SERVICE_FETCH_CONNECTIONS)
+        assert hass.services.has_service(
+            DOMAIN, SwissPublicTransportService.FETCH_CONNECTIONS
+        )
         mock().async_get_data.side_effect = raise_error
         with expected_result:
             await hass.services.async_call(
                 domain=DOMAIN,
-                service=SERVICE_FETCH_CONNECTIONS,
+                service=SwissPublicTransportService.FETCH_CONNECTIONS,
                 service_data={
-                    ATTR_CONFIG_ENTRY_ID: config_entry.entry_id,
-                    ATTR_LIMIT: limit,
+                    CommonServiceArgument.CONFIG_ENTRY_ID: config_entry.entry_id,
+                    SwissPublicTransportServiceArgument.LIMIT: limit,
                 },
                 blocking=True,
                 return_response=True,
@@ -178,18 +190,20 @@ async def test_service_call_load_unload(
         "homeassistant.components.swiss_public_transport.OpendataTransport",
         return_value=AsyncMock(),
     ) as mock:
-        mock().connections = json.loads(
-            await async_load_fixture(hass, "connections.json", DOMAIN)
+        mock().connections = await async_load_json_array_fixture(
+            hass, "connections.json", DOMAIN
         )
 
         await setup_integration(hass, config_entry)
 
-        assert hass.services.has_service(DOMAIN, SERVICE_FETCH_CONNECTIONS)
+        assert hass.services.has_service(
+            DOMAIN, SwissPublicTransportService.FETCH_CONNECTIONS
+        )
         response = await hass.services.async_call(
             domain=DOMAIN,
-            service=SERVICE_FETCH_CONNECTIONS,
+            service=SwissPublicTransportService.FETCH_CONNECTIONS,
             service_data={
-                ATTR_CONFIG_ENTRY_ID: config_entry.entry_id,
+                CommonServiceArgument.CONFIG_ENTRY_ID: config_entry.entry_id,
             },
             blocking=True,
             return_response=True,
@@ -203,9 +217,9 @@ async def test_service_call_load_unload(
         with pytest.raises(ServiceValidationError) as err:
             await hass.services.async_call(
                 domain=DOMAIN,
-                service=SERVICE_FETCH_CONNECTIONS,
+                service=SwissPublicTransportService.FETCH_CONNECTIONS,
                 service_data={
-                    ATTR_CONFIG_ENTRY_ID: config_entry.entry_id,
+                    CommonServiceArgument.CONFIG_ENTRY_ID: config_entry.entry_id,
                 },
                 blocking=True,
                 return_response=True,
@@ -215,9 +229,9 @@ async def test_service_call_load_unload(
         with pytest.raises(ServiceValidationError) as err:
             await hass.services.async_call(
                 domain=DOMAIN,
-                service=SERVICE_FETCH_CONNECTIONS,
+                service=SwissPublicTransportService.FETCH_CONNECTIONS,
                 service_data={
-                    ATTR_CONFIG_ENTRY_ID: bad_entry_id,
+                    CommonServiceArgument.CONFIG_ENTRY_ID: bad_entry_id,
                 },
                 blocking=True,
                 return_response=True,

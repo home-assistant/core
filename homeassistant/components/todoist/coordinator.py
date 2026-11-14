@@ -1,7 +1,7 @@
 """DataUpdateCoordinator for the Todoist component."""
 
 import asyncio
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncIterator
 from datetime import timedelta
 import logging
 from typing import override
@@ -19,7 +19,7 @@ type TodoistConfigEntry = ConfigEntry[TodoistCoordinator]
 
 
 async def flatten_async_pages[T](
-    pages: AsyncGenerator[list[T]],
+    pages: AsyncIterator[list[T]],
 ) -> list[T]:
     """Flatten paginated results from an async generator."""
     all_items: list[T] = []
@@ -35,7 +35,7 @@ class TodoistCoordinator(DataUpdateCoordinator[list[Task]]):
         self,
         hass: HomeAssistant,
         logger: logging.Logger,
-        entry: ConfigEntry | None,
+        entry: TodoistConfigEntry | None,
         update_interval: timedelta,
         api: TodoistAPIAsync,
         token: str,

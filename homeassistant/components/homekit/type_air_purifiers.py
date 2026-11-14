@@ -8,11 +8,12 @@ from pyhap.const import CATEGORY_AIR_PURIFIER
 from pyhap.service import Service
 from pyhap.util import callback as pyhap_callback
 
+from homeassistant.components.fan import FanEntityStateAttribute
 from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
     UnitOfTemperature,
 )
 from homeassistant.core import (
@@ -35,6 +36,7 @@ from .const import (
     CHAR_FILTER_LIFE_LEVEL,
     CHAR_NAME,
     CHAR_PM25_DENSITY,
+    CHAR_ROTATION_SPEED,
     CHAR_TARGET_AIR_PURIFIER_STATE,
     CONF_LINKED_FILTER_CHANGE_INDICATION,
     CONF_LINKED_FILTER_LIFE_LEVEL,
@@ -48,7 +50,7 @@ from .const import (
     SERV_TEMPERATURE_SENSOR,
     THRESHOLD_FILTER_CHANGE_NEEDED,
 )
-from .type_fans import ATTR_PRESET_MODE, CHAR_ROTATION_SPEED, Fan
+from .type_fans import Fan
 from .util import (
     cleanup_name_for_homekit,
     convert_to_float,
@@ -360,7 +362,7 @@ class AirPurifier(Fan):
             return
 
         unit = new_state.attributes.get(
-            ATTR_UNIT_OF_MEASUREMENT, UnitOfTemperature.CELSIUS
+            EntityStateAttribute.UNIT_OF_MEASUREMENT, UnitOfTemperature.CELSIUS
         )
         current_temperature = temperature_to_homekit(current_temperature, unit)
 
@@ -468,8 +470,8 @@ class AirPurifier(Fan):
 
         # Automatic mode is represented in HASS by a preset called Auto or auto
         attributes = new_state.attributes
-        if ATTR_PRESET_MODE in attributes:
-            current_preset_mode = attributes.get(ATTR_PRESET_MODE)
+        if FanEntityStateAttribute.PRESET_MODE in attributes:
+            current_preset_mode = attributes.get(FanEntityStateAttribute.PRESET_MODE)
             self.char_target_air_purifier_state.set_value(
                 TARGET_STATE_AUTO
                 if current_preset_mode and current_preset_mode.lower() == "auto"

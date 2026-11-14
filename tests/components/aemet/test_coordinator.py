@@ -4,14 +4,13 @@ from unittest.mock import patch
 
 from aemet_opendata.exceptions import AemetError
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.aemet.coordinator import WEATHER_UPDATE_INTERVAL
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from .util import async_init_integration
-
-from tests.common import async_fire_time_changed
 
 
 async def test_coordinator_error(

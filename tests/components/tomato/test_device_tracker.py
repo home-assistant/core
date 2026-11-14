@@ -2,10 +2,10 @@
 
 from unittest import mock
 
+import probatio
 import pytest
 import requests
 import requests_mock
-import voluptuous as vol
 
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.tomato import device_tracker as tomato
@@ -230,7 +230,7 @@ def test_config_valid_verify_ssl_bool(hass: HomeAssistant, mock_session_send) ->
 
 def test_config_errors() -> None:
     """Test for configuration errors."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         tomato.PLATFORM_SCHEMA(
             {
                 CONF_PLATFORM: DEVICE_TRACKER_DOMAIN,
@@ -243,7 +243,7 @@ def test_config_errors() -> None:
                 tomato.CONF_HTTP_ID: "0987654321",
             }
         )
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         tomato.PLATFORM_SCHEMA(
             {
                 CONF_PLATFORM: DEVICE_TRACKER_DOMAIN,
@@ -256,7 +256,7 @@ def test_config_errors() -> None:
                 tomato.CONF_HTTP_ID: "0987654321",
             }
         )
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         tomato.PLATFORM_SCHEMA(
             {
                 CONF_PLATFORM: DEVICE_TRACKER_DOMAIN,
@@ -269,7 +269,7 @@ def test_config_errors() -> None:
                 tomato.CONF_HTTP_ID: "0987654321",
             }
         )
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         tomato.PLATFORM_SCHEMA(
             {
                 CONF_PLATFORM: DEVICE_TRACKER_DOMAIN,
@@ -282,7 +282,7 @@ def test_config_errors() -> None:
                 tomato.CONF_HTTP_ID: "0987654321",
             }
         )
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         tomato.PLATFORM_SCHEMA(
             {
                 CONF_PLATFORM: DEVICE_TRACKER_DOMAIN,

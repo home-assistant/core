@@ -20,20 +20,23 @@ from pynecil import (
     USBPDMode,
 )
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
-    ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -138,8 +141,8 @@ async def test_select_option(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        service_data={ATTR_OPTION: option},
+        SelectService.SELECT_OPTION,
+        service_data={SelectServiceArgument.OPTION: option},
         target={ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
@@ -169,8 +172,8 @@ async def test_select_option_exception(
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            service_data={ATTR_OPTION: "battery_3s"},
+            SelectService.SELECT_OPTION,
+            service_data={SelectServiceArgument.OPTION: "battery_3s"},
             target={ATTR_ENTITY_ID: "select.pinecil_power_source"},
             blocking=True,
         )

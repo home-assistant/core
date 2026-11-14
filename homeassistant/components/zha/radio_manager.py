@@ -11,7 +11,7 @@ import os
 from typing import Any, Self
 
 from bellows.config import CONF_USE_THREAD
-import voluptuous as vol
+import probatio
 from zha.application.const import RadioType
 from zigpy.application import ControllerApplication
 import zigpy.backups
@@ -39,6 +39,7 @@ from .const import (
     CONF_RADIO_TYPE,
     CONF_ZIGPY,
     DEFAULT_DATABASE_NAME,
+    DOMAIN,
     EZSP_OVERWRITE_EUI64,
 )
 from .helpers import get_zha_data
@@ -66,33 +67,37 @@ BACKUP_RETRIES = 5
 MIGRATION_RETRIES = 100
 
 
-DEVICE_SCHEMA = vol.Schema(
+DEVICE_SCHEMA = probatio.Schema(
     {
-        vol.Required("path"): str,
-        vol.Optional("baudrate", default=115200): int,
-        vol.Optional("flow_control", default=None): vol.In(
+        probatio.Required("path"): str,
+        probatio.Optional("baudrate", default=115200): int,
+        probatio.Optional("flow_control", default=None): probatio.In(
             ["hardware", "software", None]
         ),
     }
 )
 
-HARDWARE_DISCOVERY_SCHEMA = vol.Schema(
+HARDWARE_DISCOVERY_SCHEMA = probatio.Schema(
     {
-        vol.Required("name"): str,
-        vol.Required("port"): DEVICE_SCHEMA,
-        vol.Required("radio_type"): str,
-        vol.Optional("flow_strategy"): vol.All(str, vol.Coerce(ZigbeeFlowStrategy)),
-        vol.Optional("tx_power"): vol.All(vol.Coerce(int), vol.Range(min=0, max=10)),
+        probatio.Required("name"): str,
+        probatio.Required("port"): DEVICE_SCHEMA,
+        probatio.Required("radio_type"): str,
+        probatio.Optional("flow_strategy"): probatio.All(
+            str, probatio.Coerce(ZigbeeFlowStrategy)
+        ),
+        probatio.Optional("tx_power"): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=0, max=10)
+        ),
     }
 )
 
-HARDWARE_MIGRATION_SCHEMA = vol.Schema(
+HARDWARE_MIGRATION_SCHEMA = probatio.Schema(
     {
-        vol.Required("new_discovery_info"): HARDWARE_DISCOVERY_SCHEMA,
-        vol.Required("old_discovery_info"): vol.Schema(
+        probatio.Required("new_discovery_info"): HARDWARE_DISCOVERY_SCHEMA,
+        probatio.Required("old_discovery_info"): probatio.Schema(
             {
-                vol.Exclusive("hw", "discovery"): HARDWARE_DISCOVERY_SCHEMA,
-                vol.Exclusive("usb", "discovery"): UsbServiceInfo,
+                probatio.Exclusive("hw", "discovery"): HARDWARE_DISCOVERY_SCHEMA,
+                probatio.Exclusive("usb", "discovery"): UsbServiceInfo,
             }
         ),
     }
@@ -178,7 +183,7 @@ class ZhaRadioManager:
         self,
         *,
         connect: bool = True,
-        device_resolver: Callable[[zigpy.device.Device], zigpy.device.Device]
+        device_resolver: Callable[[zigpy.device.BaseDevice], zigpy.device.BaseDevice]
         | None = None,
     ) -> AsyncGenerator[ControllerApplication]:
         """Connect to the radio with the current config and then clean up.
@@ -289,9 +294,15 @@ class ZhaRadioManager:
             repairs.async_delete_blocking_issues(self.hass)
             return ProbeResult.RADIO_TYPE_DETECTED
 
+        # Disabled entries are skipped since their linked issues are hidden
+        entries = self.hass.config_entries.async_entries(
+            DOMAIN, include_ignore=False, include_disabled=False
+        )
+        config_entry_id = entries[0].entry_id if len(entries) == 1 else None
+
         with suppress(repairs.wrong_silabs_firmware.AlreadyRunningEZSP):
             if await repairs.wrong_silabs_firmware.warn_on_wrong_silabs_firmware(
-                self.hass, self.device_path
+                self.hass, self.device_path, config_entry_id
             ):
                 return ProbeResult.WRONG_FIRMWARE_INSTALLED
 

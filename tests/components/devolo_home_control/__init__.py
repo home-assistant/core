@@ -1,9 +1,9 @@
 """Tests for the devolo_home_control integration."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.devolo_home_control.const import DOMAIN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 def configure_integration(hass: HomeAssistant) -> MockConfigEntry:

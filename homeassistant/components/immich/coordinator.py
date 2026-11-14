@@ -126,6 +126,18 @@ class ImmichDataUpdateCoordinator(DataUpdateCoordinator[ImmichData]):
                 translation_placeholders={"error": str(err)},
             ) from err
 
+        if (
+            self.data is not None
+            and self.data.server_about.version != server_about.version
+        ):
+            # The API client adapts to the server version during setup
+            _LOGGER.info(
+                "Immich server version changed from %s to %s, reloading integration",
+                self.data.server_about.version,
+                server_about.version,
+            )
+            self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
+
         return ImmichData(
             server_about, server_storage, server_usage, server_version_check
         )

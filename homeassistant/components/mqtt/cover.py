@@ -4,16 +4,15 @@ from contextlib import suppress
 import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import cover
 from homeassistant.components.cover import (
-    ATTR_POSITION,
-    ATTR_TILT_POSITION,
     DEVICE_CLASSES_SCHEMA,
     CoverEntity,
     CoverEntityFeature,
     CoverEntityStateAttribute,
+    CoverServiceArgument,
     CoverState,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -115,7 +114,7 @@ def validate_options(config: ConfigType) -> ConfigType:
     If set position topic is set then get position topic is set as well.
     """
     if CONF_SET_POSITION_TOPIC in config and CONF_GET_POSITION_TOPIC not in config:
-        raise vol.Invalid(
+        raise probatio.Invalid(
             f"'{CONF_SET_POSITION_TOPIC}' must be set together with"
             f" '{CONF_GET_POSITION_TOPIC}'."
         )
@@ -123,30 +122,30 @@ def validate_options(config: ConfigType) -> ConfigType:
     # if templates are set make sure the topic for the template is also set
 
     if CONF_VALUE_TEMPLATE in config and CONF_STATE_TOPIC not in config:
-        raise vol.Invalid(
+        raise probatio.Invalid(
             f"'{CONF_VALUE_TEMPLATE}' must be set together with '{CONF_STATE_TOPIC}'."
         )
 
     if CONF_GET_POSITION_TEMPLATE in config and CONF_GET_POSITION_TOPIC not in config:
-        raise vol.Invalid(
+        raise probatio.Invalid(
             f"'{CONF_GET_POSITION_TEMPLATE}' must be set together with"
             f" '{CONF_GET_POSITION_TOPIC}'."
         )
 
     if CONF_SET_POSITION_TEMPLATE in config and CONF_SET_POSITION_TOPIC not in config:
-        raise vol.Invalid(
+        raise probatio.Invalid(
             f"'{CONF_SET_POSITION_TEMPLATE}' must be set together with"
             f" '{CONF_SET_POSITION_TOPIC}'."
         )
 
     if CONF_TILT_COMMAND_TEMPLATE in config and CONF_TILT_COMMAND_TOPIC not in config:
-        raise vol.Invalid(
+        raise probatio.Invalid(
             f"'{CONF_TILT_COMMAND_TEMPLATE}' must be set together with"
             f" '{CONF_TILT_COMMAND_TOPIC}'."
         )
 
     if CONF_TILT_STATUS_TEMPLATE in config and CONF_TILT_STATUS_TOPIC not in config:
-        raise vol.Invalid(
+        raise probatio.Invalid(
             f"'{CONF_TILT_STATUS_TEMPLATE}' must be set together with"
             f" '{CONF_TILT_STATUS_TOPIC}'."
         )
@@ -156,59 +155,61 @@ def validate_options(config: ConfigType) -> ConfigType:
 
 _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
     {
-        vol.Optional(CONF_COMMAND_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_DEVICE_CLASS): vol.Any(DEVICE_CLASSES_SCHEMA, None),
-        vol.Optional(CONF_GET_POSITION_TOPIC): valid_subscribe_topic,
-        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
-        vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
-        vol.Optional(CONF_PAYLOAD_CLOSE, default=DEFAULT_PAYLOAD_CLOSE): vol.Any(
-            cv.string, None
-        ),
-        vol.Optional(CONF_PAYLOAD_OPEN, default=DEFAULT_PAYLOAD_OPEN): vol.Any(
-            cv.string, None
-        ),
-        vol.Optional(CONF_PAYLOAD_STOP, default=DEFAULT_PAYLOAD_STOP): vol.Any(
-            cv.string, None
-        ),
-        vol.Optional(CONF_POSITION_CLOSED, default=DEFAULT_POSITION_CLOSED): int,
-        vol.Optional(CONF_POSITION_OPEN, default=DEFAULT_POSITION_OPEN): int,
-        vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
-        vol.Optional(CONF_SET_POSITION_TEMPLATE): cv.template,
-        vol.Optional(CONF_SET_POSITION_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_STATE_CLOSED, default=STATE_CLOSED): cv.string,
-        vol.Optional(CONF_STATE_CLOSING, default=STATE_CLOSING): cv.string,
-        vol.Optional(CONF_STATE_OPEN, default=STATE_OPEN): cv.string,
-        vol.Optional(CONF_STATE_OPENING, default=STATE_OPENING): cv.string,
-        vol.Optional(CONF_STATE_STOPPED, default=DEFAULT_STATE_STOPPED): cv.string,
-        vol.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
-        vol.Optional(
+        probatio.Optional(CONF_COMMAND_TOPIC): valid_publish_topic,
+        probatio.Optional(CONF_DEVICE_CLASS): probatio.Any(DEVICE_CLASSES_SCHEMA, None),
+        probatio.Optional(CONF_GET_POSITION_TOPIC): valid_subscribe_topic,
+        probatio.Optional(CONF_NAME): probatio.Any(cv.string, None),
+        probatio.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
+        probatio.Optional(
+            CONF_PAYLOAD_CLOSE, default=DEFAULT_PAYLOAD_CLOSE
+        ): probatio.Any(cv.string, None),
+        probatio.Optional(
+            CONF_PAYLOAD_OPEN, default=DEFAULT_PAYLOAD_OPEN
+        ): probatio.Any(cv.string, None),
+        probatio.Optional(
+            CONF_PAYLOAD_STOP, default=DEFAULT_PAYLOAD_STOP
+        ): probatio.Any(cv.string, None),
+        probatio.Optional(CONF_POSITION_CLOSED, default=DEFAULT_POSITION_CLOSED): int,
+        probatio.Optional(CONF_POSITION_OPEN, default=DEFAULT_POSITION_OPEN): int,
+        probatio.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
+        probatio.Optional(CONF_SET_POSITION_TEMPLATE): cv.template,
+        probatio.Optional(CONF_SET_POSITION_TOPIC): valid_publish_topic,
+        probatio.Optional(CONF_STATE_CLOSED, default=STATE_CLOSED): cv.string,
+        probatio.Optional(CONF_STATE_CLOSING, default=STATE_CLOSING): cv.string,
+        probatio.Optional(CONF_STATE_OPEN, default=STATE_OPEN): cv.string,
+        probatio.Optional(CONF_STATE_OPENING, default=STATE_OPENING): cv.string,
+        probatio.Optional(CONF_STATE_STOPPED, default=DEFAULT_STATE_STOPPED): cv.string,
+        probatio.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
+        probatio.Optional(
             CONF_TILT_CLOSED_POSITION, default=DEFAULT_TILT_CLOSED_POSITION
         ): int,
-        vol.Optional(CONF_TILT_COMMAND_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_TILT_MAX, default=DEFAULT_TILT_MAX): int,
-        vol.Optional(CONF_TILT_MIN, default=DEFAULT_TILT_MIN): int,
-        vol.Optional(CONF_TILT_OPEN_POSITION, default=DEFAULT_TILT_OPEN_POSITION): int,
-        vol.Optional(
+        probatio.Optional(CONF_TILT_COMMAND_TOPIC): valid_publish_topic,
+        probatio.Optional(CONF_TILT_MAX, default=DEFAULT_TILT_MAX): int,
+        probatio.Optional(CONF_TILT_MIN, default=DEFAULT_TILT_MIN): int,
+        probatio.Optional(
+            CONF_TILT_OPEN_POSITION, default=DEFAULT_TILT_OPEN_POSITION
+        ): int,
+        probatio.Optional(
             CONF_TILT_STATE_OPTIMISTIC, default=DEFAULT_TILT_OPTIMISTIC
         ): cv.boolean,
-        vol.Optional(CONF_TILT_STATUS_TOPIC): valid_subscribe_topic,
-        vol.Optional(CONF_TILT_STATUS_TEMPLATE): cv.template,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_GET_POSITION_TEMPLATE): cv.template,
-        vol.Optional(CONF_TILT_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_PAYLOAD_STOP_TILT, default=DEFAULT_PAYLOAD_STOP): vol.Any(
-            cv.string, None
-        ),
+        probatio.Optional(CONF_TILT_STATUS_TOPIC): valid_subscribe_topic,
+        probatio.Optional(CONF_TILT_STATUS_TEMPLATE): cv.template,
+        probatio.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        probatio.Optional(CONF_GET_POSITION_TEMPLATE): cv.template,
+        probatio.Optional(CONF_TILT_COMMAND_TEMPLATE): cv.template,
+        probatio.Optional(
+            CONF_PAYLOAD_STOP_TILT, default=DEFAULT_PAYLOAD_STOP
+        ): probatio.Any(cv.string, None),
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-PLATFORM_SCHEMA_MODERN = vol.All(
+PLATFORM_SCHEMA_MODERN = probatio.All(
     _PLATFORM_SCHEMA_BASE,
     validate_options,
 )
 
-DISCOVERY_SCHEMA = vol.All(
-    _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
+DISCOVERY_SCHEMA = probatio.All(
+    _PLATFORM_SCHEMA_BASE.extend({}, extra=probatio.REMOVE_EXTRA),
     validate_options,
 )
 
@@ -575,7 +576,7 @@ class MqttCover(MqttEntity, CoverEntity):
     @override
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
-        tilt_percentage = kwargs[ATTR_TILT_POSITION]
+        tilt_percentage = kwargs[CoverServiceArgument.TILT_POSITION]
         tilt_ranged = round(
             percentage_to_ranged_value(self._tilt_range, tilt_percentage)
         )
@@ -608,7 +609,7 @@ class MqttCover(MqttEntity, CoverEntity):
     @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        position_percentage = kwargs[ATTR_POSITION]
+        position_percentage = kwargs[CoverServiceArgument.POSITION]
         position_ranged = round(
             percentage_to_ranged_value(self._pos_range, position_percentage)
         )
