@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+    <channel>
+        <title>Fully Kiosk APK Updates</title>
+        <link>https://www.fully-kiosk.com/files</link>
+        <description>Fully Kiosk APK downloads updated within the last 365 days.</description>
+        <item>
+            <title>Fully-Kiosk-Browser-v1.61.4.apk</title>
+            <link>https://www.fully-kiosk.com/files/2026/10/Fully-Kiosk-Browser-v1.61.4.apk</link>
+            <description>Download Fully-Kiosk-Browser-v1.61.4.apk (7.05 MB)</description>
+        </item>
+        <item>
+            <title>Fully-Kiosk-Browser-v1.61.4-emm.apk</title>
+            <link>https://www.fully-kiosk.com/files/2026/10/Fully-Kiosk-Browser-v1.61.4-emm.apk</link>
+            <description>Download Fully-Kiosk-Browser-v1.61.4-emm.apk (7.61 MB)</description>
+        </item>
+        <item>
+            <title>Fully-Kiosk-Browser-v1.61.3.apk</title>
+            <link>https://www.fully-kiosk.com/files/2026/09/Fully-Kiosk-Browser-v1.61.3.apk</link>
+            <description>Download Fully-Kiosk-Browser-v1.61.3.apk (7.05 MB)</description>
+        </item>
+        <item>
+            <title>Fully-Kiosk-Browser-v1.61.3-emm.apk</title>
+            <link>https://www.fully-kiosk.com/files/2026/09/Fully-Kiosk-Browser-v1.61.3-emm.apk</link>
+            <description>Download Fully-Kiosk-Browser-v1.61.3-emm.apk (7.61 MB)</description>
+        </item>
+        <item>
+            <title>Fully-Single-App-Kiosk-v1.21.4.apk</title>
+            <link>https://www.fully-kiosk.com/files/2026/10/Fully-Single-App-Kiosk-v1.21.4.apk</link>
+            <description>Download Fully-Single-App-Kiosk-v1.21.4.apk (7.10 MB)</description>
+        </item>
+        <item>
+            <title>Fully-Video-Kiosk-v1.21.4.apk</title>
+            <link>https://www.fully-kiosk.com/files/2026/10/Fully-Video-Kiosk-v1.21.4.apk</link>
+            <description>Download Fully-Video-Kiosk-v1.21.4.apk (7.10 MB)</description>
+        </item>
+    </channel>
+</rss>
