@@ -90,7 +90,6 @@ class VictronModbusConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm setting up the discovered device."""
         if user_input is None:
-            self._set_confirm_only()
             return self.async_show_form(
                 step_id="confirm",
                 description_placeholders={
