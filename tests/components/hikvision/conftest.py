@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
+    CONF_VERIFY_SSL,
     Platform,
 )
 
@@ -61,6 +62,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_USERNAME: TEST_USERNAME,
             CONF_PASSWORD: TEST_PASSWORD,
             CONF_SSL: False,
+            CONF_VERIFY_SSL: True,
         },
         unique_id=TEST_DEVICE_ID,
     )

@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
+    CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -58,11 +59,12 @@ async def test_form(hass: HomeAssistant, mock_hikcamera: MagicMock) -> None:
         CONF_USERNAME: TEST_USERNAME,
         CONF_PASSWORD: TEST_PASSWORD,
         CONF_SSL: False,
+        CONF_VERIFY_SSL: True,
     }
 
-    # Verify HikCamera was called with the ssl parameter
+    # Certificate verification defaults to on; it is unused over plain HTTP
     mock_hikcamera.assert_called_once_with(
-        f"http://{TEST_HOST}", TEST_PORT, TEST_USERNAME, TEST_PASSWORD, False
+        f"http://{TEST_HOST}", TEST_PORT, TEST_USERNAME, TEST_PASSWORD, True
     )
 
 
@@ -245,9 +247,40 @@ async def test_form_with_ssl(hass: HomeAssistant, mock_hikcamera: MagicMock) -> 
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_SSL] is True
+    assert result["data"][CONF_VERIFY_SSL] is True
     assert result["result"].unique_id == TEST_DEVICE_ID
 
-    # Verify HikCamera was called with ssl=True
+    # Verify HikCamera was called over HTTPS, verifying the certificate
     mock_hikcamera.assert_called_once_with(
         f"https://{TEST_HOST}", TEST_PORT, TEST_USERNAME, TEST_PASSWORD, True
+    )
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_form_with_ssl_without_verification(
+    hass: HomeAssistant, mock_hikcamera: MagicMock
+) -> None:
+    """Test user flow can use HTTPS without verifying the certificate."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: TEST_HOST,
+            CONF_PORT: TEST_PORT,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_SSL: True,
+            CONF_VERIFY_SSL: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_SSL] is True
+    assert result["data"][CONF_VERIFY_SSL] is False
+
+    mock_hikcamera.assert_called_once_with(
+        f"https://{TEST_HOST}", TEST_PORT, TEST_USERNAME, TEST_PASSWORD, False
     )
