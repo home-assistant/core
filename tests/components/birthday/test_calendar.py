@@ -1,11 +1,19 @@
 """Test the Birthday calendar."""
 
-from typing import Any
+from types import MappingProxyType
+from typing import Any, cast
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.birthday.calendar import _ordinal
+from homeassistant.components.birthday.const import (
+    CONF_DAY,
+    CONF_MONTH,
+    CONF_PERSON,
+    SUBENTRY_TYPE_BIRTHDAY,
+)
+from homeassistant.config_entries import ConfigEntryState, ConfigSubentry
 from homeassistant.core import HomeAssistant
 
 pytestmark = pytest.mark.freeze_time("2025-01-10 12:00:00")
@@ -28,7 +36,10 @@ async def _get_events(
         blocking=True,
         return_response=True,
     )
-    return response[ENTITY_ID]["events"]
+    assert response is not None
+    return cast(
+        list[dict[str, Any]], cast(dict[str, Any], response[ENTITY_ID])["events"]
+    )
 
 
 @pytest.mark.parametrize(
@@ -127,3 +138,30 @@ async def test_no_birthdays(
     assert state.state == "off"
     assert "message" not in state.attributes
     assert await _get_events(hass, "2025-01-01 00:00:00", "2025-12-31 23:59:59") == []
+
+
+async def test_refresh_on_birthday_change(
+    hass: HomeAssistant, init_integration: MockConfigEntry
+) -> None:
+    """Test the entity is refreshed, not reloaded, when a birthday is added."""
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes["message"] == "🎂 Leap's 25th birthday"
+    last_reported = state.last_reported
+
+    hass.config_entries.async_add_subentry(
+        init_integration,
+        ConfigSubentry(
+            data=MappingProxyType({CONF_PERSON: "Zed", CONF_DAY: 11, CONF_MONTH: 1}),
+            subentry_type=SUBENTRY_TYPE_BIRTHDAY,
+            title="Zed",
+            unique_id=None,
+        ),
+    )
+    await hass.async_block_till_done()
+
+    assert init_integration.state is ConfigEntryState.LOADED
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes["message"] == "🎂 Zed's birthday"
+    assert state.last_reported >= last_reported

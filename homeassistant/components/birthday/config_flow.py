@@ -82,6 +82,14 @@ def _parse(
     elif name.casefold() in {n.casefold() for n in existing}:
         errors[CONF_PERSON] = "name_exists"
 
+    for field in (CONF_DAY, CONF_MONTH, CONF_YEAR):
+        if field == CONF_YEAR and user_input.get(field) is None:
+            continue
+        if not float(user_input[field]).is_integer():
+            errors[field] = f"invalid_{field}"
+    if any(field in errors for field in (CONF_DAY, CONF_MONTH, CONF_YEAR)):
+        return {}, errors, placeholders
+
     year: int | None = None
     if (raw_year := user_input.get(CONF_YEAR)) is not None:
         year = int(raw_year)
@@ -147,7 +155,7 @@ class BirthdayConfigFlow(ConfigFlow, domain=DOMAIN):
                             for b in self._birthdays
                         ],
                     )
-                user_input = None  # riapre il form vuoto
+                user_input = None  # reopens the form
 
         return self.async_show_form(
             step_id="user",

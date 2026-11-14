@@ -162,6 +162,31 @@ ERROR_CASES = [
         },
         id="multiple_errors",
     ),
+    pytest.param(
+        {CONF_PERSON: "A", CONF_DAY: 1.5, CONF_MONTH: 1},
+        {CONF_DAY: "invalid_day"},
+        id="day_not_integer",
+    ),
+    pytest.param(
+        {CONF_PERSON: "A", CONF_DAY: 1, CONF_MONTH: 1.5},
+        {CONF_MONTH: "invalid_month"},
+        id="month_not_integer",
+    ),
+    pytest.param(
+        {CONF_PERSON: "A", CONF_DAY: 1, CONF_MONTH: 1, CONF_YEAR: 1990.5},
+        {CONF_YEAR: "invalid_year"},
+        id="year_not_integer",
+    ),
+    pytest.param(
+        {CONF_PERSON: " ", CONF_DAY: 1.5, CONF_MONTH: 1.5, CONF_YEAR: 1990.5},
+        {
+            CONF_PERSON: "name_empty",
+            CONF_DAY: "invalid_day",
+            CONF_MONTH: "invalid_month",
+            CONF_YEAR: "invalid_year",
+        },
+        id="all_not_integer",
+    ),
 ]
 
 
@@ -203,6 +228,7 @@ async def test_user_flow_error_placeholders(hass: HomeAssistant) -> None:
         result["flow_id"],
         {CONF_PERSON: "A", CONF_DAY: 29, CONF_MONTH: 2, CONF_YEAR: 2001},
     )
+    assert result["description_placeholders"] is not None
     assert result["description_placeholders"]["year"] == "2001"
     assert result["description_placeholders"]["max_day"] == "28"
 
@@ -325,6 +351,7 @@ async def test_subentry_reconfigure(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
+    assert result["data_schema"] is not None
     assert "add_another" not in result["data_schema"].schema
 
     # Keeping the same name is fine, the flow ignores the edited birthday

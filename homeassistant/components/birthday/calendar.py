@@ -46,6 +46,20 @@ class BirthdayCalendar(CalendarEntity):
         self._entry = entry
         self._attr_unique_id = entry.entry_id
 
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Refresh the calendar when birthdays are added, edited or removed."""
+        await super().async_added_to_hass()
+        self._entry.async_on_unload(
+            self._entry.add_update_listener(self._async_entry_updated)
+        )
+
+    async def _async_entry_updated(
+        self, hass: HomeAssistant, entry: ConfigEntry
+    ) -> None:
+        """Write the state and notify the event subscribers."""
+        self.async_write_ha_state()
+
     def _events(self, start: date, end: date) -> list[CalendarEvent]:
         events: list[CalendarEvent] = []
         for subentry in self._entry.subentries.values():
@@ -55,7 +69,7 @@ class BirthdayCalendar(CalendarEntity):
             for year in range(start.year, end.year + 1):
                 try:
                     day = date(year, data[CONF_MONTH], data[CONF_DAY])
-                except ValueError:  # 29 febbraio in anno non bisestile
+                except ValueError:
                     day = date(year, 3, 1)
                 if not start <= day <= end:
                     continue
@@ -93,6 +107,14 @@ class BirthdayCalendar(CalendarEntity):
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
         """Return birthdays in the requested range."""
-        return self._events(
-            start_date.date(), (end_date - timedelta(microseconds=1)).date()
-        )
+        start_day = start_date.date()
+        if start_day > date.min:
+            start_day -= timedelta(days=1)
+        return [
+            event
+            for event in self._events(
+                start_day, (end_date - timedelta(microseconds=1)).date()
+            )
+            if event.end_datetime_local >= start_date
+            and event.start_datetime_local < end_date
+        ]
