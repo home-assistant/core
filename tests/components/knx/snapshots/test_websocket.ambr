@@ -111,12 +111,10 @@
         'optional': True,
         'required': False,
         'selector': dict({
-          'number': dict({
-            'max': 600.0,
-            'min': 0.0,
-            'mode': 'slider',
-            'step': 0.1,
-            'unit_of_measurement': 's',
+          'duration': dict({
+            'enable_day': True,
+            'enable_millisecond': True,
+            'enable_second': True,
           }),
         }),
         'type': 'ha_selector',
