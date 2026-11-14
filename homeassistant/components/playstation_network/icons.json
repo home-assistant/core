@@ -64,5 +64,10 @@
         "default": "mdi:trending-up"
       }
     }
+  },
+  "services": {
+    "send_image": {
+      "service": "mdi:message-image"
+    }
   }
 }

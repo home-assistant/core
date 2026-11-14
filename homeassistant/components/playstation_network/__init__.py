@@ -4,8 +4,9 @@ from typing import TYPE_CHECKING
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_NPSSO, DOMAIN
 from .coordinator import (
@@ -18,6 +19,7 @@ from .coordinator import (
     PlaystationNetworkUserDataCoordinator,
 )
 from .helpers import PlaystationNetwork
+from .services import async_setup_services
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
@@ -26,6 +28,15 @@ PLATFORMS: list[Platform] = [
     Platform.NOTIFY,
     Platform.SENSOR,
 ]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the PlayStation Network services."""
+
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(
