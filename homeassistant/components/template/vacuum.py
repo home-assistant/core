@@ -26,6 +26,7 @@ from homeassistant.components.vacuum import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_STATE, CONF_UNIQUE_ID, Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -54,6 +55,7 @@ from .trigger_entity import TriggerEntity
 _LOGGER = logging.getLogger(__name__)
 
 CONF_CLEAN_SEGMENTS = "clean_segments"
+CONF_CLEAN_AREA_PASSES = "clean_area_passes"
 CONF_FAN_SPEED = "fan_speed"
 CONF_FAN_SPEED_LIST = "fan_speeds"
 CONF_SEGMENTS = "segments"
@@ -80,6 +82,21 @@ VACUUM_COMMON_SCHEMA = probatio.Schema(
     {
         probatio.Optional(CONF_FAN_SPEED_LIST, default=[]): probatio.EnsureList(),
         probatio.Optional(CONF_FAN_SPEED): cv.template,
+        probatio.Optional(CONF_CLEAN_AREA_PASSES, default=[]): probatio.Any(
+            probatio.All(
+                probatio.EnsureList(),
+                [
+                    probatio.All(
+                        probatio.Check(
+                            lambda value: type(value) is int,
+                            "Cleaning passes must be integers",
+                        ),
+                        probatio.Range(min=1),
+                    )
+                ],
+            ),
+            cv.template,
+        ),
         probatio.Optional(CONF_STATE): cv.template,
         probatio.Inclusive(
             CONF_SEGMENTS,
@@ -220,6 +237,29 @@ def validate_segments(
     return parse
 
 
+def validate_clean_area_passes(
+    entity: AbstractTemplateVacuum, option: str
+) -> Callable[[Any], list[int] | None]:
+    """Validate the list returned by a cleaning passes template."""
+
+    def parse(result: Any) -> list[int] | None:
+        if result is None or isinstance(result, TemplateError):
+            return None
+        if not isinstance(result, list) or any(
+            type(value) is not int or value < 1 for value in result
+        ):
+            _LOGGER.error(
+                "Invalid %s for %s: %r; expected a list of positive integers",
+                option,
+                entity.entity_id,
+                result,
+            )
+            return None
+        return result
+
+    return parse
+
+
 @dataclass(kw_only=True)
 class VacuumExtraStoredData(ExtraStoredData):
     """Holds extra stored data for template vacuum entities."""
@@ -271,6 +311,10 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity, RestoreE
 
         # List of valid fan speeds
         self._attr_fan_speed_list = config[CONF_FAN_SPEED_LIST]
+        configured_passes = config[CONF_CLEAN_AREA_PASSES]
+        self._attr_clean_area_passes = (
+            configured_passes if isinstance(configured_passes, list) else []
+        )
         self._segments: list[Segment] = []
         self.setup_state_template(
             "_attr_activity",
@@ -293,6 +337,9 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity, RestoreE
             VacuumEntityFeature.START | VacuumEntityFeature.STATE
         )
 
+        if self._attr_clean_area_passes and CONF_CLEAN_SEGMENTS in config:
+            self._attr_supported_features |= VacuumEntityFeature.CLEAN_AREA_PASSES
+
         for action_id, supported_feature in (
             (SERVICE_START, 0),
             (SERVICE_PAUSE, VacuumEntityFeature.PAUSE),
@@ -306,6 +353,34 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity, RestoreE
             if (action_config := config.get(action_id)) is not None:
                 self.add_script(action_id, action_config, name, DOMAIN)
                 self._attr_supported_features |= supported_feature
+
+        if not isinstance(configured_passes, list):
+            self.setup_template(
+                CONF_CLEAN_AREA_PASSES,
+                "_attr_clean_area_passes",
+                validate_clean_area_passes(self, CONF_CLEAN_AREA_PASSES),
+                self._update_clean_area_passes,
+                none_on_template_error=False,
+            )
+
+    @property
+    @override
+    def clean_area_passes(self) -> list[int]:
+        """Return current supported area cleaning pass counts."""
+        return self._attr_clean_area_passes
+
+    @callback
+    def _update_clean_area_passes(
+        self, result: list[int] | TemplateError | None
+    ) -> None:
+        """Update supported counts and capability from a rendered template."""
+        self._attr_clean_area_passes = result if isinstance(result, list) else []
+        if self._attr_clean_area_passes and (
+            VacuumEntityFeature.CLEAN_AREA in self._attr_supported_features
+        ):
+            self._attr_supported_features |= VacuumEntityFeature.CLEAN_AREA_PASSES
+        else:
+            self._attr_supported_features &= ~VacuumEntityFeature.CLEAN_AREA_PASSES
 
     @callback
     def _update_segments(self, result: list[Segment] | None) -> None:
@@ -334,7 +409,7 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity, RestoreE
         if script := self._action_scripts.get(CONF_CLEAN_SEGMENTS):
             await self.async_run_script(
                 script,
-                run_variables={"segment_ids": segment_ids},
+                run_variables={"segment_ids": segment_ids, **kwargs},
                 context=self._context,
             )
 

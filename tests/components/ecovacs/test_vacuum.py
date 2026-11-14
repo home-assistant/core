@@ -1,11 +1,16 @@
 """Tests for Ecovacs vacuum entities."""
 
-from dataclasses import asdict
+from collections.abc import Generator
+from dataclasses import asdict, replace
 import logging
+from unittest.mock import patch
 
+from deebot_client.authentication import Authenticator
+from deebot_client.capabilities import CapabilityNumber
+from deebot_client.device import Device
 from deebot_client.events import CachedMapInfoEvent, CleanCountEvent, Event, RoomsEvent
 from deebot_client.events.map import Map
-from deebot_client.models import CleanMode, Room
+from deebot_client.models import CleanMode, DeviceInfo, Room
 from deebot_client.rs.map import RotationAngle  # pylint: disable=no-name-in-module
 import pytest
 from pytest_homeassistant.typing import WebSocketGenerator
@@ -14,6 +19,7 @@ from homeassistant.components import vacuum
 from homeassistant.components.ecovacs.controller import EcovacsController
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
 from .util import notify_and_wait
@@ -59,17 +65,46 @@ def _prepare_test(
 
 
 @pytest.mark.parametrize(
-    ("device_fixture", "entity_id", "events", "expected_cleanings"),
+    (
+        "device_fixture",
+        "entity_id",
+        "events",
+        "service_options",
+        "expected_cleanings",
+        "expected_supported_passes",
+    ),
     [
-        pytest.param("55uoqe", "vacuum.dbmini", [], 1, id="default_count"),
+        pytest.param(
+            "55uoqe", "vacuum.dbmini", [], {}, 1, [1, 2, 3, 4], id="default_count"
+        ),
         pytest.param(
             "55uoqe",
             "vacuum.dbmini",
             [CleanCountEvent(2)],
+            {},
             2,
+            [1, 2, 3, 4],
             id="clean_count_from_device",
         ),
-        pytest.param("qhe2o2", "vacuum.dusty", [], 1, id="clean_v2"),
+        pytest.param(
+            "55uoqe",
+            "vacuum.dbmini",
+            [],
+            {"passes": 4},
+            4,
+            [1, 2, 3, 4],
+            id="explicit_four_passes",
+        ),
+        pytest.param(
+            "55uoqe",
+            "vacuum.dbmini",
+            [CleanCountEvent(2)],
+            {"passes": 1},
+            1,
+            [1, 2, 3, 4],
+            id="explicit_overrides_count",
+        ),
+        pytest.param("qhe2o2", "vacuum.dusty", [], {}, 1, None, id="clean_v2"),
     ],
 )
 async def test_clean_area(
@@ -78,7 +113,9 @@ async def test_clean_area(
     controller: EcovacsController,
     entity_id: str,
     events: list[Event],
+    service_options: dict[str, int],
     expected_cleanings: int,
+    expected_supported_passes: list[int] | None,
 ) -> None:
     """Test clean_area service call."""
     _prepare_test(hass, entity_registry, entity_id)
@@ -120,16 +157,250 @@ async def test_clean_area(
         {
             ATTR_ENTITY_ID: entity_id,
             "cleaning_area_id": ["area_living_room", "area_kitchen"],
+            **service_options,
         },
         blocking=True,
     )
 
     assert device._execute_command.call_count == 1
     command = device._execute_command.call_args.args[0]
+    state = hass.states.get(entity_id)
+    assert state is not None
+    passes_feature = vacuum.VacuumEntityFeature.CLEAN_AREA_PASSES
     expected_command = device.capabilities.clean.action.area(
         CleanMode.SPOT_AREA, [2, 1], expected_cleanings
     )
     assert command == expected_command
+    assert ("clean_area_passes" in state.attributes) is (
+        expected_supported_passes is not None
+    )
+    assert state.attributes.get("clean_area_passes") == expected_supported_passes
+    assert bool(state.attributes["supported_features"] & passes_feature) is (
+        expected_supported_passes is not None
+    )
+
+
+@pytest.mark.parametrize(("device_fixture", "entity_id"), [("55uoqe", "vacuum.dbmini")])
+async def test_clean_area_passes_override_then_omission(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    controller: EcovacsController,
+    entity_id: str,
+) -> None:
+    """An explicit pass count must not replace the device's saved count."""
+    _prepare_test(hass, entity_registry, entity_id)
+    device = controller.devices[0]
+    event_bus = device.events
+
+    await notify_and_wait(hass, event_bus, CleanCountEvent(2))
+    await notify_and_wait(
+        hass,
+        event_bus,
+        CachedMapInfoEvent(
+            {
+                Map(
+                    id="1",
+                    name="Main map",
+                    using=True,
+                    built=True,
+                    angle=RotationAngle.DEG_0,
+                ),
+            }
+        ),
+    )
+    device._execute_command.reset_mock()
+
+    for service_options in ({"passes": 4}, {}):
+        await hass.services.async_call(
+            vacuum.DOMAIN,
+            vacuum.SERVICE_CLEAN_AREA,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                "cleaning_area_id": ["area_living_room", "area_kitchen"],
+                **service_options,
+            },
+            blocking=True,
+        )
+
+    assert device._execute_command.call_count == 2
+    first_command, second_command = (
+        call.args[0] for call in device._execute_command.call_args_list
+    )
+    assert first_command == device.capabilities.clean.action.area(
+        CleanMode.SPOT_AREA, [2, 1], 4
+    )
+    assert second_command == device.capabilities.clean.action.area(
+        CleanMode.SPOT_AREA, [2, 1], 2
+    )
+
+
+class TestCleanAreaPassesCapabilityBounds:
+    """Exercise model-specific count bounds through the registered vacuum."""
+
+    @pytest.fixture(autouse=True)
+    def bounded_device(self, minimum: int, maximum: int) -> Generator[None]:
+        """Supply bounded capabilities before integration setup and entity creation."""
+
+        def create_device(info: DeviceInfo, authenticator: Authenticator) -> Device:
+            count = info.static.capabilities.clean.count
+            assert count is not None
+            bounded_count = CapabilityNumber(
+                event=count.event,
+                get=count.get,
+                set=count.set,
+                min=minimum,
+                max=maximum,
+            )
+            bounded_caps = replace(
+                info.static.capabilities,
+                clean=replace(info.static.capabilities.clean, count=bounded_count),
+            )
+            bounded_info = replace(
+                info, static=replace(info.static, capabilities=bounded_caps)
+            )
+            return Device(bounded_info, authenticator)
+
+        with patch(
+            "homeassistant.components.ecovacs.controller.Device",
+            side_effect=create_device,
+        ):
+            yield
+
+    @pytest.mark.parametrize(
+        ("minimum", "maximum", "expected", "invalid"),
+        [(1, 2, [1, 2], 3), (2, 4, [2, 3, 4], 1)],
+    )
+    @pytest.mark.parametrize("device_fixture", ["55uoqe"])
+    async def test_clean_area_passes_capability_bounds(
+        self,
+        hass: HomeAssistant,
+        entity_registry: er.EntityRegistry,
+        controller: EcovacsController,
+        minimum: int,
+        maximum: int,
+        expected: list[int],
+        invalid: int,
+    ) -> None:
+        """Publish literal bounds and reject out-of-range calls before dispatch."""
+        entity_id = "vacuum.dbmini"
+        _prepare_test(hass, entity_registry, entity_id)
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.attributes["clean_area_passes"] == expected
+        assert state.attributes["supported_features"] & (
+            vacuum.VacuumEntityFeature.CLEAN_AREA_PASSES
+        )
+
+        device = controller.devices[0]
+        device._execute_command.reset_mock()
+        with pytest.raises(ServiceValidationError) as exc_info:
+            await hass.services.async_call(
+                vacuum.DOMAIN,
+                vacuum.SERVICE_CLEAN_AREA,
+                {
+                    ATTR_ENTITY_ID: entity_id,
+                    "cleaning_area_id": ["area_kitchen"],
+                    "passes": invalid,
+                },
+                blocking=True,
+            )
+        assert exc_info.value.translation_key == "clean_area_passes_unsupported"
+        device._execute_command.assert_not_called()
+
+        await notify_and_wait(
+            hass,
+            device.events,
+            CachedMapInfoEvent(
+                {
+                    Map(
+                        id="1",
+                        name="Main map",
+                        using=True,
+                        built=True,
+                        angle=RotationAngle.DEG_0,
+                    ),
+                }
+            ),
+        )
+        device._execute_command.reset_mock()
+        await hass.services.async_call(
+            vacuum.DOMAIN,
+            vacuum.SERVICE_CLEAN_AREA,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                "cleaning_area_id": ["area_kitchen"],
+                "passes": 2,
+            },
+            blocking=True,
+        )
+        device._execute_command.assert_called_once()
+        command = device._execute_command.call_args.args[0]
+        assert command == device.capabilities.clean.action.area(
+            CleanMode.SPOT_AREA, [1], 2
+        )
+
+
+@pytest.mark.parametrize(("device_fixture", "entity_id"), [("qhe2o2", "vacuum.dusty")])
+async def test_clean_area_passes_not_supported_by_command(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    controller: EcovacsController,
+    entity_id: str,
+) -> None:
+    """Reject passes when the area command does not transmit a count."""
+    _prepare_test(hass, entity_registry, entity_id)
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert "clean_area_passes" not in state.attributes
+    assert not state.attributes["supported_features"] & (
+        vacuum.VacuumEntityFeature.CLEAN_AREA_PASSES
+    )
+
+    device = controller.devices[0]
+    assert device.capabilities.clean.count is not None
+    device._execute_command.reset_mock()
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            vacuum.DOMAIN,
+            vacuum.SERVICE_CLEAN_AREA,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                "cleaning_area_id": ["area_living_room"],
+                "passes": 4,
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "clean_area_passes_unsupported"
+    device._execute_command.assert_not_called()
+
+
+@pytest.mark.parametrize(("device_fixture", "entity_id"), [("55uoqe", "vacuum.dbmini")])
+async def test_clean_area_unsupported_passes(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    controller: EcovacsController,
+    entity_id: str,
+) -> None:
+    """Reject a pass count outside the Ecovacs supported range."""
+    _prepare_test(hass, entity_registry, entity_id)
+    device = controller.devices[0]
+    device._execute_command.reset_mock()
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            vacuum.DOMAIN,
+            vacuum.SERVICE_CLEAN_AREA,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                "cleaning_area_id": ["area_living_room"],
+                "passes": 5,
+            },
+            blocking=True,
+        )
+
+    device._execute_command.assert_not_called()
 
 
 @pytest.mark.parametrize(("device_fixture", "entity_id"), [("qhe2o2", "vacuum.dusty")])

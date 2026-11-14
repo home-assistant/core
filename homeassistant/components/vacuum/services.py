@@ -33,6 +33,7 @@ async def _async_clean_area(
     """
     data = dict(call.data)
     cleaning_area_id: list[str] = data.pop(VacuumServiceArgument.CLEANING_AREA_ID)
+    passes: int | None = data.get(VacuumServiceArgument.PASSES)
 
     entity_data: list[tuple[StateVacuumEntity, dict[str, Any]]] = []
     handled_areas: set[str] = set()
@@ -69,6 +70,19 @@ async def _async_clean_area(
                 entity.entity_id,
             )
             continue
+
+        if passes is not None and (
+            VacuumEntityFeature.CLEAN_AREA_PASSES not in entity.supported_features
+            or passes not in entity.clean_area_passes
+        ):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="clean_area_passes_unsupported",
+                translation_placeholders={
+                    "entity_id": entity.entity_id,
+                    "passes": str(passes),
+                },
+            )
 
         entity_data.append((entity, {"segment_ids": list(segment_ids), **data}))
 
@@ -120,6 +134,12 @@ def async_setup_services(hass: HomeAssistant) -> None:
         {
             probatio.Required(VacuumServiceArgument.CLEANING_AREA_ID): probatio.All(
                 probatio.EnsureList(), [str]
+            ),
+            probatio.Optional(VacuumServiceArgument.PASSES): probatio.All(
+                probatio.Check(
+                    lambda value: type(value) is int, "Passes must be an integer"
+                ),
+                probatio.Range(min=1),
             ),
         },
         _async_clean_area,

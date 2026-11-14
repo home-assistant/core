@@ -44,6 +44,7 @@ class VacuumEntityCapabilityAttribute(StrEnum):
     """Capability attributes for vacuum devices."""
 
     FAN_SPEED_LIST = "fan_speed_list"
+    CLEAN_AREA_PASSES = "clean_area_passes"
 
 
 class VacuumEntityStateAttribute(StrEnum):
@@ -69,6 +70,7 @@ class VacuumEntityFeature(IntFlag):
     STATE = 4096  # Must be set by vacuum platforms derived from StateVacuumEntity
     START = 8192
     CLEAN_AREA = 16384
+    CLEAN_AREA_PASSES = 32768
 
 
 class VacuumService(StrEnum):
@@ -89,6 +91,7 @@ class VacuumServiceArgument(StrEnum):
     """Store keys for vacuum service arguments."""
 
     CLEANING_AREA_ID = "cleaning_area_id"
+    PASSES = "passes"
     COMMAND = "command"
     FAN_SPEED = "fan_speed"
     PARAMS = "params"

@@ -53,6 +53,14 @@ clean_area:
         area:
           multiple: true
           reorder: true
+    passes:
+      required: false
+      example: 2
+      selector:
+        number:
+          min: 1
+          step: 1
+          mode: box
 
 send_command:
   target:
