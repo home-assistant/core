@@ -30,6 +30,20 @@
         "name": "Water detected"
       }
     },
+    "event": {
+      "alert": {
+        "name": "Alert",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "critical": "Critical",
+              "info": "Info",
+              "warning": "Warning"
+            }
+          }
+        }
+      }
+    },
     "sensor": {
       "current_flow_rate": {
         "name": "Water flow rate"
