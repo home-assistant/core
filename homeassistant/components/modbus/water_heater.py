@@ -347,4 +347,7 @@ class ModbusWaterHeater(ModbusStructEntity, WaterHeaterEntity):
             self._attr_available = False
             return None
         value = self.unpack_structure_result(result.registers, scale, offset)
-        return None if value is None else float(value)
+        if value is None:
+            self._attr_available = False
+            return None
+        return float(value)

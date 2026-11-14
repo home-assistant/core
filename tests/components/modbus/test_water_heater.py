@@ -459,10 +459,34 @@ async def test_unavailable(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("do_config", "temperature", "write_call", "expected_call"),
+    "do_config",
+    [{CONF_WATER_HEATERS: [{**BASE_CONFIG, CONF_DATA_TYPE: DataType.INT32}]}],
+)
+@pytest.mark.parametrize("register_words", [[0, 0]])
+async def test_unavailable_on_malformed_response(
+    hass: HomeAssistant, mock_modbus_ha: mock.AsyncMock
+) -> None:
+    """Test the water heater is unavailable when a temperature cannot be decoded."""
+    assert hass.states.get(ENTITY_ID).state != STATE_UNAVAILABLE
+
+    mock_modbus_ha.read_holding_registers.side_effect = _registers(
+        {CURRENT_TEMP_ADDRESS: [42], TARGET_TEMP_ADDRESS: [0, 55]}
+    )
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    ("do_config", "register_words", "temperature", "write_call", "expected_call"),
     [
         pytest.param(
             {CONF_WATER_HEATERS: [BASE_CONFIG]},
+            [0],
             50,
             "write_register",
             mock.call(TARGET_TEMP_ADDRESS, device_id=10, value=50),
@@ -474,6 +498,7 @@ async def test_unavailable(hass: HomeAssistant) -> None:
                     {**BASE_CONFIG, CONF_TARGET_TEMP_WRITE_REGISTERS: True},
                 ]
             },
+            [0],
             50,
             "write_registers",
             mock.call(TARGET_TEMP_ADDRESS, device_id=10, values=[50]),
@@ -489,6 +514,7 @@ async def test_unavailable(hass: HomeAssistant) -> None:
                     },
                 ]
             },
+            [0],
             50.3,
             "write_register",
             mock.call(TARGET_TEMP_ADDRESS, device_id=10, value=483),
@@ -500,6 +526,7 @@ async def test_unavailable(hass: HomeAssistant) -> None:
                     {**BASE_CONFIG, CONF_DATA_TYPE: DataType.INT32},
                 ]
             },
+            [0, 0],
             50,
             "write_registers",
             mock.call(TARGET_TEMP_ADDRESS, device_id=10, values=[0, 50]),
@@ -511,6 +538,7 @@ async def test_unavailable(hass: HomeAssistant) -> None:
                     {**BASE_CONFIG, CONF_DATA_TYPE: DataType.FLOAT32},
                 ]
             },
+            [0, 0],
             50,
             "write_registers",
             mock.call(TARGET_TEMP_ADDRESS, device_id=10, values=[0x4248, 0x0000]),
