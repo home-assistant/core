@@ -35,6 +35,26 @@ BUTTON_DESCRIPTIONS: tuple[MarantzIrButtonEntityDescription, ...] = (
         command_code=MarantzAudioCode.SPEAKER_AB,
     ),
     MarantzIrButtonEntityDescription(
+        key="speaker_a_off",
+        translation_key="speaker_a_off",
+        command_code=MarantzAudioCode.SPEAKER_A_OFF,
+    ),
+    MarantzIrButtonEntityDescription(
+        key="speaker_a_on",
+        translation_key="speaker_a_on",
+        command_code=MarantzAudioCode.SPEAKER_A_ON,
+    ),
+    MarantzIrButtonEntityDescription(
+        key="speaker_b_off",
+        translation_key="speaker_b_off",
+        command_code=MarantzAudioCode.SPEAKER_B_OFF,
+    ),
+    MarantzIrButtonEntityDescription(
+        key="speaker_b_on",
+        translation_key="speaker_b_on",
+        command_code=MarantzAudioCode.SPEAKER_B_ON,
+    ),
+    MarantzIrButtonEntityDescription(
         key="source_direct",
         translation_key="source_direct",
         command_code=MarantzAudioCode.SOURCE_DIRECT,
@@ -43,6 +63,16 @@ BUTTON_DESCRIPTIONS: tuple[MarantzIrButtonEntityDescription, ...] = (
         key="loudness",
         translation_key="loudness",
         command_code=MarantzAudioCode.LOUDNESS,
+    ),
+    MarantzIrButtonEntityDescription(
+        key="power_amp_direct_on",
+        translation_key="power_amp_direct_on",
+        command_code=MarantzAudioCode.POWER_AMP_DIRECT_ON,
+    ),
+    MarantzIrButtonEntityDescription(
+        key="power_amp_direct_off",
+        translation_key="power_amp_direct_off",
+        command_code=MarantzAudioCode.POWER_AMP_DIRECT_OFF,
     ),
 )
 
