@@ -2,6 +2,9 @@
 
 import asyncio
 from datetime import timedelta
+import importlib
+import threading
+from types import ModuleType
 from typing import Any
 from unittest.mock import ANY, Mock, patch
 
@@ -47,6 +50,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
     issue_registry as ir,
+    selector,
 )
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.script import (
@@ -583,6 +587,88 @@ async def test_reload_unchanged_script(
         await hass.services.async_call(DOMAIN, object_id)
         await hass.async_block_till_done()
         assert len(calls) == 2
+
+
+@pytest.mark.parametrize(
+    ("domain", "feature", "feature_value"),
+    [
+        pytest.param("cover", "CoverEntityFeature.OPEN", 1, id="cover"),
+        pytest.param(
+            "assist_satellite",
+            "AssistSatelliteEntityFeature.START_CONVERSATION",
+            2,
+            id="assist-satellite",
+        ),
+    ],
+)
+async def test_field_selector_imports_run_in_executor(
+    hass: HomeAssistant,
+    calls: list[ServiceCall],
+    domain: str,
+    feature: str,
+    feature_value: int,
+) -> None:
+    """Import field selector feature enums without blocking the event loop."""
+    loop_thread = threading.get_ident()
+    import_threads: list[int] = []
+
+    def import_module(name: str) -> ModuleType:
+        import_threads.append(threading.get_ident())
+        return importlib.import_module(name)
+
+    selector._entity_feature_flag.cache_clear()
+    with patch(
+        "homeassistant.helpers.selector.importlib",
+        Mock(import_module=import_module),
+    ):
+        assert await async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                DOMAIN: {
+                    "test": {
+                        "fields": {
+                            "target": {
+                                "selector": {
+                                    "entity": {
+                                        "filter": [
+                                            {
+                                                "domain": domain,
+                                                "supported_features": [
+                                                    f"{domain}.{feature}"
+                                                ],
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        "variables": {"position": "{{ 42 }}"},
+                        "sequence": [
+                            {
+                                "action": "test.script",
+                                "data": {"position": "{{ position }}"},
+                            }
+                        ],
+                    }
+                }
+            },
+        )
+
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
+    assert import_threads
+    assert loop_thread not in import_threads
+    await hass.services.async_call(DOMAIN, "test", blocking=True)
+    assert len(calls) == 1
+    assert calls[0].data == {"position": 42}
+    descriptions = await async_get_all_descriptions(hass)
+    assert descriptions[DOMAIN]["test"]["fields"]["target"]["selector"] == {
+        "entity": {
+            "filter": [{"domain": [domain], "supported_features": [feature_value]}],
+            "multiple": False,
+            "reorder": False,
+        }
+    }
 
 
 async def test_service_descriptions(hass: HomeAssistant) -> None:
