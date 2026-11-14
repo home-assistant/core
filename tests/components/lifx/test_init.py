@@ -96,8 +96,9 @@ async def test_setup_resolves_a_stored_hostname(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.lifx.Device.connect", return_value=device
         ) as connect,
-        patch(
-            "homeassistant.components.lifx.util.getaddrinfo",
+        patch.object(
+            hass.loop,
+            "getaddrinfo",
             return_value=[(AF_INET, SOCK_DGRAM, IPPROTO_UDP, "", (IP_ADDRESS, 0))],
         ) as resolve,
     ):
@@ -105,7 +106,7 @@ async def test_setup_resolves_a_stored_hostname(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
-    resolve.assert_called_once_with("lifx.example.com", None, type=SOCK_DGRAM)
+    resolve.assert_awaited_once_with("lifx.example.com", None, type=SOCK_DGRAM)
     connect.assert_awaited_once_with(ip=IP_ADDRESS, serial=SERIAL)
 
 

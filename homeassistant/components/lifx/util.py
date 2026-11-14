@@ -2,7 +2,7 @@
 
 from ipaddress import ip_address
 import re
-from socket import AF_INET, SOCK_DGRAM, getaddrinfo
+from socket import SOCK_DGRAM
 from typing import TYPE_CHECKING, Any, TypedDict
 
 from lifx import HSBK, Colors, LifxError
@@ -39,14 +39,16 @@ def normalize_serial(value: str) -> str:
     return value.replace(":", "").lower()
 
 
-def _resolve_host(host: str) -> str:
-    """Return the IPv4 address of a host if it has one, otherwise an IPv6 one."""
-    results = getaddrinfo(host, None, type=SOCK_DGRAM)
-    # Only Thread devices lack an IPv4 address, and they are reached over IPv6
-    sockaddr = next(
-        (sockaddr for family, _, _, _, sockaddr in results if family == AF_INET),
-        results[0][4],
-    )
+async def async_resolve_host(hass: HomeAssistant, host: str) -> str:
+    """Return the literal address of a host, which the library requires."""
+    try:
+        ip_address(host)
+    except ValueError:
+        pass
+    else:
+        return host
+    results = await hass.loop.getaddrinfo(host, None, type=SOCK_DGRAM)
+    sockaddr = results[0][4]
     address = sockaddr[0]
     if TYPE_CHECKING:
         assert isinstance(address, str)
@@ -54,15 +56,6 @@ def _resolve_host(host: str) -> str:
     if len(sockaddr) == 4 and sockaddr[3]:
         return f"{address}%{sockaddr[3]}"
     return address
-
-
-async def async_resolve_host(hass: HomeAssistant, host: str) -> str:
-    """Return the literal address of a host, which the library requires."""
-    try:
-        ip_address(host)
-    except ValueError:
-        return await hass.async_add_executor_job(_resolve_host, host)
-    return host
 
 
 @callback

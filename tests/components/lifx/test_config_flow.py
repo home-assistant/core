@@ -753,7 +753,7 @@ async def test_manual_host_creates_version_2_entry(
         pytest.param([IPV4_LOOKUP], IP_ADDRESS, id="ipv4-only"),
         pytest.param([IPV6_LOOKUP], THREAD_IP_ADDRESS, id="ipv6-only"),
         pytest.param([LINK_LOCAL_LOOKUP], "fe80::1%7", id="ipv6-link-local"),
-        pytest.param([IPV6_LOOKUP, IPV4_LOOKUP], IP_ADDRESS, id="dual-stack"),
+        pytest.param([IPV6_LOOKUP, IPV4_LOOKUP], THREAD_IP_ADDRESS, id="system-order"),
     ],
 )
 async def test_manual_hostname_is_stored_as_an_address(
@@ -771,10 +771,7 @@ async def test_manual_hostname_is_stored_as_an_address(
             "homeassistant.components.lifx.config_flow.find_by_ip",
             return_value=mock_light,
         ) as find_by_ip,
-        patch(
-            "homeassistant.components.lifx.util.getaddrinfo",
-            return_value=lookup,
-        ),
+        patch.object(hass.loop, "getaddrinfo", return_value=lookup),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: "lifx.example.com"}
