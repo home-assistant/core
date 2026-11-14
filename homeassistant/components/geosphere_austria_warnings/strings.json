@@ -69,7 +69,7 @@
   },
   "services": {
     "get_warnings": {
-      "description": "Return the cached active and advance weather warnings.",
+      "description": "Retrieves the active and advance weather warnings for a location.",
       "fields": {
         "config_entry_id": {
           "description": "The GeoSphere Austria Warnings configuration entry to query.",
