@@ -1,14 +1,15 @@
 """Integrate Sofar devices into Home Assistant."""
 
 from datetime import timedelta
+from functools import partial
 import logging
 from typing import TYPE_CHECKING
 
-from modbus_connection import ModbusTimeoutError
 from sofar_modbus.modern.device import (
     BATTERY_PACKS,
     BATTERY_STRING_COMPONENTS,
     PV_STRING_COMPONENTS,
+    InverterSilentError,
     SofarInverter,
 )
 
@@ -156,7 +157,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> Non
         entry,
         entry.title,
         device,
-        device.async_update_readings,
+        partial(device.async_update_readings, raise_when_silent=True),
         timedelta(seconds=SCAN_INTERVAL),
     )
     settings = SofarDataUpdateCoordinator(
@@ -164,7 +165,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> Non
         entry,
         entry.title,
         device,
-        device.async_update_settings,
+        partial(device.async_update_settings, raise_when_silent=True),
         timedelta(seconds=SETTINGS_SCAN_INTERVAL),
     )
     packs = SofarDataUpdateCoordinator(
@@ -172,16 +173,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> Non
         entry,
         f"{entry.title} battery packs",
         device,
-        device.async_update_packs,
+        partial(device.async_update_packs, raise_when_silent=True),
         timedelta(seconds=PACKS_SCAN_INTERVAL),
     )
     try:
         await readings.async_config_entry_first_refresh()
     except ConfigEntryNotReady as err:
         if not (
-            device.connected
-            and isinstance(readings.last_exception, UpdateFailed)
-            and isinstance(readings.last_exception.__cause__, ModbusTimeoutError)
+            isinstance(readings.last_exception, UpdateFailed)
+            and isinstance(readings.last_exception.__cause__, InverterSilentError)
         ):
             raise
         _LOGGER.info(

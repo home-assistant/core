@@ -275,7 +275,7 @@ aioengiebelgium==0.14.0
 aioesphomeapi==46.30.0
 
 # homeassistant.components.mijn_farmad_apotheek
-aiofarmad==0.6.5
+aiofarmad==0.6.7
 
 # homeassistant.components.matrix
 # homeassistant.components.slack
@@ -3621,7 +3621,7 @@ zamg==0.5.0
 zcc-helper==3.8
 
 # homeassistant.components.zeroconf
-zeroconf==0.153.0
+zeroconf==0.154.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.2
