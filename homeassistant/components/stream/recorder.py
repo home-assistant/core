@@ -112,7 +112,7 @@ class RecorderOutput(StreamOutput):
             if not output:
                 container_options: dict[str, str] = {
                     "video_track_timescale": str(int(1 / source_v.time_base)),
-                    "movflags": "frag_keyframe+empty_moov",
+                    "movflags": "frag_keyframe+empty_moov+delay_moov",
                     "min_frag_duration": str(self.stream_settings.min_segment_duration),
                 }
                 output = av.open(
@@ -130,24 +130,42 @@ class RecorderOutput(StreamOutput):
             if source_a and not output_a:
                 output_a = output.add_stream_from_template(source_a)
 
+            packets = [packet for packet in source.demux() if packet.pts is not None]
+            video_packets = [
+                packet for packet in packets if packet.stream.type == "video"
+            ]
+            if video_packets:
+                # The mp4 muxer starts decode times at the first frame's PTS
+                # (video_dts_shift) and shifts presentation times by that
+                # frame's read-back PTS - DTS: undo both
+                video_pts_shift = video_packets[0].pts - video_packets[0].dts  # type: ignore[operator]
+                for packet in video_packets:
+                    packet.pts -= video_pts_shift  # type: ignore[operator]
+                    packet.dts -= segment.video_dts_shift  # type: ignore[operator]
+
             # Recalculate pts adjustments on first segment and on any discontinuity
             # We are assuming time base is the same across all discontinuities
+            if segment.new_init and pts_adjuster["video"] is not None:
+                # A new init within a stream keeps its timestamps
+                last_stream_id = segment.stream_id
             if last_stream_id != segment.stream_id:
                 last_stream_id = segment.stream_id
+                # Move the earliest presentation time to the running duration,
+                # in av.time_base units
+                offset = running_duration - av.time_base * min(
+                    (packet.pts * packet.time_base for packet in packets),  # type: ignore[operator]
+                    default=0,
+                )
                 pts_adjuster["video"] = int(
-                    (running_duration - source.start_time)
-                    / (av.time_base * source_v.time_base)
+                    offset / (av.time_base * source_v.time_base)
                 )
                 if source_a:
                     pts_adjuster["audio"] = int(
-                        (running_duration - source.start_time)
-                        / (av.time_base * source_a.time_base)
+                        offset / (av.time_base * source_a.time_base)
                     )
 
-            # Remux video
-            for packet in source.demux():
-                if packet.pts is None:
-                    continue
+            # Remux
+            for packet in packets:
                 packet.pts += pts_adjuster[packet.stream.type]  # type: ignore[operator]
                 packet.dts += pts_adjuster[packet.stream.type]  # type: ignore[operator]
                 # With B-frames the last frame in decode order does not end last
