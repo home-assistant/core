@@ -1401,6 +1401,8 @@ AGENTS.md @home-assistant/core
 /tests/components/ohme/ @dan-r
 /homeassistant/components/okok_scale/ @rrooggiieerr
 /tests/components/okok_scale/ @rrooggiieerr
+/homeassistant/components/olarm/ @olarmtech
+/tests/components/olarm/ @olarmtech
 /homeassistant/components/ollama/ @home-assistant/core
 /tests/components/ollama/ @home-assistant/core
 /homeassistant/components/ombi/ @larssont

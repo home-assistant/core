@@ -1846,6 +1846,9 @@ ohme==1.9.1
 # homeassistant.components.okok_scale
 okokscale==0.0.5
 
+# homeassistant.components.olarm
+olarmflowclient==1.0.7
+
 # homeassistant.components.ollama
 ollama==0.6.2
 
