@@ -7,7 +7,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast, override
 
 from aiohttp import ClientError
-from aiopowerwall import PowerwallAuthenticationError, PowerwallError
 from bleak.exc import BleakError
 from bleak_retry_connector import BleakNotFoundError, BleakOutOfConnectionSlotsError
 from habluetooth.const import STRONG_OWNER_STALE_RSSI
@@ -34,6 +33,7 @@ from tesla_fleet_api.exceptions import (
     WhitelistOperationLocalEntityAuthFailedUIDenied,
 )
 from tesla_fleet_api.tesla import EnergySiteRouter
+from tesla_fleet_api.tesla.powerwall import PowerwallAuthenticationError, PowerwallError
 from tesla_fleet_api.tesla.vehicle.bluetooth import VehicleBluetooth
 from tesla_fleet_api.teslemetry import Teslemetry
 from tesla_fleet_api.teslemetry.energysite import AuthorizedClient, TeslemetryEnergySite
@@ -256,7 +256,7 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
         }
         vehicle_metadata = entry.runtime_data.metadata_coordinator.data["vehicles"]
         choices = {
-            vehicle.vin: vehicle.device["name"] or vehicle.vin
+            vehicle.vin: vehicle.device.name or vehicle.vin
             for vehicle in entry.runtime_data.vehicles
             if vehicle.vin not in already_added
             # Vehicles without the command protocol (pre-2021 Model S/X) report

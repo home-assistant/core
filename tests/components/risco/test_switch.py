@@ -7,8 +7,8 @@ from unittest.mock import PropertyMock, patch
 import pytest
 
 from homeassistant.components.risco import CannotConnectError, UnauthorizedError
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_OFF, STATE_ON
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
@@ -80,7 +80,7 @@ async def test_cloud_bypass(
         data = {"entity_id": FIRST_ENTITY_ID}
 
         await hass.services.async_call(
-            SWITCH_DOMAIN, SERVICE_TURN_ON, service_data=data, blocking=True
+            SWITCH_DOMAIN, SwitchService.TURN_ON, service_data=data, blocking=True
         )
 
         mock.assert_awaited_once_with(0, True)
@@ -94,7 +94,7 @@ async def test_cloud_unbypass(
         data = {"entity_id": FIRST_ENTITY_ID}
 
         await hass.services.async_call(
-            SWITCH_DOMAIN, SERVICE_TURN_OFF, service_data=data, blocking=True
+            SWITCH_DOMAIN, SwitchService.TURN_OFF, service_data=data, blocking=True
         )
 
         mock.assert_awaited_once_with(0, False)
@@ -175,7 +175,7 @@ async def test_local_bypass(
         data = {"entity_id": FIRST_ENTITY_ID}
 
         await hass.services.async_call(
-            SWITCH_DOMAIN, SERVICE_TURN_ON, service_data=data, blocking=True
+            SWITCH_DOMAIN, SwitchService.TURN_ON, service_data=data, blocking=True
         )
 
         mock.assert_awaited_once_with(True)
@@ -189,7 +189,7 @@ async def test_local_unbypass(
         data = {"entity_id": FIRST_ENTITY_ID}
 
         await hass.services.async_call(
-            SWITCH_DOMAIN, SERVICE_TURN_OFF, service_data=data, blocking=True
+            SWITCH_DOMAIN, SwitchService.TURN_OFF, service_data=data, blocking=True
         )
 
         mock.assert_awaited_once_with(False)

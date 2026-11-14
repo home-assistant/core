@@ -5,12 +5,12 @@ from unittest.mock import MagicMock
 from demetriek import LaMetricConnectionError, LaMetricError
 import pytest
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.lametric.const import DOMAIN
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    CommonServiceArgument,
     EntityCategory,
 )
 from homeassistant.core import HomeAssistant
@@ -58,8 +58,8 @@ async def test_button_app_next(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.frenck_s_lametric_next_app"},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: "button.frenck_s_lametric_next_app"},
         blocking=True,
     )
 
@@ -105,8 +105,8 @@ async def test_button_app_previous(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.frenck_s_lametric_previous_app"},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: "button.frenck_s_lametric_previous_app"},
         blocking=True,
     )
 
@@ -154,8 +154,10 @@ async def test_button_dismiss_current_notification(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.frenck_s_lametric_dismiss_current_notification"},
+        ButtonService.PRESS,
+        {
+            CommonServiceArgument.ENTITY_ID: "button.frenck_s_lametric_dismiss_current_notification"
+        },
         blocking=True,
     )
 
@@ -203,8 +205,10 @@ async def test_button_dismiss_all_notifications(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.frenck_s_lametric_dismiss_all_notifications"},
+        ButtonService.PRESS,
+        {
+            CommonServiceArgument.ENTITY_ID: "button.frenck_s_lametric_dismiss_all_notifications"
+        },
         blocking=True,
     )
 
@@ -228,8 +232,8 @@ async def test_button_error(
     ):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.frenck_s_lametric_next_app"},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: "button.frenck_s_lametric_next_app"},
             blocking=True,
         )
 
@@ -250,8 +254,8 @@ async def test_button_connection_error(
     ):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.frenck_s_lametric_next_app"},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: "button.frenck_s_lametric_next_app"},
             blocking=True,
         )
 

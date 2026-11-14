@@ -114,6 +114,7 @@ async def test_setup_device_registered(
         device_registry, mock_config_entry.entry_id
     )
     assert len(devices) == 1
+    assert devices[0].model == '2.9" BWR'
 
 
 @pytest.mark.parametrize(
