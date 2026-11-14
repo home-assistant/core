@@ -318,8 +318,8 @@ class Isy994ConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         self.context["title_placeholders"] = {
-            CONF_NAME: existing_entry.title,
-            CONF_HOST: existing_data[CONF_HOST],
+            "name": existing_entry.title,
+            "host": existing_data[CONF_HOST],
         }
         return self.async_show_form(
             description_placeholders={

@@ -166,6 +166,12 @@ async def test_save_preferences(
                 "name": "Water Meter",
             }
         ],
+        "device_consumption_gas": [
+            {
+                "stat_consumption": "sensor.gas_meter",
+                "name": "Gas Meter",
+            }
+        ],
     }
 
     await client.send_json({"id": 6, "type": "energy/save_prefs", **new_prefs})
@@ -282,6 +288,7 @@ async def test_validate(
         "energy_sources": [],
         "device_consumption": [],
         "device_consumption_water": [],
+        "device_consumption_gas": [],
     }
 
 

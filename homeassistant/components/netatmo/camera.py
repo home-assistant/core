@@ -8,16 +8,13 @@ from pyatmo import ApiError as NetatmoApiError, modules as NaModules
 from pyatmo.event import Event as NaEvent
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
-from homeassistant.const import ATTR_PERSONS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
-    ATTR_CAMERA_LIGHT_MODE,
     ATTR_EVENT_TYPE,
-    ATTR_PERSON,
     CAMERA_TRIGGERS,
     CONF_URL_SECURITY,
     DOMAIN,
@@ -30,6 +27,7 @@ from .const import (
     NETATMO_ALIM_STATUS_ONLINE,
     NETATMO_CREATE_CAMERA,
     WEBHOOK_PUSH_TYPE,
+    NetatmoServiceArgument,
 )
 from .coordinator import EVENT, HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoDevice
 from .entity import NetatmoModuleEntity
@@ -316,7 +314,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
 
     async def _service_set_persons_home(self, **kwargs: Any) -> None:
         """Service to change current home schedule."""
-        persons = kwargs.get(ATTR_PERSONS, [])
+        persons = kwargs.get(NetatmoServiceArgument.PERSONS, [])
         person_ids = self.fetch_person_ids(persons)
 
         await self.home.async_set_persons_home(person_ids=person_ids)
@@ -324,7 +322,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
 
     async def _service_set_person_away(self, **kwargs: Any) -> None:
         """Service to mark a person as away or set the home as empty."""
-        person = kwargs.get(ATTR_PERSON)
+        person = kwargs.get(NetatmoServiceArgument.PERSON)
         person_ids = self.fetch_person_ids([person] if person else [])
         person_id = next(iter(person_ids), None)
 
@@ -349,6 +347,6 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
                 },
             )
 
-        mode = str(kwargs.get(ATTR_CAMERA_LIGHT_MODE))
+        mode = str(kwargs.get(NetatmoServiceArgument.CAMERA_LIGHT_MODE))
         _LOGGER.debug("Turn %s camera light for '%s'", mode, self._attr_name)
         await self.device.async_set_floodlight_state(mode)

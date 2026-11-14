@@ -1,5 +1,7 @@
 """Litter-Robot services."""
 
+from enum import StrEnum
+
 import probatio
 
 from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN
@@ -8,7 +10,18 @@ from homeassistant.helpers import config_validation as cv, service
 
 from .const import DOMAIN
 
-SERVICE_SET_SLEEP_MODE = "set_sleep_mode"
+
+class LitterRobotService(StrEnum):
+    """Store keys for Litter-Robot services."""
+
+    SET_SLEEP_MODE = "set_sleep_mode"
+
+
+class LitterRobotServiceArgument(StrEnum):
+    """Store keys for Litter-Robot service arguments."""
+
+    ENABLED = "enabled"
+    START_TIME = "start_time"
 
 
 @callback
@@ -18,11 +31,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_SET_SLEEP_MODE,
+        LitterRobotService.SET_SLEEP_MODE,
         entity_domain=VACUUM_DOMAIN,
         schema={
-            probatio.Required("enabled"): cv.boolean,
-            probatio.Optional("start_time"): cv.time,
+            probatio.Required(LitterRobotServiceArgument.ENABLED): cv.boolean,
+            probatio.Optional(LitterRobotServiceArgument.START_TIME): cv.time,
         },
         func="async_set_sleep_mode",
     )

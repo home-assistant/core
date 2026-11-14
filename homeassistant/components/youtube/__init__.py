@@ -2,7 +2,7 @@
 
 from types import MappingProxyType
 
-from homeassistant.config_entries import ConfigEntry, ConfigSubentry
+from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -51,7 +51,7 @@ async def async_update_listener(hass: HomeAssistant, entry: YouTubeConfigEntry) 
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_migrate_entry(hass: HomeAssistant, entry: YouTubeConfigEntry) -> None:
     """Migrate old entries to the subentry structure."""
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)

@@ -16,7 +16,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from . import TeslemetryConfigEntry
 from .entity import (
     TeslemetryEnergyInfoEntity,
     TeslemetryRootEntity,
@@ -28,7 +27,7 @@ from .helpers import (
     handle_command,
     handle_vehicle_command,
 )
-from .models import TeslemetryEnergyData, TeslemetryVehicleData
+from .models import TeslemetryConfigEntry, TeslemetryEnergyData, TeslemetryVehicleData
 
 OFF = "off"
 LOW = "low"

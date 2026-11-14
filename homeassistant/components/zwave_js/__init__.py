@@ -205,6 +205,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ZwaveJSConfigEntry) -> N
         additional_user_agent_components=USER_AGENT,
     )
 
+    invalid_server_version_issue_id = f"invalid_server_version.{entry.entry_id}"
     # connect and throw error if connection failed
     try:
         async with asyncio.timeout(CONNECT_TIMEOUT):
@@ -217,7 +218,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ZwaveJSConfigEntry) -> N
             async_create_issue(
                 hass,
                 DOMAIN,
-                "invalid_server_version",
+                invalid_server_version_issue_id,
+                config_entry_id=entry.entry_id,
                 is_fixable=False,
                 severity=IssueSeverity.ERROR,
                 translation_key="invalid_server_version",
@@ -226,7 +228,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ZwaveJSConfigEntry) -> N
     except (TimeoutError, BaseZwaveJSServerError) as err:
         raise ConfigEntryNotReady(f"Failed to connect: {err}") from err
 
-    async_delete_issue(hass, DOMAIN, "invalid_server_version")
+    async_delete_issue(hass, DOMAIN, invalid_server_version_issue_id)
     LOGGER.debug("Connected to Zwave JS Server")
 
     # Set up websocket API

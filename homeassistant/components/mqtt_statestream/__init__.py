@@ -66,22 +66,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await mqtt.async_publish(hass, f"{mybase}state", payload, 1, True)
 
         if publish_timestamps:
-            if new_state.last_updated:
-                await mqtt.async_publish(
-                    hass,
-                    f"{mybase}last_updated",
-                    new_state.last_updated.isoformat(),
-                    1,
-                    True,
-                )
-            if new_state.last_changed:
-                await mqtt.async_publish(
-                    hass,
-                    f"{mybase}last_changed",
-                    new_state.last_changed.isoformat(),
-                    1,
-                    True,
-                )
+            await mqtt.async_publish(
+                hass,
+                f"{mybase}last_updated",
+                new_state.last_updated.isoformat(),
+                1,
+                True,
+            )
+            await mqtt.async_publish(
+                hass,
+                f"{mybase}last_changed",
+                new_state.last_changed.isoformat(),
+                1,
+                True,
+            )
 
         if publish_attributes:
             for key, val in new_state.attributes.items():

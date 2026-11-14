@@ -24,37 +24,11 @@ from pytest_homeassistant.common import async_fire_time_changed
 from homeassistant.components import lifx
 from homeassistant.components.lifx import DOMAIN
 from homeassistant.components.lifx.const import (
-    ATTR_CHANGE,
-    ATTR_CLOUD_SATURATION_MAX,
-    ATTR_CLOUD_SATURATION_MIN,
-    ATTR_CYCLES,
-    ATTR_DIRECTION,
-    ATTR_DURATION,
-    ATTR_PALETTE,
-    ATTR_PERIOD,
-    ATTR_POWER,
-    ATTR_POWER_ON,
-    ATTR_SATURATION_MAX,
-    ATTR_SATURATION_MIN,
-    ATTR_SKY_TYPE,
-    ATTR_SPEED,
-    ATTR_THEME,
     DATA_LIFX_MANAGER,
-    SERVICE_EFFECT_COLORLOOP,
-    SERVICE_EFFECT_COLORSWEEP,
-    SERVICE_EFFECT_FLAME,
-    SERVICE_EFFECT_MORPH,
-    SERVICE_EFFECT_MOVE,
-    SERVICE_EFFECT_PULSE,
-    SERVICE_EFFECT_SKY,
-    SERVICE_EFFECT_STOP,
-    SERVICE_PAINT_THEME,
+    LIFXService,
+    LIFXServiceArgument,
 )
-from homeassistant.components.lifx.light import (
-    ATTR_INFRARED,
-    ATTR_ZONES,
-    LIFX_MIN_COLOR_RAMP,
-)
+from homeassistant.components.lifx.light import LIFX_MIN_COLOR_RAMP
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_BRIGHTNESS_PCT,
@@ -198,8 +172,8 @@ async def test_white_light_modes(
     assert state.attributes[ATTR_COLOR_MODE] == expected_mode
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [expected_mode]
     assert state.attributes[ATTR_EFFECT_LIST] == [
-        SERVICE_EFFECT_PULSE,
-        SERVICE_EFFECT_STOP,
+        LIFXService.EFFECT_PULSE,
+        LIFXService.EFFECT_STOP,
     ]
 
 
@@ -209,58 +183,58 @@ async def test_white_light_modes(
         (
             create_mock_multizone_light,
             [
-                SERVICE_EFFECT_COLORLOOP,
-                SERVICE_EFFECT_PULSE,
-                SERVICE_EFFECT_MOVE,
-                SERVICE_EFFECT_STOP,
+                LIFXService.EFFECT_COLORLOOP,
+                LIFXService.EFFECT_PULSE,
+                LIFXService.EFFECT_MOVE,
+                LIFXService.EFFECT_STOP,
             ],
             (),
         ),
         (
             create_mock_luna_light,
             [
-                SERVICE_EFFECT_COLORLOOP,
-                SERVICE_EFFECT_FLAME,
-                SERVICE_EFFECT_PULSE,
-                SERVICE_EFFECT_MORPH,
-                SERVICE_EFFECT_SKY,
-                SERVICE_EFFECT_STOP,
+                LIFXService.EFFECT_COLORLOOP,
+                LIFXService.EFFECT_FLAME,
+                LIFXService.EFFECT_PULSE,
+                LIFXService.EFFECT_MORPH,
+                LIFXService.EFFECT_SKY,
+                LIFXService.EFFECT_STOP,
             ],
             (),
         ),
         (
             create_mock_matrix_light,
             [
-                SERVICE_EFFECT_COLORLOOP,
-                SERVICE_EFFECT_FLAME,
-                SERVICE_EFFECT_PULSE,
-                SERVICE_EFFECT_MORPH,
-                SERVICE_EFFECT_STOP,
+                LIFXService.EFFECT_COLORLOOP,
+                LIFXService.EFFECT_FLAME,
+                LIFXService.EFFECT_PULSE,
+                LIFXService.EFFECT_MORPH,
+                LIFXService.EFFECT_STOP,
             ],
             (),
         ),
         (
             create_mock_ceiling_light,
             [
-                SERVICE_EFFECT_COLORLOOP,
-                SERVICE_EFFECT_FLAME,
-                SERVICE_EFFECT_PULSE,
-                SERVICE_EFFECT_MORPH,
-                SERVICE_EFFECT_SKY,
-                SERVICE_EFFECT_STOP,
+                LIFXService.EFFECT_COLORLOOP,
+                LIFXService.EFFECT_FLAME,
+                LIFXService.EFFECT_PULSE,
+                LIFXService.EFFECT_MORPH,
+                LIFXService.EFFECT_SKY,
+                LIFXService.EFFECT_STOP,
             ],
             ("uplight", "downlight"),
         ),
         (
             create_mock_mirror_light,
             [
-                SERVICE_EFFECT_COLORLOOP,
-                SERVICE_EFFECT_FLAME,
-                SERVICE_EFFECT_PULSE,
-                SERVICE_EFFECT_MORPH,
-                SERVICE_EFFECT_SKY,
-                SERVICE_EFFECT_COLORSWEEP,
-                SERVICE_EFFECT_STOP,
+                LIFXService.EFFECT_COLORLOOP,
+                LIFXService.EFFECT_FLAME,
+                LIFXService.EFFECT_PULSE,
+                LIFXService.EFFECT_MORPH,
+                LIFXService.EFFECT_SKY,
+                LIFXService.EFFECT_COLORSWEEP,
+                LIFXService.EFFECT_STOP,
             ],
             ("front", "back"),
         ),
@@ -332,13 +306,13 @@ async def test_effect_pulse_uses_public_effect(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_EFFECT_PULSE,
+        LIFXService.EFFECT_PULSE,
         {
             ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_POWER_ON: False,
+            LIFXServiceArgument.POWER_ON: False,
             ATTR_MODE: "breathe",
-            ATTR_PERIOD: 2.5,
-            ATTR_CYCLES: 4,
+            LIFXServiceArgument.PERIOD: 2.5,
+            LIFXServiceArgument.CYCLES: 4,
             ATTR_HS_COLOR: (120.0, 50.0),
             ATTR_BRIGHTNESS: 128,
         },
@@ -371,7 +345,7 @@ async def test_effect_service_follows_renamed_entity_id(
     assert set(manager.entity_id_to_coordinator) == {RENAMED_ENTITY_ID}
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_EFFECT_PULSE,
+        LIFXService.EFFECT_PULSE,
         {ATTR_ENTITY_ID: RENAMED_ENTITY_ID},
         blocking=True,
     )
@@ -381,7 +355,7 @@ async def test_effect_service_follows_renamed_entity_id(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_EFFECT_PULSE,
+            LIFXService.EFFECT_PULSE,
             {ATTR_ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
@@ -401,7 +375,7 @@ async def test_effect_pulse_reads_color_before_merging(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_EFFECT_PULSE,
+        LIFXService.EFFECT_PULSE,
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_BRIGHTNESS: 128},
         blocking=True,
     )
@@ -429,7 +403,7 @@ async def test_effect_pulse_clamps_brightness_above_zero(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_EFFECT_PULSE,
+        LIFXService.EFFECT_PULSE,
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HS_COLOR: (120.0, 50.0), **brightness},
         blocking=True,
     )
@@ -447,11 +421,11 @@ async def test_effect_colorloop_uses_public_effect_defaults(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_EFFECT_COLORLOOP,
+        LIFXService.EFFECT_COLORLOOP,
         {
             ATTR_ENTITY_ID: ENTITY_ID,
             ATTR_BRIGHTNESS_PCT: 50,
-            ATTR_SATURATION_MIN: 90,
+            LIFXServiceArgument.SATURATION_MIN: 90,
         },
         blocking=True,
     )
@@ -477,8 +451,8 @@ async def test_effect_colorloop_orders_saturation_bounds(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_EFFECT_COLORLOOP,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_SATURATION_MAX: 50},
+        LIFXService.EFFECT_COLORLOOP,
+        {ATTR_ENTITY_ID: ENTITY_ID, LIFXServiceArgument.SATURATION_MAX: 50},
         blocking=True,
     )
 
@@ -495,8 +469,12 @@ async def test_effect_colorloop_clamps_saturation_above_zero(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_EFFECT_COLORLOOP,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_SATURATION_MIN: 0, ATTR_SATURATION_MAX: 0},
+        LIFXService.EFFECT_COLORLOOP,
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            LIFXServiceArgument.SATURATION_MIN: 0,
+            LIFXServiceArgument.SATURATION_MAX: 0,
+        },
         blocking=True,
     )
 
@@ -524,8 +502,8 @@ async def test_effect_colorloop_change_is_clamped_to_what_the_library_accepts(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_EFFECT_COLORLOOP,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_CHANGE: change},
+        LIFXService.EFFECT_COLORLOOP,
+        {ATTR_ENTITY_ID: ENTITY_ID, LIFXServiceArgument.CHANGE: change},
         blocking=True,
     )
 
@@ -541,7 +519,7 @@ async def test_effect_colorloop_accepts_absolute_brightness(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_EFFECT_COLORLOOP,
+        LIFXService.EFFECT_COLORLOOP,
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_BRIGHTNESS: 128},
         blocking=True,
     )
@@ -560,7 +538,7 @@ async def test_software_effect_errors_become_home_assistant_errors(
     with pytest.raises(HomeAssistantError, match="software boom"):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_EFFECT_PULSE,
+            LIFXService.EFFECT_PULSE,
             {ATTR_ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
@@ -613,15 +591,15 @@ async def test_undocumented_firmware_effect_is_not_reported(
     ("service", "service_data", "effect_type", "expected_kwargs"),
     [
         pytest.param(
-            SERVICE_EFFECT_FLAME,
-            {ATTR_SPEED: 4},
+            LIFXService.EFFECT_FLAME,
+            {LIFXServiceArgument.SPEED: 4},
             FirmwareEffect.FLAME,
             {"speed": 4},
             id="flame",
         ),
         pytest.param(
-            SERVICE_EFFECT_MORPH,
-            {ATTR_SPEED: 6, ATTR_THEME: "autumn"},
+            LIFXService.EFFECT_MORPH,
+            {LIFXServiceArgument.SPEED: 6, LIFXServiceArgument.THEME: "autumn"},
             FirmwareEffect.MORPH,
             {"speed": 6, "palette": ThemeLibrary.get("autumn").colors},
             id="morph",
@@ -662,7 +640,7 @@ async def test_firmware_effect_errors_become_home_assistant_errors(
     with pytest.raises(HomeAssistantError, match="firmware boom"):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_EFFECT_FLAME,
+            LIFXService.EFFECT_FLAME,
             {ATTR_ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
@@ -677,8 +655,8 @@ async def test_effect_theme_schema_offers_every_library_theme(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_EFFECT_MORPH,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_THEME: "arctic"},
+        LIFXService.EFFECT_MORPH,
+        {ATTR_ENTITY_ID: ENTITY_ID, LIFXServiceArgument.THEME: "arctic"},
         blocking=True,
     )
 
@@ -696,14 +674,14 @@ async def test_sky_effect_uses_public_firmware_api(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_EFFECT_SKY,
+        LIFXService.EFFECT_SKY,
         {
             ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_SPEED: 50,
-            ATTR_SKY_TYPE: "Clouds",
-            ATTR_CLOUD_SATURATION_MIN: 50,
-            ATTR_CLOUD_SATURATION_MAX: 180,
-            ATTR_PALETTE: [(200, 1, 0.01, 3500), (40, 50, 100, 3500)],
+            LIFXServiceArgument.SPEED: 50,
+            LIFXServiceArgument.SKY_TYPE: "Clouds",
+            LIFXServiceArgument.CLOUD_SATURATION_MIN: 50,
+            LIFXServiceArgument.CLOUD_SATURATION_MAX: 180,
+            LIFXServiceArgument.PALETTE: [(200, 1, 0.01, 3500), (40, 50, 100, 3500)],
         },
         blocking=True,
     )
@@ -728,12 +706,12 @@ async def test_sky_effect_plays_once_across_a_duration(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_EFFECT_SKY,
+        LIFXService.EFFECT_SKY,
         {
             ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_SKY_TYPE: "Sunrise",
-            ATTR_SPEED: 0,
-            ATTR_DURATION: 1800,
+            LIFXServiceArgument.SKY_TYPE: "Sunrise",
+            LIFXServiceArgument.SPEED: 0,
+            LIFXServiceArgument.DURATION: 1800,
         },
         blocking=True,
     )
@@ -753,8 +731,8 @@ async def test_sky_effect_speed_zero_needs_a_duration(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_EFFECT_SKY,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_SPEED: 0},
+            LIFXService.EFFECT_SKY,
+            {ATTR_ENTITY_ID: ENTITY_ID, LIFXServiceArgument.SPEED: 0},
             blocking=True,
         )
 
@@ -771,8 +749,8 @@ async def test_sky_effect_without_a_palette_omits_it(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_EFFECT_SKY,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_POWER_ON: False},
+        LIFXService.EFFECT_SKY,
+        {ATTR_ENTITY_ID: ENTITY_ID, LIFXServiceArgument.POWER_ON: False},
         blocking=True,
     )
 
@@ -786,9 +764,9 @@ async def test_sky_effect_without_a_palette_omits_it(
     [
         pytest.param(
             {
-                ATTR_SPEED: 5,
-                ATTR_DURATION: 0,
-                ATTR_PALETTE: [(0, 100, 100, 3500), (240, 50, 80, 3500)],
+                LIFXServiceArgument.SPEED: 5,
+                LIFXServiceArgument.DURATION: 0,
+                LIFXServiceArgument.PALETTE: [(0, 100, 100, 3500), (240, 50, 80, 3500)],
             },
             {
                 "speed": 5,
@@ -821,7 +799,7 @@ async def test_color_sweep_effect_uses_public_firmware_api(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_EFFECT_COLORSWEEP,
+        LIFXService.EFFECT_COLORSWEEP,
         {ATTR_ENTITY_ID: ENTITY_ID, **service_data},
         blocking=True,
     )
@@ -842,8 +820,8 @@ async def test_color_sweep_speed_zero_needs_a_duration(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_EFFECT_COLORSWEEP,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_DURATION: 0},
+            LIFXService.EFFECT_COLORSWEEP,
+            {ATTR_ENTITY_ID: ENTITY_ID, LIFXServiceArgument.DURATION: 0},
             blocking=True,
         )
 
@@ -865,7 +843,7 @@ async def test_color_sweep_effect_skips_other_matrix_lights(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_EFFECT_COLORSWEEP,
+        LIFXService.EFFECT_COLORSWEEP,
         {ATTR_ENTITY_ID: [ENTITY_ID, OTHER_ENTITY_ID]},
         blocking=True,
     )
@@ -882,12 +860,12 @@ async def test_move_effect_uses_public_firmware_api(hass: HomeAssistant) -> None
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_EFFECT_MOVE,
+        LIFXService.EFFECT_MOVE,
         {
             ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_SPEED: 4.5,
-            ATTR_DIRECTION: "left",
-            ATTR_THEME: "sports",
+            LIFXServiceArgument.SPEED: 4.5,
+            LIFXServiceArgument.DIRECTION: "left",
+            LIFXServiceArgument.THEME: "sports",
         },
         blocking=True,
     )
@@ -929,7 +907,7 @@ async def test_effect_stop_uses_compatible_public_firmware_api(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_EFFECT_STOP,
+        LIFXService.EFFECT_STOP,
         {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
@@ -942,15 +920,17 @@ async def test_effect_stop_uses_compatible_public_firmware_api(
     ("service_data", "expected_colors"),
     [
         pytest.param(
-            {ATTR_THEME: "autumn"}, ThemeLibrary.get("autumn").colors, id="library"
+            {LIFXServiceArgument.THEME: "autumn"},
+            ThemeLibrary.get("autumn").colors,
+            id="library",
         ),
         pytest.param(
-            {ATTR_PALETTE: [(0, 100, 100, 3500), (240, 50, 25, 6500)]},
+            {LIFXServiceArgument.PALETTE: [(0, 100, 100, 3500), (240, 50, 25, 6500)]},
             [HSBK(0, 1.0, 1.0, 3500), HSBK(240, 0.5, 0.25, 6500)],
             id="percentage_palette",
         ),
         pytest.param(
-            {ATTR_PALETTE: [(0, 1, 1, 3500), (240, 0.5, 0.25, 6500)]},
+            {LIFXServiceArgument.PALETTE: [(0, 1, 1, 3500), (240, 0.5, 0.25, 6500)]},
             [HSBK(0, 1.0, 1.0, 3500), HSBK(240, 0.5, 0.25, 6500)],
             id="fraction_palette",
         ),
@@ -967,10 +947,10 @@ async def test_paint_theme_uses_public_device_api(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_PAINT_THEME,
+        LIFXService.PAINT_THEME,
         {
             ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_POWER_ON: False,
+            LIFXServiceArgument.POWER_ON: False,
             ATTR_TRANSITION: 4,
             **service_data,
         },
@@ -1248,7 +1228,7 @@ async def test_multizone_selection(hass: HomeAssistant, extended: bool) -> None:
         "set_state",
         {
             ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_ZONES: [0],
+            LIFXServiceArgument.ZONES: [0],
             ATTR_BRIGHTNESS: 128,
             ATTR_TRANSITION: 2,
         },
@@ -1347,7 +1327,11 @@ async def test_multizone_selection_writes_only_the_requested_window(
     await hass.services.async_call(
         DOMAIN,
         "set_state",
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_ZONES: [1], ATTR_HS_COLOR: (120.0, 50.0)},
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            LIFXServiceArgument.ZONES: [1],
+            ATTR_HS_COLOR: (120.0, 50.0),
+        },
         blocking=True,
     )
 
@@ -1370,7 +1354,11 @@ async def test_multizone_selection_outside_the_strip_writes_nothing(
     await hass.services.async_call(
         DOMAIN,
         "set_state",
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_ZONES: [99], ATTR_BRIGHTNESS: 128},
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            LIFXServiceArgument.ZONES: [99],
+            ATTR_BRIGHTNESS: 128,
+        },
         blocking=True,
     )
 
@@ -1444,7 +1432,7 @@ async def test_turn_on_with_effect_delegates_to_the_effect_service(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_EFFECT: SERVICE_EFFECT_PULSE},
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_EFFECT: LIFXService.EFFECT_PULSE},
         blocking=True,
     )
     # The effect service is called without waiting for it to finish
@@ -1701,7 +1689,7 @@ async def test_deprecated_infrared_uses_public_level(hass: HomeAssistant) -> Non
     await hass.services.async_call(
         DOMAIN,
         "set_state",
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INFRARED: 100},
+        {ATTR_ENTITY_ID: ENTITY_ID, LIFXServiceArgument.INFRARED: 100},
         blocking=True,
     )
 
@@ -1716,7 +1704,11 @@ async def test_hev_cycle_service(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         DOMAIN,
         "set_hev_cycle_state",
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_POWER: True, ATTR_DURATION: 12},
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            LIFXServiceArgument.POWER: True,
+            LIFXServiceArgument.DURATION: 12,
+        },
         blocking=True,
     )
 
@@ -1735,7 +1727,7 @@ async def test_hev_cycle_library_error_becomes_home_assistant_error(
         await hass.services.async_call(
             DOMAIN,
             "set_hev_cycle_state",
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_POWER: True},
+            {ATTR_ENTITY_ID: ENTITY_ID, LIFXServiceArgument.POWER: True},
             blocking=True,
         )
 
@@ -1750,7 +1742,7 @@ async def test_hev_cycle_rejected_for_regular_light(hass: HomeAssistant) -> None
         await hass.services.async_call(
             DOMAIN,
             "set_hev_cycle_state",
-            {ATTR_ENTITY_ID: OTHER_ENTITY_ID, ATTR_POWER: True},
+            {ATTR_ENTITY_ID: OTHER_ENTITY_ID, LIFXServiceArgument.POWER: True},
             blocking=True,
         )
 
@@ -1767,7 +1759,7 @@ async def test_hev_cycle_action_rejects_target_without_a_clean_bulb(
         await hass.services.async_call(
             DOMAIN,
             "set_hev_cycle_state",
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_POWER: True},
+            {ATTR_ENTITY_ID: ENTITY_ID, LIFXServiceArgument.POWER: True},
             blocking=True,
         )
 
@@ -1782,7 +1774,7 @@ async def test_infrared_rejected_for_light_without_infrared(
         await hass.services.async_call(
             DOMAIN,
             "set_state",
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INFRARED: 128},
+            {ATTR_ENTITY_ID: ENTITY_ID, LIFXServiceArgument.INFRARED: 128},
             blocking=True,
         )
 
@@ -1794,7 +1786,7 @@ async def test_effect_without_a_lifx_target_is_rejected(hass: HomeAssistant) -> 
     with pytest.raises(ServiceValidationError, match="include no LIFX light"):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_EFFECT_PULSE,
+            LIFXService.EFFECT_PULSE,
             {ATTR_ENTITY_ID: "light.does_not_exist"},
             blocking=True,
         )
@@ -1804,15 +1796,17 @@ async def test_effect_without_a_lifx_target_is_rejected(hass: HomeAssistant) -> 
     ("service", "message"),
     [
         pytest.param(
-            SERVICE_EFFECT_FLAME, "no LIFX matrix light", id="flame-needs-matrix"
+            LIFXService.EFFECT_FLAME, "no LIFX matrix light", id="flame-needs-matrix"
         ),
         pytest.param(
-            SERVICE_EFFECT_COLORSWEEP,
+            LIFXService.EFFECT_COLORSWEEP,
             "no LIFX Mirror",
             id="color-sweep-needs-mirror",
         ),
         pytest.param(
-            SERVICE_EFFECT_MOVE, "no LIFX multizone light", id="move-needs-multizone"
+            LIFXService.EFFECT_MOVE,
+            "no LIFX multizone light",
+            id="move-needs-multizone",
         ),
     ],
 )
@@ -1851,7 +1845,7 @@ async def test_firmware_effect_on_an_area_without_a_capable_light_is_a_no_op(
     device_registry.async_update_device(registered.id, area_id=area.id)
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_EFFECT_FLAME, {ATTR_AREA_ID: area.id}, blocking=True
+        DOMAIN, LIFXService.EFFECT_FLAME, {ATTR_AREA_ID: area.id}, blocking=True
     )
 
     device.set_power.assert_not_called()
@@ -1868,7 +1862,7 @@ async def test_effect_on_an_area_without_a_lifx_light_is_a_no_op(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_EFFECT_PULSE,
+        LIFXService.EFFECT_PULSE,
         {ATTR_AREA_ID: area.id},
         blocking=True,
     )
@@ -1892,7 +1886,7 @@ async def test_effect_on_an_area_without_a_lifx_light_is_a_no_op(
             "set_all_color_zones",
             DOMAIN,
             "set_state",
-            {ATTR_ZONES: [0], ATTR_BRIGHTNESS: 128},
+            {LIFXServiceArgument.ZONES: [0], ATTR_BRIGHTNESS: 128},
         ),
         (
             create_mock_matrix_light,
@@ -1906,7 +1900,7 @@ async def test_effect_on_an_area_without_a_lifx_light_is_a_no_op(
             "set_infrared",
             DOMAIN,
             "set_state",
-            {ATTR_INFRARED: 100},
+            {LIFXServiceArgument.INFRARED: 100},
         ),
     ],
 )
@@ -2021,7 +2015,7 @@ async def test_unavailable_light_only_recovers_by_answering(
 
 @pytest.mark.parametrize(
     "data",
-    [{ATTR_INFRARED: 256}, {ATTR_ZONES: [-1]}],
+    [{LIFXServiceArgument.INFRARED: 256}, {LIFXServiceArgument.ZONES: [-1]}],
 )
 async def test_set_state_schema_rejects_invalid_values(
     hass: HomeAssistant, data: dict[str, Any]
@@ -2051,7 +2045,7 @@ async def test_light_starts_off(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(
     "service",
-    [SERVICE_EFFECT_MOVE, SERVICE_EFFECT_MORPH, SERVICE_PAINT_THEME],
+    [LIFXService.EFFECT_MOVE, LIFXService.EFFECT_MORPH, LIFXService.PAINT_THEME],
 )
 def test_theme_selector_options_match_the_library(service: str) -> None:
     """Test the action selectors offer every theme the library accepts.
@@ -2060,7 +2054,9 @@ def test_theme_selector_options_match_the_library(service: str) -> None:
     by a library bump would hide themes the action would have accepted.
     """
     services = load_yaml_dict(f"{lifx.__path__[0]}/services.yaml")
-    options = services[service]["fields"][ATTR_THEME]["selector"]["select"]["options"]
+    options = services[service]["fields"][LIFXServiceArgument.THEME]["selector"][
+        "select"
+    ]["options"]
 
     assert options == sorted(ThemeLibrary.get_available_themes())
 
@@ -2068,8 +2064,8 @@ def test_theme_selector_options_match_the_library(service: str) -> None:
 @pytest.mark.parametrize(
     ("service", "default"),
     [
-        pytest.param(SERVICE_EFFECT_MOVE, None, id="move"),
-        pytest.param(SERVICE_PAINT_THEME, "exciting", id="paint_theme"),
+        pytest.param(LIFXService.EFFECT_MOVE, None, id="move"),
+        pytest.param(LIFXService.PAINT_THEME, "exciting", id="paint_theme"),
     ],
 )
 def test_theme_field_default_matches_the_action(
@@ -2082,50 +2078,52 @@ def test_theme_field_default_matches_the_action(
     """
     services = load_yaml_dict(f"{lifx.__path__[0]}/services.yaml")
 
-    assert services[service]["fields"][ATTR_THEME].get("default") == default
+    assert (
+        services[service]["fields"][LIFXServiceArgument.THEME].get("default") == default
+    )
 
 
 @pytest.mark.parametrize(
     ("service", "factory", "palette"),
     [
         pytest.param(
-            SERVICE_EFFECT_MORPH,
+            LIFXService.EFFECT_MORPH,
             create_mock_matrix_light,
             [(0, 100, 100, 3500)],
             id="morph-below-minimum",
         ),
         pytest.param(
-            SERVICE_EFFECT_MORPH,
+            LIFXService.EFFECT_MORPH,
             create_mock_matrix_light,
             [(0, 100, 100, 3500)] * 17,
             id="morph-above-maximum",
         ),
         pytest.param(
-            SERVICE_EFFECT_SKY,
+            LIFXService.EFFECT_SKY,
             create_mock_matrix_light,
             [(0, 100, 100, 3500)] * 7,
             id="sky-above-maximum",
         ),
         pytest.param(
-            SERVICE_EFFECT_COLORSWEEP,
+            LIFXService.EFFECT_COLORSWEEP,
             create_mock_mirror_light,
             [(0, 100, 100, 3500)],
             id="color-sweep-below-minimum",
         ),
         pytest.param(
-            SERVICE_EFFECT_COLORSWEEP,
+            LIFXService.EFFECT_COLORSWEEP,
             create_mock_mirror_light,
             [(0, 100, 100, 3500)] * 17,
             id="color-sweep-above-maximum",
         ),
         pytest.param(
-            SERVICE_PAINT_THEME,
+            LIFXService.PAINT_THEME,
             create_mock_light,
             [(0, 100, 100, 3500)],
             id="paint-theme-below-minimum",
         ),
         pytest.param(
-            SERVICE_PAINT_THEME,
+            LIFXService.PAINT_THEME,
             create_mock_light,
             [(0, 100, 100, 3500)] * 17,
             id="paint-theme-above-maximum",
@@ -2146,6 +2144,6 @@ async def test_palette_bounds_match_the_documented_action(
         await hass.services.async_call(
             DOMAIN,
             service,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PALETTE: palette},
+            {ATTR_ENTITY_ID: ENTITY_ID, LIFXServiceArgument.PALETTE: palette},
             blocking=True,
         )

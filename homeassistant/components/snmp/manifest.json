@@ -5,7 +5,7 @@
     "computers_network.monitoring",
     "presence_location.network_presence"
   ],
-  "codeowners": ["@nmaggioni"],
+  "codeowners": [],
   "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/snmp",
   "iot_class": "local_polling",

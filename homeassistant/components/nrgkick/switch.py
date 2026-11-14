@@ -11,7 +11,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import NRGkickConfigEntry, NRGkickData, NRGkickDataUpdateCoordinator
 from .entity import NRGkickEntity
 
-PARALLEL_UPDATES = 0
+PARALLEL_UPDATES = 1
 
 CHARGING_ENABLED_KEY = "charging_enabled"
 

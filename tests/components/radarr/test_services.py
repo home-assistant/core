@@ -9,9 +9,8 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.radarr.const import DOMAIN
 from homeassistant.components.radarr.services import (
-    ATTR_ENTRY_ID,
-    SERVICE_GET_MOVIES,
-    SERVICE_GET_QUEUE,
+    RadarrService,
+    RadarrServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -29,8 +28,8 @@ async def test_get_queue_service(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_QUEUE,
-        {ATTR_ENTRY_ID: entry.entry_id},
+        RadarrService.GET_QUEUE,
+        {RadarrServiceArgument.ENTRY_ID: entry.entry_id},
         blocking=True,
         return_response=True,
     )
@@ -52,8 +51,8 @@ async def test_get_movies_service(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_MOVIES,
-        {ATTR_ENTRY_ID: entry.entry_id},
+        RadarrService.GET_MOVIES,
+        {RadarrServiceArgument.ENTRY_ID: entry.entry_id},
         blocking=True,
         return_response=True,
     )
@@ -67,7 +66,10 @@ async def test_get_movies_service(
 
 @pytest.mark.parametrize(
     ("service", "method"),
-    [(SERVICE_GET_QUEUE, "async_get_queue"), (SERVICE_GET_MOVIES, "async_get_movies")],
+    [
+        (RadarrService.GET_QUEUE, "async_get_queue"),
+        (RadarrService.GET_MOVIES, "async_get_movies"),
+    ],
 )
 async def test_services_api_connection_error(
     hass: HomeAssistant,
@@ -88,7 +90,7 @@ async def test_services_api_connection_error(
         await hass.services.async_call(
             DOMAIN,
             service,
-            {ATTR_ENTRY_ID: entry.entry_id},
+            {RadarrServiceArgument.ENTRY_ID: entry.entry_id},
             blocking=True,
             return_response=True,
         )
@@ -96,7 +98,10 @@ async def test_services_api_connection_error(
 
 @pytest.mark.parametrize(
     ("service", "method"),
-    [(SERVICE_GET_QUEUE, "async_get_queue"), (SERVICE_GET_MOVIES, "async_get_movies")],
+    [
+        (RadarrService.GET_QUEUE, "async_get_queue"),
+        (RadarrService.GET_MOVIES, "async_get_movies"),
+    ],
 )
 async def test_get_movies_service_api_auth_error(
     hass: HomeAssistant,
@@ -117,7 +122,7 @@ async def test_get_movies_service_api_auth_error(
         await hass.services.async_call(
             DOMAIN,
             service,
-            {ATTR_ENTRY_ID: entry.entry_id},
+            {RadarrServiceArgument.ENTRY_ID: entry.entry_id},
             blocking=True,
             return_response=True,
         )
@@ -125,7 +130,7 @@ async def test_get_movies_service_api_auth_error(
 
 @pytest.mark.parametrize(
     "service",
-    [SERVICE_GET_QUEUE, SERVICE_GET_MOVIES],
+    [RadarrService.GET_QUEUE, RadarrService.GET_MOVIES],
 )
 async def test_services_invalid_entry(
     hass: HomeAssistant,
@@ -140,7 +145,7 @@ async def test_services_invalid_entry(
         await hass.services.async_call(
             DOMAIN,
             service,
-            {ATTR_ENTRY_ID: "invalid_id"},
+            {RadarrServiceArgument.ENTRY_ID: "invalid_id"},
             blocking=True,
             return_response=True,
         )
@@ -149,7 +154,7 @@ async def test_services_invalid_entry(
 
 @pytest.mark.parametrize(
     "service",
-    [SERVICE_GET_QUEUE, SERVICE_GET_MOVIES],
+    [RadarrService.GET_QUEUE, RadarrService.GET_MOVIES],
 )
 async def test_services_entry_not_loaded(
     hass: HomeAssistant,
@@ -167,7 +172,7 @@ async def test_services_entry_not_loaded(
         await hass.services.async_call(
             DOMAIN,
             service,
-            {ATTR_ENTRY_ID: unloaded_entry.entry_id},
+            {RadarrServiceArgument.ENTRY_ID: unloaded_entry.entry_id},
             blocking=True,
             return_response=True,
         )

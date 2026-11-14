@@ -1,5 +1,6 @@
 """Actions for the Mijn Farmad Apotheek integration."""
 
+from enum import StrEnum
 import logging
 import re
 from typing import TYPE_CHECKING, Any, Final
@@ -25,24 +26,17 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, service
 
 from .const import (
-    ATTR_APB,
     ATTR_BASKET_ID,
     ATTR_BRAND,
     ATTR_CNK,
-    ATTR_COMMENT,
     ATTR_DESCRIPTION,
     ATTR_IS_ON_PRESCRIPTION,
     ATTR_PACKAGE_QUANTITY,
     ATTR_PRICE,
-    ATTR_PRODUCT,
     ATTR_PRODUCTS,
-    ATTR_QUANTITY,
-    ATTR_QUERY,
     ATTR_STOCK,
     DOMAIN,
     SEARCH_RESULT_LIMIT,
-    SERVICE_ORDER_MEDICATION,
-    SERVICE_SEARCH_MEDICATION,
 )
 
 if TYPE_CHECKING:
@@ -54,21 +48,39 @@ CNK_PATTERN: Final = re.compile(r"[0-9]{7}")
 
 NON_EMPTY_STRING = probatio.All(cv.string, probatio.Length(min=1))
 
+
+class FarmadService(StrEnum):
+    """Store keys for Mijn Farmad Apotheek services."""
+
+    ORDER_MEDICATION = "order_medication"
+    SEARCH_MEDICATION = "search_medication"
+
+
+class FarmadServiceArgument(StrEnum):
+    """Store keys for Mijn Farmad Apotheek service arguments."""
+
+    PRODUCT = "product"
+    QUANTITY = "quantity"
+    APB = "apb"
+    COMMENT = "comment"
+    QUERY = "query"
+
+
 SEARCH_MEDICATION_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_QUERY): NON_EMPTY_STRING,
-        probatio.Required(ATTR_APB): NON_EMPTY_STRING,
+        probatio.Required(FarmadServiceArgument.QUERY): NON_EMPTY_STRING,
+        probatio.Required(FarmadServiceArgument.APB): NON_EMPTY_STRING,
     }
 )
 
 ORDER_MEDICATION_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_PRODUCT): cv.string,
-        probatio.Optional(ATTR_QUANTITY, default=1): probatio.All(
+        probatio.Required(FarmadServiceArgument.PRODUCT): cv.string,
+        probatio.Optional(FarmadServiceArgument.QUANTITY, default=1): probatio.All(
             probatio.Number(scale=0), probatio.Coerce(int), probatio.Range(min=1)
         ),
-        probatio.Required(ATTR_APB): NON_EMPTY_STRING,
-        probatio.Optional(ATTR_COMMENT): cv.string,
+        probatio.Required(FarmadServiceArgument.APB): NON_EMPTY_STRING,
+        probatio.Optional(FarmadServiceArgument.COMMENT): cv.string,
     }
 )
 
@@ -78,7 +90,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     """Register the actions for the Mijn Farmad Apotheek integration."""
     hass.services.async_register(
         DOMAIN,
-        SERVICE_SEARCH_MEDICATION,
+        FarmadService.SEARCH_MEDICATION,
         _async_search_medication,
         schema=SEARCH_MEDICATION_SCHEMA,
         supports_response=SupportsResponse.ONLY,
@@ -86,7 +98,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_ORDER_MEDICATION,
+        FarmadService.ORDER_MEDICATION,
         _async_order_medication,
         schema=ORDER_MEDICATION_SCHEMA,
         supports_response=SupportsResponse.OPTIONAL,
@@ -238,10 +250,10 @@ async def _async_search_medication(call: ServiceCall) -> ServiceResponse:
     """Search the catalog of a Farmad pharmacy."""
     entry: FarmadConfigEntry = service.async_get_config_entry(call.hass, DOMAIN, None)
     data = entry.runtime_data
-    apb = call.data[ATTR_APB]
+    apb = call.data[FarmadServiceArgument.APB]
     try:
         products = await data.client.async_search_products_in_apb(
-            apb, call.data[ATTR_QUERY], limit=SEARCH_RESULT_LIMIT
+            apb, call.data[FarmadServiceArgument.QUERY], limit=SEARCH_RESULT_LIMIT
         )
     except FarmadError as err:
         if isinstance(err, FarmadAuthenticationError):
@@ -254,16 +266,20 @@ async def _async_order_medication(call: ServiceCall) -> ServiceResponse:
     """Order one product at a Farmad pharmacy."""
     entry: FarmadConfigEntry = service.async_get_config_entry(call.hass, DOMAIN, None)
     data = entry.runtime_data
-    apb = call.data[ATTR_APB]
+    apb = call.data[FarmadServiceArgument.APB]
     try:
         cnk, description = await _async_resolve_product(
-            data, apb, call.data[ATTR_PRODUCT]
+            data, apb, call.data[FarmadServiceArgument.PRODUCT]
         )
         basket_id = await _async_place_order(
             data,
             apb,
-            (DraftProduct(product_cnk=cnk, quantity=call.data[ATTR_QUANTITY]),),
-            call.data.get(ATTR_COMMENT),
+            (
+                DraftProduct(
+                    product_cnk=cnk, quantity=call.data[FarmadServiceArgument.QUANTITY]
+                ),
+            ),
+            call.data.get(FarmadServiceArgument.COMMENT),
         )
     except FarmadError as err:
         if isinstance(err, FarmadAuthenticationError):

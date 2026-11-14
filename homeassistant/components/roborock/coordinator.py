@@ -257,16 +257,15 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
         """Verify that the api is reachable."""
         if self._device.is_connected:
             self._has_connected_locally |= self._device.is_local_connected
+            issue_id = f"cloud_api_used_{self.config_entry.entry_id}_{self.duid_slug}"
             if self._has_connected_locally:
-                async_delete_issue(
-                    self.hass, DOMAIN, f"cloud_api_used_{self.duid_slug}"
-                )
+                async_delete_issue(self.hass, DOMAIN, issue_id)
             else:
                 self.update_interval = V1_CLOUD_NOT_CLEANING_INTERVAL
                 async_create_issue(
                     self.hass,
                     DOMAIN,
-                    f"cloud_api_used_{self.duid_slug}",
+                    issue_id,
                     is_fixable=False,
                     severity=IssueSeverity.WARNING,
                     translation_key="cloud_api_used",

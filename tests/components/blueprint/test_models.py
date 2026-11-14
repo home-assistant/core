@@ -11,6 +11,7 @@ from pytest_homeassistant.common import get_test_config_dir
 from homeassistant.components.blueprint import BLUEPRINT_SCHEMA, errors, models
 from homeassistant.config import _get_annotation
 from homeassistant.core import HomeAssistant
+from homeassistant.util import yaml as yaml_util
 from homeassistant.util.yaml import Input
 from homeassistant.util.yaml.objects import NodeDictClass, NodeListClass, NodeStrClass
 
@@ -210,6 +211,46 @@ def test_blueprint_validate() -> None:
         },
         schema=BLUEPRINT_SCHEMA,
     ).validate() == ["Requires at least Home Assistant 100000.0.0"]
+
+
+def test_blueprint_dump_preserves_original_data() -> None:
+    """Test blueprint dump preserves original data.
+
+    Blueprint validation resolves some values to types that are not supported
+    by the schema, therefore dumping should keep the original values.
+    """
+    bp = models.Blueprint(
+        {
+            "blueprint": {
+                "name": "Hello",
+                "domain": "automation",
+                "input": {
+                    "light": {
+                        "selector": {
+                            "entity": {
+                                "filter": [
+                                    {
+                                        "supported_features": [
+                                            "light.LightEntityFeature.EFFECT"
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                },
+            },
+        },
+        schema=BLUEPRINT_SCHEMA,
+    )
+
+    bp.update_metadata(source_url="http://example.com/blueprint.yaml")
+    dumped = bp.yaml()
+
+    assert "light.LightEntityFeature.EFFECT" in dumped
+    reloaded = models.Blueprint(yaml_util.parse_yaml(dumped), schema=BLUEPRINT_SCHEMA)
+    assert reloaded.inputs == bp.inputs
+    assert reloaded.metadata["source_url"] == "http://example.com/blueprint.yaml"
 
 
 def test_blueprint_inputs(blueprint_2: models.Blueprint) -> None:

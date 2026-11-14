@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any, override
 from boschshcpy import (
     BatteryLevelService,
     SHCBatteryDevice,
+    SHCClimateControl,
     SHCShutterContact,
     SHCSmokeDetectionSystem,
     SHCTwinguard,
@@ -40,6 +41,41 @@ class SHCShutterContactSensorEntityDescription(BinarySensorEntityDescription):
 
     is_on_fn: Callable[[SHCShutterContact], bool]
 
+
+@dataclass(frozen=True, kw_only=True)
+class SHCBinarySensorEntityDescription[_DeviceT: SHCDevice](
+    BinarySensorEntityDescription
+):
+    """Describes a SHC binary sensor."""
+
+    is_on_fn: Callable[[_DeviceT], bool]
+
+
+CLIMATE_CONTROL_DESCRIPTIONS: tuple[
+    SHCBinarySensorEntityDescription[SHCClimateControl], ...
+] = (
+    SHCBinarySensorEntityDescription(
+        key="call_for_heat",
+        translation_key="call_for_heat",
+        device_class=BinarySensorDeviceClass.RUNNING,
+        is_on_fn=lambda device: device.has_demand and not device.cooling_mode,
+    ),
+    SHCBinarySensorEntityDescription(
+        key="schedule_override_active",
+        translation_key="schedule_override_active",
+        is_on_fn=lambda device: device.setpoint_temperature_offset_active,
+    ),
+    SHCBinarySensorEntityDescription(
+        key="summer_mode",
+        translation_key="summer_mode",
+        is_on_fn=lambda device: device.summer_mode,
+    ),
+    SHCBinarySensorEntityDescription(
+        key="ventilation_mode",
+        translation_key="ventilation_mode",
+        is_on_fn=lambda device: device.ventilation_mode,
+    ),
+)
 
 SHUTTER_CONTACT_DESCRIPTION = SHCShutterContactSensorEntityDescription(
     key="shutter_contact",
@@ -108,8 +144,51 @@ async def async_setup_entry(
             )
             for twinguard in session.device_helper.twinguards
         )
+    entities.extend(
+        SHCBinarySensor(
+            hass=hass,
+            device=device,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            entity_description=description,
+            room_name=session.room(device.room_id).name,
+        )
+        for device in session.device_helper.climate_controls
+        for description in CLIMATE_CONTROL_DESCRIPTIONS
+    )
 
     async_add_entities(entities)
+
+
+class SHCBinarySensor[_DeviceT: SHCDevice](SHCEntity, BinarySensorEntity):
+    """Generic SHC binary sensor, driven by a SHCBinarySensorEntityDescription."""
+
+    entity_description: SHCBinarySensorEntityDescription[_DeviceT]
+    _device: _DeviceT
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        device: _DeviceT,
+        parent_id: str,
+        entry_id: str,
+        entity_description: SHCBinarySensorEntityDescription[_DeviceT],
+        room_name: str | None = None,
+    ) -> None:
+        """Initialize the binary sensor."""
+        self.entity_description = entity_description
+        super().__init__(hass, device, parent_id, entry_id)
+        if room_name is not None:
+            if TYPE_CHECKING:
+                assert self._attr_device_info is not None
+            self._attr_device_info.name = room_name
+        self._attr_unique_id = f"{device.serial}_{entity_description.key}"
+
+    @property
+    @override
+    def is_on(self) -> bool:
+        """Return the state of the sensor."""
+        return self.entity_description.is_on_fn(self._device)
 
 
 class ShutterContactSensor(SHCEntity, BinarySensorEntity):

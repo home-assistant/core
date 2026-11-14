@@ -1,6 +1,7 @@
 """Custom actions (previously known as services) for the Home Connect integration."""
 
 from collections.abc import Awaitable, Callable
+from enum import StrEnum
 from functools import partial
 import logging
 from typing import Any
@@ -17,7 +18,7 @@ from aiohomeconnect.model.error import HomeConnectError, NoProgramActiveError
 from aiohomeconnect.model.program import Program, ProgramDefinition
 import probatio
 
-from homeassistant.const import ATTR_DEVICE_ID, UnitOfTemperature
+from homeassistant.const import CommonServiceArgument, UnitOfTemperature
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, service
@@ -26,22 +27,33 @@ from homeassistant.util.unit_conversion import TemperatureConverter
 from .const import (
     AFFECTS_TO_ACTIVE_PROGRAM,
     AFFECTS_TO_SELECTED_PROGRAM,
-    ATTR_AFFECTS_TO,
-    ATTR_KEY,
-    ATTR_PROGRAM,
-    ATTR_VALUE,
     DOMAIN,
     FAVORITE_PROGRAMS,
     PROGRAM_ENUM_OPTIONS,
-    SERVICE_SET_PROGRAM_AND_OPTIONS,
-    SERVICE_SETTING,
-    SERVICE_START_SELECTED_PROGRAM,
     TRANSLATION_KEYS_PROGRAMS_MAP,
 )
 from .coordinator import HomeConnectConfigEntry
 from .utils import bsh_key_to_translation_key, get_dict_from_home_connect_error
 
 LOGGER = logging.getLogger(__name__)
+
+
+class HomeConnectService(StrEnum):
+    """Store keys for Home Connect services."""
+
+    SET_PROGRAM_AND_OPTIONS = "set_program_and_options"
+    CHANGE_SETTING = "change_setting"
+    START_SELECTED_PROGRAM = "start_selected_program"
+
+
+class HomeConnectServiceArgument(StrEnum):
+    """Store keys for Home Connect service arguments."""
+
+    AFFECTS_TO = "affects_to"
+    PROGRAM = "program"
+    KEY = "key"
+    VALUE = "value"
+
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -98,12 +110,14 @@ PROGRAM_OPTIONS = {
 
 SERVICE_SETTING_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_DEVICE_ID): str,
-        probatio.Required(ATTR_KEY): probatio.All(
+        probatio.Required(CommonServiceArgument.DEVICE_ID): str,
+        probatio.Required(HomeConnectServiceArgument.KEY): probatio.All(
             probatio.Coerce(SettingKey),
             probatio.NotIn([SettingKey.UNKNOWN]),
         ),
-        probatio.Required(ATTR_VALUE): probatio.Any(str, int, bool),
+        probatio.Required(HomeConnectServiceArgument.VALUE): probatio.Any(
+            str, int, bool
+        ),
     }
 )
 
@@ -114,7 +128,7 @@ TEMPERATURE_OPTIONS = {
 
 
 def _require_program_or_at_least_one_option(data: dict) -> dict:
-    if ATTR_PROGRAM not in data and not any(
+    if HomeConnectServiceArgument.PROGRAM not in data and not any(
         option_key in data for option_key in (PROGRAM_ENUM_OPTIONS | PROGRAM_OPTIONS)
     ):
         raise ServiceValidationError(
@@ -127,11 +141,11 @@ def _require_program_or_at_least_one_option(data: dict) -> dict:
 SERVICE_PROGRAM_AND_OPTIONS_SCHEMA = probatio.All(
     probatio.Schema(
         {
-            probatio.Required(ATTR_DEVICE_ID): str,
-            probatio.Required(ATTR_AFFECTS_TO): probatio.In(
+            probatio.Required(CommonServiceArgument.DEVICE_ID): str,
+            probatio.Required(HomeConnectServiceArgument.AFFECTS_TO): probatio.In(
                 [AFFECTS_TO_ACTIVE_PROGRAM, AFFECTS_TO_SELECTED_PROGRAM]
             ),
-            probatio.Optional(ATTR_PROGRAM): probatio.In(
+            probatio.Optional(HomeConnectServiceArgument.PROGRAM): probatio.In(
                 TRANSLATION_KEYS_PROGRAMS_MAP.keys()
             ),
         }
@@ -157,7 +171,7 @@ SERVICE_PROGRAM_AND_OPTIONS_SCHEMA = probatio.All(
 SERVICE_START_SELECTED_PROGRAM_SCHEMA = probatio.All(
     probatio.Schema(
         {
-            probatio.Required(ATTR_DEVICE_ID): str,
+            probatio.Required(CommonServiceArgument.DEVICE_ID): str,
         }
     ).extend(
         {
@@ -198,9 +212,11 @@ async def _get_client_and_ha_id(
 
 async def async_service_setting(call: ServiceCall) -> None:
     """Service for changing a setting."""
-    key = call.data[ATTR_KEY]
-    value = call.data[ATTR_VALUE]
-    client, ha_id = await _get_client_and_ha_id(call.hass, call.data[ATTR_DEVICE_ID])
+    key = call.data[HomeConnectServiceArgument.KEY]
+    value = call.data[HomeConnectServiceArgument.VALUE]
+    client, ha_id = await _get_client_and_ha_id(
+        call.hass, call.data[CommonServiceArgument.DEVICE_ID]
+    )
 
     try:
         await client.set_setting(ha_id, setting_key=key, value=value)
@@ -254,9 +270,11 @@ async def _check_temperature_options(
 async def async_service_set_program_and_options(call: ServiceCall) -> None:
     """Service for setting a program and options."""
     data = dict(call.data)
-    program = data.pop(ATTR_PROGRAM, None)
-    affects_to = data.pop(ATTR_AFFECTS_TO)
-    client, ha_id = await _get_client_and_ha_id(call.hass, data.pop(ATTR_DEVICE_ID))
+    program = data.pop(HomeConnectServiceArgument.PROGRAM, None)
+    affects_to = data.pop(HomeConnectServiceArgument.AFFECTS_TO)
+    client, ha_id = await _get_client_and_ha_id(
+        call.hass, data.pop(CommonServiceArgument.DEVICE_ID)
+    )
 
     options: list[Option] = []
 
@@ -331,7 +349,9 @@ async def async_service_set_program_and_options(call: ServiceCall) -> None:
 async def async_service_start_selected_program(call: ServiceCall) -> None:
     """Service to start a program that is already selected."""
     data = dict(call.data)
-    client, ha_id = await _get_client_and_ha_id(call.hass, data.pop(ATTR_DEVICE_ID))
+    client, ha_id = await _get_client_and_ha_id(
+        call.hass, data.pop(CommonServiceArgument.DEVICE_ID)
+    )
     try:
         try:
             program_obj = await client.get_active_program(ha_id)
@@ -426,17 +446,20 @@ def async_setup_services(hass: HomeAssistant) -> None:
     """Register custom actions."""
 
     hass.services.async_register(
-        DOMAIN, SERVICE_SETTING, async_service_setting, schema=SERVICE_SETTING_SCHEMA
+        DOMAIN,
+        HomeConnectService.CHANGE_SETTING,
+        async_service_setting,
+        schema=SERVICE_SETTING_SCHEMA,
     )
     hass.services.async_register(
         DOMAIN,
-        SERVICE_SET_PROGRAM_AND_OPTIONS,
+        HomeConnectService.SET_PROGRAM_AND_OPTIONS,
         async_service_set_program_and_options,
         schema=SERVICE_PROGRAM_AND_OPTIONS_SCHEMA,
     )
     hass.services.async_register(
         DOMAIN,
-        SERVICE_START_SELECTED_PROGRAM,
+        HomeConnectService.START_SELECTED_PROGRAM,
         async_service_start_selected_program,
         schema=SERVICE_START_SELECTED_PROGRAM_SCHEMA,
     )

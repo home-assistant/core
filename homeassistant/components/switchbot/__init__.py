@@ -7,7 +7,6 @@ import switchbot
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import BluetoothReachabilityIntent
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_MAC,
@@ -266,7 +265,7 @@ CLASS_BY_DEVICE = {
     SupportedModels.K11_PLUS_VACUUM.value: switchbot.SwitchbotVacuum,
     SupportedModels.K20_VACUUM.value: switchbot.SwitchbotVacuum,
     SupportedModels.LOCK_LITE.value: switchbot.SwitchbotLock,
-    SupportedModels.LOCK_ULTRA.value: switchbot.SwitchbotLock,
+    SupportedModels.LOCK_ULTRA.value: switchbot.SwitchbotLockUltra,
     SupportedModels.AIR_PURIFIER_JP.value: switchbot.SwitchbotAirPurifier,
     SupportedModels.AIR_PURIFIER_US.value: switchbot.SwitchbotAirPurifier,
     SupportedModels.AIR_PURIFIER_TABLE_JP.value: switchbot.SwitchbotAirPurifier,
@@ -296,7 +295,7 @@ CLASS_BY_DEVICE = {
     SupportedModels.LOCK_VISION_PRO.value: switchbot.SwitchbotLock,
     SupportedModels.LOCK_VISION.value: switchbot.SwitchbotLock,
     SupportedModels.LOCK_PRO_WIFI.value: switchbot.SwitchbotLock,
-    SupportedModels.LOCK_ULTRA_MAX.value: switchbot.SwitchbotLock,
+    SupportedModels.LOCK_ULTRA_MAX.value: switchbot.SwitchbotLockUltra,
     SupportedModels.CANDLE_WARMER_LAMP.value: switchbot.SwitchbotCandleWarmerLamp,
     SupportedModels.RGBIC_NEON_ROPE_LIGHT.value: switchbot.SwitchbotRgbicNeonLight,
     SupportedModels.RGBIC_NEON_WIRE_ROPE_LIGHT.value: switchbot.SwitchbotRgbicNeonLight,
@@ -550,12 +549,14 @@ async def async_migrate_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) 
         _LOGGER.debug("Migration to version 2.1 successful")
 
 
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def _async_update_listener(
+    hass: HomeAssistant, entry: SwitchbotConfigEntry
+) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_unload_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) -> None:
     """Unload a config entry."""
     sensor_type = entry.data[CONF_SENSOR_TYPE]
     await hass.config_entries.async_unload_platforms_or_raise(

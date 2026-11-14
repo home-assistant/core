@@ -111,11 +111,6 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             LOGGER,
             config_entry=config_entry,
             name=f"{DOMAIN}_{api.api_key_masked}",
-            update_interval=calculate_update_interval(
-                len(config_entry.get_subentries_of_type(SUBENTRY_TYPE_LOCATION)),
-                api.num_api_requests,
-                api.max_requests_per_day,
-            ),
         )
 
     @override
@@ -192,4 +187,10 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             ) as error:
                 raise UpdateFailed from error
 
+        # The request count and daily limit are only known after an API call
+        self.update_interval = calculate_update_interval(
+            len(subentries),
+            self._api.num_api_requests,
+            self._api.max_requests_per_day,
+        )
         return data

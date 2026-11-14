@@ -198,7 +198,7 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
             updates={CONF_HOST: self.host, CONF_NAME: self.name}
         )
         _LOGGER.debug("New Android TV device found via zeroconf: %s", self.name)
-        self.context.update({"title_placeholders": {CONF_NAME: self.name}})
+        self.context.update({"title_placeholders": {"name": self.name}})
         return await self.async_step_zeroconf_confirm()
 
     async def async_step_zeroconf_confirm(

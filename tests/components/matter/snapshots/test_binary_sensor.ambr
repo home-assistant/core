@@ -1831,6 +1831,108 @@
     'state': 'off',
   })
 # ---
+# name: test_binary_sensors[heiman_motion_sensor_m1_m][binary_sensor.smart_motion_sensor_battery_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000044-MatterNodeDevice'), ('matter', 'serial_serial_68')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.smart_motion_sensor_battery_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Battery',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000044-MatterNodeDevice-1-BatteryChargeLevel-47-14',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[heiman_motion_sensor_m1_m][binary_sensor.smart_motion_sensor_battery_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart motion sensor Battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.smart_motion_sensor_battery_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[heiman_motion_sensor_m1_m][binary_sensor.smart_motion_sensor_occupancy_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000044-MatterNodeDevice'), ('matter', 'serial_serial_68')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.smart_motion_sensor_occupancy_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Occupancy',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
+    'original_icon': None,
+    'original_name': 'Occupancy',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000044-MatterNodeDevice-1-OccupancySensor-1030-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[heiman_motion_sensor_m1_m][binary_sensor.smart_motion_sensor_occupancy_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'occupancy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart motion sensor Occupancy',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.smart_motion_sensor_occupancy_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_binary_sensors[heiman_smoke_detector][binary_sensor.smoke_sensor_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
