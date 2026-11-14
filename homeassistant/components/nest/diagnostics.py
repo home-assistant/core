@@ -18,10 +18,8 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: NestConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    if (
-        not hasattr(config_entry, "runtime_data")
-        or not config_entry.runtime_data
-        or not (nest_devices := config_entry.runtime_data.device_manager.devices)
+    if not hasattr(config_entry, "runtime_data") or not (
+        nest_devices := config_entry.runtime_data.device_manager.devices
     ):
         return {}
     data: dict[str, Any] = {
