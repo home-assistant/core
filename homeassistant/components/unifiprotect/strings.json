@@ -172,9 +172,6 @@
       }
     },
     "binary_sensor": {
-      "alarm_hub_zone": {
-        "name": "Zone {zone}"
-      },
       "animal_detected": {
         "name": "Animal detected"
       },
@@ -333,6 +330,41 @@
             "state": {
               "co": "Carbon monoxide",
               "smoke": "Smoke"
+            }
+          }
+        }
+      },
+      "alarm_hub": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "battery_connected": "Battery connected",
+              "battery_low": "[%key:component::unifiprotect::entity::event::maintenance::state_attributes::event_type::state::battery_low%]",
+              "button_press": "Button pressed",
+              "device_tamper": "Hub tampered",
+              "entry_closed": "Entry closed",
+              "entry_opened": "Entry opened",
+              "glass_break": "[%key:component::unifiprotect::entity::event::sound_detection::state_attributes::event_type::state::glass_break%]",
+              "motion": "[%key:component::unifiprotect::entity::event::motion_detection::state_attributes::event_type::state::motion%]",
+              "relay_switched": "Relay switched",
+              "smoke": "[%key:component::unifiprotect::entity::event::alarm::state_attributes::event_type::state::smoke%]",
+              "tamper": "Tampered"
+            }
+          }
+        }
+      },
+      "alarm_hub_input": {
+        "name": "Input {input}",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "button_press": "[%key:component::unifiprotect::entity::event::alarm_hub::state_attributes::event_type::state::button_press%]",
+              "entry_closed": "[%key:component::unifiprotect::entity::event::alarm_hub::state_attributes::event_type::state::entry_closed%]",
+              "entry_opened": "[%key:component::unifiprotect::entity::event::alarm_hub::state_attributes::event_type::state::entry_opened%]",
+              "glass_break": "[%key:component::unifiprotect::entity::event::sound_detection::state_attributes::event_type::state::glass_break%]",
+              "motion": "[%key:component::unifiprotect::entity::event::motion_detection::state_attributes::event_type::state::motion%]",
+              "smoke": "[%key:component::unifiprotect::entity::event::alarm::state_attributes::event_type::state::smoke%]",
+              "tamper": "[%key:component::unifiprotect::entity::event::alarm_hub::state_attributes::event_type::state::tamper%]"
             }
           }
         }
@@ -592,12 +624,6 @@
       }
     },
     "sensor": {
-      "alarm_hub_battery_voltage": {
-        "name": "Battery voltage"
-      },
-      "alarm_hub_last_event": {
-        "name": "Last event"
-      },
       "alarm_sound_detected": {
         "name": "Alarm sound detected"
       },

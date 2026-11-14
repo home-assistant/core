@@ -157,6 +157,12 @@
       "alarm": {
         "default": "mdi:alarm-light"
       },
+      "alarm_hub": {
+        "default": "mdi:alarm-panel"
+      },
+      "alarm_hub_input": {
+        "default": "mdi:electric-switch"
+      },
       "doorbell": {
         "default": "mdi:doorbell-video"
       },
