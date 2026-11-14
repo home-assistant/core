@@ -37,7 +37,7 @@ from homeassistant.util.dt import utcnow
 
 from . import entity, event
 from .debounce import Debouncer
-from .typing import UNDEFINED, UndefinedType
+from .typing import Undefined
 
 REQUEST_REFRESH_DEFAULT_COOLDOWN = 10
 REQUEST_REFRESH_DEFAULT_IMMEDIATE = True
@@ -57,6 +57,14 @@ class UpdateFailed(HomeAssistantError):
         """Initialize exception."""
         super().__init__(*args, **kwargs)
         self.retry_after = retry_after
+
+
+class UpdateFailedUnreachable(UpdateFailed):
+    """Raised when an update failed because the device or service is unreachable.
+
+    Use for any device or service that cannot be reached, e.g. a device that
+    was turned off. The failure is logged at info level instead of error.
+    """
 
 
 class BaseDataUpdateCoordinatorProtocol(Protocol):
@@ -82,7 +90,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         hass: HomeAssistant,
         logger: logging.Logger,
         *,
-        config_entry: config_entries.ConfigEntry | UndefinedType | None = UNDEFINED,
+        config_entry: config_entries.ConfigEntry | Undefined | None = Undefined,
         name: str,
         update_interval: timedelta | None = None,
         update_method: Callable[[], Awaitable[_DataT]] | None = None,
@@ -99,7 +107,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         self._update_interval_seconds: float | None = None
         self.update_interval = update_interval
         self._shutdown_requested = False
-        if config_entry is UNDEFINED:
+        if config_entry is Undefined:
             # late import to avoid circular imports
             from . import frame  # noqa: PLC0415
 
@@ -523,7 +531,9 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
                 )
 
             if self.last_update_success:
-                if log_failures:
+                if log_failures and isinstance(err, UpdateFailedUnreachable):
+                    self.logger.info("%s is unavailable: %s", self.name, err)
+                elif log_failures:
                     self.logger.error("Error fetching %s data: %s", self.name, err)
                     self.logger.debug("Full error:", exc_info=True)
                 self.last_update_success = False

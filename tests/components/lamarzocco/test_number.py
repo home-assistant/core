@@ -16,11 +16,11 @@ from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -31,6 +31,92 @@ DOSE_MODE_HA_TO_LM = {
     "dose1": DoseMode.DOSE_1,
     "dose2": DoseMode.DOSE_2,
 }
+
+
+@pytest.mark.parametrize(
+    "device_fixture", [ModelName.LINEA_MICRA, ModelName.LINEA_MINI, ModelName.GS3_AV]
+)
+async def test_coffee_temperature_limits(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Expose the coffee boiler limits supplied by each machine."""
+    boiler = mock_lamarzocco.dashboard.config[WidgetType.CM_COFFEE_BOILER]
+    boiler.target_temperature_step = 0.5
+    await async_init_integration(hass, mock_config_entry)
+    state = hass.states.get(
+        f"number.{mock_lamarzocco.serial_number}_coffee_target_temperature"
+    )
+    assert state
+    assert state.attributes["min"] == boiler.target_temperature_min
+    assert state.attributes["max"] == boiler.target_temperature_max
+    assert state.attributes["step"] == boiler.target_temperature_step
+
+
+@pytest.mark.parametrize(
+    ("device_fixture", "temperature"),
+    [
+        (ModelName.LINEA_MICRA, 80),
+        (ModelName.LINEA_MICRA, 83),
+        (ModelName.LINEA_MICRA, 100),
+        (ModelName.LINEA_MINI, 83),
+        (ModelName.GS3_AV, 110),
+    ],
+)
+async def test_coffee_temperature_supported_values(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    temperature: float,
+) -> None:
+    """Allow valid temperatures outside the formerly hard-coded range."""
+    await async_init_integration(hass, mock_config_entry)
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: (
+                f"number.{mock_lamarzocco.serial_number}_coffee_target_temperature"
+            ),
+            NumberServiceArgument.VALUE: temperature,
+        },
+        blocking=True,
+    )
+    mock_lamarzocco.set_coffee_target_temperature.assert_called_once_with(
+        temperature=temperature
+    )
+
+
+@pytest.mark.parametrize(
+    ("device_fixture", "temperature"),
+    [
+        (ModelName.LINEA_MICRA, 79.9),
+        (ModelName.LINEA_MICRA, 100.1),
+        (ModelName.GS3_AV, 110.1),
+    ],
+)
+async def test_coffee_temperature_unsupported_values(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    temperature: float,
+) -> None:
+    """Reject temperatures outside the machine's reported range."""
+    await async_init_integration(hass, mock_config_entry)
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: (
+                    f"number.{mock_lamarzocco.serial_number}_coffee_target_temperature"
+                ),
+                NumberServiceArgument.VALUE: temperature,
+            },
+            blocking=True,
+        )
+    mock_lamarzocco.set_coffee_target_temperature.assert_not_called()
 
 
 @pytest.mark.parametrize(
@@ -83,10 +169,10 @@ async def test_general_numbers(
     # service call
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: f"number.{serial_number}_{entity_name}",
-            ATTR_VALUE: value,
+            CommonServiceArgument.ENTITY_ID: f"number.{serial_number}_{entity_name}",
+            NumberServiceArgument.VALUE: value,
         },
         blocking=True,
     )
@@ -122,10 +208,10 @@ async def test_preinfusion(
     # service call
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_VALUE: 5.3,
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            NumberServiceArgument.VALUE: 5.3,
         },
         blocking=True,
     )
@@ -167,10 +253,10 @@ async def test_prebrew_on(
     # service call
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_VALUE: 5.3,
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            NumberServiceArgument.VALUE: 5.3,
         },
         blocking=True,
     )
@@ -213,10 +299,10 @@ async def test_prebrew_off(
     # service call
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_VALUE: 7,
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            NumberServiceArgument.VALUE: 7,
         },
         blocking=True,
     )
@@ -255,10 +341,10 @@ async def test_number_error(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: f"number.{serial_number}_coffee_target_temperature",
-                ATTR_VALUE: 94,
+                CommonServiceArgument.ENTITY_ID: f"number.{serial_number}_coffee_target_temperature",
+                NumberServiceArgument.VALUE: 94,
             },
             blocking=True,
         )
@@ -292,10 +378,10 @@ async def test_steam_temperature(
     # service call
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_VALUE: 128.3,
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            NumberServiceArgument.VALUE: 128.3,
         },
         blocking=True,
     )
@@ -333,10 +419,10 @@ async def test_brew_by_weight_dose(
         # service call
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: entity_id,
-                ATTR_VALUE: 42,
+                CommonServiceArgument.ENTITY_ID: entity_id,
+                NumberServiceArgument.VALUE: 42,
             },
             blocking=True,
         )

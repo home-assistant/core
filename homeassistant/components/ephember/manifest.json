@@ -3,9 +3,10 @@
   "name": "EPH Controls",
   "categories": ["climate.thermostats_heating"],
   "codeowners": ["@ttroy50", "@roberty99"],
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/ephember",
   "iot_class": "local_polling",
   "loggers": ["pyephember2"],
   "quality_scale": "legacy",
-  "requirements": ["pyephember2==0.4.12"]
+  "requirements": ["pyephember2==0.4.13"]
 }

@@ -10,13 +10,13 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.besen.const import DOMAIN
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_OPTION,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -125,8 +125,11 @@ async def test_select_option(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: TEMPERATURE_UNIT_ENTITY_ID, ATTR_OPTION: option},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: TEMPERATURE_UNIT_ENTITY_ID,
+            SelectServiceArgument.OPTION: option,
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -152,8 +155,11 @@ async def test_select_command_failure(
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: TEMPERATURE_UNIT_ENTITY_ID, ATTR_OPTION: "fahrenheit"},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: TEMPERATURE_UNIT_ENTITY_ID,
+                SelectServiceArgument.OPTION: "fahrenheit",
+            },
             blocking=True,
         )
 

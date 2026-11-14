@@ -1,5 +1,6 @@
 """Tests for the OpenRGB config flow."""
 
+import errno
 import socket
 
 from openrgb.utils import OpenRGBDisconnected, SDKVersionError
@@ -50,6 +51,7 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
         (OpenRGBDisconnected, "cannot_connect"),
         (TimeoutError, "cannot_connect"),
         (socket.gaierror, "cannot_connect"),
+        (OSError(errno.EHOSTUNREACH, "Host is unreachable"), "cannot_connect"),
         (SDKVersionError, "cannot_connect"),
         (RuntimeError("Test error"), "unknown"),
     ],
@@ -185,6 +187,7 @@ async def test_reconfigure_flow(
         (OpenRGBDisconnected, "cannot_connect"),
         (TimeoutError, "cannot_connect"),
         (socket.gaierror, "cannot_connect"),
+        (OSError(errno.EHOSTUNREACH, "Host is unreachable"), "cannot_connect"),
         (SDKVersionError, "cannot_connect"),
         (RuntimeError("Test error"), "unknown"),
     ],

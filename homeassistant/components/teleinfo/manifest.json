@@ -4,6 +4,7 @@
   "categories": ["energy.meters_monitoring"],
   "codeowners": ["@esciara"],
   "config_flow": true,
+  "connectivity": ["serial"],
   "dependencies": ["usb"],
   "documentation": "https://www.home-assistant.io/integrations/teleinfo",
   "integration_type": "device",

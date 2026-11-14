@@ -5,11 +5,16 @@ from collections.abc import Iterable
 import logging
 from typing import Any
 
-from homeassistant.const import ATTR_DATE, ATTR_ENTITY_ID, ATTR_TIME
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import Context, HomeAssistant, State
 from homeassistant.util import dt as dt_util
 
-from .const import ATTR_DATETIME, DOMAIN, InputDatetimeEntityCapabilityAttribute
+from .const import (
+    DOMAIN,
+    InputDatetimeEntityCapabilityAttribute,
+    InputDatetimeService,
+    InputDatetimeServiceArgument,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,14 +69,18 @@ async def _async_reproduce_state(
     service_data = {ATTR_ENTITY_ID: state.entity_id}
 
     if has_time and has_date:
-        service_data[ATTR_DATETIME] = state.state
+        service_data[InputDatetimeServiceArgument.DATETIME] = state.state
     elif has_time:
-        service_data[ATTR_TIME] = state.state
+        service_data[InputDatetimeServiceArgument.TIME] = state.state
     elif has_date:
-        service_data[ATTR_DATE] = state.state
+        service_data[InputDatetimeServiceArgument.DATE] = state.state
 
     await hass.services.async_call(
-        DOMAIN, "set_datetime", service_data, context=context, blocking=True
+        DOMAIN,
+        InputDatetimeService.SET,
+        service_data,
+        context=context,
+        blocking=True,
     )
 
 

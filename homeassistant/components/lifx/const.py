@@ -1,5 +1,6 @@
 """Const for LIFX."""
 
+from enum import StrEnum
 import logging
 from typing import TYPE_CHECKING
 
@@ -21,42 +22,62 @@ CONF_TITLE = "title"
 IDENTIFY = "identify"
 RESTART = "restart"
 
-ATTR_DURATION = "duration"
-ATTR_INFRARED = "infrared"
-ATTR_POWER = "power"
 ATTR_RSSI = "rssi"
-ATTR_ZONES = "zones"
 
-ATTR_THEME = "theme"
 
-ATTR_CHANGE = "change"
-ATTR_CLOUD_SATURATION_MAX = "cloud_saturation_max"
-ATTR_CLOUD_SATURATION_MIN = "cloud_saturation_min"
-ATTR_CYCLES = "cycles"
-ATTR_DIRECTION = "direction"
-ATTR_PALETTE = "palette"
-ATTR_PERIOD = "period"
-ATTR_POWER_ON = "power_on"
-ATTR_SATURATION_MAX = "saturation_max"
-ATTR_SATURATION_MIN = "saturation_min"
-ATTR_SKY_TYPE = "sky_type"
-ATTR_SPEED = "speed"
-ATTR_SPREAD = "spread"
+class LIFXService(StrEnum):
+    """Store keys for LIFX services."""
 
-SERVICE_EFFECT_COLORSWEEP = "effect_colorsweep"
-SERVICE_EFFECT_COLORLOOP = "effect_colorloop"
-SERVICE_EFFECT_FLAME = "effect_flame"
-SERVICE_EFFECT_MORPH = "effect_morph"
-SERVICE_EFFECT_MOVE = "effect_move"
-SERVICE_EFFECT_PULSE = "effect_pulse"
-SERVICE_EFFECT_SKY = "effect_sky"
-SERVICE_EFFECT_STOP = "effect_stop"
-SERVICE_PAINT_THEME = "paint_theme"
-SERVICE_SET_HEV_CYCLE_STATE = "set_hev_cycle_state"
-SERVICE_SET_STATE = "set_state"
+    EFFECT_COLORLOOP = "effect_colorloop"
+    EFFECT_COLORSWEEP = "effect_colorsweep"
+    EFFECT_FLAME = "effect_flame"
+    EFFECT_MORPH = "effect_morph"
+    EFFECT_MOVE = "effect_move"
+    EFFECT_PULSE = "effect_pulse"
+    EFFECT_SKY = "effect_sky"
+    EFFECT_STOP = "effect_stop"
+    PAINT_THEME = "paint_theme"
+    SET_HEV_CYCLE_STATE = "set_hev_cycle_state"
+    SET_STATE = "set_state"
+
+
+class LIFXServiceArgument(StrEnum):
+    """Store keys for LIFX service arguments."""
+
+    BRIGHTNESS = "brightness"
+    BRIGHTNESS_PCT = "brightness_pct"
+    CHANGE = "change"
+    CLOUD_SATURATION_MAX = "cloud_saturation_max"
+    CLOUD_SATURATION_MIN = "cloud_saturation_min"
+    COLOR_NAME = "color_name"
+    COLOR_TEMP_KELVIN = "color_temp_kelvin"
+    CYCLES = "cycles"
+    DIRECTION = "direction"
+    DURATION = "duration"
+    HS_COLOR = "hs_color"
+    INFRARED = "infrared"
+    MODE = "mode"
+    PALETTE = "palette"
+    PERIOD = "period"
+    POWER = "power"
+    POWER_ON = "power_on"
+    RGB_COLOR = "rgb_color"
+    SATURATION_MAX = "saturation_max"
+    SATURATION_MIN = "saturation_min"
+    SKY_TYPE = "sky_type"
+    SPEED = "speed"
+    SPREAD = "spread"
+    THEME = "theme"
+    TRANSITION = "transition"
+    XY_COLOR = "xy_color"
+    ZONES = "zones"
+
 
 HEV_CYCLE_STATE = "hev_cycle_state"
 LIFX_IDENTIFY_DELAY = 3.0
+# A bulb often misses one poll and answers the next, so it is only shown as
+# unavailable once it has missed this many in a row
+MAX_MISSED_POLLS = 3
 INFRARED_BRIGHTNESS = "infrared_brightness"
 INFRARED_LEVELS = {
     "Disabled": 0.0,

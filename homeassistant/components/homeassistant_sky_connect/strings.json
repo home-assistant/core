@@ -109,6 +109,9 @@
     "device_disconnected": {
       "message": "The device is not plugged in"
     },
+    "device_missing_migration": {
+      "message": "USB device {device} is missing, cannot migrate"
+    },
     "duplicate_entry": {
       "message": "Another configuration entry exists for the adapter with serial number {serial_number}"
     }

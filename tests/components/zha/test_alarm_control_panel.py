@@ -4,7 +4,7 @@ from collections.abc import Callable, Coroutine
 from unittest.mock import AsyncMock, call, patch, sentinel
 
 import pytest
-from zigpy.device import Device
+from zigpy.device import ZigbeeDevice
 from zigpy.profiles import zha
 from zigpy.zcl import Cluster
 from zigpy.zcl.clusters import security
@@ -49,7 +49,7 @@ def alarm_control_panel_platform_only():
 async def test_alarm_control_panel(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
     """Test ZHA alarm control panel platform."""
 

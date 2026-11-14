@@ -70,7 +70,7 @@ async def _async_init_integration(
     with (
         patch("homeassistant.components.victron_gx.PLATFORMS", platforms),
         patch(
-            "homeassistant.components.victron_gx.hub.VictronVenusHub"
+            "homeassistant.components.victron_gx.hub.VictronVenusHub", autospec=True
         ) as mock_hub_class,
     ):
         mock_hub_class.return_value = victron_hub

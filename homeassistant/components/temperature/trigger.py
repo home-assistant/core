@@ -4,15 +4,18 @@ from typing import override
 
 from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN,
+    ClimateEntityCapabilityAttribute,
     ClimateEntityStateAttribute,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.components.water_heater import (
     DOMAIN as WATER_HEATER_DOMAIN,
+    WaterHeaterCapabilityAttribute,
     WaterHeaterStateAttribute,
 )
 from homeassistant.components.weather import (
     DOMAIN as WEATHER_DOMAIN,
+    WeatherEntityCapabilityAttribute,
     WeatherEntityStateAttribute,
 )
 from homeassistant.const import EntityStateAttribute, UnitOfTemperature
@@ -72,10 +75,13 @@ class _TemperatureTriggerMixin(EntityNumericalStateTriggerWithUnitBase):
         """Get the temperature unit of an entity from its state."""
         if state.domain == SENSOR_DOMAIN:
             return state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
-        if state.domain == WEATHER_DOMAIN:
-            return state.attributes.get(WeatherEntityStateAttribute.TEMPERATURE_UNIT)
-        # Climate and water_heater: show_temp converts to system unit
-        return self._hass.config.units.temperature_unit
+        if state.domain == CLIMATE_DOMAIN:
+            return state.attributes.get(
+                ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT
+            )
+        if state.domain == WATER_HEATER_DOMAIN:
+            return state.attributes.get(WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT)
+        return state.attributes.get(WeatherEntityCapabilityAttribute.TEMPERATURE_UNIT)
 
 
 class TemperatureChangedTrigger(

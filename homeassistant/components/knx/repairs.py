@@ -15,10 +15,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir, selector
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-if TYPE_CHECKING:
-    from .knx_module import KNXModule
-    from .telegrams import TelegramDict
-
 from .const import (
     CONF_KNX_KNXKEY_PASSWORD,
     DOMAIN,
@@ -31,6 +27,10 @@ from .const import (
     KNXConfigEntryData,
 )
 from .storage.keyring import DEFAULT_KNX_KEYRING_FILENAME, save_uploaded_knxkeys_file
+
+if TYPE_CHECKING:
+    from .knx_module import KNXModule
+    from .telegrams import TelegramDict
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -161,9 +161,11 @@ def _data_secure_group_key_issue_handler(
         existing_data: dict[str, str] = existing_issue.data  # type: ignore[assignment]
         if new_ga in existing_data:
             current_ias = existing_data[new_ga].split(", ")
-            if new_ia in current_ias:
+            if new_ia not in current_ias:
+                current_ias = sorted([*current_ias, new_ia], key=IndividualAddress)
+            # Re-create an issue raised before it was linked to the entry
+            elif existing_issue.config_entry_id is not None:
                 return
-            current_ias = sorted([*current_ias, new_ia], key=IndividualAddress)
             new_data[new_ga] = ", ".join(current_ias)
         new_data_unsorted = existing_data | new_data
         new_data = {

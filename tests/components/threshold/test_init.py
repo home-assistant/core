@@ -7,7 +7,10 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import threshold
 from homeassistant.components.threshold.config_flow import ConfigFlowHandler
-from homeassistant.components.threshold.const import DOMAIN
+from homeassistant.components.threshold.const import (
+    DOMAIN,
+    ThresholdEntityStateAttribute,
+)
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -127,13 +130,13 @@ async def test_setup_and_remove_config_entry(
     state = hass.states.get(threshold_entity_id)
     assert state
     assert state.state == "on"
-    assert state.attributes["entity_id"] == input_sensor
-    assert state.attributes["hysteresis"] == 0.0
-    assert state.attributes["lower"] == -2.0
-    assert state.attributes["position"] == "below"
-    assert state.attributes["sensor_value"] == -10.0
-    assert state.attributes["type"] == "lower"
-    assert state.attributes["upper"] is None
+    assert state.attributes[ThresholdEntityStateAttribute.ENTITY_ID] == input_sensor
+    assert state.attributes[ThresholdEntityStateAttribute.HYSTERESIS] == 0.0
+    assert state.attributes[ThresholdEntityStateAttribute.LOWER] == -2.0
+    assert state.attributes[ThresholdEntityStateAttribute.POSITION] == "below"
+    assert state.attributes[ThresholdEntityStateAttribute.SENSOR_VALUE] == -10.0
+    assert state.attributes[ThresholdEntityStateAttribute.TYPE] == "lower"
+    assert state.attributes[ThresholdEntityStateAttribute.UPPER] is None
 
     # Remove the config entry
     assert await hass.config_entries.async_remove(config_entry.entry_id)

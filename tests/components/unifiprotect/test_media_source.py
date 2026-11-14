@@ -224,7 +224,6 @@ async def test_browse_media_root_multiple_consoles(
     api2.base_url = "https://127.0.0.2"
     api2.connection_host = IPv4Address("127.0.0.2")
     api2.get_bootstrap = AsyncMock(return_value=bootstrap2)
-    api2.get_nvr = AsyncMock(return_value=bootstrap2.nvr)
     api2.update = AsyncMock(return_value=bootstrap2)
     api2.async_disconnect_ws = AsyncMock()
 
@@ -291,7 +290,6 @@ async def test_browse_media_root_multiple_consoles_only_one_media(
     api2.api_path = "/api"
     api2.base_url = "https://127.0.0.2"
     api2.connection_host = IPv4Address("127.0.0.2")
-    api2.get_nvr = AsyncMock(return_value=bootstrap2.nvr)
     api2.update = AsyncMock(return_value=bootstrap2)
     api2.async_disconnect_ws = AsyncMock()
 
@@ -1027,7 +1025,8 @@ async def test_browse_media_browse_whole_month_december(
     ufp.api.get_events_raw = AsyncMock(
         return_value=[
             event1.unifi_dict(),
-            event2.unifi_dict(),
+            # Raw API field, not on the model.
+            event2.unifi_dict() | {"smartDetectEvents": ["test_event_id"]},
             event3.unifi_dict(),
             event4.unifi_dict(),
         ]

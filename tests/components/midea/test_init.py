@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_PROTOCOL,
     CONF_TOKEN,
     CONF_TYPE,
+    EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -51,9 +52,27 @@ async def test_unload_entry(hass: HomeAssistant, config_entry: MockConfigEntry) 
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state is ConfigEntryState.LOADED
-    assert device.daemon is True
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     assert config_entry.state is ConfigEntryState.NOT_LOADED
+    assert ("close",) in device.calls
+
+
+async def test_close_on_homeassistant_stop(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test the device is closed when Home Assistant stops."""
+    config_entry.add_to_hass(hass)
+    device = DummyDevice(DeviceType.AC)
+    with patch(
+        "homeassistant.components.midea.device_selector",
+        return_value=device,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+    assert ("close",) not in device.calls
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
     assert ("close",) in device.calls
 
 
@@ -121,8 +140,6 @@ async def test_setup_entry_not_ready_on_connect_failure(
 
     The real device.connect() already catches SocketException/AuthException
     internally and reports failure by returning False; it never raises them.
-    It can also leave the socket open in that case (e.g. when authentication
-    fails), so the socket must be closed explicitly to avoid a ResourceWarning.
     """
     config_entry.add_to_hass(hass)
     device = DummyDevice(DeviceType.AC)
@@ -136,7 +153,6 @@ async def test_setup_entry_not_ready_on_connect_failure(
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert ("close_socket",) in device.calls
     assert config_entry.data[CONF_IP_ADDRESS] == ENTRY_DATA[CONF_IP_ADDRESS]
 
 
@@ -168,7 +184,6 @@ async def test_setup_entry_recovers_ip_on_connect_failure(
         await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.data[CONF_IP_ADDRESS] == "2.2.2.2"
-    assert recovered_device.daemon is True
     assert ("open",) in recovered_device.calls
 
 
@@ -268,7 +283,6 @@ async def test_migrate_entry_drops_empty_mac_connection(
             ProtocolVersion(entry.data[CONF_PROTOCOL]),
             entry.data[CONF_MODEL],
             entry.data[CONF_SUBTYPE],
-            "",
             entry.data.get(CONF_MAC, None),
             entry.data.get(CONF_SN, None),
         )
@@ -304,7 +318,6 @@ async def test_migrate_entry_without_discovery_result(hass: HomeAssistant) -> No
             ProtocolVersion(entry.data[CONF_PROTOCOL]),
             entry.data[CONF_MODEL],
             entry.data[CONF_SUBTYPE],
-            "",
             None,
             None,
         )
@@ -313,3 +326,33 @@ async def test_migrate_entry_without_discovery_result(hass: HomeAssistant) -> No
     assert entry.minor_version == 2
     assert CONF_MAC not in entry.data
     assert CONF_SN not in entry.data
+
+
+@pytest.mark.parametrize(
+    ("stored_subtype", "expected"),
+    [
+        ("5", 5),
+        ("not-a-number", 0),
+        (None, 0),
+    ],
+)
+async def test_setup_converts_stored_subtype(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    stored_subtype: str | None,
+    expected: int,
+) -> None:
+    """Test a subtype stored as a string is handed to the device as an int."""
+    config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        config_entry, data={**config_entry.data, CONF_SUBTYPE: stored_subtype}
+    )
+    device = DummyDevice(DeviceType.AC)
+    with patch(
+        "homeassistant.components.midea.device_selector",
+        return_value=device,
+    ) as mock_device_selector:
+        await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.LOADED
+    # subtype is the 10th positional argument of device_selector()
+    assert mock_device_selector.call_args.args[9] == expected

@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+import httpx2
 from ollama import Message, ResponseError
 import probatio
 import pytest
@@ -98,6 +99,7 @@ async def test_chat(
     assert [event["event_type"] for event in trace_events] == [
         trace.ConversationTraceEventType.ASYNC_PROCESS,
         trace.ConversationTraceEventType.AGENT_DETAIL,
+        trace.ConversationTraceEventType.TURN_CONTENT,
     ]
     # AGENT_DETAIL event contains the raw prompt passed to the model
     detail_event = trace_events[1]
@@ -377,6 +379,7 @@ async def test_function_call(
             language="en",
             assistant="conversation",
             device_id=None,
+            agent_id=agent_id,
         ),
     )
 
@@ -461,6 +464,7 @@ async def test_function_exception(
             language="en",
             assistant="conversation",
             device_id=None,
+            agent_id=agent_id,
         ),
     )
 
@@ -758,6 +762,35 @@ async def test_error_handling(
 
     assert result.response.response_type is intent.IntentResponseType.ERROR, result
     assert result.response.error_code == "unknown", result
+
+
+@pytest.mark.parametrize(
+    "error",
+    [httpx2.ConnectError("unreachable"), ResponseError("model not found", 404)],
+)
+async def test_stream_error_handling(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    error: Exception,
+) -> None:
+    """Test errors raised while the streamed response is read."""
+
+    async def stream(*args, **kwargs) -> AsyncGenerator[dict[str, Any]]:
+        raise error
+        yield  # pylint: disable=unreachable
+
+    with patch("ollama.AsyncClient.chat", side_effect=stream):
+        result = await conversation.async_converse(
+            hass, "hello", None, Context(), agent_id=mock_config_entry.entry_id
+        )
+
+    assert result.response.response_type is intent.IntentResponseType.ERROR, result
+    assert result.response.error_code == "unknown", result
+    assert (
+        "problem talking to the Ollama server"
+        in result.response.speech["plain"]["speech"]
+    )
 
 
 async def test_template_error(

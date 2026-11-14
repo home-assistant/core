@@ -4,6 +4,7 @@
   "categories": ["appliances_cleaning"],
   "codeowners": ["@milanmeu", "@frenck", "@quebulm"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/rituals_perfume_genie",
   "integration_type": "hub",
   "iot_class": "cloud_polling",

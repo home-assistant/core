@@ -15,7 +15,7 @@ from homeassistant.components import utility_meter
 from homeassistant.components.select import (
     ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.utility_meter import (
@@ -23,7 +23,8 @@ from homeassistant.components.utility_meter import (
     sensor as um_sensor,
 )
 from homeassistant.components.utility_meter.config_flow import ConfigFlowHandler
-from homeassistant.components.utility_meter.const import DOMAIN, SERVICE_RESET
+from homeassistant.components.utility_meter.const import DOMAIN
+from homeassistant.components.utility_meter.services import UtilityMeterService
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -225,7 +226,7 @@ async def test_services(hass: HomeAssistant, meter) -> None:
 
     # Change tariff
     data = {ATTR_ENTITY_ID: "select.energy_bill", ATTR_OPTION: "offpeak"}
-    await hass.services.async_call(SELECT_DOMAIN, SERVICE_SELECT_OPTION, data)
+    await hass.services.async_call(SELECT_DOMAIN, SelectService.SELECT_OPTION, data)
     await hass.async_block_till_done()
 
     now += timedelta(seconds=10)
@@ -246,14 +247,14 @@ async def test_services(hass: HomeAssistant, meter) -> None:
 
     # Change tariff
     data = {ATTR_ENTITY_ID: "select.energy_bill", "option": "wrong_tariff"}
-    await hass.services.async_call(SELECT_DOMAIN, SERVICE_SELECT_OPTION, data)
+    await hass.services.async_call(SELECT_DOMAIN, SelectService.SELECT_OPTION, data)
     await hass.async_block_till_done()
 
     # Inexisting tariff, ignoring
     assert hass.states.get("select.energy_bill").state != "wrong_tariff"
 
     data = {ATTR_ENTITY_ID: "select.energy_bill", "option": "peak"}
-    await hass.services.async_call(SELECT_DOMAIN, SERVICE_SELECT_OPTION, data)
+    await hass.services.async_call(SELECT_DOMAIN, SelectService.SELECT_OPTION, data)
     await hass.async_block_till_done()
 
     now += timedelta(seconds=10)
@@ -274,7 +275,7 @@ async def test_services(hass: HomeAssistant, meter) -> None:
 
     # Reset meters
     data = {ATTR_ENTITY_ID: meter}
-    await hass.services.async_call(DOMAIN, SERVICE_RESET, data)
+    await hass.services.async_call(DOMAIN, UtilityMeterService.RESET, data)
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.energy_bill_peak")
@@ -351,7 +352,7 @@ async def test_services_config_entry(hass: HomeAssistant) -> None:
 
     # Change tariff
     data = {ATTR_ENTITY_ID: "select.energy_bill", "option": "offpeak"}
-    await hass.services.async_call(SELECT_DOMAIN, SERVICE_SELECT_OPTION, data)
+    await hass.services.async_call(SELECT_DOMAIN, SelectService.SELECT_OPTION, data)
     await hass.async_block_till_done()
 
     now += timedelta(seconds=10)
@@ -372,14 +373,14 @@ async def test_services_config_entry(hass: HomeAssistant) -> None:
 
     # Change tariff
     data = {ATTR_ENTITY_ID: "select.energy_bill", "option": "wrong_tariff"}
-    await hass.services.async_call(SELECT_DOMAIN, SERVICE_SELECT_OPTION, data)
+    await hass.services.async_call(SELECT_DOMAIN, SelectService.SELECT_OPTION, data)
     await hass.async_block_till_done()
 
     # Inexisting tariff, ignoring
     assert hass.states.get("select.energy_bill").state != "wrong_tariff"
 
     data = {ATTR_ENTITY_ID: "select.energy_bill", "option": "peak"}
-    await hass.services.async_call(SELECT_DOMAIN, SERVICE_SELECT_OPTION, data)
+    await hass.services.async_call(SELECT_DOMAIN, SelectService.SELECT_OPTION, data)
     await hass.async_block_till_done()
 
     now += timedelta(seconds=10)
@@ -400,7 +401,7 @@ async def test_services_config_entry(hass: HomeAssistant) -> None:
 
     # Reset meters
     data = {ATTR_ENTITY_ID: "select.energy_bill"}
-    await hass.services.async_call(DOMAIN, SERVICE_RESET, data)
+    await hass.services.async_call(DOMAIN, UtilityMeterService.RESET, data)
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.energy_bill_peak")
@@ -990,7 +991,47 @@ async def test_migration_2_1(
     assert entities == expected_entities
 
     assert utility_meter_config_entry.version == 2
-    assert utility_meter_config_entry.minor_version == 2
+    assert utility_meter_config_entry.minor_version == 3
+
+
+@pytest.mark.parametrize(
+    ("offset", "expected_offset"),
+    [
+        pytest.param(0, 0, id="zero"),
+        pytest.param(27, 27, id="max"),
+        pytest.param(28, 27, id="clamped"),
+    ],
+)
+async def test_migration_2_2_clamps_offset(
+    hass: HomeAssistant, offset: int, expected_offset: int
+) -> None:
+    """Test migration from v2.2 clamps an offset above 27 days."""
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "cycle": "monthly",
+            "delta_values": False,
+            "name": "My utility meter",
+            "net_consumption": False,
+            "offset": offset,
+            "periodically_resetting": True,
+            "source": "sensor.test",
+            "tariffs": [],
+        },
+        title="My utility meter",
+        version=2,
+        minor_version=2,
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.version == 2
+    assert config_entry.minor_version == 3
+    assert config_entry.options["offset"] == expected_offset
 
 
 async def test_migration_from_future_version(

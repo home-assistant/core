@@ -53,9 +53,7 @@ class IstaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="authentication_exception",
-                translation_placeholders={
-                    CONF_EMAIL: self.config_entry.data[CONF_EMAIL]
-                },
+                translation_placeholders={"email": self.config_entry.data[CONF_EMAIL]},
             ) from e
 
     @override
@@ -73,9 +71,7 @@ class IstaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="authentication_exception",
-                translation_placeholders={
-                    CONF_EMAIL: self.config_entry.data[CONF_EMAIL]
-                },
+                translation_placeholders={"email": self.config_entry.data[CONF_EMAIL]},
             ) from e
 
     def get_consumption_data(self) -> dict[str, Any]:

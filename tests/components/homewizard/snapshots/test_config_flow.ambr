@@ -46,7 +46,6 @@
 # name: test_discovery_flow_during_onboarding_disabled_api
   FlowResultSnapshot({
     'context': dict({
-      'confirm_only': True,
       'dismiss_protected': True,
       'source': 'zeroconf',
       'title_placeholders': dict({
@@ -95,7 +94,6 @@
 # name: test_discovery_flow_works
   FlowResultSnapshot({
     'context': dict({
-      'confirm_only': True,
       'dismiss_protected': True,
       'source': 'zeroconf',
       'title_placeholders': dict({

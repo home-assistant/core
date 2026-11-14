@@ -17,7 +17,6 @@ from homeassistant.components.media_source import (
     PlayMedia,
     Unresolvable,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN, SHARED_SUFFIX
@@ -70,7 +69,9 @@ class SynologyPhotosMediaSource(MediaSource):
 
     name = "Synology Photos"
 
-    def __init__(self, hass: HomeAssistant, entries: list[ConfigEntry]) -> None:
+    def __init__(
+        self, hass: HomeAssistant, entries: list[SynologyDSMConfigEntry]
+    ) -> None:
         """Initialize Synology source."""
         super().__init__(DOMAIN)
         self.hass = hass

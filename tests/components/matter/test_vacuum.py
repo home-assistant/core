@@ -22,6 +22,12 @@ from .common import (
 )
 
 
+@pytest.fixture
+def platform() -> Platform:
+    """Return the platform under test."""
+    return Platform.VACUUM
+
+
 @pytest.mark.usefixtures("matter_devices")
 async def test_vacuum(
     hass: HomeAssistant,
@@ -142,6 +148,34 @@ async def test_vacuum_actions(
         command=clusters.RvcRunMode.Commands.ChangeToMode(newMode=0),
     )
     matter_client.send_device_command.reset_mock()
+
+
+@pytest.mark.parametrize("node_fixture", ["roborock_saros_10"])
+async def test_vacuum_locate_action(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test vacuum locate service action."""
+    entity_ids = [state.entity_id for state in hass.states.async_all("vacuum")]
+    assert len(entity_ids) == 1
+    entity_id = entity_ids[0]
+
+    await hass.services.async_call(
+        "vacuum",
+        "locate",
+        {
+            "entity_id": entity_id,
+        },
+        blocking=True,
+    )
+
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.Identify.Commands.Identify(identifyTime=10),
+    )
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_vacuum_cleaner"])

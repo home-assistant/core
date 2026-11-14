@@ -127,20 +127,20 @@ async def async_call_action_from_config(
     service_data = {ATTR_ENTITY_ID: config[CONF_ENTITY_ID]}
 
     if config[CONF_TYPE] == "open":
-        service = CoverService.OPEN_COVER
+        service = CoverService.OPEN
     elif config[CONF_TYPE] == "close":
-        service = CoverService.CLOSE_COVER
+        service = CoverService.CLOSE
     elif config[CONF_TYPE] == "stop":
-        service = CoverService.STOP_COVER
+        service = CoverService.STOP
     elif config[CONF_TYPE] == "open_tilt":
-        service = CoverService.OPEN_COVER_TILT
+        service = CoverService.OPEN_TILT
     elif config[CONF_TYPE] == "close_tilt":
-        service = CoverService.CLOSE_COVER_TILT
+        service = CoverService.CLOSE_TILT
     elif config[CONF_TYPE] == "set_position":
-        service = CoverService.SET_COVER_POSITION
+        service = CoverService.SET_POSITION
         service_data[CoverServiceArgument.POSITION] = config["position"]
     elif config[CONF_TYPE] == "set_tilt_position":
-        service = CoverService.SET_COVER_TILT_POSITION
+        service = CoverService.SET_TILT_POSITION
         service_data[CoverServiceArgument.TILT_POSITION] = config["position"]
 
     await hass.services.async_call(

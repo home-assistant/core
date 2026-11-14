@@ -4,10 +4,11 @@
   "categories": ["computers_network.nas_servers"],
   "codeowners": ["@erwindouna"],
   "config_flow": true,
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/portainer",
   "integration_type": "service",
   "iot_class": "local_polling",
   "loggers": ["pyportainer"],
   "quality_scale": "platinum",
-  "requirements": ["pyportainer==1.0.49"]
+  "requirements": ["pyportainer==1.0.51"]
 }

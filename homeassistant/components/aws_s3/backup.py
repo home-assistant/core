@@ -19,6 +19,7 @@ from homeassistant.components.backup import (
 )
 from homeassistant.const import CONF_PREFIX
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.util.async_iterator import ResourceChunkIterator
 
 from .const import CONF_BUCKET, DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 from .coordinator import S3ConfigEntry
@@ -26,6 +27,8 @@ from .helpers import async_list_backups_from_s3
 
 _LOGGER = logging.getLogger(__name__)
 CACHE_TTL = 300
+# Matches the default chunk size of aiobotocore's StreamingBody.iter_chunks
+DOWNLOAD_CHUNK_SIZE = 1024
 
 # S3 part size requirements: 5 MiB to 5 GiB per part
 # https://docs.aws.amazon.com/AmazonS3/latest/userguide/qfacts.html
@@ -128,7 +131,10 @@ class S3BackupAgent(BackupAgent):
         response = await self._client.get_object(
             Bucket=self._bucket, Key=self._with_prefix(tar_filename)
         )
-        return response["Body"].iter_chunks()
+        body = response["Body"]
+        return ResourceChunkIterator(
+            functools.partial(body.read, DOWNLOAD_CHUNK_SIZE), close=body.close
+        )
 
     @override
     async def async_upload_backup(
