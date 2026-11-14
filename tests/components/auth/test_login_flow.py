@@ -815,6 +815,10 @@ async def test_well_known_protected_resource_no_url(
             id="unauthenticated-view",
         ),
         pytest.param(
+            "/.well-known/oauth-protected-resource/auth/token",
+            id="unauthenticated-post-view",
+        ),
+        pytest.param(
             "/.well-known/oauth-protected-resource//api/states",
             id="double-leading-slash",
         ),

@@ -19,8 +19,13 @@ from aiohttp.abc import AbstractStreamWriter
 from aiohttp.http_parser import RawRequestMessage
 from aiohttp.streams import StreamReader
 from aiohttp.typedefs import JSONDecoder, StrOrURL
-from aiohttp.web_exceptions import HTTPMovedPermanently, HTTPRedirection
+from aiohttp.web_exceptions import (
+    HTTPMethodNotAllowed,
+    HTTPMovedPermanently,
+    HTTPRedirection,
+)
 from aiohttp.web_protocol import RequestHandler
+from aiohttp.web_urldispatcher import AbstractResource, MatchInfoError
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -300,6 +305,7 @@ class HomeAssistantHTTP:
         self._port_transition = port_transition
         self._legacy_redirect_runner: web.AppRunner | None = None
         self._legacy_redirect_server: asyncio.Server | None = None
+        self._protected_resources: set[AbstractResource] = set()
 
     async def async_bind(self) -> None:
         """Create the SSL context and the server, binding its sockets.
@@ -391,7 +397,28 @@ class HomeAssistantHTTP:
             class_name = view.__class__.__name__
             raise AttributeError(f'{class_name} missing required attribute "name"')
 
-        view.register(self.hass, self.app, self.app.router)
+        routes = view.register(self.hass, self.app, self.app.router)
+        if view.requires_auth and routes:
+            self._protected_resources.update(
+                route.resource for route in routes if route.resource is not None
+            )
+
+    async def async_is_protected_path(
+        self, request: web.Request, raw_path: str
+    ) -> bool:
+        """Return whether raw_path resolves to a registered view requiring auth."""
+        probe_request = request.clone(rel_url=URL.build(path=raw_path, encoded=True))
+        match_info = await self.app.router.resolve(probe_request)
+        if isinstance(match_info, MatchInfoError) and isinstance(
+            match_info.http_exception, HTTPMethodNotAllowed
+        ):
+            if methods := match_info.http_exception.allowed_methods - {"OPTIONS"}:
+                probe_request = probe_request.clone(method=next(iter(methods)))
+                match_info = await self.app.router.resolve(probe_request)
+        return (
+            not isinstance(match_info, MatchInfoError)
+            and match_info.route.resource in self._protected_resources
+        )
 
     def register_redirect(
         self,

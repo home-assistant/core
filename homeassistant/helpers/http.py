@@ -37,7 +37,6 @@ KEY_AUTHENTICATED: Final = "ha_authenticated"
 KEY_ALLOW_ALL_CORS = AppKey[AllowCorsType]("allow_all_cors")
 KEY_ALLOW_CONFIGURED_CORS = AppKey[AllowCorsType]("allow_configured_cors")
 KEY_HASS: AppKey[HomeAssistant] = AppKey("hass")
-KEY_PROTECTED_RESOURCES = AppKey[set[AbstractResource]]("protected_resources")
 
 current_request: ContextVar[Request | None] = ContextVar(
     "current_request", default=None
@@ -193,7 +192,7 @@ class HomeAssistantView:
 
     def register(
         self, hass: HomeAssistant, app: web.Application, router: web.UrlDispatcher
-    ) -> None:
+    ) -> list[AbstractRoute]:
         """Register the view with a router."""
         assert self.url is not None, "No url set for view"
         urls = [self.url, *self.extra_urls]
@@ -207,12 +206,6 @@ class HomeAssistantView:
 
             routes.extend(router.add_route(method, url, handler) for url in urls)
 
-        if self.requires_auth:
-            protected_resources = app.setdefault(KEY_PROTECTED_RESOURCES, set())
-            protected_resources.update(
-                route.resource for route in routes if route.resource is not None
-            )
-
         # Use `get` because CORS middleware is not be loaded in emulated_hue
         if self.cors_allowed:
             allow_cors = app.get(KEY_ALLOW_ALL_CORS)
@@ -222,3 +215,5 @@ class HomeAssistantView:
         if allow_cors:
             for route in routes:
                 allow_cors(route)
+
+        return routes
