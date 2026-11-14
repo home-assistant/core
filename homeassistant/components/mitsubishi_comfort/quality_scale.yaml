@@ -34,7 +34,7 @@ rules:
   log-when-unavailable: done
   entity-unavailable: done
   action-exceptions: done
-  reauthentication-flow: todo
+  reauthentication-flow: done
   parallel-updates: todo
   test-coverage: todo
   integration-owner: done

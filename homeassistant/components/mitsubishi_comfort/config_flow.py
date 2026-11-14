@@ -1,5 +1,6 @@
 """Config flow for Mitsubishi Comfort integration."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any, override
 
@@ -7,7 +8,7 @@ from mitsubishi_comfort import MitsubishiCloudAccount
 from mitsubishi_comfort.exceptions import AuthenticationError, DeviceConnectionError
 import probatio
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -45,6 +46,12 @@ class MitsubishiComfortConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the user setup step."""
+        return await self._async_handle_credentials(user_input, "user")
+
+    async def _async_handle_credentials(
+        self, user_input: dict[str, Any] | None, step_id: str
+    ) -> ConfigFlowResult:
+        """Validate credentials for setup or reauthentication."""
         errors: dict[str, str] = {}
 
         if user_input is not None:
@@ -79,6 +86,21 @@ class MitsubishiComfortConfigFlow(ConfigFlow, domain=DOMAIN):
 
             if not errors:
                 await self.async_set_unique_id(account.user_id)
+                if self.source == SOURCE_REAUTH:
+                    self._abort_if_unique_id_mismatch()
+                    entry = self._get_reauth_entry()
+                    credentials = dict(entry.data.get(CONF_CREDENTIALS, {}))
+                    # A throttled discovery on reload may not return these fields again.
+                    for serial, recovered in build_credentials(devices).items():
+                        cached = credentials.get(serial, {})
+                        credentials[serial] = {
+                            key: value or cached.get(key, "")
+                            for key, value in recovered.items()
+                        }
+                    return self.async_update_reload_and_abort(
+                        entry,
+                        data_updates={**user_input, CONF_CREDENTIALS: credentials},
+                    )
                 self._abort_if_unique_id_configured()
 
                 # Persist the fields discovered here for async_setup_entry to
@@ -91,9 +113,6 @@ class MitsubishiComfortConfigFlow(ConfigFlow, domain=DOMAIN):
                 if not devices:
                     errors["base"] = "no_devices"
                 elif not any(is_fully_credentialed(info) for info in devices.values()):
-                    # The cache may hold partial (MAC-less) records setup cannot
-                    # use; creating the entry with nothing settable-up would
-                    # load zero devices without raising any repair.
                     errors["base"] = "no_usable_devices"
                 else:
                     return self.async_create_entry(
@@ -106,8 +125,24 @@ class MitsubishiComfortConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
 
         return self.async_show_form(
-            step_id="user", data_schema=USER_SCHEMA, errors=errors
+            step_id=step_id,
+            data_schema=USER_SCHEMA,
+            errors=errors,
         )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Reauthenticate without replacing cached local credentials."""
+        self._cached_username = entry_data[CONF_USERNAME]
+        self._cached_credentials = entry_data.get(CONF_CREDENTIALS, {})
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm the credentials for the existing account."""
+        return await self._async_handle_credentials(user_input, "reauth_confirm")
 
     @override
     async def async_step_dhcp(

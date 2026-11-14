@@ -161,6 +161,9 @@ def mock_cloud_account(mock_device_info: DeviceInfo) -> Generator[AsyncMock]:
         account.get_passwords_via_websocket.return_value = {}
         account.user_id = "user-12345"
         yield account
+        account.get_device_details.assert_not_awaited()
+        account.get_zone_state.assert_not_awaited()
+        account.send_command.assert_not_awaited()
 
 
 @pytest.fixture

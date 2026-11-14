@@ -15,7 +15,11 @@ from mitsubishi_comfort.exceptions import AuthenticationError, DeviceConnectionE
 from homeassistant.components.dhcp import async_discovered_service_info
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -83,7 +87,7 @@ async def async_setup_entry(
         await account.login()
         devices = await account.discover_devices(cached_credentials=cached_credentials)
     except AuthenticationError as err:
-        raise ConfigEntryError("Mitsubishi cloud authentication failed") from err
+        raise ConfigEntryAuthFailed("Mitsubishi cloud authentication failed") from err
     except DeviceConnectionError as err:
         raise ConfigEntryNotReady("Cannot reach Mitsubishi cloud") from err
 

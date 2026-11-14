@@ -520,6 +520,7 @@ FLOWS = {
         "mill",
         "minecraft_server",
         "mitsubishi_comfort",
+        "mitsubishi_comfort_cloud",
         "mjpeg",
         "moat",
         "mobile_app",
