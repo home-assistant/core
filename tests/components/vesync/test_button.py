@@ -9,6 +9,7 @@ import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
     async_fire_time_changed,
+    load_json_object_fixture,
     snapshot_platform,
 )
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
@@ -16,13 +17,14 @@ from pyvesync.utils.errors import VeSyncAPIResponseError
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
+from homeassistant.components.vesync.const import DOMAIN
 from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.update_coordinator import REQUEST_REFRESH_DEFAULT_COOLDOWN
 
-from .common import mock_devices_response
+from .common import mock_devices_response, mock_firmware
 
 ENTITY_RESET_FILTER = "button.air_purifier_200s_reset_filter"
 RESET_FILTER = "pyvesync.devices.vesyncpurifier.VeSyncAirBypass.reset_filter"
@@ -213,3 +215,115 @@ async def test_fryer_button_press_fails(
             },
             blocking=True,
         )
+
+
+DUAL_FRYER_CLASS = "pyvesync.devices.vesynckitchen.VeSyncDualAirFryer"
+
+
+def mock_dual_fryer(aioclient_mock: AiohttpClientMocker, device_type: str) -> None:
+    """Mock a dual basket air fryer of the given type with both baskets cooking."""
+    aioclient_mock.post(
+        "https://smartapi.vesync.com/cloud/v1/deviceManaged/devices",
+        json={
+            "traceId": "1234",
+            "code": 0,
+            "msg": None,
+            "module": None,
+            "stacktrace": None,
+            "result": {
+                "total": 1,
+                "pageSize": 1,
+                "pageNo": 1,
+                "list": [
+                    {
+                        "deviceRegion": "EU",
+                        "isOwner": True,
+                        "deviceName": "Dual Fryer",
+                        "deviceImg": "",
+                        "cid": "DualFryer",
+                        "deviceStatus": "on",
+                        "connectionStatus": "online",
+                        "connectionType": "wifi",
+                        "deviceType": device_type,
+                        "type": "SKA",
+                        "uuid": "##_REDACTED_##",
+                        "configModule": f"VS_WFON_{device_type}_EU",
+                        "currentFirmVersion": None,
+                        "subDeviceNo": None,
+                        "subDeviceType": None,
+                    }
+                ],
+            },
+        },
+    )
+    aioclient_mock.post(
+        "https://smartapi.vesync.com/cloud/v2/deviceManaged/bypassV2",
+        json=load_json_object_fixture("air-fryer-CAF-DC111S-AEU-detail.json", DOMAIN),
+    )
+    mock_firmware(aioclient_mock)
+
+
+@pytest.mark.parametrize(
+    "device_type",
+    [
+        "CAF-DC111S-AEU",  # dual basket, can pause
+        "CAF-TF101S",  # dual basket, cannot pause
+    ],
+)
+async def test_dual_fryer_button_state(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    aioclient_mock: AiohttpClientMocker,
+    device_type: str,
+) -> None:
+    """Test dual basket fryers get the buttons once per basket."""
+
+    mock_dual_fryer(aioclient_mock, device_type)
+
+    with patch("homeassistant.components.vesync.PLATFORMS", [Platform.BUTTON]):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "method", "chamber"),
+    [
+        ("button.dual_fryer_basket_1_stop_cooking", "end", 1),
+        ("button.dual_fryer_basket_2_stop_cooking", "end", 2),
+        ("button.dual_fryer_basket_1_pause_cooking", "stop", 1),
+        ("button.dual_fryer_basket_2_pause_cooking", "stop", 2),
+        ("button.dual_fryer_basket_1_resume_cooking", "resume", 1),
+        ("button.dual_fryer_basket_2_resume_cooking", "resume", 2),
+    ],
+)
+async def test_dual_fryer_button_press(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    entity_id: str,
+    method: str,
+    chamber: int,
+) -> None:
+    """Test each basket button sends the command for its own basket."""
+
+    mock_dual_fryer(aioclient_mock, "CAF-DC111S-AEU")
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with (
+        patch(f"{DUAL_FRYER_CLASS}.{method}", return_value=True) as method_mock,
+        patch(UPDATE_ALL_DEVICES),
+    ):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+    method_mock.assert_called_once_with(chamber)

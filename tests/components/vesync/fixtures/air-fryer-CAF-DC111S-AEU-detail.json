@@ -1,0 +1,48 @@
+{
+  "traceId": "1234",
+  "code": 0,
+  "msg": "request success",
+  "module": null,
+  "stacktrace": null,
+  "result": {
+    "traceId": "1234",
+    "code": 0,
+    "result": {
+      "statusList": [
+        {
+          "cookStatus": "cooking",
+          "startTime": 1794671681,
+          "recipeType": 3,
+          "recipeId": 14,
+          "recipeName": "Air Fry",
+          "upc": "",
+          "holdTime": 0,
+          "cookSetTime": 120,
+          "cookTemp": 120,
+          "mode": "AirFry",
+          "currentRemainingTime": 110,
+          "totalTimeRemaining": 110,
+          "chamber": 1
+        },
+        {
+          "cookStatus": "cooking",
+          "startTime": 1794671685,
+          "recipeType": 3,
+          "recipeId": 9,
+          "recipeName": "Bake",
+          "upc": "",
+          "holdTime": 0,
+          "cookSetTime": 120,
+          "cookTemp": 125,
+          "mode": "Bake",
+          "currentRemainingTime": 115,
+          "totalTimeRemaining": 115,
+          "chamber": 2
+        }
+      ],
+      "tempUnit": "c",
+      "syncType": 0,
+      "workChamber": 4
+    }
+  }
+}
