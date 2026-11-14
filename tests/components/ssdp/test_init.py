@@ -1,7 +1,8 @@
 """Test the SSDP integration."""
 
 from ipaddress import IPv4Address
-from unittest.mock import ANY, AsyncMock, call, patch
+from typing import Any
+from unittest.mock import ANY, AsyncMock, MagicMock, call, patch
 
 from async_upnp_client.server import UpnpServer
 from async_upnp_client.ssdp_listener import SsdpListener
@@ -1106,3 +1107,307 @@ async def test_ssdp_rediscover_no_match(
     await hass.async_block_till_done()
 
     assert len(mock_flow_init.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("device_udn", "description", "expected"),
+    [
+        pytest.param("uuid:AAA", {"UDN": "uuid:AAA"}, False, id="same_device"),
+        pytest.param("uuid:aaa", {"UDN": "uuid:AAA"}, False, id="case_insensitive"),
+        pytest.param("uuid:BBB", {"UDN": "uuid:AAA"}, True, id="other_device"),
+        pytest.param("uuid:BBB", {}, False, id="no_cached_udn"),
+        pytest.param(None, {"UDN": "uuid:AAA"}, False, id="no_device_udn"),
+        pytest.param(
+            "uuid:AAA_MR",
+            {
+                "UDN": "uuid:AAA",
+                "deviceList": {"device": {"UDN": "uuid:AAA_MR"}},
+            },
+            False,
+            id="embedded_device",
+        ),
+        pytest.param(
+            "uuid:AAA_MS",
+            {
+                "UDN": "uuid:AAA",
+                "deviceList": {
+                    "device": [{"UDN": "uuid:AAA_MR"}, {"UDN": "uuid:AAA_MS"}]
+                },
+            },
+            False,
+            id="embedded_device_in_list",
+        ),
+        pytest.param(
+            "uuid:BBB_MR",
+            {
+                "UDN": "uuid:AAA",
+                "deviceList": {"device": {"UDN": "uuid:AAA_MR"}},
+            },
+            True,
+            id="other_devices_embedded_device",
+        ),
+    ],
+)
+def test_description_is_stale(
+    device_udn: str | None, description: dict[str, Any], expected: bool
+) -> None:
+    """Test detecting a cached description that belongs to another device."""
+    ssdp_device = MagicMock(udn=device_udn)
+    assert scanner._description_is_stale(ssdp_device, description) is expected
+
+
+async def test_description_refetched_when_address_changes_device(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test a stale cached description is refetched when another device takes over."""
+    location = "http://1.1.1.1"
+    aioclient_mock.get(
+        location,
+        text="<root><device><UDN>uuid:device-a</UDN></device></root>",
+    )
+    ssdp_listener = await init_ssdp_component(hass)
+    callback = AsyncMock()
+    await ssdp.async_register_callback(hass, callback, {"st": "upnp:rootdevice"})
+
+    ssdp_listener._on_search(
+        _ssdp_headers(
+            {
+                "st": "upnp:rootdevice",
+                "location": location,
+                "usn": "uuid:device-a::upnp:rootdevice",
+                "_source": "search",
+            }
+        )
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert callback.call_args[0][0].upnp[ATTR_UPNP_UDN] == "uuid:device-a"
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        location,
+        text="<root><device><UDN>uuid:device-b</UDN></device></root>",
+    )
+    ssdp_listener._on_search(
+        _ssdp_headers(
+            {
+                "st": "upnp:rootdevice",
+                "location": location,
+                "usn": "uuid:device-b::upnp:rootdevice",
+                "_source": "search",
+            }
+        )
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert len(aioclient_mock.mock_calls) == 1
+    assert callback.call_args[0][0].upnp[ATTR_UPNP_UDN] == "uuid:device-b"
+
+
+async def test_description_kept_for_embedded_device(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test an embedded device's UDN does not invalidate the cached description."""
+    location = "http://1.1.1.1"
+    media_renderer = "urn:schemas-upnp-org:device:MediaRenderer:1"
+    aioclient_mock.get(
+        location,
+        text=(
+            "<root><device><UDN>uuid:device-a</UDN><deviceList><device>"
+            "<UDN>uuid:device-a_MR</UDN></device></deviceList></device></root>"
+        ),
+    )
+    ssdp_listener = await init_ssdp_component(hass)
+    callback = AsyncMock()
+    await ssdp.async_register_callback(hass, callback, {"st": media_renderer})
+
+    ssdp_listener._on_search(
+        _ssdp_headers(
+            {
+                "st": "upnp:rootdevice",
+                "location": location,
+                "usn": "uuid:device-a::upnp:rootdevice",
+                "_source": "search",
+            }
+        )
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    ssdp_listener._on_search(
+        _ssdp_headers(
+            {
+                "st": media_renderer,
+                "location": location,
+                "usn": f"uuid:device-a_MR::{media_renderer}",
+                "_source": "search",
+            }
+        )
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert len(aioclient_mock.mock_calls) == 1
+    assert callback.call_count == 1
+    assert callback.call_args[0][0].upnp[ATTR_UPNP_UDN] == "uuid:device-a"
+
+
+@patch(
+    "homeassistant.components.ssdp.async_get_ssdp",
+    return_value={"mock-domain": [{"st": "urn:schemas-upnp-org:device:ZonePlayer:1"}]},
+)
+@pytest.mark.parametrize(
+    "search_targets",
+    [
+        pytest.param(
+            ("upnp:rootdevice", "urn:schemas-upnp-org:device:ZonePlayer:1"),
+            id="root_first",
+        ),
+        pytest.param(
+            ("urn:schemas-upnp-org:device:ZonePlayer:1", "upnp:rootdevice"),
+            id="service_first",
+        ),
+    ],
+)
+async def test_ssdp_rediscover_refetches_stale_description(
+    mock_get_ssdp,
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_flow_init,
+    search_targets: tuple[str, str],
+) -> None:
+    """Test rediscovery replays all targets with a fresh description."""
+    location = "http://1.1.1.1"
+    description = "<root><device><UDN>{udn}</UDN></device></root>"
+    entry = MockConfigEntry(
+        domain="mock-domain",
+        discovery_keys={
+            "ssdp": (DiscoveryKey(domain="ssdp", key="uuid:mock-udn", version=1),)
+        },
+        unique_id="mock-unique-id",
+        state=config_entries.ConfigEntryState.LOADED,
+        source=config_entries.SOURCE_IGNORE,
+    )
+    entry.add_to_hass(hass)
+
+    aioclient_mock.get(location, text=description.format(udn="uuid:mock-udn"))
+    ssdp_listener = await init_ssdp_component(hass)
+    for search_target in search_targets:
+        ssdp_listener._on_search(
+            _ssdp_headers(
+                {
+                    "st": search_target,
+                    "location": location,
+                    "usn": f"uuid:mock-udn::{search_target}",
+                    "_source": "search",
+                }
+            )
+        )
+    await hass.async_block_till_done()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+    assert len(mock_flow_init.mock_calls) == 1
+
+    description_cache = hass.data[ssdp.DOMAIN][ssdp.SSDP_SCANNER]._description_cache
+    description_cache.uncache_description(location)
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(location, text=description.format(udn="uuid:other-udn"))
+    await description_cache.async_get_description_dict(location)
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(location, text=description.format(udn="uuid:mock-udn"))
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert len(aioclient_mock.mock_calls) == 1
+    assert len(mock_flow_init.mock_calls) == 2
+    mock_call_data: SsdpServiceInfo = mock_flow_init.mock_calls[1][2]["data"]
+    assert mock_call_data.ssdp_st == "urn:schemas-upnp-org:device:ZonePlayer:1"
+    assert mock_call_data.upnp[ATTR_UPNP_UDN] == "uuid:mock-udn"
+
+
+async def test_description_refetched_when_service_message_arrives_first(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test a non-root message from a new device never gets the old description."""
+    location = "http://1.1.1.1"
+    zone_player = "urn:schemas-upnp-org:device:ZonePlayer:1"
+    aioclient_mock.get(
+        location,
+        text="<root><device><UDN>uuid:device-a</UDN></device></root>",
+    )
+    ssdp_listener = await init_ssdp_component(hass)
+    callback = AsyncMock()
+    await ssdp.async_register_callback(hass, callback, {"st": zone_player})
+
+    ssdp_listener._on_search(
+        _ssdp_headers(
+            {
+                "st": zone_player,
+                "location": location,
+                "usn": f"uuid:device-a::{zone_player}",
+                "_source": "search",
+            }
+        )
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        location,
+        text="<root><device><UDN>uuid:device-b</UDN></device></root>",
+    )
+    ssdp_listener._on_search(
+        _ssdp_headers(
+            {
+                "st": zone_player,
+                "location": location,
+                "usn": f"uuid:device-b::{zone_player}",
+                "_source": "search",
+            }
+        )
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert [call[0][0].upnp[ATTR_UPNP_UDN] for call in callback.call_args_list] == [
+        "uuid:device-a",
+        "uuid:device-b",
+    ]
+
+
+async def test_description_looked_up_at_message_location(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test the description is read from the location the message came from."""
+    old_location = "http://1.1.1.1"
+    new_location = "http://1.1.1.2"
+    zone_player = "urn:schemas-upnp-org:device:ZonePlayer:1"
+    for location in (old_location, new_location):
+        aioclient_mock.get(
+            location,
+            text=(
+                "<root><device><UDN>uuid:device-a</UDN>"
+                f"<friendlyName>{location}</friendlyName></device></root>"
+            ),
+        )
+    ssdp_listener = await init_ssdp_component(hass)
+    callback = AsyncMock()
+    await ssdp.async_register_callback(hass, callback, {"st": zone_player})
+
+    for location in (old_location, new_location):
+        ssdp_listener._on_search(
+            _ssdp_headers(
+                {
+                    "st": zone_player,
+                    "location": location,
+                    "usn": f"uuid:device-a::{zone_player}",
+                    "_source": "search",
+                }
+            )
+        )
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert [call[0][0].upnp["friendlyName"] for call in callback.call_args_list] == [
+        old_location,
+        new_location,
+    ]
