@@ -9,8 +9,26 @@
       }
     },
     "button": {
+      "pause_cooking": {
+        "default": "mdi:pause"
+      },
+      "pause_cooking_basket": {
+        "default": "mdi:pause"
+      },
       "reset_filter": {
         "default": "mdi:air-filter"
+      },
+      "resume_cooking": {
+        "default": "mdi:play"
+      },
+      "resume_cooking_basket": {
+        "default": "mdi:play"
+      },
+      "stop_cooking": {
+        "default": "mdi:stop"
+      },
+      "stop_cooking_basket": {
+        "default": "mdi:stop"
       }
     },
     "fan": {
