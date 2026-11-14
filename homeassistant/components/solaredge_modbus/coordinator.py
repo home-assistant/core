@@ -5,13 +5,17 @@ from dataclasses import dataclass
 from datetime import timedelta
 from typing import Final, override
 
-from solaredged import SolarEdge, SolarEdgeConnectionError, UpdateReport
+from solaredged import InverterStatus, SolarEdge, SolarEdgeConnectionError, UpdateReport
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailed,
+    UpdateFailedUnreachable,
+)
 
 from .const import (
     DOMAIN,
@@ -21,6 +25,9 @@ from .const import (
     SUBSYSTEM_POWER_CONTROL,
     SUBSYSTEM_SITE_CONTROL,
 )
+
+# A sleeping inverter refuses connections for about a minute while it resets.
+SLEEP_RESET_GRACE: Final = timedelta(seconds=90)
 
 type SolarEdgeModbusConfigEntry = ConfigEntry[SolarEdgeModbusRuntimeData]
 
@@ -74,6 +81,10 @@ class SolarEdgeModbusDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
         self.solaredge = solaredge
         self._poll = poll
         self._silent: set[str] = set()
+        # Start of the first failed poll of the current outage.
+        self._outage_since: float | None = None
+        # Whether the coordinator logged the current outage at info level.
+        self._logged_as_reset = False
         super().__init__(
             hass,
             LOGGER,
@@ -140,15 +151,47 @@ class SolarEdgeModbusDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
         return _merge(report, retried)
 
     async def _async_poll(self) -> UpdateReport:
-        """Poll the inverter's sub-systems, translating a dead link."""
+        """Poll the inverter, reporting a sleeping inverter's reset as unreachable."""
+        # From the poll's start, so a connect timeout does not use up the grace.
+        started = self.hass.loop.time()
         try:
-            return await self._poll()
+            report = await self._poll()
         except SolarEdgeConnectionError as err:
+            if self._outage_since is None:
+                self._outage_since = started
+            # The coordinator only logs the first failure of an outage.
+            begins = self.last_update_success
+            # The status is kept from the last read of the inverter that succeeded.
+            if (
+                self.solaredge.inverter.status is InverterStatus.SLEEPING
+                and started - self._outage_since < SLEEP_RESET_GRACE.total_seconds()
+            ):
+                if begins:
+                    self._logged_as_reset = True
+                raise UpdateFailedUnreachable(
+                    translation_domain=DOMAIN,
+                    translation_key="communication_error",
+                    translation_placeholders={"error": str(err)},
+                ) from err
+            if begins:
+                self._logged_as_reset = False
+            elif self._logged_as_reset:
+                self._logged_as_reset = False
+                LOGGER.error(
+                    "%s: the inverter is still not answering, which is more than"
+                    " a sleeping reset: %s",
+                    self.name,
+                    err,
+                )
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="communication_error",
                 translation_placeholders={"error": str(err)},
             ) from err
+
+        self._outage_since = None
+        self._logged_as_reset = False
+        return report
 
     def _log_silence(self, report: UpdateReport) -> None:
         """Log a sub-system falling silent once, and log its return."""
