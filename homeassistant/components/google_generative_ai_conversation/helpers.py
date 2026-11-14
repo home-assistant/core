@@ -70,14 +70,7 @@ def _parse_audio_mime_type(mime_type: str) -> dict[str, int]:
 
 
 def streaming_wav_header(mime_type: str) -> bytes:
-    """Build a WAV header that says the length is not known yet.
-
-    `convert_to_wav` writes the header we want, except that it knows the size.
-    Both length fields are overwritten with the "not known yet" marker so a
-    reader that receives the finished stream can still read the samples;
-    Home Assistant's tts component also accepts it as a streaming WAV source,
-    strips the header and feeds the samples to ffmpeg as they arrive.
-    """
+    """Build a WAV header with unknown RIFF and data lengths for streaming."""
     header = bytearray(convert_to_wav(b"", mime_type))
     header[4:8] = b"\xff" * 4  # RIFF chunk size
     header[40:44] = b"\xff" * 4  # data chunk size

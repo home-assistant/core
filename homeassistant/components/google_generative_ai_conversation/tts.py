@@ -459,8 +459,6 @@ class GoogleGenerativeAITextToSpeechEntity(
                 if not started:
                     started = True
                     if mime_type != "audio/wav":
-                        # Raw PCM needs a header that says the length is not
-                        # known yet; a complete WAV response brings its own.
                         yield streaming_wav_header(mime_type)
 
                 yield data
