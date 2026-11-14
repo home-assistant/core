@@ -2,23 +2,20 @@
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from datetime import date
 from enum import IntEnum
-from typing import cast, override
+from typing import override
 
-from sofar_modbus.model import CorrectedTotal
-from sofar_modbus.modern.battery_pack import BatteryPack
-from sofar_modbus.modern.device import (
+from sofar_modbus import (
     BATTERY_PACKS,
     BATTERY_STRING_COMPONENTS,
     PV_STRING_COMPONENTS,
-    SofarInverter,
-)
-from sofar_modbus.modern.enums import (
-    BatConfigCellType,
-    BatConfigProtocol,
-    FeedinLimitationMode,
+    BatteryConfigCellType,
+    BatteryConfigProtocol,
+    BatteryPack,
+    CorrectedTotal,
+    FeedInLimitationMode,
     PassiveModeTimeoutAction,
+    SofarInverter,
     SyncRtcResult,
     SystemState,
 )
@@ -28,6 +25,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorExtraStoredData,
     SensorStateClass,
 )
 from homeassistant.const import (
@@ -54,6 +52,7 @@ from .coordinator import SofarConfigEntry, SofarRuntimeData
 from .entity import (
     SofarEntity,
     SofarEntityDescription,
+    SofarPart,
     async_remove_unserved_entities,
     battery_pack_identifier,
 )
@@ -72,20 +71,25 @@ async def async_setup_entry(
         hass,
         entry,
         Platform.SENSOR,
-        SENSOR_DESCRIPTIONS + TOTAL_SENSOR_DESCRIPTIONS,
+        SENSOR_DESCRIPTIONS + ENUM_SENSOR_DESCRIPTIONS + TOTAL_SENSOR_DESCRIPTIONS,
     )
     runtime_data = entry.runtime_data
-    served = runtime_data.served_components
 
-    entities: list[SofarSensor | SofarTotalSensor] = [
+    entities: list[SofarSensor | SofarEnumSensor | SofarTotalSensor] = [
         SofarSensor(runtime_data, description)
         for description in SENSOR_DESCRIPTIONS
-        if description.component in served and _battery_string(description) is None
+        if description.component in runtime_data.served_components
+        and _battery_string(description) is None
     ]
+    entities.extend(
+        SofarEnumSensor(runtime_data, description)
+        for description in ENUM_SENSOR_DESCRIPTIONS
+        if description.component in runtime_data.served_components
+    )
     entities.extend(
         SofarTotalSensor(runtime_data, description)
         for description in TOTAL_SENSOR_DESCRIPTIONS
-        if description.component in served
+        if description.component in runtime_data.served_components
     )
     async_add_entities(entities)
 
@@ -109,7 +113,7 @@ async def async_setup_entry(
     entry.async_on_unload(
         runtime_data.readings.async_add_listener(_async_add_wired_battery_strings)
     )
-    if BATTERY_PACKS in served:
+    if BATTERY_PACKS in runtime_data.served_components:
         _async_setup_battery_packs(entry, runtime_data, async_add_entities)
 
 
@@ -147,9 +151,9 @@ def _async_setup_battery_packs(
 
 def _battery_string(description: SofarSensorDescription) -> int | None:
     """Return the battery string a description belongs to, if any."""
-    if (part := description.part) is None or part[0] != "battery":
+    if (part := description.part) is None or part.kind != "battery":
         return None
-    return part[1]
+    return part.number
 
 
 class SofarSensor(SofarEntity, SensorEntity):
@@ -159,12 +163,28 @@ class SofarSensor(SofarEntity, SensorEntity):
 
     @property
     @override
-    def native_value(self) -> str | int | float | date | None:
-        value = self.entity_description.value_fn(self.coordinator.device)
+    def native_value(self) -> StateType:
+        return self.entity_description.value_fn(self.coordinator.device)
+
+
+class SofarEnumSensor(SofarEntity, SensorEntity):
+    """Defines a Sofar enum sensor."""
+
+    entity_description: SofarEnumSensorDescription
+
+    @property
+    @override
+    def native_value(self) -> str | None:
         # IntEnum stringifies as the raw int; use the option slug.
-        if isinstance(value, IntEnum):
-            return option_slug(value)
-        return value
+        value = self.entity_description.value_fn(self.coordinator.device)
+        return option_slug(value) if value is not None else None
+
+
+def restored_total(data: SensorExtraStoredData | None) -> float | None:
+    """Return a stored total, if the stored state holds a number."""
+    if data is None or not isinstance(data.native_value, (int, float)):
+        return None
+    return data.native_value
 
 
 class SofarTotalSensor(SofarEntity, RestoreSensor):
@@ -175,18 +195,24 @@ class SofarTotalSensor(SofarEntity, RestoreSensor):
     @override
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
-        last_data = await self.async_get_last_sensor_data()
-        if last_data is not None and isinstance(last_data.native_value, (int, float)):
-            self._attr_native_value = last_data.native_value
+        if (
+            total := restored_total(await self.async_get_last_sensor_data())
+        ) is not None:
+            self._attr_native_value = total
+        self._take_total()
 
-    @property
+    @callback
     @override
-    def native_value(self) -> int | float | None:
-        value = self.entity_description.total_fn(self.coordinator.device).value
-        # Restore state saves this even while unavailable; keep the last total.
-        if value is not None:
+    def _handle_coordinator_update(self) -> None:
+        self._take_total()
+        super()._handle_coordinator_update()
+
+    def _take_total(self) -> None:
+        """Keep the last total while the inverter reports none."""
+        if (
+            value := self.entity_description.total_fn(self.coordinator.device).value
+        ) is not None:
             self._attr_native_value = value
-        return cast(int | float | None, self._attr_native_value)
 
 
 class SofarPackSensor(SofarEntity, SensorEntity):
@@ -201,36 +227,24 @@ class SofarPackSensor(SofarEntity, SensorEntity):
         pack: BatteryPack,
     ) -> None:
         """Initialize the entity."""
-        # The base builds the unique ID and device info from this pack.
-        self._pack = pack
         super().__init__(runtime_data, entity_description)
-
-    @override
-    def _unique_id(self, serial: str) -> str:
-        """Name the entity after its pack, which repeats every key."""
-        return (
-            f"{battery_pack_identifier(serial, self._pack)}"
-            f"_{self.entity_description.key}"
+        self._pack = pack
+        identifier = battery_pack_identifier(
+            self.coordinator.device.serial_number, pack
         )
-
-    @override
-    def _device_info(
-        self, runtime_data: SofarRuntimeData, serial: str
-    ) -> dr.DeviceInfo:
-        """Place the entity on its own pack, connected via the inverter."""
-        return dr.DeviceInfo(
-            identifiers={(DOMAIN, battery_pack_identifier(serial, self._pack))},
+        # Every pack repeats the same keys.
+        self._attr_unique_id = f"{identifier}_{entity_description.key}"
+        self._attr_device_info = dr.DeviceInfo(
+            identifiers={(DOMAIN, identifier)},
             via_device_id=runtime_data.inverter_device_id,
             translation_key="battery_pack",
             translation_placeholders={
-                "group": str(self._pack.group_nr + 1),
-                "pack": str(self._pack.pack_nr + 1),
+                "group": str(pack.group_nr + 1),
+                "pack": str(pack.pack_nr + 1),
             },
-            model=self._pack.pack_model or None,
-            sw_version=(
-                None if self._pack.bms_version is None else str(self._pack.bms_version)
-            ),
-            serial_number=self._pack.pack_serial_number or None,
+            model=pack.pack_model or None,
+            sw_version=None if pack.bms_version is None else str(pack.bms_version),
+            serial_number=pack.pack_serial_number or None,
         )
 
     @property
@@ -250,6 +264,13 @@ class SofarSensorDescription(SensorEntityDescription, SofarEntityDescription):
     """Describe a Sofar sensor."""
 
     value_fn: Callable[[SofarInverter], StateType]
+
+
+@dataclass(frozen=True, kw_only=True)
+class SofarEnumSensorDescription(SensorEntityDescription, SofarEntityDescription):
+    """Describe a Sofar enum sensor."""
+
+    value_fn: Callable[[SofarInverter], IntEnum | None]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -381,7 +402,7 @@ def _part_sensors(
             key=f"{measurement.key}_{number}",
             component=component,
             translation_key=measurement.translation_key,
-            part=(kind, number),
+            part=SofarPart(kind, number),
             device_class=measurement.device_class,
             native_unit_of_measurement=measurement.native_unit_of_measurement,
             state_class=measurement.state_class,
@@ -413,14 +434,6 @@ SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.pv_1_2.pv_power_total,
-    ),
-    SofarSensorDescription(
-        key="system_state",
-        component="state",
-        translation_key="system_state",
-        device_class=SensorDeviceClass.ENUM,
-        options=enum_options(SystemState),
-        value_fn=lambda device: device.state.system_state,
     ),
     SofarSensorDescription(
         key="inverter_temperature_1",
@@ -1373,16 +1386,6 @@ SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
         value_fn=lambda device: device.eps.passive_eps_wait_time,
     ),
     SofarSensorDescription(
-        key="bat_config_protocol",
-        component="battery_config_id",
-        translation_key="bat_config_protocol",
-        device_class=SensorDeviceClass.ENUM,
-        options=enum_options(BatConfigProtocol),
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-        value_fn=lambda device: device.battery_config_id.bat_config_protocol,
-    ),
-    SofarSensorDescription(
         key="bat_config_overvoltage_protection",
         component="battery_config_id",
         translation_key="bat_config_overvoltage_protection",
@@ -1492,16 +1495,6 @@ SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
         value_fn=lambda device: device.battery_config.bat_config_rated_battery_voltage,
     ),
     SofarSensorDescription(
-        key="bat_config_cell_type",
-        component="battery_config",
-        translation_key="bat_config_cell_type",
-        device_class=SensorDeviceClass.ENUM,
-        options=enum_options(BatConfigCellType),
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-        value_fn=lambda device: device.battery_config.bat_config_cell_type,
-    ),
-    SofarSensorDescription(
         key="bat_config_eps_buffer",
         component="battery_config",
         translation_key="bat_config_eps_buffer",
@@ -1568,25 +1561,6 @@ SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
         ),
     ),
     SofarSensorDescription(
-        key="sync_rtc_result",
-        component="rtc_sync",
-        translation_key="sync_rtc_result",
-        device_class=SensorDeviceClass.ENUM,
-        options=enum_options(SyncRtcResult),
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda device: device.rtc_sync.sync_rtc_result,
-    ),
-    SofarSensorDescription(
-        key="feedin_limitation_mode",
-        component="feed_in",
-        translation_key="feedin_limitation_mode",
-        device_class=SensorDeviceClass.ENUM,
-        options=enum_options(FeedinLimitationMode),
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-        value_fn=lambda device: device.feed_in.feedin_limitation_mode,
-    ),
-    SofarSensorDescription(
         key="feedin_max_power",
         component="feed_in",
         translation_key="feedin_max_power",
@@ -1614,16 +1588,6 @@ SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda device: device.passive.passive_mode_timeout,
-    ),
-    SofarSensorDescription(
-        key="passive_mode_timeout_action",
-        component="passive",
-        translation_key="passive_mode_timeout_action",
-        device_class=SensorDeviceClass.ENUM,
-        options=enum_options(PassiveModeTimeoutAction),
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-        value_fn=lambda device: device.passive.passive_mode_timeout_action,
     ),
     SofarSensorDescription(
         key="passive_mode_grid_power",
@@ -1660,6 +1624,66 @@ SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
 SENSOR_DESCRIPTIONS += _part_sensors(
     "pv_string", PV_STRING_COMPONENTS, _PV_STRING_MEASUREMENTS
 ) + _part_sensors("battery", BATTERY_STRING_COMPONENTS, _BATTERY_MEASUREMENTS)
+
+ENUM_SENSOR_DESCRIPTIONS: tuple[SofarEnumSensorDescription, ...] = (
+    SofarEnumSensorDescription(
+        key="system_state",
+        component="state",
+        translation_key="system_state",
+        device_class=SensorDeviceClass.ENUM,
+        options=enum_options(SystemState),
+        value_fn=lambda device: device.state.system_state,
+    ),
+    SofarEnumSensorDescription(
+        key="bat_config_protocol",
+        component="battery_config_id",
+        translation_key="bat_config_protocol",
+        device_class=SensorDeviceClass.ENUM,
+        options=enum_options(BatteryConfigProtocol),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda device: device.battery_config_id.bat_config_protocol,
+    ),
+    SofarEnumSensorDescription(
+        key="bat_config_cell_type",
+        component="battery_config",
+        translation_key="bat_config_cell_type",
+        device_class=SensorDeviceClass.ENUM,
+        options=enum_options(BatteryConfigCellType),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda device: device.battery_config.bat_config_cell_type,
+    ),
+    SofarEnumSensorDescription(
+        key="sync_rtc_result",
+        component="rtc_sync",
+        translation_key="sync_rtc_result",
+        device_class=SensorDeviceClass.ENUM,
+        options=enum_options(SyncRtcResult),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda device: device.rtc_sync.sync_rtc_result,
+    ),
+    SofarEnumSensorDescription(
+        key="feedin_limitation_mode",
+        component="feed_in",
+        translation_key="feedin_limitation_mode",
+        device_class=SensorDeviceClass.ENUM,
+        options=enum_options(FeedInLimitationMode),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda device: device.feed_in.feedin_limitation_mode,
+    ),
+    SofarEnumSensorDescription(
+        key="passive_mode_timeout_action",
+        component="passive",
+        translation_key="passive_mode_timeout_action",
+        device_class=SensorDeviceClass.ENUM,
+        options=enum_options(PassiveModeTimeoutAction),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda device: device.passive.passive_mode_timeout_action,
+    ),
+)
 
 TOTAL_SENSOR_DESCRIPTIONS: tuple[SofarTotalSensorDescription, ...] = (
     SofarTotalSensorDescription(

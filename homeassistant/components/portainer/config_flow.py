@@ -79,7 +79,7 @@ class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Portainer."""
 
     VERSION = 5
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     @classmethod
     @callback

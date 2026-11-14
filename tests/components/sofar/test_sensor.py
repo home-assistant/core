@@ -14,7 +14,7 @@ from pytest_homeassistant.common import (
     mock_restore_cache_with_extra_data,
     snapshot_platform,
 )
-from sofar_modbus.modern.device import SofarInverter
+from sofar_modbus import SofarInverter
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -24,8 +24,10 @@ from homeassistant.components.sofar.const import (
     SCAN_INTERVAL,
 )
 from homeassistant.components.sofar.sensor import (
+    ENUM_SENSOR_DESCRIPTIONS,
     SENSOR_DESCRIPTIONS,
     TOTAL_SENSOR_DESCRIPTIONS,
+    SofarEnumSensorDescription,
     SofarSensorDescription,
     SofarTotalSensorDescription,
 )
@@ -62,10 +64,11 @@ DERIVED_KEYS = {
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_all_entities(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test all entities match their snapshot on a hybrid device."""
+    """Test all entities match their snapshot on a hybrid after a poll."""
     connection = MockModbusConnection()
     seed_hybrid_inverter(connection.for_unit(1))
     entry = MockConfigEntry(
@@ -86,6 +89,16 @@ async def test_all_entities(
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
+
+    unit = connection.for_unit(1)
+    unit.holding[0x0484] = 4990  # 49.90 Hz
+    unit.holding[0x0604] = 525  # battery_voltage_1 -> 52.5 V
+    unit.holding[0x0608] = 88  # battery_capacity_1 -> 88%
+    unit.holding[0x0687] = 160  # solar_generation_total -> 16.0 kWh
+    unit.holding[0x104D] = 70  # depth of discharge -> 30% on-grid cut-off
+    freezer.tick(timedelta(seconds=PACKS_SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
     await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
 
@@ -94,33 +107,16 @@ def test_sensor_description_components_are_real() -> None:
     inverter = SofarInverter(
         MockModbusConnection().for_unit(1), serial_number="SP1ES12345678"
     )
-    for description in (*SENSOR_DESCRIPTIONS, *TOTAL_SENSOR_DESCRIPTIONS):
+    for description in (
+        *SENSOR_DESCRIPTIONS,
+        *ENUM_SENSOR_DESCRIPTIONS,
+        *TOTAL_SENSOR_DESCRIPTIONS,
+    ):
         component = getattr(inverter, description.component, None)
         assert component is not None, f"unknown component {description.component!r}"
         assert hasattr(component, description.key), (
             f"{description.component}.{description.key} does not exist"
         )
-
-
-async def test_sensor_entities_created_and_state(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    init_integration: MockConfigEntry,
-) -> None:
-    """Test a measurement and an enum sensor report live state."""
-    grid_freq_id = entity_registry.async_get_entity_id(
-        SENSOR_DOMAIN, "sofar", f"{MOCK_SERIAL}_grid_frequency"
-    )
-    assert grid_freq_id is not None
-    assert (state := hass.states.get(grid_freq_id)) is not None
-    assert float(state.state) == 50.0
-
-    system_state_id = entity_registry.async_get_entity_id(
-        SENSOR_DOMAIN, "sofar", f"{MOCK_SERIAL}_system_state"
-    )
-    assert system_state_id is not None
-    assert (state := hass.states.get(system_state_id)) is not None
-    assert state.state == "grid_connected"
 
 
 @pytest.mark.parametrize(
@@ -172,7 +168,11 @@ async def test_enabled_by_default_partition(
     served = entry.runtime_data.served_components
     expected_disabled = {
         description.key
-        for description in (*SENSOR_DESCRIPTIONS, *TOTAL_SENSOR_DESCRIPTIONS)
+        for description in (
+            *SENSOR_DESCRIPTIONS,
+            *ENUM_SENSOR_DESCRIPTIONS,
+            *TOTAL_SENSOR_DESCRIPTIONS,
+        )
         if description.component in served
         and not description.entity_registry_enabled_default
     }
@@ -182,35 +182,6 @@ async def test_enabled_by_default_partition(
         if registry_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
     }
     assert disabled == expected_disabled
-
-
-async def test_settings_backed_sensor_created_and_state(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test a settings-polled component reaches the sensor platform."""
-    connection = MockModbusConnection()
-    seed_hybrid_inverter(connection.for_unit(1))
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=MOCK_HYBRID_SERIAL,
-        data=MOCK_ENTRY_DATA,
-        title=MOCK_HYBRID_MODEL,
-    )
-    entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.sofar.async_get_unit",
-        side_effect=lambda hass, entry, params, unit_id: connection.for_unit(unit_id),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done(wait_background_tasks=True)
-
-    rtc_id = entity_registry.async_get_entity_id(
-        SENSOR_DOMAIN, "sofar", f"{MOCK_HYBRID_SERIAL}_sync_rtc_result"
-    )
-    assert rtc_id is not None
-    assert (state := hass.states.get(rtc_id)) is not None
-    assert state.state == "successful"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -351,12 +322,13 @@ async def test_sensor_availability_on_component_failure(
     "description",
     [
         pytest.param(description, id=description.key)
-        for description in SENSOR_DESCRIPTIONS
+        for description in (*SENSOR_DESCRIPTIONS, *ENUM_SENSOR_DESCRIPTIONS)
         if description.key not in DERIVED_KEYS
     ],
 )
 async def test_value_fn_reads_the_field_its_key_names(
-    init_integration: MockConfigEntry, description: SofarSensorDescription
+    init_integration: MockConfigEntry,
+    description: SofarSensorDescription | SofarEnumSensorDescription,
 ) -> None:
     """Test each value_fn reads the field its key and component name."""
     device = init_integration.runtime_data.readings.device
@@ -459,18 +431,23 @@ async def _setup_hybrid_with_tower(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_battery_pack_entities(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test a pack's entities match their snapshot, one per cell it has."""
+    """Test a pack's entities, one per cell it has, after a pack poll."""
+    connection = MockModbusConnection()
     pack = device_registry.async_get_device_by_identifier(
         (DOMAIN, f"{MOCK_HYBRID_SERIAL}_battery_pack_0_0"),
-        (
-            await _setup_hybrid_with_tower(hass, MockModbusConnection(), groups=1)
-        ).entry_id,
+        (await _setup_hybrid_with_tower(hass, connection, groups=1)).entry_id,
     )
     assert pack is not None
+
+    connection.for_unit(1).holding[0x9072] = 970  # 97.0 Ah remaining
+    freezer.tick(timedelta(seconds=PACKS_SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     for entity_entry in sorted(
         er.async_entries_for_device(entity_registry, pack.id),

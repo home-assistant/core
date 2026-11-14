@@ -188,6 +188,52 @@ def _handle_discovery_failure(
     async_dispatcher_send(hass, MQTT_DISCOVERY_DONE.format(*discovery_hash), None)
 
 
+@callback
+def _async_is_unique_id_of_other_disabled_entity(
+    hass: HomeAssistant,
+    domain: str,
+    config: DiscoveryInfoType,
+    discovery_payload: MQTTDiscoveryPayload,
+) -> bool:
+    """Return True if a disabled entity discovered on another topic has the unique ID.
+
+    A disabled entity is not loaded, so the entity platform does not detect its
+    unique ID is used again, and the discoveries would take over the entity
+    registry entry from each other.
+    """
+    if (unique_id := config.get(CONF_UNIQUE_ID)) is None:
+        return False
+    registry_key = (domain, DOMAIN, unique_id)
+    discovered_and_disabled = hass.data[DATA_MQTT].discovery_discovered_and_disabled
+    discovery_data = discovery_payload.discovery_data
+    if (
+        other_discovery_hash := discovered_and_disabled.get_discovery_hash(registry_key)
+    ) is None or other_discovery_hash == discovery_data[ATTR_DISCOVERY_HASH]:
+        return False
+    entity_registry = er.async_get(hass)
+    if (
+        entity_id := entity_registry.async_get_entity_id(*registry_key)
+    ) is None or not entity_registry.entities[entity_id].disabled:
+        return False
+    other_discovery_data = discovered_and_disabled[other_discovery_hash].discovery_data
+    _LOGGER.error(
+        "Ignoring discovered %s on topic %s%s, unique ID '%s' is already used by "
+        "disabled entity %s which was discovered on topic %s%s; to resolve the "
+        "duplicate unique ID, publish an empty retained payload to at least one "
+        "of these discovery topics",
+        domain,
+        discovery_data[ATTR_DISCOVERY_TOPIC],
+        get_origin_log_string(discovery_payload, include_url=False),
+        unique_id,
+        entity_id,
+        other_discovery_data[ATTR_DISCOVERY_TOPIC],
+        get_origin_log_string(
+            other_discovery_data[ATTR_DISCOVERY_PAYLOAD], include_url=False
+        ),
+    )
+    return True
+
+
 def _verify_mqtt_config_entry_enabled_for_discovery(
     hass: HomeAssistant, domain: str, discovery_payload: MQTTDiscoveryPayload
 ) -> bool:
@@ -369,6 +415,10 @@ def async_setup_entity_entry_helper(  # noqa: C901
                     "MQTT discovery skipped, as device exists in subentry, "
                     "and repair flow must be completed first"
                 )
+            elif _async_is_unique_id_of_other_disabled_entity(
+                hass, domain, config, discovery_payload
+            ):
+                _handle_discovery_failure(hass, discovery_payload)
             else:
                 entity = entity_class(
                     hass, config, entry, discovery_payload.discovery_data

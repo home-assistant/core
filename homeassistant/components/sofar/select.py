@@ -5,8 +5,7 @@ from dataclasses import dataclass
 from enum import IntEnum
 from typing import override
 
-from sofar_modbus.modern.device import SofarInverter
-from sofar_modbus.modern.enums import ChargerUseMode, EpsControlMode
+from sofar_modbus import ChargerUseMode, EpsControlMode, SofarInverter
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import Platform
@@ -60,11 +59,10 @@ async def async_setup_entry(
     """Set up the Sofar select platform."""
     async_remove_unserved_entities(hass, entry, Platform.SELECT, SELECT_DESCRIPTIONS)
     runtime_data = entry.runtime_data
-    served = runtime_data.served_components
     async_add_entities(
         SofarSelect(runtime_data, description)
         for description in SELECT_DESCRIPTIONS
-        if description.component in served
+        if description.component in runtime_data.served_components
     )
 
 

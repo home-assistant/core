@@ -4,8 +4,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any, override
 
-from sofar_modbus.modern.device import SofarInverter
-from sofar_modbus.modern.enums import RemoteSwitchOnOff
+from sofar_modbus import RemoteSwitchOnOff, SofarInverter
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import Platform
@@ -47,11 +46,10 @@ async def async_setup_entry(
     """Set up the Sofar switch platform."""
     async_remove_unserved_entities(hass, entry, Platform.SWITCH, SWITCH_DESCRIPTIONS)
     runtime_data = entry.runtime_data
-    served = runtime_data.served_components
     async_add_entities(
         SofarSwitch(runtime_data, description)
         for description in SWITCH_DESCRIPTIONS
-        if description.component in served
+        if description.component in runtime_data.served_components
     )
 
 

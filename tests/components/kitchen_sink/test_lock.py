@@ -9,12 +9,11 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.kitchen_sink import DOMAIN
 from homeassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN,
-    SERVICE_LOCK,
     SERVICE_OPEN,
-    SERVICE_UNLOCK,
+    LockService,
     LockState,
 )
-from homeassistant.const import ATTR_ENTITY_ID, EVENT_STATE_CHANGED, Platform
+from homeassistant.const import EVENT_STATE_CHANGED, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -54,7 +53,10 @@ async def test_locking(hass: HomeAssistant) -> None:
 
     state_changes = async_capture_events(hass, EVENT_STATE_CHANGED)
     await hass.services.async_call(
-        LOCK_DOMAIN, SERVICE_LOCK, {ATTR_ENTITY_ID: UNLOCKED_LOCK}, blocking=False
+        LOCK_DOMAIN,
+        LockService.LOCK,
+        {CommonServiceArgument.ENTITY_ID: UNLOCKED_LOCK},
+        blocking=False,
     )
     await hass.async_block_till_done()
 
@@ -73,7 +75,10 @@ async def test_unlocking(hass: HomeAssistant) -> None:
 
     state_changes = async_capture_events(hass, EVENT_STATE_CHANGED)
     await hass.services.async_call(
-        LOCK_DOMAIN, SERVICE_UNLOCK, {ATTR_ENTITY_ID: LOCKED_LOCK}, blocking=False
+        LOCK_DOMAIN,
+        LockService.UNLOCK,
+        {CommonServiceArgument.ENTITY_ID: LOCKED_LOCK},
+        blocking=False,
     )
     await hass.async_block_till_done()
 
@@ -88,7 +93,10 @@ async def test_opening_mocked(hass: HomeAssistant) -> None:
     """Test the opening of a lock."""
     calls = async_mock_service(hass, LOCK_DOMAIN, SERVICE_OPEN)
     await hass.services.async_call(
-        LOCK_DOMAIN, SERVICE_OPEN, {ATTR_ENTITY_ID: OPENABLE_LOCK}, blocking=True
+        LOCK_DOMAIN,
+        LockService.OPEN,
+        {CommonServiceArgument.ENTITY_ID: OPENABLE_LOCK},
+        blocking=True,
     )
     assert len(calls) == 1
 
@@ -96,7 +104,10 @@ async def test_opening_mocked(hass: HomeAssistant) -> None:
 async def test_opening(hass: HomeAssistant) -> None:
     """Test the opening of a lock."""
     await hass.services.async_call(
-        LOCK_DOMAIN, SERVICE_OPEN, {ATTR_ENTITY_ID: OPENABLE_LOCK}, blocking=True
+        LOCK_DOMAIN,
+        LockService.OPEN,
+        {CommonServiceArgument.ENTITY_ID: OPENABLE_LOCK},
+        blocking=True,
     )
     state = hass.states.get(OPENABLE_LOCK)
     assert state.state == LockState.OPEN

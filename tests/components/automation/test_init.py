@@ -1819,7 +1819,7 @@ async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
             },
             "failed to setup triggers",
             "Integration 'automation' does not provide trigger support"
-            ". Got {'alias': 'bad_automation',",
+            " at 'triggers[0]'. Got {'platform': 'automation'}",
             "validation_failed_triggers",
         ),
         (
@@ -1832,7 +1832,7 @@ async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
             },
             "failed to setup triggers",
             "Integration 'automation' does not provide trigger support"
-            ". Got {'alias': 'bad_automation',",
+            " at 'triggers[1]'. Got {'platform': 'automation'}",
             "validation_failed_triggers",
         ),
         (
@@ -1848,7 +1848,7 @@ async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
             },
             "failed to setup conditions",
             "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd"
-            ". Got {'alias': 'bad_automation',",
+            " at 'conditions[0]'. Got {'condition': 'state',",
             "validation_failed_conditions",
         ),
         (
@@ -1863,7 +1863,7 @@ async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
             },
             "failed to setup actions",
             "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd"
-            ". Got {'alias': 'bad_automation',",
+            " at 'actions[0]'. Got {'condition': 'state',",
             "validation_failed_actions",
         ),
         (
@@ -1878,7 +1878,7 @@ async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
             },
             "failed to setup actions",
             "Invalid trigger 'not_a_platform' specified"
-            ". Got {'alias': 'bad_automation',",
+            " at 'actions[0].wait_for_trigger[1]'. Got {'platform': 'not_a_platform'}",
             "validation_failed_actions",
         ),
     ],
