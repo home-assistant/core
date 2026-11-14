@@ -56,12 +56,19 @@ def mock_equipment(equipment_data: dict, mock_api: MagicMock) -> Equipment:
 
 
 @pytest.fixture
+def additional_platforms() -> list[Platform]:
+    """Provide extra platforms for tests covering cross-platform updates."""
+    return []
+
+
+@pytest.fixture
 def setup_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_api: MagicMock,
     mock_equipment: Equipment,
     platform: Platform,
+    additional_platforms: list[Platform],
 ) -> Generator[Callable[[], Awaitable[None]]]:
     """Set up the requested platform after any registry entries are prepared."""
     mock_config_entry.add_to_hass(hass)
@@ -77,7 +84,8 @@ def setup_integration(
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    with patch("homeassistant.components.econet.PLATFORMS", [platform]):
+    platforms = [platform, *additional_platforms]
+    with patch("homeassistant.components.econet.PLATFORMS", platforms):
         yield setup
 
 

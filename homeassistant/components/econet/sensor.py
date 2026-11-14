@@ -17,10 +17,12 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfVolume,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import EconetConfigEntry
+from .const import PUSH_UPDATE
 from .entity import EcoNetEntity
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
@@ -92,14 +94,28 @@ async def async_setup_entry(
     equipment = data[EquipmentType.WATER_HEATER].copy()
     equipment.extend(data[EquipmentType.THERMOSTAT].copy())
 
-    sensors = [
-        EcoNetSensor(_equip, description)
-        for _equip in equipment
-        for description in SENSOR_TYPES
-        if getattr(_equip, description.key, False) is not False
-    ]
+    known_sensors: set[tuple[str, str]] = set()
 
-    async_add_entities(sensors)
+    @callback
+    def async_add_new_sensors() -> None:
+        """Add sensors when the device first reports a value."""
+        sensors = []
+        for device in equipment:
+            for description in SENSOR_TYPES:
+                sensor_key = (device.device_id, description.key)
+                if (
+                    sensor_key not in known_sensors
+                    and getattr(device, description.key, None) is not None
+                ):
+                    known_sensors.add(sensor_key)
+                    sensors.append(EcoNetSensor(device, description))
+        if sensors:
+            async_add_entities(sensors)
+
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, PUSH_UPDATE, async_add_new_sensors)
+    )
+    async_add_new_sensors()
 
 
 class EcoNetSensor(EcoNetEntity, SensorEntity):
