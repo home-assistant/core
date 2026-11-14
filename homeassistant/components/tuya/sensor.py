@@ -287,14 +287,6 @@ def _meter_channel_sensors(channel: int) -> tuple[TuyaSensorEntityDescription, .
             channel_condition=_has_multiple_meter_channels,
         ),
         TuyaSensorEntityDescription(
-            key=DPCode(f"power_factor{channel}"),
-            translation_key="power_factor",
-            device_class=SensorDeviceClass.POWER_FACTOR,
-            state_class=SensorStateClass.MEASUREMENT,
-            channel_index=channel,
-            channel_condition=_has_multiple_meter_channels,
-        ),
-        TuyaSensorEntityDescription(
             key=DPCode(f"reactive_power{channel}"),
             translation_key="reactive_power",
             device_class=SensorDeviceClass.REACTIVE_POWER,
