@@ -47,8 +47,21 @@ async def test_resolve(
     assert play_media.mime_type == "audio/flac"
     assert play_media.url == snapshot
 
-    mock_api.audio_url.assert_called_with("TRACK-UUID")
+    # The source container is allowed so the original file is streamed
+    mock_api.audio_url.assert_called_with("TRACK-UUID", container="flac")
     assert mock_api.audio_url.call_count == 1
+    mock_api.audio_url.reset_mock()
+
+    # Without a known container the server picks the stream format
+    track = load_json_fixture("track.json")
+    del track["MediaSources"][0]["Container"]
+    mock_api.get_item.return_value = track
+
+    play_media = await async_resolve_media(
+        hass, f"{URI_SCHEME}{DOMAIN}/TRACK-UUID", "media_player.jellyfin_device"
+    )
+
+    mock_api.audio_url.assert_called_with("TRACK-UUID")
     mock_api.audio_url.reset_mock()
 
     # Test resolving a movie
@@ -75,8 +88,13 @@ async def test_resolve(
 
 
 @pytest.mark.parametrize(
-    "audio_codec",
-    [("aac"), ("wma"), ("vorbis"), ("mp3")],
+    ("audio_codec", "expected_codec", "expected_mime_type"),
+    [
+        ("aac", "aac", "audio/aac"),
+        ("wma", "wmav2", "audio/x-ms-wma"),
+        ("vorbis", "vorbis", "audio/ogg"),
+        ("mp3", "mp3", "audio/mpeg"),
+    ],
 )
 async def test_audio_codec_resolve(
     hass: HomeAssistant,
@@ -86,6 +104,8 @@ async def test_audio_codec_resolve(
     mock_api: MagicMock,
     snapshot: SnapshotAssertion,
     audio_codec: str,
+    expected_codec: str,
+    expected_mime_type: str,
 ) -> None:
     """Test resolving Jellyfin media items with audio codec."""
 
@@ -103,11 +123,20 @@ async def test_audio_codec_resolve(
         hass, f"{URI_SCHEME}{DOMAIN}/TRACK-UUID", "media_player.jellyfin_device"
     )
 
-    assert play_media.mime_type == "audio/flac"
+    assert play_media.mime_type == expected_mime_type
     assert play_media.url == snapshot
 
-    mock_api.audio_url.assert_called_with("TRACK-UUID", audio_codec=audio_codec)
+    mock_api.audio_url.assert_called_with("TRACK-UUID", audio_codec=expected_codec)
     assert mock_api.audio_url.call_count == 1
+
+    # The audio codec option does not apply to video streams
+    mock_api.get_item.return_value = load_json_fixture("movie.json")
+
+    play_media = await async_resolve_media(
+        hass, f"{URI_SCHEME}{DOMAIN}/MOVIE-UUID", "media_player.jellyfin_device"
+    )
+
+    assert play_media.mime_type == "video/mp4"
 
 
 async def test_root(

@@ -3,7 +3,7 @@
 import logging
 import mimetypes
 import os
-from typing import Any, override
+from typing import Any, Final, NamedTuple, override
 
 from jellyfin_apiclient_python.api import jellyfin_url
 from jellyfin_apiclient_python.client import JellyfinClient
@@ -49,6 +49,24 @@ from .coordinator import JellyfinConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
+MEDIA_SOURCE_KEY_CONTAINER: Final = "Container"
+
+
+class AudioTranscodeTarget(NamedTuple):
+    """Combines codec, container, and mime type information for audio transcoding."""
+
+    codec: str  # codec name passed to the Jellyfin (ffmpeg) transcoder
+    container: str  # transcoding container that can hold this codec
+    mime_type: str  # mime type of the resulting stream
+
+
+AUDIO_TRANSCODE_TARGETS: Final = {
+    "aac": AudioTranscodeTarget("aac", "aac", "audio/aac"),
+    "mp3": AudioTranscodeTarget("mp3", "mp3", "audio/mpeg"),
+    "vorbis": AudioTranscodeTarget("vorbis", "ogg", "audio/ogg"),
+    "wma": AudioTranscodeTarget("wmav2", "asf", "audio/x-ms-wma"),
+}
+
 
 async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
     """Set up Jellyfin media source."""
@@ -88,7 +106,7 @@ class JellyfinSource(MediaSource):
         )
 
         stream_url = self._get_stream_url(media_item)
-        mime_type = _media_mime_type(media_item)
+        mime_type = self._get_stream_mime_type(media_item)
 
         # Media Sources without a mime type have been filtered
         # out during library creation
@@ -534,12 +552,35 @@ class JellyfinSource(MediaSource):
 
         if media_type == MEDIA_TYPE_AUDIO:
             if audio_codec := self.entry.options.get(CONF_AUDIO_CODEC):
-                return self.api.audio_url(item_id, audio_codec=audio_codec)  # type: ignore[no-any-return]
+                target = AUDIO_TRANSCODE_TARGETS[audio_codec]
+                url: str = self.api.audio_url(item_id, audio_codec=target.codec)
+                return f"{url}&TranscodingContainer={target.container}"
+            # Without a container list the universal endpoint always transcodes,
+            # so allow the source's own container to stream the original file
+            if container := _media_container(media_item):
+                return self.api.audio_url(item_id, container=container)  # type: ignore[no-any-return]
             return self.api.audio_url(item_id)  # type: ignore[no-any-return]
         if media_type == MEDIA_TYPE_VIDEO:
             return self.api.video_url(item_id)  # type: ignore[no-any-return]
 
         raise BrowseError(f"Unsupported media type {media_type}")
+
+    def _get_stream_mime_type(self, media_item: dict[str, Any]) -> str | None:
+        """Return the mime type of the stream returned by _get_stream_url."""
+        if media_item[ITEM_KEY_MEDIA_TYPE] == MEDIA_TYPE_AUDIO and (
+            audio_codec := self.entry.options.get(CONF_AUDIO_CODEC)
+        ):
+            # The server transcodes to the configured codec, so the source
+            # file's mime type no longer describes the stream
+            return AUDIO_TRANSCODE_TARGETS[audio_codec].mime_type
+        return _media_mime_type(media_item)
+
+
+def _media_container(media_item: dict[str, Any]) -> str | None:
+    """Return the container of a media item's first media source."""
+    media_sources = media_item.get(ITEM_KEY_MEDIA_SOURCES) or [{}]
+    container: str | None = media_sources[0].get(MEDIA_SOURCE_KEY_CONTAINER)
+    return container
 
 
 def _media_mime_type(media_item: dict[str, Any]) -> str | None:
