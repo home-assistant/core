@@ -1,13 +1,14 @@
 """Test the helpers to collect, locate and serialize config validation errors."""
 
+from collections.abc import Callable
 from datetime import timedelta
-from enum import StrEnum
+from enum import Enum, StrEnum
 import gc
 import threading
 from typing import Any
 
 import probatio
-from probatio.markers import VirtualPathComponent
+from probatio import VirtualPathComponent
 import pytest
 
 from homeassistant.exceptions import HomeAssistantError
@@ -25,6 +26,12 @@ class _Key(StrEnum):
     """A key of a config."""
 
     NAME = "name"
+
+
+class _Mode(Enum):
+    """A placeholder value which is not a str."""
+
+    FAST = 2
 
 
 class _Unserializable:
@@ -56,6 +63,22 @@ def test_iter_validation_errors_invalid() -> None:
     # The error is not changed, apart from its traceback
     assert err.path == ["a", 1]
     assert err.__traceback__ is None
+
+
+def test_iter_validation_errors_clears_chained_tracebacks() -> None:
+    """Test the tracebacks of chained exceptions are cleared, also in a loop."""
+    cause = _raised(ValueError("cause"))
+    context = _raised(TypeError("context"))
+    err = _raised(probatio.Invalid("bad"))
+    err.__cause__ = cause
+    err.__context__ = context
+    cause.__context__ = err
+    context.__cause__ = cause
+
+    assert list(iter_validation_errors(err)) == [ValidationErrorInfo(err, ())]
+    assert err.__traceback__ is None
+    assert cause.__traceback__ is None
+    assert context.__traceback__ is None
 
 
 def test_iter_validation_errors_multiple_invalid() -> None:
@@ -226,6 +249,23 @@ def test_path_segments(
     assert json_bytes(path)
 
 
+def test_secret_error_text() -> None:
+    """Test the text of a secret error does not have the value."""
+    schema = probatio.Schema(
+        {"outer": {probatio.Secret("password"): cv.matches_regex("^a+$")}}
+    )
+    with pytest.raises(probatio.Invalid) as exc_info:
+        schema({"outer": {"password": "hunter2"}})
+    assert "hunter2" in str(exc_info.value)
+
+    records = list(iter_validation_errors(exc_info.value, [0]))
+
+    assert len(records) == 1
+    assert records[0].message == "invalid value"
+    assert str(records[0]) == "invalid value at '[0].outer.password'"
+    assert str(ValidationErrors(records)) == "invalid value at '[0].outer.password'"
+
+
 def test_group_segment() -> None:
     """Test a trailing group is kept in the record and dropped for clients."""
     schema = probatio.Schema(
@@ -254,6 +294,13 @@ def test_group_segment() -> None:
             "translation_placeholders": {"group": "repeat"},
         }
     ]
+
+
+def test_group_segment_not_last() -> None:
+    """Test a group which is not the last segment is kept for clients."""
+    err = probatio.Invalid("bad", ["a", VirtualPathComponent("group"), "b"])
+
+    assert validation_errors_as_dicts(err)[0]["path"] == ["a", "<group>", "b"]
 
 
 @pytest.mark.parametrize(
@@ -301,12 +348,12 @@ def test_group_segment() -> None:
             id="object_placeholder",
         ),
         pytest.param(
-            probatio.Schema({probatio.Secret("password"): cv.entity_id}),
+            probatio.Schema({probatio.Secret("password"): probatio.In(["allowed"])}),
             {"password": "s3cr3t"},
             {
                 "message": "invalid value",
                 "path": ["password"],
-                "code": None,
+                "code": "not_in_list",
                 "translation_key": None,
                 "translation_domain": None,
                 "translation_placeholders": {},
@@ -351,6 +398,10 @@ def test_validation_errors_as_dicts(
                     "timeout": timedelta(seconds=5),
                     "attempts": 3,
                     "entities": ("light.a", _Unserializable()),
+                    "mode": _Mode.FAST,
+                    "modes": {_Mode.FAST},
+                    "frozen": frozenset({"a"}),
+                    5: "not a str key",
                 },
             ),
             {
@@ -363,6 +414,10 @@ def test_validation_errors_as_dicts(
                     "timeout": "0:00:05",
                     "attempts": 3,
                     "entities": ["light.a", "<unserializable>"],
+                    "mode": 2,
+                    "modes": [2],
+                    "frozen": ["a"],
+                    "5": "not a str key",
                 },
             },
             id="translated",
@@ -379,18 +434,44 @@ def test_validation_errors_as_dicts_homeassistant_error(
     assert json_bytes(validation_errors_as_dicts(ValidationErrors(records)))
 
 
-def test_no_reference_cycles() -> None:
-    """Test a record does not keep the frames which raised its error alive."""
+def _raise_plain() -> None:
+    """Raise an error."""
+    raise HomeAssistantError("bad")
 
-    def validate() -> None:
+
+def _raise_from() -> None:
+    """Raise an error from another error."""
+    try:
+        int("x")
+    except ValueError as err:
+        raise probatio.Invalid("bad") from err
+
+
+def _raise_in_except() -> None:
+    """Raise an error while another error is handled."""
+    try:
+        int("x")
+    except ValueError:
         raise HomeAssistantError("bad")
+
+
+@pytest.mark.parametrize(
+    "validate",
+    [
+        pytest.param(_raise_plain, id="plain"),
+        pytest.param(_raise_from, id="explicit_cause"),
+        pytest.param(_raise_in_except, id="implicit_context"),
+    ],
+)
+def test_no_reference_cycles(validate: Callable[[], None]) -> None:
+    """Test a record does not keep the frames which raised its error alive."""
 
     def collect() -> None:
         errors: list[ValidationErrorInfo] = []
         for index in range(3):
             try:
                 validate()
-            except HomeAssistantError as err:
+            except (probatio.Invalid, HomeAssistantError) as err:
                 errors.extend(iter_validation_errors(err, [index]))
         raise ValidationErrors(errors)
 
