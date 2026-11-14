@@ -1,0 +1,49 @@
+{
+  "entity": {
+    "sensor": {
+      "battery_charge_power": {
+        "default": "mdi:battery-charging"
+      },
+      "battery_discharge_power": {
+        "default": "mdi:battery-arrow-down"
+      },
+      "grid_input_power": {
+        "default": "mdi:transmission-tower-import"
+      },
+      "grid_off_power": {
+        "default": "mdi:power-socket"
+      },
+      "output_home_power": {
+        "default": "mdi:home-lightning-bolt"
+      },
+      "pack_count": {
+        "default": "mdi:battery-plus-variant"
+      },
+      "pack_state": {
+        "default": "mdi:battery",
+        "state": {
+          "charging": "mdi:battery-charging",
+          "discharging": "mdi:battery-arrow-down"
+        }
+      },
+      "remaining_discharge_time": {
+        "default": "mdi:timer-sand"
+      },
+      "solar_input_power": {
+        "default": "mdi:solar-power"
+      },
+      "solar_power_1": {
+        "default": "mdi:solar-panel"
+      },
+      "solar_power_2": {
+        "default": "mdi:solar-panel"
+      },
+      "solar_power_3": {
+        "default": "mdi:solar-panel"
+      },
+      "solar_power_4": {
+        "default": "mdi:solar-panel"
+      }
+    }
+  }
+}
