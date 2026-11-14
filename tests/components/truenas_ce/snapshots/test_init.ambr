@@ -1,0 +1,31 @@
+# serializer version: 1
+# name: test_device_info
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'configuration_url': 'https://192.168.1.10',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'truenas_ce',
+        'a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'iXsystems',
+    'model': 'TRUENAS-MINI-3.0-XL+',
+    'model_id': None,
+    'name': 'truenas',
+    'name_by_user': None,
+    'serial_number': 'A1-123456',
+    'sw_version': '25.10.1',
+    'via_device_id': None,
+  })
+# ---
