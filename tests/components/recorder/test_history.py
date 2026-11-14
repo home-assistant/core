@@ -540,15 +540,15 @@ async def test_stream_error_falls_back(
     await async_wait_recording_done(hass)
     expected = get_states(hass, zero, four)
 
-    sorted_states_to_dict = history._sorted_states_to_dict
+    iter_entity_states = history._iter_entity_states
 
-    def _fail_streamed(states: Any, **kwargs: Any) -> dict[str, list[Any]]:
+    def _fail_streamed(states: Any, *args: Any, **kwargs: Any) -> Any:
         # Only the streamed result is not a list
         if not isinstance(states, list):
             raise OperationalError("SELECT", {}, Exception())
-        return sorted_states_to_dict(states, **kwargs)
+        return iter_entity_states(states, *args, **kwargs)
 
-    with patch.object(history, "_sorted_states_to_dict", side_effect=_fail_streamed):
+    with patch.object(history, "_iter_entity_states", side_effect=_fail_streamed):
         states = get_states(hass, zero, four)
     assert expected["media_player.test"]
     assert_dict_of_states_equal_without_context_and_last_changed(expected, states)
