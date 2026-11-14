@@ -606,7 +606,9 @@ def _is_same_error(error: ValidationErrorInfo, other: ValidationErrorInfo) -> bo
 
 
 async def async_validate_block_collect_errors(
-    hass: HomeAssistant, kind: _BlockKind, submitted: Any
+    hass: HomeAssistant,
+    kind: Literal["triggers", "conditions", "actions"],
+    submitted: Any,
 ) -> list[Any]:
     """Validate a block of triggers, conditions or actions, collecting all errors.
 
@@ -639,8 +641,11 @@ async def async_validate_block_collect_errors(
     if fail_fast_errors and not (
         platform_errors and _is_same_error(platform_errors[0], fail_fast_errors[0])
     ):
-        # Keep the error, with its path in the validated block if it has one
-        _LOGGER.error(
+        # The walk should find the error the block's validator raised. If it
+        # doesn't, the walk misses a submitted form (a bug in the walk), or a
+        # platform answered differently the second time, for example because a
+        # device was removed in between. Keep the error so it isn't lost.
+        _LOGGER.warning(
             "Validating the items of a block of %s one by one did not give the "
             "error of the block: %s",
             kind,

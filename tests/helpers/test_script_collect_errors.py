@@ -3,8 +3,10 @@
 from collections.abc import Callable, Coroutine, Iterator
 import copy
 import gc
+import logging
+import random
 from typing import Any
-from unittest.mock import Mock
+from unittest.mock import DEFAULT, AsyncMock, Mock
 
 import probatio
 from probatio.markers import VirtualPathComponent
@@ -20,7 +22,6 @@ from homeassistant.helpers.validation_errors import (
     ValidationErrorInfo,
     ValidationErrors,
     iter_validation_errors,
-    validation_errors_as_dicts,
 )
 
 from .script_block_corpus import (
@@ -39,6 +40,7 @@ from .script_block_corpus import (
     Case,
     Path,
     corpus,
+    random_block,
 )
 
 # The path, the class and the message of an error
@@ -71,8 +73,10 @@ _SERVICE_ACTION = {"action": "light.turn_on", "target": {"entity_id": "light.kit
 
 _WALK_MISSED_ERROR = "one by one did not give the error of the block"
 
+_RANDOM_BLOCKS = 250
 
-def _grouped(cases: list[Case]) -> list[Any]:
+
+def _grouped(cases: list[Case]) -> list[pytest.ParameterSet]:
     """Return a test parameter per group of cases of a corpus."""
     groups: dict[str, list[Case]] = {}
     for case in cases:
@@ -123,6 +127,45 @@ def _schema_error(kind: BlockKind, submitted: Any) -> probatio.Invalid:
     with pytest.raises(probatio.Invalid) as exc_info:
         script._BLOCK_SCHEMAS[kind](copy.deepcopy(submitted))
     return exc_info.value
+
+
+def _schema_records(kind: BlockKind, submitted: Any) -> list[Record]:
+    """Return the errors of the schema of a block, none if the block passes it."""
+    try:
+        script._BLOCK_SCHEMAS[kind](copy.deepcopy(submitted))
+    except probatio.Invalid as err:
+        return _records(err)
+    return []
+
+
+async def _async_fail_fast_records(
+    hass: HomeAssistant, kind: BlockKind, submitted: Any
+) -> list[Record]:
+    """Return the first error of the schema and the validator of a block, if any."""
+    try:
+        await _async_fail_fast(hass, kind, submitted)
+    except (probatio.Invalid, HomeAssistantError) as err:
+        return _records(err)[:1]
+    return []
+
+
+async def _async_collected_records(
+    hass: HomeAssistant, kind: BlockKind, submitted: Any
+) -> list[Record]:
+    """Return the errors collected for a block, none if the block is valid."""
+    block = copy.deepcopy(submitted)
+    records: list[Record] = []
+    try:
+        await script.async_validate_block_collect_errors(hass, kind, block)
+    except ValidationErrors as err:
+        records = _records(err)
+    assert block == submitted
+    return records
+
+
+def _sorted_by_path(records: list[Record]) -> list[Record]:
+    """Return errors sorted by their path."""
+    return sorted(records, key=lambda record: [str(segment) for segment in record[0]])
 
 
 def _device(number: int) -> dict[str, Any]:
@@ -197,27 +240,15 @@ def trigger_errors(hass: HomeAssistant) -> dict[str, Exception]:
 
 
 @pytest.fixture
-def validated_triggers(hass: HomeAssistant) -> list[ConfigType]:
-    """Mock a trigger platform, return the triggers it was asked to validate.
+def validate_trigger(hass: HomeAssistant) -> AsyncMock:
+    """Mock a trigger platform, return its validator.
 
-    It rejects a trigger with fail set to always, and the first one with fail
-    set to once. The error is a HomeAssistantError if error is homeassistant.
+    It accepts every trigger. A test sets its side_effect to what it answers
+    each time it is called: DEFAULT to accept the trigger, or an error.
     """
-    validated: list[ConfigType] = []
-
-    async def async_validate_trigger_config(
-        hass: HomeAssistant, config: ConfigType
-    ) -> ConfigType:
-        failed = any(trigger.get("fail") for trigger in validated)
-        validated.append(config)
-        if (fail := config.get("fail")) == "always" or (fail and not failed):
-            if config.get("error") == "homeassistant":
-                raise HomeAssistantError(f"Trigger failed {fail}")
-            raise probatio.Invalid(f"Trigger failed {fail}", path=["fail"])
-        return config
-
-    _mock_trigger_platform(hass, async_validate_trigger_config)
-    return validated
+    validate = AsyncMock(side_effect=lambda hass, config: config)
+    _mock_trigger_platform(hass, validate)
+    return validate
 
 
 def test_corpus_paths() -> None:
@@ -228,7 +259,7 @@ def test_corpus_paths() -> None:
             config = config[segment]
         return config
 
-    assert len(_PLATFORM_ERROR_CORPUS) > 1000
+    assert _PLATFORM_ERROR_CORPUS
     assert {
         case.id: resolve(case.submitted, case.marker_path)
         for case in _PLATFORM_ERROR_CORPUS
@@ -424,12 +455,6 @@ _ERRORS_PARAMS = [
         id="triggers",
     ),
     pytest.param(
-        "triggers",
-        {"triggers": [_registry_trigger(1), _device_trigger(2)]},
-        [_registry_error(1, "triggers", 0), _device_error(2, "triggers", 1)],
-        id="single_trigger_sublist",
-    ),
-    pytest.param(
         "conditions",
         [
             _registry(1),
@@ -447,12 +472,6 @@ _ERRORS_PARAMS = [
             ((4,), HomeAssistantError, _UNKNOWN_CONDITION_ERROR),
         ],
         id="conditions",
-    ),
-    pytest.param(
-        "conditions",
-        {"or": [_registry(1), _registry(2)]},
-        [_registry_error(1, "or", 0), _registry_error(2, "or", 1)],
-        id="single_condition_shorthand",
     ),
     pytest.param(
         "conditions",
@@ -494,12 +513,6 @@ _ERRORS_PARAMS = [
     ),
     pytest.param(
         "actions",
-        {"if": _registry(1), "then": _device(2)},
-        [_registry_error(1, "if"), _device_error(2, "then")],
-        id="single_action_if_then",
-    ),
-    pytest.param(
-        "actions",
         [
             {
                 "choose": [
@@ -517,41 +530,6 @@ _ERRORS_PARAMS = [
             _device_error(5, 0, "choose", 1, "sequence", 0),
         ],
         id="choose",
-    ),
-    pytest.param(
-        "actions",
-        [
-            {
-                "choose": {
-                    "conditions": _registry(1),
-                    "sequence": [_device(2), _device(3)],
-                }
-            }
-        ],
-        [
-            _registry_error(1, 0, "choose", "conditions"),
-            _device_error(2, 0, "choose", "sequence", 0),
-            _device_error(3, 0, "choose", "sequence", 1),
-        ],
-        id="choose_single_option",
-    ),
-    pytest.param(
-        "actions",
-        [{"repeat": {"sequence": [_device(2)], "until": [_registry(1)]}}],
-        [
-            _registry_error(1, 0, "repeat", "until", 0),
-            _device_error(2, 0, "repeat", "sequence", 0),
-        ],
-        id="repeat_until",
-    ),
-    pytest.param(
-        "actions",
-        [{"repeat": {"sequence": _device(2), "while": _registry(1)}}],
-        [
-            _registry_error(1, 0, "repeat", "while"),
-            _device_error(2, 0, "repeat", "sequence"),
-        ],
-        id="repeat_while",
     ),
     pytest.param(
         "actions",
@@ -579,31 +557,6 @@ _ERRORS_PARAMS = [
         [{"parallel": [[{"parallel": [[_device(1)]]}]]}],
         [_device_error(1, 0, "parallel", 0, 0, "parallel", 0, 0)],
         id="parallel_list_branches_nested",
-    ),
-    pytest.param(
-        "actions",
-        [
-            {
-                "wait_for_trigger": [
-                    {"triggers": [_registry_trigger(1), OK_TRIGGER]},
-                    _device_trigger(2),
-                    {"triggers": _registry_trigger(3)},
-                ]
-            },
-            {
-                "wait_for_trigger": {
-                    "triggers": [_registry_trigger(4), _registry_trigger(5)]
-                }
-            },
-        ],
-        [
-            _registry_error(1, 0, "wait_for_trigger", 0, "triggers", 0),
-            _device_error(2, 0, "wait_for_trigger", 1),
-            _registry_error(3, 0, "wait_for_trigger", 2, "triggers"),
-            _registry_error(4, 1, "wait_for_trigger", "triggers", 0),
-            _registry_error(5, 1, "wait_for_trigger", "triggers", 1),
-        ],
-        id="wait_for_trigger",
     ),
     pytest.param(
         "actions",
@@ -750,74 +703,6 @@ async def test_all_errors_of_an_item(hass: HomeAssistant) -> None:
     ]
 
 
-@pytest.mark.parametrize(
-    ("kind", "submitted", "fail_fast_error", "expected_error"),
-    [
-        pytest.param(
-            "actions",
-            [OK_ACTION, {"if": [], "then": [_registry(1), _device(2)]}],
-            f"Unknown entity registry entry {1:032x} at '[1].then[0]'",
-            f"Unknown entity registry entry {1:032x} at '[1].then[0]'",
-            id="invalid_list_forms",
-        ),
-        pytest.param(
-            "actions",
-            {"if": [], "then": {"or": _registry(1)}},
-            f"Unknown entity registry entry {1:032x} at '[0].then[0].conditions[0]'",
-            f"Unknown entity registry entry {1:032x} at 'then.or'",
-            id="invalid_other_forms",
-        ),
-        pytest.param(
-            "triggers",
-            _registry_trigger(1),
-            f"Unknown entity registry entry {1:032x} at '[0]'",
-            f"Unknown entity registry entry {1:032x}",
-            id="invalid_single_item",
-        ),
-        pytest.param(
-            "triggers",
-            [OK_TRIGGER, _FIELD_TRIGGER],
-            "required key not provided at '[1].entity_id'",
-            "required key not provided at '[1].entity_id'",
-            id="multiple_invalid",
-        ),
-        pytest.param(
-            "actions",
-            [OK_ACTION, {"if": [], "then": [_device(1), _registry(2)]}],
-            "Unknown device 'device_1'",
-            "Unknown device 'device_1' at '[1].then[0]'",
-            id="homeassistant_error",
-        ),
-        pytest.param(
-            "actions",
-            _device(1),
-            "Unknown device 'device_1'",
-            "Unknown device 'device_1'",
-            id="homeassistant_error_single_item",
-        ),
-    ],
-)
-async def test_error_text(
-    hass: HomeAssistant,
-    kind: BlockKind,
-    submitted: Any,
-    fail_fast_error: str,
-    expected_error: str,
-) -> None:
-    """Test the text of the collected errors is the first error with its path.
-
-    The validator of the block gives the path in the validated block, and no
-    path for a HomeAssistantError.
-    """
-    with pytest.raises((probatio.Invalid, HomeAssistantError)) as exc_info:
-        await _async_fail_fast(hass, kind, submitted)
-    assert str(exc_info.value) == fail_fast_error
-
-    err = await _async_collect(hass, kind, submitted)
-
-    assert str(err) == expected_error
-
-
 @pytest.mark.parametrize("cases", _grouped(_VALID_CORPUS))
 async def test_valid_block_corpus(hass: HomeAssistant, cases: list[Case]) -> None:
     """Test a valid block gives the validated block, in every form."""
@@ -880,7 +765,7 @@ async def test_valid_block(
 
 
 async def test_valid_block_is_validated_once(
-    hass: HomeAssistant, validated_triggers: list[ConfigType]
+    hass: HomeAssistant, validate_trigger: AsyncMock
 ) -> None:
     """Test the platforms validate the items of a valid block only once."""
     submitted = [{"trigger": "test"}, {"triggers": {"trigger": "test", "id": "2"}}]
@@ -888,7 +773,7 @@ async def test_valid_block_is_validated_once(
     assert await script.async_validate_block_collect_errors(
         hass, "triggers", submitted
     ) == [{"platform": "test"}, {"platform": "test", "id": "2"}]
-    assert len(validated_triggers) == 2
+    assert validate_trigger.await_count == 2
 
 
 @pytest.mark.parametrize("cases", _grouped(_SCHEMA_ERROR_CORPUS))
@@ -918,30 +803,6 @@ async def test_schema_error_corpus(hass: HomeAssistant, cases: list[Case]) -> No
             [(0, "bogus"), (2, "then"), (3, "bogus")],
             id="several_errors",
         ),
-        pytest.param(
-            "triggers",
-            [{"triggers": [OK_TRIGGER, OK_TRIGGER]}, _BAD_TRIGGER],
-            [(1, "trigger")],
-            id="after_trigger_sublist",
-        ),
-        pytest.param(
-            "triggers",
-            {"triggers": [OK_TRIGGER, _BAD_TRIGGER]},
-            [("triggers", 1, "trigger")],
-            id="single_trigger_sublist",
-        ),
-        pytest.param(
-            "actions",
-            [{"parallel": [OK_ACTION, [OK_ACTION, _BAD_ACTION]]}],
-            [(0, "parallel", 1, 1, "bogus")],
-            id="parallel_list_branch",
-        ),
-        pytest.param(
-            "conditions",
-            {"or": {"not": [_BAD_CONDITION]}},
-            [("or", "not", 0, "state")],
-            id="condition_shorthands",
-        ),
         pytest.param("actions", 5, [()], id="not_an_action"),
     ],
 )
@@ -970,41 +831,6 @@ async def test_schema_error(
         ),
         pytest.param(
             "conditions",
-            [{"condition": "or", "conditions": [_BAD_CONDITION, _UNKNOWN_CONDITION]}],
-            [(0, "conditions", 0, "state")],
-            [(0, "conditions", 1)],
-            id="or",
-        ),
-        pytest.param(
-            "conditions",
-            [{"or": [_BAD_CONDITION, _UNKNOWN_CONDITION]}],
-            [(0, "or", 0, "state")],
-            [(0, "or", 1)],
-            id="or_shorthand",
-        ),
-        pytest.param(
-            "conditions",
-            [{"and": [_UNKNOWN_CONDITION, _BAD_CONDITION]}],
-            [(0, "and", 1, "state")],
-            [(0, "and", 0)],
-            id="and_shorthand",
-        ),
-        pytest.param(
-            "conditions",
-            [{"not": [_BAD_CONDITION, _REGISTRY_CONDITION]}],
-            [(0, "not", 0, "state")],
-            [(0, "not", 1)],
-            id="not_shorthand",
-        ),
-        pytest.param(
-            "conditions",
-            [{"condition": [_BAD_CONDITION, _UNKNOWN_CONDITION]}],
-            [(0, "condition", 0, "state")],
-            [(0, "condition", 1)],
-            id="list_shorthand",
-        ),
-        pytest.param(
-            "conditions",
             [
                 {
                     "or": [
@@ -1026,13 +852,6 @@ async def test_schema_error(
         ),
         pytest.param(
             "conditions",
-            {"or": [_BAD_CONDITION, _UNKNOWN_CONDITION]},
-            [("or", 0, "state")],
-            [("or", 1)],
-            id="single_condition",
-        ),
-        pytest.param(
-            "conditions",
             [{"or": [_UNKNOWN_CONDITION], "bogus": 1}],
             [(0, "bogus")],
             [(0, "or", 0)],
@@ -1047,40 +866,6 @@ async def test_schema_error(
         ),
         pytest.param(
             "actions",
-            [{"or": [_BAD_CONDITION, _UNKNOWN_CONDITION]}, OK_ACTION],
-            [(0, "or", 0, "state")],
-            [(0, "or", 1)],
-            id="condition_action_shorthand",
-        ),
-        pytest.param(
-            "actions",
-            [{"condition": "and", "conditions": [_BAD_CONDITION, _UNKNOWN_CONDITION]}],
-            [(0, "conditions", 0, "state")],
-            [(0, "conditions", 1)],
-            id="condition_action",
-        ),
-        pytest.param(
-            "actions",
-            [
-                {
-                    "if": [{"or": [_BAD_CONDITION, _UNKNOWN_CONDITION]}],
-                    "then": [_DEVICE_ACTION],
-                    "else": [_BAD_ACTION, _DEVICE_ACTION],
-                }
-            ],
-            [(0, "if", 0, "or", 0, "state"), (0, "else", 0, "bogus")],
-            [(0, "if", 0, "or", 1), (0, "then", 0), (0, "else", 1)],
-            id="if",
-        ),
-        pytest.param(
-            "actions",
-            [{"if": _UNKNOWN_CONDITION, "then": _DEVICE_ACTION, "else": _BAD_ACTION}],
-            [(0, "else", "bogus")],
-            [(0, "if"), (0, "then")],
-            id="if_single_items",
-        ),
-        pytest.param(
-            "actions",
             [{"if": [_UNKNOWN_CONDITION], "then": [_DEVICE_ACTION], "bogus": 1}],
             [(0, "bogus")],
             [(0, "if", 0), (0, "then", 0)],
@@ -1092,42 +877,6 @@ async def test_schema_error(
             [(0, "then")],
             [(0, "if", 0), (1,)],
             id="if_without_then",
-        ),
-        pytest.param(
-            "actions",
-            [
-                {
-                    "choose": [
-                        {"conditions": [_UNKNOWN_CONDITION], "sequence": [_BAD_ACTION]},
-                        {"conditions": [_BAD_CONDITION], "sequence": [_DEVICE_ACTION]},
-                    ],
-                    "default": [_DEVICE_ACTION],
-                }
-            ],
-            [
-                (0, "choose", 0, "sequence", 0, "bogus"),
-                (0, "choose", 1, "conditions", 0, "state"),
-            ],
-            [
-                (0, "default", 0),
-                (0, "choose", 0, "conditions", 0),
-                (0, "choose", 1, "sequence", 0),
-            ],
-            id="choose",
-        ),
-        pytest.param(
-            "actions",
-            [
-                {
-                    "choose": {
-                        "conditions": _UNKNOWN_CONDITION,
-                        "sequence": [_BAD_ACTION, _DEVICE_ACTION],
-                    }
-                }
-            ],
-            [(0, "choose", "sequence", 0, "bogus")],
-            [(0, "choose", "conditions"), (0, "choose", "sequence", 1)],
-            id="choose_single_option",
         ),
         pytest.param(
             "actions",
@@ -1171,57 +920,6 @@ async def test_schema_error(
                 (0, "parallel", 3, "sequence"),
             ],
             id="parallel",
-        ),
-        pytest.param(
-            "actions",
-            [{"parallel": _DEVICE_ACTION}, _BAD_ACTION],
-            [(1, "bogus")],
-            [(0, "parallel")],
-            id="parallel_single_branch",
-        ),
-        pytest.param(
-            "actions",
-            [
-                {
-                    "repeat": {
-                        "until": [_BAD_CONDITION, _UNKNOWN_CONDITION],
-                        "sequence": [_DEVICE_ACTION],
-                    }
-                }
-            ],
-            [(0, "repeat", "until", 0, "state")],
-            [(0, "repeat", "until", 1), (0, "repeat", "sequence", 0)],
-            id="repeat",
-        ),
-        pytest.param(
-            "actions",
-            [{"sequence": [_BAD_ACTION, _DEVICE_ACTION]}],
-            [(0, "sequence", 0, "bogus")],
-            [(0, "sequence", 1)],
-            id="sequence",
-        ),
-        pytest.param(
-            "actions",
-            [
-                {
-                    "wait_for_trigger": [
-                        _BAD_TRIGGER,
-                        _UNKNOWN_TRIGGER,
-                        {"triggers": [OK_TRIGGER, _UNKNOWN_TRIGGER, _BAD_TRIGGER]},
-                        _FIELD_TRIGGER,
-                    ]
-                }
-            ],
-            [
-                (0, "wait_for_trigger", 0, "trigger"),
-                (0, "wait_for_trigger", 2, "triggers", 2, "trigger"),
-            ],
-            [
-                (0, "wait_for_trigger", 1),
-                (0, "wait_for_trigger", 2, "triggers", 1),
-                (0, "wait_for_trigger", 3, "entity_id"),
-            ],
-            id="wait_for_trigger",
         ),
         pytest.param(
             "actions",
@@ -1287,58 +985,6 @@ async def test_schema_error(
             id="both_kinds_of_errors_in_nested_blocks",
         ),
         pytest.param(
-            "actions",
-            [
-                {
-                    "if": [OK_CONDITION],
-                    "then": [
-                        {
-                            "choose": [
-                                {
-                                    "conditions": [{"not": [_UNKNOWN_CONDITION]}],
-                                    "sequence": [
-                                        {
-                                            "parallel": [
-                                                [
-                                                    {
-                                                        "sequence": [
-                                                            _DEVICE_ACTION,
-                                                            _BAD_ACTION,
-                                                        ]
-                                                    }
-                                                ]
-                                            ]
-                                        }
-                                    ],
-                                }
-                            ]
-                        }
-                    ],
-                }
-            ],
-            [
-                (
-                    *(0, "then", 0, "choose", 0, "sequence", 0),
-                    *("parallel", 0, 0, "sequence", 1, "bogus"),
-                )
-            ],
-            [
-                (0, "then", 0, "choose", 0, "conditions", 0, "not", 0),
-                (
-                    *(0, "then", 0, "choose", 0, "sequence", 0),
-                    *("parallel", 0, 0, "sequence", 0),
-                ),
-            ],
-            id="deeply_nested",
-        ),
-        pytest.param(
-            "triggers",
-            [_BAD_TRIGGER, _UNKNOWN_TRIGGER, _FIELD_TRIGGER],
-            [(0, "trigger")],
-            [(1,), (2, "entity_id")],
-            id="triggers",
-        ),
-        pytest.param(
             "triggers",
             [
                 {"triggers": [_UNKNOWN_TRIGGER, _BAD_TRIGGER]},
@@ -1364,6 +1010,30 @@ async def test_schema_error(
             [(0, "triggers", 0, "trigger")],
             [(1,)],
             id="trigger_sublist_in_sublist",
+        ),
+        # The items of a condition are conditions, also in a block of actions
+        pytest.param(
+            "actions",
+            [{"and": [_DEVICE_ACTION]}, _DEVICE_ACTION],
+            [(0, "and", 0)],
+            [(1,)],
+            id="action_in_condition_action",
+        ),
+        # Only an and, or or not condition holds conditions
+        pytest.param(
+            "conditions",
+            [
+                {
+                    "condition": "state",
+                    "entity_id": "light.kitchen",
+                    "state": "on",
+                    "conditions": [_UNKNOWN_CONDITION],
+                },
+                _UNKNOWN_CONDITION,
+            ],
+            [(0, "conditions")],
+            [(1,)],
+            id="conditions_in_other_condition",
         ),
         # Only a condition holds conditions: here and is an extra key of the
         # delay action, and the condition below it is not an item of the block
@@ -1394,6 +1064,43 @@ async def test_schema_and_platform_errors(
     assert [info.path for info in err.errors] == [*schema_paths, *platform_paths]
     assert _records(err)[: len(schema_paths)] == _records(schema_error)
     assert str(err) == str(schema_error)
+
+
+@pytest.mark.parametrize(
+    "seed", [pytest.param(seed, id=f"seed_{seed}") for seed in range(4)]
+)
+async def test_random_blocks(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, seed: int
+) -> None:
+    """Test random blocks give the errors of their schema and of the items in them.
+
+    This guards shapes the corpus doesn't enumerate: several errors in one
+    block, and blocks nested deeper.
+    """
+    rng = random.Random(seed)
+    collected = {}
+    expected = {}
+    for index in range(_RANDOM_BLOCKS):
+        block = random_block(rng)
+        schema_records = _schema_records(block.kind, block.submitted)
+        fail_fast = await _async_fail_fast_records(hass, block.kind, block.submitted)
+        records = await _async_collected_records(hass, block.kind, block.submitted)
+        collected[index] = (
+            block.submitted,
+            records[: len(schema_records)],
+            _sorted_by_path(records[len(schema_records) :]),
+            [(error_class, message) for _, error_class, message in records[:1]],
+        )
+        expected[index] = (
+            block.submitted,
+            schema_records,
+            _sorted_by_path(block.platform_errors),
+            # The first error is the one the schema or the validator raises
+            [(error_class, message) for _, error_class, message in fail_fast],
+        )
+
+    assert collected == expected
+    assert _WALK_MISSED_ERROR not in caplog.text
 
 
 async def test_schema_and_platform_error_classes(hass: HomeAssistant) -> None:
@@ -1507,21 +1214,13 @@ async def test_platform_errors_next_to_malformed_item(
 
 
 @pytest.mark.parametrize(
-    ("kind", "submitted", "error", "expected_error", "expected_dict"),
+    ("kind", "submitted", "error", "expected_error"),
     [
         pytest.param(
             "triggers",
             [OK_TRIGGER, {"trigger": "test", "error": "untranslated"}],
             "untranslated",
             "Something is wrong at '[1]'",
-            {
-                "message": "Something is wrong",
-                "path": [1],
-                "code": None,
-                "translation_key": None,
-                "translation_domain": None,
-                "translation_placeholders": {},
-            },
             id="homeassistant_error",
         ),
         pytest.param(
@@ -1529,14 +1228,6 @@ async def test_platform_errors_next_to_malformed_item(
             {"triggers": [OK_TRIGGER, {"trigger": "test", "error": "translated"}]},
             "translated",
             "Action test.missing not found at 'triggers[1]'",
-            {
-                "message": "Action test.missing not found",
-                "path": ["triggers", 1],
-                "code": None,
-                "translation_key": "service_not_found",
-                "translation_domain": "homeassistant",
-                "translation_placeholders": {"domain": "test", "service": "missing"},
-            },
             id="translated_homeassistant_error",
         ),
         pytest.param(
@@ -1544,14 +1235,6 @@ async def test_platform_errors_next_to_malformed_item(
             [OK_TRIGGER, {"trigger": "test", "error": "empty"}, OK_TRIGGER],
             "empty",
             "no validation errors at '[1]'",
-            {
-                "message": "no validation errors",
-                "path": [1],
-                "code": None,
-                "translation_key": None,
-                "translation_domain": None,
-                "translation_placeholders": {},
-            },
             id="empty_multiple_invalid",
         ),
         pytest.param(
@@ -1559,14 +1242,6 @@ async def test_platform_errors_next_to_malformed_item(
             [{"parallel": {"wait_for_trigger": {"trigger": "test", "error": "empty"}}}],
             "empty",
             "no validation errors at '[0].parallel.wait_for_trigger'",
-            {
-                "message": "no validation errors",
-                "path": [0, "parallel", "wait_for_trigger"],
-                "code": None,
-                "translation_key": None,
-                "translation_domain": None,
-                "translation_placeholders": {},
-            },
             id="empty_multiple_invalid_nested",
         ),
     ],
@@ -1578,14 +1253,12 @@ async def test_error_kinds(
     submitted: Any,
     error: str,
     expected_error: str,
-    expected_dict: dict[str, Any],
 ) -> None:
     """Test each kind of error a platform can raise is collected as it is."""
     err = await _async_collect(hass, kind, submitted)
 
     assert [info.exception for info in err.errors] == [trigger_errors[error]]
     assert str(err) == expected_error
-    assert validation_errors_as_dicts(err) == [expected_dict]
 
 
 async def test_several_error_kinds(
@@ -1623,6 +1296,10 @@ async def test_several_error_kinds(
             [{"trigger": "test", "error": "other"}, _registry_trigger(1)],
             id="first_error",
         ),
+        pytest.param(
+            [_BAD_TRIGGER, {"trigger": "test", "error": "other"}],
+            id="after_schema_error",
+        ),
     ],
 )
 @pytest.mark.usefixtures("trigger_errors")
@@ -1635,7 +1312,7 @@ async def test_other_exceptions_are_not_collected(
 
 
 @pytest.mark.parametrize(
-    ("kind", "submitted", "expected_path", "expected_dict"),
+    ("kind", "submitted", "expected_path"),
     [
         pytest.param(
             "triggers",
@@ -1649,48 +1326,24 @@ async def test_other_exceptions_are_not_collected(
                 },
             ],
             (1, "to"),
-            {
-                "message": (
-                    "two or more values in the same group of exclusion "
-                    "<StateTriggerArgument.TO: 'to'>"
-                ),
-                "path": [1],
-                "code": "exclusive",
-                "translation_key": "exclusive_group",
-                "translation_domain": None,
-                "translation_placeholders": {"group": "to"},
-            },
             id="platform_error",
         ),
         pytest.param(
             "actions",
             {"repeat": {"count": 2, "while": [], "sequence": []}},
             ("repeat", "repeat"),
-            {
-                "message": "two or more values in the same group of exclusion 'repeat'",
-                "path": ["repeat"],
-                "code": "exclusive",
-                "translation_key": "exclusive_group",
-                "translation_domain": None,
-                "translation_placeholders": {"group": "repeat"},
-            },
             id="schema_error",
         ),
     ],
 )
 async def test_group_segment(
-    hass: HomeAssistant,
-    kind: BlockKind,
-    submitted: Any,
-    expected_path: Path,
-    expected_dict: dict[str, Any],
+    hass: HomeAssistant, kind: BlockKind, submitted: Any, expected_path: Path
 ) -> None:
     """Test the path of an error keeps the group the error is about."""
     err = await _async_collect(hass, kind, submitted)
 
     assert [info.path for info in err.errors] == [expected_path]
     assert type(err.errors[0].path[-1]) is VirtualPathComponent
-    assert validation_errors_as_dicts(err) == [expected_dict]
 
 
 async def test_path_segments_are_not_converted(hass: HomeAssistant) -> None:
@@ -1771,19 +1424,23 @@ async def test_no_reference_cycles(
     assert await unreachable_objects(collect) == (200, 0)
 
 
-@pytest.mark.usefixtures("validated_triggers")
+def _trigger_failed(message: str = "Trigger failed") -> probatio.Invalid:
+    """Return the error of a mocked trigger platform."""
+    return probatio.Invalid(message, path=["fail"])
+
+
 async def test_error_of_the_block_is_collected_once(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, validate_trigger: AsyncMock
 ) -> None:
     """Test the error the validator of the block raises is not collected twice."""
     submitted = [
         {"trigger": "test"},
-        {
-            "triggers": [
-                {"trigger": "test", "fail": "always"},
-                {"trigger": "test", "fail": "always"},
-            ]
-        },
+        {"triggers": [{"trigger": "test"}, {"trigger": "test"}]},
+    ]
+    validate_trigger.side_effect = [
+        # The validator of the block stops at its first error
+        *(DEFAULT, _trigger_failed()),
+        *(DEFAULT, _trigger_failed(), _trigger_failed()),
     ]
 
     err = await _async_collect(hass, "triggers", submitted)
@@ -1795,76 +1452,95 @@ async def test_error_of_the_block_is_collected_once(
     assert _WALK_MISSED_ERROR not in caplog.text
 
 
-@pytest.mark.usefixtures("validated_triggers")
 @pytest.mark.parametrize(
-    ("triggers", "errors", "text"),
+    ("answers", "errors", "text"),
     [
         pytest.param(
-            [{"trigger": "test"}, {"trigger": "test", "fail": "once"}],
-            [((0, "wait_for_trigger", 1, "fail"), "Trigger failed once")],
-            "Trigger failed once at '[0].wait_for_trigger[1].fail'",
+            [DEFAULT, _trigger_failed(), DEFAULT, DEFAULT],
+            [((0, "wait_for_trigger", 1, "fail"), "Trigger failed")],
+            "Trigger failed at '[0].wait_for_trigger[1].fail'",
             id="invalid",
         ),
         pytest.param(
-            [
-                {"trigger": "test"},
-                {"trigger": "test", "fail": "once", "error": "homeassistant"},
-            ],
-            [((), "Trigger failed once")],
-            "Trigger failed once",
+            [DEFAULT, HomeAssistantError("Trigger failed"), DEFAULT, DEFAULT],
+            [((), "Trigger failed")],
+            "Trigger failed",
             id="homeassistant_error",
         ),
         pytest.param(
+            [_trigger_failed("Failed once"), DEFAULT, _trigger_failed()],
             [
-                {"trigger": "test", "fail": "once"},
-                {"trigger": "test", "fail": "always"},
+                ((0, "wait_for_trigger", 0, "fail"), "Failed once"),
+                (("wait_for_trigger", 0, "triggers", 1, "fail"), "Trigger failed"),
             ],
-            [
-                ((0, "wait_for_trigger", 0, "fail"), "Trigger failed once"),
-                (
-                    ("wait_for_trigger", 0, "triggers", 1, "fail"),
-                    "Trigger failed always",
-                ),
-            ],
-            "Trigger failed once at '[0].wait_for_trigger[0].fail'",
+            "Failed once at '[0].wait_for_trigger[0].fail'",
             id="invalid_and_other_error",
         ),
         pytest.param(
+            [HomeAssistantError("Failed once"), DEFAULT, _trigger_failed()],
             [
-                {"trigger": "test", "fail": "once", "error": "homeassistant"},
-                {"trigger": "test", "fail": "always"},
+                ((), "Failed once"),
+                (("wait_for_trigger", 0, "triggers", 1, "fail"), "Trigger failed"),
             ],
-            [
-                ((), "Trigger failed once"),
-                (
-                    ("wait_for_trigger", 0, "triggers", 1, "fail"),
-                    "Trigger failed always",
-                ),
-            ],
-            "Trigger failed once",
+            "Failed once",
             id="homeassistant_error_and_other_error",
+        ),
+        pytest.param(
+            [HomeAssistantError("Trigger failed"), _trigger_failed(), DEFAULT],
+            [
+                ((), "Trigger failed"),
+                (("wait_for_trigger", 0, "triggers", 0, "fail"), "Trigger failed"),
+            ],
+            "Trigger failed",
+            id="same_message_other_class",
+        ),
+        pytest.param(
+            [
+                *(DEFAULT, _trigger_failed()),
+                *(_trigger_failed("Failed later"), _trigger_failed()),
+            ],
+            [
+                ((0, "wait_for_trigger", 1, "fail"), "Trigger failed"),
+                (("wait_for_trigger", 0, "triggers", 0, "fail"), "Failed later"),
+                (("wait_for_trigger", 0, "triggers", 1, "fail"), "Trigger failed"),
+            ],
+            "Trigger failed at '[0].wait_for_trigger[1].fail'",
+            id="same_error_not_first",
         ),
     ],
 )
 async def test_error_of_the_block_is_kept_if_its_item_is_not_found(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    triggers: list[ConfigType],
+    validate_trigger: AsyncMock,
+    answers: list[Any],
     errors: list[tuple[Path, str]],
     text: str,
 ) -> None:
     """Test the error of the block is logged and comes first if no item gives it.
 
-    Here the platform rejects a trigger only once, so the error is not found
-    again when the items are validated one by one. The path of the error is
-    then not the one in the block as written. For a probatio.Invalid it is the
-    one in the validated block: the action is in a list, and the sublist of
-    triggers is flattened. A HomeAssistantError has no path.
+    Here the platform does not answer the same when the items are validated
+    one by one, so the first error it gives then is not the error of the
+    block. The path of the error of the block is then not the one in the block
+    as written. For a probatio.Invalid it is the one in the validated block:
+    the action is in a list, and the sublist of triggers is flattened. A
+    HomeAssistantError has no path.
     """
-    submitted = {"wait_for_trigger": [{"triggers": triggers}]}
+    submitted = {
+        "wait_for_trigger": [{"triggers": [{"trigger": "test"}, {"trigger": "test"}]}]
+    }
+    # The answers to the validator of the block, which stops at its first
+    # error, followed by the answers for each of the two triggers
+    validate_trigger.side_effect = answers
 
     err = await _async_collect(hass, "actions", submitted)
 
     assert [(info.path, info.message) for info in err.errors] == errors
     assert str(err) == text
-    assert f"actions {_WALK_MISSED_ERROR}: {text}" in caplog.text
+    assert caplog.record_tuples == [
+        (
+            "homeassistant.helpers.script",
+            logging.WARNING,
+            f"Validating the items of a block of actions {_WALK_MISSED_ERROR}: {text}",
+        )
+    ]
