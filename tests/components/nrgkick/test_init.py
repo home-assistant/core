@@ -1,6 +1,7 @@
 """Tests for the NRGkick integration initialization."""
 
 from datetime import timedelta
+import logging
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -189,3 +190,39 @@ async def test_json_api_disabled_at_runtime(
     assert (state := hass.states.get(entity_id))
     assert state.state != STATE_UNAVAILABLE
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+@pytest.mark.parametrize(
+    ("exception", "level"),
+    [
+        pytest.param(
+            NRGkickUnreachableError("Connection refused"),
+            logging.INFO,
+            id="unreachable",
+        ),
+        pytest.param(NRGkickTimeoutError("Timeout"), logging.ERROR, id="timeout"),
+    ],
+)
+async def test_refresh_log_level(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_nrgkick_api: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    exception: Exception,
+    level: int,
+) -> None:
+    """Test an unreachable device is logged at info level."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_nrgkick_api.get_info.side_effect = exception
+    freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert [
+        record.levelno
+        for record in caplog.records
+        if record.name == "homeassistant.components.nrgkick.coordinator"
+        and record.levelno > logging.DEBUG
+    ] == [level]
