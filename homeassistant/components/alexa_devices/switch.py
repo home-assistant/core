@@ -170,6 +170,7 @@ async def async_setup_entry(
 
     known_devices: set[str] = set()
     known_dnd_devices: set[str] = set()
+    known_communication_switches: set[tuple[str, str]] = set()
 
     def _check_device() -> None:
         current_devices = set(coordinator.data)
@@ -183,6 +184,19 @@ async def async_setup_entry(
             current_devices & coordinator.dnd_states.keys()
         ) - known_dnd_devices
 
+        known_communication_switches.intersection_update(
+            (serial_num, key)
+            for serial_num, key in tuple(known_communication_switches)
+            if serial_num in current_devices
+        )
+        new_communication_switches = [
+            (serial_num, switch_desc)
+            for serial_num in current_devices
+            for switch_desc in COMMUNICATION_SWITCHES
+            if switch_desc.key in coordinator.data[serial_num].communication_settings
+            and (serial_num, switch_desc.key) not in known_communication_switches
+        ]
+
         async_add_entities(
             [
                 AmazonSwitchEntity(coordinator, serial_num, DND_SWITCH)
@@ -190,10 +204,7 @@ async def async_setup_entry(
             ]
             + [
                 AmazonSwitchEntity(coordinator, serial_num, switch_desc)
-                for switch_desc in COMMUNICATION_SWITCHES
-                for serial_num in new_devices
-                if switch_desc.key
-                in coordinator.data[serial_num].communication_settings
+                for serial_num, switch_desc in new_communication_switches
             ]
             + [
                 AmazonSwitchEntity(coordinator, serial_num, switch_desc)
@@ -201,6 +212,10 @@ async def async_setup_entry(
                 for serial_num in new_devices
                 if _has_feature_sensor(coordinator.data[serial_num], switch_desc.key)
             ]
+        )
+        known_communication_switches.update(
+            (serial_num, switch_desc.key)
+            for serial_num, switch_desc in new_communication_switches
         )
         known_dnd_devices.update(new_dnd_devices)
         known_devices.update(new_devices)
