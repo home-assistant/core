@@ -8,6 +8,7 @@ import contextlib
 from datetime import datetime, timedelta
 from typing import Any, cast, override
 
+from samsungtvws.art import SamsungTVArt
 from samsungtvws.async_remote import SamsungTVWSAsyncRemote
 from samsungtvws.async_rest import SamsungTVAsyncRest
 from samsungtvws.command import SamsungTVCommand
@@ -29,6 +30,7 @@ from samsungtvws.exceptions import (
 )
 from samsungtvws.legacy.remote import SamsungTVLegacyAsyncRemote
 from samsungtvws.remote import ChannelEmitCommand, SendRemoteKey
+from websocket import WebSocketException as SyncWebSocketException
 from websockets.exceptions import ConnectionClosedError, WebSocketException
 
 from homeassistant.const import (
@@ -225,6 +227,20 @@ class SamsungTVBridge(ABC):
     @abstractmethod
     async def async_is_on(self) -> bool:
         """Tells if the TV is on."""
+
+    @property
+    def supports_art_mode(self) -> bool:
+        """Return True if the TV supports the Frame art mode API."""
+        return False
+
+    @property
+    def art_mode_support_unknown(self) -> bool:
+        """Return True if Frame support can not be determined yet."""
+        return False
+
+    async def async_get_art_mode(self) -> bool | None:
+        """Return True if the TV is showing art, None if unknown."""
+        return None
 
     @abstractmethod
     async def async_send_keys(self, keys: list[str]) -> None:
@@ -614,6 +630,58 @@ class SamsungTVWSBridge(
             return device_info
 
         return None if force else self._device_info
+
+    @property
+    @override
+    def supports_art_mode(self) -> bool:
+        """Return True if the TV supports the Frame art mode API."""
+        return self._get_device_spec("FrameTVSupport") == "true"
+
+    @property
+    @override
+    def art_mode_support_unknown(self) -> bool:
+        """Return True while the device info has not been read yet."""
+        return self._device_info is None
+
+    @override
+    async def async_get_art_mode(self) -> bool | None:
+        """Return True if the TV is showing art, None if unknown."""
+        status, token = await self.hass.async_add_executor_job(self._get_art_mode)
+        if token and token != self.token:
+            LOGGER.debug("Art mode connection to %s provided a new token", self.host)
+            self.token = token
+            self._notify_update_config_entry({CONF_TOKEN: token})
+        if status == "on":
+            return True
+        if status == "off":
+            return False
+        return None
+
+    def _get_art_mode(self) -> tuple[str | None, str | None]:
+        """Read the art mode status over the art app channel."""
+        assert self.port
+        # samsungtvws does not annotate the art API
+        art = SamsungTVArt(  # type: ignore[no-untyped-call]
+            host=self.host,
+            port=self.port,
+            token=self.token,
+            timeout=TIMEOUT_WEBSOCKET,
+            name=VALUE_CONF_NAME,
+        )
+        try:
+            status: str | None = art.get_artmode()  # type: ignore[no-untyped-call]
+        except (
+            ConnectionFailure,
+            ResponseError,
+            SyncWebSocketException,
+            OSError,
+        ) as err:
+            LOGGER.debug("Failed to get art mode from %s: %s", self.host, repr(err))
+            status = None
+        finally:
+            art.close()
+        # The TV may hand the art connection a refreshed token; keep it
+        return status, art.token
 
     async def async_launch_app(self, app_id: str) -> None:
         """Send the launch_app command using websocket protocol."""

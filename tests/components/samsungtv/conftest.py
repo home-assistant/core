@@ -10,6 +10,7 @@ from async_upnp_client.event_handler import UpnpEventHandler
 from async_upnp_client.exceptions import UpnpConnectionError
 import pytest
 from pytest_homeassistant.common import async_load_json_object_fixture
+from samsungtvws.art import SamsungTVArt
 from samsungtvws.async_remote import SamsungTVWSAsyncRemote
 from samsungtvws.command import SamsungTVCommand
 from samsungtvws.encrypted.remote import SamsungTVEncryptedWSAsyncRemote
@@ -257,6 +258,19 @@ def remote_websocket_fixture() -> Generator[Mock]:
         return_value=remote_websocket,
     ):
         yield remote_websocket
+
+
+@pytest.fixture(name="art_api", autouse=True)
+def art_api_fixture() -> Generator[Mock]:
+    """Patch the samsungtvws SamsungTVArt."""
+    art_api = Mock(SamsungTVArt)
+    art_api.get_artmode.return_value = "on"
+    art_api.token = None
+    with patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVArt",
+        return_value=art_api,
+    ):
+        yield art_api
 
 
 @pytest.fixture(name="remote_encrypted_websocket")
