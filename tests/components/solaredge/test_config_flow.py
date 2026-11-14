@@ -149,10 +149,15 @@ async def test_duplicate_legacy_site_is_rejected(
         pytest.param(ClientError(), "cannot_connect", id="connection-error"),
     ],
 )
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_user_web_auth_errors(
     recorder_mock: Recorder,
     hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
     setup_credentials: None,
+    mock_setup_entry: AsyncMock,
+    solaredge_api: AsyncMock,
     solaredge_web_api: AsyncMock,
     error: Exception,
     flow_error: str,
@@ -176,6 +181,28 @@ async def test_user_web_auth_errors(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": flow_error}
+
+    solaredge_web_api.async_get_equipment.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_SITE_ID: SITE_ID,
+            CONF_SECTION_WEB_AUTH: {
+                CONF_USERNAME: "user",
+                CONF_PASSWORD: "password",
+            },
+        },
+    )
+    result = await _complete_oauth(
+        hass,
+        hass_client_no_auth,
+        aioclient_mock,
+        result["flow_id"],
+        result["url"],
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == SITE_ID
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -264,6 +291,7 @@ async def test_oauth_uses_access_token_for_site_validation(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == SITE_ID
 
 
 @pytest.mark.parametrize(
@@ -526,6 +554,20 @@ async def test_reconfigure_web_auth_error(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
     assert CONF_USERNAME not in mock_config_entry.data
+
+    solaredge_web_api.async_get_equipment.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_SECTION_WEB_AUTH: {
+                CONF_USERNAME: "user",
+                CONF_PASSWORD: "password",
+            }
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
 
 async def test_migration_starts_reauth(
