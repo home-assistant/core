@@ -1,4 +1,15 @@
 {
+  "exceptions": {
+    "end_time_before_start_time": {
+      "message": "End time must be greater than or equal to start time"
+    },
+    "max_records_exceeded": {
+      "message": "More than {max_records} state changes were recorded for {entity_id} in the requested period. Use a shorter period or set allow truncation."
+    },
+    "start_time_in_future": {
+      "message": "Start time must be in the past"
+    }
+  },
   "issues": {
     "backup_failed_out_of_resources": {
       "description": "The database backup stated at {start_time} failed due to lack of resources. The backup cannot be trusted and must be restarted. This can happen if the database is too large or if the system is under heavy load. Consider upgrading the system hardware or reducing the size of the database by decreasing the number of history days to keep or creating a filter.",
@@ -25,6 +36,28 @@
     "enable": {
       "description": "Starts the recording of events and state changes.",
       "name": "Enable Recorder"
+    },
+    "get_history": {
+      "description": "Retrieves history data for entities within a specific time period.",
+      "fields": {
+        "allow_truncation": {
+          "description": "Truncate the returned history instead of raising an error when an entity exceeds the limit of recorded state changes. The limit applies to recorded state changes, not returned segments.",
+          "name": "Allow truncation"
+        },
+        "end_time": {
+          "description": "The end time for the history query. If omitted, returns all history from start time onward.",
+          "name": "End time"
+        },
+        "entity_id": {
+          "description": "The entity IDs to return history for.",
+          "name": "Entities"
+        },
+        "start_time": {
+          "description": "The start time for the history query.",
+          "name": "Start time"
+        }
+      },
+      "name": "Get Recorder history"
     },
     "get_statistics": {
       "description": "Retrieves statistics data for entities within a specific time period.",

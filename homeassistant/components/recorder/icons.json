@@ -6,6 +6,9 @@
     "enable": {
       "service": "mdi:database"
     },
+    "get_history": {
+      "service": "mdi:chart-box-multiple"
+    },
     "get_statistics": {
       "service": "mdi:chart-bar"
     },
