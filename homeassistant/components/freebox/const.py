@@ -20,6 +20,7 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CAMERA,
+    Platform.COVER,
     Platform.DEVICE_TRACKER,
     Platform.SENSOR,
     Platform.SWITCH,
@@ -73,13 +74,14 @@ class FreeboxHomeCategory(enum.StrEnum):
     """Freebox Home categories."""
 
     ALARM = "alarm"
+    BASIC_SHUTTER = "basic_shutter"
     CAMERA = "camera"
     DWS = "dws"
     IOHOME = "iohome"
     KFB = "kfb"
-    OPENER = "opener"
     PIR = "pir"
     RTS = "rts"
+    SHUTTER = "shutter"
 
 
 CATEGORY_TO_MODEL = {
@@ -89,15 +91,18 @@ CATEGORY_TO_MODEL = {
     FreeboxHomeCategory.KFB: "F-HAKFB01A",
     FreeboxHomeCategory.ALARM: "F-MSEC07A",
     FreeboxHomeCategory.RTS: "RTS",
+    FreeboxHomeCategory.BASIC_SHUTTER: "RTS",
     FreeboxHomeCategory.IOHOME: "IOHome",
 }
 
 HOME_COMPATIBLE_CATEGORIES = [
     FreeboxHomeCategory.ALARM,
+    FreeboxHomeCategory.BASIC_SHUTTER,
     FreeboxHomeCategory.CAMERA,
     FreeboxHomeCategory.DWS,
     FreeboxHomeCategory.IOHOME,
     FreeboxHomeCategory.KFB,
     FreeboxHomeCategory.PIR,
     FreeboxHomeCategory.RTS,
+    FreeboxHomeCategory.SHUTTER,
 ]

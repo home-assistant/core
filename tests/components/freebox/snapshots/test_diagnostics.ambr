@@ -575,6 +575,68 @@
         'type': 'node::domus::sercomm::pir',
       }),
       dict({
+        'category': 'shutter',
+        'endpoints': list([
+          dict({
+            'ep_type': 'signal',
+            'id': 4,
+            'name': 'position_set',
+            'value': 0,
+            'value_type': 'int',
+          }),
+          dict({
+            'ep_type': 'signal',
+            'id': 5,
+            'name': 'state',
+            'value': 'stop',
+            'value_type': 'string',
+          }),
+        ]),
+        'firmware_version': 1,
+        'id': 150,
+        'status': None,
+        'type': None,
+      }),
+      dict({
+        'category': 'shutter',
+        'endpoints': list([
+          dict({
+            'ep_type': 'signal',
+            'id': 4,
+            'name': 'position_set',
+            'value': 0,
+            'value_type': 'int',
+          }),
+          dict({
+            'ep_type': 'signal',
+            'id': 5,
+            'name': 'state',
+            'value': 'stop',
+            'value_type': 'string',
+          }),
+        ]),
+        'firmware_version': 1,
+        'id': 151,
+        'status': None,
+        'type': None,
+      }),
+      dict({
+        'category': 'basic_shutter',
+        'endpoints': list([
+          dict({
+            'ep_type': 'signal',
+            'id': 3,
+            'name': 'state',
+            'value': False,
+            'value_type': 'bool',
+          }),
+        ]),
+        'firmware_version': 1,
+        'id': 152,
+        'status': None,
+        'type': None,
+      }),
+      dict({
         'category': 'alarm',
         'endpoints': list([
           dict({
