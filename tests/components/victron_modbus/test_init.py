@@ -52,6 +52,22 @@ async def test_setup_retries_when_nothing_could_be_read(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == "no_readings"
+
+
+async def test_setup_retries_when_the_device_stops_answering(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_unit
+) -> None:
+    """A device that is identified but then times out can't be connected to."""
+    mock_unit.fail_read(0x3034, ModbusTimeoutError())
+    mock_unit.fail_read(0x3040, ModbusTimeoutError())
+    mock_config_entry.add_to_hass(hass)
+
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == "cannot_connect"
 
 
 async def test_setup_retries_when_identification_fails(
@@ -65,6 +81,7 @@ async def test_setup_retries_when_identification_fails(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == "cannot_connect"
 
 
 @pytest.mark.parametrize(

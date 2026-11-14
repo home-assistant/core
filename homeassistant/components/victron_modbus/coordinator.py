@@ -6,7 +6,7 @@ from datetime import timedelta
 import logging
 from typing import Self, override
 
-from modbus_connection import ModbusError
+from modbus_connection import ModbusError, ModbusExceptionError
 from victron_modbus import FAST_SUB_SYSTEMS, SLOW_SUB_SYSTEMS, UpdateReport
 
 from homeassistant.config_entries import ConfigEntry
@@ -68,9 +68,15 @@ class VictronModbusCoordinator(DataUpdateCoordinator[UpdateReport]):
             failed |= partial.failed
         report = UpdateReport(updated=updated, failed=failed)
         if not report.updated:
+            # An exception response means the device answered; anything else,
+            # such as a timeout, means it couldn't be reached.
+            answered = any(
+                isinstance(err, ModbusExceptionError) for err in failed.values()
+            )
             raise UpdateFailed(
-                translation_domain=DOMAIN, translation_key="no_readings"
-            ) from ExceptionGroup("every read failed", list(report.failed.values()))
+                translation_domain=DOMAIN,
+                translation_key="no_readings" if answered else "cannot_connect",
+            ) from ExceptionGroup("every read failed", list(failed.values()))
         # The coordinator logs a failed poll once; do the same per sub-system.
         for name in report.failed.keys() - self._failed:
             _LOGGER.warning("Could not read %s: %s", name, report.failed[name])
