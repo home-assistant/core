@@ -90,6 +90,7 @@ def _director_mock(
         ),
     ):
         mock_director = mock_director_class.return_value
+        mock_director.director_bearer_token = "test"
         mock_director.get_all_item_info = AsyncMock(return_value=all_items)
         mock_director.get_ui_configuration = AsyncMock(return_value=ui_config)
         mock_director.get_item_variables = AsyncMock(return_value=[])
@@ -108,6 +109,44 @@ def mock_c4_director() -> Generator[MagicMock]:
         copy.deepcopy(load_json_object_fixture("ui_configuration.json", DOMAIN)),
     )
     yield from _director_mock(all_items, ui_config)
+
+
+@pytest.fixture(autouse=True)
+def mock_c4_websocket() -> Generator[MagicMock]:
+    """Mock C4Websocket, tracking callbacks so tests can drive disconnects through the real path."""
+    item_callbacks: dict[int, list] = {}
+
+    def _add_item_callback(item_id, callback):
+        item_callbacks.setdefault(item_id, []).append(callback)
+
+    def _remove_item_callback(item_id, callback):
+        callbacks = item_callbacks.get(item_id, [])
+        if callback in callbacks:
+            callbacks.remove(callback)
+
+    with patch(
+        "homeassistant.components.control4.C4Websocket", autospec=True
+    ) as mock_ws_class:
+        mock_ws = mock_ws_class.return_value
+        mock_ws.sio_connect = AsyncMock()
+        mock_ws.sio_disconnect = AsyncMock()
+        mock_ws.add_item_callback = MagicMock(side_effect=_add_item_callback)
+        mock_ws.remove_item_callback = MagicMock(side_effect=_remove_item_callback)
+        mock_ws.item_callbacks = item_callbacks
+        mock_ws.connect_callback = None
+        mock_ws.disconnect_callback = None
+
+        def _capture_callbacks(*args, **kwargs):
+            mock_ws.connect_callback = kwargs.get(
+                "connect_callback", args[2] if len(args) > 2 else None
+            )
+            mock_ws.disconnect_callback = kwargs.get(
+                "disconnect_callback", args[3] if len(args) > 3 else None
+            )
+            return mock_ws
+
+        mock_ws_class.side_effect = _capture_callbacks
+        yield mock_ws
 
 
 @pytest.fixture
