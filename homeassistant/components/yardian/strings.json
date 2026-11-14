@@ -56,6 +56,14 @@
       }
     }
   },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "invalid_auth": {
+      "message": "[%key:common::config_flow::error::invalid_auth%]"
+    }
+  },
   "services": {
     "start_irrigation": {
       "description": "Start a zone with a duration.",
