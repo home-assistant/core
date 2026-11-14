@@ -1031,14 +1031,14 @@
     },
     "aquostv": {
       "name": "Sharp Aquos TV",
-      "integration_type": "hub",
+      "integration_type": "device",
       "categories": [
         "media_entertainment.tv_streaming"
       ],
       "connectivity": [
         "network"
       ],
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "aqvify": {

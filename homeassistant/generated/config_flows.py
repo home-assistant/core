@@ -80,6 +80,7 @@ FLOWS = {
         "apsystems",
         "aquacell",
         "aqualogic",
+        "aquostv",
         "aqvify",
         "aranet",
         "arcam_fmj",

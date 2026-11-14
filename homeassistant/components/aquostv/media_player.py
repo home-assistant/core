@@ -13,6 +13,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaPlayerState,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -21,19 +22,26 @@ from homeassistant.const import (
     CONF_TIMEOUT,
     CONF_USERNAME,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from . import AquosConfigEntry
+from .const import CONF_POWER_ON_ENABLED, DEFAULT_NAME, DEFAULT_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = "Sharp Aquos TV"
-DEFAULT_PORT = 10002
+INTEGRATION_TITLE = "Sharp Aquos TV"
 DEFAULT_USERNAME = "admin"
 DEFAULT_PASSWORD = "password"
 DEFAULT_TIMEOUT = 0.5
 DEFAULT_RETRIES = 2
+MAX_VOLUME = 100
 
 PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
@@ -46,7 +54,7 @@ PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
         ): cv.string,
         probatio.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.string,
         probatio.Optional("retries", default=DEFAULT_RETRIES): cv.string,
-        probatio.Optional("power_on_enabled", default=False): cv.boolean,
+        probatio.Optional(CONF_POWER_ON_ENABLED, default=True): cv.boolean,
     }
 )
 
@@ -63,23 +71,47 @@ SOURCES = {
 }
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Sharp Aquos TV platform."""
+    """Import the YAML platform configuration into a config entry."""
+    await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+    )
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2027.6.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": INTEGRATION_TITLE,
+        },
+    )
 
-    name = config[CONF_NAME]
-    port = config[CONF_PORT]
-    username = config[CONF_USERNAME]
-    password = config[CONF_PASSWORD]
-    power_on_enabled = config["power_on_enabled"]
-    host = config[CONF_HOST]
-    remote = sharp_aquos_rc.TV(host, port, username, password, 15, 1)
 
-    add_entities([SharpAquosTVDevice(name, remote, power_on_enabled)])
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: AquosConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the Sharp Aquos TV media player from a config entry."""
+    async_add_entities(
+        [
+            SharpAquosTVDevice(
+                entry,
+                entry.runtime_data,
+                entry.options.get(CONF_POWER_ON_ENABLED, True),
+            )
+        ]
+    )
 
 
 def _retry[_SharpAquosTVDeviceT: SharpAquosTVDevice, **_P](
@@ -117,19 +149,25 @@ class SharpAquosTVDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.VOLUME_SET
         | MediaPlayerEntityFeature.PLAY
     )
-    _attr_volume_step = 2 / 60
+    _attr_volume_step = 2 / MAX_VOLUME
+
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
-        self, name: str, remote: sharp_aquos_rc.TV, power_on_enabled: bool = False
+        self, entry: AquosConfigEntry, remote: sharp_aquos_rc.TV, power_on_enabled: bool
     ) -> None:
         """Initialize the aquos device."""
         self._power_on_enabled = power_on_enabled
         if power_on_enabled:
             self._attr_supported_features |= MediaPlayerEntityFeature.TURN_ON
-        # Save a reference to the imported class
-        self._attr_name = name
-        # Assume that the TV is not muted
         self._remote = remote
+        self._attr_unique_id = entry.entry_id
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, entry.entry_id)},
+            name=entry.title,
+            manufacturer="Sharp",
+        )
 
     def set_state(self, state: MediaPlayerState) -> None:
         """Set TV state."""
@@ -142,7 +180,6 @@ class SharpAquosTVDevice(MediaPlayerEntity):
             self._attr_state = MediaPlayerState.ON
         else:
             self._attr_state = MediaPlayerState.OFF
-        # Set TV to be able to remotely power on
         if self._power_on_enabled:
             self._remote.power_on_command_settings(2)
         else:
@@ -155,7 +192,7 @@ class SharpAquosTVDevice(MediaPlayerEntity):
         # Get source
         self._attr_source = SOURCES.get(self._remote.input())
         # Get volume
-        self._attr_volume_level = self._remote.volume() / 60
+        self._attr_volume_level = self._remote.volume() / MAX_VOLUME
 
     @_retry
     @override
@@ -167,7 +204,7 @@ class SharpAquosTVDevice(MediaPlayerEntity):
     @override
     def set_volume_level(self, volume: float) -> None:
         """Set Volume media player."""
-        self._remote.volume(int(volume * 60))
+        self._remote.volume(round(volume * MAX_VOLUME))
 
     @_retry
     @override
