@@ -1,0 +1,44 @@
+---
+title: "2026.11: Target release"
+---
+
+## Integrations
+
+### Noteworthy improvements to existing integrations
+
+- **[Philips Hue]** now shows the bridge firmware. Thanks, [@dave]!
+
+### Integration quality scale achievements
+
+- **2 integrations reached gold** 🥇
+  - [Philips Hue], thanks to [@dave] and [@erin]
+  - [Shelly], thanks to [@carol]
+
+## Backward-incompatible changes
+
+{% details "Philips Hue" %}
+
+Scenes are now {% term entities %} of their own.
+
+([@dave] - [#3000]) ([documentation](/integrations/hue))
+
+[#3000]: https://github.com/home-assistant/core/pull/3000
+
+{% enddetails %}
+
+{% details "Gardena Bluetooth" %}
+
+The valve's sensor now reports a fixed set of values.
+
+([@elupus] - [#4000])
+
+[#4000]: https://github.com/home-assistant/core/pull/4000
+
+{% enddetails %}
+
+[Gardena Bluetooth]: /integrations/gardena_bluetooth
+[Philips Hue]: /integrations/hue
+[Shelly]: /integrations/shelly
+[@carol]: https://github.com/carol
+[@dave]: https://github.com/dave
+[@erin]: https://github.com/erin
