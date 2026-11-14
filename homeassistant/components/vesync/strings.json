@@ -50,6 +50,19 @@
         "name": "Reset filter"
       }
     },
+    "climate": {
+      "vesync": {
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "auto": "[%key:common::state::auto%]",
+              "circulate": "Circulate",
+              "on": "[%key:common::state::on%]"
+            }
+          }
+        }
+      }
+    },
     "fan": {
       "vesync": {
         "state_attributes": {

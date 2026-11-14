@@ -18,6 +18,9 @@ ENTITY_PEDESTAL_FAN = "fan.corebreeze_432s"
 
 ENTITY_SWITCH_DISPLAY = "switch.humidifier_200s_display"
 
+ENTITY_THERMOSTAT = "climate.aura_thermostat"
+THERMOSTAT_CLASS = "pyvesync.devices.vesyncthermostat.VeSyncAuraThermostat"
+
 DEVICE_CATEGORIES = [
     "outlets",
     "switches",
@@ -104,6 +107,9 @@ DEVICE_FIXTURES: dict[str, list[tuple[str, str, str]]] = {
             "/cloud/v1/deviceManaged/bypass",
             "air-fryer-CS158-AF-detail-cooking.json",
         )
+    ],
+    "Aura Thermostat": [
+        ("post", "/cloud/v2/deviceManaged/bypassV2", "thermostat-detail.json")
     ],
 }
 

@@ -8,6 +8,7 @@ from pyvesync.base_devices.fan_base import VeSyncFanBase
 from pyvesync.base_devices.fryer_base import VeSyncFryer
 from pyvesync.base_devices.outlet_base import VeSyncOutlet
 from pyvesync.base_devices.purifier_base import VeSyncPurifier
+from pyvesync.base_devices.thermostat_base import VeSyncThermostat
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
 from pyvesync.const import ProductTypes
 from pyvesync.devices.vesyncswitch import VeSyncWallSwitch
@@ -73,3 +74,9 @@ def is_air_fryer(device: VeSyncBaseDevice) -> TypeGuard[VeSyncFryer]:
     """Check if the device represents an air fryer."""
 
     return device.product_type == ProductTypes.AIR_FRYER
+
+
+def is_thermostat(device: VeSyncBaseDevice) -> TypeGuard[VeSyncThermostat]:
+    """Check if the device represents a thermostat."""
+
+    return device.product_type == ProductTypes.THERMOSTAT
