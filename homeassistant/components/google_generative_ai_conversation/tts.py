@@ -1,6 +1,6 @@
 """Text to speech support for Google Generative AI."""
 
-from collections.abc import Mapping
+from collections.abc import AsyncGenerator, Mapping
 from enum import StrEnum
 from typing import Any, override
 
@@ -11,6 +11,8 @@ from propcache.api import cached_property
 from homeassistant.components.tts import (
     TextToSpeechCommonOption,
     TextToSpeechEntity,
+    TTSAudioRequest,
+    TTSAudioResponse,
     TtsAudioType,
     Voice,
 )
@@ -33,7 +35,7 @@ from .entity import (
     supports_speech_metadata,
     supports_voice_library,
 )
-from .helpers import convert_to_wav
+from .helpers import convert_to_wav, streaming_wav_header
 
 
 class GoogleGenerativeAITextToSpeechOption(StrEnum):
@@ -44,6 +46,29 @@ class GoogleGenerativeAITextToSpeechOption(StrEnum):
 
 VOICES_PAGE_SIZE = 1000
 VOICES_MAX_PAGES = 10
+
+
+def _extract_audio_parts(
+    response: types.GenerateContentResponse,
+) -> tuple[bytes, str] | None:
+    """Return the audio payload of a response, if it carries one."""
+    if (
+        not response.candidates
+        or not response.candidates[0].content
+        or not response.candidates[0].content.parts
+        or not response.candidates[0].content.parts[0].inline_data
+    ):
+        return None
+
+    data = response.candidates[0].content.parts[0].inline_data.data
+    mime_type = response.candidates[0].content.parts[0].inline_data.mime_type
+
+    if not isinstance(data, bytes):
+        raise TypeError(f"Expected bytes for audio data, got {type(data).__name__}")
+    if not isinstance(mime_type, str):
+        raise TypeError(f"Expected str for mime_type, got {type(mime_type).__name__}")
+
+    return data, mime_type
 
 
 async def async_setup_entry(
@@ -342,11 +367,10 @@ class GoogleGenerativeAITextToSpeechEntity(
             TextToSpeechCommonOption.VOICE: self._supported_voices[0].voice_id,
         }
 
-    @override
-    async def async_get_tts_audio(
-        self, message: str, language: str, options: dict[str, Any]
-    ) -> TtsAudioType:
-        """Load tts audio file from the engine."""
+    def _build_request(
+        self, message: str, options: dict[str, Any]
+    ) -> tuple[str, str | types.Part, types.GenerateContentConfig]:
+        """Build the model, contents and config for a speech request."""
         model = self.subentry.data.get(CONF_CHAT_MODEL, RECOMMENDED_TTS_MODEL)
         config = types.GenerateContentConfig()
         if supports_custom_sampling(model):
@@ -369,30 +393,14 @@ class GoogleGenerativeAITextToSpeechEntity(
                 speech_metadata=types.SpeechMetadata(style=style),
             )
 
-        def _extract_audio_parts(
-            response: types.GenerateContentResponse,
-        ) -> tuple[bytes, str]:
-            if (
-                not response.candidates
-                or not response.candidates[0].content
-                or not response.candidates[0].content.parts
-                or not response.candidates[0].content.parts[0].inline_data
-            ):
-                raise ValueError("No content returned from TTS generation")
+        return model, contents, config
 
-            data = response.candidates[0].content.parts[0].inline_data.data
-            mime_type = response.candidates[0].content.parts[0].inline_data.mime_type
-
-            if not isinstance(data, bytes):
-                raise TypeError(
-                    f"Expected bytes for audio data, got {type(data).__name__}"
-                )
-            if not isinstance(mime_type, str):
-                raise TypeError(
-                    f"Expected str for mime_type, got {type(mime_type).__name__}"
-                )
-
-            return data, mime_type
+    @override
+    async def async_get_tts_audio(
+        self, message: str, language: str, options: dict[str, Any]
+    ) -> TtsAudioType:
+        """Load tts audio file from the engine."""
+        model, contents, config = self._build_request(message, options)
 
         try:
             response = await self._genai_client.aio.models.generate_content(
@@ -401,11 +409,67 @@ class GoogleGenerativeAITextToSpeechEntity(
                 config=config,
             )
 
-            data, mime_type = _extract_audio_parts(response)
+            audio_parts = _extract_audio_parts(response)
         except (APIError, ClientError, ValueError, TypeError) as exc:
             # pylint: disable-next=home-assistant-log-and-raise
             LOGGER.error("Error during TTS: %s", exc, exc_info=True)
             raise HomeAssistantError(exc) from exc
+
+        if audio_parts is None:
+            # pylint: disable-next=home-assistant-log-and-raise
+            LOGGER.error("Error during TTS: no content returned")
+            raise HomeAssistantError("No content returned from TTS generation")
+
+        data, mime_type = audio_parts
         if mime_type == "audio/wav":
             return "wav", data
         return "wav", convert_to_wav(data, mime_type)
+
+    @override
+    async def async_stream_tts_audio(
+        self, request: TTSAudioRequest
+    ) -> TTSAudioResponse:
+        """Generate speech from an incoming message."""
+        message = "".join([chunk async for chunk in request.message_gen])
+        return TTSAudioResponse(
+            "wav", self._async_stream_audio(message, request.options)
+        )
+
+    async def _async_stream_audio(
+        self, message: str, options: dict[str, Any]
+    ) -> AsyncGenerator[bytes]:
+        """Yield audio as the model produces it."""
+        model, contents, config = self._build_request(message, options)
+
+        started = False
+        try:
+            stream = await self._genai_client.aio.models.generate_content_stream(
+                model=model,
+                contents=contents,
+                config=config,
+            )
+
+            async for response in stream:
+                if (audio_parts := _extract_audio_parts(response)) is None:
+                    continue
+                data, mime_type = audio_parts
+                if not data:
+                    continue
+
+                if not started:
+                    started = True
+                    if mime_type != "audio/wav":
+                        # Raw PCM needs a header that says the length is not
+                        # known yet; a complete WAV response brings its own.
+                        yield streaming_wav_header(mime_type)
+
+                yield data
+        except (APIError, ClientError, ValueError, TypeError) as exc:
+            # pylint: disable-next=home-assistant-log-and-raise
+            LOGGER.error("Error during TTS stream: %s", exc, exc_info=True)
+            raise HomeAssistantError(exc) from exc
+
+        if not started:
+            # pylint: disable-next=home-assistant-log-and-raise
+            LOGGER.error("Error during TTS stream: no content returned")
+            raise HomeAssistantError("No content returned from TTS generation")
