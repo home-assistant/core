@@ -227,7 +227,7 @@ async def test_setup_all_platforms(
     prev_devices = len(device_registry.devices)
 
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert len(device_registry.devices) == prev_devices + 1
 
