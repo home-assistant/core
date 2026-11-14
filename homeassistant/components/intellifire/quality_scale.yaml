@@ -1,0 +1,80 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: This integration does not register any custom service actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage:
+    status: todo
+    comment: Duplicate-entry aborts and options flow error recovery are not tested.
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: No service actions are provided by this integration.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: todo
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry:
+    status: todo
+    comment: The single-fireplace auto-create path does not set a unique ID on the entry.
+
+  # Silver
+  action-exceptions:
+    status: todo
+    comment: Entity action methods do not raise HomeAssistantError when the device command fails.
+  config-entry-unloading: done
+  docs-configuration-parameters: todo
+  docs-installation-parameters: todo
+  entity-unavailable: todo
+  integration-owner: done
+  log-when-unavailable: todo
+  parallel-updates: todo
+  reauthentication-flow: done
+  test-coverage: todo
+
+  # Gold
+  devices:
+    status: todo
+    comment: Device info is missing sw_version and serial_number, and the device name and identifier domain are hardcoded literals.
+  diagnostics: todo
+  discovery: done
+  discovery-update-info: todo
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions:
+    status: todo
+    comment: Docs are missing the read/control mode sensors and the connectivity binary sensors.
+  docs-troubleshooting: done
+  docs-use-cases: todo
+  dynamic-devices: todo
+  entity-category: done
+  entity-device-class: todo
+  entity-disabled-by-default: todo
+  entity-translations: todo
+  exception-translations: todo
+  icon-translations: todo
+  reconfiguration-flow: todo
+  repair-issues: todo
+  stale-devices: todo
+
+  # Platinum
+  async-dependency: todo
+  inject-websession: todo
+  strict-typing: todo
