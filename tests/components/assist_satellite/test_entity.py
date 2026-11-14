@@ -9,7 +9,7 @@ import probatio
 import pytest
 from pytest_homeassistant.common import MockUser
 
-from homeassistant.components import stt, voice_support
+from homeassistant.components import stt
 from homeassistant.components.assist_pipeline import (
     OPTION_PREFERRED,
     AudioSettings,
@@ -1223,57 +1223,3 @@ async def test_wake_word_start_keeps_responding(
     entity.tts_response_finished()
     state = hass.states.get(ENTITY_ID)
     assert state.state == AssistSatelliteState.IDLE
-
-
-@pytest.mark.parametrize(
-    ("active_wake_words", "verified_wake_words", "expected"),
-    [
-        pytest.param(["1234"], {"okay nabu"}, True, id="active_wake_word"),
-        pytest.param(["1234"], {"hey jarvis"}, False, id="inactive_wake_word"),
-        pytest.param(
-            ["1234", "5678"],
-            {"okay nabu", "hey jarvis"},
-            True,
-            id="all_active_wake_words_supported",
-        ),
-        pytest.param(
-            ["1234", "5678"],
-            {"okay nabu"},
-            False,
-            id="unsupported_active_wake_word",
-        ),
-        pytest.param([], {"okay nabu"}, False, id="no_active_wake_words"),
-        pytest.param(
-            ["hey_computer"], {"hey_computer"}, True, id="unknown_id_fallback"
-        ),
-    ],
-)
-@pytest.mark.usefixtures("init_components")
-async def test_wake_word_audio_wanted(
-    entity: MockAssistSatellite,
-    active_wake_words: list[str],
-    verified_wake_words: set[str],
-    expected: bool,
-) -> None:
-    """Test wake word audio requires verification of all active wake word phrases."""
-    entity.config.active_wake_words = active_wake_words
-    with patch.object(
-        voice_support,
-        "async_verifies_wake_word",
-        lambda _hass, wake_word: wake_word in verified_wake_words,
-    ):
-        assert entity.wake_word_audio_wanted is expected
-
-
-@pytest.mark.usefixtures("init_components")
-async def test_wake_word_audio_wanted_without_configuration(
-    entity: MockAssistSatellite,
-) -> None:
-    """Test wake word audio is not wanted from a satellite without a configuration."""
-    with (
-        patch.object(
-            entity, "async_get_configuration", side_effect=NotImplementedError
-        ),
-        patch.object(voice_support, "async_verifies_wake_word", return_value=True),
-    ):
-        assert entity.wake_word_audio_wanted is False

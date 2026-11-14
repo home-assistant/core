@@ -26,7 +26,7 @@ from aioesphomeapi import (
 import probatio
 from probatio.humanize import humanize_error
 
-from homeassistant.components import assist_satellite, stt, tts
+from homeassistant.components import assist_satellite, stt, tts, voice_support
 from homeassistant.components.assist_pipeline import (
     AudioSettings,
     PipelineEvent,
@@ -281,11 +281,26 @@ class EsphomeAssistSatellite(
         # and a device is subscribed before its configuration arrives.
         self._async_wake_word_audio_wanted_changed()
 
+    @property
+    def _wake_word_audio_wanted(self) -> bool:
+        """Whether every active wake word supports verification."""
+        config = self._satellite_config
+        wake_word_phrases = {
+            wake_word.id: wake_word.wake_word
+            for wake_word in config.available_wake_words
+        }
+        return bool(config.active_wake_words) and all(
+            voice_support.async_verifies_wake_word(
+                self.hass, wake_word_phrases.get(wake_word, wake_word)
+            )
+            for wake_word in config.active_wake_words
+        )
+
     @callback
     def _async_subscribe_voice_assistant(self) -> None:
         """Tell the device how to talk to us, and whether to send pre-roll."""
         self._wake_word_audio_subscribed = (
-            self._device_can_send_wake_word_audio and self.wake_word_audio_wanted
+            self._device_can_send_wake_word_audio and self._wake_word_audio_wanted
         )
         self._unsubscribe_voice_assistant = self.cli.subscribe_voice_assistant(
             handle_start=self.handle_pipeline_start,
@@ -301,7 +316,6 @@ class EsphomeAssistSatellite(
             self._unsubscribe_voice_assistant()
             self._unsubscribe_voice_assistant = None
 
-    @override
     @callback
     def _async_wake_word_audio_wanted_changed(self) -> None:
         """Subscribe again, now that the answer is different.
@@ -312,7 +326,7 @@ class EsphomeAssistSatellite(
         """
         if self._unsubscribe_voice_assistant is None:
             return
-        wanted = self._device_can_send_wake_word_audio and self.wake_word_audio_wanted
+        wanted = self._device_can_send_wake_word_audio and self._wake_word_audio_wanted
         if wanted == self._wake_word_audio_subscribed:
             return
         _LOGGER.debug(
@@ -325,6 +339,11 @@ class EsphomeAssistSatellite(
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
+        self.async_on_remove(
+            voice_support.async_on_wake_words_changed(
+                self.hass, self._async_wake_word_audio_wanted_changed
+            )
+        )
 
         assert self._entry_data.device_info is not None
         feature_flags = (
