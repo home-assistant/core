@@ -1,0 +1,132 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: The integration does not provide actions.
+  appropriate-polling:
+    status: exempt
+    comment: The integration does not poll.
+  brands: done
+  common-modules:
+    status: exempt
+    comment: The integration has a single entity, with no coordinator or base entity.
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency:
+    status: exempt
+    comment: The integration has no dependencies.
+  docs-actions:
+    status: exempt
+    comment: The integration does not provide actions.
+  docs-conditions:
+    status: exempt
+    comment: The integration does not provide conditions.
+  docs-triggers:
+    status: exempt
+    comment: The integration does not provide triggers.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: The entity does not subscribe to events.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data:
+    status: exempt
+    comment: The integration has no runtime data; birthdays are stored in subentries.
+  test-before-configure:
+    status: exempt
+    comment: The integration does not connect to anything.
+  test-before-setup:
+    status: exempt
+    comment: The integration does not connect to anything.
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: The integration does not provide actions.
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable:
+    status: exempt
+    comment: The calendar is computed locally and is always available.
+  integration-owner: done
+  log-when-unavailable:
+    status: exempt
+    comment: The calendar is computed locally and is always available.
+  parallel-updates:
+    status: exempt
+    comment: The integration does not poll and does not provide actions.
+  reauthentication-flow:
+    status: exempt
+    comment: The integration does not require authentication.
+  test-coverage: done
+
+  # Gold
+  devices:
+    status: exempt
+    comment: The integration does not represent a physical or logical device.
+  diagnostics:
+    status: exempt
+    comment: All data is entered by the user and nothing is fetched from outside.
+  discovery-update-info:
+    status: exempt
+    comment: The integration cannot be discovered.
+  discovery:
+    status: exempt
+    comment: The integration cannot be discovered.
+  docs-data-update:
+    status: exempt
+    comment: The integration does not fetch data.
+  docs-examples: done
+  docs-known-limitations:
+    status: exempt
+    comment: The integration has no known limitations.
+  docs-supported-devices:
+    status: exempt
+    comment: The integration does not support devices.
+  docs-supported-functions: done
+  docs-troubleshooting:
+    status: exempt
+    comment: There is nothing to troubleshoot, the integration has no connection.
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: The integration does not create devices.
+  entity-category:
+    status: exempt
+    comment: The only entity is the primary calendar.
+  entity-device-class:
+    status: exempt
+    comment: The calendar entity has no device classes.
+  entity-disabled-by-default:
+    status: exempt
+    comment: The only entity is the primary calendar.
+  entity-translations: done
+  exception-translations:
+    status: exempt
+    comment: The integration raises no exceptions that reach the user.
+  icon-translations:
+    status: exempt
+    comment: The calendar entity uses the default icon of its domain.
+  reconfiguration-flow:
+    status: exempt
+    comment: The entry has no settings; birthdays are edited with the subentry reconfigure flow.
+  repair-issues:
+    status: exempt
+    comment: The integration has nothing the user needs to repair.
+  stale-devices:
+    status: exempt
+    comment: The integration does not create devices.
+
+  # Platinum
+  async-dependency:
+    status: exempt
+    comment: The integration has no dependencies.
+  inject-websession:
+    status: exempt
+    comment: The integration does not make HTTP requests.
+  strict-typing: done

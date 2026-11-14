@@ -1550,6 +1550,16 @@
       ],
       "supported_by": "opower"
     },
+    "birthday": {
+      "name": "Birthday",
+      "integration_type": "service",
+      "categories": [
+        "helpers.store_value"
+      ],
+      "config_flow": true,
+      "iot_class": "calculated",
+      "single_config_entry": true
+    },
     "bitcoin": {
       "name": "Bitcoin",
       "integration_type": "service",
