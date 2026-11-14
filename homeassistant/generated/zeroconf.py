@@ -607,6 +607,10 @@ ZEROCONF = {
             "name": "awair*",
         },
         {
+            "domain": "bluetti_modbus",
+            "name": "bluetti hems*",
+        },
+        {
             "domain": "bosch_shc",
             "name": "bosch shc*",
         },
