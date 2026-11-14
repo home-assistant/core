@@ -2,8 +2,15 @@
 
 from typing import TYPE_CHECKING
 
+from .const import BATTERY_DIRECTIONS
+
 if TYPE_CHECKING:
     from .data import PowerConfig
+
+
+def _direction_sensors(config: PowerConfig) -> list[str | None]:
+    """Return the battery direction power sensors in a fixed order."""
+    return [config.get(power_key) for _, power_key in BATTERY_DIRECTIONS]
 
 
 def generate_power_sensor_unique_id(source_type: str, config: PowerConfig) -> str:
@@ -15,8 +22,14 @@ def generate_power_sensor_unique_id(source_type: str, config: PowerConfig) -> st
         from_id = config["stat_rate_from"].replace(".", "_")
         to_id = config["stat_rate_to"].replace(".", "_")
         return f"energy_power_{source_type}_combined_{from_id}_{to_id}"
-    # This case is impossible: schema validation (probatio.Inclusive) ensures
-    # stat_rate_from and stat_rate_to are always present together
+    if directions := [
+        f"{power_key.removeprefix('stat_rate_')}={sensor}"
+        for _, power_key in BATTERY_DIRECTIONS
+        if (sensor := config.get(power_key))
+    ]:
+        # Entity IDs never contain "," or "=", so each config gets its own ID
+        return f"energy_power_{source_type}_directions_{','.join(directions)}"
+    # Unreachable: schema validation ensures one of the methods above is used
     raise RuntimeError("Invalid power config: missing required keys")
 
 
@@ -35,6 +48,8 @@ def generate_power_sensor_entity_id(source_type: str, config: PowerConfig) -> st
         from_sensor = config["stat_rate_from"].removeprefix("sensor.")
         to_sensor = config["stat_rate_to"].removeprefix("sensor.")
         return f"sensor.energy_{source_type}_{from_sensor}_{to_sensor}_net_power"
-    # This case is impossible: schema validation (probatio.Inclusive) ensures
-    # stat_rate_from and stat_rate_to are always present together
+    if sensors := [sensor for sensor in _direction_sensors(config) if sensor]:
+        sensor_ids = "_".join(sensor.removeprefix("sensor.") for sensor in sensors)
+        return f"sensor.energy_{source_type}_{sensor_ids}_net_power"
+    # Unreachable: schema validation ensures one of the methods above is used
     raise RuntimeError("Invalid power config: missing required keys")
