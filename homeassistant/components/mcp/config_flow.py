@@ -32,6 +32,7 @@ from .application_credentials import authorization_server_context
 from .auth import AuthenticateHeader
 from .const import CONF_AUTHORIZATION_URL, CONF_SCOPE, CONF_SLUG, CONF_TOKEN_URL, DOMAIN
 from .coordinator import (
+    TIMEOUT,
     TokenManager,
     create_mcp_httpx_client,
     mcp_client,
@@ -128,16 +129,17 @@ async def validate_input(
     except probatio.Invalid as error:
         raise InvalidUrl from error
     try:
-        async with mcp_client(hass, url, token_manager=token_manager) as (
-            _session,
-            response,
-        ):
-            if not response.capabilities.tools:
-                raise MissingCapabilities(
-                    f"MCP Server {url} does not support 'Tools' capability"
-                )
-            return {"title": response.server_info.name}
-    except httpx2.TimeoutException as error:
+        async with asyncio.timeout(TIMEOUT):
+            async with mcp_client(hass, url, token_manager=token_manager) as (
+                _session,
+                response,
+            ):
+                if not response.capabilities.tools:
+                    raise MissingCapabilities(
+                        f"MCP Server {url} does not support 'Tools' capability"
+                    )
+                return {"title": response.server_info.name}
+    except (httpx2.TimeoutException, TimeoutError) as error:
         _LOGGER.info("Timeout connecting to MCP server: %s", error)
         raise TimeoutConnectError from error
     except httpx2.HTTPStatusError as error:
@@ -474,7 +476,9 @@ async def _async_fetch_any(
     async def fetch(url: str) -> httpx2.Response:
         _LOGGER.debug("Fetching URL %s", url)
         try:
-            async with create_mcp_httpx_client() as client:
+            async with create_mcp_httpx_client(
+                timeout=httpx2.Timeout(TIMEOUT)
+            ) as client:
                 response = await client.get(url)
                 response.raise_for_status()
                 return response
