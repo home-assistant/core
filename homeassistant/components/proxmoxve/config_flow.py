@@ -9,6 +9,7 @@ from aioproxmox.exceptions import (
     ProxmoxAPIError,
     ProxmoxAuthError,
     ProxmoxConnectionError as PVEConnectionError,
+    ProxmoxNodeUnreachableError,
     ProxmoxSSLError as PVESSLError,
     ProxmoxTimeoutError,
 )
@@ -153,6 +154,11 @@ async def _get_nodes_data(
             containers = await node_endpoint.lxc_all()
         except ProxmoxAuthError as err:
             raise ProxmoxAuthenticationError from err
+        except ProxmoxNodeUnreachableError:
+            _LOGGER.warning(
+                "Unable to fetch VMs/LXC for node %s, skipping node", node.node
+            )
+            continue
         except ProxmoxAPIError as err:
             _LOGGER.debug(
                 "Error fetching VMs/LXC for node %s", node.node, exc_info=True

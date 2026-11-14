@@ -1,12 +1,13 @@
 """Test the config flow for Proxmox VE."""
 
 from typing import Any
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 from aioproxmox.exceptions import (
     ProxmoxAPIError,
     ProxmoxAuthError,
     ProxmoxConnectionError,
+    ProxmoxNodeUnreachableError,
     ProxmoxResponseError,
     ProxmoxSSLError,
     ProxmoxTimeoutError,
@@ -282,6 +283,48 @@ async def test_form_exceptions_qemu(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.parametrize("status_code", [595, 596])
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_form_skips_unreachable_node(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+    status_code: int,
+) -> None:
+    """Test that an unreachable node is skipped during discovery."""
+    mock_proxmox_client.cluster_resources.resources = [
+        node
+        for node in mock_proxmox_client._all_cluster_resources
+        if node.node in ("pve1", "pve2")
+    ]
+    failed_node = MagicMock()
+    failed_node.qemu_all = AsyncMock(
+        side_effect=ProxmoxNodeUnreachableError(
+            status_code, "Connection timed out", "nodes/pve2/qemu"
+        )
+    )
+    healthy_node = mock_proxmox_client._node_mock
+    mock_proxmox_client.nodes.side_effect = lambda node: (
+        failed_node if node == "pve2" else healthy_node
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_USER_STEP
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_USER_AUTH_STEP_PASSWORD
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert [node[CONF_NODE] for node in result["data"][CONF_NODES]] == ["pve1"]
+    failed_node.qemu_all.assert_awaited_once_with()
+    healthy_node.qemu_all.assert_awaited_once_with()
+    assert "Unable to fetch VMs/LXC for node pve2, skipping node" in caplog.text
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
