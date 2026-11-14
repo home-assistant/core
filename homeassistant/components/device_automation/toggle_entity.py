@@ -12,6 +12,8 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_STATE,
     CONF_TYPE,
+    STATE_OFF,
+    STATE_ON,
 )
 from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
 from homeassistant.helpers import (
@@ -162,16 +164,19 @@ async def async_attach_trigger(
     trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
-    if config[CONF_TYPE] not in [CONF_TURNED_ON, CONF_TURNED_OFF]:
-        return await entity.async_attach_trigger(hass, config, action, trigger_info)
-
+    # Becoming available/unavailable is not a turn on or off, so don't fire on it
     if config[CONF_TYPE] == CONF_TURNED_ON:
-        to_state = "on"
+        to_state: str | list[str] = STATE_ON
+        from_state: str | list[str] = STATE_OFF
+    elif config[CONF_TYPE] == CONF_TURNED_OFF:
+        to_state = STATE_OFF
+        from_state = STATE_ON
     else:
-        to_state = "off"
+        to_state = from_state = [STATE_ON, STATE_OFF]
     state_config: ConfigType = {
         StateTriggerArgument.PLATFORM: "state",
         StateTriggerArgument.ENTITY_ID: config[CONF_ENTITY_ID],
+        StateTriggerArgument.FROM: from_state,
         StateTriggerArgument.TO: to_state,
     }
     if CONF_FOR in config:
