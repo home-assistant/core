@@ -3614,6 +3614,7 @@ yt-dlp[default]==2026.07.04
 # homeassistant.components.zabbix
 zabbix-utils==2.0.4
 
+# homeassistant.components.geosphere_austria_forecast
 # homeassistant.components.zamg
 zamg==0.5.0
 

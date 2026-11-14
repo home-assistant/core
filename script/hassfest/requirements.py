@@ -166,6 +166,10 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "flux_led": {"flux-led": {"async-timeout"}},
     "foobot": {"foobot-async": {"async-timeout"}},
     "geocaching": {"geocachingapi": {"backoff"}},
+    "geosphere_austria_forecast": {
+        # https://github.com/killer0071234/python-zamg/pull/436
+        "zamg": {"async-timeout"}
+    },
     "github": {"aiogithubapi": {"backoff"}},
     "google_maps": {"locationsharinglib": {"coloredlogs"}},
     "harmony": {"aioharmony": {"async-timeout"}},
