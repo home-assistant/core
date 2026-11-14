@@ -254,6 +254,9 @@ SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
     "Lock Vision": (BATTERY_DESCRIPTION,),
     "Lock Vision Pro": (BATTERY_DESCRIPTION,),
     "Smart Lock Pro Wifi": (BATTERY_DESCRIPTION,),
+    "Keypad Touch": (BATTERY_DESCRIPTION,),
+    "Keypad Vision": (BATTERY_DESCRIPTION,),
+    "Keypad Vision Pro": (BATTERY_DESCRIPTION,),
     "Relay Switch 2PM": (
         RELAY_SWITCH_2PM_POWER_DESCRIPTION,
         RELAY_SWITCH_2PM_VOLTAGE_DESCRIPTION,
