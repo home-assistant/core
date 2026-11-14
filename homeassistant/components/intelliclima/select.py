@@ -1,15 +1,16 @@
 """Select platform for IntelliClima VMC."""
 
+from itertools import chain
 from typing import override
 
-from pyintelliclima import FanMode, FanSpeed, IntelliClimaECO2
+from pyintelliclima import FanMode, FanSpeed
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import IntelliClimaConfigEntry, IntelliClimaCoordinator
-from .entity import IntelliClimaECOEntity
+from .entity import IntelliClimaECODevice, IntelliClimaECOEntity
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -35,9 +36,12 @@ async def async_setup_entry(
     entities: list[IntelliClimaVMCFanModeSelect] = [
         IntelliClimaVMCFanModeSelect(
             coordinator=coordinator,
-            device=ecocomfort2,
+            device=device,
         )
-        for ecocomfort2 in coordinator.data.ecocomfort2_devices.values()
+        for device in chain[IntelliClimaECODevice](
+            coordinator.data.ecocomfort2_devices.values(),
+            coordinator.data.ecocomfort3_devices.values(),
+        )
     ]
 
     async_add_entities(entities)
@@ -52,7 +56,7 @@ class IntelliClimaVMCFanModeSelect(IntelliClimaECOEntity, SelectEntity):
     def __init__(
         self,
         coordinator: IntelliClimaCoordinator,
-        device: IntelliClimaECO2,
+        device: IntelliClimaECODevice,
     ) -> None:
         """Class initializer."""
         super().__init__(coordinator, device)
@@ -83,7 +87,5 @@ class IntelliClimaVMCFanModeSelect(IntelliClimaECOEntity, SelectEntity):
         else:
             speed = device_data.speed_set
 
-        await self.coordinator.api.ecocomfort2.set_mode_speed(
-            self._device_sn, mode, speed
-        )
+        await self._device_api.set_mode_speed(self._device_sn, mode, speed)
         await self.coordinator.async_request_refresh()

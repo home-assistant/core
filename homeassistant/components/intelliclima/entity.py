@@ -1,8 +1,19 @@
 """Platform for shared base classes for sensors."""
 
+from collections.abc import Callable, Mapping
+from dataclasses import dataclass
 from typing import override
 
-from pyintelliclima import FanState, IntelliClimaC800, IntelliClimaECO2
+from pyintelliclima import (
+    FanState,
+    IntelliClimaAPI,
+    IntelliClimaC800,
+    IntelliClimaDevices,
+    IntelliClimaECO2,
+    IntelliClimaECO3,
+    IntelliClimaEcocomfort2API,
+    IntelliClimaEcocomfort3API,
+)
 
 from homeassistant.helpers.device_registry import (
     CONNECTION_BLUETOOTH,
@@ -14,15 +25,42 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
 from .coordinator import IntelliClimaCoordinator
 
+type IntelliClimaECODevice = IntelliClimaECO2 | IntelliClimaECO3
 
-def eco_device_info(device: IntelliClimaECO2) -> DeviceInfo:
-    """Return the device info shared by all entities of an ECOCOMFORT 2.0."""
+
+@dataclass(frozen=True, kw_only=True)
+class IntelliClimaECODescription:
+    """Model metadata and access to a device family's current data and API."""
+
+    model: str
+    devices_fn: Callable[[IntelliClimaDevices], Mapping[str, IntelliClimaECODevice]]
+    api_fn: Callable[
+        [IntelliClimaAPI], IntelliClimaEcocomfort2API | IntelliClimaEcocomfort3API
+    ]
+
+
+ECO_DESCRIPTIONS: dict[type[IntelliClimaECODevice], IntelliClimaECODescription] = {
+    IntelliClimaECO2: IntelliClimaECODescription(
+        model="ECOCOMFORT 2.0",
+        devices_fn=lambda data: data.ecocomfort2_devices,
+        api_fn=lambda api: api.ecocomfort2,
+    ),
+    IntelliClimaECO3: IntelliClimaECODescription(
+        model="ECOCOMFORT 3",
+        devices_fn=lambda data: data.ecocomfort3_devices,
+        api_fn=lambda api: api.ecocomfort3,
+    ),
+}
+
+
+def eco_device_info(device: IntelliClimaECODevice) -> DeviceInfo:
+    """Return the device info shared by all ECOCOMFORT entities."""
     return DeviceInfo(
         identifiers={(DOMAIN, device.id)},
         manufacturer="Fantini Cosmi",
         name=device.name,
         serial_number=device.crono_sn,
-        model="ECOCOMFORT 2.0",
+        model=ECO_DESCRIPTIONS[type(device)].model,
         sw_version=device.fw,
         connections={
             (CONNECTION_BLUETOOTH, device.mac),
@@ -40,7 +78,7 @@ class IntelliClimaEntity(CoordinatorEntity[IntelliClimaCoordinator]):
     def __init__(
         self,
         coordinator: IntelliClimaCoordinator,
-        device: IntelliClimaECO2 | IntelliClimaC800,
+        device: IntelliClimaECODevice | IntelliClimaC800,
     ) -> None:
         """Class initializer."""
         super().__init__(coordinator=coordinator)
@@ -58,21 +96,32 @@ class IntelliClimaEntity(CoordinatorEntity[IntelliClimaCoordinator]):
 
 
 class IntelliClimaECOEntity(IntelliClimaEntity):
-    """Specific entity for the ECOCOMFORT 2.0."""
+    """Specific entity for an ECOCOMFORT device."""
 
     def __init__(
         self,
         coordinator: IntelliClimaCoordinator,
-        device: IntelliClimaECO2,
+        device: IntelliClimaECODevice,
     ) -> None:
         """Class initializer."""
         super().__init__(coordinator, device)
 
         self._attr_device_info = eco_device_info(device)
+        self._device_description = ECO_DESCRIPTIONS[type(device)]
 
     @property
-    def _device_data(self) -> IntelliClimaECO2:
-        return self.coordinator.data.ecocomfort2_devices[self._device_id]
+    def _devices(self) -> Mapping[str, IntelliClimaECODevice]:
+        """Return this family's devices from the latest coordinator update."""
+        return self._device_description.devices_fn(self.coordinator.data)
+
+    @property
+    def _device_data(self) -> IntelliClimaECODevice:
+        return self._devices[self._device_id]
+
+    @property
+    def _device_api(self) -> IntelliClimaEcocomfort2API | IntelliClimaEcocomfort3API:
+        """Return the API client for this device family."""
+        return self._device_description.api_fn(self.coordinator.api)
 
     @property
     def _fan_state(self) -> FanState | None:
@@ -86,7 +135,4 @@ class IntelliClimaECOEntity(IntelliClimaEntity):
     @override
     def available(self) -> bool:
         """Return if entity is available."""
-        return (
-            super().available
-            and self._device_id in self.coordinator.data.ecocomfort2_devices
-        )
+        return super().available and self._device_id in self._devices
