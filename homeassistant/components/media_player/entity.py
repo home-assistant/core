@@ -627,11 +627,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             await self.hass.async_add_executor_job(self.toggle)
             return
 
-        if self.state in {
-            MediaPlayerState.OFF,
-            # Not comparing to MediaPlayerState.STANDBY to avoid deprecation warning
-            "standby",
-        }:
+        if self.state == MediaPlayerState.OFF:
             await self.async_turn_on()
         else:
             await self.async_turn_off()

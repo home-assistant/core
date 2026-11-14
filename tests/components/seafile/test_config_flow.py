@@ -3,16 +3,18 @@
 import asyncio
 from dataclasses import replace
 from typing import Any
-from unittest.mock import AsyncMock
+from unittest.mock import ANY, AsyncMock, call, patch
 
 from aioseafile import (
     SeafileAuthenticationError,
     SeafileConnectionError,
+    SeafileTimeoutError,
     SeafileTwoFactorRequiredError,
 )
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
+from homeassistant.components.seafile import config_flow
 from homeassistant.components.seafile.const import (
     CONF_BACKUP,
     CONF_BACKUP_PATH,
@@ -21,7 +23,11 @@ from homeassistant.components.seafile.const import (
     DOMAIN,
     SUBENTRY_TYPE_LIBRARY,
 )
-from homeassistant.config_entries import SOURCE_USER, ConfigSubentryData
+from homeassistant.config_entries import (
+    SOURCE_USER,
+    ConfigEntryState,
+    ConfigSubentryData,
+)
 from homeassistant.const import (
     CONF_PASSWORD,
     CONF_TOKEN,
@@ -46,6 +52,14 @@ NEW_LIBRARY_ID = "0c8bd7d5-6ba2-4e7d-9a8b-1f2f4c6ad2b1"
 
 NEW_TOKEN = "fedcba9876543210fedcba9876543210fedcba98"
 REAUTH_INPUT = {CONF_USERNAME: "user@example.com", CONF_PASSWORD: "hunter3"}
+
+NEW_URL = "https://files.example.org"
+RECONFIGURE_INPUT = {
+    CONF_URL: NEW_URL,
+    CONF_USERNAME: "new@example.com",
+    CONF_PASSWORD: "hunter4",
+    CONF_VERIFY_SSL: False,
+}
 
 USER_INPUT = {
     CONF_URL: URL,
@@ -454,18 +468,48 @@ async def test_reauth(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], REAUTH_INPUT
-    )
+    with patch.object(
+        hass.config_entries,
+        "async_schedule_reload",
+        wraps=hass.config_entries.async_schedule_reload,
+    ) as mock_schedule_reload:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], REAUTH_INPUT
+        )
+        await hass.async_block_till_done()
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
-    await hass.async_block_till_done()
     assert mock_config_entry.data == {
         CONF_URL: URL,
         CONF_TOKEN: NEW_TOKEN,
         CONF_VERIFY_SSL: True,
     }
     mock_seafile_client.logout_device.assert_not_awaited()
+    # The update listener reloads the entry, so the flow doesn't reload it again.
+    mock_schedule_reload.assert_not_called()
+
+
+async def test_reauth_entry_not_loaded(
+    hass: HomeAssistant,
+    mock_seafile_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the flow reloads an entry that failed to set up."""
+    mock_seafile_client.get_libraries.side_effect = SeafileAuthenticationError
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    mock_seafile_client.get_libraries.side_effect = None
+    mock_seafile_client.get_auth_token.return_value = NEW_TOKEN
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], REAUTH_INPUT
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.data[CONF_TOKEN] == NEW_TOKEN
 
 
 async def test_reauth_two_factor_authentication(
@@ -554,4 +598,193 @@ async def test_reauth_wrong_account(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unique_id_mismatch"
     assert mock_config_entry.data[CONF_TOKEN] == TOKEN
+    mock_seafile_client.logout_device.assert_awaited_once()
+
+
+async def test_reconfigure(
+    hass: HomeAssistant,
+    mock_seafile_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test logging in again stores the new login and revokes the old token."""
+    await setup_integration(hass, mock_config_entry)
+    mock_seafile_client.get_auth_token.return_value = NEW_TOKEN
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    mock_seafile_class = config_flow.Seafile
+    mock_seafile_class.reset_mock()
+    with patch.object(
+        hass.config_entries,
+        "async_schedule_reload",
+        wraps=hass.config_entries.async_schedule_reload,
+    ) as mock_schedule_reload:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], RECONFIGURE_INPUT
+        )
+        await hass.async_block_till_done(wait_background_tasks=True)
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {
+        CONF_URL: NEW_URL,
+        CONF_TOKEN: NEW_TOKEN,
+        CONF_VERIFY_SSL: False,
+    }
+    assert mock_config_entry.title == "new@example.com (files.example.org)"
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    # Login on the new server, revoke on the old server, then the reload.
+    assert mock_seafile_class.call_args_list == [
+        call(NEW_URL, session=ANY),
+        call(URL, TOKEN, session=ANY),
+        call(NEW_URL, NEW_TOKEN, session=ANY),
+    ]
+    mock_seafile_client.logout_device.assert_awaited_once()
+    # The update listener reloads the entry, so the flow doesn't reload it again.
+    mock_schedule_reload.assert_not_called()
+
+
+async def test_reconfigure_entry_not_loaded(
+    hass: HomeAssistant,
+    mock_seafile_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the flow reloads an entry that failed to set up."""
+    mock_seafile_client.get_libraries.side_effect = SeafileConnectionError
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    mock_seafile_client.get_libraries.side_effect = None
+    mock_seafile_client.get_auth_token.return_value = NEW_TOKEN
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], RECONFIGURE_INPUT
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.data[CONF_TOKEN] == NEW_TOKEN
+
+
+async def test_reconfigure_old_server_not_responding(
+    hass: HomeAssistant,
+    mock_seafile_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the flow doesn't wait for the old server to revoke the old token."""
+    await setup_integration(hass, mock_config_entry)
+    mock_seafile_client.get_auth_token.return_value = NEW_TOKEN
+    release_logout = asyncio.Event()
+
+    async def _logout_device() -> None:
+        await release_logout.wait()
+        raise SeafileConnectionError
+
+    mock_seafile_client.logout_device.side_effect = _logout_device
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], RECONFIGURE_INPUT
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_TOKEN] == NEW_TOKEN
+
+    release_logout.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+    mock_seafile_client.logout_device.assert_awaited_once()
+
+
+async def test_reconfigure_two_factor_authentication(
+    hass: HomeAssistant,
+    mock_seafile_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the code is asked when reconfiguring."""
+    await setup_integration(hass, mock_config_entry)
+    mock_seafile_client.get_auth_token.side_effect = [
+        SeafileTwoFactorRequiredError,
+        NEW_TOKEN,
+    ]
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], RECONFIGURE_INPUT
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "otp"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"otp": "123456"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    await hass.async_block_till_done()
+    assert mock_config_entry.data[CONF_TOKEN] == NEW_TOKEN
+
+
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        pytest.param(SeafileAuthenticationError, "invalid_auth", id="invalid_auth"),
+        pytest.param(SeafileConnectionError, "cannot_connect", id="cannot_connect"),
+        pytest.param(SeafileTimeoutError, "cannot_connect", id="timeout"),
+    ],
+)
+async def test_reconfigure_errors(
+    hass: HomeAssistant,
+    mock_seafile_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    exception: type[Exception],
+    error: str,
+) -> None:
+    """Test login errors are shown on the reconfigure form and the flow can recover."""
+    await setup_integration(hass, mock_config_entry)
+    mock_seafile_client.get_auth_token.side_effect = exception
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], RECONFIGURE_INPUT
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": error}
+
+    mock_seafile_client.get_auth_token.side_effect = None
+    mock_seafile_client.get_auth_token.return_value = NEW_TOKEN
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], RECONFIGURE_INPUT
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    await hass.async_block_till_done()
+    assert mock_config_entry.data[CONF_TOKEN] == NEW_TOKEN
+
+
+async def test_reconfigure_wrong_account(
+    hass: HomeAssistant,
+    mock_seafile_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test logging in with another account aborts and revokes its token."""
+    await setup_integration(hass, mock_config_entry)
+    mock_seafile_client.get_auth_token.return_value = NEW_TOKEN
+    mock_seafile_client.get_account_info.return_value = replace(
+        mock_seafile_client.get_account_info.return_value,
+        email="other@auth.local",
+    )
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], RECONFIGURE_INPUT
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_config_entry.data == {
+        CONF_URL: URL,
+        CONF_TOKEN: TOKEN,
+        CONF_VERIFY_SSL: True,
+    }
     mock_seafile_client.logout_device.assert_awaited_once()

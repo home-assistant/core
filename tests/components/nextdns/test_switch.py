@@ -17,15 +17,13 @@ from syrupy.assertion import SnapshotAssertion
 from tenacity import RetryError
 
 from homeassistant.components.nextdns.const import DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -64,8 +62,8 @@ async def test_switch_on(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.fake_profile_block_page"},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: "switch.fake_profile_block_page"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -91,8 +89,8 @@ async def test_switch_off(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.fake_profile_web3"},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: "switch.fake_profile_web3"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -175,8 +173,8 @@ async def test_switch_failure(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.fake_profile_block_page"},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: "switch.fake_profile_block_page"},
             blocking=True,
         )
 
@@ -197,8 +195,8 @@ async def test_switch_auth_error(
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.fake_profile_block_page"},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: "switch.fake_profile_block_page"},
             blocking=True,
         )
 
@@ -237,8 +235,8 @@ async def test_switch_set_setting_failure(
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.fake_profile_block_page"},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: "switch.fake_profile_block_page"},
             blocking=True,
         )
 

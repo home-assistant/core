@@ -1,5 +1,7 @@
 """Test the pushover notify platform."""
 
+import errno
+import os
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -9,7 +11,7 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.pushover import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from . import MOCK_CONFIG
 
@@ -95,20 +97,11 @@ async def test_send_message(
 
 
 @pytest.mark.usefixtures("mock_pushover")
-@pytest.mark.parametrize(
-    ("is_allowed", "translation_key"),
-    [
-        pytest.param(False, "attachment_not_allowed", id="not_allowed"),
-        pytest.param(True, "attachment_open_failed", id="open_failed"),
-    ],
-)
-async def test_send_message_attachment_error(
+async def test_send_message_attachment_not_allowed(
     hass: HomeAssistant,
     mock_send_message: MagicMock,
-    is_allowed: bool,
-    translation_key: str,
 ) -> None:
-    """Test that an unusable attachment raises and sends nothing."""
+    """Test that an attachment outside the allowed paths raises and sends nothing."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
     entry.add_to_hass(hass)
 
@@ -116,7 +109,7 @@ async def test_send_message_attachment_error(
     await hass.async_block_till_done()
 
     with (
-        patch.object(hass.config, "is_allowed_path", return_value=is_allowed),
+        patch.object(hass.config, "is_allowed_path", return_value=False),
         pytest.raises(ServiceValidationError) as exc_info,
     ):
         await hass.services.async_call(
@@ -130,7 +123,52 @@ async def test_send_message_attachment_error(
         )
 
     assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "attachment_not_allowed"
+    mock_send_message.assert_not_called()
+
+
+@pytest.mark.usefixtures("mock_pushover")
+@pytest.mark.parametrize(
+    ("error_no", "translation_key"),
+    [
+        pytest.param(errno.ENOENT, "os_read_not_found", id="not_found"),
+        pytest.param(errno.EACCES, "os_read_permission_denied", id="permission"),
+        pytest.param(errno.EISDIR, "os_read_is_directory", id="is_directory"),
+        pytest.param(errno.EIO, "os_read_error", id="fallback"),
+    ],
+)
+async def test_send_message_attachment_read_error(
+    hass: HomeAssistant,
+    mock_send_message: MagicMock,
+    error_no: int,
+    translation_key: str,
+) -> None:
+    """Test that an unreadable attachment raises and sends nothing."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    attachment = "/some/attachment.jpg"
+    with (
+        patch.object(hass.config, "is_allowed_path", return_value=True),
+        patch(
+            "homeassistant.components.pushover.notify.open",
+            side_effect=OSError(error_no, os.strerror(error_no)),
+        ),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            "notify",
+            "pushover",
+            {"message": "Hello", "data": {"attachment": attachment}},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_domain == "homeassistant"
     assert exc_info.value.translation_key == translation_key
+    assert exc_info.value.translation_placeholders == {"path": attachment}
     mock_send_message.assert_not_called()
 
 
@@ -275,20 +313,47 @@ async def test_cancel_multiple_receipts_same_tag(
     assert called_receipts == {RECEIPT_A, RECEIPT_B}
 
 
-async def test_cancel_unknown_entry_id(
+@pytest.mark.parametrize(
+    ("other_entry_domain", "entry_id", "translation_key"),
+    [
+        pytest.param(
+            "other", "nonexistent", "service_config_entry_not_found", id="not_found"
+        ),
+        pytest.param(
+            "other",
+            "other_entry",
+            "service_config_entry_wrong_domain",
+            id="wrong_domain",
+        ),
+        pytest.param(
+            DOMAIN,
+            "other_entry",
+            "service_config_entry_not_loaded",
+            id="not_loaded",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_pushover")
+async def test_cancel_invalid_entry_id(
     hass: HomeAssistant,
-    mock_pushover: MagicMock,
+    other_entry_domain: str,
+    entry_id: str,
+    translation_key: str,
 ) -> None:
-    """Test cancel with an entry_id that does not exist."""
+    """Test cancel with an entry_id that can't be used."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
+    # Added but not set up
+    MockConfigEntry(domain=other_entry_domain, entry_id="other_entry").add_to_hass(hass)
 
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
-            DOMAIN, "cancel", {"entry_id": "nonexistent"}, blocking=True
+            DOMAIN, "cancel", {"entry_id": entry_id}, blocking=True
         )
+
+    assert exc_info.value.translation_key == translation_key
 
 
 async def test_cancel_empty_receipt_tags(

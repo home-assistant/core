@@ -5,15 +5,11 @@ from typing import Any, override
 from datadog import DogStatsd
 import probatio
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_PREFIX
 from homeassistant.core import HomeAssistant, callback
 
+from . import DatadogConfigEntry
 from .const import (
     CONF_RATE,
     DEFAULT_HOST,
@@ -74,7 +70,7 @@ class DatadogConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     @override
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+    def async_get_options_flow(config_entry: DatadogConfigEntry) -> OptionsFlow:
         """Get the options flow handler."""
         return DatadogOptionsFlowHandler()
 

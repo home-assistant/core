@@ -37,6 +37,11 @@ class HarmonyData(HarmonySubscriberMixin):
         self._address = address
 
     @property
+    def address(self) -> str:
+        """Return the address the hub is connected to."""
+        return self._address
+
+    @property
     def activities(self):
         """List of all non-poweroff activity objects."""
         activity_infos = self._client.config.get("activity", [])

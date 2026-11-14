@@ -14,7 +14,29 @@
           "minutesAfterWakeUp": 10,
           "minutesAsleep": 420,
           "minutesInSleepPeriod": 480,
-          "minutesAwake": 60
+          "minutesAwake": 60,
+          "stagesSummary": [
+            {
+              "type": "AWAKE",
+              "minutes": 60,
+              "count": 20
+            },
+            {
+              "type": "REM",
+              "minutes": 90,
+              "count": 4
+            },
+            {
+              "type": "DEEP",
+              "minutes": 90,
+              "count": 3
+            },
+            {
+              "type": "LIGHT",
+              "minutes": 240,
+              "count": 24
+            }
+          ]
         }
       }
     }

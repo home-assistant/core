@@ -136,6 +136,9 @@
           "normal": "Normal"
         }
       },
+      "current_quarter_hour_electricity_price": {
+        "name": "Current quarter-hour electricity price"
+      },
       "current_sustainability_score": {
         "name": "Current sustainability score"
       },

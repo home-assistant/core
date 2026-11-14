@@ -41,6 +41,7 @@
 # name: test_device_tracker[vehicle_electric.json][device_tracker.enyaq_coupe-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://iprenders.blob.core.windows.net/base5azs22200218/enyaq_side1080.png',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enyaq Coupé',
       <TrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 0,
       <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([

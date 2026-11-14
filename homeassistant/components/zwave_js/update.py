@@ -43,6 +43,11 @@ UPDATE_DELAY_STRING = "delay"
 UPDATE_DELAY_INTERVAL = 15  # In seconds
 ATTR_LATEST_VERSION_FIRMWARE = "latest_version_firmware"
 
+OTA_MESSAGE_SLEEPING_DEVICE = (
+    "This is a battery powered sleeping device. You may need to wake it up"
+    " manually for the update to begin."
+)
+
 
 @dataclass(frozen=True, kw_only=True)
 class ZWaveUpdateEntityDescription(UpdateEntityDescription):
@@ -278,17 +283,14 @@ class ZWaveFirmwareUpdateEntity(ZWaveNodeBaseEntity, UpdateEntity):
             # If we have an available firmware update that is a higher version than
             # what's on the node, we should advertise it, otherwise the installed
             # version is the latest.
-            if (
-                available_firmware_updates
-                and (
-                    latest_firmware := max(
-                        available_firmware_updates,
-                        key=lambda x: AwesomeVersion(x.version),
-                    )
-                )
-                and AwesomeVersion(latest_firmware.version)
-                > AwesomeVersion(self.node.firmware_version)
-            ):
+            latest_firmware = max(
+                available_firmware_updates,
+                key=lambda x: AwesomeVersion(x.version),
+                default=None,
+            )
+            if latest_firmware is not None and AwesomeVersion(
+                latest_firmware.version
+            ) > AwesomeVersion(self.node.firmware_version):
                 self._latest_version_firmware = latest_firmware
                 self._attr_latest_version = latest_firmware.version
                 self.async_write_ha_state()
@@ -305,7 +307,16 @@ class ZWaveFirmwareUpdateEntity(ZWaveNodeBaseEntity, UpdateEntity):
         """Get release notes."""
         if self._latest_version_firmware is None:
             return None
-        return self._latest_version_firmware.changelog
+        changelog = self._latest_version_firmware.changelog
+        if not self.node.can_sleep:
+            return changelog
+
+        message = OTA_MESSAGE_SLEEPING_DEVICE
+        if wakeup := (self.node.device_config.metadata.wakeup or "").strip():
+            message += f" To wake up this device:\n\n{wakeup}"
+        # Surround the content with blank lines so markdown inside the alert is rendered
+        header = f"<ha-alert alert-type='info'>\n\n{message}\n\n</ha-alert>"
+        return f"{header}\n\n{changelog}"
 
     @override
     async def async_install(

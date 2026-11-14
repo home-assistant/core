@@ -1,16 +1,21 @@
 """Services for the Verisure integration."""
 
+from enum import StrEnum
+
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import service
 
-from .const import (
-    DOMAIN,
-    SERVICE_CAPTURE_SMARTCAM,
-    SERVICE_DISABLE_AUTOLOCK,
-    SERVICE_ENABLE_AUTOLOCK,
-)
+from .const import DOMAIN
+
+
+class VerisureService(StrEnum):
+    """Store keys for Verisure services."""
+
+    CAPTURE_SMARTCAM = "capture_smartcam"
+    ENABLE_AUTOLOCK = "enable_autolock"
+    DISABLE_AUTOLOCK = "disable_autolock"
 
 
 @callback
@@ -20,7 +25,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_CAPTURE_SMARTCAM,
+        VerisureService.CAPTURE_SMARTCAM,
         entity_domain=CAMERA_DOMAIN,
         schema=None,
         func="capture_smartcam",
@@ -29,7 +34,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_DISABLE_AUTOLOCK,
+        VerisureService.DISABLE_AUTOLOCK,
         entity_domain=LOCK_DOMAIN,
         schema=None,
         func="disable_autolock",
@@ -38,7 +43,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_ENABLE_AUTOLOCK,
+        VerisureService.ENABLE_AUTOLOCK,
         entity_domain=LOCK_DOMAIN,
         schema=None,
         func="enable_autolock",

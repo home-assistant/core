@@ -12,7 +12,7 @@ from homeassistant.components.usb import (
     usb_unique_id_from_service_info,
 )
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import ATTR_MANUFACTURER, CONF_DEVICE, CONF_NAME
+from homeassistant.const import CONF_DEVICE
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
     SelectSelector,
@@ -74,7 +74,7 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
 
         self.data[CONF_DEVICE] = discovery_info.device
         self.context["title_placeholders"] = {
-            CONF_NAME: human_readable_device_name(
+            "name": human_readable_device_name(
                 discovery_info.device,
                 discovery_info.serial_number,
                 discovery_info.manufacturer,
@@ -94,8 +94,8 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="usb_confirm",
             description_placeholders={
-                ATTR_MANUFACTURER: MANUFACTURER,
-                CONF_DEVICE: self.data.get(CONF_DEVICE, ""),
+                "manufacturer": MANUFACTURER,
+                "device": self.data.get(CONF_DEVICE, ""),
             },
         )
 

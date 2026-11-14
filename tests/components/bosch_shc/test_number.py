@@ -7,14 +7,15 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 
 from .conftest import (
+    micromodule_dimmer_device,
     micromodule_relay_device,
     setup_integration,
     shutter_contact2_device,
@@ -35,6 +36,7 @@ LED_BRIGHTNESS_ENTITY_ID = "number.smart_plug_led_brightness"
 LED_BRIGHTNESS_COMPACT_ENTITY_ID = "number.smart_plug_compact_led_brightness"
 DISPLAY_BRIGHTNESS_ENTITY_ID = "number.thermostat_gen2_display_brightness"
 DISPLAY_ON_TIME_ENTITY_ID = "number.thermostat_gen2_display_on_time"
+DIMMER_SPEED_ENTITY_ID = "number.dimmer_dimming_speed"
 ENTER_DURATION_ENTITY_ID = "number.smart_plug_energy_saving_enter_duration"
 ENTER_DURATION_COMPACT_ENTITY_ID = (
     "number.smart_plug_compact_energy_saving_enter_duration"
@@ -76,8 +78,11 @@ async def test_micromodule_impulse_relay_impulse_length_set_value(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: IMPULSE_LENGTH_ENTITY_ID, ATTR_VALUE: 2.5},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: IMPULSE_LENGTH_ENTITY_ID,
+            NumberServiceArgument.VALUE: 2.5,
+        },
         blocking=True,
     )
     assert device.impulse_length == 25
@@ -158,8 +163,11 @@ async def test_shutter_contact2_bypass_timeout_set_value(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: BYPASS_TIMEOUT_ENTITY_ID, ATTR_VALUE: 10.6},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: BYPASS_TIMEOUT_ENTITY_ID,
+            NumberServiceArgument.VALUE: 10.6,
+        },
         blocking=True,
     )
     device.set_bypass_configuration.assert_called_once_with(timeout=11)
@@ -220,8 +228,11 @@ async def test_smart_plug_power_threshold_set_value(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: POWER_THRESHOLD_ENTITY_ID, ATTR_VALUE: 20},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: POWER_THRESHOLD_ENTITY_ID,
+            NumberServiceArgument.VALUE: 20,
+        },
         blocking=True,
     )
     assert device.power_threshold == 20
@@ -312,8 +323,11 @@ async def test_smart_plug_enter_duration_set_value(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: ENTER_DURATION_ENTITY_ID, ATTR_VALUE: 300},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: ENTER_DURATION_ENTITY_ID,
+            NumberServiceArgument.VALUE: 300,
+        },
         blocking=True,
     )
     assert device.enter_duration_seconds == 300
@@ -404,8 +418,11 @@ async def test_thermostat_offset_set_value(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: OFFSET_ENTITY_ID, ATTR_VALUE: -2.5},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: OFFSET_ENTITY_ID,
+            NumberServiceArgument.VALUE: -2.5,
+        },
         blocking=True,
     )
     assert device.offset == -2.5
@@ -506,8 +523,11 @@ async def test_smart_plug_led_brightness_set_value(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: LED_BRIGHTNESS_ENTITY_ID, ATTR_VALUE: 35},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: LED_BRIGHTNESS_ENTITY_ID,
+            NumberServiceArgument.VALUE: 35,
+        },
         blocking=True,
     )
     assert device.led_brightness == 35
@@ -590,19 +610,19 @@ async def test_room_thermostat2_display_numbers_set_value(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: "number.room_thermostat_2_display_brightness",
-            ATTR_VALUE: 80,
+            CommonServiceArgument.ENTITY_ID: "number.room_thermostat_2_display_brightness",
+            NumberServiceArgument.VALUE: 80,
         },
         blocking=True,
     )
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: "number.room_thermostat_2_display_on_time",
-            ATTR_VALUE: 120,
+            CommonServiceArgument.ENTITY_ID: "number.room_thermostat_2_display_on_time",
+            NumberServiceArgument.VALUE: 120,
         },
         blocking=True,
     )
@@ -661,3 +681,77 @@ async def test_thermostat_gen2_display_numbers_partial_support(
         brightness_present
     )
     assert (hass.states.get(DISPLAY_ON_TIME_ENTITY_ID) is not None) is on_time_present
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "micromodule_dimmers": [
+                micromodule_dimmer_device(
+                    supports_dimmer_configuration=True, dimming_speed=7
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_dimmer_dimming_speed_value(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The dimming speed is reported."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(DIMMER_SPEED_ENTITY_ID)
+    assert state is not None
+    assert state.state == "7.0"
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "micromodule_dimmers": [
+                micromodule_dimmer_device(supports_dimmer_configuration=True)
+            ]
+        }
+    ],
+    indirect=True,
+)
+async def test_dimmer_dimming_speed_set_value(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Setting a value writes the rounded speed to the device."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.micromodule_dimmers[0]
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: DIMMER_SPEED_ENTITY_ID,
+            NumberServiceArgument.VALUE: 3.6,
+        },
+        blocking=True,
+    )
+    device.set_dimming_speed.assert_called_once_with(4)
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"micromodule_dimmers": [micromodule_dimmer_device()]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_dimmer_without_configuration_has_no_speed_number(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A dimmer without calibration support gets no dimming speed number."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(DIMMER_SPEED_ENTITY_ID) is None

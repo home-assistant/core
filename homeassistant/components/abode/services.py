@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 from jaraco.abode.exceptions import Exception as AbodeException
 import probatio
 
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, service
@@ -40,9 +40,9 @@ CHANGE_SETTING_SCHEMA = probatio.Schema(
     }
 )
 
-CAPTURE_IMAGE_SCHEMA = probatio.Schema({ATTR_ENTITY_ID: cv.entity_ids})
+CAPTURE_IMAGE_SCHEMA = probatio.Schema({CommonServiceArgument.ENTITY_ID: cv.entity_ids})
 
-AUTOMATION_SCHEMA = probatio.Schema({ATTR_ENTITY_ID: cv.entity_ids})
+AUTOMATION_SCHEMA = probatio.Schema({CommonServiceArgument.ENTITY_ID: cv.entity_ids})
 
 
 def _get_abode_system(hass: HomeAssistant) -> AbodeSystem:
@@ -68,7 +68,7 @@ def _change_setting(call: ServiceCall) -> None:
 
 def _capture_image(call: ServiceCall) -> None:
     """Capture a new image."""
-    entity_ids = call.data[ATTR_ENTITY_ID]
+    entity_ids = call.data[CommonServiceArgument.ENTITY_ID]
 
     target_entities = [
         entity_id
@@ -83,7 +83,7 @@ def _capture_image(call: ServiceCall) -> None:
 
 def _trigger_automation(call: ServiceCall) -> None:
     """Trigger an Abode automation."""
-    entity_ids = call.data[ATTR_ENTITY_ID]
+    entity_ids = call.data[CommonServiceArgument.ENTITY_ID]
 
     target_entities = [
         entity_id

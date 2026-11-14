@@ -7,8 +7,8 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.music_assistant.const import DOMAIN
 from homeassistant.components.music_assistant.switch import PLAYER_OPTIONS_SWITCH
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SERVICE_TOGGLE
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
+from homeassistant.const import STATE_OFF, STATE_ON, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.translation import LOCALE_EN, async_get_translations
@@ -47,7 +47,10 @@ async def test_switch_action(
 
     # toggle off -> on and verify, that client got called once with correct parameters
     await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        SWITCH_DOMAIN,
+        SwitchService.TOGGLE,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
+        blocking=True,
     )
     assert music_assistant_client.send_command.call_count == 1
     assert music_assistant_client.send_command.call_args == call(

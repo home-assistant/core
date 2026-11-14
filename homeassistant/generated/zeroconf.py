@@ -757,10 +757,18 @@ ZEROCONF = {
     ],
     "_ipp._tcp.local.": [
         {
+            "domain": "hp_printer",
+            "name": "hp*",
+        },
+        {
             "domain": "ipp",
         },
     ],
     "_ipps._tcp.local.": [
+        {
+            "domain": "hp_printer",
+            "name": "hp*",
+        },
         {
             "domain": "ipp",
         },
@@ -1000,6 +1008,15 @@ ZEROCONF = {
             "domain": "shelly",
         },
     ],
+    "_ship._tcp.local.": [
+        {
+            "domain": "e3dc",
+            "properties": {
+                "brand": "hager energy",
+                "id": "*",
+            },
+        },
+    ],
     "_sideplay._tcp.local.": [
         {
             "domain": "ecobee",
@@ -1125,6 +1142,11 @@ ZEROCONF = {
     "_viziocast._tcp.local.": [
         {
             "domain": "vizio",
+        },
+    ],
+    "_voice-support._tcp.local.": [
+        {
+            "domain": "voice_support",
         },
     ],
     "_waermeleser._tcp.local.": [

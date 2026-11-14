@@ -43,21 +43,12 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 
 from .const import (
-    ATTR_INFRARED,
-    ATTR_POWER,
-    ATTR_ZONES,
     DATA_LIFX_MANAGER,
     DOMAIN,
     INFRARED_BRIGHTNESS,
     LOGGER,
-    SERVICE_EFFECT_COLORLOOP,
-    SERVICE_EFFECT_COLORSWEEP,
-    SERVICE_EFFECT_FLAME,
-    SERVICE_EFFECT_MORPH,
-    SERVICE_EFFECT_MOVE,
-    SERVICE_EFFECT_PULSE,
-    SERVICE_EFFECT_SKY,
-    SERVICE_EFFECT_STOP,
+    LIFXService,
+    LIFXServiceArgument,
 )
 from .coordinator import LIFXConfigEntry, LIFXUpdateCoordinator
 from .entity import LIFXEntity
@@ -81,11 +72,11 @@ LIFX_MIN_COLOR_RAMP = 0.25
 
 # Matrix firmware effects run on the whole device, and stopping covers every effect
 COMPONENT_FORWARDED_EFFECTS = {
-    SERVICE_EFFECT_COLORSWEEP,
-    SERVICE_EFFECT_FLAME,
-    SERVICE_EFFECT_MORPH,
-    SERVICE_EFFECT_SKY,
-    SERVICE_EFFECT_STOP,
+    LIFXService.EFFECT_COLORSWEEP,
+    LIFXService.EFFECT_FLAME,
+    LIFXService.EFFECT_MORPH,
+    LIFXService.EFFECT_SKY,
+    LIFXService.EFFECT_STOP,
 }
 
 
@@ -211,7 +202,7 @@ class LIFXLight(LIFXEntity, LightEntity):
     _attr_supported_features = LightEntityFeature.TRANSITION | LightEntityFeature.EFFECT
     _attr_name = None
     # A light without hue runs the effects that do not paint a color
-    _attr_effect_list = [SERVICE_EFFECT_PULSE, SERVICE_EFFECT_STOP]
+    _attr_effect_list = [LIFXService.EFFECT_PULSE, LIFXService.EFFECT_STOP]
     _unregister_manager: CALLBACK_TYPE
 
     def __init__(
@@ -297,12 +288,12 @@ class LIFXLight(LIFXEntity, LightEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
-        await self.set_state(**{**kwargs, ATTR_POWER: True})
+        await self.set_state(**{**kwargs, LIFXServiceArgument.POWER: True})
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
-        await self.set_state(**{**kwargs, ATTR_POWER: False})
+        await self.set_state(**{**kwargs, LIFXServiceArgument.POWER: False})
 
     async def set_state(self, **kwargs: Any) -> None:
         """Set a color on the light and turn it on/off."""
@@ -324,9 +315,9 @@ class LIFXLight(LIFXEntity, LightEntity):
 
         self._resolve_brightness_step(kwargs)
 
-        # These are both False if ATTR_POWER is not set
-        power_on = kwargs.get(ATTR_POWER, False)
-        power_off = not kwargs.get(ATTR_POWER, True)
+        # These are both False if power is not set
+        power_on = kwargs.get(LIFXServiceArgument.POWER, False)
+        power_off = not kwargs.get(LIFXServiceArgument.POWER, True)
 
         new_hsbk = find_hsbk(self.coordinator.data.color, **kwargs)
 
@@ -351,7 +342,7 @@ class LIFXLight(LIFXEntity, LightEntity):
 
     async def _async_set_deprecated_infrared(self, kwargs: dict[str, Any]) -> None:
         """Handle the deprecated 'infrared' attribute of 'lifx.set_state'."""
-        if ATTR_INFRARED not in kwargs:
+        if LIFXServiceArgument.INFRARED not in kwargs:
             return
 
         if not isinstance(self.device, InfraredLight):
@@ -366,7 +357,7 @@ class LIFXLight(LIFXEntity, LightEntity):
         )
 
         try:
-            await self.device.set_infrared(kwargs[ATTR_INFRARED] / 255)
+            await self.device.set_infrared(kwargs[LIFXServiceArgument.INFRARED] / 255)
         except LifxError as err:
             raise device_error(err) from err
 
@@ -461,9 +452,9 @@ class LIFXColor(LIFXLight):
     """Representation of a color LIFX light."""
 
     _attr_effect_list = [
-        SERVICE_EFFECT_COLORLOOP,
-        SERVICE_EFFECT_PULSE,
-        SERVICE_EFFECT_STOP,
+        LIFXService.EFFECT_COLORLOOP,
+        LIFXService.EFFECT_PULSE,
+        LIFXService.EFFECT_STOP,
     ]
 
     @property
@@ -507,10 +498,10 @@ class LIFXMultiZone(LIFXColor):
     device: MultiZoneLight
 
     _attr_effect_list = [
-        SERVICE_EFFECT_COLORLOOP,
-        SERVICE_EFFECT_PULSE,
-        SERVICE_EFFECT_MOVE,
-        SERVICE_EFFECT_STOP,
+        LIFXService.EFFECT_COLORLOOP,
+        LIFXService.EFFECT_PULSE,
+        LIFXService.EFFECT_MOVE,
+        LIFXService.EFFECT_STOP,
     ]
 
     @override
@@ -523,7 +514,7 @@ class LIFXMultiZone(LIFXColor):
         """Set the requested zones, leaving every other zone as it is."""
         device = self.device
         changes = parse_hsbk_changes(**kwargs)
-        requested_zones = kwargs.get(ATTR_ZONES)
+        requested_zones = kwargs.get(LIFXServiceArgument.ZONES)
 
         overwrites_every_zone = requested_zones is None and overwrites_existing_color(
             changes
@@ -577,16 +568,20 @@ class LIFXMatrix(LIFXColor):
         super().__init__(coordinator, manager)
         state = coordinator.data
         effects = [
-            SERVICE_EFFECT_COLORLOOP,
-            SERVICE_EFFECT_FLAME,
-            SERVICE_EFFECT_PULSE,
-            SERVICE_EFFECT_MORPH,
+            LIFXService.EFFECT_COLORLOOP,
+            LIFXService.EFFECT_FLAME,
+            LIFXService.EFFECT_PULSE,
+            LIFXService.EFFECT_MORPH,
         ]
         if supports_sky_effect(
             state.capabilities.has_matrix, state.host_firmware.version_major
         ):
-            effects.append(SERVICE_EFFECT_SKY)
-        self._attr_effect_list = [*effects, *self._model_effects, SERVICE_EFFECT_STOP]
+            effects.append(LIFXService.EFFECT_SKY)
+        self._attr_effect_list = [
+            *effects,
+            *self._model_effects,
+            LIFXService.EFFECT_STOP,
+        ]
 
     @override
     async def set_color(
@@ -635,7 +630,7 @@ class LIFXMatrix(LIFXColor):
 class LIFXMirror(LIFXMatrix):
     """Representation of a LIFX Mirror device."""
 
-    _model_effects = (SERVICE_EFFECT_COLORSWEEP,)
+    _model_effects = (LIFXService.EFFECT_COLORSWEEP,)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -912,7 +907,7 @@ class LIFXComponentLight[
 
     async def set_state(self, **kwargs: Any) -> None:
         """Carry out lifx.set_state on the component as far as it can."""
-        if ATTR_INFRARED in kwargs:
+        if LIFXServiceArgument.INFRARED in kwargs:
             self.raise_no_infrared()
         if (effect := kwargs.pop(ATTR_EFFECT, None)) is not None:
             await self._async_forward_effect(effect)
@@ -922,7 +917,7 @@ class LIFXComponentLight[
         resolve_brightness_step(
             kwargs, self.brightness if self.is_on and self.brightness else 0
         )
-        if (power := kwargs.pop(ATTR_POWER, None)) is None:
+        if (power := kwargs.pop(LIFXServiceArgument.POWER, None)) is None:
             if not self.is_on and not requested(parse_hsbk_changes(**kwargs)):
                 return
             # Without a power change, a color set while off is kept for later

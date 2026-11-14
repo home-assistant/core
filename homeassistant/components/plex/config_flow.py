@@ -18,7 +18,6 @@ from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.config_entries import (
     SOURCE_INTEGRATION_DISCOVERY,
     SOURCE_REAUTH,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
@@ -57,7 +56,7 @@ from .const import (
     X_PLEX_VERSION,
 )
 from .errors import NoServersFound, ServerNotSpecified
-from .helpers import get_plex_server
+from .helpers import PlexConfigEntry, get_plex_server
 from .server import PlexServer
 
 HEADER_FRONTEND_BASE = "HA-Frontend-Base"
@@ -99,7 +98,7 @@ class PlexFlowHandler(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: PlexConfigEntry,
     ) -> PlexOptionsFlowHandler:
         """Get the options flow for this handler."""
         return PlexOptionsFlowHandler(config_entry)
@@ -443,7 +442,7 @@ class PlexFlowHandler(ConfigFlow, domain=DOMAIN):
 class PlexOptionsFlowHandler(OptionsFlow):
     """Handle Plex options."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self, config_entry: PlexConfigEntry) -> None:
         """Initialize Plex options flow."""
         self.options = deepcopy(dict(config_entry.options))
         self.server_id = config_entry.data[CONF_SERVER_IDENTIFIER]

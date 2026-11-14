@@ -123,7 +123,7 @@ class CyncConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
-            description_placeholders={CONF_EMAIL: reauth_entry.title},
+            description_placeholders={"email": reauth_entry.title},
         )
 
     async def _validate_credentials(self, user_input: dict[str, Any]) -> dict[str, str]:

@@ -8,14 +8,14 @@ from homeassistant.components.homeassistant import (
     SERVICE_UPDATE_ENTITY,
 )
 from homeassistant.components.select import (
-    ATTR_OPTION,
     ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_NEXT,
+    SelectService,
+    SelectServiceArgument,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    SERVICE_SELECT_OPTION,
+    CommonServiceArgument,
     EntityCategory,
     UnitOfArea,
 )
@@ -60,8 +60,11 @@ async def test_select_option(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.genie_room_size", ATTR_OPTION: "30"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: "select.genie_room_size",
+            SelectServiceArgument.OPTION: "30",
+        },
         blocking=True,
     )
 
@@ -96,8 +99,11 @@ async def test_select_invalid_option(hass: HomeAssistant) -> None:
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: "select.genie_room_size", ATTR_OPTION: "120"},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: "select.genie_room_size",
+                SelectServiceArgument.OPTION: "120",
+            },
             blocking=True,
         )
     await hass.services.async_call(
@@ -122,8 +128,8 @@ async def test_select_next_twice(hass: HomeAssistant) -> None:
     for _ in range(2):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_NEXT,
-            {ATTR_ENTITY_ID: "select.genie_room_size"},
+            SelectService.SELECT_NEXT,
+            {CommonServiceArgument.ENTITY_ID: "select.genie_room_size"},
             blocking=True,
         )
 
@@ -145,8 +151,11 @@ async def test_select_option_category_only(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.genie_room_size", ATTR_OPTION: "30"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: "select.genie_room_size",
+            SelectServiceArgument.OPTION: "30",
+        },
         blocking=True,
     )
 
@@ -169,8 +178,11 @@ async def test_select_action_error(hass: HomeAssistant) -> None:
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: "select.genie_room_size", ATTR_OPTION: "30"},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: "select.genie_room_size",
+                SelectServiceArgument.OPTION: "30",
+            },
             blocking=True,
         )
 

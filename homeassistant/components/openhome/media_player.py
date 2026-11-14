@@ -37,8 +37,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import OpenhomeConfigEntry
-from .const import DOMAIN
-from .services import SERVICE_INVOKE_PIN
+from .const import DOMAIN, OpenhomeService
 
 SUPPORT_OPENHOME = (
     MediaPlayerEntityFeature.SELECT_SOURCE
@@ -268,7 +267,7 @@ class OpenhomeDevice(MediaPlayerEntity):
         """Select input source."""
         await self._device.set_source(self._source_index[source])
 
-    @catch_request_errors(SERVICE_INVOKE_PIN)
+    @catch_request_errors(OpenhomeService.INVOKE_PIN)
     async def async_invoke_pin(self, pin):
         """Invoke pin."""
         if not self._device.pins_enabled:
