@@ -14,13 +14,7 @@ from homeassistant.components.device_tracker import (
     ScannerEntity,
     SourceType,
 )
-from homeassistant.components.device_tracker.const import (
-    ATTR_IP,
-    CONF_CONSIDER_HOME,
-    CONF_NEW_DEVICE_DEFAULTS,
-    CONF_SCAN_INTERVAL,
-    CONF_TRACK_NEW,
-)
+from homeassistant.components.device_tracker.const import ATTR_IP, CONF_SCAN_INTERVAL
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -73,21 +67,13 @@ async def async_setup_scanner(
     get suffixed ids. The migrate_device_tracker repair explains the manual
     migration instead.
     """
-    dropped = [
-        key
-        for key in (
-            CONF_SCAN_INTERVAL,
-            CONF_TRACK_NEW,
-            CONF_CONSIDER_HOME,
-            CONF_NEW_DEVICE_DEFAULTS,
-        )
-        if key in config
-    ]
-    if dropped:
+    if CONF_SCAN_INTERVAL in config:
+        # The poll interval comes from the integration; the other platform
+        # options are still applied by the legacy device_tracker component.
         _LOGGER.warning(
-            "The bbox device_tracker YAML options %s are no longer supported"
-            " and were not imported; remove them from the YAML configuration",
-            ", ".join(dropped),
+            "The bbox device_tracker YAML option %s is no longer supported"
+            " and was ignored; remove it from the YAML configuration",
+            CONF_SCAN_INTERVAL,
         )
     ir.async_create_issue(
         hass,

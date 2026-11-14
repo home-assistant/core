@@ -232,6 +232,9 @@ class BboxConfigFlow(ConfigFlow, domain=DOMAIN):
                     # The new host points to a box already configured on
                     # another entry.
                     return self.async_abort(reason="already_configured")
+                # The target host must not be configured on another entry
+                # (e.g. a YAML import with a host-based unique ID).
+                self._async_abort_entries_match({CONF_HOST: host})
                 if (
                     reconfigure_entry.unique_id is not None
                     and reconfigure_entry.unique_id != reconfigure_entry.data[CONF_HOST]
@@ -271,19 +274,40 @@ class BboxConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         reauth_entry = self._get_reauth_entry()
         if user_input is not None:
-            errors, _ = await _async_validate(
+            errors, device = await _async_validate(
                 self.hass,
                 reauth_entry.data[CONF_HOST],
                 user_input[CONF_PASSWORD],
                 user_input[CONF_VERIFY_SSL],
             )
             if not errors:
+                data_updates = {
+                    CONF_PASSWORD: user_input[CONF_PASSWORD],
+                    CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
+                }
+                if device is not None and device.serialnumber:
+                    serial = device.serialnumber
+                    if (
+                        other_entry
+                        := self.hass.config_entries.async_entry_for_domain_unique_id(
+                            DOMAIN, serial
+                        )
+                    ) is not None and other_entry.entry_id != reauth_entry.entry_id:
+                        # Another entry already identifies this box.
+                        return self.async_abort(reason="already_configured")
+                    if (
+                        reauth_entry.unique_id is not None
+                        and reauth_entry.unique_id != reauth_entry.data[CONF_HOST]
+                        and reauth_entry.unique_id != serial
+                    ):
+                        # A serial-based entry must stay the same box.
+                        return self.async_abort(reason="different_device")
+                    # Host-based YAML entries adopt the stable serial identity.
+                    return self.async_update_reload_and_abort(
+                        reauth_entry, unique_id=serial, data_updates=data_updates
+                    )
                 return self.async_update_reload_and_abort(
-                    reauth_entry,
-                    data_updates={
-                        CONF_PASSWORD: user_input[CONF_PASSWORD],
-                        CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
-                    },
+                    reauth_entry, data_updates=data_updates
                 )
         return self.async_show_form(
             step_id="reauth_confirm",

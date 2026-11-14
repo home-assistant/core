@@ -3,13 +3,27 @@
 from aiohttp import CookieJar
 from bbox_api import BboxClient
 
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_VERIFY_SSL
+from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_VERIFY_SSL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import PLATFORMS
 from .coordinator import BboxConfigEntry, BboxCoordinator
+
+
+def _entry_platforms(entry: BboxConfigEntry) -> list[Platform]:
+    """Return the platforms the entry forwards: sensors only for YAML imports.
+
+    An entry's source never changes, so a YAML-imported entry never gets the
+    device_tracker platform: the known_devices.yaml trackers keep their
+    entity ids while the legacy YAML scanner is configured, and switching to
+    config-flow trackers stays a manual migration (migrate_device_tracker).
+    """
+    if entry.source is SOURCE_IMPORT:
+        return [Platform.SENSOR]
+    return PLATFORMS
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: BboxConfigEntry) -> None:
@@ -38,9 +52,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: BboxConfigEntry) -> None
     # Detach the client on unload; the HA-managed session itself is
     # closed by the framework at shutdown.
     entry.async_on_unload(client.close)
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    platforms = _entry_platforms(entry)
+    await hass.config_entries.async_forward_entry_setups(entry, platforms)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: BboxConfigEntry) -> None:
     """Unload a config entry."""
-    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(
+        entry, _entry_platforms(entry)
+    )

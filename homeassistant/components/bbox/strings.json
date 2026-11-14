@@ -71,11 +71,11 @@
   },
   "issues": {
     "deprecated_yaml": {
-      "description": "Configuring {integration_title} using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the `{domain}` platform configuration from the `sensor` and `device_tracker` sections of your configuration.yaml file and restart Home Assistant to fix this issue.",
+      "description": "Configuring {integration_title} using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the `{domain}` platform configuration from the `sensor` section of your configuration.yaml file and restart Home Assistant to fix this issue. The `device_tracker` YAML platform keeps working and has its own migration repair.",
       "title": "The {integration_title} YAML configuration is being removed"
     },
     "migrate_device_tracker": {
-      "description": "Configuring {integration_title} device tracking with YAML is being removed in Home Assistant 2027.5.\n\nThe legacy YAML scanner keeps working until then, but it is no longer imported automatically: while the YAML platform is configured, the trackers in known_devices.yaml keep their entity ids, so automatically created replacement entities could get suffixed entity ids.\n\nTo migrate manually: remove the `{domain}` platform from the `device_tracker` section of configuration.yaml, remove its entries from known_devices.yaml, and restart Home Assistant. Then set up the {integration_title} integration through the UI and enable the device trackers you want to keep.",
+      "description": "Configuring {integration_title} device tracking with YAML is being removed in Home Assistant 2027.5.\n\nThe legacy YAML scanner keeps working until then, but it is no longer imported automatically: while the YAML platform is configured, the trackers in known_devices.yaml keep their entity ids, so replacement trackers are only created after the migration, which keeps the original entity ids.\n\nTo migrate manually: remove the `{domain}` platform from the `device_tracker` section of configuration.yaml, remove its entries from known_devices.yaml, and restart Home Assistant. Then remove the existing {integration_title} entry, set up the integration through the UI and enable the device trackers you want to keep.",
       "title": "The {integration_title} device tracker YAML configuration is being removed"
     }
   }
