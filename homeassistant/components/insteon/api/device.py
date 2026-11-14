@@ -6,6 +6,7 @@ import probatio
 from pyinsteon import devices
 from pyinsteon.address import Address
 from pyinsteon.constants import DeviceAction
+from pyinsteon.managers.scene_controller_manager import controller_groups
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
@@ -87,6 +88,7 @@ async def websocket_get_device(
         "engine_version": str(device.engine_version),
         "firmware": device.firmware,
         "buttons": {group: state.name for group, state in groups.items()},
+        "controller_groups": controller_groups(device),
     }
     connection.send_result(msg[ID], device_info)
 
