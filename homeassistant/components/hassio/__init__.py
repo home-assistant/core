@@ -642,6 +642,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     _check_deprecated_setup(hass)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    auto_update.async_start()
 
     # If everything else has succeeded, remove the legacy store if it exists. This is done last to
     # avoid removing it before it has been moved to the config entry and persisted to disk.
