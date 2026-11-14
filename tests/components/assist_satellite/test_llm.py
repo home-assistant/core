@@ -8,6 +8,7 @@ import pytest
 from homeassistant.components import llm as llm_component
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
@@ -17,7 +18,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.setup import async_setup_component
 
-from .conftest import MockAssistSatellite
+from .conftest import TEST_DOMAIN, MockAssistSatellite
 
 from tests.components.tts.common import MockResultStream
 
@@ -117,19 +118,20 @@ async def test_broadcast_area_or_floor(
     entity2: MockAssistSatellite,
     target: dict[str, str],
 ) -> None:
-    """Test a broadcast to an area or floor includes the satellite that asked."""
+    """Test a broadcast to an area or floor skips the satellite that asked."""
     floor = floor_registry.async_create("Upstairs")
     kitchen = area_registry.async_create("Kitchen", floor_id=floor.floor_id)
     area_registry.async_create("Living room")
     device_registry.async_update_device(entity.device_entry.id, area_id=kitchen.id)
+    device_registry.async_update_device(entity2.device_entry.id, area_id=kitchen.id)
 
     result = await _async_broadcast(
         hass, {"message": "Hello", **target}, entity.device_entry.id
     )
 
-    assert result == llm.ToolResult(data={"satellites": ["Test Entity"]})
-    assert len(entity.announcements) == 1
-    assert len(entity2.announcements) == 0
+    assert result == llm.ToolResult(data={"satellites": ["Test Entity 2"]})
+    assert len(entity.announcements) == 0
+    assert len(entity2.announcements) == 1
 
 
 @pytest.mark.parametrize(
@@ -158,3 +160,26 @@ async def test_broadcast_no_satellite(
 
     assert len(entity.announcements) == 0
     assert len(entity2.announcements) == 0
+
+
+@pytest.mark.usefixtures("mock_tts_engine")
+async def test_broadcast_area_all_satellites_excluded(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity: MockAssistSatellite,
+) -> None:
+    """Test a broadcast to an area does not reach excluded satellites."""
+    kitchen = area_registry.async_create("Kitchen")
+    device_registry.async_update_device(entity.device_entry.id, area_id=kitchen.id)
+
+    with (
+        patch(
+            "homeassistant.components.assist_satellite.intent.EXCLUDED_DOMAINS",
+            new={TEST_DOMAIN},
+        ),
+        pytest.raises(HomeAssistantError, match="No satellite can play the broadcast"),
+    ):
+        await _async_broadcast(hass, {"message": "Hello", "area": "Kitchen"}, None)
+
+    assert len(entity.announcements) == 0

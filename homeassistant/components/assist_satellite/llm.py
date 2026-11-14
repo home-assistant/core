@@ -7,6 +7,7 @@ import probatio
 from homeassistant.components.llm import LLMTools
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, intent
 from homeassistant.helpers.llm import (
     LLM_API_ASSIST,
@@ -61,16 +62,17 @@ class BroadcastTool(Tool):
         area = args.get("area")
         floor = args.get("floor")
 
-        # A broadcast to the whole home skips the satellite that asked for it.
-        # A broadcast to a named area or floor includes it.
-        entity_ids = async_get_broadcast_entity_ids(
-            hass, None if area or floor else llm_context.device_id
-        )
+        # The satellite that asked is skipped, because an announcement cancels
+        # its running pipeline, which is the one calling this tool.
+        entity_ids = async_get_broadcast_entity_ids(hass, llm_context.device_id)
         states = [
             state for entity_id in entity_ids if (state := hass.states.get(entity_id))
         ]
 
         if area or floor:
+            # The matcher searches all states when it gets an empty list.
+            if not states:
+                raise HomeAssistantError("No satellite can play the broadcast")
             # Satellites are matched without the assistant, because the user
             # rarely exposes them.
             constraints = intent.MatchTargetsConstraints(
