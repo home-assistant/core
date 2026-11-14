@@ -20,8 +20,10 @@ from homeassistant.components.device_tracker import (
     DEFAULT_CONSIDER_HOME,
 )
 from homeassistant.components.fritz.const import (
+    CONF_ALLOW_MESH_INFO_NON_ADMIN,
     CONF_FEATURE_DEVICE_TRACKING,
     CONF_OLD_DISCOVERY,
+    DEFAULT_CONF_ALLOW_MESH_INFO_NON_ADMIN,
     DOMAIN,
     ERROR_AUTH_INVALID,
     ERROR_CANNOT_CONNECT,
@@ -90,6 +92,7 @@ def _patch_fritz_connection(fc_class_mock: MagicMock) -> Generator[None]:
                 CONF_OLD_DISCOVERY: False,
                 CONF_CONSIDER_HOME: DEFAULT_CONSIDER_HOME.total_seconds(),
                 CONF_FEATURE_DEVICE_TRACKING: True,
+                CONF_ALLOW_MESH_INFO_NON_ADMIN: DEFAULT_CONF_ALLOW_MESH_INFO_NON_ADMIN,
             },
         ),
         (
@@ -105,6 +108,7 @@ def _patch_fritz_connection(fc_class_mock: MagicMock) -> Generator[None]:
                 CONF_OLD_DISCOVERY: False,
                 CONF_CONSIDER_HOME: DEFAULT_CONSIDER_HOME.total_seconds(),
                 CONF_FEATURE_DEVICE_TRACKING: True,
+                CONF_ALLOW_MESH_INFO_NON_ADMIN: DEFAULT_CONF_ALLOW_MESH_INFO_NON_ADMIN,
             },
         ),
         (
@@ -124,6 +128,7 @@ def _patch_fritz_connection(fc_class_mock: MagicMock) -> Generator[None]:
                 CONF_OLD_DISCOVERY: False,
                 CONF_CONSIDER_HOME: DEFAULT_CONSIDER_HOME.total_seconds(),
                 CONF_FEATURE_DEVICE_TRACKING: False,
+                CONF_ALLOW_MESH_INFO_NON_ADMIN: DEFAULT_CONF_ALLOW_MESH_INFO_NON_ADMIN,
             },
         ),
     ],
@@ -936,6 +941,7 @@ async def test_options_flow(hass: HomeAssistant, fc_class_mock) -> None:
         CONF_OLD_DISCOVERY: False,
         CONF_CONSIDER_HOME: 37,
         CONF_FEATURE_DEVICE_TRACKING: True,
+        CONF_ALLOW_MESH_INFO_NON_ADMIN: DEFAULT_CONF_ALLOW_MESH_INFO_NON_ADMIN,
     }
 
 

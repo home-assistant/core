@@ -31,6 +31,7 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import slugify
 from homeassistant.util.hass_dict import HassKey
+from homeassistant.util.json import JsonArrayType, JsonObjectType
 
 from .const import (
     CONF_OLD_DISCOVERY,
@@ -184,6 +185,8 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         self._wifi_network_indexes: set[int] = set()
         self._guest_wifi_registered = False
         self._port_mapping_indexes: set[int] = set()
+        self._mesh_topology_raw: JsonObjectType | None = None
+        self._hosts_attributes_raw: JsonArrayType | None = None
 
     async def async_setup(self, options: Mapping[str, Any] | None = None) -> None:
         """Wrap up FritzboxTools class setup."""
@@ -483,6 +486,16 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         return self._release_url
 
     @property
+    def hosts_attributes_raw(self) -> JsonArrayType | None:
+        """Return the hosts attributes, as received from the device."""
+        return self._hosts_attributes_raw
+
+    @property
+    def mesh_topology_raw(self) -> JsonObjectType | None:
+        """Return mesh topology, as received from the device."""
+        return self._mesh_topology_raw
+
+    @property
     def mac(self) -> str:
         """Return device Mac address."""
         if not self._unique_id:
@@ -533,6 +546,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         """Retrieve latest hosts information from the FRITZ!Box."""
         hosts_attributes: list[HostAttributes] = []
         hosts_info: list[HostInfo] = []
+        self._hosts_attributes_raw = None
         try:
             try:
                 hosts_attributes = cast(
@@ -541,6 +555,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                         self.fritz_hosts.get_hosts_attributes
                     ),
                 )
+                self._hosts_attributes_raw = cast(JsonArrayType, hosts_attributes)
             except FritzActionError:
                 hosts_info = cast(
                     list[HostInfo],
@@ -685,6 +700,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
 
         new_device = False
         hosts = await self._async_update_hosts_info()
+        self._mesh_topology_raw = None
 
         if not self.fritz_status.device_has_mesh_support or (
             self._options
@@ -711,6 +727,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 )
             ) or not isinstance(topology, dict):
                 raise Exception("Mesh supported but empty topology reported")  # noqa: TRY002
+            self._mesh_topology_raw = cast(JsonObjectType, topology)
         except FritzActionError:
             self.mesh_role = MeshRoles.SLAVE
             # Avoid duplicating device trackers
