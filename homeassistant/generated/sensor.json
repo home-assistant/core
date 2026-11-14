@@ -283,6 +283,7 @@
       "m\u00b3"
     ],
     "volume_flow_rate": [
+      "ft\u00b3/h",
       "ft\u00b3/min",
       "gal/d",
       "gal/h",
@@ -666,6 +667,7 @@
       "m\u00b3"
     ],
     "volume_flow_rate": [
+      "ft\u00b3/h",
       "ft\u00b3/min",
       "gal/d",
       "gal/h",
