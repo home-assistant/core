@@ -1,0 +1,221 @@
+# serializer version: 1
+# name: test_conversation
+  list([
+    dict({
+      'attachments': None,
+      'content': 'hello',
+      'created': HAFakeDatetime(2026, 9, 28, 12, 0, tzinfo=datetime.timezone.utc),
+      'role': 'user',
+    }),
+    dict({
+      'agent_id': 'conversation.gpt_oss_20b',
+      'content': 'Hello, how can I help?',
+      'created': HAFakeDatetime(2026, 9, 28, 12, 0, tzinfo=datetime.timezone.utc),
+      'native': None,
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': None,
+    }),
+  ])
+# ---
+# name: test_conversation[input]
+  list([
+    dict({
+      'content': 'hello',
+      'role': 'user',
+    }),
+  ])
+# ---
+# name: test_entities[conversation.gpt_oss_20b-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'conversation',
+    'entity_category': None,
+    'entity_id': 'conversation.gpt_oss_20b',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+      'conversation': dict({
+        'should_expose': False,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'openresponses',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ConversationEntityFeature: 1>,
+    'translation_key': None,
+    'unique_id': 'ulid-conversation',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[conversation.gpt_oss_20b-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'gpt-oss:20b',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ConversationEntityFeature: 1>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'conversation.gpt_oss_20b',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_function_call
+  list([
+    dict({
+      'attachments': None,
+      'content': 'Please call the test tool',
+      'created': HAFakeDatetime(2026, 9, 28, 12, 0, tzinfo=datetime.timezone.utc),
+      'role': 'user',
+    }),
+    dict({
+      'agent_id': 'conversation.gpt_oss_20b',
+      'content': None,
+      'created': HAFakeDatetime(2026, 9, 28, 12, 0, tzinfo=datetime.timezone.utc),
+      'native': dict({
+        'content': None,
+        'encrypted_content': 'encrypted',
+        'extra': dict({
+        }),
+        'id': 'rs_1',
+        'status': None,
+        'summary': list([
+        ]),
+        'type': 'reasoning',
+      }),
+      'role': 'assistant',
+      'thinking_content': 'Let me check.',
+      'tool_calls': None,
+    }),
+    dict({
+      'agent_id': 'conversation.gpt_oss_20b',
+      'content': None,
+      'created': HAFakeDatetime(2026, 9, 28, 12, 0, tzinfo=datetime.timezone.utc),
+      'native': dict({
+        'extra': dict({
+        }),
+        'id': 'acme_1',
+        'status': None,
+        'type': 'acme:search',
+      }),
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': list([
+        dict({
+          'external': False,
+          'id': 'call_1',
+          'tool_args': dict({
+            'param1': 'value1',
+          }),
+          'tool_name': 'test_tool',
+        }),
+        dict({
+          'external': False,
+          'id': 'call_2',
+          'tool_args': dict({
+          }),
+          'tool_name': 'test_tool',
+        }),
+      ]),
+    }),
+    dict({
+      'agent_id': 'conversation.gpt_oss_20b',
+      'created': HAFakeDatetime(2026, 9, 28, 12, 0, tzinfo=datetime.timezone.utc),
+      'result': dict({
+        'data': 'result1',
+        'error': False,
+      }),
+      'role': 'tool_result',
+      'tool_call_id': 'call_1',
+      'tool_name': 'test_tool',
+    }),
+    dict({
+      'agent_id': 'conversation.gpt_oss_20b',
+      'created': HAFakeDatetime(2026, 9, 28, 12, 0, tzinfo=datetime.timezone.utc),
+      'result': dict({
+        'data': 'result2',
+        'error': False,
+      }),
+      'role': 'tool_result',
+      'tool_call_id': 'call_2',
+      'tool_name': 'test_tool',
+    }),
+    dict({
+      'agent_id': 'conversation.gpt_oss_20b',
+      'content': 'Done',
+      'created': HAFakeDatetime(2026, 9, 28, 12, 0, tzinfo=datetime.timezone.utc),
+      'native': None,
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': None,
+    }),
+  ])
+# ---
+# name: test_function_call[input]
+  list([
+    dict({
+      'content': 'Please call the test tool',
+      'role': 'user',
+    }),
+    dict({
+      'content': None,
+      'encrypted_content': 'encrypted',
+      'extra': dict({
+      }),
+      'id': 'rs_1',
+      'status': None,
+      'summary': list([
+      ]),
+      'type': 'reasoning',
+    }),
+    dict({
+      'extra': dict({
+      }),
+      'id': 'acme_1',
+      'status': None,
+      'type': 'acme:search',
+    }),
+    dict({
+      'arguments': '{"param1":"value1"}',
+      'call_id': 'call_1',
+      'name': 'test_tool',
+      'type': 'function_call',
+    }),
+    dict({
+      'arguments': '{}',
+      'call_id': 'call_2',
+      'name': 'test_tool',
+      'type': 'function_call',
+    }),
+    dict({
+      'call_id': 'call_1',
+      'output': '{"data":"result1","error":false}',
+      'type': 'function_call_output',
+    }),
+    dict({
+      'call_id': 'call_2',
+      'output': '{"data":"result2","error":false}',
+      'type': 'function_call_output',
+    }),
+  ])
+# ---
