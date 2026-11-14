@@ -1,5 +1,6 @@
 """Tests for the BLUETTI Modbus numbers."""
 
+import asyncio
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -150,6 +151,64 @@ async def test_number_unavailable_for_another_device(
     entity = hass.states.get(DISCHARGE_LIMIT_ENTITY)
     assert entity is not None
     assert entity.state == STATE_UNAVAILABLE
+
+
+async def _let_tasks_run() -> None:
+    """Let the pending tasks run as far as they can without blocking."""
+    for _ in range(20):
+        await asyncio.sleep(0)
+
+
+async def test_queued_write_is_dropped_for_another_device(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A write waiting its turn is not sent once another device answers."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_config_entry.runtime_data.settings.device
+    write = device.write
+    release = asyncio.Event()
+    written: list[str] = []
+
+    async def held_write(key: str, value: int) -> None:
+        written.append(key)
+        await release.wait()
+        await write(key, value)
+
+    with patch.object(device, "write", held_write):
+        first = hass.async_create_task(
+            hass.services.async_call(
+                NUMBER_DOMAIN,
+                SERVICE_SET_VALUE,
+                {ATTR_ENTITY_ID: CHARGE_LIMIT_ENTITY, ATTR_VALUE: 95},
+                blocking=True,
+            )
+        )
+        # Waits for the first one: the platform takes one action at a time.
+        second = hass.async_create_task(
+            hass.services.async_call(
+                NUMBER_DOMAIN,
+                SERVICE_SET_VALUE,
+                {ATTR_ENTITY_ID: DISCHARGE_LIMIT_ENTITY, ATTR_VALUE: 20},
+                blocking=True,
+            )
+        )
+        await _let_tasks_run()
+        assert written == ["b_soc_high"]
+
+        mock_modbus_unit.holding[SERIAL_ADDRESS] = 1
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await _let_tasks_run()
+
+        release.set()
+        await first
+        with pytest.raises(HomeAssistantError, match="could not be written"):
+            await second
+
+    assert written == ["b_soc_high"]
 
 
 async def test_settings_are_read_on_their_own_poll(

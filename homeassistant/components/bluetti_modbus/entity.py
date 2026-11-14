@@ -78,6 +78,13 @@ class BluettiModbusSettingEntity(CoordinatorEntity[BluettiModbusDataUpdateCoordi
 
         The device serves the old value for a moment after a write.
         """
+        # An action can wait for another one first, and the readings poll may
+        # find another device at the address in the meantime.
+        if not self.available:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="write_failed",
+            )
         try:
             await self.coordinator.device.write(self._field_name, value)
         except ModbusError as err:
