@@ -1,12 +1,15 @@
 """Tests for the system health component init."""
 
 from typing import Any
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from aiohttp.client_exceptions import ClientError
 import pytest
 from pytest_homeassistant.common import get_system_health_info, mock_platform
-from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.test_util.aiohttp import (
+    AiohttpClientMocker,
+    AiohttpClientMockResponse,
+)
 from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components import system_health
@@ -202,7 +205,7 @@ async def test_check_can_reach_url_session(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test the reachability check uses the session passed to it."""
-    session = AsyncMock()
+    session = MagicMock()
 
     assert (
         await system_health.async_check_can_reach_url(
@@ -211,6 +214,25 @@ async def test_check_can_reach_url_session(
         == "ok"
     )
 
-    session.get.assert_awaited_once()
-    assert session.get.await_args.args == ("http://localhost/status",)
+    session.get.assert_called_once()
+    assert session.get.call_args.args == ("http://localhost/status",)
+    session.get.return_value.__aexit__.assert_awaited_once()
     assert len(aioclient_mock.mock_calls) == 0
+
+
+async def test_check_can_reach_url_releases_response(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test the reachability check releases the response it does not read."""
+    aioclient_mock.get("http://example.com/status", text="large page")
+
+    with patch.object(AiohttpClientMockResponse, "release") as mock_release:
+        assert (
+            await system_health.async_check_can_reach_url(
+                hass, "http://example.com/status"
+            )
+            == "ok"
+        )
+
+    # An unreleased response keeps its connection out of the pool for good
+    mock_release.assert_called_once()

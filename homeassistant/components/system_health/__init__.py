@@ -301,7 +301,8 @@ async def async_check_can_reach_url(
         session = aiohttp_client.async_get_clientsession(hass)
 
     try:
-        await session.get(url, timeout=aiohttp.ClientTimeout(total=5))
+        async with session.get(url, timeout=aiohttp.ClientTimeout(total=5)):
+            pass
     except aiohttp.ClientError:
         data = {"type": "failed", "error": "unreachable"}
     except TimeoutError:
