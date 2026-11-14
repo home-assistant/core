@@ -1,0 +1,6 @@
+{
+  "domain": "dagen_neopool",
+  "name": "Dagen",
+  "integration_type": "virtual",
+  "supported_by": "neopool"
+}

@@ -2687,6 +2687,17 @@
       ],
       "supported_by": "renault"
     },
+    "dagen_neopool": {
+      "name": "Dagen",
+      "integration_type": "virtual",
+      "categories": [
+        "water.pools_spas"
+      ],
+      "connectivity": [
+        "modbus"
+      ],
+      "supported_by": "neopool"
+    },
     "daikin": {
       "name": "Daikin AC",
       "integration_type": "device",
