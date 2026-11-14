@@ -7,6 +7,9 @@
       "cool_energy_consumption": {
         "default": "mdi:snowflake"
       },
+      "demand_control_mode": {
+        "default": "mdi:meter-electric-outline"
+      },
       "heat_energy_consumption": {
         "default": "mdi:fire"
       }

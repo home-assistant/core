@@ -33,6 +33,9 @@ from .const import (
     ATTR_TARGET_HUMIDITY,
     ATTR_TOTAL_ENERGY_TODAY,
     ATTR_TOTAL_POWER,
+    DAIKIN_DEMAND_CONTROL_MODES,
+    MODE_AUTO,
+    MODE_MANUAL,
 )
 from .coordinator import DaikinConfigEntry, DaikinCoordinator
 from .entity import DaikinEntity
@@ -152,11 +155,13 @@ async def async_setup_entry(
     if daikin_api.device.support_compressor_frequency:
         sensors.append(ATTR_COMPRESSOR_FREQUENCY)
 
-    entities = [
+    entities: list[SensorEntity] = [
         DaikinSensor(daikin_api, description)
         for description in SENSOR_TYPES
         if description.key in sensors
     ]
+    if daikin_api.device.support_demand_control:
+        entities.append(DaikinDemandControlSensor(daikin_api))
     async_add_entities(entities)
 
 
@@ -178,3 +183,58 @@ class DaikinSensor(DaikinEntity, SensorEntity):
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
         return self.entity_description.value_func(self.device)
+
+
+class DaikinDemandControlSensor(DaikinEntity, SensorEntity):
+    """Representation of the demand control mode."""
+
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_options = ["off", MODE_AUTO, MODE_MANUAL]
+    _attr_translation_key = "demand_control_mode"
+
+    def __init__(self, coordinator: DaikinCoordinator) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{self.device.mac}-demand_control"
+
+    @property
+    @override
+    def native_value(self) -> str | None:
+        """Return the active demand control mode."""
+        attrs = self.device.get_demand_control()
+        match attrs.get("en_demand"):
+            case "0":
+                return "off"
+            case "1":
+                return self._get_mode(attrs)
+            case _:
+                return None
+
+    @property
+    @override
+    def extra_state_attributes(self) -> dict[str, str | int]:
+        """Return the device's configured demand control mode and power limit."""
+        attrs = self.device.get_demand_control()
+        mode = self._get_mode(attrs)
+        if mode is None:
+            return {}
+
+        attributes: dict[str, str | int] = {"armed_mode": mode}
+        if mode == MODE_MANUAL and attrs.get("max_pow", "").isdigit():
+            attributes["max_pow"] = int(attrs["max_pow"])
+
+        return attributes
+
+    @staticmethod
+    def _get_mode(attrs: dict[str, str]) -> str | None:
+        """Return the configured demand control mode."""
+        mode_value = attrs.get("mode")
+        if mode_value is None or not mode_value.isdigit():
+            return None
+
+        mode = int(mode_value)
+        if mode == DAIKIN_DEMAND_CONTROL_MODES[MODE_MANUAL]:
+            return MODE_MANUAL
+        if mode == DAIKIN_DEMAND_CONTROL_MODES[MODE_AUTO]:
+            return MODE_AUTO
+        return None
