@@ -131,6 +131,9 @@ class SwissPublicTransportSensor(
     @override
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
+        connections = self.coordinator.data
+        if len(connections) <= self.entity_description.index:
+            return None
         return self.entity_description.value_fn(
-            self.coordinator.data[self.entity_description.index]
+            connections[self.entity_description.index]
         )
