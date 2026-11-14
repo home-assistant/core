@@ -55,7 +55,7 @@ async def test_active_alert(
 @pytest.mark.parametrize(
     "alert",
     [
-        pytest.param(None, id="no_alert"),
+        pytest.param({}, id="no_alert"),
         pytest.param(
             ALERT | {"expires": "2026-01-01T11:59:59+00:00"}, id="expired_alert"
         ),
@@ -66,7 +66,7 @@ async def test_no_active_alert(
     hass: HomeAssistant,
     mock_meteoalert: MagicMock,
     snapshot: SnapshotAssertion,
-    alert: dict[str, Any] | None,
+    alert: dict[str, Any],
 ) -> None:
     """Test the sensor is off, without alert attributes, if no alert is valid."""
     mock_meteoalert.return_value.get_alert.return_value = alert
@@ -75,6 +75,23 @@ async def test_no_active_alert(
     await hass.async_block_till_done()
 
     assert hass.states.get(ENTITY_ID) == snapshot
+
+
+async def test_alert_without_expires(
+    hass: HomeAssistant, mock_meteoalert: MagicMock
+) -> None:
+    """Test an alert without an expiration time is active."""
+    alert = dict(ALERT)
+    del alert["expires"]
+    mock_meteoalert.return_value.get_alert.return_value = alert
+
+    assert await async_setup_component(hass, BINARY_SENSOR_DOMAIN, CONFIG)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_ON
+    assert state.attributes["event"] == ALERT["event"]
+    assert "expires" not in state.attributes
 
 
 async def test_defaults(hass: HomeAssistant, mock_meteoalert: MagicMock) -> None:
@@ -137,7 +154,7 @@ async def test_alert_withdrawn(
 
     assert hass.states.get(ENTITY_ID).state == STATE_ON
 
-    mock_meteoalert.return_value.get_alert.return_value = None
+    mock_meteoalert.return_value.get_alert.return_value = {}
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)

@@ -270,39 +270,8 @@ MODELS_ALL_DEVICES = (
 )
 MODELS_ALL = MODELS_ALL_DEVICES + MODELS_GATEWAY
 
-# Fan/Humidifier Services
-SERVICE_SET_FAVORITE_LEVEL = "fan_set_favorite_level"
-SERVICE_SET_FAN_LEVEL = "fan_set_fan_level"
-SERVICE_SET_VOLUME = "fan_set_volume"
-SERVICE_RESET_FILTER = "fan_reset_filter"
-SERVICE_SET_EXTRA_FEATURES = "fan_set_extra_features"
-SERVICE_SET_DRY = "set_dry"
-SERVICE_SET_MOTOR_SPEED = "fan_set_motor_speed"
-
 # Light data
 ATTR_SCENE = "scene"
-
-# Light Services
-SERVICE_SET_SCENE = "light_set_scene"
-SERVICE_SET_DELAYED_TURN_OFF = "light_set_delayed_turn_off"
-SERVICE_REMINDER_ON = "light_reminder_on"
-SERVICE_REMINDER_OFF = "light_reminder_off"
-SERVICE_NIGHT_LIGHT_MODE_ON = "light_night_light_mode_on"
-SERVICE_NIGHT_LIGHT_MODE_OFF = "light_night_light_mode_off"
-SERVICE_EYECARE_MODE_ON = "light_eyecare_mode_on"
-SERVICE_EYECARE_MODE_OFF = "light_eyecare_mode_off"
-
-# Remote Services
-SERVICE_LEARN = "remote_learn_command"
-SERVICE_SET_REMOTE_LED_ON = "remote_set_led_on"
-SERVICE_SET_REMOTE_LED_OFF = "remote_set_led_off"
-
-# Switch Services
-SERVICE_SET_WIFI_LED_ON = "switch_set_wifi_led_on"
-SERVICE_SET_WIFI_LED_OFF = "switch_set_wifi_led_off"
-SERVICE_SET_POWER_MODE = "switch_set_power_mode"
-SERVICE_SET_POWER_PRICE = "switch_set_power_price"
-
 
 # Features
 FEATURE_SET_BUZZER = 1

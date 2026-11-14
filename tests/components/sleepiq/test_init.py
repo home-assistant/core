@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from datetime import timedelta
 from http import HTTPStatus
+import logging
 from unittest.mock import MagicMock, create_autospec
 
 from asyncsleepiq import (
@@ -120,35 +121,35 @@ async def test_api_timeout(hass: HomeAssistant, mock_asyncsleepiq) -> None:
     assert not await hass.config_entries.async_setup(entry.entry_id)
 
 
-@pytest.mark.parametrize(
-    ("get_fetch_mock", "platform", "interval"),
-    [
-        pytest.param(
-            lambda client, bed: client.fetch_bed_statuses,
-            "sensor",
-            UPDATE_INTERVAL,
-            id="bed_status",
-        ),
-        pytest.param(
-            lambda client, bed: bed.fetch_pause_mode,
-            "switch",
-            LONGER_UPDATE_INTERVAL,
-            id="pause_mode",
-        ),
-        pytest.param(
-            lambda client, bed: bed.sleepers[0].fetch_favsleepnumber,
-            "number",
-            LONGER_UPDATE_INTERVAL,
-            id="favorite_firmness",
-        ),
-        pytest.param(
-            lambda client, bed: bed.sleepers[0].fetch_sleep_data,
-            "sensor",
-            SLEEP_DATA_UPDATE_INTERVAL,
-            id="sleep_data",
-        ),
-    ],
-)
+FETCH_PARAMS = [
+    pytest.param(
+        lambda client, bed: client.fetch_bed_statuses,
+        "sensor",
+        UPDATE_INTERVAL,
+        id="bed_status",
+    ),
+    pytest.param(
+        lambda client, bed: bed.fetch_pause_mode,
+        "switch",
+        LONGER_UPDATE_INTERVAL,
+        id="pause_mode",
+    ),
+    pytest.param(
+        lambda client, bed: bed.sleepers[0].fetch_favsleepnumber,
+        "number",
+        LONGER_UPDATE_INTERVAL,
+        id="favorite_firmness",
+    ),
+    pytest.param(
+        lambda client, bed: bed.sleepers[0].fetch_sleep_data,
+        "sensor",
+        SLEEP_DATA_UPDATE_INTERVAL,
+        id="sleep_data",
+    ),
+]
+
+
+@pytest.mark.parametrize(("get_fetch_mock", "platform", "interval"), FETCH_PARAMS)
 async def test_update_auth_error_starts_reauth_flow(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -191,6 +192,46 @@ async def test_update_api_error_does_not_start_reauth_flow(
 
     assert mock_asyncsleepiq.fetch_bed_statuses.call_count == 2
     assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+
+
+@pytest.mark.parametrize(("get_fetch_mock", "platform", "interval"), FETCH_PARAMS)
+@pytest.mark.parametrize(
+    ("exception", "level"),
+    [
+        pytest.param(SleepIQTimeoutException, logging.INFO, id="unreachable"),
+        pytest.param(
+            SleepIQAPIException(HTTPStatus.INTERNAL_SERVER_ERROR, "server error"),
+            logging.ERROR,
+            id="api_error",
+        ),
+    ],
+)
+async def test_update_failure_log_level(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    mock_asyncsleepiq: MagicMock,
+    mock_bed: MagicMock,
+    get_fetch_mock: Callable[[MagicMock, MagicMock], MagicMock],
+    platform: str,
+    interval: timedelta,
+    exception: Exception | type[Exception],
+    level: int,
+) -> None:
+    """Test an unreachable service is logged at info level."""
+    await setup_platform(hass, platform)
+
+    get_fetch_mock(mock_asyncsleepiq, mock_bed).side_effect = exception
+    freezer.tick(interval)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert [
+        record.levelno
+        for record in caplog.records
+        if record.name == "homeassistant.components.sleepiq.coordinator"
+        and record.levelno > logging.DEBUG
+    ] == [level]
 
 
 async def test_unique_id_migration(hass: HomeAssistant, mock_asyncsleepiq) -> None:

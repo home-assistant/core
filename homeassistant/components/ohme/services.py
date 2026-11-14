@@ -1,5 +1,6 @@
 """Ohme services."""
 
+from enum import StrEnum
 from typing import Final
 
 from ohme import OhmeApiClient
@@ -17,13 +18,26 @@ from homeassistant.helpers import selector, service
 from .const import DOMAIN
 from .coordinator import OhmeConfigEntry
 
-ATTR_CONFIG_ENTRY: Final = "config_entry"
-ATTR_PRICE_CAP: Final = "price_cap"
 
-SERVICE_LIST_CHARGE_SLOTS = "list_charge_slots"
+class OhmeService(StrEnum):
+    """Store keys for Ohme services."""
+
+    LIST_CHARGE_SLOTS = "list_charge_slots"
+    SET_PRICE_CAP = "set_price_cap"
+
+
+class OhmeServiceArgument(StrEnum):
+    """Store keys for Ohme service arguments."""
+
+    CONFIG_ENTRY = "config_entry"
+    PRICE_CAP = "price_cap"
+
+
 SERVICE_LIST_CHARGE_SLOTS_SCHEMA: Final = probatio.Schema(
     {
-        probatio.Required(ATTR_CONFIG_ENTRY): selector.ConfigEntrySelector(
+        probatio.Required(
+            OhmeServiceArgument.CONFIG_ENTRY
+        ): selector.ConfigEntrySelector(
             {
                 "integration": DOMAIN,
             }
@@ -31,15 +45,16 @@ SERVICE_LIST_CHARGE_SLOTS_SCHEMA: Final = probatio.Schema(
     }
 )
 
-SERVICE_SET_PRICE_CAP = "set_price_cap"
 SERVICE_SET_PRICE_CAP_SCHEMA: Final = probatio.Schema(
     {
-        probatio.Required(ATTR_CONFIG_ENTRY): selector.ConfigEntrySelector(
+        probatio.Required(
+            OhmeServiceArgument.CONFIG_ENTRY
+        ): selector.ConfigEntrySelector(
             {
                 "integration": DOMAIN,
             }
         ),
-        probatio.Required(ATTR_PRICE_CAP): probatio.Coerce(float),
+        probatio.Required(OhmeServiceArgument.PRICE_CAP): probatio.Coerce(float),
     }
 )
 
@@ -47,7 +62,7 @@ SERVICE_SET_PRICE_CAP_SCHEMA: Final = probatio.Schema(
 def __get_client(call: ServiceCall) -> OhmeApiClient:
     """Get the client from the config entry."""
     entry: OhmeConfigEntry = service.async_get_config_entry(
-        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY]
+        call.hass, DOMAIN, call.data[OhmeServiceArgument.CONFIG_ENTRY]
     )
 
     return entry.runtime_data.charge_session_coordinator.client
@@ -70,12 +85,12 @@ def async_setup_services(hass: HomeAssistant) -> None:
     ) -> None:
         """List of charge slots."""
         client = __get_client(service_call)
-        price_cap = service_call.data[ATTR_PRICE_CAP]
+        price_cap = service_call.data[OhmeServiceArgument.PRICE_CAP]
         await client.async_change_price_cap(cap=price_cap)
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_LIST_CHARGE_SLOTS,
+        OhmeService.LIST_CHARGE_SLOTS,
         list_charge_slots,
         schema=SERVICE_LIST_CHARGE_SLOTS_SCHEMA,
         supports_response=SupportsResponse.ONLY,
@@ -83,7 +98,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_SET_PRICE_CAP,
+        OhmeService.SET_PRICE_CAP,
         set_price_cap,
         schema=SERVICE_SET_PRICE_CAP_SCHEMA,
         supports_response=SupportsResponse.NONE,
