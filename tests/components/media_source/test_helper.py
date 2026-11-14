@@ -75,6 +75,27 @@ async def test_async_browse_media(hass: HomeAssistant) -> None:
     assert media.children[0].title == "My media"
 
 
+async def test_async_browse_media_root_hides_unavailable(hass: HomeAssistant) -> None:
+    """Test the root only lists sources that are available."""
+    assert await async_setup_component(hass, media_source.DOMAIN, {})
+    await hass.async_block_till_done()
+    unavailable = models.MediaSource("unavailable")
+    unavailable.async_is_available = AsyncMock(return_value=False)
+    hass.data[DATA_MEDIA_SOURCE_PLATFORMS].async_get_platforms = AsyncMock(
+        return_value={
+            "available": models.MediaSource("available"),
+            "unavailable": unavailable,
+        }
+    )
+
+    media = await media_source.async_browse_media(hass, const.URI_SCHEME)
+
+    assert [child.domain for child in media.children] == [
+        media_source.DOMAIN,
+        "available",
+    ]
+
+
 async def test_async_resolve_media(hass: HomeAssistant) -> None:
     """Test browse media."""
     assert await async_setup_component(hass, media_source.DOMAIN, {})

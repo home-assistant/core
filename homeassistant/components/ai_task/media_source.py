@@ -3,6 +3,7 @@
 import math
 from pathlib import Path
 from time import time
+from typing import override
 
 from homeassistant.components.media_source import local_source
 from homeassistant.core import HomeAssistant
@@ -12,8 +13,20 @@ from homeassistant.helpers.singleton import singleton
 from .const import DATA_MEDIA_SOURCE, DOMAIN, IMAGE_DIR, LOGGER
 
 
+class AITaskMediaSource(local_source.LocalSource):
+    """Local media source for AI generated images."""
+
+    @override
+    async def async_is_available(self) -> bool:
+        """Return if any image has been generated."""
+        # The image dir is only created when the first image is uploaded
+        return await self.hass.async_add_executor_job(
+            Path(self.media_dirs[IMAGE_DIR]).is_dir
+        )
+
+
 @singleton(DATA_MEDIA_SOURCE, async_=True)
-async def async_get_media_source(hass: HomeAssistant) -> local_source.LocalSource:
+async def async_get_media_source(hass: HomeAssistant) -> AITaskMediaSource:
     """Set up local media source."""
     media_dirs = list(hass.config.media_dirs.values())
 
@@ -24,7 +37,7 @@ async def async_get_media_source(hass: HomeAssistant) -> local_source.LocalSourc
 
     media_dir = Path(media_dirs[0]) / DOMAIN / IMAGE_DIR
 
-    return local_source.LocalSource(
+    return AITaskMediaSource(
         hass,
         DOMAIN,
         "AI generated images",
