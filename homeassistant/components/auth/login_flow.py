@@ -182,7 +182,7 @@ class WellKnownProtectedResourceView(HomeAssistantView):
         resource = url_prefix
         if resource_path is not None:
             raw_suffix = request.rel_url.raw_path.removeprefix(self.url)
-            if not await hass.http.async_is_protected_path(request, raw_suffix):
+            if not await hass.http.async_path_requires_auth(request, raw_suffix):
                 return self.json_message("Resource not found", HTTPStatus.NOT_FOUND)
             resource = f"{url_prefix}{raw_suffix}"
 
