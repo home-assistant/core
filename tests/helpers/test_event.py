@@ -4626,6 +4626,34 @@ async def test_async_track_entity_registry_updated_event(hass: HomeAssistant) ->
     assert event_data[2] == {"action": "remove", "entity_id": "switch.dog_feeder"}
 
 
+async def test_async_track_entity_registry_updated_event_with_generator(
+    hass: HomeAssistant,
+) -> None:
+    """Test tracking entity registry updates with a generator of entity_ids."""
+    entity_id = "switch.puppy_feeder"
+    event_data = []
+
+    @ha.callback
+    def run_callback(event):
+        event_data.append(event.data)
+
+    unsub = async_track_entity_registry_updated_event(
+        hass, (entity_id for _ in range(1)), run_callback
+    )
+    hass.bus.async_fire(
+        EVENT_ENTITY_REGISTRY_UPDATED, {"action": "create", "entity_id": entity_id}
+    )
+    await hass.async_block_till_done()
+    assert len(event_data) == 1
+
+    unsub()
+    hass.bus.async_fire(
+        EVENT_ENTITY_REGISTRY_UPDATED, {"action": "create", "entity_id": entity_id}
+    )
+    await hass.async_block_till_done()
+    assert len(event_data) == 1
+
+
 async def test_async_track_entity_registry_updated_event_with_a_callback_that_throws(
     hass: HomeAssistant,
 ) -> None:
