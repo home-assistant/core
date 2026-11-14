@@ -7,6 +7,9 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.bbox.const import DOMAIN
+from homeassistant.components.bbox.coordinator import BboxCoordinator
+from homeassistant.components.bbox.sensor import BboxSensor
+from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.const import (
     CONF_HOST,
     CONF_MONITORED_VARIABLES,
@@ -128,3 +131,18 @@ async def test_yaml_import_keeps_connection_options(hass: HomeAssistant) -> None
     assert entry.data[CONF_HOST] == "192.168.1.1"
     assert entry.data[CONF_PASSWORD] == PASSWORD
     assert entry.data[CONF_VERIFY_SSL] is False
+
+
+@pytest.mark.usefixtures("mock_bbox_client")
+async def test_sensor_unknown_description_key(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a sensor whose description key matches nothing reports None."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    coordinator: BboxCoordinator = mock_config_entry.runtime_data
+
+    sensor = BboxSensor(coordinator, "Bbox", SensorEntityDescription(key="unknown"))
+    assert sensor.native_value is None

@@ -151,3 +151,17 @@ async def test_setup_api_error(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_unexpected_error(
+    hass: HomeAssistant,
+    mock_bbox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test an unexpected client error is retried, not treated as reauth."""
+    mock_bbox_client.return_value.get_device.side_effect = ValueError("boom")
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY

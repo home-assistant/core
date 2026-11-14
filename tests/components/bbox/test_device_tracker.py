@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from .const import ACTIVE_HOST, HOST, HOSTS, NEW_HOST, PASSWORD
+from .const import ACTIVE_HOST, HOST, HOSTS, INACTIVE_HOST, NEW_HOST, PASSWORD
 
 MYLAPTOP_ENTITY = "device_tracker.mylaptop"
 OLDPHONE_ENTITY = "device_tracker.oldphone"
@@ -226,3 +226,37 @@ async def test_yaml_scanner_survives_fetch_errors(
     assert hass.states.get(MYLAPTOP_ENTITY) is None
     issue = issue_registry.async_get_issue(DOMAIN, f"migrate_device_tracker_{DOMAIN}")
     assert issue is not None
+
+
+async def test_tracker_device_gone_from_hosts(
+    hass: HomeAssistant,
+    mock_bbox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a device no longer reported by the box becomes not home."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    await _async_enable_trackers(
+        hass, mock_config_entry, entity_registry, MYLAPTOP_ENTITY
+    )
+    state = hass.states.get(MYLAPTOP_ENTITY)
+    assert state is not None
+    assert state.state == STATE_HOME
+
+    # Let the reload batched by the entity registry change settle first.
+    freezer.tick(timedelta(seconds=31))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_bbox_client.return_value.get_hosts.return_value = [INACTIVE_HOST]
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(MYLAPTOP_ENTITY)
+    assert state is not None
+    assert state.state == STATE_NOT_HOME
+    assert state.attributes.get(ATTR_IP) is None

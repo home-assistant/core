@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 from bbox_api import (
+    BboxApiError,
     BboxConnectionError,
     BboxInvalidCredentialsError,
     BboxRateLimitError,
@@ -60,6 +61,7 @@ async def test_user_flow(hass: HomeAssistant, mock_bbox_client: MagicMock) -> No
         (BboxConnectionError("unreachable"), "cannot_connect"),
         (BboxInvalidCredentialsError(), "invalid_auth"),
         (BboxRateLimitError(), "rate_limited"),
+        (BboxApiError("unexpected"), "unknown"),
     ],
 )
 async def test_user_flow_errors(

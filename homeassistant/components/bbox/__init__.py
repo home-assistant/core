@@ -21,7 +21,7 @@ def _entry_platforms(entry: BboxConfigEntry) -> list[Platform]:
     entity ids while the legacy YAML scanner is configured, and switching to
     config-flow trackers stays a manual migration (migrate_device_tracker).
     """
-    if entry.source is SOURCE_IMPORT:
+    if entry.source == SOURCE_IMPORT:
         return [Platform.SENSOR]
     return PLATFORMS
 
