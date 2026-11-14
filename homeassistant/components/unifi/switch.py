@@ -36,7 +36,7 @@ from aiounifi.models.device import (
 from aiounifi.models.dpi_restriction_app import DPIRestrictionAppEnableRequest
 from aiounifi.models.dpi_restriction_group import DPIRestrictionGroup
 from aiounifi.models.event import Event, EventKey
-from aiounifi.models.firewall_policy import FirewallPolicy, FirewallPolicyUpdateRequest
+from aiounifi.models.firewall_policy import FirewallPolicy
 from aiounifi.models.object_oriented_network_config import (
     ObjectOrientedNetworkConfig,
     ObjectOrientedNetworkInternetMode,
@@ -56,12 +56,11 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import UnifiConfigEntry
-from .const import ATTR_MANUFACTURER, DOMAIN
+from .const import ATTR_MANUFACTURER
 from .entity import (
     SubscriptionType,
     UnifiEntity,
@@ -74,6 +73,7 @@ from .entity import (
     async_port_poe_supported_fn,
     async_unifi_network_device_info_fn,
     async_wlan_device_info_fn,
+    request_failed_error,
 )
 from .hub import UnifiHub
 
@@ -136,9 +136,8 @@ async def async_firewall_policy_control_fn(
     hub: UnifiHub, obj_id: str, target: bool
 ) -> None:
     """Control firewall policy state."""
-    policy = hub.api.firewall_policies[obj_id].raw
-    policy["enabled"] = target
-    await hub.api.request(FirewallPolicyUpdateRequest.create(policy))
+    policy = hub.api.firewall_policies[obj_id]
+    await hub.api.firewall_policies.save(policy, enabled=target)
 
 
 async def async_object_oriented_network_config_control_fn(
@@ -437,26 +436,22 @@ class UnifiSwitchEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
-        try:
-            await self.entity_description.control_fn(self.hub, self._obj_id, True)
-        except aiounifi.AiounifiException as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="action_request_failed",
-            ) from err
-        await self.async_refresh_after_control()
+        async with self.control_lock:
+            try:
+                await self.entity_description.control_fn(self.hub, self._obj_id, True)
+            except aiounifi.AiounifiException as err:
+                raise request_failed_error(err) from err
+            await self.async_refresh_after_control()
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off switch."""
-        try:
-            await self.entity_description.control_fn(self.hub, self._obj_id, False)
-        except aiounifi.AiounifiException as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="action_request_failed",
-            ) from err
-        await self.async_refresh_after_control()
+        async with self.control_lock:
+            try:
+                await self.entity_description.control_fn(self.hub, self._obj_id, False)
+            except aiounifi.AiounifiException as err:
+                raise request_failed_error(err) from err
+            await self.async_refresh_after_control()
 
     @callback
     @override
