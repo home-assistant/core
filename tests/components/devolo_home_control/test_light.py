@@ -7,7 +7,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.devolo_home_control.const import DOMAIN
-from homeassistant.components.light import ATTR_BRIGHTNESS, DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN, LightServiceArgument
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -50,7 +50,7 @@ async def test_light_without_binary_sensor(
     await hass.async_block_till_done()
     state = hass.states.get(f"{LIGHT_DOMAIN}.test_test")
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_BRIGHTNESS] == 255
+    assert state.attributes[LightServiceArgument.BRIGHTNESS] == 255
 
     # Test setting brightness
     with patch(
@@ -77,7 +77,10 @@ async def test_light_without_binary_sensor(
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: f"{LIGHT_DOMAIN}.test_test", ATTR_BRIGHTNESS: 50},
+            {
+                ATTR_ENTITY_ID: f"{LIGHT_DOMAIN}.test_test",
+                LightServiceArgument.BRIGHTNESS: 50,
+            },
             blocking=True,
         )  # In reality, this leads to a websocket message like already tested above
         set_value.assert_called_once_with(round(50 / 255 * 100))
@@ -92,7 +95,10 @@ async def test_light_without_binary_sensor(
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: f"{LIGHT_DOMAIN}.test_test", ATTR_BRIGHTNESS: 50},
+            {
+                ATTR_ENTITY_ID: f"{LIGHT_DOMAIN}.test_test",
+                LightServiceArgument.BRIGHTNESS: 50,
+            },
             blocking=True,
         )
     assert error.value.translation_key == "set_failed"
@@ -134,7 +140,7 @@ async def test_light_with_binary_sensor(
     await hass.async_block_till_done()
     state = hass.states.get(f"{LIGHT_DOMAIN}.test_test")
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_BRIGHTNESS] == 255
+    assert state.attributes[LightServiceArgument.BRIGHTNESS] == 255
 
     # Test setting brightness
     with patch(

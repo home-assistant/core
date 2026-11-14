@@ -6,9 +6,9 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
-    ATTR_HVAC_MODE,
     DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_TEMPERATURE,
+    ClimateServiceArgument,
     HVACMode,
 )
 from homeassistant.components.devolo_home_control.const import DOMAIN
@@ -55,7 +55,7 @@ async def test_climate(
             SERVICE_SET_TEMPERATURE,
             {
                 ATTR_ENTITY_ID: f"{CLIMATE_DOMAIN}.test_test",
-                ATTR_HVAC_MODE: HVACMode.HEAT,
+                ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT,
                 ATTR_TEMPERATURE: 20.0,
             },
             blocking=True,
@@ -74,7 +74,7 @@ async def test_climate(
             SERVICE_SET_TEMPERATURE,
             {
                 ATTR_ENTITY_ID: f"{CLIMATE_DOMAIN}.test_test",
-                ATTR_HVAC_MODE: HVACMode.HEAT,
+                ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT,
                 ATTR_TEMPERATURE: 20.0,
             },
             blocking=True,
