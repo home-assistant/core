@@ -28,13 +28,20 @@ async def async_setup_entry(
     async_add_entities(
         [
             DemoCover(hass, "cover_1", "Kitchen Window"),
-            DemoCover(hass, "cover_2", "Hall Window", 10),
+            DemoCover(
+                hass,
+                "cover_2",
+                "Hall Window",
+                10,
+                device_class=CoverDeviceClass.SHUTTER,
+            ),
             DemoCover(
                 hass,
                 "cover_3",
                 "Living Room Window",
                 70,
                 50,
+                device_class=CoverDeviceClass.BLIND,
                 supported_speeds=[CoverSpeed.SLOW, CoverSpeed.FAST],
                 translation_key="living_room_window",
             ),
@@ -50,11 +57,30 @@ async def async_setup_entry(
                 "cover_5",
                 "Pergola Roof",
                 tilt_position=60,
+                device_class=CoverDeviceClass.AWNING,
                 supported_features=(
                     CoverEntityFeature.OPEN_TILT
                     | CoverEntityFeature.STOP_TILT
                     | CoverEntityFeature.CLOSE_TILT
                     | CoverEntityFeature.SET_TILT_POSITION
+                ),
+            ),
+            DemoCover(
+                hass,
+                "cover_6",
+                "Bedroom Curtains",
+                40,
+                device_class=CoverDeviceClass.CURTAIN,
+            ),
+            DemoCover(
+                hass,
+                "cover_7",
+                "Front Gate",
+                device_class=CoverDeviceClass.GATE,
+                supported_features=(
+                    CoverEntityFeature.OPEN
+                    | CoverEntityFeature.CLOSE
+                    | CoverEntityFeature.STOP
                 ),
             ),
         ]

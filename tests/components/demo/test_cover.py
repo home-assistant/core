@@ -13,9 +13,11 @@ from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
     DOMAIN as COVER_DOMAIN,
+    CoverDeviceClass,
     CoverState,
 )
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     SERVICE_CLOSE_COVER,
@@ -66,6 +68,27 @@ async def test_supported_features(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 15
     state = hass.states.get("cover.living_room_window")
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 511
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "device_class"),
+    [
+        ("cover.kitchen_window", None),
+        ("cover.hall_window", CoverDeviceClass.SHUTTER),
+        ("cover.living_room_window", CoverDeviceClass.BLIND),
+        ("cover.garage_door", CoverDeviceClass.GARAGE),
+        ("cover.pergola_roof", CoverDeviceClass.AWNING),
+        ("cover.bedroom_curtains", CoverDeviceClass.CURTAIN),
+        ("cover.front_gate", CoverDeviceClass.GATE),
+    ],
+)
+async def test_device_class(
+    hass: HomeAssistant, entity_id: str, device_class: CoverDeviceClass | None
+) -> None:
+    """Test cover device classes."""
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == device_class
 
 
 async def test_close_cover(hass: HomeAssistant) -> None:

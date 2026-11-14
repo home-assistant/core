@@ -144,7 +144,7 @@ DEMO_DEVICES = [
         "traits": [
             "action.devices.traits.OpenClose",
         ],
-        "type": "action.devices.types.BLINDS",
+        "type": "action.devices.types.AWNING",
         "willReportState": False,
     },
     {
@@ -154,7 +154,7 @@ DEMO_DEVICES = [
             "action.devices.traits.StartStop",
             "action.devices.traits.OpenClose",
         ],
-        "type": "action.devices.types.BLINDS",
+        "type": "action.devices.types.SHUTTER",
         "willReportState": False,
     },
     {
@@ -162,6 +162,26 @@ DEMO_DEVICES = [
         "name": {"name": "Garage Door"},
         "traits": ["action.devices.traits.OpenClose"],
         "type": "action.devices.types.GARAGE",
+        "willReportState": False,
+    },
+    {
+        "id": "cover.bedroom_curtains",
+        "name": {"name": "Bedroom Curtains"},
+        "traits": [
+            "action.devices.traits.StartStop",
+            "action.devices.traits.OpenClose",
+        ],
+        "type": "action.devices.types.CURTAIN",
+        "willReportState": False,
+    },
+    {
+        "id": "cover.front_gate",
+        "name": {"name": "Front Gate"},
+        "traits": [
+            "action.devices.traits.StartStop",
+            "action.devices.traits.OpenClose",
+        ],
+        "type": "action.devices.types.GATE",
         "willReportState": False,
     },
     {
