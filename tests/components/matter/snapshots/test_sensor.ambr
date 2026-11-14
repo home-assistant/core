@@ -28762,7 +28762,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000043-MatterNodeDevice'), ('matter', 'serial_serial_67')]>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000045-MatterNodeDevice'), ('matter', 'serial_serial_69')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -28785,7 +28785,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'reboot_count',
-    'unique_id': '00000000000004D2-0000000000000043-MatterNodeDevice-0-GeneralDiagnosticsRebootCount-51-1',
+    'unique_id': '00000000000004D2-0000000000000045-MatterNodeDevice-0-GeneralDiagnosticsRebootCount-51-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -28813,7 +28813,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000043-MatterNodeDevice'), ('matter', 'serial_serial_67')]>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000045-MatterNodeDevice'), ('matter', 'serial_serial_69')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -28836,7 +28836,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'uptime',
-    'unique_id': '00000000000004D2-0000000000000043-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
+    'unique_id': '00000000000004D2-0000000000000045-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
     'unit_of_measurement': None,
   })
 # ---
