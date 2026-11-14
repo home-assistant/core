@@ -254,5 +254,6 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator[None]):
             start_date,
             end_date,
             device_mac_address=self.mac_address,
+            timezone=self.hass.config.time_zone,
         )
         LOGGER.debug("Updated Flo consumption data: %s", self._water_usage)
