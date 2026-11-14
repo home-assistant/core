@@ -463,11 +463,22 @@ ATTR_PERSONS: Final = "persons"
 
 
 class CommonServiceArgument(StrEnum):
-    """Action fields shared by the actions of many integrations."""
+    """Action fields shared by many integrations; target keys use TargetKey."""
 
     CONFIG_ENTRY_ID = "config_entry_id"
     DEVICE_ID = "device_id"
     ENTITY_ID = "entity_id"
+
+
+class TargetKey(StrEnum):
+    """Keys of an action, condition or trigger target and its exclude block."""
+
+    ENTITY_ID = "entity_id"
+    DEVICE_ID = "device_id"
+    AREA_ID = "area_id"
+    FLOOR_ID = "floor_id"
+    LABEL_ID = "label_id"
+    EXCLUDE = "exclude"
 
 
 class EntityCapabilityAttribute(StrEnum):
