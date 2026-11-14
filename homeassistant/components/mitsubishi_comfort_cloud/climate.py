@@ -69,7 +69,15 @@ _MODE_TO_ACTION: dict[str, HVACAction] = {
     "vent": HVACAction.FAN,
 }
 
-_FAN_SPEED_MAP: dict[str, FanSpeed] = {s.name.lower(): s for s in FanSpeed}
+# Protocol speed names differ from the Comfort app and remote labels.
+_FAN_SPEED_MAP: dict[str, FanSpeed] = {
+    "quiet": FanSpeed.SUPER_QUIET,
+    "low": FanSpeed.QUIET,
+    "medium": FanSpeed.LOW,
+    "high": FanSpeed.POWERFUL,
+    "powerful": FanSpeed.SUPER_POWERFUL,
+    "auto": FanSpeed.AUTO,
+}
 _FAN_SPEED_TO_MODE = {speed.value: mode for mode, speed in _FAN_SPEED_MAP.items()}
 _VANE_DIR_MAP: dict[str, VaneDirection] = {d.value: d for d in VaneDirection}
 
@@ -236,7 +244,10 @@ class MitsubishiComfortCloudClimate(MitsubishiComfortCloudEntity, ClimateEntity)
     @override
     def fan_modes(self) -> list[str]:
         """Return the list of available fan modes."""
-        return [s.name.lower() for s in self._device.supported_fan_speeds]
+        return [
+            _FAN_SPEED_TO_MODE[speed.value]
+            for speed in self._device.supported_fan_speeds
+        ]
 
     @property
     @override

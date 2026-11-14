@@ -5,11 +5,11 @@
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 23.5,
       <ClimateEntityStateAttribute.FAN_MODE: 'fan_mode'>: 'auto',
       <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
-        'super_quiet',
         'quiet',
         'low',
+        'medium',
+        'high',
         'powerful',
-        'super_powerful',
         'auto',
       ]),
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room',

@@ -162,15 +162,15 @@ async def test_fahrenheit_target_range(
         ),
         pytest.param(
             "set_fan_mode",
-            {"fan_mode": "super_quiet"},
+            {"fan_mode": "quiet"},
             {"fanSpeed": "superQuiet"},
-            id="super-quiet-fan",
+            id="quiet-fan",
         ),
         pytest.param(
             "set_fan_mode",
-            {"fan_mode": "super_powerful"},
+            {"fan_mode": "powerful"},
             {"fanSpeed": "superPowerful"},
-            id="super-powerful-fan",
+            id="powerful-fan",
         ),
         pytest.param(
             "set_swing_mode",
@@ -817,7 +817,12 @@ async def test_app_room_temperature(
 @pytest.mark.parametrize(
     ("attribute", "value", "label"),
     [
-        ("fan_mode", "super_quiet", "Super quiet"),
+        pytest.param("fan_mode", "auto", "Auto", id="fan-auto"),
+        pytest.param("fan_mode", "quiet", "Quiet", id="fan-quiet"),
+        pytest.param("fan_mode", "low", "Low", id="fan-low"),
+        pytest.param("fan_mode", "medium", "Medium", id="fan-medium"),
+        pytest.param("fan_mode", "high", "High", id="fan-high"),
+        pytest.param("fan_mode", "powerful", "Powerful", id="fan-powerful"),
         ("swing_mode", "midhorizontal", "Mid-horizontal"),
     ],
 )
@@ -846,18 +851,108 @@ async def test_mode_translations(
 
 
 @pytest.mark.parametrize(
-    ("fan_mode", "raw"),
-    [("super_quiet", "superQuiet"), ("super_powerful", "superPowerful")],
+    ("speed_count", "has_auto", "expected"),
+    [
+        pytest.param(0, False, None, id="no-fan-control"),
+        pytest.param(0, True, ["auto"], id="auto-only"),
+        pytest.param(3, False, ["low", "medium", "high"], id="three-manual"),
+        pytest.param(3, True, ["low", "medium", "high", "auto"], id="three-auto"),
+        pytest.param(4, False, ["low", "medium", "high", "powerful"], id="four-manual"),
+        pytest.param(
+            4, True, ["low", "medium", "high", "powerful", "auto"], id="four-auto"
+        ),
+        pytest.param(
+            5, False, ["quiet", "low", "medium", "high", "powerful"], id="five-manual"
+        ),
+        pytest.param(
+            5,
+            True,
+            ["quiet", "low", "medium", "high", "powerful", "auto"],
+            id="five-auto",
+        ),
+    ],
+)
+async def test_supported_fan_modes(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_cloud_account: AsyncMock,
+    speed_count: int,
+    has_auto: bool,
+    expected: list[str] | None,
+) -> None:
+    """Expose app labels for only the device's supported fan speeds."""
+    mock_cloud_account.get_device_profile.return_value.update(
+        numberOfFanSpeeds=speed_count, hasFanSpeedAuto=has_auto
+    )
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).attributes.get("fan_modes") == expected
+
+
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    [
+        pytest.param("auto", "auto", id="auto"),
+        pytest.param("superQuiet", "quiet", id="quiet"),
+        pytest.param("quiet", "low", id="low"),
+        pytest.param("low", "medium", id="medium"),
+        pytest.param("powerful", "high", id="high"),
+        pytest.param("superPowerful", "powerful", id="powerful"),
+        pytest.param(None, None, id="missing"),
+        pytest.param("unknown", None, id="unknown"),
+    ],
+)
+async def test_reported_fan_mode(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_cloud_account: AsyncMock,
+    raw: str | None,
+    expected: str | None,
+) -> None:
+    """Translate reported speeds without relying on a preceding command."""
+    mock_cloud_account.get_device_details.return_value["fanSpeed"] = raw
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).attributes["fan_mode"] == expected
+
+
+@pytest.mark.parametrize(
+    ("speed_count", "fan_mode", "raw"),
+    [
+        pytest.param(3, "auto", "auto", id="three-auto"),
+        pytest.param(3, "low", "quiet", id="three-low"),
+        pytest.param(3, "medium", "low", id="three-medium"),
+        pytest.param(3, "high", "powerful", id="three-high"),
+        pytest.param(4, "auto", "auto", id="four-auto"),
+        pytest.param(4, "low", "quiet", id="four-low"),
+        pytest.param(4, "medium", "low", id="four-medium"),
+        pytest.param(4, "high", "powerful", id="four-high"),
+        pytest.param(4, "powerful", "superPowerful", id="four-powerful"),
+        pytest.param(5, "auto", "auto", id="five-auto"),
+        pytest.param(5, "quiet", "superQuiet", id="five-quiet"),
+        pytest.param(5, "low", "quiet", id="five-low"),
+        pytest.param(5, "medium", "low", id="five-medium"),
+        pytest.param(5, "high", "powerful", id="five-high"),
+        pytest.param(5, "powerful", "superPowerful", id="five-powerful"),
+    ],
 )
 async def test_fan_mode_round_trip(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_cloud_account: AsyncMock,
     freezer: FrozenDateTimeFactory,
+    speed_count: int,
     fan_mode: str,
     raw: str,
 ) -> None:
-    """Translated fan identifiers survive commands and subsequent polling."""
+    """App fan identifiers map consistently during commands and polling."""
+    mock_cloud_account.get_device_profile.return_value["numberOfFanSpeeds"] = (
+        speed_count
+    )
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -878,6 +973,13 @@ async def test_fan_mode_round_trip(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).attributes["fan_mode"] == fan_mode
+
+    # A remote speed change must replace the optimistic command state.
+    mock_cloud_account.get_device_details.return_value["fanSpeed"] = "quiet"
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).attributes["fan_mode"] == "low"
 
 
 @pytest.mark.parametrize(
