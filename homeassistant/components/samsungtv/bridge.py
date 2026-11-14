@@ -646,9 +646,18 @@ class SamsungTVWSBridge(
     @override
     async def async_get_art_mode(self) -> bool | None:
         """Return True if the TV is showing art, None if unknown."""
-        return await self.hass.async_add_executor_job(self._get_art_mode)
+        status, token = await self.hass.async_add_executor_job(self._get_art_mode)
+        if token and token != self.token:
+            LOGGER.debug("Art mode connection to %s provided a new token", self.host)
+            self.token = token
+            self._notify_update_config_entry({CONF_TOKEN: token})
+        if status == "on":
+            return True
+        if status == "off":
+            return False
+        return None
 
-    def _get_art_mode(self) -> bool | None:
+    def _get_art_mode(self) -> tuple[str | None, str | None]:
         """Read the art mode status over the art app channel."""
         assert self.port
         # samsungtvws does not annotate the art API
@@ -660,7 +669,7 @@ class SamsungTVWSBridge(
             name=VALUE_CONF_NAME,
         )
         try:
-            status: str = art.get_artmode()  # type: ignore[no-untyped-call]
+            status: str | None = art.get_artmode()  # type: ignore[no-untyped-call]
         except (
             ConnectionFailure,
             ResponseError,
@@ -668,10 +677,11 @@ class SamsungTVWSBridge(
             OSError,
         ) as err:
             LOGGER.debug("Failed to get art mode from %s: %s", self.host, repr(err))
-            return None
+            status = None
         finally:
             art.close()
-        return status == "on"
+        # The TV may hand the art connection a refreshed token; keep it
+        return status, art.token
 
     async def async_launch_app(self, app_id: str) -> None:
         """Send the launch_app command using websocket protocol."""

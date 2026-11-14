@@ -265,6 +265,7 @@ def art_api_fixture() -> Generator[Mock]:
     """Patch the samsungtvws SamsungTVArt."""
     art_api = Mock(SamsungTVArt)
     art_api.get_artmode.return_value = "on"
+    art_api.token = None
     with patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVArt",
         return_value=art_api,

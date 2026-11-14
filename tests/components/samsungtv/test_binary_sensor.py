@@ -12,7 +12,7 @@ from pytest_homeassistant.common import (
 from samsungtvws.exceptions import ConnectionFailure, ResponseError
 
 from homeassistant.components.samsungtv.const import DOMAIN
-from homeassistant.const import CONF_MAC, STATE_OFF, STATE_ON, STATE_UNKNOWN
+from homeassistant.const import CONF_MAC, CONF_TOKEN, STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -174,6 +174,29 @@ async def test_art_mode_unknown_on_error(
     state = hass.states.get(ENTITY_ID)
     assert state
     assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize("status", [None, "unexpected"])
+@pytest.mark.usefixtures("remote_websocket", "frame_rest_api")
+async def test_art_mode_unknown_on_unexpected_status(
+    hass: HomeAssistant, art_api: Mock, status: str | None
+) -> None:
+    """Test an unexpected art mode answer is unknown, not off."""
+    art_api.get_artmode.return_value = status
+    await setup_samsungtv_entry(hass, ENTRYDATA_WEBSOCKET)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.usefixtures("remote_websocket", "frame_rest_api")
+async def test_art_mode_saves_new_token(hass: HomeAssistant, art_api: Mock) -> None:
+    """Test a token refreshed by the art connection is saved to the entry."""
+    art_api.token = "987654321"
+    entry = await setup_samsungtv_entry(hass, ENTRYDATA_WEBSOCKET)
+
+    assert entry.data[CONF_TOKEN] == "987654321"
 
 
 @pytest.mark.usefixtures("remote_websocket", "rest_api")
