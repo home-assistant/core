@@ -309,6 +309,193 @@ def test_render_with_possible_json_value_and_dont_parse_result(
     assert isinstance(result, str)
 
 
+CYCLIC: list[object] = []
+CYCLIC.append(CYCLIC)
+
+
+@pytest.mark.parametrize(
+    ("template_str", "kwargs", "expected"),
+    [
+        pytest.param(
+            "{{ value_json.temp }}",
+            {"value": '{"temp": 21.5}'},
+            "21.5",
+            id="attribute",
+        ),
+        pytest.param(
+            "{{value_json.temp}}",
+            {"value": '{"temp": 21.5}', "parse_result": True},
+            21.5,
+            id="parse_result",
+        ),
+        pytest.param(
+            "{{- value_json.temp -}}",
+            {"value": '{"temp": " padded "}'},
+            "padded",
+            id="whitespace_control",
+        ),
+        pytest.param(
+            "{{ value_json['a b'] }}",
+            {"value": '{"a b": true}'},
+            "True",
+            id="item_single_quotes",
+        ),
+        pytest.param(
+            '{{ value_json["temp"] }}',
+            {"value": '{"temp": null}'},
+            "None",
+            id="item_double_quotes",
+        ),
+        pytest.param(
+            "{{ value_json['items'] }}",
+            {"value": '{"items": 5}'},
+            "5",
+            id="item_named_like_dict_attribute",
+        ),
+        pytest.param(
+            "{{ value_json.ENERGY['Power'] }}",
+            {"value": '{"ENERGY": {"Power": 12}}', "parse_result": True},
+            12,
+            id="nested_key",
+        ),
+        pytest.param(
+            "{{ value_json.nested }}",
+            {"value": '{"nested": {"a": [1, "x"]}}'},
+            "{'a': [1, 'x']}",
+            id="container",
+        ),
+        pytest.param(
+            "{{ value_json.temp }}",
+            {"value": "raw", "value_json": {"temp": 21.5}},
+            "21.5",
+            id="value_json_argument",
+        ),
+    ],
+)
+def test_render_with_possible_json_value_json_path(
+    hass: HomeAssistant,
+    template_str: str,
+    kwargs: dict[str, Any],
+    expected: Any,
+) -> None:
+    """A template that only outputs a value_json key is rendered without jinja."""
+    tpl = template.Template(template_str, hass)
+    with patch("homeassistant.helpers.template.render_with_context") as mock_render:
+        assert tpl.async_render_with_possible_json_value(**kwargs) == expected
+    mock_render.assert_not_called()
+
+
+def test_render_with_possible_json_value_json_path_legacy_templates(
+    hass: HomeAssistant,
+) -> None:
+    """The fast path returns a string with legacy templates, like jinja."""
+    hass.config.legacy_templates = True
+    tpl = template.Template("{{ value_json.temp }}", hass)
+    assert (
+        tpl.async_render_with_possible_json_value('{"temp": 21.5}', parse_result=True)
+        == "21.5"
+    )
+
+
+@pytest.mark.parametrize(
+    ("template_str", "kwargs", "expected"),
+    [
+        pytest.param(
+            "{{ value_json.goodbye }}",
+            {"value": '{"hello": 1}'},
+            "",
+            id="missing_key",
+        ),
+        pytest.param(
+            "{{ value_json.a.b }}",
+            {"value": '{"a": {}}'},
+            "",
+            id="nested_missing_key",
+        ),
+        pytest.param(
+            "{{ value_json.a.b }}",
+            {"value": '{"a": 1}'},
+            "",
+            id="nested_not_a_dict",
+        ),
+        pytest.param(
+            "{{ value_json.hello }}", {"value": "[1, 2]"}, "", id="not_a_dict"
+        ),
+        pytest.param(
+            "{{ value_json.hello }}",
+            {"value": "not json"},
+            "not json",
+            id="not_json",
+        ),
+        pytest.param(
+            "{{ value_json.temp }}",
+            {"value": "raw", "value_json": Undefined},
+            "raw",
+            id="value_json_undefined",
+        ),
+        pytest.param(
+            "{{ value_json.hello | int }}",
+            {"value": '{"hello": "1"}'},
+            "1",
+            id="filter",
+        ),
+        pytest.param(
+            "{{ value_json['a\rb'] }}",
+            {"value": '{"a\\rb": 1, "a\\nb": 2}'},
+            "2",
+            id="carriage_return_in_key",
+        ),
+        pytest.param(
+            "{{ value_json['a\r\nb'] }}",
+            {"value": '{"a\\r\\nb": 1, "a\\nb": 2}'},
+            "2",
+            id="crlf_in_key",
+        ),
+        pytest.param(
+            "{{ value_json['a\\nb'] }}",
+            {"value": '{"a\\\\nb": 1, "a\\nb": 2}'},
+            "2",
+            id="backslash_escape_in_key",
+        ),
+        pytest.param(
+            "{{ value_json.a }}",
+            {"value": "raw", "value_json": {"a": CYCLIC}, "error_value": "fallback"},
+            "fallback",
+            id="cyclic_value",
+        ),
+    ],
+)
+def test_render_with_possible_json_value_json_path_fallback(
+    hass: HomeAssistant,
+    template_str: str,
+    kwargs: dict[str, Any],
+    expected: str,
+) -> None:
+    """Anything the fast path can't render exactly like jinja is rendered by jinja."""
+    tpl = template.Template(template_str, hass)
+    with patch(
+        "homeassistant.helpers.template.render_with_context",
+        wraps=template.render_with_context,
+    ) as mock_render:
+        result = tpl.async_render_with_possible_json_value(**kwargs)
+    mock_render.assert_called_once()
+    assert result == expected
+
+
+def test_render_with_possible_json_value_json_path_dict_attribute(
+    hass: HomeAssistant,
+) -> None:
+    """Attribute access to a dict attribute name is left to jinja, which returns the attribute."""
+    tpl = template.Template("{{ value_json.items }}", hass)
+    with patch(
+        "homeassistant.helpers.template.render_with_context",
+        wraps=template.render_with_context,
+    ) as mock_render:
+        result = tpl.async_render_with_possible_json_value('{"items": 1}')
+    mock_render.assert_called_once()
+    assert result.startswith("<built-in method items of dict object")
+
+
 @patch(
     "homeassistant.helpers.template.TemplateEnvironment.is_safe_callable",
     return_value=True,
