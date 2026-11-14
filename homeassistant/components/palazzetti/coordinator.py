@@ -43,8 +43,8 @@ class PalazzettiDataUpdateCoordinator(DataUpdateCoordinator[None]):
     @override
     async def _async_setup(self) -> None:
         try:
-            await self.client.connect()
-            await self.client.update_state()
+            if not await self.client.connect() or not await self.client.update_state():
+                raise UpdateFailed("Error communicating with the API")
         except (CommunicationError, ValidationError) as err:
             raise UpdateFailed(f"Error communicating with the API: {err}") from err
 
@@ -52,6 +52,7 @@ class PalazzettiDataUpdateCoordinator(DataUpdateCoordinator[None]):
     async def _async_update_data(self) -> None:
         """Fetch data from Palazzetti."""
         try:
-            await self.client.update_state()
+            if not await self.client.update_state():
+                raise UpdateFailed("Error communicating with the API")
         except (CommunicationError, ValidationError) as err:
             raise UpdateFailed(f"Error communicating with the API: {err}") from err
