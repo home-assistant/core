@@ -23,3 +23,13 @@ def test_add_pending_after_reset_does_not_reseed_oldest_ts() -> None:
     manager.add_pending("sensor.test", States(last_updated_ts=99.0))
 
     assert manager.oldest_ts == 10.0
+
+
+def test_reset_clears_pending_last_reported() -> None:
+    """Test reset() clears pending last_reported updates."""
+    manager = StatesManager()
+    manager.update_pending_last_reported(1, 123.0)
+
+    manager.reset()
+
+    assert manager.get_pending_last_reported_timestamp() == {}
