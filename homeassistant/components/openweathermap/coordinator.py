@@ -26,9 +26,6 @@ from homeassistant.helpers import sun
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-if TYPE_CHECKING:
-    from . import OpenweathermapConfigEntry
-
 from .const import (
     ATTR_API_AIRPOLLUTION_AQI,
     ATTR_API_AIRPOLLUTION_CO,
@@ -71,6 +68,9 @@ from .const import (
     OWM_MODE_V30,
     WEATHER_CODE_SUNNY_OR_CLEAR_NIGHT,
 )
+
+if TYPE_CHECKING:
+    from . import OpenweathermapConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

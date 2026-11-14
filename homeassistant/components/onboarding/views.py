@@ -26,9 +26,6 @@ from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.setup import async_setup_component, async_wait_component
 
-if TYPE_CHECKING:
-    from . import OnboardingData, OnboardingStorage, OnboardingStoreData
-
 from .const import (
     DEFAULT_AREAS,
     DOMAIN,
@@ -38,6 +35,9 @@ from .const import (
     STEP_USER,
     STEPS,
 )
+
+if TYPE_CHECKING:
+    from . import OnboardingData, OnboardingStorage, OnboardingStoreData
 
 _LOGGER = logging.getLogger(__name__)
 

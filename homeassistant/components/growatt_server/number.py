@@ -187,8 +187,11 @@ class GrowattNumber(CoordinatorEntity[GrowattCoordinator], NumberEntity):
         except GrowattV1ApiError as e:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="api_error",
-                translation_placeholders={"error": str(e)},
+                translation_key="api_error_with_code",
+                translation_placeholders={
+                    "error": e.error_msg or str(e),
+                    "code": str(e.error_code),
+                },
             ) from e
 
         # If no exception was raised, the write was successful
