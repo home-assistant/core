@@ -58,8 +58,7 @@ async def async_setup_entry(
     except ModbusError as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
-            translation_key="communication_error",
-            translation_placeholders={"error": str(err)},
+            translation_key="battery_firmware_unreadable",
         ) from err
     if bms.values["b_ver_count"]:
         sw_version += f", BMS {bms.values['b_ver_1']}"

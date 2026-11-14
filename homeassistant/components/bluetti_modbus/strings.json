@@ -161,6 +161,9 @@
     }
   },
   "exceptions": {
+    "battery_firmware_unreadable": {
+      "message": "The firmware version of the built-in battery could not be read from the BLUETTI power station."
+    },
     "communication_error": {
       "message": "An error occurred while communicating with the BLUETTI power station: {error}"
     },

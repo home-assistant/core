@@ -163,6 +163,10 @@ async def test_setup_retry_when_bms_version_unreadable(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == (
+        "battery_firmware_unreadable"
+    )
+    assert mock_config_entry.error_reason_translation_placeholders is None
 
 
 async def test_setup_error_when_link_settings_are_in_use(
