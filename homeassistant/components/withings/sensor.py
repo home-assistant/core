@@ -238,10 +238,25 @@ MEASUREMENT_SENSORS: dict[
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
+    MeasurementType.METABOLIC_AGE: WithingsMeasurementSensorEntityDescription(
+        key="metabolic_age",
+        measurement_type=MeasurementType.METABOLIC_AGE,
+        translation_key="metabolic_age",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
     MeasurementType.VISCERAL_FAT: WithingsMeasurementSensorEntityDescription(
         key="visceral_fat",
         measurement_type=MeasurementType.VISCERAL_FAT,
         translation_key="visceral_fat_index",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    MeasurementType.BASAL_METABOLIC_RATE: WithingsMeasurementSensorEntityDescription(
+        key="basal_metabolic_rate",
+        measurement_type=MeasurementType.BASAL_METABOLIC_RATE,
+        translation_key="basal_metabolic_rate",
+        native_unit_of_measurement="kcal/day",
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
@@ -980,7 +995,6 @@ class WithingsGoalsSensor(
     @override
     def native_value(self) -> StateType:
         """Return the state of the entity."""
-        assert self.coordinator.data
         return self.entity_description.value_fn(self.coordinator.data)
 
 

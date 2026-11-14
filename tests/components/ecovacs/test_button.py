@@ -11,10 +11,10 @@ from deebot_client.events import LifeSpan
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.ecovacs.const import DOMAIN
 from homeassistant.components.ecovacs.controller import EcovacsController
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -193,6 +193,10 @@ def platforms() -> Platform | list[Platform]:
                     "button.t90_pro_omni_empty_dustbin",
                     station_action.StationAction(StationAction.EMPTY_DUSTBIN),
                 ),
+                (
+                    "button.t90_pro_omni_wash_mop",
+                    station_action.StationAction(StationAction.WASH_MOP),
+                ),
             ],
         ),
     ],
@@ -216,8 +220,8 @@ async def test_buttons(
         device._execute_command.reset_mock()
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: entity_id},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
         device._execute_command.assert_called_with(command)

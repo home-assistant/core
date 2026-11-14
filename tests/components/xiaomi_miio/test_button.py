@@ -5,19 +5,19 @@ from unittest.mock import MagicMock, patch
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.xiaomi_miio.const import (
     CONF_FLOW_TYPE,
     DOMAIN,
     MODELS_VACUUM,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_DEVICE,
     CONF_HOST,
     CONF_MAC,
     CONF_MODEL,
     CONF_TOKEN,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -68,8 +68,8 @@ async def test_vacuum_button_press(hass: HomeAssistant) -> None:
     pressed_at = dt_util.utcnow()
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: entity_id + "_reset_side_brush"},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: entity_id + "_reset_side_brush"},
         blocking=True,
     )
 

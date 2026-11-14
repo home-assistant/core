@@ -3,6 +3,7 @@
 from ipaddress import ip_address
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
 from requests import RequestException
 import requests_mock
 from requests_mock import ANY, Mocker
@@ -14,7 +15,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .conftest import DEVICE_1_ID, DEVICE_1_IP, DEVICE_1_NAME, DEVICE_1_URL
+from .conftest import (
+    DEVICE_1_ID,
+    DEVICE_1_IP,
+    DEVICE_1_NAME,
+    DEVICE_1_URL,
+    DEVICE_2_IP,
+    DEVICE_2_URL,
+)
 
 
 async def test_user_flow_create_entry(
@@ -123,3 +131,83 @@ async def test_zeroconf_flow_create_entry(
     assert "result" in result
     assert result["result"].unique_id == DEVICE_1_ID
     assert result["result"].title == DEVICE_1_NAME
+
+
+async def test_reconfigure_flow(
+    hass: HomeAssistant,
+    requests_mock: requests_mock.Mocker,
+    device1_config: MockConfigEntry,
+    device1_info: str,
+) -> None:
+    """Test reconfiguring the device host."""
+    device1_config.add_to_hass(hass)
+
+    result = await device1_config.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    requests_mock.get(f"{DEVICE_2_URL}/info", text=device1_info)
+    with patch(
+        "homeassistant.components.soundtouch.async_setup_entry", return_value=None
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_HOST: DEVICE_2_IP}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert device1_config.data[CONF_HOST] == DEVICE_2_IP
+
+
+async def test_reconfigure_flow_cannot_connect(
+    hass: HomeAssistant,
+    requests_mock: requests_mock.Mocker,
+    device1_config: MockConfigEntry,
+    device1_info: str,
+) -> None:
+    """Test reconfigure flow recovers from a connection error."""
+    device1_config.add_to_hass(hass)
+
+    result = await device1_config.start_reconfigure_flow(hass)
+
+    requests_mock.get(ANY, exc=RequestException())
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: DEVICE_2_IP}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    requests_mock.get(f"{DEVICE_2_URL}/info", text=device1_info)
+    with patch(
+        "homeassistant.components.soundtouch.async_setup_entry", return_value=None
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_HOST: DEVICE_2_IP}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert device1_config.data[CONF_HOST] == DEVICE_2_IP
+
+
+async def test_reconfigure_flow_unique_id_mismatch(
+    hass: HomeAssistant,
+    requests_mock: requests_mock.Mocker,
+    device1_config: MockConfigEntry,
+    device2_info: str,
+) -> None:
+    """Test reconfigure flow aborts when pointed at a different device."""
+    device1_config.add_to_hass(hass)
+
+    result = await device1_config.start_reconfigure_flow(hass)
+
+    requests_mock.get(f"{DEVICE_2_URL}/info", text=device2_info)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: DEVICE_2_IP}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert device1_config.data[CONF_HOST] == DEVICE_1_IP

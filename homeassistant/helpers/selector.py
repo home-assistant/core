@@ -1381,8 +1381,8 @@ class LocationSelector(Selector[LocationSelectorConfig]):
     )
     DATA_SCHEMA = probatio.Schema(
         {
-            probatio.Required("latitude"): probatio.Coerce(float),
-            probatio.Required("longitude"): probatio.Coerce(float),
+            probatio.Required("latitude"): cv.latitude,
+            probatio.Required("longitude"): cv.longitude,
             probatio.Optional("radius"): probatio.Coerce(float),
         }
     )

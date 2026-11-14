@@ -4,6 +4,7 @@
   "categories": ["weather_alerts.air_quality_pollen", "health_wellbeing"],
   "codeowners": ["@bachya"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/iqvia",
   "integration_type": "service",
   "iot_class": "cloud_polling",

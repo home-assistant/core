@@ -10,7 +10,12 @@ from homeassistant.components.met.const import (
     DOMAIN,
     HOME_LOCATION_NAME,
 )
-from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import (
+    CONF_ELEVATION,
+    CONF_LATITUDE,
+    CONF_LOCATION,
+    CONF_LONGITUDE,
+)
 from homeassistant.core import HomeAssistant
 
 
@@ -19,8 +24,10 @@ async def init_integration(
 ) -> MockConfigEntry:
     """Set up the Met integration in Home Assistant."""
     entry_data = {
-        CONF_LATITUDE: 0,
-        CONF_LONGITUDE: 1.0,
+        CONF_LOCATION: {
+            CONF_LATITUDE: 0,
+            CONF_LONGITUDE: 1.0,
+        },
         CONF_ELEVATION: 1.0,
     }
 
@@ -37,7 +44,8 @@ async def init_integration(
             if track_home
             else f"{DEFAULT_NAME} (0, 1.0)"
         ),
-        minor_version=2,
+        minor_version=1,
+        version=2,
     )
     with patch(
         "homeassistant.components.met.coordinator.metno.MetWeatherData.fetching_data",

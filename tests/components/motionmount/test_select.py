@@ -8,11 +8,11 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.select import (
-    ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -41,8 +41,11 @@ async def test_select_option(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: PRESET_ENTITY_ID, ATTR_OPTION: "Couch"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: PRESET_ENTITY_ID,
+            SelectServiceArgument.OPTION: "Couch",
+        },
         blocking=True,
     )
 
@@ -73,8 +76,11 @@ async def test_select_option_communication_error(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: PRESET_ENTITY_ID, ATTR_OPTION: "Couch"},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: PRESET_ENTITY_ID,
+                SelectServiceArgument.OPTION: "Couch",
+            },
             blocking=True,
         )
 

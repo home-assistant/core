@@ -1,5 +1,7 @@
 """Constants used by the Netatmo component."""
 
+from enum import StrEnum
+
 from homeassistant.const import Platform
 
 API = "api"
@@ -77,31 +79,17 @@ DEFAULT_DISCOVERY = True
 DEFAULT_PERSON = "unknown"
 DEFAULT_WEBHOOKS = False
 
-ATTR_CAMERA_LIGHT_MODE = "camera_light_mode"
-ATTR_END_DATETIME = "end_datetime"
 ATTR_EVENT_TYPE = "event_type"
 ATTR_FACE_URL = "face_url"
 ATTR_HEATING_POWER_REQUEST = "heating_power_request"
 ATTR_HOME_ID = "home_id"
 ATTR_HOME_NAME = "home_name"
 ATTR_IS_KNOWN = "is_known"
-ATTR_PERSON = "person"
 ATTR_PSEUDO = "pseudo"
 ATTR_SCHEDULE_ID = "schedule_id"
-ATTR_SCHEDULE_NAME = "schedule_name"
 ATTR_SELECTED_SCHEDULE = "selected_schedule"
 ATTR_SELECTED_SCHEDULE_ID = "selected_schedule_id"
-ATTR_TARGET_TEMPERATURE = "target_temperature"
-ATTR_TIME_PERIOD = "time_period"
 
-SERVICE_CLEAR_TEMPERATURE_SETTING = "clear_temperature_setting"
-SERVICE_SET_CAMERA_LIGHT = "set_camera_light"
-SERVICE_SET_PERSON_AWAY = "set_person_away"
-SERVICE_SET_PERSONS_HOME = "set_persons_home"
-SERVICE_SET_SCHEDULE = "set_schedule"
-SERVICE_SET_PRESET_MODE_WITH_END_DATETIME = "set_preset_mode_with_end_datetime"
-SERVICE_SET_TEMPERATURE_WITH_END_DATETIME = "set_temperature_with_end_datetime"
-SERVICE_SET_TEMPERATURE_WITH_TIME_PERIOD = "set_temperature_with_time_period"
 
 # Climate events
 EVENT_TYPE_CANCEL_SET_POINT = "cancel_set_point"
@@ -225,3 +213,31 @@ CAMERA_CONNECTION_WEBHOOKS = [
 # For NDB there is no monitoring attribute in status but only alim_status.
 # 2 = Full power/online for NDB (and also Correct power adapter for NACamera).
 NETATMO_ALIM_STATUS_ONLINE = 2
+
+
+class NetatmoService(StrEnum):
+    """Store keys for Netatmo services."""
+
+    SET_CAMERA_LIGHT = "set_camera_light"
+    SET_SCHEDULE = "set_schedule"
+    SET_PRESET_MODE_WITH_END_DATETIME = "set_preset_mode_with_end_datetime"
+    SET_TEMPERATURE_WITH_END_DATETIME = "set_temperature_with_end_datetime"
+    SET_TEMPERATURE_WITH_TIME_PERIOD = "set_temperature_with_time_period"
+    CLEAR_TEMPERATURE_SETTING = "clear_temperature_setting"
+    SET_PERSONS_HOME = "set_persons_home"
+    SET_PERSON_AWAY = "set_person_away"
+    REGISTER_WEBHOOK = "register_webhook"
+    UNREGISTER_WEBHOOK = "unregister_webhook"
+
+
+class NetatmoServiceArgument(StrEnum):
+    """Store keys for Netatmo service arguments."""
+
+    CAMERA_LIGHT_MODE = "camera_light_mode"
+    SCHEDULE_NAME = "schedule_name"
+    PRESET_MODE = "preset_mode"
+    END_DATETIME = "end_datetime"
+    TARGET_TEMPERATURE = "target_temperature"
+    TIME_PERIOD = "time_period"
+    PERSONS = "persons"
+    PERSON = "person"

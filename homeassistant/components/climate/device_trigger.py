@@ -2,7 +2,10 @@
 
 import probatio
 
-from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
+from homeassistant.components.device_automation import (
+    DEVICE_TRIGGER_BASE_SCHEMA,
+    async_get_entity_registry_entry_or_raise,
+)
 from homeassistant.components.homeassistant.triggers import (
     numeric_state as numeric_state_trigger,
     state as state_trigger,
@@ -23,12 +26,18 @@ from homeassistant.const import (
     PERCENTAGE,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers.entity import get_capability
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from . import const
-from .const import DOMAIN
+from .const import (
+    DOMAIN,
+    HVAC_MODES,
+    ClimateEntityCapabilityAttribute,
+    ClimateEntityStateAttribute,
+)
 
 TRIGGER_TYPES = {
     "current_temperature_changed",
@@ -40,7 +49,7 @@ HVAC_MODE_TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
         probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
         probatio.Required(CONF_TYPE): "hvac_mode_changed",
-        probatio.Required(StateTriggerArgument.TO): probatio.In(const.HVAC_MODES),
+        probatio.Required(StateTriggerArgument.TO): probatio.In(HVAC_MODES),
         probatio.Optional(CONF_FOR): cv.positive_time_period_dict,
     }
 )
@@ -101,8 +110,7 @@ async def async_get_triggers(
 
         if (
             state
-            and const.ClimateEntityStateAttribute.CURRENT_TEMPERATURE
-            in state.attributes
+            and ClimateEntityStateAttribute.CURRENT_TEMPERATURE in state.attributes
         ):
             triggers.append(
                 {
@@ -111,10 +119,7 @@ async def async_get_triggers(
                 }
             )
 
-        if (
-            state
-            and const.ClimateEntityStateAttribute.CURRENT_HUMIDITY in state.attributes
-        ):
+        if state and ClimateEntityStateAttribute.CURRENT_HUMIDITY in state.attributes:
             triggers.append(
                 {
                     **base_trigger,
@@ -138,9 +143,7 @@ async def async_attach_trigger(
             StateTriggerArgument.ENTITY_ID: config[CONF_ENTITY_ID],
             StateTriggerArgument.TO: config[StateTriggerArgument.TO],
             StateTriggerArgument.FROM: [
-                mode
-                for mode in const.HVAC_MODES
-                if mode != config[StateTriggerArgument.TO]
+                mode for mode in HVAC_MODES if mode != config[StateTriggerArgument.TO]
             ],
         }
         if CONF_FOR in config:
@@ -194,28 +197,34 @@ async def async_get_trigger_capabilities(
         return {
             "extra_fields": probatio.Schema(
                 {
-                    probatio.Required(StateTriggerArgument.TO): probatio.In(
-                        const.HVAC_MODES
-                    ),
+                    probatio.Required(StateTriggerArgument.TO): probatio.In(HVAC_MODES),
                     probatio.Optional(CONF_FOR): cv.positive_time_period_dict,
                 }
             )
         }
 
+    unit_of_measurement: str | None = PERCENTAGE
     if trigger_type == "current_temperature_changed":
-        unit_of_measurement: str = hass.config.units.temperature_unit
-    else:
-        unit_of_measurement = PERCENTAGE
+        try:
+            entry = async_get_entity_registry_entry_or_raise(
+                hass, config[CONF_ENTITY_ID]
+            )
+            unit_of_measurement = get_capability(
+                hass, entry.entity_id, ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT
+            )
+        except HomeAssistantError:
+            unit_of_measurement = None
+    description = {"suffix": unit_of_measurement} if unit_of_measurement else None
 
     return {
         "extra_fields": probatio.Schema(
             {
-                probatio.Optional(
-                    CONF_ABOVE, description={"suffix": unit_of_measurement}
-                ): probatio.Coerce(float),
-                probatio.Optional(
-                    CONF_BELOW, description={"suffix": unit_of_measurement}
-                ): probatio.Coerce(float),
+                probatio.Optional(CONF_ABOVE, description=description): probatio.Coerce(
+                    float
+                ),
+                probatio.Optional(CONF_BELOW, description=description): probatio.Coerce(
+                    float
+                ),
                 probatio.Optional(CONF_FOR): cv.positive_time_period_dict,
             }
         )

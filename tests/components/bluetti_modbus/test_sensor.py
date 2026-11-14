@@ -1,11 +1,17 @@
 """Tests for the BLUETTI Modbus sensor entities."""
 
 from bluetti_modbus_lib import PvType, get_device
+from freezegun.api import FrozenDateTimeFactory
 from modbus_connection.mock import MockModbusUnit
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.bluetti_modbus.const import SCAN_INTERVAL
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -13,6 +19,7 @@ from homeassistant.helpers import entity_registry as er
 from . import setup_integration
 
 INVERTER_POWER_ENTITY = "sensor.balco_260_total_inverter_power"
+PV_AC_ENERGY_ENTITY = "sensor.balco_260_pv_ac_energy"
 PV_1_TYPE_ENTITY = "sensor.balco_260_pv_1_input_type"
 
 
@@ -46,6 +53,32 @@ async def test_inverter_power_is_signed(
     state = hass.states.get(INVERTER_POWER_ENTITY)
     assert state is not None
     assert state.state == "-1200"
+
+
+async def test_pv_ac_energy_zero_is_unknown(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A PV AC energy read as 0 is unknown, not a meter reset."""
+    field = get_device("balco260").get_field("pv_ac_e")
+    assert field is not None
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(PV_AC_ENERGY_ENTITY)
+    assert state is not None
+    assert state.state == "95.6"
+
+    mock_modbus_unit.holding[field.address] = 0
+    mock_modbus_unit.holding[field.address + 1] = 0
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(PV_AC_ENERGY_ENTITY)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
 
 
 @pytest.mark.parametrize(

@@ -1,12 +1,20 @@
 """Services for the Remote Python Debugger integration."""
 
+from enum import StrEnum
+
 import probatio
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.service import async_register_admin_service
 
-from .const import DOMAIN, SERVICE_START
+from .const import DOMAIN
 from .helpers import async_start_debugger
+
+
+class DebugpyService(StrEnum):
+    """Store keys for Remote Python Debugger services."""
+
+    START = "start"
 
 
 async def _debug_start(call: ServiceCall) -> None:
@@ -18,5 +26,5 @@ async def _debug_start(call: ServiceCall) -> None:
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the services for the Remote Python Debugger integration."""
     async_register_admin_service(
-        hass, DOMAIN, SERVICE_START, _debug_start, schema=probatio.Schema({})
+        hass, DOMAIN, DebugpyService.START, _debug_start, schema=probatio.Schema({})
     )

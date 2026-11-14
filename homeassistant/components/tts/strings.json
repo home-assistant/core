@@ -6,6 +6,9 @@
     "language_not_supported": {
       "message": "Language {language} is not supported."
     },
+    "no_engine": {
+      "message": "This audio stream has no text-to-speech provider to generate speech."
+    },
     "no_tts_audio": {
       "message": "No text-to-speech audio from {engine} for \"{message}\"."
     },
@@ -18,7 +21,13 @@
   },
   "services": {
     "clear_cache": {
-      "description": "Removes all cached text-to-speech files and purges the memory.",
+      "description": "Removes cached text-to-speech files. When all files are removed, also purges the memory.",
+      "fields": {
+        "days": {
+          "description": "Only removes files that have not been used for this many days. Leave empty to remove all files.",
+          "name": "Days unused"
+        }
+      },
       "name": "Clear TTS cache"
     },
     "say": {

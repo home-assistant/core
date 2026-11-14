@@ -5,6 +5,7 @@
   "categories": ["garden_plants"],
   "codeowners": ["@bdraco", "@rfverbruggen"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["http"],
   "dhcp": [
     {

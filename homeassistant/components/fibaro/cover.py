@@ -7,7 +7,6 @@ from pyfibaro.fibaro_device import DeviceModel
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    ENTITY_ID_FORMAT,
     CoverEntity,
     CoverEntityFeature,
 )
@@ -45,7 +44,11 @@ class PositionableFibaroCover(FibaroEntity, CoverEntity):
     ) -> None:
         """Initialize the device."""
         super().__init__(fibaro_device, controller)
-        self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
+        # HC3 reports value2 for every roller shutter module, also without slats.
+        self._has_tilt = fibaro_device.properties.get("deviceRole") in (
+            None,
+            "VenetianBlinds",
+        )
 
     @staticmethod
     def bound(position: int | None) -> int | None:
@@ -64,7 +67,8 @@ class PositionableFibaroCover(FibaroEntity, CoverEntity):
         super().update()
 
         self._attr_current_cover_position = self.bound(self.level)
-        self._attr_current_cover_tilt_position = self.bound(self.level2)
+        if self._has_tilt:
+            self._attr_current_cover_tilt_position = self.bound(self.level2)
 
         # Be aware that opening and closing is only available for some modern
         # devices.
@@ -122,7 +126,6 @@ class FibaroCover(FibaroEntity, CoverEntity):
     ) -> None:
         """Initialize the device."""
         super().__init__(fibaro_device, controller)
-        self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
 
         self._attr_supported_features = (
             CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE

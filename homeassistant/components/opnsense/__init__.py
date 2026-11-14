@@ -11,56 +11,21 @@ from aiopnsense import (
     OPNsenseTimeoutError,
     OPNsenseUnknownFirmware,
 )
-import probatio
 
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_API_SECRET, CONF_TRACKER_INTERFACES, DOMAIN
 from .types import OPNsenseConfigEntry, OPNsenseRuntimeData
 
-CONFIG_SCHEMA = probatio.Schema(
-    {
-        DOMAIN: probatio.Schema(
-            {
-                probatio.Required(CONF_URL): cv.url,
-                probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string,
-                probatio.Required(probatio.Secret(CONF_API_SECRET)): cv.string,
-                probatio.Optional(CONF_VERIFY_SSL, default=False): cv.boolean,
-                probatio.Optional(CONF_TRACKER_INTERFACES, default=[]): probatio.All(
-                    probatio.EnsureList(), [cv.string]
-                ),
-            }
-        )
-    },
-    extra=probatio.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 PLATFORMS = [Platform.DEVICE_TRACKER]
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the OPNsense component."""
-    if DOMAIN not in config:
-        return True
-
-    hass.async_create_task(_async_setup(hass, config))
-
-    return True
-
-
-async def _async_setup(hass: HomeAssistant, config: ConfigType) -> None:
-    """Set up the OPNsense component from YAML."""
-    await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=config[DOMAIN],
-    )
 
 
 async def async_setup_entry(
@@ -161,3 +126,32 @@ async def async_unload_entry(
 ) -> None:
     """Unload a config entry."""
     await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant,
+    config_entry: OPNsenseConfigEntry,
+    device_entry: dr.AnyDeviceEntry,
+) -> bool:
+    """Allow removing a client device while the client is not connected."""
+    if not isinstance(device_entry, dr.DeviceEntry):
+        # This integration does not create child devices.
+        return False
+    if config_entry.state is not ConfigEntryState.LOADED:
+        return True
+    runtime_data = config_entry.runtime_data
+    connected = (
+        coordinator.data
+        if (coordinator := runtime_data.tracker_coordinator) and coordinator.data
+        else {}
+    )
+    device_macs = {
+        mac
+        for connection_type, mac in device_entry.connections
+        if connection_type == dr.CONNECTION_NETWORK_MAC
+    }
+    if not device_macs.isdisjoint(connected):
+        return False
+    # Forget the client, so it is added again when it reconnects
+    runtime_data.tracked_devices -= device_macs
+    return True

@@ -51,11 +51,20 @@
       "cover_off": {
         "name": "Cover off"
       },
+      "current_unbalance": {
+        "name": "Current imbalance"
+      },
       "defrost": {
         "name": "Defrost"
       },
       "drop": {
         "name": "Drop"
+      },
+      "fall": {
+        "name": "Fall"
+      },
+      "feed_blocked": {
+        "name": "Feed blocked"
       },
       "feeding": {
         "name": "Feeding"
@@ -63,11 +72,32 @@
       "filter_cleaning": {
         "name": "Filter cleaning"
       },
+      "fire": {
+        "name": "Fire"
+      },
+      "food_stuck": {
+        "name": "Food stuck"
+      },
       "formaldehyde": {
         "name": "Formaldehyde"
       },
+      "high_power": {
+        "name": "High power"
+      },
       "high_temp": {
         "name": "High temperature"
+      },
+      "high_temperature_early_warning": {
+        "name": "High temperature early warning"
+      },
+      "leakage_current_alarm": {
+        "name": "Leakage current alarm"
+      },
+      "leakage_current_early_warning": {
+        "name": "Leakage current early warning"
+      },
+      "low_credit": {
+        "name": "Low credit"
       },
       "low_humidity": {
         "name": "Low humidity"
@@ -75,17 +105,56 @@
       "low_temp": {
         "name": "Low temperature"
       },
+      "magnetic_interference": {
+        "name": "Magnetic interference"
+      },
       "methane": {
         "name": "Methane"
       },
       "motor_fault": {
         "name": "Motor fault"
       },
+      "no_credit": {
+        "name": "No credit"
+      },
+      "overcurrent": {
+        "name": "Overcurrent"
+      },
+      "overcurrent_early_warning": {
+        "name": "Overcurrent early warning"
+      },
+      "overload": {
+        "name": "Overload"
+      },
+      "overpower_early_warning": {
+        "name": "Overpower early warning"
+      },
+      "overvoltage": {
+        "name": "Overvoltage"
+      },
+      "overvoltage_early_warning": {
+        "name": "Overvoltage early warning"
+      },
+      "phase_loss": {
+        "name": "Phase loss"
+      },
       "pm25": {
         "name": "PM2.5"
       },
+      "power_outage": {
+        "name": "Power outage"
+      },
       "pressure": {
         "name": "Pressure"
+      },
+      "self_test": {
+        "name": "Self-test"
+      },
+      "short_circuit": {
+        "name": "Short circuit"
+      },
+      "surge": {
+        "name": "Surge"
       },
       "tankfull": {
         "name": "Tank full"
@@ -93,8 +162,17 @@
       "temp_error": {
         "name": "Temperature error"
       },
+      "temperature_difference": {
+        "name": "Temperature difference fault"
+      },
       "tilt": {
         "name": "Tilt"
+      },
+      "undervoltage": {
+        "name": "Undervoltage"
+      },
+      "undervoltage_early_warning": {
+        "name": "Undervoltage early warning"
       },
       "valve": {
         "name": "Valve"
@@ -226,6 +304,9 @@
       "heat_preservation_time": {
         "name": "Heat preservation time"
       },
+      "height": {
+        "name": "Height"
+      },
       "indexed_cook_temperature": {
         "name": "Cooking temperature {index}"
       },
@@ -234,9 +315,6 @@
       },
       "indexed_minimum_brightness": {
         "name": "Minimum brightness {index}"
-      },
-      "indexed_power_warning_threshold": {
-        "name": "Power warning threshold {index}"
       },
       "indexed_temperature": {
         "name": "Temperature {index}"
@@ -270,6 +348,9 @@
       },
       "powder": {
         "name": "Powder"
+      },
+      "power_warning_threshold": {
+        "name": "Power warning threshold"
       },
       "sensitivity": {
         "name": "Sensitivity"
@@ -549,6 +630,17 @@
           "smart": "Smart"
         }
       },
+      "power_on_behavior": {
+        "name": "Power-on behavior",
+        "state": {
+          "last": "Previous state",
+          "memory": "[%key:component::tuya::entity::select::power_on_behavior::state::last%]",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]",
+          "power_off": "[%key:common::state::off%]",
+          "power_on": "[%key:common::state::on%]"
+        }
+      },
       "pump_mode": {
         "name": "Mode"
       },
@@ -567,17 +659,6 @@
         "state": {
           "1": "Record events only",
           "2": "Continuous recording"
-        }
-      },
-      "relay_status": {
-        "name": "Power-on behavior",
-        "state": {
-          "last": "Previous state",
-          "memory": "[%key:component::tuya::entity::select::relay_status::state::last%]",
-          "off": "[%key:common::state::off%]",
-          "on": "[%key:common::state::on%]",
-          "power_off": "[%key:common::state::off%]",
-          "power_on": "[%key:common::state::on%]"
         }
       },
       "siren_mode": {
@@ -745,6 +826,9 @@
       "concentration_carbon_dioxide": {
         "name": "Concentration of carbon dioxide"
       },
+      "countdown_end": {
+        "name": "Countdown end"
+      },
       "current": {
         "name": "[%key:component::sensor::entity_component::current::name%]"
       },
@@ -759,6 +843,9 @@
       },
       "duster_cloth_life": {
         "name": "Duster cloth lifetime"
+      },
+      "energy_today": {
+        "name": "Energy today"
       },
       "excretion_time_day": {
         "name": "Excretion duration"
@@ -781,6 +868,14 @@
       "flow_temperature": {
         "name": "Flow temperature"
       },
+      "food_level": {
+        "name": "Food level",
+        "state": {
+          "full": "Full",
+          "lack": "Empty",
+          "less": "Low"
+        }
+      },
       "formaldehyde": {
         "name": "[%key:component::tuya::entity::binary_sensor::formaldehyde::name%]"
       },
@@ -802,36 +897,11 @@
       "illuminance": {
         "name": "[%key:component::sensor::entity_component::illuminance::name%]"
       },
-      "indexed_current": {
-        "name": "Current channel {index}"
-      },
-      "indexed_energy_today": {
-        "name": "Energy today channel {index}"
-      },
       "indexed_humidity_outdoor": {
         "name": "Outdoor humidity channel {index}"
       },
-      "indexed_meter_status": {
-        "name": "Status channel {index}",
-        "state": {
-          "close": "[%key:common::state::closed%]",
-          "idle": "[%key:common::state::idle%]",
-          "monitor": "Monitoring",
-          "warning": "Warning",
-          "working": "Working"
-        }
-      },
-      "indexed_power": {
-        "name": "Power channel {index}"
-      },
       "indexed_temperature_external": {
         "name": "Probe temperature channel {index}"
-      },
-      "indexed_total_energy": {
-        "name": "Total energy channel {index}"
-      },
-      "indexed_voltage": {
-        "name": "Voltage channel {index}"
       },
       "inverter_output_power": {
         "name": "Inverter output power"
@@ -852,6 +922,9 @@
       },
       "last_watering_time": {
         "name": "Last watering time"
+      },
+      "leakage_current": {
+        "name": "Leakage current"
       },
       "lifetime_battery_charge_energy": {
         "name": "Lifetime battery charge energy"
@@ -884,6 +957,16 @@
       },
       "luminosity": {
         "name": "Luminosity"
+      },
+      "meter_status": {
+        "name": "Status",
+        "state": {
+          "close": "[%key:common::state::closed%]",
+          "idle": "[%key:common::state::idle%]",
+          "monitor": "Monitoring",
+          "warning": "Warning",
+          "working": "Working"
+        }
       },
       "methane": {
         "name": "[%key:component::tuya::entity::binary_sensor::methane::name%]"
@@ -974,6 +1057,9 @@
       },
       "precipitation_today": {
         "name": "Total precipitation today"
+      },
+      "pump_speed": {
+        "name": "Speed"
       },
       "pump_time": {
         "name": "Water pump duration"
@@ -1133,6 +1219,9 @@
       "do_not_disturb": {
         "name": "Do not disturb"
       },
+      "eco_mode": {
+        "name": "Eco mode"
+      },
       "energy_saving": {
         "name": "Energy saving"
       },
@@ -1156,9 +1245,6 @@
       },
       "indexed_alarm": {
         "name": "Alarm {index}"
-      },
-      "indexed_socket": {
-        "name": "Socket {index}"
       },
       "indexed_switch": {
         "name": "Switch {index}"
@@ -1314,6 +1400,12 @@
     },
     "send_command_failed": {
       "message": "Failed to send the command to the Tuya cloud."
+    }
+  },
+  "issues": {
+    "deprecated_entity_new_valve": {
+      "description": "The Tuya entity `{entity}` is deprecated, replaced by a new valve entity.\nPlease update your dashboards, automations and scripts, disable `{entity}` and reload the integration/restart Home Assistant to fix this issue.",
+      "title": "{name} is deprecated"
     }
   },
   "selector": {

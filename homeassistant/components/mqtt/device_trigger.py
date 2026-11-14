@@ -30,7 +30,7 @@ from .const import ATTR_DISCOVERY_HASH, CONF_ENCODING, CONF_QOS, CONF_TOPIC, DOM
 from .discovery import MQTTDiscoveryPayload, clear_discovery_hash
 from .entity import MqttDiscoveryDeviceUpdateMixin, send_discovery_done, update_device
 from .models import DATA_MQTT
-from .schemas import MQTT_ENTITY_DEVICE_INFO_SCHEMA
+from .schemas import MQTT_DEVICE_INFO_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,7 +63,7 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 TRIGGER_DISCOVERY_SCHEMA = MQTT_BASE_SCHEMA.extend(
     {
         probatio.Required(CONF_AUTOMATION_TYPE): str,
-        probatio.Required(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+        probatio.Required(CONF_DEVICE): MQTT_DEVICE_INFO_SCHEMA,
         probatio.Optional(CONF_PAYLOAD, default=None): probatio.Any(None, cv.string),
         probatio.Required(CONF_SUBTYPE): cv.string,
         probatio.Required(CONF_TOPIC): cv.string,

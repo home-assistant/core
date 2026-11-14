@@ -12,18 +12,15 @@ from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
 )
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
+from homeassistant.components.cover import CoverDeviceClass
 from homeassistant.components.light import ATTR_SUPPORTED_COLOR_MODES, ColorMode
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.components.switch import (
-    DOMAIN as SWITCH_DOMAIN,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-)
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.components.zwave_js.discovery import (
     FirmwareVersionRange,
     ZWaveDiscoverySchema,
@@ -37,9 +34,9 @@ from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY, ConfigEntryState
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
-    ATTR_ENTITY_ID,
     STATE_OFF,
     STATE_UNKNOWN,
+    CommonServiceArgument,
     EntityCategory,
     Platform,
 )
@@ -96,6 +93,25 @@ async def test_zvidar_state(hass: HomeAssistant, client, zvidar, integration) ->
 
     state = hass.states.get("cover.window_blind_controller")
     assert state
+    assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.SHADE
+
+
+async def test_simon_io_700_roller_blind(
+    hass: HomeAssistant,
+    client: MagicMock,
+    simon_io_700_roller_blind: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test that Simon IO 700 roller blind multilevel switch value is discovered as a cover."""
+    node = simon_io_700_roller_blind
+    assert node.device_class.specific.label == "Unused"
+
+    state = hass.states.get("light.simon_io_700_roller_blind")
+    assert not state
+
+    state = hass.states.get("cover.simon_io_700_roller_blind")
+    assert state
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == CoverDeviceClass.SHUTTER
 
 
 async def test_ge_12730(hass: HomeAssistant, client, ge_12730, integration) -> None:
@@ -226,35 +242,43 @@ async def test_merten_507801(
     assert state
 
 
-async def test_shelly_001p10_disabled_entities(
+async def test_shelly_001p10_suppressed_endpoint(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
     client,
-    shelly_qnsh_001P10_shutter,
-    integration,
+    shelly_qnsh_001P10_shutter: Node,
+    integration: MockConfigEntry,
 ) -> None:
-    """Test that Shelly 001P10 entity created by endpoint 2 is disabled."""
-    entity_ids = [
-        "cover.wave_shutter_2",
-    ]
-    for entity_id in entity_ids:
-        state = hass.states.get(entity_id)
-        assert state is None
-        entry = entity_registry.async_get(entity_id)
-        assert entry
-        assert entry.disabled
-        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    """Test that Shelly 001P10 endpoint 2 is suppressed (no entity created at all).
 
-        # Test enabling entity
-        updated_entry = entity_registry.async_update_entity(
-            entry.entity_id, disabled_by=None
+    Endpoint 2 covers the same shutter as endpoint 1 and has no practical function.
+    The discovery schema suppresses it completely so it doesn't produce even a
+    disabled entity, and endpoint 1 therefore has no collision partner, so the
+    shutter cover stays on the main node device rather than on a child device.
+    """
+    node = shelly_qnsh_001P10_shutter
+
+    # Endpoint 2 is suppressed, so the node exposes exactly one cover entity (endpoint 1)
+    # and no second, disabled or hidden, endpoint-2 cover.
+    cover_entries = [
+        entry
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, integration.entry_id
         )
-        assert updated_entry != entry
-        assert updated_entry.disabled is False
+        if entry.domain == Platform.COVER
+    ]
+    assert [entry.entity_id for entry in cover_entries] == ["cover.wave_shutter"]
+    assert hass.states.get("cover.wave_shutter")
 
-    # Test if the main entity from endpoint 1 was created.
-    state = hass.states.get("cover.wave_shutter")
-    assert state
+    # With no collision partner, the shutter cover stays on the main node device rather
+    # than on an endpoint child device.
+    node_device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, node), integration.entry_id
+    )
+    assert node_device is not None
+    assert not dr.async_entries_for_parent_device(device_registry, node_device.id)
+    assert cover_entries[0].device_id == node_device.id
 
 
 async def test_merten_507801_disabled_enitites(
@@ -314,10 +338,10 @@ async def test_zooz_zen72(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_VALUE: 5,
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            NumberServiceArgument.VALUE: 5,
         },
         blocking=True,
     )
@@ -342,8 +366,8 @@ async def test_zooz_zen72(
     assert hass.states.get(entity_id) is not None
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: entity_id},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert client.async_send_command.call_count == 1
@@ -420,8 +444,8 @@ async def test_indicator_test(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert client.async_send_command.call_count == 1
@@ -440,8 +464,8 @@ async def test_indicator_test(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert client.async_send_command.call_count == 1

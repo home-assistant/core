@@ -1,10 +1,16 @@
 """Test weather of Google Weather integration."""
 
+from copy import deepcopy
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from google_weather_api import GoogleWeatherApiError, WeatherCondition
+from google_weather_api import (
+    GoogleWeatherApiError,
+    PrecipitationSegment,
+    QuantitativePrecipitationForecast,
+    WeatherCondition,
+)
 import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
@@ -14,7 +20,13 @@ from pytest_homeassistant.common import (
 from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.google_weather.weather import _CONDITION_MAP
+from homeassistant.components.google_weather.const import DOMAIN
+from homeassistant.components.google_weather.services import GoogleWeatherService
+from homeassistant.components.google_weather.weather import (
+    _CONDITION_MAP,
+    _PRECIPITATION_INTENSITY_MAP,
+    _PRECIPITATION_TYPE_MAP,
+)
 from homeassistant.components.homeassistant import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
     SERVICE_UPDATE_ENTITY,
@@ -24,12 +36,20 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_PARTLYCLOUDY,
     ATTR_CONDITION_SUNNY,
     DOMAIN as WEATHER_DOMAIN,
-    SERVICE_GET_FORECASTS,
+    WeatherEntityFeature,
+    WeatherService,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
+    STATE_UNAVAILABLE,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 
 async def test_weather(
@@ -150,6 +170,14 @@ def test_all_conditions_mapped() -> None:
         assert condition_type in _CONDITION_MAP
 
 
+def test_all_precipitation_segment_values_mapped() -> None:
+    """Ensure every precipitation type and intensity has a response value."""
+    for precipitation_type in PrecipitationSegment.DominantPrecipitationType:
+        assert precipitation_type in _PRECIPITATION_TYPE_MAP
+    for intensity in PrecipitationSegment.PrecipitationIntensity:
+        assert intensity in _PRECIPITATION_INTENSITY_MAP
+
+
 @pytest.mark.parametrize(("forecast_type"), ["daily", "hourly", "twice_daily"])
 async def test_forecast_service(
     hass: HomeAssistant,
@@ -163,7 +191,7 @@ async def test_forecast_service(
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECASTS,
+        WeatherService.GET_FORECASTS,
         {
             "entity_id": "weather.home",
             "type": forecast_type,
@@ -218,3 +246,286 @@ async def test_forecast_subscription(
 
     assert forecast2 != []
     assert forecast2 == snapshot
+
+
+async def test_minute_forecast_service(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+    mock_google_weather_api: AsyncMock,
+) -> None:
+    """Test the get_minute_forecast service."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        GoogleWeatherService.GET_MINUTE_FORECAST,
+        {ATTR_ENTITY_ID: "weather.home"},
+        blocking=True,
+        return_response=True,
+    )
+    mock_google_weather_api.async_get_minute_forecast.assert_awaited_once_with(
+        latitude=10.1, longitude=20.1
+    )
+    assert response == snapshot
+
+
+async def test_minute_forecast_service_unit_conversion(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_google_weather_api: AsyncMock,
+) -> None:
+    """Test that amounts follow the configured unit system like get_forecasts."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        GoogleWeatherService.GET_MINUTE_FORECAST,
+        {ATTR_ENTITY_ID: "weather.home"},
+        blocking=True,
+        return_response=True,
+    )
+    segments = response["weather.home"]["segments"]
+    # 0.5 mm and 0 mm from the fixture, converted to inches without rounding.
+    assert segments[0]["precipitation"] == pytest.approx(0.5 / 25.4)
+    assert segments[0]["snowfall_amount"] == 0.0
+    assert segments[1]["precipitation"] is None
+    assert segments[1]["snowfall_amount"] is None
+
+
+async def test_minute_forecast_service_keeps_small_amounts(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_google_weather_api: AsyncMock,
+) -> None:
+    """Test that small per-segment amounts survive conversion to coarser units."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    minute_forecast = mock_google_weather_api.async_get_minute_forecast.return_value
+    minute_forecast.segments[0].qpf.quantity = 0.1
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        GoogleWeatherService.GET_MINUTE_FORECAST,
+        {ATTR_ENTITY_ID: "weather.home"},
+        blocking=True,
+        return_response=True,
+    )
+    amount = response["weather.home"]["segments"][0]["precipitation"]
+    # 0.1 mm is 0.0039 in; rounding to two decimals would have reported 0.0.
+    assert amount > 0
+    assert amount == pytest.approx(0.1 / 25.4)
+
+
+async def test_minute_forecast_service_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_google_weather_api: AsyncMock,
+) -> None:
+    """Test the get_minute_forecast service when the API raises an error."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    mock_google_weather_api.async_get_minute_forecast.side_effect = (
+        GoogleWeatherApiError("boom")
+    )
+    with pytest.raises(HomeAssistantError, match="Error fetching minute forecast"):
+        await hass.services.async_call(
+            DOMAIN,
+            GoogleWeatherService.GET_MINUTE_FORECAST,
+            {ATTR_ENTITY_ID: "weather.home"},
+            blocking=True,
+            return_response=True,
+        )
+
+
+@pytest.fixture
+def mock_regional_weather_api(mock_google_weather_api: AsyncMock) -> AsyncMock:
+    """Configure mock responses for regions returning full-day forecasts."""
+    current = mock_google_weather_api.async_get_current_conditions.return_value
+    current.weather_condition.type = WeatherCondition.Type.CLOUDY_PERIODICALLY_CLEAR
+    current.wind.gust = None
+    current.cloud_cover = None
+    current.thunderstorm_probability = None
+    current.visibility.distance = None
+    current.heat_index.degrees = None
+    current.wind_chill.degrees = None
+
+    daily = mock_google_weather_api.async_get_daily_forecast.return_value
+    day = daily.forecast_days[0]
+    full_day = day.daytime_forecast
+    assert full_day is not None
+    full_day.weather_condition.type = WeatherCondition.Type.CLOUDY_PERIODICALLY_CLEAR
+    full_day.wind.gust = None
+    full_day.cloud_cover = None
+    full_day.thunderstorm_probability = None
+    day.full_day_forecast = full_day
+    day.daytime_forecast = None
+    day.nighttime_forecast = None
+    day.feels_like_max_temperature.degrees = None
+    day.feels_like_min_temperature.degrees = None
+
+    hourly = mock_google_weather_api.async_get_hourly_forecast.return_value
+    hour = hourly.forecast_hours[0]
+    hour.weather_condition.type = WeatherCondition.Type.CLOUDY_PERIODICALLY_CLEAR
+    hour.wind.gust = None
+    hour.cloud_cover = None
+    hour.thunderstorm_probability = None
+
+    return mock_google_weather_api
+
+
+@pytest.mark.usefixtures("mock_regional_weather_api")
+async def test_weather_full_day_forecast(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test weather entity for regions returning full-day forecasts."""
+    with patch(
+        "homeassistant.components.google_weather._PLATFORMS", [Platform.WEATHER]
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.usefixtures("mock_regional_weather_api")
+@pytest.mark.parametrize("forecast_type", ["daily", "hourly"])
+async def test_forecast_service_full_day(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+    forecast_type: str,
+) -> None:
+    """Test forecast service for regions returning full-day forecasts."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    response = await hass.services.async_call(
+        WEATHER_DOMAIN,
+        WeatherService.GET_FORECASTS,
+        {
+            "entity_id": "weather.home",
+            "type": forecast_type,
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response == snapshot
+
+
+@pytest.mark.parametrize("forecast_type", ["daily", "twice_daily"])
+async def test_forecast_service_partial_dayparts(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_google_weather_api: AsyncMock,
+    snapshot: SnapshotAssertion,
+    forecast_type: str,
+) -> None:
+    """Test daily and twice-daily forecasts when dayparts or optional values are omitted."""
+    daily = mock_google_weather_api.async_get_daily_forecast.return_value
+    day = daily.forecast_days[0]
+    mixed_qpf_day = deepcopy(day)
+    assert mixed_qpf_day.daytime_forecast is not None
+    assert mixed_qpf_day.nighttime_forecast is not None
+    mixed_qpf_day.daytime_forecast.precipitation.qpf.quantity = 0.0
+    mixed_qpf_day.nighttime_forecast.precipitation.qpf.quantity = None
+
+    day.daytime_forecast = None
+    nighttime = day.nighttime_forecast
+    assert nighttime is not None
+    nighttime.wind.gust = None
+    nighttime.precipitation.qpf.quantity = None
+
+    empty_day = deepcopy(day)
+    empty_day.nighttime_forecast = None
+    daily.forecast_days.extend([empty_day, mixed_qpf_day])
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    response = await hass.services.async_call(
+        WEATHER_DOMAIN,
+        WeatherService.GET_FORECASTS,
+        {
+            "entity_id": "weather.home",
+            "type": forecast_type,
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response == snapshot
+
+
+async def test_minute_forecast_service_unspecified_quantity(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_google_weather_api: AsyncMock,
+) -> None:
+    """Test minute forecast when qpf is present without a quantity."""
+    minute_forecast = mock_google_weather_api.async_get_minute_forecast.return_value
+    minute_forecast.segments[0].qpf = QuantitativePrecipitationForecast()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        GoogleWeatherService.GET_MINUTE_FORECAST,
+        {ATTR_ENTITY_ID: "weather.home"},
+        blocking=True,
+        return_response=True,
+    )
+    assert response["weather.home"]["segments"][0]["precipitation"] is None
+
+
+async def test_supported_features_updated_on_response(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_regional_weather_api: AsyncMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test supported_features updates when daily forecast dayparts change."""
+    entity_id = "weather.home"
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    expected_initial = (
+        WeatherEntityFeature.FORECAST_DAILY | WeatherEntityFeature.FORECAST_HOURLY
+    )
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == expected_initial
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.supported_features == expected_initial
+
+    day = mock_regional_weather_api.async_get_daily_forecast.return_value.forecast_days[
+        0
+    ]
+    day.daytime_forecast = day.full_day_forecast
+    day.full_day_forecast = None
+
+    freezer.tick(timedelta(hours=1) + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Daily forecasts are only polled when subscribed or fetched on demand.
+    assert mock_regional_weather_api.async_get_daily_forecast.call_count == 1
+
+    await hass.services.async_call(
+        WEATHER_DOMAIN,
+        WeatherService.GET_FORECASTS,
+        {
+            "entity_id": entity_id,
+            "type": "daily",
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert mock_regional_weather_api.async_get_daily_forecast.call_count == 2
+
+    expected_updated = expected_initial | WeatherEntityFeature.FORECAST_TWICE_DAILY
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == expected_updated
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.supported_features == expected_updated

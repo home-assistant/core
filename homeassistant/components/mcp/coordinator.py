@@ -5,20 +5,24 @@ from collections.abc import AsyncGenerator, Awaitable, Callable
 from contextlib import asynccontextmanager
 import datetime as dt
 import logging
-from typing import TYPE_CHECKING, Any, override
+from typing import Any, cast, override
 
 import httpx2
+
+# mcp imports jsonschema lazily to validate tool results, and that import
+# reads schema files from disk, so load it here in the import executor.
+import jsonschema  # noqa: F401
 from mcp import MCPError
 from mcp.client.session import ClientSession
 from mcp.client.sse import sse_client
 from mcp.client.streamable_http import streamable_http_client
-from mcp.types import InitializeResult, ToolAnnotations
+from mcp.types import InitializeResult, RequestParamsMeta, ToolAnnotations
 import probatio
 
 # Imported by name because the tests patch it on this module.
 from probatio import from_openapi
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_HASSIO, ConfigEntry
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
@@ -34,20 +38,28 @@ from homeassistant.util.ssl import SSL_ALPN_HTTP11, SSLCipherList, client_contex
 from .auth import AuthenticateHeader
 from .const import DOMAIN
 
-if TYPE_CHECKING:
-    from .types import ModelContextProtocolConfigEntry
-
 _LOGGER = logging.getLogger(__name__)
 
 UPDATE_INTERVAL = dt.timedelta(minutes=30)
-TIMEOUT = 10
+TIMEOUT = 30
+META_USER_ID = "io.home-assistant/user_id"
 
 type TokenManager = Callable[[], Awaitable[str]]
+type ModelContextProtocolConfigEntry = ConfigEntry[ModelContextProtocolCoordinator]
+
+
+def static_token_manager(token: str) -> TokenManager:
+    """Return a token manager for a token that does not expire."""
+
+    async def token_manager() -> str:
+        return token
+
+    return token_manager
 
 
 async def _raise_on_post_error(response: httpx2.Response) -> None:
-    """Raise HTTPStatusError for non-404 error responses on POST requests."""
-    if response.request.method == "POST" and response.status_code != 404:
+    """Raise HTTPStatusError for error responses on POST requests."""
+    if response.request.method == "POST":
         response.raise_for_status()
 
 
@@ -99,6 +111,7 @@ async def mcp_client(
         token = await token_manager()
         headers["Authorization"] = f"Bearer {token}"
 
+    yielded = False
     try:
         async with (
             create_mcp_httpx_client(headers=headers) as http_client,
@@ -109,18 +122,18 @@ async def mcp_client(
             ClientSession(read_stream, write_stream) as session,
         ):
             result = await session.initialize()
+            yielded = True
             yield session, result
     except ExceptionGroup as streamable_err:
         main_error = _first_exception(streamable_err)
-        # Method not Allowed likely means this is not a streamable HTTP server,
-        # but it may be an SSE server. This is part of the MCP Transport
-        # backwards compatibility specification.
-        # We also handle other generic MCPErrors since proxies may not respond
-        # consistently with a 405.
+        # Method not Allowed or Not Found on the initial POST indicates this is
+        # not a streamable HTTP server, but it may be an SSE server. This is
+        # part of the MCP Transport backwards compatibility specification.
         if (
-            isinstance(main_error, httpx2.HTTPStatusError)
-            and main_error.response.status_code == 405
-        ) or isinstance(main_error, MCPError):
+            not yielded
+            and isinstance(main_error, httpx2.HTTPStatusError)
+            and main_error.response.status_code in (404, 405)
+        ):
             _LOGGER.debug(
                 "Streamable HTTP client failed, attempting SSE client: %s", main_error
             )
@@ -176,7 +189,7 @@ class ModelContextProtocolTool(llm.Tool):
         description: str | None,
         parameters: probatio.Schema,
         server_url: str,
-        config_entry: ConfigEntry,
+        config_entry: ModelContextProtocolConfigEntry,
         token_manager: TokenManager | None = None,
         annotations: llm.ToolAnnotations = llm.ToolAnnotations(),
     ) -> None:
@@ -198,6 +211,15 @@ class ModelContextProtocolTool(llm.Tool):
         llm_context: llm.LLMContext,
     ) -> llm.ToolResult:
         """Call the tool."""
+        meta: RequestParamsMeta | None = None
+        # Remote servers added by the user must not get a stable user identifier
+        if (
+            self.config_entry.source == SOURCE_HASSIO
+            and llm_context.context
+            and (user_id := llm_context.context.user_id)
+        ):
+            # mypy does not support the extra_items of this TypedDict (PEP 728)
+            meta = cast(RequestParamsMeta, {META_USER_ID: user_id})
         try:
             async with asyncio.timeout(TIMEOUT):
                 async with mcp_client(hass, self.server_url, self.token_manager) as (
@@ -205,9 +227,9 @@ class ModelContextProtocolTool(llm.Tool):
                     _,
                 ):
                     result = await session.call_tool(
-                        tool_input.tool_name, tool_input.tool_args
+                        tool_input.tool_name, tool_input.tool_args, meta=meta
                     )
-        except TimeoutError as error:
+        except (TimeoutError, httpx2.TimeoutException) as error:
             _LOGGER.debug("Timeout when calling tool: %s", error)
             raise HomeAssistantError(f"Timeout when calling tool: {error}") from error
         except OAuth2TokenRequestReauthError as error:
@@ -229,7 +251,7 @@ class ModelContextProtocolTool(llm.Tool):
                     "The MCP server requires authentication"
                 ) from error
             raise HomeAssistantError(f"Error when calling tool: {error}") from error
-        except httpx2.HTTPError as error:
+        except (httpx2.HTTPError, MCPError) as error:
             _LOGGER.debug(
                 "Error communicating with MCP server when calling tool: %s", error
             )
@@ -264,6 +286,7 @@ class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
             update_interval=UPDATE_INTERVAL,
         )
         self.token_manager = token_manager
+        self.server_info: InitializeResult | None = None
 
     @override
     async def _async_update_data(self) -> list[llm.Tool]:
@@ -276,9 +299,9 @@ class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
             async with asyncio.timeout(TIMEOUT):
                 async with mcp_client(
                     self.hass, self.config_entry.data[CONF_URL], self.token_manager
-                ) as (session, _):
+                ) as (session, server_info):
                     result = await session.list_tools()
-        except TimeoutError as error:
+        except (TimeoutError, httpx2.TimeoutException) as error:
             _LOGGER.debug("Timeout when listing tools: %s", error)
             raise UpdateFailed(f"Timeout when listing tools: {error}") from error
         except OAuth2TokenRequestReauthError as error:
@@ -297,11 +320,12 @@ class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
                     "The MCP server requires authentication"
                 ) from error
             raise UpdateFailed(f"Error communicating with API: {error}") from error
-        except httpx2.HTTPError as err:
+        except (httpx2.HTTPError, MCPError) as err:
             _LOGGER.debug("Error communicating with API: %s", err)
             raise UpdateFailed(f"Error communicating with API: {err}") from err
 
         _LOGGER.debug("Received tools: %s", result.tools)
+        self.server_info = server_info
         tools: list[llm.Tool] = []
         for tool in result.tools:
             try:

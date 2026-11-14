@@ -6,11 +6,7 @@ from pytest_homeassistant.common import assert_setup_component
 
 from homeassistant.components import ffmpeg
 from homeassistant.components.ffmpeg import DOMAIN, get_ffmpeg_manager
-from homeassistant.components.ffmpeg.services import (
-    SERVICE_RESTART,
-    SERVICE_START,
-    SERVICE_STOP,
-)
+from homeassistant.components.ffmpeg.services import FFmpegService
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     EVENT_HOMEASSISTANT_START,
@@ -27,7 +23,7 @@ def async_start(hass: HomeAssistant, entity_id: str | None = None) -> None:
     This is a legacy helper method. Do not use it for new tests.
     """
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    hass.async_create_task(hass.services.async_call(DOMAIN, SERVICE_START, data))
+    hass.async_create_task(hass.services.async_call(DOMAIN, FFmpegService.START, data))
 
 
 @callback
@@ -37,7 +33,7 @@ def async_stop(hass: HomeAssistant, entity_id: str | None = None) -> None:
     This is a legacy helper method. Do not use it for new tests.
     """
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    hass.async_create_task(hass.services.async_call(DOMAIN, SERVICE_STOP, data))
+    hass.async_create_task(hass.services.async_call(DOMAIN, FFmpegService.STOP, data))
 
 
 @callback
@@ -47,7 +43,9 @@ def async_restart(hass: HomeAssistant, entity_id: str | None = None) -> None:
     This is a legacy helper method. Do not use it for new tests.
     """
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    hass.async_create_task(hass.services.async_call(DOMAIN, SERVICE_RESTART, data))
+    hass.async_create_task(
+        hass.services.async_call(DOMAIN, FFmpegService.RESTART, data)
+    )
 
 
 class MockFFmpegDev(ffmpeg.FFmpegBase):

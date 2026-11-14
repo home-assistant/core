@@ -28,28 +28,23 @@ if TYPE_CHECKING:
         SupervisorIssuesCoordinator,
         SupervisorJobsCoordinator,
     )
-    from .handler import HassIO
 
 
 DOMAIN = "hassio"
 
 ATTR_ADDON = "addon"
 ATTR_ADDONS = "addons"
-ATTR_APP = "app"
-ATTR_APPS = "apps"
 ATTR_ADMIN = "admin"
-ATTR_COMPRESSED = "compressed"
 ATTR_CONFIG = "config"
 ATTR_DATA = "data"
+ATTR_SESSION = "session"
 ATTR_SESSION_DATA_USER_ID = "user_id"
 ATTR_DISCOVERY = "discovery"
 ATTR_ENABLE = "enable"
 ATTR_ENDPOINT = "endpoint"
 ATTR_FOLDERS = "folders"
 ATTR_HEALTHY = "healthy"
-ATTR_HOMEASSISTANT = "homeassistant"
 ATTR_HOMEASSISTANT_EXCLUDE_DATABASE = "homeassistant_exclude_database"
-ATTR_INPUT = "input"
 ATTR_ISSUES = "issues"
 ATTR_MESSAGE = "message"
 ATTR_METHOD = "method"
@@ -80,6 +75,9 @@ WS_ID = "id"
 
 WS_TYPE_API = "supervisor/api"
 WS_TYPE_EVENT = "supervisor/event"
+WS_TYPE_INGRESS_INFO = "supervisor/ingress/info"
+WS_TYPE_INGRESS_SESSION = "supervisor/ingress/session"
+WS_TYPE_INGRESS_VALIDATE_SESSION = "supervisor/ingress/validate_session"
 WS_TYPE_SUBSCRIBE = "supervisor/subscribe"
 
 EVENT_SUPERVISOR_EVENT = "supervisor_event"
@@ -93,6 +91,7 @@ EVENT_STORE_RELOADED = "store_reloaded"
 EVENT_ADDON = "addon"
 
 UPDATE_KEY_SUPERVISOR = "supervisor"
+UPDATE_KEY_NETWORK = "network"
 STARTUP_COMPLETE = "complete"
 
 MAIN_COORDINATOR: HassKey[HassioMainDataUpdateCoordinator] = HassKey(
@@ -110,7 +109,6 @@ JOBS_COORDINATOR: HassKey[SupervisorJobsCoordinator] = HassKey(
 DATA_AUTO_UPDATE: HassKey[AutoUpdateManager] = HassKey("hassio_auto_update")
 
 
-DATA_COMPONENT: HassKey[HassIO] = HassKey(DOMAIN)
 DATA_CORE_INFO: HassKey[HomeAssistantInfo] = HassKey("hassio_core_info")
 DATA_CORE_STATS = "hassio_core_stats"
 DATA_HOST_INFO: HassKey[HostInfo] = HassKey("hassio_host_info")
@@ -153,9 +151,12 @@ DATA_KEY_SUPERVISOR_ISSUES: HassKey[SupervisorIssuesCoordinator] = HassKey(
     "supervisor_issues"
 )
 DATA_KEY_MOUNTS = "mounts"
-DATA_HASSIO_HOST: HassKey[str] = HassKey("hassio_host")
 
 ENTRY_DATA_USER = "user"
+
+ENV_SUPERVISOR = "SUPERVISOR"
+ENV_SUPERVISOR_SOCKET = "SUPERVISOR_SOCKET"
+ENV_SUPERVISOR_TOKEN = "SUPERVISOR_TOKEN"
 
 OPTION_ADD_ON_BACKUP_BEFORE_UPDATE = "add_on_backup_before_update"
 OPTION_ADD_ON_BACKUP_RETAIN_COPIES = "add_on_backup_retain_copies"
@@ -200,7 +201,6 @@ ISSUE_KEY_SYSTEM_FREE_SPACE = "issue_system_free_space"
 ISSUE_KEY_SYSTEM_REBOOT_REQUIRED = "issue_system_reboot_required"
 ISSUE_KEY_ADDON_DEPRECATED = "issue_addon_deprecated_addon"
 ISSUE_KEY_ADDON_DEPRECATED_ARCH = "issue_addon_deprecated_arch_addon"
-ISSUE_KEY_LEGACY_HOMEASSISTANT_FOLDER = "legacy_homeassistant_folder"
 
 ISSUE_MOUNT_MOUNT_FAILED = "issue_mount_mount_failed"
 

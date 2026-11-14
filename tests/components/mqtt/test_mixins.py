@@ -1172,6 +1172,111 @@ async def test_previous_device_kept_after_entry_reload(
 
 
 @pytest.mark.parametrize(
+    "discovery",
+    [
+        pytest.param(_single_component_discovery, id="single_component"),
+        pytest.param(_device_discovery, id="device_discovery"),
+    ],
+)
+async def test_cleanup_previous_device_after_discovery_update(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    discovery: Callable[[str], tuple[str, dict[str, Any]]],
+) -> None:
+    """Test a discovery update moves the entity to its new device right away."""
+    await mqtt_mock_entry()
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    topic, payload = discovery(MOVED_DEVICE_A)
+    async_fire_mqtt_message(hass, topic, json.json_dumps(payload))
+    await hass.async_block_till_done()
+    device_a = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOVED_DEVICE_A), entry.entry_id
+    )
+    assert device_a is not None
+    entity_id = entity_registry.async_get_entity_id(
+        sensor.DOMAIN, DOMAIN, MOVED_UNIQUE_ID
+    )
+    assert entity_id is not None
+
+    topic, payload = discovery(MOVED_DEVICE_B)
+    async_fire_mqtt_message(hass, topic, json.json_dumps(payload))
+    await hass.async_block_till_done()
+
+    device_b = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOVED_DEVICE_B), entry.entry_id
+    )
+    assert device_b is not None
+    assert entity_registry.async_get(entity_id).device_id == device_b.id
+    assert device_registry.async_get(device_a.id) is None
+
+
+@pytest.mark.parametrize(
+    ("keeper_topic", "keeper_payload"),
+    [
+        pytest.param(
+            "homeassistant/sensor/keeper/config",
+            {
+                "device": {"identifiers": [MOVED_DEVICE_A]},
+                "name": "keeper",
+                "state_topic": "test-topic",
+                "unique_id": "keeper_unique_id",
+            },
+            id="enabled_entity",
+        ),
+        pytest.param(
+            "homeassistant/sensor/keeper/config",
+            {
+                "device": {"identifiers": [MOVED_DEVICE_A]},
+                "name": "keeper",
+                "state_topic": "test-topic",
+                "unique_id": "keeper_unique_id",
+                "enabled_by_default": False,
+            },
+            id="disabled_entity",
+        ),
+        pytest.param(*TRIGGER_KEEPER, id="device_trigger"),
+        pytest.param(*TAG_KEEPER, id="tag"),
+    ],
+)
+async def test_previous_device_kept_after_discovery_update(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    keeper_topic: str,
+    keeper_payload: dict[str, Any],
+) -> None:
+    """Test a discovery update keeps the previous device while it is still used."""
+    await mqtt_mock_entry()
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    topic, payload = _single_component_discovery(MOVED_DEVICE_A)
+    async_fire_mqtt_message(hass, keeper_topic, json.json_dumps(keeper_payload))
+    async_fire_mqtt_message(hass, topic, json.json_dumps(payload))
+    await hass.async_block_till_done()
+    device_a = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOVED_DEVICE_A), entry.entry_id
+    )
+    assert device_a is not None
+
+    topic, payload = _single_component_discovery(MOVED_DEVICE_B)
+    async_fire_mqtt_message(hass, topic, json.json_dumps(payload))
+    await hass.async_block_till_done()
+
+    device_b = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOVED_DEVICE_B), entry.entry_id
+    )
+    assert device_b is not None
+    entity_id = entity_registry.async_get_entity_id(
+        sensor.DOMAIN, DOMAIN, MOVED_UNIQUE_ID
+    )
+    assert entity_id is not None
+    assert entity_registry.async_get(entity_id).device_id == device_b.id
+    assert device_registry.async_get(device_a.id) is not None
+
+
+@pytest.mark.parametrize(
     ("keeper_topic", "keeper_payload"),
     [
         pytest.param(*TRIGGER_KEEPER, id="device_trigger"),

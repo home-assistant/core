@@ -23,6 +23,7 @@ from typing import (
 from warnings import deprecated as mark_deprecated
 
 from propcache.api import cached_property
+from typing_extensions import Sentinel as sentinel
 
 if TYPE_CHECKING:
     from .frame import ReportBehavior
@@ -649,7 +650,7 @@ class DeprecatedEntityAttr[_T](_DeprecatedEntityMember[_T]):
 
 
 _REPORTED_DEPRECATED_ENTITY_USAGE: set[tuple[type, str, str, CodeType, int]] = set()
-_MISSING = object()
+_MISSING = sentinel("_MISSING")
 
 
 class _DeprecatedEntityFallback:
