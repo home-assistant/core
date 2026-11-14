@@ -1822,6 +1822,17 @@
       ],
       "supported_by": "motion_blinds"
     },
+    "brilix_neopool": {
+      "name": "Brilix",
+      "integration_type": "virtual",
+      "categories": [
+        "water.pools_spas"
+      ],
+      "connectivity": [
+        "modbus"
+      ],
+      "supported_by": "neopool"
+    },
     "bring": {
       "name": "Bring!",
       "integration_type": "service",
