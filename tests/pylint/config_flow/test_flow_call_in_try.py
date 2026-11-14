@@ -300,6 +300,21 @@ class MyFlow(ConfigFlow, domain="test_int"):
         pytest.param(
             """
 from homeassistant.config_entries import ConfigFlow
+
+class MyFlow(ConfigFlow, domain="test_int"):
+    async def async_step_user(self, user_input=None):
+        try:
+            await self.async_set_unique_id_or_abort(user_input["serial_number"])
+        except Exception:
+            return self.async_abort(reason="unknown")
+        return self.async_create_entry(title="Test", data=user_input)
+""",
+            ("async_set_unique_id_or_abort",),
+            id="set_unique_id_or_abort",
+        ),
+        pytest.param(
+            """
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.data_entry_flow import AbortFlow
 
 class MyFlow(ConfigFlow, domain="test_int"):

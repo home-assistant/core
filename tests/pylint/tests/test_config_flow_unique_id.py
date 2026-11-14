@@ -526,6 +526,14 @@ async def test_full_flow(hass):
             {"config_flow/__init__.py": "", "config_flow/user.py": _CONFIG_FLOW},
             id="package",
         ),
+        pytest.param(
+            {
+                "config_flow.py": _CONFIG_FLOW.replace(
+                    "async_set_unique_id(", "async_set_unique_id_or_abort("
+                )
+            },
+            id="set_unique_id_or_abort",
+        ),
     ],
 )
 def test_missing_unique_id(
