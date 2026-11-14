@@ -181,7 +181,7 @@ class OpenhomeDevice(MediaPlayerEntity):
                 self._attr_state = MediaPlayerState.PAUSED
             elif transport_state in ("Playing", "Buffering"):
                 self._attr_state = MediaPlayerState.PLAYING
-            elif transport_state == "Stopped":
+            elif transport_state in ("Stopped", "Waiting"):
                 self._attr_state = MediaPlayerState.IDLE
             else:
                 # Device is playing an external source with no transport controls
