@@ -405,6 +405,9 @@ aiopegelonline==0.1.1
 # homeassistant.components.opnsense
 aiopnsense==1.0.10
 
+# homeassistant.components.proxmoxve
+aioproxmox==0.1.5
+
 # homeassistant.components.ptdevices
 aioptdevices==2026.11.1
 
@@ -1997,9 +2000,6 @@ prometheus-client==0.21.0
 
 # homeassistant.components.prowl
 prowlpy==1.1.5
-
-# homeassistant.components.proxmoxve
-proxmoxer==2.3.0
 
 # homeassistant.components.hardware
 # homeassistant.components.recorder

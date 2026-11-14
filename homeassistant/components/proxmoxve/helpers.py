@@ -1,9 +1,8 @@
 """Helpers for Proxmox VE."""
 
 from dataclasses import dataclass
-from typing import Any
 
-from .const import ProxmoxPermission
+from aioproxmox.model.pve import NodeAptUpdateProperty
 
 
 @dataclass(frozen=True)
@@ -17,36 +16,18 @@ class ProxmoxUpdateInfo:
     other_updates: int = 0
 
 
-def is_granted(
-    permissions: dict[str, dict[str, int]],
-    p_type: str = "vms",
-    p_id: str | int | None = None,  # can be str for nodes
-    permission: ProxmoxPermission = ProxmoxPermission.POWER,
-) -> bool:
-    """Validate user permissions for the given type and permission."""
-    if (privileges := permissions.get(f"/{p_type}/{p_id}")) is not None:
-        return permission in privileges
-
-    # Proxmox omits /{p_type} only when nothing reaches it, so "/" never applies.
-    # Known limitation: an exact path denied via NoAccess is omitted as well.
-    return permissions.get(f"/{p_type}", {}).get(permission) == 1
-
-
-def is_proxmox_package(update: dict[str, Any]) -> bool:
+def is_proxmox_package(update: NodeAptUpdateProperty) -> bool:
     """Indicate if the given update is related to Proxmox VE."""
-    package = update.get("Package", "")
-    origin = update.get("Origin", "")
-    title = update.get("Title", "")
     return (
-        package.startswith(("pve-", "libpve-"))
-        or "proxmox" in origin.lower()
-        or "proxmox" in title.lower()
+        update.package.startswith(("pve-", "libpve-"))
+        or "proxmox" in update.origin.lower()
+        or "proxmox" in update.title.lower()
     )
 
 
 def update_version(
     current_version: str,
-    updates: list[dict[str, Any]],
+    updates: list[NodeAptUpdateProperty],
 ) -> ProxmoxUpdateInfo:
     """Return the updated version based on the current version and updates."""
 
@@ -54,11 +35,11 @@ def update_version(
     pve_count = sum(is_proxmox_package(u) for u in updates)
     other_count = count - pve_count
     pve_manager_update = next(
-        (update for update in updates if update.get("Package") == "pve-manager"),
+        (update for update in updates if update.package == "pve-manager"),
         None,
     )
     latest = (
-        pve_manager_update["Version"].split("-")[0]
+        pve_manager_update.version.split("-")[0]
         if pve_manager_update
         else current_version
     )
