@@ -164,8 +164,6 @@ FFMPEG_CHUNK_SIZE: Final[int] = 4096
 class TTSCache:
     """Cached bytes of a TTS result."""
 
-    stream_task: asyncio.Task[None] | None = None
-
     _result_data: bytes | None = None
     """When fully loaded, contains the result data."""
 
@@ -953,9 +951,6 @@ class ResultStream:
 
     def delete(self) -> None:
         """Remove the result stream from the manager."""
-        if self._result_cache.done() and not self._result_cache.cancelled():
-            if task := self._result_cache.result().stream_task:
-                task.cancel()
         self._manager.async_delete_result_stream(self.token)
 
 
@@ -1363,7 +1358,7 @@ class SpeechManager:
             data_gen=data_gen,
         )
         self.mem_cache[cache_key] = cache
-        cache.stream_task = self.hass.async_create_background_task(
+        self.hass.async_create_background_task(
             self._load_data_into_cache(
                 cache, engine_instance, "[Streaming TTS]", False, language, options
             ),
@@ -1503,9 +1498,6 @@ class SpeechManager:
         """Load and process a finished loading TTS Cache."""
         try:
             data = await cache.async_load_data()
-        except asyncio.CancelledError:
-            self.mem_cache.pop(cache.cache_key, None)
-            raise
         except Exception as err:  # pylint: disable=broad-except  # noqa: BLE001
             # Truncate message so we don't flood the logs. Cutting off at 32 chars
             # but since we add 3 dots to truncated message, we cut off at 35.

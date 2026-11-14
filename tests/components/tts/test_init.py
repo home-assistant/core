@@ -2670,62 +2670,6 @@ async def _message_stream() -> AsyncGenerator[str]:
     yield "beer"
 
 
-async def test_delete_result_stream_cancels_text_collection(
-    hass: HomeAssistant, mock_tts_entity: MockTTSEntity
-) -> None:
-    """Stop collecting text when its result stream is deleted."""
-    await mock_config_entry_setup(hass, mock_tts_entity)
-    started = asyncio.Event()
-    stopped = asyncio.Event()
-
-    async def message_stream() -> AsyncGenerator[str]:
-        try:
-            started.set()
-            yield "Partial reply"
-            await asyncio.Event().wait()
-        finally:
-            stopped.set()
-
-    stream = tts.async_create_stream(hass, mock_tts_entity.entity_id)
-    stream.async_set_message_stream(message_stream())
-    await started.wait()
-
-    stream.delete()
-
-    async with asyncio.timeout(1):
-        await stopped.wait()
-    await hass.async_block_till_done(wait_background_tasks=True)
-    assert tts.async_get_stream(hass, stream.token) is None
-
-
-async def test_delete_result_stream_keeps_shared_message(
-    hass: HomeAssistant, mock_tts_entity: MockTTSEntity
-) -> None:
-    """Deleting one stream does not cancel another stream of the same message."""
-    started = asyncio.Event()
-    finish = asyncio.Event()
-
-    async def get_audio(
-        message: str, language: str, options: dict[str, Any]
-    ) -> tts.TtsAudioType:
-        started.set()
-        await finish.wait()
-        return "mp3", MOCK_DATA
-
-    mock_tts_entity.async_get_tts_audio = AsyncMock(side_effect=get_audio)
-    await mock_config_entry_setup(hass, mock_tts_entity)
-    stream = tts.async_create_stream(hass, mock_tts_entity.entity_id)
-    stream.async_set_message("hello")
-    other_stream = tts.async_create_stream(hass, mock_tts_entity.entity_id)
-    other_stream.async_set_message("hello")
-    await started.wait()
-
-    stream.delete()
-    finish.set()
-
-    assert await get_stream_data(other_stream) == MOCK_DATA
-
-
 @pytest.mark.parametrize(
     "set_message",
     [
