@@ -2,6 +2,8 @@
 
 from collections.abc import Callable
 from datetime import timedelta
+import json
+from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
@@ -14,6 +16,7 @@ from lifx import (
     LifxError,
     Light,
     MultiZoneEffect,
+    Theme,
     ThemeLibrary,
     TileEffectSkyType,
 )
@@ -29,6 +32,7 @@ from homeassistant.components.lifx.const import (
     LIFXServiceArgument,
 )
 from homeassistant.components.lifx.light import LIFX_MIN_COLOR_RAMP
+from homeassistant.components.lifx.util import THEME_OPTIONS
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_BRIGHTNESS_PCT,
@@ -56,6 +60,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -69,6 +74,7 @@ from homeassistant.util.yaml import load_yaml_dict
 
 from . import (
     SERIAL,
+    async_enable_components,
     async_setup_lifx_entries,
     async_setup_lifx_entry,
     async_trigger_update,
@@ -87,6 +93,7 @@ from .helpers import (
     create_mock_matrix_light,
     create_mock_mirror_light,
     create_mock_multizone_light,
+    record_paint,
 )
 
 ENTITY_ID = "light.my_group_my_bulb"
@@ -597,13 +604,6 @@ async def test_undocumented_firmware_effect_is_not_reported(
             {"speed": 4},
             id="flame",
         ),
-        pytest.param(
-            LIFXService.EFFECT_MORPH,
-            {LIFXServiceArgument.SPEED: 6, LIFXServiceArgument.THEME: "autumn"},
-            FirmwareEffect.MORPH,
-            {"speed": 6, "palette": ThemeLibrary.get("autumn").colors},
-            id="morph",
-        ),
     ],
 )
 async def test_matrix_effects_use_public_firmware_api(
@@ -646,11 +646,64 @@ async def test_firmware_effect_errors_become_home_assistant_errors(
         )
 
 
-async def test_effect_theme_schema_offers_every_library_theme(
-    hass: HomeAssistant,
+@pytest.mark.parametrize(
+    ("service_data", "slug"),
+    [
+        pytest.param({}, "exciting", id="default"),
+        pytest.param({LIFXServiceArgument.THEME: "arctic"}, "arctic", id="library"),
+        pytest.param(
+            {LIFXServiceArgument.THEME: "aurora_borealis"}, "aurora", id="renamed"
+        ),
+    ],
+)
+async def test_morph_theme_is_sent_by_slug(
+    hass: HomeAssistant, service_data: dict[str, Any], slug: str
 ) -> None:
-    """Test effect services accept the themes the library currently ships."""
+    """Test a theme Morph starts from a library theme, so the library can report it."""
     device = create_mock_matrix_light()
+    await async_setup_lifx_entry(hass, device)
+
+    await hass.services.async_call(
+        DOMAIN,
+        LIFXService.EFFECT_MORPH,
+        {ATTR_ENTITY_ID: ENTITY_ID, LIFXServiceArgument.SPEED: 6, **service_data},
+        blocking=True,
+    )
+
+    device.set_morph_effect.assert_awaited_once()
+    assert device.set_morph_effect.await_args.args[0].slug == slug
+    assert device.set_morph_effect.await_args.kwargs == {"speed": 6}
+    device.set_effect.assert_not_awaited()
+
+
+async def test_morph_palette_keeps_the_firmware_path(hass: HomeAssistant) -> None:
+    """Test a custom palette Morph is sent as a palette, with nothing to record."""
+    device = create_mock_matrix_light()
+    await async_setup_lifx_entry(hass, device)
+
+    await hass.services.async_call(
+        DOMAIN,
+        LIFXService.EFFECT_MORPH,
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            LIFXServiceArgument.SPEED: 6,
+            LIFXServiceArgument.PALETTE: [(0, 100, 100, 3500), (240, 50, 25, 6500)],
+        },
+        blocking=True,
+    )
+
+    device.set_effect.assert_awaited_once_with(
+        FirmwareEffect.MORPH,
+        speed=6,
+        palette=[HSBK(0, 1.0, 1.0, 3500), HSBK(240, 0.5, 0.25, 6500)],
+    )
+    device.set_morph_effect.assert_not_awaited()
+
+
+async def test_morph_theme_powers_on_an_off_light(hass: HomeAssistant) -> None:
+    """Test a theme Morph turns an off light on first, as before."""
+    device = create_mock_matrix_light()
+    device.state.power = 0
     await async_setup_lifx_entry(hass, device)
 
     await hass.services.async_call(
@@ -660,11 +713,7 @@ async def test_effect_theme_schema_offers_every_library_theme(
         blocking=True,
     )
 
-    device.set_effect.assert_awaited_once()
-    assert (
-        device.set_effect.await_args.kwargs["palette"]
-        == ThemeLibrary.get("arctic").colors
-    )
+    device.set_power.assert_awaited_once_with(True, duration=0.0)
 
 
 async def test_sky_effect_uses_public_firmware_api(hass: HomeAssistant) -> None:
@@ -2043,22 +2092,76 @@ async def test_light_starts_off(hass: HomeAssistant) -> None:
     assert state.state == STATE_OFF
 
 
+def _theme_label(slug: str) -> str:
+    """Return the label the app shows for a theme."""
+    theme = ThemeLibrary.get(slug)
+    return f"{theme.category} > {theme.unicode_name}"
+
+
+def _theme_sort_key(slug: str) -> tuple[str, str]:
+    """Order themes as the app does: by category, then by name."""
+    theme = ThemeLibrary.get(slug)
+    return theme.category, theme.unicode_name.casefold()
+
+
+def _load_strings() -> dict[str, Any]:
+    """Return the integration's source strings."""
+    return json.loads(
+        Path(lifx.__path__[0], "strings.json").read_text(encoding="utf-8")
+    )
+
+
+def test_theme_options_list_each_library_theme_once() -> None:
+    """Test the dropdowns offer every theme once, grouped by category.
+
+    Rename aliases would repeat their successor's label, so they are left out
+    of the dropdowns while the schemas keep accepting them.
+    """
+    canonical = [
+        slug
+        for slug in ThemeLibrary.get_available_themes()
+        if ThemeLibrary.get(slug).disposition != "renamed"
+    ]
+
+    assert sorted(THEME_OPTIONS) == sorted(canonical)
+    assert len(THEME_OPTIONS) == 378
+    assert sorted(THEME_OPTIONS, key=_theme_sort_key) == THEME_OPTIONS
+
+
 @pytest.mark.parametrize(
     "service",
     [LIFXService.EFFECT_MOVE, LIFXService.EFFECT_MORPH, LIFXService.PAINT_THEME],
 )
-def test_theme_selector_options_match_the_library(service: str) -> None:
-    """Test the action selectors offer every theme the library accepts.
-
-    The action schemas validate against the library, so a selector left behind
-    by a library bump would hide themes the action would have accepted.
-    """
+def test_theme_selectors_use_the_labelled_options(service: str) -> None:
+    """Test every theme field offers the labelled theme dropdown."""
     services = load_yaml_dict(f"{lifx.__path__[0]}/services.yaml")
-    options = services[service]["fields"][LIFXServiceArgument.THEME]["selector"][
+    selector = services[service]["fields"][LIFXServiceArgument.THEME]["selector"][
         "select"
-    ]["options"]
+    ]
 
-    assert options == sorted(ThemeLibrary.get_available_themes())
+    assert selector["options"] == THEME_OPTIONS
+    assert selector["translation_key"] == "theme"
+
+
+def test_theme_labels_name_category_and_theme() -> None:
+    """Test each dropdown label is the app's category and name.
+
+    Only the Theme select offers rename aliases, so only it labels them.
+    """
+    strings = _load_strings()
+
+    assert strings["selector"]["theme"]["options"] == {
+        slug: _theme_label(slug) for slug in THEME_OPTIONS
+    }
+    assert strings["entity"]["select"]["theme"]["state"] == {
+        **{
+            slug: f"[%key:component::lifx::selector::theme::options::{slug}%]"
+            for slug in THEME_OPTIONS
+        },
+        "aurora_borealis": "Nature > Aurora Borealis (renamed to Aurora)",
+        "energising": "Moods > Energising (renamed to Energizing)",
+        "forest": "Nature > Forest (renamed to Forrest)",
+    }
 
 
 @pytest.mark.parametrize(
@@ -2147,3 +2250,196 @@ async def test_palette_bounds_match_the_documented_action(
             {ATTR_ENTITY_ID: ENTITY_ID, LIFXServiceArgument.PALETTE: palette},
             blocking=True,
         )
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data", "factory"),
+    [
+        pytest.param(LIFXService.PAINT_THEME, {}, create_mock_light, id="paint_theme"),
+        pytest.param(
+            LIFXService.EFFECT_MOVE,
+            {LIFXServiceArgument.SPEED: 3},
+            create_mock_multizone_light,
+            id="move",
+        ),
+    ],
+)
+async def test_renamed_theme_paints_its_successor(
+    hass: HomeAssistant,
+    service: str,
+    service_data: dict[str, Any],
+    factory: Callable[[], MockDevice],
+) -> None:
+    """Test a renamed theme paints, and is recorded as, the theme it became.
+
+    The library records the slug it is given, and the selects only offer the
+    successor, so painting the alias itself would leave them blank.
+    """
+    device = factory()
+    await async_setup_lifx_entry(hass, device)
+
+    await hass.services.async_call(
+        DOMAIN,
+        service,
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            LIFXServiceArgument.THEME: "forest",
+            **service_data,
+        },
+        blocking=True,
+    )
+
+    assert device.apply_theme.await_args.args[0].slug == "forrest"
+
+
+async def test_set_mood_applies_one_group_across_the_targets(
+    hass: HomeAssistant, mock_device_group: MagicMock
+) -> None:
+    """Test one call applies the Mood to every target together.
+
+    Bulbs in one group share the Mood's colours out, as in the LIFX app.
+    """
+    first = create_mock_light()
+    second = create_mock_light(ip=OTHER_IP_ADDRESS, serial=OTHER_SERIAL)
+    second.state.label = OTHER_LABEL
+    await async_setup_lifx_entries(hass, [first, second])
+
+    await hass.services.async_call(
+        DOMAIN,
+        LIFXService.SET_MOOD,
+        {
+            ATTR_ENTITY_ID: [ENTITY_ID, OTHER_ENTITY_ID],
+            LIFXServiceArgument.MOOD: "dream",
+        },
+        blocking=True,
+    )
+
+    mock_device_group.assert_called_once()
+    assert set(mock_device_group.call_args.args[0]) == {first, second}
+    group = mock_device_group.return_value
+    group.apply_mood.assert_awaited_once()
+    assert group.apply_mood.await_args.args[0].slug == "dream"
+
+
+async def test_set_mood_follows_a_rename(
+    hass: HomeAssistant, mock_device_group: MagicMock
+) -> None:
+    """Test a renamed Mood is applied as the Mood it became."""
+    await async_setup_lifx_entry(hass, create_mock_light())
+
+    await hass.services.async_call(
+        DOMAIN,
+        LIFXService.SET_MOOD,
+        {ATTR_ENTITY_ID: ENTITY_ID, LIFXServiceArgument.MOOD: "energising"},
+        blocking=True,
+    )
+
+    group = mock_device_group.return_value
+    assert group.apply_mood.await_args.args[0].slug == "energizing"
+
+
+async def test_set_mood_updates_each_target_mood_select(
+    hass: HomeAssistant, mock_device_group: MagicMock
+) -> None:
+    """Test each target's Mood select shows the Mood once the action applies it."""
+    device = create_mock_multizone_light()
+    await async_setup_lifx_entry(hass, device)
+
+    async def apply_mood(theme: Theme) -> None:
+        record_paint(device, "mood", theme.slug)
+
+    mock_device_group.return_value.apply_mood.side_effect = apply_mood
+    await hass.services.async_call(
+        DOMAIN,
+        LIFXService.SET_MOOD,
+        {ATTR_ENTITY_ID: ENTITY_ID, LIFXServiceArgument.MOOD: "dream"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("select.my_group_my_bulb_mood")
+    assert state
+    assert state.state == "dream"
+
+
+async def test_set_mood_rejects_a_component_only_target(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_device_group: MagicMock,
+) -> None:
+    """Test a Mood cannot be applied to one component of a Ceiling.
+
+    Moods paint whole devices, so naming only a component must not paint the light.
+    """
+    device = create_mock_ceiling_light()
+    entry = await async_setup_lifx_entry(hass, device)
+    await async_enable_components(hass, entry, entity_registry, device, ("downlight",))
+    downlight = entity_registry.async_get_entity_id(
+        Platform.LIGHT, DOMAIN, f"{SERIAL}_downlight"
+    )
+    assert downlight
+    assert hass.states.get(downlight)
+
+    with pytest.raises(ServiceValidationError, match="include no LIFX light"):
+        await hass.services.async_call(
+            DOMAIN,
+            LIFXService.SET_MOOD,
+            {ATTR_ENTITY_ID: downlight, LIFXServiceArgument.MOOD: "dream"},
+            blocking=True,
+        )
+
+    mock_device_group.return_value.apply_mood.assert_not_awaited()
+
+
+@pytest.mark.usefixtures("mock_device_group")
+async def test_set_mood_requires_a_known_mood(hass: HomeAssistant) -> None:
+    """Test the action rejects a Mood the library does not have."""
+    await async_setup_lifx_entry(hass, create_mock_light())
+
+    with pytest.raises(probatio.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            LIFXService.SET_MOOD,
+            {ATTR_ENTITY_ID: ENTITY_ID, LIFXServiceArgument.MOOD: "no_such_mood"},
+            blocking=True,
+        )
+
+
+def test_set_mood_selector_uses_the_labelled_options() -> None:
+    """Test the Mood field offers the labelled theme dropdown."""
+    services = load_yaml_dict(f"{lifx.__path__[0]}/services.yaml")
+    field = services[LIFXService.SET_MOOD]["fields"][LIFXServiceArgument.MOOD]
+
+    assert field["required"] is True
+    assert field["selector"]["select"]["options"] == THEME_OPTIONS
+    assert field["selector"]["select"]["translation_key"] == "theme"
+
+
+async def test_set_mood_on_an_area_applies_each_whole_light_once(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    mock_device_group: MagicMock,
+) -> None:
+    """Test an area holding a Ceiling and its components applies the Ceiling once."""
+    device = create_mock_ceiling_light()
+    entry = await async_setup_lifx_entry(hass, device)
+    await async_enable_components(
+        hass, entry, entity_registry, device, ("uplight", "downlight")
+    )
+    area = area_registry.async_create("Living Room")
+    registered = device_registry.async_get_device_by_identifier(
+        (DOMAIN, SERIAL), entry.entry_id
+    )
+    assert registered is not None
+    device_registry.async_update_device(registered.id, area_id=area.id)
+
+    await hass.services.async_call(
+        DOMAIN,
+        LIFXService.SET_MOOD,
+        {ATTR_AREA_ID: area.id, LIFXServiceArgument.MOOD: "dream"},
+        blocking=True,
+    )
+
+    mock_device_group.assert_called_once_with([device])

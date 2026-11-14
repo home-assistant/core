@@ -3,7 +3,7 @@
 import asyncio
 from collections.abc import Callable
 from datetime import timedelta
-from typing import cast, override
+from typing import TYPE_CHECKING, cast, override
 
 from lifx import (
     STATE_REFRESH_DEBOUNCE_MS,
@@ -24,7 +24,6 @@ from lifx import (
     MirrorLightState,
     MultiZoneLight,
     MultiZoneLightState,
-    ThemeLibrary,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -41,7 +40,7 @@ from .const import (
     LOGGER,
     MAX_MISSED_POLLS,
 )
-from .util import device_error
+from .util import device_error, resolve_renamed_theme
 
 type LIFXState = (
     LightState
@@ -64,7 +63,6 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[LIFXState]):
     ) -> None:
         """Initialize the coordinator."""
         self.device = device
-        self.last_used_theme: str | None = None
         self._missed_polls = 0
         super().__init__(
             hass,
@@ -139,6 +137,20 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[LIFXState]):
             ),
             None,
         )
+
+    @property
+    def current_theme(self) -> str | None:
+        """Return the theme the library painted, while the light still shows it."""
+        if TYPE_CHECKING:
+            assert isinstance(self.device, (MultiZoneLight, MatrixLight))
+        return self.device.current_theme
+
+    @property
+    def current_mood(self) -> str | None:
+        """Return the Mood the library applied, while the light still shows it."""
+        if TYPE_CHECKING:
+            assert isinstance(self.device, (MultiZoneLight, MatrixLight))
+        return self.device.current_mood
 
     @property
     def rssi(self) -> int | None:
@@ -227,10 +239,25 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[LIFXState]):
             raise device_error(err) from err
 
     async def async_apply_theme(self, theme_name: str) -> None:
-        """Apply a built-in theme to a zone-based device."""
+        """Paint a built-in theme on a zone-based device."""
         assert isinstance(self.device, (MultiZoneLight, MatrixLight))
         try:
-            await self.device.apply_theme(ThemeLibrary.get(theme_name))
+            await self.device.apply_theme(resolve_renamed_theme(theme_name))
         except LifxError as err:
             raise device_error(err) from err
-        self.last_used_theme = theme_name.lower()
+        # The library records the paint without a read, so show it straight away
+        self.async_update_listeners()
+        # The paint can also turn the light on, which only a refresh reads
+        await self.async_request_refresh()
+
+    async def async_apply_mood(self, mood: str) -> None:
+        """Apply a Mood to a zone-based device, as the LIFX app does."""
+        assert isinstance(self.device, (MultiZoneLight, MatrixLight))
+        try:
+            await self.device.apply_mood(resolve_renamed_theme(mood))
+        except LifxError as err:
+            raise device_error(err) from err
+        # The library swaps a theme record for this Mood, so both selects change
+        self.async_update_listeners()
+        # The Mood can also turn the light on, which only a refresh reads
+        await self.async_request_refresh()
