@@ -1,6 +1,7 @@
 """Test the Home Assistant local auth provider."""
 
 import asyncio
+import threading
 from typing import Any
 from unittest.mock import Mock, patch
 
@@ -225,6 +226,35 @@ async def test_race_condition_in_data_loading(hass: HomeAssistant) -> None:
         assert isinstance(results[0], hass_auth.InvalidAuth)
         # results[1] will be a TypeError if race condition occurred
         assert isinstance(results[1], hass_auth.InvalidAuth)
+
+
+async def test_add_auth_concurrent_same_username(
+    hass: HomeAssistant, data: hass_auth.Data
+) -> None:
+    """Test adding the same username twice at once stores one password."""
+    provider = hass_auth.HassAuthProvider(
+        hass, auth_store.AuthStore(hass), {"type": "homeassistant"}
+    )
+    provider.data = data
+    # Both passwords are hashed at the same time, as in the race.
+    both_hashing = threading.Barrier(2, timeout=5)
+    hash_password = hass_auth.Data.hash_password
+
+    def hash_together(
+        data: hass_auth.Data, password: str, for_storage: bool = False
+    ) -> bytes:
+        both_hashing.wait()
+        return hash_password(data, password, for_storage)
+
+    with patch.object(hass_auth.Data, "hash_password", hash_together):
+        results = await asyncio.gather(
+            provider.async_add_auth("test-user", "first-pass"),
+            provider.async_add_auth("test-user", "second-pass"),
+            return_exceptions=True,
+        )
+
+    assert sum(isinstance(result, hass_auth.InvalidUser) for result in results) == 1
+    assert [user["username"] for user in data.users] == ["test-user"]
 
 
 def test_change_username(data: hass_auth.Data) -> None:

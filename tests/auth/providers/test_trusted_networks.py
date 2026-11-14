@@ -105,7 +105,10 @@ def manager(
     provider: tn_auth.TrustedNetworksAuthProvider,
 ) -> auth.AuthManager:
     """Mock manager."""
-    return auth.AuthManager(hass, store, {(provider.type, provider.id): provider}, {})
+    hass.auth = auth.AuthManager(
+        hass, store, {(provider.type, provider.id): provider}, {}
+    )
+    return hass.auth
 
 
 @pytest.fixture
@@ -115,12 +118,13 @@ def manager_with_user(
     provider_with_user: tn_auth.TrustedNetworksAuthProvider,
 ) -> auth.AuthManager:
     """Mock manager with trusted user."""
-    return auth.AuthManager(
+    hass.auth = auth.AuthManager(
         hass,
         store,
         {(provider_with_user.type, provider_with_user.id): provider_with_user},
         {},
     )
+    return hass.auth
 
 
 @pytest.fixture
@@ -130,12 +134,13 @@ def manager_bypass_login(
     provider_bypass_login: tn_auth.TrustedNetworksAuthProvider,
 ) -> auth.AuthManager:
     """Mock manager with allow bypass login."""
-    return auth.AuthManager(
+    hass.auth = auth.AuthManager(
         hass,
         store,
         {(provider_bypass_login.type, provider_bypass_login.id): provider_bypass_login},
         {},
     )
+    return hass.auth
 
 
 async def test_config_schema() -> None:
