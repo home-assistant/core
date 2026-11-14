@@ -15,6 +15,8 @@
   },
   "config": {
     "error": {
+      "fan_speeds_required": "Fan speeds are required when a fan speed or the set fan speed action is set.",
+      "set_fan_speed_required": "A set fan speed action is required when fan speeds are set.",
       "source_list_required": "A source list is required when a source or the select source actions are set.",
       "volume_up_and_down_required": "Volume up and volume down actions must be set together."
     },
@@ -768,10 +770,16 @@
     "config_format_triggers": {
       "description": "A trigger template configuration needs a trigger and at least one domain when defining an entity. This will be a configuration validation error in Home Assistant Core 2026.5.\n\nPlease remove the orphaned trigger from the configuration.\n\n```\n{config}\n```",
       "title": "Incomplete template configuration"
+    },
+    "incomplete_option_group": {
+      "description": "The template entity `{entity_id}` sets some of the `{options}` options but is missing `{missing}`. Without all of them, these options do nothing or fail when used. This will be a configuration validation error in Home Assistant Core 2027.6.\n\nAdd the missing options to the entity configuration, or remove the options that are set.",
+      "title": "Incomplete template entity configuration"
     }
   },
   "options": {
     "error": {
+      "fan_speeds_required": "[%key:component::template::config::error::fan_speeds_required%]",
+      "set_fan_speed_required": "[%key:component::template::config::error::set_fan_speed_required%]",
       "source_list_required": "[%key:component::template::config::error::source_list_required%]",
       "volume_up_and_down_required": "[%key:component::template::config::error::volume_up_and_down_required%]"
     },

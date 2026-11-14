@@ -1600,3 +1600,140 @@ async def test_attributes_template_with_blocked_attributes(
 
     error = f"Unsupported attribute(s) found for {TEST_VACUUM.entity_id}: {attribute}"
     assert error in caplog.text
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    ("config", "missing"),
+    [
+        pytest.param(
+            {"fan_speed": "{{ 'high' }}"},
+            "fan_speeds, set_fan_speed",
+            id="fan_speed_only",
+        ),
+        pytest.param(
+            {"fan_speed": "{{ 'high' }}", "fan_speeds": ["high"]},
+            "set_fan_speed",
+            id="fan_speed_without_action",
+        ),
+        pytest.param({"fan_speeds": ["high"]}, "set_fan_speed", id="list_only"),
+        pytest.param(SET_FAN_SPEED_ACTION, "fan_speeds", id="action_only"),
+    ],
+)
+async def test_incomplete_fan_speed_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    style: ConfigurationStyle,
+    config: ConfigType,
+    missing: str,
+) -> None:
+    """Test a repair issue is created for a partially set fan speed group."""
+    await setup_entity(
+        hass, TEST_VACUUM, style, 1, {**START_ACTION, **config}, "{{ 'docked' }}"
+    )
+
+    issue = issue_registry.async_get_issue(
+        template.DOMAIN, f"incomplete_fan_speed_group_{TEST_VACUUM.entity_id}"
+    )
+    assert issue is not None
+    assert issue.breaks_in_ha_version == "2027.6.0"
+    assert issue.translation_key == "incomplete_option_group"
+    assert issue.translation_placeholders == {
+        "entity_id": TEST_VACUUM.entity_id,
+        "options": "fan_speed, fan_speeds, set_fan_speed",
+        "missing": missing,
+    }
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    "config",
+    [
+        pytest.param({}, id="none"),
+        pytest.param(
+            {"fan_speeds": ["high"], **SET_FAN_SPEED_ACTION}, id="without_fan_speed"
+        ),
+        pytest.param(
+            {
+                "fan_speed": "{{ 'high' }}",
+                "fan_speeds": ["high"],
+                **SET_FAN_SPEED_ACTION,
+            },
+            id="all",
+        ),
+    ],
+)
+async def test_complete_fan_speed_no_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    style: ConfigurationStyle,
+    config: ConfigType,
+) -> None:
+    """Test no repair issue is created for a valid fan speed group."""
+    await setup_entity(
+        hass, TEST_VACUUM, style, 1, {**START_ACTION, **config}, "{{ 'docked' }}"
+    )
+
+    assert not issue_registry.async_get_issue(
+        template.DOMAIN, f"incomplete_fan_speed_group_{TEST_VACUUM.entity_id}"
+    )
+
+
+async def test_incomplete_fan_speed_issue_removed_with_entity(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test the repair issue is removed when the entity is removed."""
+    template_config_entry = MockConfigEntry(
+        data={},
+        domain=template.DOMAIN,
+        options={
+            "name": "My template",
+            "state": "{{ 'docked' }}",
+            "start": [],
+            "set_fan_speed": [],
+            "template_type": vacuum.DOMAIN,
+        },
+        title="My template",
+    )
+    template_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    issue_id = "incomplete_fan_speed_group_vacuum.my_template"
+    assert issue_registry.async_get_issue(template.DOMAIN, issue_id)
+
+    assert await hass.config_entries.async_unload(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert not issue_registry.async_get_issue(template.DOMAIN, issue_id)
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_optimistic_fan_speed(
+    hass: HomeAssistant, style: ConfigurationStyle, calls: list[ServiceCall]
+) -> None:
+    """Test the fan speed is set optimistically without a fan speed template."""
+    await setup_entity(
+        hass,
+        TEST_VACUUM,
+        style,
+        1,
+        {
+            **START_ACTION,
+            **SET_FAN_SPEED_ACTION,
+            "fan_speeds": ["low", "high"],
+        },
+        "{{ 'docked' }}",
+    )
+
+    await common.async_set_fan_speed(hass, "high", TEST_VACUUM.entity_id)
+    await hass.async_block_till_done()
+
+    assert_action(TEST_VACUUM, calls, 1, "set_fan_speed", fan_speed="high")
+    assert hass.states.get(TEST_VACUUM.entity_id).attributes[ATTR_FAN_SPEED] == "high"

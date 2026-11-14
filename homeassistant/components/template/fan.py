@@ -204,6 +204,9 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity, RestoreEntity):
     _restore_state_extra_data = FanExtraStoredData
     _restore_state_properties = ("_attr_is_on",)
     _blocked_attributes = _BLOCKED_ATTRIBUTES
+    _deprecated_inclusive_groups = (
+        (CONF_PRESET_MODE, CONF_PRESET_MODES, CONF_SET_PRESET_MODE_ACTION),
+    )
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call
