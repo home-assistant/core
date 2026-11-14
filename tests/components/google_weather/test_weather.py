@@ -201,34 +201,53 @@ async def test_forecast_service(
 
 
 @pytest.mark.parametrize(
-    ("frozen_time", "forecast_type", "expected_times"),
+    ("frozen_time", "time_zone_id", "forecast_type", "expected_times"),
     [
         pytest.param(
             "2025-02-10T16:00:00Z",
+            "America/Los_Angeles",
             "daily",
             ["2025-02-10T15:00:00Z", "2025-02-11T15:00:00Z"],
             id="daily_daytime",
         ),
         pytest.param(
             "2025-02-11T04:00:00Z",
+            "America/Los_Angeles",
             "daily",
             ["2025-02-10T15:00:00Z", "2025-02-11T15:00:00Z"],
             id="daily_evening_before_midnight",
         ),
         pytest.param(
             "2025-02-11T08:00:00Z",
+            "America/Los_Angeles",
             "daily",
             ["2025-02-11T15:00:00Z"],
             id="daily_at_local_midnight",
         ),
         pytest.param(
             "2025-02-11T11:00:00Z",
+            "America/Los_Angeles",
             "daily",
             ["2025-02-11T15:00:00Z"],
             id="daily_between_midnight_and_7am",
         ),
         pytest.param(
             "2025-02-10T16:00:00Z",
+            "Asia/Tokyo",
+            "daily",
+            ["2025-02-11T15:00:00Z"],
+            id="daily_uses_location_time_zone",
+        ),
+        pytest.param(
+            "2025-02-11T08:00:00Z",
+            "Invalid/Timezone",
+            "daily",
+            ["2025-02-11T15:00:00Z"],
+            id="daily_invalid_time_zone_falls_back_to_default",
+        ),
+        pytest.param(
+            "2025-02-10T16:00:00Z",
+            "America/Los_Angeles",
             "twice_daily",
             [
                 "2025-02-10T15:00:00Z",
@@ -240,6 +259,7 @@ async def test_forecast_service(
         ),
         pytest.param(
             "2025-02-11T04:00:00Z",
+            "America/Los_Angeles",
             "twice_daily",
             [
                 "2025-02-11T03:00:00Z",
@@ -250,6 +270,7 @@ async def test_forecast_service(
         ),
         pytest.param(
             "2025-02-11T11:00:00Z",
+            "America/Los_Angeles",
             "twice_daily",
             [
                 "2025-02-11T03:00:00Z",
@@ -260,6 +281,7 @@ async def test_forecast_service(
         ),
         pytest.param(
             "2025-02-11T16:00:00Z",
+            "America/Los_Angeles",
             "twice_daily",
             [
                 "2025-02-11T15:00:00Z",
@@ -275,11 +297,13 @@ async def test_forecast_filters_past_periods(
     mock_google_weather_api: AsyncMock,
     freezer: FrozenDateTimeFactory,
     frozen_time: str,
+    time_zone_id: str,
     forecast_type: str,
     expected_times: list[str],
 ) -> None:
     """Test daily and twice-daily forecasts skip past days and ended dayparts."""
     daily_forecast = mock_google_weather_api.async_get_daily_forecast.return_value
+    daily_forecast.time_zone.id = time_zone_id
     second_day = deepcopy(daily_forecast.forecast_days[0])
     second_day.display_date = Date(year=2025, month=2, day=11)
     second_day.interval = Interval(

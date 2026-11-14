@@ -214,11 +214,12 @@ class GoogleWeatherEntity(
         subentry_runtime_data = entry.runtime_data.subentries_runtime_data[
             subentry.subentry_id
         ]
+        self._daily_coordinator = subentry_runtime_data.coordinator_daily_forecast
         super().__init__(
             observation_coordinator=subentry_runtime_data.coordinator_observation,
-            daily_coordinator=subentry_runtime_data.coordinator_daily_forecast,
+            daily_coordinator=self._daily_coordinator,
             hourly_coordinator=subentry_runtime_data.coordinator_hourly_forecast,
-            twice_daily_coordinator=subentry_runtime_data.coordinator_daily_forecast,
+            twice_daily_coordinator=self._daily_coordinator,
         )
         GoogleWeatherBaseEntity.__init__(self, entry, subentry)
         self._api = entry.runtime_data.api
@@ -354,12 +355,8 @@ class GoogleWeatherEntity(
     @override
     def _async_forecast_daily(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
-        coordinator = self.forecast_coordinators["daily"]
-        assert coordinator
-        daily_data = coordinator.data
-        assert isinstance(daily_data, DailyForecastResponse)
-        tz = dt_util.get_time_zone(daily_data.time_zone.id) or dt_util.DEFAULT_TIME_ZONE
-        today = dt_util.now(tz).date()
+        daily_data = self._daily_coordinator.data
+        today = dt_util.now(self._daily_coordinator.time_zone).date()
         # Google's forecast day runs 07:00-07:00 local time, so between midnight
         # and 07:00 the first record still has yesterday's display_date.
         return [
