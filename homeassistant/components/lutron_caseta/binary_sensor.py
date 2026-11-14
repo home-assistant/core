@@ -29,6 +29,7 @@ from .models import LutronCasetaConfigEntry, LutronCasetaData
 from .util import area_name_from_id
 
 SCAN_INTERVAL = timedelta(days=1)
+BATTERY_STATUS_BAD = "bad"
 BATTERY_STATUS_GOOD = "good"
 BATTERY_STATUS_LOW = "low"
 
@@ -187,7 +188,7 @@ class LutronCasetaBatterySensor(LutronCasetaEntity, BinarySensorEntity):
             self._attr_is_on = None
             return
         normalized_status = status.strip().casefold() if status else None
-        if normalized_status == BATTERY_STATUS_LOW:
+        if normalized_status in (BATTERY_STATUS_BAD, BATTERY_STATUS_LOW):
             self._attr_is_on = True
         elif normalized_status == BATTERY_STATUS_GOOD:
             self._attr_is_on = False
