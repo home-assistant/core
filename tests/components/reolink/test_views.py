@@ -14,7 +14,12 @@ from pytest_homeassistant.typing import ClientSessionGenerator
 from reolink_aio.enums import VodRequestType
 from reolink_aio.exceptions import ReolinkError, UnexpectedDataError
 
-from homeassistant.components.reolink.views import async_generate_playback_proxy_url
+from homeassistant.components.reolink.util import get_host
+from homeassistant.components.reolink.views import (
+    MAX_PARALLEL_THUMBNAILS,
+    async_generate_playback_proxy_url,
+    async_generate_thumbnail_url,
+)
 from homeassistant.core import HomeAssistant
 
 TEST_YEAR = 2023
@@ -38,6 +43,8 @@ TEST_NVR_START = "20231114131200"
 TEST_NVR_END = "20231114131700"
 TEST_NVR_FILE_NAME = f"{TEST_NVR_START}_{TEST_NVR_END}"
 TEST_NVR_VOD_TYPE = VodRequestType.NVR_DOWNLOAD.value
+TEST_START_TIME_ID = "20231114131200"
+TEST_IMAGE = b"jpeg"
 
 
 def get_mock_session(
@@ -497,3 +504,171 @@ async def test_playback_service_unavailable(
     assert await response.read() == b"testtest"
     assert unavailable_session.get.call_args.kwargs["headers"]["Range"] == "bytes=0-"
     successful_response.release.assert_called_once_with()
+
+
+async def test_thumbnail(
+    hass: HomeAssistant,
+    reolink_host: MagicMock,
+    config_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test getting the thumbnail of a recording."""
+    reolink_host.baichuan.snapshot_past = AsyncMock(return_value=TEST_IMAGE)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    thumbnail_url = async_generate_thumbnail_url(
+        config_entry.entry_id, int(TEST_CHANNEL), TEST_START_TIME_ID
+    )
+
+    http_client = await hass_client()
+    response = await http_client.get(thumbnail_url)
+
+    assert response.status == 200
+    assert response.content_type == "image/jpeg"
+    assert await response.content.read() == TEST_IMAGE
+    reolink_host.baichuan.snapshot_past.assert_called_once()
+    args = reolink_host.baichuan.snapshot_past.call_args.args
+    assert args[0] == int(TEST_CHANNEL)
+    assert args[1] == datetime(2023, 11, 14, 13, 12, 0)
+    assert args[2] == TEST_STREAM
+
+
+@pytest.mark.parametrize(
+    ("config_entry_id", "channel", "start_time_id", "side_effect", "body"),
+    [
+        pytest.param(
+            "wrong_config_id",
+            TEST_CHANNEL,
+            TEST_START_TIME_ID,
+            None,
+            "Reolink thumbnail could not find config entry id: wrong_config_id",
+            id="unknown_config_entry",
+        ),
+        pytest.param(
+            None,
+            "abc",
+            TEST_START_TIME_ID,
+            None,
+            f"Reolink thumbnail invalid channel abc or start time {TEST_START_TIME_ID}",
+            id="invalid_channel",
+        ),
+        pytest.param(
+            None,
+            TEST_CHANNEL,
+            "invalid",
+            None,
+            f"Reolink thumbnail invalid channel {TEST_CHANNEL} or start time invalid",
+            id="invalid_start_time",
+        ),
+        pytest.param(
+            None,
+            TEST_CHANNEL,
+            TEST_START_TIME_ID,
+            ReolinkError(TEST_ERROR),
+            TEST_ERROR,
+            id="camera_error",
+        ),
+    ],
+)
+async def test_thumbnail_errors(
+    hass: HomeAssistant,
+    reolink_host: MagicMock,
+    config_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+    config_entry_id: str | None,
+    channel: str,
+    start_time_id: str,
+    side_effect: Exception | None,
+    body: str,
+) -> None:
+    """Test errors while getting the thumbnail of a recording."""
+    reolink_host.baichuan.snapshot_past = AsyncMock(
+        return_value=TEST_IMAGE, side_effect=side_effect
+    )
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    http_client = await hass_client()
+    response = await http_client.get(
+        f"/api/reolink/thumbnail/{config_entry_id or config_entry.entry_id}"
+        f"/{channel}/{start_time_id}"
+    )
+
+    assert response.status == HTTPStatus.BAD_REQUEST
+    assert await response.content.read() == bytes(body, "utf-8")
+
+
+async def test_thumbnail_unloaded_config_entry(
+    hass: HomeAssistant,
+    reolink_host: MagicMock,
+    config_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test getting a thumbnail after the config entry has been unloaded."""
+    reolink_host.baichuan.snapshot_past = AsyncMock(return_value=TEST_IMAGE)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    http_client = await hass_client()
+    response = await http_client.get(
+        async_generate_thumbnail_url(
+            config_entry.entry_id, int(TEST_CHANNEL), TEST_START_TIME_ID
+        )
+    )
+
+    assert response.status == HTTPStatus.BAD_REQUEST
+    reolink_host.baichuan.snapshot_past.assert_not_called()
+
+
+async def test_thumbnail_unloaded_while_queued(
+    hass: HomeAssistant,
+    reolink_host: MagicMock,
+    config_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test a queued thumbnail request after the config entry has been unloaded."""
+    release = asyncio.Event()
+
+    async def snapshot_past(*args: Any) -> bytes:
+        await release.wait()
+        return TEST_IMAGE
+
+    reolink_host.baichuan.snapshot_past = AsyncMock(side_effect=snapshot_past)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    http_client = await hass_client()
+    thumbnail_url = async_generate_thumbnail_url(
+        config_entry.entry_id, int(TEST_CHANNEL), TEST_START_TIME_ID
+    )
+    with patch(
+        "homeassistant.components.reolink.views.get_host", wraps=get_host
+    ) as mock_get_host:
+        requests = [
+            asyncio.create_task(http_client.get(thumbnail_url))
+            for _ in range(MAX_PARALLEL_THUMBNAILS)
+        ]
+        while reolink_host.baichuan.snapshot_past.call_count < MAX_PARALLEL_THUMBNAILS:
+            await asyncio.sleep(0)
+        checks = mock_get_host.call_count
+        requests.append(asyncio.create_task(http_client.get(thumbnail_url)))
+        # Past its first config entry check, the request waits for the semaphore.
+        while mock_get_host.call_count == checks:
+            await asyncio.sleep(0)
+
+        assert await hass.config_entries.async_unload(config_entry.entry_id)
+        release.set()
+        responses = await asyncio.gather(*requests)
+
+    assert sorted(response.status for response in responses) == [
+        *[HTTPStatus.OK] * MAX_PARALLEL_THUMBNAILS,
+        HTTPStatus.BAD_REQUEST,
+    ]
+    assert reolink_host.baichuan.snapshot_past.call_count == MAX_PARALLEL_THUMBNAILS
