@@ -13,8 +13,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import TessieConfigEntry
 from .const import TessieSeatCoolerOptions, TessieSeatHeaterOptions
 from .entity import TessieEnergyEntity, TessieEntity
-from .helpers import handle_command
-from .models import TessieEnergyData
+from .helpers import handle_command, handle_fleet_command, handle_tessie_command
+from .models import TessieEnergyData, TessieVehicleData
 
 SEAT_HEATERS = {
     "climate_state_seat_heater_left": "front_left",
@@ -29,6 +29,15 @@ SEAT_HEATERS = {
 SEAT_COOLERS = {
     "climate_state_seat_fan_front_left": "front_left",
     "climate_state_seat_fan_front_right": "front_right",
+}
+
+STEERING_WHEEL_HEATER = "climate_state_steering_wheel_heat_level"
+
+# The steering wheel heater has no medium level: Tesla expects 0, 1 or 3.
+STEERING_WHEEL_HEAT_LEVELS: dict[str, int] = {
+    TessieSeatHeaterOptions.OFF: 0,
+    TessieSeatHeaterOptions.LOW: 1,
+    TessieSeatHeaterOptions.HIGH: 3,
 }
 
 PARALLEL_UPDATES = 0
@@ -54,6 +63,11 @@ async def async_setup_entry(
                 for vehicle in entry.runtime_data.vehicles
                 for key in SEAT_COOLERS
                 if key in vehicle.data_coordinator.data
+            ),
+            (
+                TessieSteeringWheelHeaterSelectEntity(vehicle)
+                for vehicle in entry.runtime_data.vehicles
+                if STEERING_WHEEL_HEATER in vehicle.data_coordinator.data
             ),
             (
                 TessieOperationSelectEntity(energysite)
@@ -115,6 +129,42 @@ class TessieSeatCoolerSelectEntity(TessieEntity, SelectEntity):
         """Change the selected option."""
         level = self._attr_options.index(option)
         await self.run(set_seat_cool, seat=SEAT_COOLERS[self.key], level=level)
+        self.set((self.key, level))
+
+
+class TessieSteeringWheelHeaterSelectEntity(TessieEntity, SelectEntity):
+    """Select entity for steering wheel heater level."""
+
+    _attr_options = list(STEERING_WHEEL_HEAT_LEVELS)
+
+    def __init__(self, vehicle: TessieVehicleData) -> None:
+        """Initialize the steering wheel heater select entity."""
+        super().__init__(vehicle, STEERING_WHEEL_HEATER)
+
+    @property
+    @override
+    def current_option(self) -> str | None:
+        """Return the current selected option."""
+        value = self._value
+        # Tesla reports levels above the highest option (for example 4) and
+        # "SNA" (signal not available) instead of a level.
+        if isinstance(value, int):
+            return self._attr_options[min(value, len(self._attr_options) - 1)]
+        return None
+
+    @override
+    async def async_select_option(self, option: str) -> None:
+        """Change the selected option."""
+        level = STEERING_WHEEL_HEAT_LEVELS[option]
+        name = getattr(self, "name", self.entity_id)
+        # The vehicle rejects steering wheel heat while climate is off
+        if level and not self.get("climate_state_is_climate_on"):
+            await handle_tessie_command(self.api.start_climate(), name=name)
+            self.set(("climate_state_is_climate_on", True))
+        # Tessie has no level endpoint, so this goes through its Fleet API proxy
+        await handle_fleet_command(
+            self.api.remote_steering_wheel_heat_level_request(level), name=name
+        )
         self.set((self.key, level))
 
 
