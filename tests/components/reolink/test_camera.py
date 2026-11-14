@@ -24,7 +24,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import setup_integration
-from .conftest import TEST_CAM_NAME, TEST_DUO_MODEL
+from .conftest import TEST_CAM_NAME, TEST_DUO_MODEL, TEST_NVR_NAME
 
 from tests.components.camera.common import SomeTestProvider
 
@@ -145,5 +145,5 @@ async def test_camera_no_stream_source(
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
-    entity_id = f"{Platform.CAMERA}.{TEST_CAM_NAME}_lens_0_snapshots_fluent"
+    entity_id = f"{Platform.CAMERA}.{TEST_NVR_NAME}_lens_0_snapshots_fluent"
     assert hass.states.get(entity_id).state == CameraState.IDLE

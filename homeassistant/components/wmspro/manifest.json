@@ -4,6 +4,7 @@
   "categories": ["blinds_curtains"],
   "codeowners": ["@mback2k"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dhcp": [
     {
       "macaddress": "0023D5*"

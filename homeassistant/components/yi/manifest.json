@@ -3,6 +3,7 @@
   "name": "Yi Home Cameras",
   "categories": ["security_safety.cameras"],
   "codeowners": ["@bachya"],
+  "connectivity": ["network"],
   "dependencies": ["ffmpeg"],
   "documentation": "https://www.home-assistant.io/integrations/yi",
   "integration_type": "device",

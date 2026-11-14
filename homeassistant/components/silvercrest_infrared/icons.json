@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "button": {
+      "mist": { "default": "mdi:sprinkler" },
+      "mode": { "default": "mdi:leaf" },
+      "osc": { "default": "mdi:arrow-oscillating" },
+      "power": { "default": "mdi:power" },
+      "speed": { "default": "mdi:fan-chevron-up" },
+      "timer": { "default": "mdi:timer" }
+    }
+  }
+}

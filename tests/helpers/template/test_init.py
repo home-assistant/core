@@ -3,13 +3,14 @@
 from datetime import datetime
 from enum import Enum, IntEnum, IntFlag, StrEnum
 import gc
+from typing import Any
 from unittest.mock import patch
 
 from freezegun import freeze_time
 import probatio
 import pytest
 
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT
+from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import entity_registry as er, template
@@ -17,6 +18,7 @@ from homeassistant.helpers.template.render_info import (
     ALL_STATES_RATE_LIMIT,
     DOMAIN_STATES_RATE_LIMIT,
 )
+from homeassistant.helpers.typing import Undefined
 from homeassistant.util import dt as dt_util
 
 from .helpers import assert_result_info, render, render_to_info
@@ -222,6 +224,29 @@ def test_render_with_possible_json_value_with_invalid_json(hass: HomeAssistant) 
     """Render with possible JSON value with invalid JSON."""
     tpl = template.Template("{{ value_json }}", hass)
     assert tpl.async_render_with_possible_json_value("{ I AM NOT JSON }") == ""
+
+
+@pytest.mark.parametrize(
+    ("value_json", "expected"),
+    [
+        pytest.param({"hello": "world"}, "raw True {'hello': 'world'}", id="parsed"),
+        pytest.param(None, "raw True None", id="null"),
+        pytest.param(Undefined, "raw False", id="not_json"),
+    ],
+)
+def test_render_with_possible_json_value_with_value_json(
+    hass: HomeAssistant, value_json: Any, expected: str
+) -> None:
+    """A value_json passed by the caller is used instead of parsing the value."""
+    tpl = template.Template(
+        "{{ value }} {{ value_json is defined }} {{ value_json }}", hass
+    )
+    with patch("homeassistant.helpers.template.json_loads") as mock_json_loads:
+        assert (
+            tpl.async_render_with_possible_json_value("raw", value_json=value_json)
+            == expected
+        )
+    mock_json_loads.assert_not_called()
 
 
 def test_render_with_possible_json_value_cyclic(hass: HomeAssistant) -> None:
@@ -583,8 +608,12 @@ def test_state_with_unit_and_rounding_options(
     )
     assert entry.entity_id == "sensor.test"
 
-    hass.states.async_set("sensor.test", "23", {ATTR_UNIT_OF_MEASUREMENT: "beers"})
-    hass.states.async_set("sensor.test2", "23", {ATTR_UNIT_OF_MEASUREMENT: "beers"})
+    hass.states.async_set(
+        "sensor.test", "23", {EntityStateAttribute.UNIT_OF_MEASUREMENT: "beers"}
+    )
+    hass.states.async_set(
+        "sensor.test2", "23", {EntityStateAttribute.UNIT_OF_MEASUREMENT: "beers"}
+    )
 
     tpl = template.Template(
         f"{{{{ states('sensor.test', rounded={rounded}, with_unit={with_unit}) }}}}",
@@ -598,8 +627,12 @@ def test_state_with_unit_and_rounding_options(
     assert tpl.async_render() == output1_1
     assert tpl2.async_render() == output2_1
 
-    hass.states.async_set("sensor.test", "23.015", {ATTR_UNIT_OF_MEASUREMENT: "beers"})
-    hass.states.async_set("sensor.test2", "23.015", {ATTR_UNIT_OF_MEASUREMENT: "beers"})
+    hass.states.async_set(
+        "sensor.test", "23.015", {EntityStateAttribute.UNIT_OF_MEASUREMENT: "beers"}
+    )
+    hass.states.async_set(
+        "sensor.test2", "23.015", {EntityStateAttribute.UNIT_OF_MEASUREMENT: "beers"}
+    )
 
     assert tpl.async_render() == output1_2
     assert tpl2.async_render() == output2_2

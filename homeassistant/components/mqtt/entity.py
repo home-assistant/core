@@ -49,10 +49,9 @@ from homeassistant.helpers.group import IntegrationSpecificGroup
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.typing import (
-    UNDEFINED,
     ConfigType,
     DiscoveryInfoType,
-    UndefinedType,
+    Undefined,
     VolSchemaType,
 )
 from homeassistant.util.json import json_loads
@@ -187,6 +186,52 @@ def _handle_discovery_failure(
     discovery_hash = discovery_payload.discovery_data[ATTR_DISCOVERY_HASH]
     clear_discovery_hash(hass, discovery_hash)
     async_dispatcher_send(hass, MQTT_DISCOVERY_DONE.format(*discovery_hash), None)
+
+
+@callback
+def _async_is_unique_id_of_other_disabled_entity(
+    hass: HomeAssistant,
+    domain: str,
+    config: DiscoveryInfoType,
+    discovery_payload: MQTTDiscoveryPayload,
+) -> bool:
+    """Return True if a disabled entity discovered on another topic has the unique ID.
+
+    A disabled entity is not loaded, so the entity platform does not detect its
+    unique ID is used again, and the discoveries would take over the entity
+    registry entry from each other.
+    """
+    if (unique_id := config.get(CONF_UNIQUE_ID)) is None:
+        return False
+    registry_key = (domain, DOMAIN, unique_id)
+    discovered_and_disabled = hass.data[DATA_MQTT].discovery_discovered_and_disabled
+    discovery_data = discovery_payload.discovery_data
+    if (
+        other_discovery_hash := discovered_and_disabled.get_discovery_hash(registry_key)
+    ) is None or other_discovery_hash == discovery_data[ATTR_DISCOVERY_HASH]:
+        return False
+    entity_registry = er.async_get(hass)
+    if (
+        entity_id := entity_registry.async_get_entity_id(*registry_key)
+    ) is None or not entity_registry.entities[entity_id].disabled:
+        return False
+    other_discovery_data = discovered_and_disabled[other_discovery_hash].discovery_data
+    _LOGGER.error(
+        "Ignoring discovered %s on topic %s%s, unique ID '%s' is already used by "
+        "disabled entity %s which was discovered on topic %s%s; to resolve the "
+        "duplicate unique ID, publish an empty retained payload to at least one "
+        "of these discovery topics",
+        domain,
+        discovery_data[ATTR_DISCOVERY_TOPIC],
+        get_origin_log_string(discovery_payload, include_url=False),
+        unique_id,
+        entity_id,
+        other_discovery_data[ATTR_DISCOVERY_TOPIC],
+        get_origin_log_string(
+            other_discovery_data[ATTR_DISCOVERY_PAYLOAD], include_url=False
+        ),
+    )
+    return True
 
 
 def _verify_mqtt_config_entry_enabled_for_discovery(
@@ -328,6 +373,8 @@ def async_setup_entity_entry_helper(  # noqa: C901
                 hass,
                 DOMAIN,
                 subentry_id,
+                config_entry_id=entry.entry_id,
+                config_subentry_id=subentry_id,
                 issue_domain=DOMAIN,
                 is_fixable=True,
                 severity=IssueSeverity.WARNING,
@@ -368,6 +415,10 @@ def async_setup_entity_entry_helper(  # noqa: C901
                     "MQTT discovery skipped, as device exists in subentry, "
                     "and repair flow must be completed first"
                 )
+            elif _async_is_unique_id_of_other_disabled_entity(
+                hass, domain, config, discovery_payload
+            ):
+                _handle_discovery_failure(hass, discovery_payload)
             else:
                 entity = entity_class(
                     hass, config, entry, discovery_payload.discovery_data
@@ -1860,7 +1911,7 @@ class MqttEntity(
             )
             entity_registry.async_update_entity(
                 recreated_entry.entity_id,
-                disabled_by=None if reenable_condition else UNDEFINED,
+                disabled_by=None if reenable_condition else Undefined,
                 hidden_by=hidden_by,
             )
 
@@ -2029,9 +2080,9 @@ class MqttEntity(
 
     def _set_entity_name(self, config: ConfigType) -> None:
         """Help setting the entity name if needed."""
-        entity_name: str | UndefinedType | None = config.get(CONF_NAME, UNDEFINED)
+        entity_name: str | Undefined | None = config.get(CONF_NAME, Undefined)
         # Only set _attr_name if it is needed
-        if entity_name is not UNDEFINED:
+        if entity_name is not Undefined:
             self._attr_name = entity_name
         elif not self._default_to_device_class_name():
             # Assign the default name
@@ -2077,13 +2128,13 @@ class MqttEntity(
 
     @callback
     def _attrs_have_changed(
-        self, attrs_snapshot: tuple[tuple[str, Any | UndefinedType], ...]
+        self, attrs_snapshot: tuple[tuple[str, Any | Undefined], ...]
     ) -> bool:
         """Return True if attributes on entity changed or if update is forced."""
         if self._attr_force_update:
             return True
         for attribute, last_value in attrs_snapshot:
-            if getattr(self, attribute, UNDEFINED) != last_value:
+            if getattr(self, attribute, Undefined) != last_value:
                 return True
         return False
 
@@ -2097,8 +2148,8 @@ class MqttEntity(
     ) -> None:
         """Process the message callback."""
         if attributes is not None:
-            attrs_snapshot: tuple[tuple[str, Any | UndefinedType], ...] = tuple(
-                (attribute, getattr(self, attribute, UNDEFINED))
+            attrs_snapshot: tuple[tuple[str, Any | Undefined], ...] = tuple(
+                (attribute, getattr(self, attribute, Undefined))
                 for attribute in attributes
             )
         mqtt_data = self.hass.data[DATA_MQTT]

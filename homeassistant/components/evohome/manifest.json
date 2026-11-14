@@ -3,9 +3,10 @@
   "name": "Honeywell Total Connect Comfort (Europe)",
   "categories": ["climate.thermostats_heating"],
   "codeowners": ["@zxdavb"],
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/evohome",
   "iot_class": "cloud_polling",
   "loggers": ["evohomeasync", "evohomeasync2"],
   "quality_scale": "legacy",
-  "requirements": ["evohome-async==3.1.0"]
+  "requirements": ["evohome-async==3.2.2"]
 }

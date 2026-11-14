@@ -3,9 +3,10 @@
   "name": "Amazon Polly",
   "categories": ["ai_voice.speech"],
   "codeowners": ["@jschlyter"],
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/amazon_polly",
   "iot_class": "cloud_push",
   "loggers": ["boto3", "botocore", "s3transfer"],
   "quality_scale": "legacy",
-  "requirements": ["boto3==1.42.97"]
+  "requirements": ["boto3==1.43.117"]
 }

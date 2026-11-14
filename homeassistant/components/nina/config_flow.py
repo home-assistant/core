@@ -6,7 +6,6 @@ import probatio
 from pynina import ApiError, Nina
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -35,6 +34,7 @@ from .const import (
     NO_MATCH_REGEX,
     SENSOR_SUFFIXES,
 )
+from .coordinator import NinaConfigEntry
 
 
 def swap_key_value(dict_to_sort: dict[str, str]) -> dict[str, str]:
@@ -194,7 +194,7 @@ class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: NinaConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
@@ -203,7 +203,7 @@ class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
 class OptionsFlowHandler(OptionsFlowWithReload):
     """Handle an option flow for NINA."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self, config_entry: NinaConfigEntry) -> None:
         """Initialize options flow."""
         self.data = dict(config_entry.data)
 

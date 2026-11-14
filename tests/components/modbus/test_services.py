@@ -6,26 +6,18 @@ import pytest
 from pytest_homeassistant.common import get_fixture_path
 
 from homeassistant import config as hass_config
-from homeassistant.components.modbus.const import (
-    ATTR_ADDRESS,
-    ATTR_HUB,
-    ATTR_VALUE,
-    DATA_MODBUS_HUBS,
-    DEFAULT_HUB,
-    DOMAIN,
-    SERVICE_STOP,
-    SERVICE_WRITE_COIL,
-    SERVICE_WRITE_REGISTER,
+from homeassistant.components.modbus.const import DATA_MODBUS_HUBS, DEFAULT_HUB, DOMAIN
+from homeassistant.components.modbus.services import (
+    ModbusService,
+    ModbusServiceArgument,
 )
 from homeassistant.const import (
-    ATTR_STATE,
     CONF_ADDRESS,
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
     CONF_SENSORS,
     CONF_TYPE,
-    SERVICE_RELOAD,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
@@ -46,25 +38,35 @@ HUB_CONFIG = {
 }
 
 SERVICES = (
-    SERVICE_RELOAD,
-    SERVICE_WRITE_REGISTER,
-    SERVICE_WRITE_COIL,
-    SERVICE_STOP,
+    ModbusService.RELOAD,
+    ModbusService.WRITE_REGISTER,
+    ModbusService.WRITE_COIL,
+    ModbusService.STOP,
 )
 
 # The actions that need a configured hub, and a minimal valid payload for each.
 HUB_SERVICES = [
     pytest.param(
-        SERVICE_WRITE_REGISTER,
-        {ATTR_HUB: DEFAULT_HUB, ATTR_ADDRESS: 1, ATTR_VALUE: 1},
+        ModbusService.WRITE_REGISTER,
+        {
+            ModbusServiceArgument.HUB: DEFAULT_HUB,
+            ModbusServiceArgument.ADDRESS: 1,
+            ModbusServiceArgument.VALUE: 1,
+        },
         id="write_register",
     ),
     pytest.param(
-        SERVICE_WRITE_COIL,
-        {ATTR_HUB: DEFAULT_HUB, ATTR_ADDRESS: 1, ATTR_STATE: True},
+        ModbusService.WRITE_COIL,
+        {
+            ModbusServiceArgument.HUB: DEFAULT_HUB,
+            ModbusServiceArgument.ADDRESS: 1,
+            ModbusServiceArgument.STATE: True,
+        },
         id="write_coil",
     ),
-    pytest.param(SERVICE_STOP, {ATTR_HUB: DEFAULT_HUB}, id="stop"),
+    pytest.param(
+        ModbusService.STOP, {ModbusServiceArgument.HUB: DEFAULT_HUB}, id="stop"
+    ),
 ]
 
 
@@ -154,7 +156,7 @@ async def test_service_after_failed_reload_raises(
             return_value=False,
         ),
     ):
-        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, {}, blocking=True)
+        await hass.services.async_call(DOMAIN, ModbusService.RELOAD, {}, blocking=True)
         await hass.async_block_till_done()
 
     assert DATA_MODBUS_HUBS not in hass.data
@@ -179,7 +181,7 @@ async def test_reload_after_failed_setup(
 
     yaml_path = get_fixture_path("configuration.yaml", DOMAIN)
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
-        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, {}, blocking=True)
+        await hass.services.async_call(DOMAIN, ModbusService.RELOAD, {}, blocking=True)
         await hass.async_block_till_done()
 
     assert "Modbus failed to set up, restart Home Assistant to retry" in caplog.text
@@ -218,7 +220,7 @@ async def test_reload_yaml(
 
     yaml_path = get_fixture_path(yaml_file, DOMAIN)
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
-        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, {}, blocking=True)
+        await hass.services.async_call(DOMAIN, ModbusService.RELOAD, {}, blocking=True)
         await hass.async_block_till_done()
 
     assert "ERROR" not in caplog.text
@@ -269,7 +271,10 @@ async def test_stop_only_disables_the_selected_hub(hass: HomeAssistant) -> None:
     assert entity_b.available
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_STOP, {ATTR_HUB: TEST_HUB_A}, blocking=True
+        DOMAIN,
+        ModbusService.STOP,
+        {ModbusServiceArgument.HUB: TEST_HUB_A},
+        blocking=True,
     )
     await hass.async_block_till_done()
 

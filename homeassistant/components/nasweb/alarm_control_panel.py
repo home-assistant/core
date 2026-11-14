@@ -83,7 +83,6 @@ class ZoneEntity(AlarmControlPanelEntity, BaseCoordinatorEntity):
     """Entity representing NASweb zone."""
 
     _attr_has_entity_name = True
-    _attr_should_poll = False
     _attr_translation_key = ALARM_CONTROL_PANEL_TRANSLATION_KEY
 
     def __init__(

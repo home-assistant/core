@@ -331,7 +331,7 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
 
     def _update_unhealthy_issues(self, unhealthy_reasons: set[str]) -> None:
         """Create unhealthy repairs and delete those whose reason is gone."""
-        with ir.async_begin_issues_refresh(
+        with ir.async_refresh_issues(
             self.hass, DOMAIN, issue_id_pattern=f"{ISSUE_ID_UNHEALTHY}_"
         ):
             for unhealthy in unhealthy_reasons:
@@ -355,7 +355,7 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
 
     def _update_unsupported_issues(self, unsupported_reasons: set[str]) -> None:
         """Create unsupported repairs and delete those whose reason is gone."""
-        with ir.async_begin_issues_refresh(
+        with ir.async_refresh_issues(
             self.hass, DOMAIN, issue_id_pattern=f"{ISSUE_ID_UNSUPPORTED}_"
         ):
             for unsupported in unsupported_reasons - UNSUPPORTED_SKIP_REPAIR:

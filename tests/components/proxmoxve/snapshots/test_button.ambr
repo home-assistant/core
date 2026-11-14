@@ -652,7 +652,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_all_button_entities[button.vm_web-entry]
+# name: test_all_button_entities[button.vm_web_resume-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -666,7 +666,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.vm_web',
+    'entity_id': 'button.vm_web_resume',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -674,12 +674,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Resume',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Resume',
     'platform': 'proxmoxve',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -689,13 +689,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_button_entities[button.vm_web-state]
+# name: test_all_button_entities[button.vm_web_resume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'vm-web',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'vm-web Resume',
     }),
     'context': <ANY>,
-    'entity_id': 'button.vm_web',
+    'entity_id': 'button.vm_web_resume',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

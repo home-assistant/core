@@ -22,11 +22,11 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
-    ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -62,7 +62,7 @@ async def test_entities(
         ),
         pytest.param(
             "room_sensors",
-            "select.heating_circuit_1_patterilammitys_operation_mode",
+            "select.ouman_eh_800_heating_circuit_1_patterilammitys_operation_mode",
             L1BaseEndpoints.OPERATION_MODE,
             OperationMode.AUTOMATIC,
             OperationMode.SHUTDOWN,
@@ -100,8 +100,11 @@ async def test_async_select_option(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: target_value.name.lower()},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            SelectServiceArgument.OPTION: target_value.name.lower(),
+        },
         blocking=True,
     )
 
@@ -147,10 +150,10 @@ async def test_async_select_option_errors(
     with pytest.raises(expected_exception, match=expected_message):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: "select.ouman_eh_800_home_away_mode",
-                ATTR_OPTION: HomeAwayControl.AWAY.name.lower(),
+                CommonServiceArgument.ENTITY_ID: "select.ouman_eh_800_home_away_mode",
+                SelectServiceArgument.OPTION: HomeAwayControl.AWAY.name.lower(),
             },
             blocking=True,
         )

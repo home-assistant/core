@@ -28,16 +28,10 @@ async def async_get_config_entry_diagnostics(
 
     for subentry_id, subentry_rt in entry.runtime_data.subentries_runtime_data.items():
         diag_data["subentries"][subentry_id] = {
-            "observation_data": subentry_rt.coordinator_observation.data.to_dict()
-            if subentry_rt.coordinator_observation.data
-            else None,
-            "daily_forecast_data": subentry_rt.coordinator_daily_forecast.data.to_dict()
-            if subentry_rt.coordinator_daily_forecast.data
-            else None,
+            "observation_data": subentry_rt.coordinator_observation.data.to_dict(),
+            "daily_forecast_data": subentry_rt.coordinator_daily_forecast.data.to_dict(),
             "hourly_forecast_data": (
                 subentry_rt.coordinator_hourly_forecast.data.to_dict()
-                if subentry_rt.coordinator_hourly_forecast.data
-                else None
             ),
         }
 

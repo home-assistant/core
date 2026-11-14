@@ -24,7 +24,6 @@ from homeassistant.backup_restore import RESTORE_BACKUP_FILE, RESTORE_BACKUP_RES
 from homeassistant.const import __version__ as HAVERSION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
-    frame,
     instance_id,
     integration_platform,
     issue_registry as ir,
@@ -408,24 +407,49 @@ class BackupManager:
         await self.load_platforms()
 
     @callback
-    def async_rename_agent(self, old_agent_id: str, new_agent_id: str) -> None:
+    def async_rename_agent(
+        self,
+        old_agent_id: str,
+        new_agent_id: str,
+        *,
+        overwrite_orphaned_settings: bool = False,
+    ) -> None:
         """Rename a backup agent in the backup config and known backups.
 
         Integrations call this when the ID of one of their backup agents changes,
-        for example when migrating the unique ID of a config entry. Raises
-        ValueError if the old agent ID is configured and the new agent ID is
-        already loaded or configured.
+        for example when migrating the unique ID of a config entry. Settings of the
+        new agent ID are orphaned if none of the integration's config entries,
+        including disabled ones, provide it, for example when they were left
+        behind by a removed config entry. Integrations which know this pass
+        overwrite_orphaned_settings to replace them with those of the old agent ID.
+
+        Raises ValueError if the agent IDs belong to different integrations, if
+        the new agent ID is loaded, or if both agent IDs are configured and
+        overwrite_orphaned_settings is not set.
         """
+        if old_agent_id.partition(".")[0] != new_agent_id.partition(".")[0]:
+            raise ValueError(
+                f"Can't rename backup agent {old_agent_id} to {new_agent_id} of"
+                " another integration"
+            )
+        if old_agent_id == new_agent_id:
+            return
         config = self.config.data
-        if (
-            old_agent_id in config.agents
-            or old_agent_id in config.create_backup.agent_ids
-        ) and (
-            new_agent_id in self.backup_agents
-            or new_agent_id in config.agents
-            or new_agent_id in config.create_backup.agent_ids
+        if new_agent_id in self.backup_agents or (
+            not overwrite_orphaned_settings
+            and (
+                old_agent_id in config.agents
+                or old_agent_id in config.create_backup.agent_ids
+            )
+            and (
+                new_agent_id in config.agents
+                or new_agent_id in config.create_backup.agent_ids
+            )
         ):
             raise ValueError(f"Backup agent {new_agent_id} already exists")
+        if overwrite_orphaned_settings:
+            self.config.remove_agent(new_agent_id)
+            self.known_backups.remove_failed_agent(new_agent_id)
         self.config.rename_agent(old_agent_id, new_agent_id)
         self.known_backups.rename_failed_agent(old_agent_id, new_agent_id)
 
@@ -796,15 +820,6 @@ class BackupManager:
                 continue
             if isinstance(result, BaseException):
                 raise result  # unexpected error
-            # Check for None to be backwards compatible with the old BackupAgent API,
-            # this can be removed in HA Core 2025.10
-            if not result:
-                frame.report_usage(
-                    "returns None from BackupAgent.async_get_backup",
-                    breaks_in_ha_version="2025.10",
-                    integration_domain=agent_id.partition(".")[0],
-                )
-                continue
             if backup is None:
                 if known_backup := self.known_backups.get(backup_id):
                     failed_addons = known_backup.failed_addons
@@ -1442,22 +1457,11 @@ class BackupManager:
         """Initiate restoring a backup."""
         agent = self.backup_agents[agent_id]
         try:
-            backup = await agent.async_get_backup(backup_id)
+            await agent.async_get_backup(backup_id)
         except BackupNotFound as err:
             raise BackupManagerError(
                 f"Backup {backup_id} not found in agent {agent_id}"
             ) from err
-        # Check for None to be backwards compatible with the old BackupAgent API,
-        # this can be removed in HA Core 2025.10
-        if not backup:
-            frame.report_usage(
-                "returns None from BackupAgent.async_get_backup",
-                breaks_in_ha_version="2025.10",
-                integration_domain=agent_id.partition(".")[0],
-            )
-            raise BackupManagerError(
-                f"Backup {backup_id} not found in agent {agent_id}"
-            )
 
         async def open_backup() -> AsyncIterator[bytes]:
             return await agent.async_download_backup(backup_id)
@@ -1612,22 +1616,11 @@ class BackupManager:
         except KeyError as err:
             raise BackupManagerError(f"Invalid agent selected: {agent_id}") from err
         try:
-            backup = await agent.async_get_backup(backup_id)
+            await agent.async_get_backup(backup_id)
         except BackupNotFound as err:
             raise BackupManagerError(
                 f"Backup {backup_id} not found in agent {agent_id}"
             ) from err
-        # Check for None to be backwards compatible with the old BackupAgent API,
-        # this can be removed in HA Core 2025.10
-        if not backup:
-            frame.report_usage(
-                "returns None from BackupAgent.async_get_backup",
-                breaks_in_ha_version="2025.10",
-                integration_domain=agent_id.partition(".")[0],
-            )
-            raise BackupManagerError(
-                f"Backup {backup_id} not found in agent {agent_id}"
-            )
         reader: IO[bytes]
         if agent_id in self.local_backup_agents:
             local_agent = self.local_backup_agents[agent_id]
@@ -1700,9 +1693,22 @@ class KnownBackups:
     def rename_failed_agent(self, old_agent_id: str, new_agent_id: str) -> None:
         """Rename an agent in the failed agents of known backups."""
         for backup in self._backups.values():
+            # The new agent ID may already be listed, only keep it once
+            backup.failed_agent_ids = list(
+                dict.fromkeys(
+                    new_agent_id if agent_id == old_agent_id else agent_id
+                    for agent_id in backup.failed_agent_ids
+                )
+            )
+        self._manager.store.save()
+
+    def remove_failed_agent(self, agent_id: str) -> None:
+        """Remove an agent from the failed agents of known backups."""
+        for backup in self._backups.values():
             backup.failed_agent_ids = [
-                new_agent_id if agent_id == old_agent_id else agent_id
-                for agent_id in backup.failed_agent_ids
+                failed_agent_id
+                for failed_agent_id in backup.failed_agent_ids
+                if failed_agent_id != agent_id
             ]
         self._manager.store.save()
 

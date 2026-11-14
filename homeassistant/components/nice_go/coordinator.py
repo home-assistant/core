@@ -90,11 +90,13 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
 
         device_id = barrier_state.deviceId
         name = barrier_state.reported["displayName"]
+        # A barrier can be shared between accounts, key the issue per entry
+        issue_id = f"firmware_update_required_{self.config_entry.entry_id}_{device_id}"
         if barrier_state.reported["migrationStatus"] == "NOT_STARTED":
             ir.async_create_issue(
                 self.hass,
                 DOMAIN,
-                f"firmware_update_required_{device_id}",
+                issue_id,
                 config_entry_id=self.config_entry.entry_id,
                 is_fixable=False,
                 severity=ir.IssueSeverity.ERROR,
@@ -102,9 +104,7 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
                 translation_placeholders={"device_name": name},
             )
             return None
-        ir.async_delete_issue(
-            self.hass, DOMAIN, f"firmware_update_required_{device_id}"
-        )
+        ir.async_delete_issue(self.hass, DOMAIN, issue_id)
         barrier_status_raw = [
             int(x) for x in barrier_state.reported["barrierStatus"].split(",")
         ]

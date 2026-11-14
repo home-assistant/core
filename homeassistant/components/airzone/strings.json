@@ -29,8 +29,14 @@
       "air_demand": {
         "name": "Air demand"
       },
+      "cold_demand": {
+        "name": "Cold demand"
+      },
       "floor_demand": {
         "name": "Floor demand"
+      },
+      "heat_demand": {
+        "name": "Heat demand"
       }
     },
     "select": {
@@ -50,6 +56,14 @@
           "45deg": "[%key:component::airzone::entity::select::grille_angles::state::45deg%]",
           "50deg": "[%key:component::airzone::entity::select::grille_angles::state::50deg%]",
           "90deg": "[%key:component::airzone::entity::select::grille_angles::state::90deg%]"
+        }
+      },
+      "heat_stages": {
+        "name": "Heat stage",
+        "state": {
+          "air": "Air",
+          "combined": "Combined",
+          "radiant": "Radiant"
         }
       },
       "modes": {
@@ -84,6 +98,16 @@
       }
     },
     "sensor": {
+      "eco_adapt": {
+        "name": "Eco-Adapt",
+        "state": {
+          "a": "A",
+          "a_p": "A+",
+          "a_pp": "A++",
+          "manual": "Manual",
+          "off": "[%key:common::state::off%]"
+        }
+      },
       "rssi": {
         "name": "RSSI"
       },

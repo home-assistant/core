@@ -41,4 +41,4 @@ async def test_gateway_sub_device_via_device_id(
 
     device_info = entity.device_info
 
-    assert device_info["via_device_id"] == gateway_device.id
+    assert device_info.via_device_id == gateway_device.id

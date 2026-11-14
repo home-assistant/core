@@ -5,8 +5,7 @@ import probatio
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
 
-from . import ATTR_PERCENTAGE
-from .const import DOMAIN, FanService
+from .const import DOMAIN, FanService, FanServiceArgument
 
 INTENT_FAN_SET_SPEED = "HassFanSetSpeed"
 
@@ -23,7 +22,7 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
             required_domains={DOMAIN},
             platforms={DOMAIN},
             required_slots={
-                ATTR_PERCENTAGE: intent.IntentSlotInfo(
+                FanServiceArgument.PERCENTAGE: intent.IntentSlotInfo(
                     description="The speed percentage of the fan",
                     value_schema=probatio.All(
                         probatio.Coerce(int), probatio.Percentage()

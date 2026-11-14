@@ -5,12 +5,14 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, override
 
 from boschshcpy import (
+    SHCMicromoduleDimmer,
     SHCMicromoduleRelay,
     SHCRoomThermostat2,
     SHCShutterContact2,
     SHCSmartPlug,
     SHCSmartPlugCompact,
     SHCThermostat,
+    SHCThermostatGen2,
     SHCWallThermostat,
 )
 from boschshcpy.device import SHCDevice
@@ -90,6 +92,19 @@ def _led_brightness_set_value_fn(
     device.led_brightness = round(value)
 
 
+type _DisplayConfigDevice = SHCThermostatGen2 | SHCRoomThermostat2
+
+
+def _display_brightness_set_value_fn(
+    device: _DisplayConfigDevice, value: float
+) -> None:
+    device.display_brightness = round(value)
+
+
+def _display_on_time_set_value_fn(device: _DisplayConfigDevice, value: float) -> None:
+    device.display_on_time = round(value)
+
+
 IMPULSE_LENGTH = "impulse_length"
 
 NUMBER_TYPES: dict[str, SHCNumberEntityDescription] = {
@@ -120,6 +135,19 @@ NUMBER_TYPES: dict[str, SHCNumberEntityDescription] = {
         set_value_fn=lambda device, value: device.set_bypass_configuration(
             timeout=round(value)
         ),
+    ),
+    "dimmer_speed": SHCNumberEntityDescription[SHCMicromoduleDimmer](
+        key="dimmer_speed",
+        translation_key="dimmer_speed",
+        entity_category=EntityCategory.CONFIG,
+        native_min_value=1.0,
+        native_max_value=10.0,
+        native_step=1.0,
+        mode=NumberMode.BOX,
+        value_fn=lambda device: (
+            float(speed) if (speed := device.dimming_speed) is not None else None
+        ),
+        set_value_fn=lambda device, value: device.set_dimming_speed(round(value)),
     ),
     "power_threshold": SHCNumberEntityDescription[SHCSmartPlug | SHCSmartPlugCompact](
         key="power_threshold",
@@ -171,6 +199,31 @@ NUMBER_TYPES: dict[str, SHCNumberEntityDescription] = {
         mode=NumberMode.SLIDER,
         value_fn=lambda device: device.led_brightness,
         set_value_fn=_led_brightness_set_value_fn,
+    ),
+    "display_brightness": SHCNumberEntityDescription[_DisplayConfigDevice](
+        key="display_brightness",
+        translation_key="display_brightness",
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=PERCENTAGE,
+        min_value_fn=lambda device: float(device.display_brightness_min or 0),
+        max_value_fn=lambda device: float(device.display_brightness_max or 100),
+        step_fn=lambda device: float(device.display_brightness_step_size or 1),
+        mode=NumberMode.SLIDER,
+        value_fn=lambda device: device.display_brightness,
+        set_value_fn=_display_brightness_set_value_fn,
+    ),
+    "display_on_time": SHCNumberEntityDescription[_DisplayConfigDevice](
+        key="display_on_time",
+        translation_key="display_on_time",
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        min_value_fn=lambda device: float(device.display_on_time_min or 0),
+        max_value_fn=lambda device: float(device.display_on_time_max or 3600),
+        step_fn=lambda device: float(device.display_on_time_step_size or 1),
+        mode=NumberMode.BOX,
+        value_fn=lambda device: device.display_on_time,
+        set_value_fn=_display_on_time_set_value_fn,
     ),
 }
 
@@ -297,6 +350,41 @@ async def async_setup_entry(
         if isinstance(plug, SHCSmartPlug | SHCSmartPlugCompact)
         and plug.supports_led_brightness
         and plug.led_brightness is not None
+    )
+
+    for display_device in (
+        *session.device_helper.thermostats,
+        *session.device_helper.roomthermostats,
+    ):
+        if not isinstance(display_device, SHCThermostatGen2 | SHCRoomThermostat2):
+            continue
+        if not display_device.supports_display_configuration:
+            continue
+        entities.extend(
+            SHCNumber(
+                hass=hass,
+                device=display_device,
+                parent_id=shc_info.unique_id,
+                entry_id=config_entry.entry_id,
+                description=NUMBER_TYPES[key],
+            )
+            for key, value in (
+                ("display_brightness", display_device.display_brightness),
+                ("display_on_time", display_device.display_on_time),
+            )
+            if value is not None
+        )
+
+    entities.extend(
+        SHCNumber(
+            hass=hass,
+            device=device,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=NUMBER_TYPES["dimmer_speed"],
+        )
+        for device in session.device_helper.micromodule_dimmers
+        if device.supports_dimmer_configuration and device.dimming_speed is not None
     )
 
     async_add_entities(entities)

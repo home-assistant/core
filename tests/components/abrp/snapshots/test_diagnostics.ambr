@@ -1,0 +1,56 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'entry': dict({
+      'auth_implementation': 'abrp',
+      'token': dict({
+        'expires_at': 4102444800.0,
+        'token_type': 'Bearer',
+      }),
+    }),
+    'stream': dict({
+      'auth_failed': False,
+      'reason': 'AbrpApiError: Connection timeout to host <url>',
+      'state': 'disconnected',
+    }),
+    'vehicles': list([
+      dict({
+        'display': dict({
+          'end_year': None,
+          'manufacturer': 'Rivian',
+          'model': 'R2',
+          'start_year': 2026,
+          'title': 'Standard Long Range RWD',
+          'years': '2026',
+        }),
+        'metrics': dict({
+          'charging_state': dict({
+            'provider': 'RIVIAN_STREAM',
+            'time': '2026-11-04T07:00:00+00:00',
+            'value': 'charging_ac',
+          }),
+          'elevation': dict({
+            'provider': 'RIVIAN_STREAM',
+            'time': '2026-11-04T07:00:00+00:00',
+          }),
+          'location': dict({
+            'provider': 'RIVIAN_STREAM',
+            'time': '2026-11-04T07:00:00+00:00',
+          }),
+          'soc': dict({
+            'provider': 'RIVIAN_STREAM',
+            'time': '2026-11-04T07:00:00+00:00',
+            'value': 85.0,
+          }),
+        }),
+        'vehicle_model': 'rivian:r2:26:ncma91:rwd:w21',
+      }),
+      dict({
+        'display': None,
+        'metrics': dict({
+        }),
+        'vehicle_model': 'rivian:r1s:24:max:tri:w22',
+      }),
+    ]),
+  })
+# ---

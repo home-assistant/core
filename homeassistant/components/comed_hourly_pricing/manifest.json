@@ -3,6 +3,7 @@
   "name": "ComEd Hourly Pricing",
   "categories": ["energy.energy_prices"],
   "codeowners": [],
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/comed_hourly_pricing",
   "iot_class": "cloud_polling",
   "quality_scale": "legacy"

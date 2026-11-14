@@ -49,7 +49,7 @@ _LOGGER = logging.getLogger(__name__)
 class EcovacsController:
     """Ecovacs controller."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: EcovacsConfigEntry) -> None:
         """Initialize controller."""
         self._hass = hass
         self._entry = entry
@@ -146,11 +146,20 @@ class EcovacsController:
                 )
 
         except DeviceVerificationRequiredError as ex:
-            raise ConfigEntryAuthFailed("Device verification required") from ex
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="device_verification_required",
+            ) from ex
         except InvalidAuthenticationError as ex:
-            raise ConfigEntryAuthFailed("Invalid credentials") from ex
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+            ) from ex
         except DeebotError as ex:
-            raise ConfigEntryNotReady("Error during setup") from ex
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="setup_error",
+            ) from ex
 
         _LOGGER.debug("Controller initialize complete")
 
@@ -231,3 +240,6 @@ class EcovacsController:
     def legacy_devices(self) -> list[VacBot]:
         """Return legacy devices."""
         return self._legacy_devices
+
+
+type EcovacsConfigEntry = ConfigEntry[EcovacsController]

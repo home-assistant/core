@@ -675,7 +675,9 @@ async def test_agent_list_backups_parametrized(
 
 
 @pytest.fixture
-def downloaded_bodies(mock_client: MagicMock) -> list[StreamingBody]:
+def downloaded_bodies(
+    mock_client: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> list[StreamingBody]:
     """Return the bodies of downloaded backup archives."""
     bodies: list[StreamingBody] = []
     get_object = mock_client.get_object.side_effect
@@ -683,7 +685,10 @@ def downloaded_bodies(mock_client: MagicMock) -> list[StreamingBody]:
     def get_object_and_track(**kwargs: Any) -> dict[str, Any]:
         response = get_object(**kwargs)
         if kwargs["Key"].endswith(".tar"):
-            bodies.append(response["Body"])
+            body = response["Body"]
+            # Spy on the real close so tests can assert the body was closed
+            monkeypatch.setattr(body, "close", Mock(wraps=body.close))
+            bodies.append(body)
         return response
 
     mock_client.get_object.side_effect = get_object_and_track
