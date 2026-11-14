@@ -6,11 +6,13 @@ from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock, call, patch
 
 from aiohasupervisor import SupervisorError
+from aiohasupervisor.models import AddonState as SupervisorAddonState
 import aiohttp
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
+from homeassistant.components.hassio import AddonState
 from homeassistant.components.labs import async_update_preview_feature
 from homeassistant.components.voice_support import (
     DATA_CLIENT,
@@ -21,6 +23,7 @@ from homeassistant.components.voice_support import (
     async_start_run,
     async_verifies_wake_word,
 )
+from homeassistant.components.voice_support.app import APP_SLUG
 from homeassistant.components.voice_support.client import AppInfo
 from homeassistant.components.voice_support.const import (
     CONF_INTEGRATION_CREATED_APP,
@@ -47,6 +50,75 @@ async def test_setup_entry(
 
     assert setup_integration.state is ConfigEntryState.NOT_LOADED
     assert DATA_CLIENT not in hass.data
+
+
+@pytest.mark.parametrize(
+    ("owned", "state", "expected_starts"),
+    [
+        pytest.param(True, SupervisorAddonState.STOPPED, 1, id="stopped"),
+        pytest.param(True, SupervisorAddonState.STARTED, 0, id="running"),
+        pytest.param(False, SupervisorAddonState.STOPPED, 0, id="external"),
+    ],
+)
+@pytest.mark.usefixtures("supervisor", "addon_installed", "app_info")
+async def test_setup_starts_owned_app(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    addon_info: AsyncMock,
+    start_addon: AsyncMock,
+    owned: bool,
+    state: SupervisorAddonState,
+    expected_starts: int,
+) -> None:
+    """Test a stopped managed app starts before the first connection."""
+    addon_info.return_value.state = state
+
+    async def async_start(slug: str) -> None:
+        assert slug == APP_SLUG
+        assert aioclient_mock.call_count == 0
+        await asyncio.sleep(0)
+        assert aioclient_mock.call_count == 0
+
+    start_addon.side_effect = async_start
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={**mock_config_entry.data, CONF_INTEGRATION_CREATED_APP: owned},
+    )
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert start_addon.await_count == expected_starts
+    assert aioclient_mock.call_count == 1
+
+
+@pytest.mark.parametrize("failed_operation", ["info", "start"])
+@pytest.mark.usefixtures("supervisor", "addon_installed", "app_info")
+async def test_setup_retries_app_start_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    addon_info: AsyncMock,
+    start_addon: AsyncMock,
+    failed_operation: str,
+) -> None:
+    """Test Supervisor failures leave setup retrying without connecting."""
+    operations = {"info": addon_info, "start": start_addon}
+    operations[failed_operation].side_effect = SupervisorError("busy")
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={**mock_config_entry.data, CONF_INTEGRATION_CREATED_APP: True},
+    )
+
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert aioclient_mock.call_count == 0
 
 
 @pytest.mark.parametrize(
@@ -554,11 +626,14 @@ async def test_setup_waits_for_info_before_update(
         ),
         patch("homeassistant.components.voice_support.get_app_manager") as app_manager,
     ):
+        app_manager.return_value.async_get_addon_info = AsyncMock(
+            return_value=Mock(state=AddonState.RUNNING)
+        )
         setup_task = hass.async_create_task(
             hass.config_entries.async_setup(mock_config_entry.entry_id)
         )
         await info_requested.wait()
-        app_manager.assert_not_called()
+        app_manager.return_value.async_schedule_update_addon.assert_not_called()
 
         info.set_result(AppInfo.from_json(INFO))
         assert await setup_task

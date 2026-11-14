@@ -11,7 +11,13 @@ from pyvesync.utils.errors import ResponseInfo
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -171,6 +177,14 @@ async def test_turn_on_off_display_raises_error(
             id="drying_mode",
         ),
         pytest.param(
+            "Air Purifier Vital 200S",
+            "switch.air_purifier_vital_200s_light_detection",
+            SERVICE_TURN_ON,
+            "pyvesync.devices.vesyncpurifier.VeSyncAirBaseV2.toggle_light_detection",
+            "Device does not support toggling light detection.",
+            id="light_detection",
+        ),
+        pytest.param(
             "SmartTowerFan",
             "switch.smarttowerfan_mute",
             SERVICE_TURN_ON,
@@ -277,6 +291,19 @@ async def test_switch_unsupported_command(
             SERVICE_TURN_OFF,
             "pyvesync.devices.vesynchumidifier.VeSyncSuperior6000S.toggle_drying_mode",
         ),
+        # light_detection switch for purifier
+        (
+            "Air Purifier Vital 200S",
+            "switch.air_purifier_vital_200s_light_detection",
+            SERVICE_TURN_ON,
+            "pyvesync.devices.vesyncpurifier.VeSyncAirBaseV2.toggle_light_detection",
+        ),
+        (
+            "Air Purifier Vital 200S",
+            "switch.air_purifier_vital_200s_light_detection",
+            SERVICE_TURN_OFF,
+            "pyvesync.devices.vesyncpurifier.VeSyncAirBaseV2.toggle_light_detection",
+        ),
         # mute switch for fan
         (
             "SmartTowerFan",
@@ -329,3 +356,32 @@ async def test_switch_operations(
     await hass.async_block_till_done()
     method_mock.assert_called_once()
     update_mock.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("light_detection_switch", "expected_state"),
+    [
+        pytest.param(0, STATE_OFF, id="off"),
+        pytest.param(1, STATE_ON, id="on"),
+    ],
+)
+async def test_light_detection_state(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    light_detection_switch: int,
+    expected_state: str,
+) -> None:
+    """Test the light detection switch reflects the device state."""
+    mock_devices_response(
+        aioclient_mock,
+        "Air Purifier Vital 200S",
+        details_override={"lightDetectionSwitch": light_detection_switch},
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.air_purifier_vital_200s_light_detection")
+    assert state
+    assert state.state == expected_state
