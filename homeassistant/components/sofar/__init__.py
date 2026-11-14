@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING
 
-from sofar_modbus.modern.device import (
+from sofar_modbus import (
     BATTERY_PACKS,
     BATTERY_STRING_COMPONENTS,
     PV_STRING_COMPONENTS,
