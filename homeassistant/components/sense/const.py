@@ -3,6 +3,7 @@
 import socket
 
 from sense_energy import (
+    Scale,
     SenseAPIException,
     SenseAPITimeoutException,
     SenseWebsocketException,
@@ -11,7 +12,8 @@ from sense_energy import (
 DOMAIN = "sense"
 DEFAULT_TIMEOUT = 30
 ACTIVE_UPDATE_RATE = 60
-TREND_UPDATE_RATE = 300
+TREND_UPDATE_MINUTES = [10, 25, 40, 55]
+PROVISIONAL_IMPORT_MINUTE = 1
 DEFAULT_NAME = "Sense"
 SENSE_DEVICE_UPDATE = "sense_devices_update"
 
@@ -34,6 +36,14 @@ FROM_GRID_NAME = "From Grid"
 FROM_GRID_ID = "from_grid"
 SOLAR_POWERED_NAME = "Solar Powered Percentage"
 SOLAR_POWERED_ID = "solar_powered"
+
+TRENDS_SENSOR_TYPES = {
+    Scale.DAY: "Daily",
+    Scale.WEEK: "Weekly",
+    Scale.MONTH: "Monthly",
+    Scale.YEAR: "Yearly",
+    Scale.CYCLE: "Bill",
+}
 
 SENSE_TIMEOUT_EXCEPTIONS = (TimeoutError, SenseAPITimeoutException)
 SENSE_WEBSOCKET_EXCEPTIONS = (socket.gaierror, SenseWebsocketException)
