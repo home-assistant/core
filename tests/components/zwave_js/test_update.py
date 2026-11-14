@@ -308,7 +308,7 @@ async def test_update_entity_release_notes_sleeping_device(
         }
     )
     result = await ws_client.receive_json()
-    assert result["result"] == (
+    assert result["result"]["release_notes"] == (
         f"<ha-alert alert-type='info'>\n\n{expected_message}\n\n</ha-alert>\n\nblah 2"
     )
 
