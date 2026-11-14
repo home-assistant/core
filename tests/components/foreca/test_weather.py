@@ -18,11 +18,13 @@ from homeassistant.components.foreca.services import (
     ForecaService,
     ForecaServiceArgument,
 )
-from homeassistant.components.weather import (
-    DOMAIN as WEATHER_DOMAIN,
-    SERVICE_GET_FORECASTS,
+from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN, WeatherService
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_UNAVAILABLE,
+    CommonServiceArgument,
+    Platform,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -65,8 +67,8 @@ async def test_forecast(
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECASTS,
-        {ATTR_ENTITY_ID: ENTITY_ID, "type": forecast_type},
+        WeatherService.GET_FORECASTS,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_ID, "type": forecast_type},
         blocking=True,
         return_response=True,
     )
@@ -95,8 +97,8 @@ async def test_forecast_without_a_time_is_dropped(
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECASTS,
-        {ATTR_ENTITY_ID: ENTITY_ID, "type": forecast_type},
+        WeatherService.GET_FORECASTS,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_ID, "type": forecast_type},
         blocking=True,
         return_response=True,
     )
@@ -118,8 +120,8 @@ async def test_daily_forecast_lands_on_the_right_local_day(
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECASTS,
-        {ATTR_ENTITY_ID: ENTITY_ID, "type": "daily"},
+        WeatherService.GET_FORECASTS,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_ID, "type": "daily"},
         blocking=True,
         return_response=True,
     )

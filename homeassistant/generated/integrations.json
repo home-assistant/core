@@ -16374,6 +16374,18 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "voice_support": {
+      "name": "Voice support",
+      "integration_type": "service",
+      "categories": [
+        "ai_voice.voice_assistants"
+      ],
+      "connectivity": [
+        "network"
+      ],
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "voicerss": {
       "name": "VoiceRSS",
       "integration_type": "hub",

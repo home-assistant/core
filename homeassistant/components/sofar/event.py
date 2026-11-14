@@ -6,9 +6,7 @@ from datetime import datetime
 from itertools import takewhile
 from typing import override
 
-from sofar_modbus.modern.device import SofarInverter
-from sofar_modbus.modern.fault_log import FaultLog
-from sofar_modbus.modern.faults import FAULTS, FaultLogEntry
+from sofar_modbus import FAULTS, FaultLog, FaultLogEntry, SofarInverter
 
 from homeassistant.components.event import EventEntity, EventEntityDescription
 from homeassistant.const import EntityCategory

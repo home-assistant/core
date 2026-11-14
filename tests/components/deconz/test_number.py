@@ -10,11 +10,11 @@ from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -101,10 +101,10 @@ async def test_number_entities(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: expected["entity_id"],
-            ATTR_VALUE: expected["supported_service_value"],
+            CommonServiceArgument.ENTITY_ID: expected["entity_id"],
+            NumberServiceArgument.VALUE: expected["supported_service_value"],
         },
         blocking=True,
     )
@@ -114,10 +114,10 @@ async def test_number_entities(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: expected["entity_id"],
-            ATTR_VALUE: expected["unsupported_service_value"],
+            CommonServiceArgument.ENTITY_ID: expected["entity_id"],
+            NumberServiceArgument.VALUE: expected["unsupported_service_value"],
         },
         blocking=True,
     )
@@ -128,10 +128,10 @@ async def test_number_entities(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: expected["entity_id"],
-                ATTR_VALUE: expected["out_of_range_service_value"],
+                CommonServiceArgument.ENTITY_ID: expected["entity_id"],
+                NumberServiceArgument.VALUE: expected["out_of_range_service_value"],
             },
             blocking=True,
         )
