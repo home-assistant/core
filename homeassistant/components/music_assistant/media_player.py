@@ -614,16 +614,9 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
                     f"Could not resolve {media_id} to playable media item"
                 )
 
-            # determine active queue to send the play request to
-            if TYPE_CHECKING:
-                assert self.player.active_source is not None
-            if queue := self.mass.player_queues.get(self.player.active_source):
-                queue_id = queue.queue_id
-            else:
-                queue_id = self.player_id
-
+            # the server routes the request for the picked player to the right queue
             await self.mass.player_queues.play_media(
-                queue_id,
+                self.player_id,
                 media=media_uris,
                 option=self._convert_queueoption_to_media_player_enqueue(enqueue),
                 radio_mode=radio_mode or False,
