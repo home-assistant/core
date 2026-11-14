@@ -4,6 +4,7 @@ import logging
 from typing import Any, cast, override
 
 from pyvesync.base_devices import VeSyncFanBase, VeSyncPurifier
+from pyvesync.const import DeviceStatus
 from pyvesync.devices.vesyncpurifier import VeSyncAirBaseV2
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
@@ -145,20 +146,26 @@ class VeSyncFanHA(VeSyncBaseEntity[VeSyncFanBase | VeSyncPurifier], FanEntity):
     @override
     def is_on(self) -> bool:
         """Return True if device is on."""
-        return self.device.state.device_status == "on"
+        return self.device.state.device_status == DeviceStatus.ON
 
     @property
     @override
     def oscillating(self) -> bool:
         """Return True if device is oscillating."""
         # Tower fans report a single-axis oscillation status.
-        if rgetattr(self.device, "state.oscillation_status") == "on":
+        if rgetattr(self.device, "state.oscillation_status") == DeviceStatus.ON:
             return True
         # Pedestal fans report vertical and horizontal oscillation separately;
         # the fan is considered oscillating when either axis is active.
-        if rgetattr(self.device, "state.vertical_oscillation_status") == "on":
+        if (
+            rgetattr(self.device, "state.vertical_oscillation_status")
+            == DeviceStatus.ON
+        ):
             return True
-        return rgetattr(self.device, "state.horizontal_oscillation_status") == "on"
+        return (
+            rgetattr(self.device, "state.horizontal_oscillation_status")
+            == DeviceStatus.ON
+        )
 
     @property
     @override
