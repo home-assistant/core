@@ -9,7 +9,10 @@ from google_health_api.const import HealthApiScope
 from google_health_api.model import (
     SLEEP,
     ListPairedDevicesResult,
+    NutrientQuantityRollup,
+    NutritionLogRollupValue,
     StageSummary,
+    WeightQuantityRollup,
     _ListPairedDevicesModel,
 )
 import pytest
@@ -31,10 +34,12 @@ from homeassistant.util.unit_system import (
     UnitSystem,
 )
 
-from .conftest import _list_fixture, paired_devices_fixture
+from .conftest import _list_fixture, _rollup_fixture, paired_devices_fixture
 
 
-@pytest.mark.usefixtures("mock_google_health_client")
+@pytest.mark.usefixtures(
+    "entity_registry_enabled_by_default", "mock_google_health_client"
+)
 async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -49,6 +54,38 @@ async def test_all_entities(
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
+@pytest.mark.usefixtures("mock_google_health_client")
+async def test_sensor_disabled_by_default(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    integration_setup: Callable[[], Awaitable[bool]],
+) -> None:
+    """Test secondary nutrition sensors are disabled by default."""
+    assert await integration_setup()
+
+    for entity_id in (
+        "sensor.google_health_total_fat",
+        "sensor.google_health_total_carbohydrates",
+        "sensor.google_health_protein",
+    ):
+        entry = entity_registry.async_get(entity_id)
+        assert entry is not None
+        assert entry.disabled_by is None
+        assert hass.states.get(entity_id) is not None
+
+    for entity_id in (
+        "sensor.google_health_dietary_fiber",
+        "sensor.google_health_sugar",
+        "sensor.google_health_sodium",
+        "sensor.google_health_calories_from_fat",
+    ):
+        entry = entity_registry.async_get(entity_id)
+        assert entry is not None
+        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+        assert hass.states.get(entity_id) is None
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_empty_rollup(
     hass: HomeAssistant,
     mock_google_health_client: AsyncMock,
@@ -65,33 +102,63 @@ async def test_sensor_empty_rollup(
 
     assert await integration_setup()
 
-    steps_state = hass.states.get("sensor.google_health_steps")
-    assert steps_state is not None
-    assert steps_state.state == "0"
+    for entity_id, expected in (
+        ("sensor.google_health_steps", "0"),
+        ("sensor.google_health_distance", "0.0"),
+        ("sensor.google_health_active_calories", "0.0"),
+        ("sensor.google_health_total_calories", "0.0"),
+        ("sensor.google_health_floors", "0"),
+        ("sensor.google_health_water_intake", "0.0"),
+        ("sensor.google_health_calories_consumed", "0.0"),
+        ("sensor.google_health_total_fat", "0.0"),
+        ("sensor.google_health_total_carbohydrates", "0.0"),
+        ("sensor.google_health_protein", "0.0"),
+        ("sensor.google_health_dietary_fiber", "0.0"),
+        ("sensor.google_health_sugar", "0.0"),
+        ("sensor.google_health_sodium", "0.0"),
+        ("sensor.google_health_calories_from_fat", "0.0"),
+    ):
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == expected
 
-    distance_state = hass.states.get("sensor.google_health_distance")
-    assert distance_state is not None
-    assert distance_state.state == "0.0"
 
-    active_calories_state = hass.states.get("sensor.google_health_active_calories")
-    assert active_calories_state is not None
-    assert active_calories_state.state == "0.0"
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensor_nutrition_partial_rollup(
+    hass: HomeAssistant,
+    mock_google_health_client: AsyncMock,
+    integration_setup: Callable[[], Awaitable[bool]],
+) -> None:
+    """Test nutrition sensors when rollup contains only a subset of fields and nutrients."""
+    nutrition_rollup = _rollup_fixture(
+        "nutrition.json", NutritionLogRollupValue, "nutritionLog"
+    )
+    assert nutrition_rollup is not None
+    nutrition_rollup.data = NutritionLogRollupValue(
+        nutrients=[
+            NutrientQuantityRollup(
+                nutrient="PROTEIN",
+                quantity=WeightQuantityRollup(grams_sum=30.5),
+            )
+        ]
+    )
+    mock_google_health_client.nutrition_log.today.return_value = nutrition_rollup
 
-    total_calories_state = hass.states.get("sensor.google_health_total_calories")
-    assert total_calories_state is not None
-    assert total_calories_state.state == "0.0"
+    assert await integration_setup()
 
-    floors_state = hass.states.get("sensor.google_health_floors")
-    assert floors_state is not None
-    assert floors_state.state == "0"
-
-    hydration_state = hass.states.get("sensor.google_health_water_intake")
-    assert hydration_state is not None
-    assert hydration_state.state == "0.0"
-
-    calories_consumed_state = hass.states.get("sensor.google_health_calories_consumed")
-    assert calories_consumed_state is not None
-    assert calories_consumed_state.state == "0.0"
+    for entity_id, expected in (
+        ("sensor.google_health_calories_consumed", "0.0"),
+        ("sensor.google_health_total_fat", "0.0"),
+        ("sensor.google_health_total_carbohydrates", "0.0"),
+        ("sensor.google_health_protein", "30.5"),
+        ("sensor.google_health_dietary_fiber", "0.0"),
+        ("sensor.google_health_sugar", "0.0"),
+        ("sensor.google_health_sodium", "0.0"),
+        ("sensor.google_health_calories_from_fat", "0.0"),
+    ):
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == expected
 
 
 async def test_sensor_empty_sleep(
@@ -217,6 +284,7 @@ async def test_sensor_only_in_progress_sleep(
                 "sensor.google_health_weight": (pytest.approx(80.0), "kg"),
                 "sensor.google_health_distance": (pytest.approx(5.0), "km"),
                 "sensor.google_health_water_intake": (pytest.approx(2.5), "L"),
+                "sensor.google_health_total_fat": (pytest.approx(65.0), "g"),
             },
             id="metric",
         ),
@@ -232,6 +300,7 @@ async def test_sensor_only_in_progress_sleep(
                     pytest.approx(84.54, abs=1e-1),
                     "fl. oz.",
                 ),
+                "sensor.google_health_total_fat": (pytest.approx(65.0), "g"),
             },
             id="us_customary",
         ),
