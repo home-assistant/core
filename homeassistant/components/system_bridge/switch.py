@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, override
 from systembridgeconnector.models.modules.displays import DisplayPowerState
 from systembridgeconnector.models.system_control import KeepAwakeRequest
 
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchEntity
 from homeassistant.const import CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -17,6 +17,7 @@ from .entity import (
     SystemBridgeDisplayEntity,
     SystemBridgeEntity,
     async_add_new_audio_devices,
+    async_remove_gone_displays,
 )
 
 PARALLEL_UPDATES = 0
@@ -30,10 +31,15 @@ async def async_setup_entry(
     """Set up System Bridge switches based on a config entry."""
     coordinator = entry.runtime_data
     known_displays: set[str] = set()
+    checked_displays: int | None = None
 
     @callback
     def _async_add_new_displays() -> None:
-        """Add power switches for displays not seen before."""
+        """Add power switches for displays not seen before, removing gone ones."""
+        nonlocal checked_displays
+        if checked_displays != coordinator.display_connections:
+            checked_displays = coordinator.display_connections
+            async_remove_gone_displays(entry, SWITCH_DOMAIN, "power", known_displays)
         # Only displays that report a power state can be turned on or off
         new_displays = [
             display.id

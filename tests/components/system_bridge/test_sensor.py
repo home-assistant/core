@@ -2,10 +2,16 @@
 
 from collections.abc import Generator
 from dataclasses import replace
+from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 from systembridgeconnector.models.fixtures.modules.battery import FIXTURE_BATTERY
 from systembridgeconnector.models.fixtures.modules.cpu import FIXTURE_CPU
@@ -635,6 +641,44 @@ async def test_sensor_disk_added(
 
 
 @pytest.mark.usefixtures("mock_version")
+async def test_sensor_display_gpu_partition_added(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+) -> None:
+    """Test sensors are added for displays, GPUs and partitions found later."""
+    mock_websocket_client.listen.side_effect = None
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    new_states = {
+        "sensor.hostname_display_def456_resolution_x": "2560",
+        "sensor.hostname_other_usage": "50.0",
+        "sensor.hostname_other_space_used": "75.0",
+    }
+    for entity_id in new_states:
+        assert hass.states.get(entity_id) is None, entity_id
+
+    coordinator = mock_config_entry.runtime_data
+    await coordinator.async_handle_module(
+        Module.DISPLAYS, [*FIXTURE_DISPLAYS, SECOND_DISPLAY]
+    )
+    await coordinator.async_handle_module(Module.GPUS, [*FIXTURE_GPUS, SECOND_GPU])
+    await coordinator.async_handle_module(
+        Module.DISKS,
+        replace(FIXTURE_DISKS, devices=[*FIXTURE_DISKS.devices, SECOND_DISK]),
+    )
+    await hass.async_block_till_done()
+
+    for entity_id, expected in new_states.items():
+        assert (state := hass.states.get(entity_id)), entity_id
+        assert state.state == expected, entity_id
+
+
+@pytest.mark.usefixtures("mock_version")
 @pytest.mark.parametrize(
     ("displays", "gpus", "disks", "first_state"),
     [
@@ -654,9 +698,9 @@ async def test_sensor_disk_added(
             [SECOND_GPU],
             [SECOND_DISK],
             {
-                "sensor.hostname_display_abc123_resolution_x": STATE_UNKNOWN,
-                "sensor.hostname_name_usage": STATE_UNKNOWN,
-                "sensor.hostname_mountpoint_space_used": STATE_UNKNOWN,
+                "sensor.hostname_display_abc123_resolution_x": None,
+                "sensor.hostname_name_usage": None,
+                "sensor.hostname_mountpoint_space_used": None,
             },
             id="first_removed",
         ),
@@ -666,12 +710,13 @@ async def test_sensor_device_found_by_id(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_websocket_client: MagicMock,
+    entity_registry: er.EntityRegistry,
     displays: list[Display],
     gpus: list[GPU],
     disks: list[Disk],
-    first_state: dict[str, str],
+    first_state: dict[str, str | None],
 ) -> None:
-    """Test display, GPU and partition sensors follow their device, not its position."""
+    """Test display, GPU and partition sensors follow their device by its ID."""
     mock_websocket_client.get_data.return_value = replace(
         mock_websocket_client.get_data.return_value,
         displays=[*FIXTURE_DISPLAYS, SECOND_DISPLAY],
@@ -700,5 +745,94 @@ async def test_sensor_device_found_by_id(
         "sensor.hostname_other_usage": "50.0",
         "sensor.hostname_other_space_used": "75.0",
     }.items():
+        if expected is None:
+            assert hass.states.get(entity_id) is None, entity_id
+            assert entity_registry.async_get(entity_id) is None, entity_id
+            continue
         assert (state := hass.states.get(entity_id)), entity_id
         assert state.state == expected, entity_id
+
+
+@pytest.mark.usefixtures("mock_version", "entity_registry_enabled_by_default")
+async def test_sensor_removed_device_restored(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a GPU or partition that goes is removed, and restored when it's back."""
+    mock_websocket_client.listen.side_effect = None
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    entity_ids = ("sensor.hostname_name_usage", "sensor.hostname_mountpoint_space_used")
+    for entity_id in entity_ids:
+        entity_registry.async_update_entity(entity_id, name="Custom")
+
+    coordinator = mock_config_entry.runtime_data
+    await coordinator.async_handle_module(Module.GPUS, [])
+    # The partition is unmounted while its disk stays
+    await coordinator.async_handle_module(
+        Module.DISKS,
+        replace(
+            FIXTURE_DISKS,
+            devices=[replace(FIXTURE_DISKS.devices[0], partitions=[])],
+        ),
+    )
+    await hass.async_block_till_done()
+
+    for entity_id in entity_ids:
+        assert hass.states.get(entity_id) is None, entity_id
+        assert entity_registry.async_get(entity_id) is None, entity_id
+    assert hass.states.get("sensor.hostname_name_read_rate")
+
+    await coordinator.async_handle_module(Module.GPUS, FIXTURE_GPUS)
+    await coordinator.async_handle_module(Module.DISKS, FIXTURE_DISKS)
+    await hass.async_block_till_done()
+
+    for entity_id in entity_ids:
+        assert hass.states.get(entity_id), entity_id
+        assert (entry := entity_registry.async_get(entity_id)), entity_id
+        assert entry.name == "Custom"
+
+
+@pytest.mark.usefixtures("mock_version")
+async def test_sensor_display_removed_on_reconnect(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a display's sensors stay until it's still gone after reconnecting."""
+    mock_websocket_client.listen.side_effect = None
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    entity_id = "sensor.hostname_display_abc123_resolution_x"
+    coordinator = mock_config_entry.runtime_data
+    # The first display list after connecting
+    await coordinator.async_handle_module(Module.DISPLAYS, FIXTURE_DISPLAYS)
+    await coordinator.async_handle_module(Module.DISPLAYS, [])
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNKNOWN
+
+    # System Bridge reconnects, here after a lost connection
+    freezer.tick(timedelta(minutes=2))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    await coordinator.async_handle_module(Module.DISPLAYS, [])
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id) is None
+    assert entity_registry.async_get(entity_id) is None

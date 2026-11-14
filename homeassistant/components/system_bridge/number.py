@@ -2,7 +2,11 @@
 
 from typing import TYPE_CHECKING, override
 
-from homeassistant.components.number import NumberEntity, NumberMode
+from homeassistant.components.number import (
+    DOMAIN as NUMBER_DOMAIN,
+    NumberEntity,
+    NumberMode,
+)
 from homeassistant.const import CONF_PORT, PERCENTAGE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -13,6 +17,7 @@ from .entity import (
     SystemBridgeAudioDeviceEntity,
     SystemBridgeDisplayEntity,
     async_add_new_audio_devices,
+    async_remove_gone_displays,
 )
 
 PARALLEL_UPDATES = 0
@@ -26,10 +31,17 @@ async def async_setup_entry(
     """Set up System Bridge numbers based on a config entry."""
     coordinator = entry.runtime_data
     known_displays: set[str] = set()
+    checked_displays: int | None = None
 
     @callback
     def _async_add_new_displays() -> None:
-        """Add brightness numbers for displays not seen before."""
+        """Add brightness numbers for displays not seen before, removing gone ones."""
+        nonlocal checked_displays
+        if checked_displays != coordinator.display_connections:
+            checked_displays = coordinator.display_connections
+            async_remove_gone_displays(
+                entry, NUMBER_DOMAIN, "brightness", known_displays
+            )
         # Only displays that report a brightness can have it set
         new_displays = [
             display.id
