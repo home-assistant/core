@@ -8,7 +8,6 @@ import pytest
 from homeassistant.components import llm as llm_component
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
@@ -69,9 +68,12 @@ async def _async_broadcast(
 ) -> llm.ToolResult:
     """Call the broadcast tool through the Assist API."""
     api = await llm.async_get_api(hass, "assist", _llm_context(device_id))
-    return await api.async_call_tool(
+    result = await api.async_call_tool(
         llm.ToolInput(tool_name=TOOL_NAME, tool_args=tool_args)
     )
+    # The tool does not wait for the announcements to finish.
+    await hass.async_block_till_done()
+    return result
 
 
 async def test_broadcast_tool_offered(hass: HomeAssistant) -> None:
@@ -195,7 +197,7 @@ async def test_broadcast_area_all_satellites_excluded(
             "homeassistant.components.assist_satellite.intent.EXCLUDED_DOMAINS",
             new={TEST_DOMAIN},
         ),
-        pytest.raises(HomeAssistantError, match="No satellite can play the broadcast"),
+        pytest.raises(intent.MatchFailedError, match="No entities were in the area"),
     ):
         await _async_broadcast(hass, {"message": "Hello", "area": "Kitchen"}, None)
 

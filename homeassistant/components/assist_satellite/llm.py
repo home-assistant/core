@@ -7,7 +7,6 @@ import probatio
 from homeassistant.components.llm import LLMTools
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, intent
 from homeassistant.helpers.llm import (
     LLM_API_ASSIST,
@@ -42,8 +41,6 @@ class BroadcastTool(Tool):
             ): cv.string,
         }
     )
-    # A broadcast announces something every time it is called and takes
-    # nothing away, and it only reaches the user's own satellites.
     annotations = ToolAnnotations(destructive=False, open_world=False)
     integration = DOMAIN
 
@@ -62,22 +59,28 @@ class BroadcastTool(Tool):
         area = args.get("area")
         floor = args.get("floor")
 
-        # The satellite that asked is skipped, because an announcement cancels
-        # its running pipeline, which is the one calling this tool.
         entity_ids = async_get_broadcast_entity_ids(hass, llm_context.device_id)
         states = [
             state for entity_id in entity_ids if (state := hass.states.get(entity_id))
         ]
 
         if area or floor:
-            # The matcher searches all states when it gets an empty list.
-            if not states:
-                raise HomeAssistantError("No satellite can play the broadcast")
-            # Satellites are matched without the assistant, because the user
-            # rarely exposes them.
             constraints = intent.MatchTargetsConstraints(
                 area_name=area, floor_name=floor
             )
+            # The matcher searches all states when it gets an empty list.
+            if not states:
+                raise intent.MatchFailedError(
+                    result=intent.MatchTargetsResult(
+                        False,
+                        intent.MatchFailedReason.AREA
+                        if area
+                        else intent.MatchFailedReason.FLOOR,
+                    ),
+                    constraints=constraints,
+                )
+            # Satellites are matched without the assistant, because the user
+            # rarely exposes them.
             result = intent.async_match_targets(hass, constraints, states=states)
             if not result.is_match:
                 raise intent.MatchFailedError(result=result, constraints=constraints)
@@ -87,7 +90,6 @@ class BroadcastTool(Tool):
             DOMAIN,
             AssistSatelliteService.ANNOUNCE,
             {AssistSatelliteServiceArgument.MESSAGE: args["message"]},
-            blocking=True,
             context=llm_context.context,
             target={ATTR_ENTITY_ID: [state.entity_id for state in states]},
         )
