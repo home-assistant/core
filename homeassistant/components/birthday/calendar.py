@@ -50,9 +50,7 @@ class BirthdayCalendar(CalendarEntity):
     async def async_added_to_hass(self) -> None:
         """Refresh the calendar when birthdays are added, edited or removed."""
         await super().async_added_to_hass()
-        self._entry.async_on_unload(
-            self._entry.add_update_listener(self._async_entry_updated)
-        )
+        self.async_on_remove(self._entry.add_update_listener(self._async_entry_updated))
 
     async def _async_entry_updated(
         self, hass: HomeAssistant, entry: ConfigEntry
@@ -115,6 +113,6 @@ class BirthdayCalendar(CalendarEntity):
             for event in self._events(
                 start_day, (end_date - timedelta(microseconds=1)).date()
             )
-            if event.end_datetime_local >= start_date
+            if event.end_datetime_local > start_date
             and event.start_datetime_local < end_date
         ]
