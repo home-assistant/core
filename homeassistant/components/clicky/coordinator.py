@@ -54,13 +54,11 @@ class ClickyCoordinator(DataUpdateCoordinator):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
-                translation_placeholders={"error": str(error)},
             ) from error
         except ClickyAPIError as error:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="api_error",
-                translation_placeholders={"error": str(error)},
             ) from error
 
         return {

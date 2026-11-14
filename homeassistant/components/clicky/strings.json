@@ -4,7 +4,7 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     },
     "error": {
-      "api_error": "The Clicky API returned an error: {error}",
+      "api_error": "The Clicky API returned an error",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
@@ -28,7 +28,7 @@
       "message": "[%key:component::clicky::config::error::api_error%]"
     },
     "cannot_connect": {
-      "message": "Could not connect to the Clicky API: {error}"
+      "message": "Could not connect to the Clicky API"
     },
     "invalid_auth": {
       "message": "Authentication with the Clicky API failed"

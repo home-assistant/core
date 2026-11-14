@@ -44,7 +44,6 @@ class ClickyConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step (website name and API credentials)."""
         errors: dict[str, str] = {}
-        description_placeholders: dict[str, str] = {}
         if user_input is not None:
             await self.async_set_unique_id(user_input[CONF_SITE_ID])
             self._async_abort_entries_match({CONF_SITE_ID: user_input[CONF_SITE_ID]})
@@ -66,9 +65,8 @@ class ClickyConfigFlow(ConfigFlow, domain=DOMAIN):
                 TimeoutError,
             ):
                 errors["base"] = "cannot_connect"
-            except ClickyAPIError as error:
+            except ClickyAPIError:
                 errors["base"] = "api_error"
-                description_placeholders["error"] = str(error)
             else:
                 return self.async_create_entry(
                     title=user_input[CONF_SITE_ID], data=user_input
@@ -78,5 +76,4 @@ class ClickyConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
-            description_placeholders=description_placeholders,
         )

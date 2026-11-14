@@ -44,6 +44,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_SITE_ID
+    assert result["result"].unique_id == TEST_SITE_ID
     assert result["data"] == {
         CONF_SITE_ID: TEST_SITE_ID,
         CONF_SITEKEY: TEST_SITEKEY,
@@ -52,15 +53,15 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
 
 
 @pytest.mark.parametrize(
-    ("side_effect", "expected_error", "expected_placeholders"),
+    ("side_effect", "expected_error"),
     [
-        (AuthenticationError(), "invalid_auth", {}),
-        (ConnectionError(), "cannot_connect", {}),
-        (InvalidEndpoint(), "cannot_connect", {}),
-        (ServiceUnavailable(), "cannot_connect", {}),
-        (ClientError(), "cannot_connect", {}),
-        (TimeoutError(), "cannot_connect", {}),
-        (ClickyAPIError("Some API error"), "api_error", {"error": "Some API error"}),
+        (AuthenticationError(), "invalid_auth"),
+        (ConnectionError(), "cannot_connect"),
+        (InvalidEndpoint(), "cannot_connect"),
+        (ServiceUnavailable(), "cannot_connect"),
+        (ClientError(), "cannot_connect"),
+        (TimeoutError(), "cannot_connect"),
+        (ClickyAPIError("Some API error"), "api_error"),
     ],
 )
 async def test_form_errors(
@@ -68,7 +69,6 @@ async def test_form_errors(
     mock_setup_entry: AsyncMock,
     side_effect: Exception,
     expected_error: str,
-    expected_placeholders: dict[str, str],
 ) -> None:
     """Test that errors are shown and the flow can recover."""
     result = await hass.config_entries.flow.async_init(
@@ -91,7 +91,6 @@ async def test_form_errors(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": expected_error}
-    assert result["description_placeholders"] == expected_placeholders
     assert len(mock_setup_entry.mock_calls) == 0
 
     with patch(
@@ -107,6 +106,7 @@ async def test_form_errors(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_SITE_ID
+    assert result["result"].unique_id == TEST_SITE_ID
     assert result["data"] == {
         CONF_SITE_ID: TEST_SITE_ID,
         CONF_SITEKEY: TEST_SITEKEY,

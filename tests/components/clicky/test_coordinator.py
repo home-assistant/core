@@ -76,7 +76,8 @@ async def test_async_update_data_connection_error(hass: HomeAssistant) -> None:
 
     assert exc_info.value.translation_domain == DOMAIN
     assert exc_info.value.translation_key == "cannot_connect"
-    assert exc_info.value.translation_placeholders == {"error": "Connection refused"}
+    assert exc_info.value.translation_placeholders is None
+    assert exc_info.value.__cause__ is client.visitors_online.side_effect
 
 
 @pytest.mark.asyncio
@@ -128,4 +129,5 @@ async def test_async_update_data_failure(hass: HomeAssistant) -> None:
 
     assert exc_info.value.translation_domain == DOMAIN
     assert exc_info.value.translation_key == "api_error"
-    assert exc_info.value.translation_placeholders == {"error": "Unexpected Error"}
+    assert exc_info.value.translation_placeholders is None
+    assert exc_info.value.__cause__ is client.visitors_online.side_effect
