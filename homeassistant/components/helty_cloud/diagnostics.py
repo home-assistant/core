@@ -3,6 +3,8 @@
 from dataclasses import asdict
 from typing import Any
 
+from pyheltycloud import HeltyState
+
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
@@ -36,8 +38,15 @@ async def async_get_config_entry_diagnostics(
                     TO_REDACT_DEVICE,
                 ),
                 "last_update_success": coordinator.last_update_success,
-                "state": asdict(coordinator.data) if coordinator.data else None,
+                "state": _state_diagnostics(coordinator.data),
             }
             for coordinator in entry.runtime_data
         ],
     }
+
+
+def _state_diagnostics(data: HeltyState | None) -> dict[str, Any] | None:
+    """Return the last state of a unit, if its panel has reported one."""
+    # Setup refreshes each coordinator without raising, so the data of a
+    # panel that has not reported yet is still None despite its type.
+    return asdict(data) if data is not None else None
