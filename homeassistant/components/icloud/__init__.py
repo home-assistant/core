@@ -18,7 +18,11 @@ from .const import (
     STORAGE_KEY,
     STORAGE_VERSION,
 )
-from .coordinator import IcloudCalendarCoordinator, IcloudRemindersCoordinator
+from .coordinator import (
+    IcloudCalendarCoordinator,
+    IcloudRemindersCoordinator,
+    IcloudStorageCoordinator,
+)
 from .media_source import async_setup_mediasource, async_setup_photo_cache
 from .services import async_setup_services
 
@@ -66,6 +70,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: IcloudConfigEntry) -> No
     account.calendar_coordinator = IcloudCalendarCoordinator(hass, entry)
     account.reminders_coordinator = IcloudRemindersCoordinator(hass, entry)
 
+    account.storage_coordinator = IcloudStorageCoordinator(hass, entry)
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     await async_setup_photo_cache(hass, account)
 
@@ -77,6 +83,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: IcloudConfigEntry) -> No
     # deliberately does not use async_config_entry_first_refresh: an account
     # that fails to authenticate still loads and starts a reauth flow, and a
     # calendar or Reminders outage should not take device tracking down with it.
+    entry.async_create_background_task(
+        hass, account.storage_coordinator.async_refresh(), "icloud storage refresh"
+    )
     entry.async_create_background_task(
         hass, _async_first_refresh(account), "icloud calendars and reminders refresh"
     )
