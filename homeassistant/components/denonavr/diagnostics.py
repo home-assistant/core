@@ -42,7 +42,7 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: DenonavrConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    receiver = entry.runtime_data
+    receiver = entry.runtime_data.receiver
     return {
         "entry_data": {key: entry.data[key] for key in ENTRY_DATA_KEYS},
         "entry_options": dict(entry.options),
