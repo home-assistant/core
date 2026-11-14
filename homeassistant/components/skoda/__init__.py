@@ -11,6 +11,7 @@ from .coordinator import SkodaConfigEntry, SkodaData, SkodaUpdateCoordinator
 
 _PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
     Platform.DEVICE_TRACKER,
     Platform.NUMBER,
     Platform.SENSOR,
