@@ -45,7 +45,7 @@ from homeassistant.util.event_type import EventType
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import format_unserializable_data
 
-from . import storage, translation
+from . import frame, storage, translation
 from .debounce import Debouncer
 from .frame import (
     MissingIntegrationFrame,
@@ -147,11 +147,49 @@ _DEPRECATED_DEVICE_INFO_PARAMETERS: dict[str, tuple[str, str | None]] = {
 type _DeviceInfoLike = _DeviceInfoMapping | Mapping[str, Any]
 
 
+def _report_deprecated_mapping_use(what: str) -> None:
+    """Report deprecated dict-style use of a device info."""
+    what = f"{what}, which is deprecated as device infos are dataclasses"
+    # report_usage raises before the frame helper is set up, as in tests without hass
+    if frame._hass.hass is None:  # noqa: SLF001
+        _LOGGER.warning(
+            "Detected code that %s. This will stop working in Home Assistant 2027.12",
+            what,
+        )
+        return
+    report_usage(
+        what,
+        breaks_in_ha_version="2027.12.0",
+        core_behavior=ReportBehavior.ERROR,
+        # A core integration may still use it in a path its tests do not cover
+        core_integration_behavior=ReportBehavior.LOG,
+        custom_integration_behavior=ReportBehavior.LOG,
+    )
+
+
+class _DeprecatedTypedDictKeys:
+    """A deprecated TypedDict key attribute of a device info dataclass."""
+
+    __slots__ = ("_keys", "_name")
+
+    def __init__(self, name: str, keys: frozenset[str]) -> None:
+        """Initialize the attribute."""
+        self._name = name
+        self._keys = keys
+
+    def __get__(self, instance: object, owner: type) -> frozenset[str]:
+        """Report the deprecated use and return the keys."""
+        _report_deprecated_mapping_use(
+            f"reads `{owner.__name__}.{self._name}`; use `dataclasses.fields()` instead"
+        )
+        return self._keys
+
+
 class _DeviceInfoMapping:
     """Dict-style access for the device info dataclasses, which were TypedDicts.
 
-    A field left at Undefined is not part of the mapping. Each method covers a usage
-    found in integrations, as this compatibility layer is meant to be deprecated.
+    A field left at Undefined is not part of the mapping. This compatibility layer is
+    deprecated, and can be removed in release 2027.12.
     """
 
     __slots__ = ()
@@ -161,8 +199,8 @@ class _DeviceInfoMapping:
     _field_names: ClassVar[tuple[str, ...]]
     _field_set: ClassVar[frozenset[str]]
     _field_values: ClassVar[attrgetter[tuple[Any, ...]]]
-    __required_keys__: ClassVar[frozenset[str]]
-    __optional_keys__: ClassVar[frozenset[str]]
+    __required_keys__: ClassVar[_DeprecatedTypedDictKeys]
+    __optional_keys__: ClassVar[_DeprecatedTypedDictKeys]
 
     if TYPE_CHECKING:
         # Set by the @dataclass decorator, declared for _device_info_fields
@@ -170,7 +208,10 @@ class _DeviceInfoMapping:
 
     def __getitem__(self, key: str) -> Any:
         """Return the value of a set field."""
-        # Also backs `.get()`, `dict()` and `**device_info` unpacking
+        # Also backs `dict()` and `**device_info` unpacking
+        _report_deprecated_mapping_use(
+            f"reads `{type(self).__name__}[{key!r}]`; read the attribute instead"
+        )
         if key in self._field_set:
             value = getattr(self, key)
             if value is not Undefined:
@@ -179,7 +220,9 @@ class _DeviceInfoMapping:
 
     def __setitem__(self, key: str, value: Any) -> None:
         """Set the value of a field."""
-        # Integrations fill a device info in after building it
+        _report_deprecated_mapping_use(
+            f"sets `{type(self).__name__}[{key!r}]`; set the attribute instead"
+        )
         if key not in self._field_set:
             raise KeyError(f"'{key}' is not a valid {type(self).__name__} field")
         setattr(self, key, value)
@@ -189,7 +232,10 @@ class _DeviceInfoMapping:
 
     def __contains__(self, key: object) -> bool:
         """Return if a field is set."""
-        # Integrations test for a field: `"name" in device_info`
+        _report_deprecated_mapping_use(
+            f"checks if {key!r} is in a `{type(self).__name__}`; check if the "
+            "attribute is `Undefined` instead"
+        )
         return (
             isinstance(key, str)
             and key in self._field_set
@@ -199,8 +245,8 @@ class _DeviceInfoMapping:
     @override
     def __eq__(self, other: object) -> bool:
         """Return if the set fields match those of another device info or mapping."""
-        # Integrations compare a device info to a plain mapping, so this can't be
-        # left to the dataclass
+        # Comparing to a plain mapping is deprecated, so this can't be left to the
+        # dataclass yet
         if other is self:
             return True
         if isinstance(other, _DeviceInfoMapping):
@@ -209,25 +255,38 @@ class _DeviceInfoMapping:
                 self
             ) == other._field_values(other)
         if isinstance(other, Mapping):
-            return dict(self) == other
+            _report_deprecated_mapping_use(
+                f"compares a `{type(self).__name__}` to a mapping; compare "
+                "`as_dict()` instead"
+            )
+            return self.as_dict() == other
         return NotImplemented
 
     @override
     def __repr__(self) -> str:
         """Return the representation, listing the set fields only."""
         # The generated repr would spell out Undefined for every unset field
-        set_fields = ", ".join(f"{key}={value!r}" for key, value in self.items())
+        set_fields = ", ".join(
+            f"{key}={value!r}" for key, value in self.as_dict().items()
+        )
         return f"{type(self).__name__}({set_fields})"
 
     def keys(self) -> tuple[str, ...]:
         """Return the names of the set fields."""
         # Required, together with __getitem__, for `**device_info` unpacking
+        _report_deprecated_mapping_use(
+            f"calls `{type(self).__name__}.keys()` or unpacks it; use `as_dict()` "
+            "instead"
+        )
         return tuple(
             key for key in self._field_names if getattr(self, key) is not Undefined
         )
 
     def items(self) -> tuple[tuple[str, Any], ...]:
         """Return the set fields as key-value pairs."""
+        _report_deprecated_mapping_use(
+            f"calls `{type(self).__name__}.items()`; use `as_dict()` instead"
+        )
         return tuple(self.as_dict().items())
 
     def as_dict(self) -> dict[str, Any]:
@@ -243,15 +302,23 @@ class _DeviceInfoMapping:
 
     def get(self, key: str, default: Any = None) -> Any:
         """Return the value of a field, or default if the field is not set."""
+        _report_deprecated_mapping_use(
+            f"calls `{type(self).__name__}.get({key!r})`; read the attribute instead"
+        )
         if key in self._field_set and (value := getattr(self, key)) is not Undefined:
             return value
         return default
 
     def update(self, other: _DeviceInfoLike) -> None:
         """Set the fields another device info or mapping has set."""
-        # Integrations merge fields in with `device_info.update(...)`
-        for key, value in other.items():
-            self[key] = value
+        _report_deprecated_mapping_use(
+            f"calls `{type(self).__name__}.update()`; set the attributes instead"
+        )
+        values = other.as_dict() if isinstance(other, _DeviceInfoMapping) else other
+        for key, value in values.items():
+            if key not in self._field_set:
+                raise KeyError(f"'{key}' is not a valid {type(self).__name__} field")
+            setattr(self, key, value)
 
 
 def _device_info_fields[_DeviceInfoT: _DeviceInfoMapping](
@@ -262,17 +329,18 @@ def _device_info_fields[_DeviceInfoT: _DeviceInfoMapping](
     cls._field_names = tuple(field.name for field in fields)
     cls._field_set = frozenset(cls._field_names)
     cls._field_values = attrgetter(*cls._field_names)
-    # Integrations read these TypedDict attributes to check for a field
-    cls.__required_keys__ = frozenset(
+    required_keys = frozenset(
         field.name
         for field in fields
         if field.default is MISSING and field.default_factory is MISSING
     )
+    cls.__required_keys__ = _DeprecatedTypedDictKeys("__required_keys__", required_keys)
     # The deprecated fields were not keys of the TypedDict
-    cls.__optional_keys__ = (
+    cls.__optional_keys__ = _DeprecatedTypedDictKeys(
+        "__optional_keys__",
         frozenset(cls._field_names)
-        - cls.__required_keys__
-        - _DEPRECATED_DEVICE_INFO_PARAMETERS.keys()
+        - required_keys
+        - _DEPRECATED_DEVICE_INFO_PARAMETERS.keys(),
     )
     return cls
 
