@@ -1,6 +1,7 @@
 """Tests for arcam fmj receivers."""
 
 from collections.abc import Generator
+import logging
 from math import isclose
 from unittest.mock import Mock, PropertyMock, patch
 
@@ -207,14 +208,22 @@ async def test_update(hass: HomeAssistant, state_1: State) -> None:
     state_1.update.assert_called_with()
 
 
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(ConnectionFailed(), id="connection_failed"),
+        pytest.param(NotConnectedException(), id="not_connected"),
+    ],
+)
 @pytest.mark.usefixtures("player_setup")
-async def test_update_lost(
+async def test_update_unreachable(
     hass: HomeAssistant,
     state_1: State,
     caplog: pytest.LogCaptureFixture,
+    exception: Exception,
 ) -> None:
-    """Test update, with connection loss is ignored."""
-    state_1.update.side_effect = ConnectionFailed()
+    """Test a lost connection marks the entity unavailable and logs at info."""
+    state_1.update.side_effect = exception
 
     await hass.services.async_call(
         HA_DOMAIN,
@@ -222,7 +231,13 @@ async def test_update_lost(
         service_data={ATTR_ENTITY_ID: MOCK_ENTITY_ID},
         blocking=True,
     )
-    state_1.update.assert_called_with()
+
+    assert hass.states.get(MOCK_ENTITY_ID).state == STATE_UNAVAILABLE
+    assert (
+        "homeassistant.components.arcam_fmj.coordinator",
+        logging.INFO,
+        "Arcam FMJ zone 1 is unavailable: Connection failed to the device",
+    ) in caplog.record_tuples
 
 
 @pytest.mark.parametrize(
