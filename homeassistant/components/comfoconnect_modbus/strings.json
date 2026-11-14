@@ -1,0 +1,192 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_path_to_unit": "The gateway answered, but it has no path to a ventilation unit. Check the ComfoNet cable.",
+      "no_ventilation_unit": "The gateway answered, but it does not reach a ComfoAir Q or Flex ventilation unit (connection state {state}). Check the ComfoNet cable and the unit's firmware.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "serial": {
+        "data": {
+          "baudrate": "Baud rate",
+          "device": "Serial port",
+          "parity": "Parity",
+          "unit_id": "[%key:component::comfoconnect_modbus::config::step::tcp::data::unit_id%]"
+        },
+        "data_description": {
+          "baudrate": "The baud rate set on the gateway's Protocols and services page.",
+          "device": "The serial port wired to the gateway's RS-485 terminals A and B. Ports shared over the network by a serial proxy, such as an ESPHome device, are listed here alongside the local ones.",
+          "parity": "The parity set on the gateway. The default is even. Without parity, the gateway uses 2 stop bits.",
+          "unit_id": "[%key:component::comfoconnect_modbus::config::step::tcp::data_description::unit_id%]"
+        },
+        "description": "Set up a ComfoConnect PRO wired to a serial port over RS-485. Select Modbus RTU on the gateway's Protocols and services page first."
+      },
+      "tcp": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "unit_id": "Modbus unit ID"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the ComfoConnect PRO, as shown on its Network page.",
+          "port": "The Modbus TCP port to connect on. The gateway uses 502.",
+          "unit_id": "The Modbus unit ID set on the gateway's Protocols and services page. The default is 1."
+        },
+        "description": "Set up a ComfoConnect PRO on your network. Select Modbus TCP on the gateway's Protocols and services page first."
+      },
+      "user": {
+        "description": "The ComfoConnect PRO speaks Modbus over the network or over its RS-485 terminals. Choose the one selected on the gateway's Protocols and services page.",
+        "menu_options": {
+          "serial": "Serial port (Modbus RTU)",
+          "tcp": "Network (Modbus TCP)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "active_error": {
+        "name": "Active error {number}",
+        "state": {
+          "analysis_busy_warning": "An error analysis is running",
+          "cc_comp_err": "The ComfoCool compressor reports an error",
+          "cc_overheat_err": "ComfoCool is overheated",
+          "cc_t_10_err": "The ComfoCool room temperature is out of range",
+          "cc_t_13_err": "The ComfoCool compressor temperature is out of range",
+          "cc_t_23_err": "The ComfoCool supply temperature is out of range",
+          "co2_sens_count_err": "A controller detects fewer CO₂ sensors than before",
+          "co2_sens_general_err": "A CO₂ sensor reports a general error",
+          "co2_sens_too_many_err": "A zone has more than 8 CO₂ sensors",
+          "comfonet_err": "The ComfoNet bus reports an error",
+          "config_err": "The configuration is invalid",
+          "f_12_s_err": "The speed of fan F12 exceeded its limit too often",
+          "f_12_s_set_err": "Fan F12 missed its requested speed too often",
+          "f_22_s_err": "The speed of fan F22 exceeded its limit too often",
+          "f_22_s_set_err": "Fan F22 missed its requested speed too often",
+          "filter_alarm_flag": "The filters must be replaced now",
+          "filter_ext_err": "The external filter input is high",
+          "filter_warning_flag": "The filters are near the end of their life and should be ordered",
+          "h_21_comm_err": "The preheater does not communicate reliably",
+          "h_21_p_err": "The preheater does not deliver the requested power",
+          "h_21_p_ratio_err": "The preheater does not deliver the requested power ratio",
+          "h_21_qm_min_err": "The airflow is too low for the preheater",
+          "h_21_release_err": "The preheater's side does not match the unit's orientation",
+          "hru_front_open_err": "The front door is open",
+          "hru_init_err": "The heat recovery unit has not been initialized",
+          "hru_t_fire_err": "Two or more temperature sensors are out of range",
+          "io_hood_duty_err": "The cooker hood is on",
+          "none": "None",
+          "p_12_err": "Pressure sensor P12 exceeded its limit too often",
+          "p_22_err": "Pressure sensor P22 exceeded its limit too often",
+          "phi_11_err": "Humidity sensor φ11 exceeded its limit too often",
+          "phi_12_err": "Humidity sensor φ12 exceeded its limit too often",
+          "phi_20_err": "Humidity sensor φ20 exceeded its limit too often",
+          "phi_21_err": "Humidity sensor φ21 exceeded its limit too often",
+          "phi_22_err": "Humidity sensor φ22 exceeded its limit too often",
+          "present_ccool_err": "ComfoCool was present and is no longer detected",
+          "present_g_err": "ComfoFond was present and is no longer detected",
+          "present_h_21_err": "The preheater was present and is no longer detected",
+          "present_h_23_err": "The postheater was present and is no longer detected",
+          "present_hood_err": "The cooker hood was present and is no longer detected",
+          "present_io_err": "The option box was present and is no longer detected",
+          "present_rf_err": "The RF hardware was present and is no longer detected",
+          "ptot_12_s_err": "The static pressure at sensor P12 exceeded its limit too often",
+          "ptot_22_s_err": "The static pressure at sensor P22 exceeded its limit too often",
+          "qm_12_set_err": "Fan F12 missed its requested mass flow too often",
+          "qm_22_set_err": "Fan F22 missed its requested mass flow too often",
+          "qm_constraint_min_err": "A status flag; the manual gives no further description",
+          "standby_err": "Standby is active",
+          "t_11_err": "Temperature sensor T11 exceeded its limit too often",
+          "t_11_limit_err": "Temperature sensor T11 exceeds its limit",
+          "t_12_err": "Temperature sensor T12 exceeded its limit too often",
+          "t_12_limit_err": "Temperature sensor T12 exceeds its limit",
+          "t_20_err": "Temperature sensor T20 exceeded its limit too often",
+          "t_20_limit_err": "Temperature sensor T20 exceeds its limit",
+          "t_21_err": "Temperature sensor T21 exceeded its limit too often",
+          "t_21_limit_err": "Temperature sensor T21 exceeds its limit",
+          "t_21_set_err": "The outdoor air after the preheater missed its temperature too often",
+          "t_22_err": "Temperature sensor T22 exceeded its limit too often",
+          "t_22_frost_err": "The supply air temperature at sensor T22 was too low too often",
+          "t_22_limit_err": "Temperature sensor T22 exceeds its limit",
+          "t_22_manual_err": "The bypass is in manual use",
+          "t_22_set_err": "The supply air missed its requested temperature too often",
+          "t_hood_err": "The cooker hood temperature is too high",
+          "t_hru_err": "The temperature is too high for the heat recovery unit",
+          "unbalance_err": "The airflow imbalance was out of tolerance too often"
+        }
+      },
+      "airflow": {
+        "name": "Airflow"
+      },
+      "boost_remaining": {
+        "name": "Boost time remaining"
+      },
+      "co2_zone": {
+        "name": "CO₂ zone {number}"
+      },
+      "comfort_temperature": {
+        "name": "Comfort temperature"
+      },
+      "exhaust_humidity": {
+        "name": "Exhaust air humidity"
+      },
+      "exhaust_temperature": {
+        "name": "Exhaust air temperature"
+      },
+      "extract_humidity": {
+        "name": "Extract air humidity"
+      },
+      "extract_temperature": {
+        "name": "Extract air temperature"
+      },
+      "filter_days_remaining": {
+        "name": "Filter days remaining"
+      },
+      "outdoor_humidity": {
+        "name": "Outdoor air humidity"
+      },
+      "outdoor_temperature": {
+        "name": "Outdoor air temperature"
+      },
+      "room_humidity": {
+        "name": "Room humidity"
+      },
+      "room_temperature": {
+        "name": "Room temperature"
+      },
+      "supply_humidity": {
+        "name": "Supply air humidity"
+      },
+      "supply_temperature": {
+        "name": "Supply air temperature"
+      }
+    }
+  },
+  "exceptions": {
+    "modbus_error": {
+      "message": "Lost the Modbus link to the ComfoConnect PRO"
+    },
+    "no_component_answered": {
+      "message": "The ComfoConnect PRO refused every read"
+    },
+    "no_path_to_unit": {
+      "message": "The ComfoConnect PRO has no path to the ventilation unit"
+    },
+    "no_ventilation_unit": {
+      "message": "The ComfoConnect PRO does not reach a supported ventilation unit (connection state {state})"
+    }
+  },
+  "selector": {
+    "parity": {
+      "options": {
+        "even": "Even",
+        "none": "None",
+        "odd": "Odd"
+      }
+    }
+  }
+}

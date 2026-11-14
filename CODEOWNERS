@@ -349,6 +349,8 @@ AGENTS.md @home-assistant/core
 /tests/components/comelit/ @chemelli74
 /homeassistant/components/comfoconnect/ @michaelarnauts
 /tests/components/comfoconnect/ @michaelarnauts
+/homeassistant/components/comfoconnect_modbus/ @AlCalzone
+/tests/components/comfoconnect_modbus/ @AlCalzone
 /homeassistant/components/command_line/ @gjohansson-ST
 /tests/components/command_line/ @gjohansson-ST
 /homeassistant/components/compensation/ @Petro31
