@@ -70,8 +70,8 @@ async def async_setup_entry(
         serial, sw_version, host=entry.data[CONF_HOST]
     )
     # Registered up front: the built-in battery is a child of this device.
-    device_entry = dr.async_get(hass).async_get_or_create(
-        config_entry_id=entry.entry_id, **device_info
+    device_entry = dr.async_get(hass).async_get_or_create_from_info(
+        config_entry_id=entry.entry_id, device_info=device_info
     )
     entry.runtime_data = BluettiModbusRuntimeData(
         coordinator=coordinator,

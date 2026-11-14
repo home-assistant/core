@@ -7,6 +7,7 @@ import probatio
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_ENTITY_ID, CONF_NAME
+from homeassistant.core import callback
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
@@ -152,10 +153,10 @@ LOWPASS_SCHEMA = probatio.Schema(
 RANGE_SCHEMA = probatio.Schema(
     {
         probatio.Optional(CONF_FILTER_LOWER_BOUND): NumberSelector(
-            NumberSelectorConfig(min=0, step="any", mode=NumberSelectorMode.BOX)
+            NumberSelectorConfig(step="any", mode=NumberSelectorMode.BOX)
         ),
         probatio.Optional(CONF_FILTER_UPPER_BOUND): NumberSelector(
-            NumberSelectorConfig(min=0, step="any", mode=NumberSelectorMode.BOX)
+            NumberSelectorConfig(step="any", mode=NumberSelectorMode.BOX)
         ),
     }
 ).extend(BASE_OPTIONS_SCHEMA)
@@ -250,6 +251,7 @@ class FilterConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     options_flow = OPTIONS_FLOW
     options_flow_reloads = True
 
+    @callback
     @override
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""

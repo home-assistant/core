@@ -61,6 +61,11 @@ BINARY_SENSORS = [
         device_class=BinarySensorDeviceClass.RUNNING,
         value_fn=lambda status: status.indoor_unit_electric_heater_state,
     ),
+    WeHeatBinarySensorEntityDescription(
+        translation_key="on_off_thermostat_state",
+        key="on_off_thermostat_state",
+        value_fn=lambda status: status.thermostat_on_off_state,
+    ),
 ]
 
 

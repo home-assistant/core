@@ -30,7 +30,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SwitcherConfigEntry
-from .const import API_CONTROL_BREEZE_DEVICE, SIGNAL_DEVICE_ADD
+from .const import API_CONTROL_BREEZE_DEVICE, DOMAIN, SIGNAL_DEVICE_ADD
 from .coordinator import SwitcherDataUpdateCoordinator
 from .entity import SwitcherEntity
 from .utils import get_breeze_remote_manager
@@ -158,7 +158,8 @@ class SwitcherClimateEntity(SwitcherEntity, ClimateEntity):
         data = cast(SwitcherThermostat, self.coordinator.data)
         if not self._remote.modes_features[data.mode]["temperature_control"]:
             raise ServiceValidationError(
-                "Current mode does not support setting 'Target temperature'."
+                translation_domain=DOMAIN,
+                translation_key="target_temperature_not_supported",
             )
 
         await self._async_control_breeze_device(
