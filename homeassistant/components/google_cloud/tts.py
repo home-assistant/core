@@ -10,7 +10,7 @@ from google.api_core.exceptions import GoogleAPIError, Unauthenticated
 from google.api_core.retry import AsyncRetry
 from google.cloud import texttospeech
 import probatio
-from sentence_stream import SentenceBoundaryDetector
+from sentence_stream import async_stream_to_sentences
 
 from homeassistant.components.tts import (
     CONF_LANG,
@@ -339,12 +339,8 @@ class GoogleCloudTTSEntity(BaseGoogleCloudProvider, TextToSpeechEntity):
         ]:
             yield texttospeech.StreamingSynthesizeRequest(streaming_config=config)
             # Sending whole sentences avoids long pauses within the speech
-            boundary_detector = SentenceBoundaryDetector()
-            async for chunk in message_gen:
-                for sentence in boundary_detector.add_chunk(chunk):
-                    yield text_request(sentence)
-            if text := boundary_detector.finish():
-                yield text_request(text)
+            async for sentence in async_stream_to_sentences(message_gen):
+                yield text_request(sentence)
 
         # WAV readers take a data size of 0 literally, so mark the sizes unknown
         yield struct.pack(
