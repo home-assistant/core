@@ -157,6 +157,7 @@ class BSBLanFastCoordinator(BSBLanCoordinator[BSBLanFastData]):
                     translation_placeholders={"host": host},
                 ) from err
             except BSBLANError:
+                # During the initial refresh, self.data is None despite its annotation.
                 sensor = self.data.sensor if self.data else Sensor()
                 LOGGER.debug("Sensor data not available on device at %s", host)
 
@@ -177,7 +178,7 @@ class BSBLanFastCoordinator(BSBLanCoordinator[BSBLanFastData]):
         try:
             dhw = await self.client.hot_water_state(include=DHW_STATE_INCLUDE)
         except BSBLANError:
-            # Preserve last known DHW state if available (entity may depend on it)
+            # Preserve DHW state for entities; the initial refresh has no previous data.
             if self.data:
                 dhw = self.data.dhw
             LOGGER.debug(
@@ -264,6 +265,7 @@ class BSBLanSlowCoordinator(BSBLanCoordinator[BSBLanSlowData]):
         write) to avoid extra serial-bus traffic on every interval, so they
         are carried over from the previous update.
         """
+        # Before the first successful refresh, data is None despite its annotation.
         previous = self.data or BSBLanSlowData()
         dhw_config: HotWaterConfig | None
         try:
