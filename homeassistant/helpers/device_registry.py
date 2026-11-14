@@ -465,13 +465,9 @@ def _validate_str(name: str, value: Any) -> str | Undefined | None:
         or isinstance(value, str)
     ):
         return value
-    report_usage(
-        f"passes a non-string value of type {type(value).__name__} "
-        f"as {name} to the device registry",
-        core_behavior=ReportBehavior.LOG,
-        breaks_in_ha_version="2026.12.0",
+    raise TypeError(
+        f"Device registry field {name} must be a string, got {type(value).__name__}"
     )
-    return str(value)
 
 
 def _validate_device_info_fields(
