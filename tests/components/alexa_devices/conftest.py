@@ -116,6 +116,12 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_LOGIN_DATA: {
                 "session": "test-session",
                 CONF_SITE: "https://www.amazon.com",
+                "account_customer_id": "fake_customer_id",
+                "customer_info": {
+                    "given_name": "Fake",
+                    "user_id": TEST_USER_ID,
+                },
+                "device_info": {"device_serial_number": "fake_serial_number"},
             },
         },
         unique_id=TEST_USER_ID,
