@@ -5,6 +5,7 @@ from collections.abc import AsyncGenerator, Callable, Coroutine
 from dataclasses import replace
 from http import HTTPStatus
 import os
+from time import monotonic
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -879,7 +880,7 @@ async def test_onboarding_installation_type_during_bootstrap(
         ),
     ):
         bootstrap_task = asyncio.create_task(
-            bootstrap._async_set_up_integrations(hass, {"frontend": {}})
+            bootstrap._async_set_up_integrations(hass, {"frontend": {}}, monotonic())
         )
         await onboarding_loaded.wait()
         assert "hassio" not in hass.config.components

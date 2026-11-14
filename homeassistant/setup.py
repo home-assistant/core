@@ -5,6 +5,7 @@ from collections import defaultdict
 from collections.abc import Awaitable, Callable, Generator, Mapping
 import contextlib
 import contextvars
+from dataclasses import dataclass, field
 from enum import StrEnum
 from functools import partial
 import logging.handlers
@@ -76,6 +77,10 @@ _DATA_PERSISTENT_ERRORS: HassKey[dict[str, str | None]] = HassKey(
     "bootstrap_persistent_errors"
 )
 
+_DATA_BOOTSTRAP_PROGRESS: HassKey[_BootstrapProgressData] = HassKey(
+    "bootstrap_progress"
+)
+
 NOTIFY_FOR_TRANSLATION_KEYS = [
     "config_validation_err",
     "platform_config_validation_err",
@@ -89,6 +94,89 @@ class EventComponentLoaded(TypedDict):
     """EventComponentLoaded data."""
 
     component: str
+
+
+class BootstrapPhase(StrEnum):
+    """Startup phases reported in the bootstrap progress."""
+
+    PREPARING = "preparing"
+    """Resolving the domains to set up; the total is not known yet."""
+    SETUP = "setup"
+    """Setting up the integrations of a bootstrap stage."""
+    WRAP_UP = "wrap_up"
+    """Waiting for the tasks created during integration setup."""
+    STARTING = "starting"
+    """CoreState.starting: start event listeners and startup jobs."""
+    RUNNING = "running"
+    """CoreState.running: startup is finished."""
+
+
+class BootstrapIntegrationsProgress(TypedDict):
+    """Integrations whose setup attempt finished during bootstrap."""
+
+    total: int | None
+    done: int
+    failed: list[str]
+
+
+class BootstrapProgress(TypedDict):
+    """Startup progress sent by bootstrap."""
+
+    phase: BootstrapPhase
+    elapsed: float
+    integrations: BootstrapIntegrationsProgress
+    active: dict[str, float]
+
+
+@dataclass(slots=True)
+class _BootstrapProgressData:
+    """Startup progress listeners and the source of the current progress."""
+
+    listeners: list[Callable[[BootstrapProgress], None]] = field(default_factory=list)
+    source: Callable[[], BootstrapProgress] | None = None
+
+
+@singleton.singleton(_DATA_BOOTSTRAP_PROGRESS)
+def _bootstrap_progress(hass: core.HomeAssistant) -> _BootstrapProgressData:
+    """Return the startup progress listeners and source."""
+    return _BootstrapProgressData()
+
+
+@callback
+def async_subscribe_bootstrap_progress(
+    hass: HomeAssistant, listener: Callable[[BootstrapProgress], None]
+) -> CALLBACK_TYPE:
+    """Subscribe to the startup progress.
+
+    Once bootstrap has started, the listener is called with the current
+    progress right away.
+    """
+    data = _bootstrap_progress(hass)
+    data.listeners.append(listener)
+    if data.source is not None:
+        listener(data.source())
+    return partial(data.listeners.remove, listener)
+
+
+@callback
+def _async_set_bootstrap_progress_source(
+    hass: HomeAssistant, source: Callable[[], BootstrapProgress]
+) -> None:
+    """Set the source of the current progress and send it to the listeners."""
+    _bootstrap_progress(hass).source = source
+    _async_dispatch_bootstrap_progress(hass)
+
+
+@callback
+def _async_dispatch_bootstrap_progress(hass: HomeAssistant) -> None:
+    """Send the current progress to the listeners."""
+    data = _bootstrap_progress(hass)
+    # The progress is only built when someone listens.
+    if not data.listeners or data.source is None:
+        return
+    progress = data.source()
+    for listener in data.listeners:
+        listener(progress)
 
 
 @callback
@@ -118,6 +206,12 @@ def async_notify_setup_error(
     persistent_notification.async_create(
         hass, message, "Invalid config", "invalid_config"
     )
+
+
+@callback
+def _async_get_domains_pending_setup(hass: core.HomeAssistant) -> set[str]:
+    """Return domains scheduled by bootstrap whose setup has not finished."""
+    return set(hass.data.get(_DATA_SETUP_DONE, ()))
 
 
 @core.callback

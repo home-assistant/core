@@ -1570,3 +1570,31 @@ async def test_async_wait_component_waiter_cancelled(hass: HomeAssistant) -> Non
 
     assert await setup_task is True
     assert setup_done_future.result() is True
+
+
+async def test_subscribe_bootstrap_progress(hass: HomeAssistant) -> None:
+    """Test the bootstrap progress is only built and sent for subscribers."""
+    progress = {"phase": "setup"}
+    source = Mock(return_value=progress)
+    first = Mock()
+    unsubscribe_first = setup.async_subscribe_bootstrap_progress(hass, first)
+    first.assert_not_called()
+
+    setup._async_set_bootstrap_progress_source(hass, source)
+    first.assert_called_once_with(progress)
+
+    # A late subscriber gets the current progress right away.
+    second = Mock()
+    unsubscribe_second = setup.async_subscribe_bootstrap_progress(hass, second)
+    second.assert_called_once_with(progress)
+
+    unsubscribe_first()
+    setup._async_dispatch_bootstrap_progress(hass)
+    assert first.call_count == 1
+    assert second.call_count == 2
+    assert source.call_count == 3
+
+    unsubscribe_second()
+    setup._async_dispatch_bootstrap_progress(hass)
+    assert second.call_count == 2
+    assert source.call_count == 3
