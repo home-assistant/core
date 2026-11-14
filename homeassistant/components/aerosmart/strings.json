@@ -49,6 +49,152 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "aggregate_fault_stoerung_summenstoerung": {
+        "name": "Aggregate fault"
+      },
+      "aggregate_fault_stoerung_summenstoerung2": {
+        "name": "Aggregate fault 2"
+      },
+      "carbon_dioxide_co2_sensor_available": {
+        "name": "CO2 sensor installed"
+      },
+      "carbon_dioxide_stoerung_co2_sensor": {
+        "name": "CO2 sensor fault"
+      },
+      "coarse_dust_filter_grobstaubfilter_vorhanden": {
+        "name": "Coarse dust filter installed"
+      },
+      "coarse_dust_filter_grobstaubfilter_wechseln": {
+        "name": "Replace coarse dust filter"
+      },
+      "cooling_kuehlung_vorhanden": {
+        "name": "Cooling installed"
+      },
+      "fans_anforderung_ventilatoren_durch_waermepumpe": {
+        "name": "Fan request from heat pump"
+      },
+      "fans_anforderung_ventilatoren_durch_zonenregelung": {
+        "name": "Fan request from zone control"
+      },
+      "fans_stoerung_abluftventilator": {
+        "name": "Extract air fan fault"
+      },
+      "fans_stoerung_zuluftventilator": {
+        "name": "Supply air fan fault"
+      },
+      "fine_dust_filter_feinstaubfilter_vorhanden": {
+        "name": "Fine dust filter installed"
+      },
+      "fine_dust_filter_feinstaubfilter_wechseln": {
+        "name": "Replace fine dust filter"
+      },
+      "fire_alarm_brandmeldealarm": {
+        "name": "Fire alarm"
+      },
+      "fire_alarm_brandmeldealarm_vorhanden": {
+        "name": "Fire alarm system installed"
+      },
+      "fire_alarm_kontakt_brandmeldealarm": {
+        "name": "Fire alarm contact"
+      },
+      "general_relaykontakt_ext_lu": {
+        "name": "External ventilation relay contact"
+      },
+      "heat_pump_wp_kontakt_evu": {
+        "name": "Utility contact"
+      },
+      "heat_pump_wp_relaiskontakt_ext": {
+        "name": "External heat pump relay contact"
+      },
+      "hot_water_heat_pump_wp_elektroheizstab_vorhanden": {
+        "name": "Electric heater installed"
+      },
+      "hot_water_ventilation_anforderung_brauchwasserheizung_elektroheizstab": {
+        "name": "Hot water electric heater request"
+      },
+      "hot_water_ventilation_anforderung_brauchwasserheizung_waermepumpe": {
+        "name": "Hot water heat pump request"
+      },
+      "hot_water_ventilation_anforderung_disbalance_boilerueberwaermung": {
+        "name": "Boiler overheating imbalance request"
+      },
+      "hot_water_ventilation_stoerung_boiler_uebertemperatur": {
+        "name": "Boiler overtemperature fault"
+      },
+      "hot_water_ventilation_stoerung_boilerfuehler_waermepumpe": {
+        "name": "Heat pump boiler sensor fault"
+      },
+      "hot_water_ventilation_stoerung_elektroheizstab": {
+        "name": "Electric heater fault"
+      },
+      "outside_temperature_aussenluftfuehler_vorhanden": {
+        "name": "Outdoor air sensor installed"
+      },
+      "outside_temperature_stoerung_temperaturfuehler_aussenluft": {
+        "name": "Outdoor air temperature sensor fault"
+      },
+      "outside_temperature_stoerung_temperaturfuehler_sole_aussenluft": {
+        "name": "Outdoor brine temperature sensor fault"
+      },
+      "room_temperature_anforderung_raum_heizstufe_1": {
+        "name": "Room heating stage 1 request"
+      },
+      "room_temperature_anforderung_raum_heizstufe_2": {
+        "name": "Room heating stage 2 request"
+      },
+      "room_temperature_stoerung_temperaturfuehler_raum": {
+        "name": "Room temperature sensor fault"
+      },
+      "room_temperature_timeout_soll_temp_raum": {
+        "name": "Room target temperature timeout"
+      },
+      "room_temperature_timeout_temp_fuehler_raum": {
+        "name": "Room temperature sensor timeout"
+      },
+      "summer_bypass_anforderung_sommerautomatik": {
+        "name": "Summer bypass request"
+      },
+      "summer_bypass_function_sommerautomatik": {
+        "name": "Summer bypass"
+      },
+      "utility_lockout_evu_sperre_brauchwasser_aktiv": {
+        "name": "Hot water utility lockout"
+      },
+      "utility_lockout_evu_sperre_elektroheizstab_aktiv": {
+        "name": "Electric heater utility lockout"
+      },
+      "utility_lockout_evu_sperre_raumheizung_aktiv": {
+        "name": "Space heating utility lockout"
+      },
+      "utility_lockout_evu_vorhanden": {
+        "name": "Utility control installed"
+      },
+      "ventilation_anforderung_abtauen": {
+        "name": "Defrost request"
+      },
+      "ventilation_anforderung_beschattung": {
+        "name": "Shading request"
+      },
+      "ventilation_anforderung_st3_ext": {
+        "name": "External fan level 3 request"
+      },
+      "ventilation_stoerung_teilnehmer_nicht_erreichbar": {
+        "name": "Controller participant unreachable"
+      },
+      "ventilation_stoerung_temperaturfuehler_verdampferregister": {
+        "name": "Evaporator temperature sensor fault"
+      },
+      "ventilation_stoerung_waermepumpe_hochdruck": {
+        "name": "Heat pump high pressure fault"
+      },
+      "ventilation_stoerung_waermepumpe_niederdruck": {
+        "name": "Heat pump low pressure fault"
+      },
+      "ventilation_stoerung_wert_nicht_zulaessig": {
+        "name": "Invalid controller value"
+      }
+    },
     "sensor": {
       "air_condenser_solenoid_valve_operating_hours": {
         "name": "Air condenser solenoid valve operating hours"
