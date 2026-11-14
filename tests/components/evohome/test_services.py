@@ -40,7 +40,10 @@ async def test_refresh_system_deprecated(
     """
 
     # EvoService.REFRESH_SYSTEM
-    with patch("evohomeasync2.location.Location.get_status") as mock_fcn:
+    with (
+        patch("evohomeasync2.location.Location.get_status") as mock_fcn,
+        patch("evohomeasync.EvohomeClient.get_status") as mock_v1,
+    ):
         await hass.services.async_call(
             DOMAIN,
             EvoService.REFRESH_SYSTEM,
@@ -49,6 +52,7 @@ async def test_refresh_system_deprecated(
         )
 
         mock_fcn.assert_awaited_once_with()
+        mock_v1.assert_not_awaited()  # high-precision temps are not refreshed on demand
 
     issue = issue_registry.async_get_issue(DOMAIN, "deprecated_refresh_system_service")
     assert issue is not None
@@ -65,13 +69,16 @@ async def test_update_entity(
 ) -> None:
     """Test that homeassistant.update_entity triggers an appropriate refresh.
 
-    Any evohome entity can be targeted; the API invoked by the shared coordinator
-    refreshes the whole location.
+    Any evohome entity can be targeted; the API invoked by the location coordinator
+    refreshes the whole location (but not the high-precision temperatures).
     """
 
     await async_setup_component(hass, "homeassistant", {})
 
-    with patch("evohomeasync2.location.Location.get_status") as mock_fcn:
+    with (
+        patch("evohomeasync2.location.Location.get_status") as mock_fcn,
+        patch("evohomeasync.EvohomeClient.get_status") as mock_v1,
+    ):
         await hass.services.async_call(
             "homeassistant",
             "update_entity",
@@ -81,6 +88,7 @@ async def test_update_entity(
         )
 
         mock_fcn.assert_awaited_once_with()
+        mock_v1.assert_not_awaited()
 
 
 @pytest.mark.parametrize("install", ["default"])

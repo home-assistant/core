@@ -3,6 +3,7 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
+import evohomeasync as ec1
 from evohomeasync2 import ControlSystem, HotWater, Zone, exceptions as evo_exc
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -12,22 +13,19 @@ from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_TEMPERATURE,
 )
-from homeassistant.components.evohome import EvoData
-from homeassistant.components.evohome.const import (
-    DOMAIN,
-    EVOHOME_DATA,
-    SCHEDULE_MAX_AGE,
-)
+from homeassistant.components.evohome.const import EVOHOME_DATA, SCHEDULE_MAX_AGE
 from homeassistant.components.water_heater import DOMAIN as WATER_HEATER_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
+    CONF_SCAN_INTERVAL,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .conftest import setup_evohome
@@ -42,15 +40,16 @@ async def test_setup_platform(
 ) -> None:
     """Test entities and their states after setup of evohome."""
 
-    evo_data: EvoData = hass.data.get(DOMAIN)  # type: ignore[assignment]
-    update_interval: timedelta = evo_data.coordinator.update_interval  # type: ignore[assignment]
+    evo_data = hass.data[EVOHOME_DATA]
+    update_interval = evo_data.coordinator.update_interval
+    assert update_interval is not None
 
     # confirm initial state after coordinator.async_first_refresh()...
     state = hass.states.get("climate.my_home")
     assert state is not None and state.state != STATE_UNAVAILABLE
 
     with patch(
-        "homeassistant.components.evohome.coordinator.EvoDataUpdateCoordinator._async_update_data",
+        "homeassistant.components.evohome.coordinator.EvoLocationCoordinator._async_update_data",
         side_effect=UpdateFailed,
     ):
         freezer.tick(update_interval)
@@ -93,10 +92,11 @@ async def test_high_precision_temps(
 ) -> None:
     """Test a zone uses the v1 API's temperature, if its location has a TCS."""
 
-    evo_data: EvoData = hass.data.get(DOMAIN)  # type: ignore[assignment]
-    update_interval: timedelta = evo_data.coordinator.update_interval  # type: ignore[assignment]
+    evo_data = hass.data[EVOHOME_DATA]
+    update_interval = evo_data.coordinator.update_interval
+    assert update_interval is not None
 
-    evo_data.coordinator.temps = {"3432521": 99.9}  # stale, so must be replaced
+    evo_data.account.data = {"3432521": 99.9}  # stale, so must be replaced
 
     with (
         patch("evohomeasync.EvohomeClient.get_status"),
@@ -115,6 +115,116 @@ async def test_high_precision_temps(
     assert state.attributes["current_temperature"] == expected
 
 
+async def test_update_intervals(
+    hass: HomeAssistant,
+    config: ConfigType,
+) -> None:
+    """Test scan_interval applies to the location and to high-precision temps."""
+
+    config[CONF_SCAN_INTERVAL] = 600
+
+    async for _ in setup_evohome(hass, config, install="default"):
+        evo_data = hass.data[EVOHOME_DATA]
+
+        assert evo_data.coordinator.update_interval == timedelta(seconds=600)
+        assert evo_data.account.update_interval == timedelta(seconds=600)
+
+
+@pytest.mark.parametrize("install", ["default"])
+@pytest.mark.usefixtures("evohome")
+async def test_high_precision_temps_update_entities(
+    hass: HomeAssistant,
+    zone_id: str,
+) -> None:
+    """Test an update of (only) the account coordinator updates a zone's state."""
+
+    evo_data = hass.data[EVOHOME_DATA]
+
+    evo_data.account.async_set_updated_data({"3432521": 19.8})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(zone_id)
+    assert state is not None
+    assert state.attributes["current_temperature"] == 19.8
+
+
+@pytest.mark.parametrize("install", ["default"])
+@pytest.mark.usefixtures("evohome")
+async def test_high_precision_temps_multiple_locations(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test high-precision temps from all of an account's locations are retained."""
+
+    evo_data = hass.data[EVOHOME_DATA]
+    update_interval = evo_data.account.update_interval
+    assert update_interval is not None
+
+    with (
+        patch("evohomeasync.EvohomeClient.get_status"),
+        patch(
+            "evohomeasync.EvohomeClient.location_by_id",
+            new_callable=PropertyMock,
+            return_value={
+                "1111111": MagicMock(
+                    tcs=MagicMock(
+                        get_temperatures=AsyncMock(return_value={"3432521": 19.8})
+                    )
+                ),
+                "2222222": MagicMock(
+                    tcs=MagicMock(
+                        get_temperatures=AsyncMock(return_value={"9999999": 21.3})
+                    )
+                ),
+            },
+        ),
+    ):
+        freezer.tick(update_interval)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert evo_data.account.data == {"3432521": 19.8, "9999999": 21.3}
+
+
+@pytest.mark.parametrize("install", ["default"])
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(ec1.ApiCallFailedError("API call failed"), id="api_error"),
+        pytest.param(TimeoutError(), id="timeout"),
+    ],
+)
+@pytest.mark.usefixtures("evohome")
+async def test_high_precision_temps_failed_poll(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    zone_id: str,
+    exception: Exception,
+) -> None:
+    """Test a failed v1 poll drops the high-precision temps, rather than keep them."""
+
+    evo_data = hass.data[EVOHOME_DATA]
+    update_interval = evo_data.account.update_interval
+    assert update_interval is not None
+
+    evo_data.account.async_set_updated_data({"3432521": 99.9})
+
+    with patch("evohomeasync.EvohomeClient.get_status", side_effect=exception):
+        freezer.tick(update_interval)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert evo_data.account.last_update_success
+    assert evo_data.account.data == {}
+    assert "They will be ignored this refresh cycle" in caplog.text
+
+    # the zone falls back to its v2 temperature (it has none in this fixture)
+    state = hass.states.get(zone_id)
+    assert state is not None
+    assert state.attributes["current_temperature"] is None
+
+
 @pytest.mark.parametrize("install", TEST_INSTALLS)
 @pytest.mark.usefixtures("evohome")
 async def test_schedules_fetched_only_when_stale(
@@ -124,8 +234,9 @@ async def test_schedules_fetched_only_when_stale(
 ) -> None:
     """Test schedules are re-fetched only after SCHEDULE_MAX_AGE, not every poll."""
 
-    evo_data: EvoData = hass.data.get(DOMAIN)  # type: ignore[assignment]
-    update_interval: timedelta = evo_data.coordinator.update_interval  # type: ignore[assignment]
+    evo_data = hass.data[EVOHOME_DATA]
+    update_interval = evo_data.coordinator.update_interval
+    assert update_interval is not None
 
     num_children = len(tcs.zones) + (tcs.hotwater is not None)
 
