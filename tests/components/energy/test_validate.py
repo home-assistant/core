@@ -434,7 +434,6 @@ async def test_validation_grid(
                     "stat_energy_to": "sensor.grid_production_1",
                     "stat_cost": "sensor.grid_cost_1",
                     "stat_compensation": "sensor.grid_compensation_1",
-                    "cost_adjustment_day": 0.0,
                 }
             ]
         }
@@ -520,7 +519,6 @@ async def test_validation_grid_external_cost_compensation(
                     "stat_energy_to": "sensor.grid_production_1",
                     "stat_cost": "external:grid_cost_1",
                     "stat_compensation": "external:grid_compensation_1",
-                    "cost_adjustment_day": 0.0,
                 }
             ]
         }
@@ -608,7 +606,6 @@ async def test_validation_grid_price_not_exist(
                     "stat_energy_to": "sensor.grid_production_1",
                     "entity_energy_price": "sensor.grid_price_1",
                     "number_energy_price_export": 0.10,
-                    "cost_adjustment_day": 0.0,
                 }
             ]
         }
@@ -750,7 +747,6 @@ async def test_validation_grid_price_errors(
                     "type": "grid",
                     "stat_energy_from": "sensor.grid_consumption_1",
                     "entity_energy_price": "sensor.grid_price_1",
-                    "cost_adjustment_day": 0.0,
                 }
             ]
         }
@@ -1105,7 +1101,6 @@ async def test_validation_grid_no_costs_tracking(
                         },
                     ],
                     "power": [],
-                    "cost_adjustment_day": 0.0,
                 }
             ]
         }
