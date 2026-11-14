@@ -54,10 +54,10 @@ rules:
   test-coverage: done
 
   # Gold
-  devices: todo
+  devices: done
   diagnostics: todo
   discovery-update-info: todo
-  discovery: todo
+  discovery: done
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo

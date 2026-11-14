@@ -104,4 +104,4 @@ rules:
     status: exempt
     comment: |
       This integration doesn't use websession.
-  strict-typing: todo
+  strict-typing: done

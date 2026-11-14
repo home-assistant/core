@@ -87,4 +87,4 @@ rules:
   inject-websession:
     status: exempt
     comment: Integration uses aiodns directly; no shared HTTP websession applies.
-  strict-typing: todo
+  strict-typing: done
