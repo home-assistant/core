@@ -40,6 +40,9 @@
       "temp_trend": {
         "default": "mdi:trending-up"
       },
+      "therm_setpoint_mode": {
+        "default": "mdi:thermostat"
+      },
       "wifi_strength": {
         "default": "mdi:wifi"
       },
