@@ -84,7 +84,7 @@ async def test_update_process(
         mock_lamarzocco.settings.firmwares[
             FirmwareType.GATEWAY
         ].available_update.change_log
-        in result["result"]
+        in result["result"]["release_notes"]
     )
 
     await hass.services.async_call(

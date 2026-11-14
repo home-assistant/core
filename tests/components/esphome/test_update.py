@@ -733,7 +733,7 @@ async def test_update_entity_release_notes(
     )
 
     result = await client.receive_json()
-    assert result["result"] is None
+    assert result["result"]["release_notes"] is None
 
     mock_device.set_state(
         UpdateState(
@@ -755,7 +755,7 @@ async def test_update_entity_release_notes(
     )
 
     result = await client.receive_json()
-    assert result["result"] is None
+    assert result["result"]["release_notes"] is None
 
     mock_device.set_state(
         UpdateState(
@@ -777,7 +777,7 @@ async def test_update_entity_release_notes(
     )
 
     result = await client.receive_json()
-    assert result["result"] == RELEASE_SUMMARY
+    assert result["result"]["release_notes"] == RELEASE_SUMMARY
 
 
 @pytest.mark.parametrize(
