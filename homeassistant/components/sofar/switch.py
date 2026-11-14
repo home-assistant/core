@@ -4,8 +4,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any, override
 
-from sofar_modbus.modern.device import SofarInverter
-from sofar_modbus.modern.enums import RemoteSwitchOnOff
+from sofar_modbus import RemoteSwitchOnOff, SofarInverter
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import Platform

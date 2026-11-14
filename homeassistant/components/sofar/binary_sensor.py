@@ -5,9 +5,7 @@ from dataclasses import dataclass
 from enum import IntFlag
 from typing import override
 
-from sofar_modbus.modern.device import SofarInverter
-from sofar_modbus.modern.enums import PowerControlFlags
-from sofar_modbus.modern.faults import FaultCategory
+from sofar_modbus import FaultCategory, PowerControlFlags, SofarInverter
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,

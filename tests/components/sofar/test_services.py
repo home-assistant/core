@@ -8,7 +8,7 @@ from modbus_connection.mock import MockModbusConnection, MockModbusUnit, WriteEv
 import probatio
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
-from sofar_modbus.modern import BatConfigCellType, BatConfigWriteStatus
+from sofar_modbus import BatteryConfigCellType, BatteryConfigWriteStatus
 
 from homeassistant.components.sofar.const import DOMAIN
 from homeassistant.components.sofar.services import SofarService, SofarServiceArgument
@@ -164,10 +164,10 @@ async def test_set_passive_mode_power(hass: HomeAssistant) -> None:
 
 def _commit_battery_config(unit: MockModbusUnit) -> None:
     """Make a lithium battery's config writes commit at once."""
-    unit.holding[CELL_TYPE_REGISTER] = BatConfigCellType.LITHIUM_IRON_PHOSPHATE
+    unit.holding[CELL_TYPE_REGISTER] = BatteryConfigCellType.LITHIUM_IRON_PHOSPHATE
     unit.on_write(
         lambda _: unit.holding.__setitem__(
-            BATTERY_CONFIG_STATUS_REGISTER, BatConfigWriteStatus.SUCCESS
+            BATTERY_CONFIG_STATUS_REGISTER, BatteryConfigWriteStatus.SUCCESS
         )
     )
 

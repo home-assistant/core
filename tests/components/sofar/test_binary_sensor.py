@@ -11,7 +11,7 @@ from pytest_homeassistant.common import (
     async_fire_time_changed,
     snapshot_platform,
 )
-from sofar_modbus.modern.faults import FaultCategory
+from sofar_modbus import FaultCategory
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
