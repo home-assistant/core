@@ -646,6 +646,7 @@ class DPCode(StrEnum):
     CHARGE_CUR_SET = "charge_cur_set"
     CHARGE_ENERGY_ONCE = "charge_energy_once"
     CHARGE_STATE = "charge_state"
+    CHARGE_TIME = "charge_time"
     CHILD_LOCK = "child_lock"  # Child lock
     CISTERN = "cistern"
     CLEAN_AREA = "clean_area"
