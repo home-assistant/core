@@ -380,6 +380,7 @@ FLOWS = {
         "hyperion",
         "hypontech",
         "ialarm",
+        "iammeter",
         "iaqualink",
         "ibeacon",
         "icloud",

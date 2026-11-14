@@ -896,6 +896,7 @@ AGENTS.md @home-assistant/core
 /homeassistant/components/ialarm/ @RyuzakiKK @bigmoby
 /tests/components/ialarm/ @RyuzakiKK @bigmoby
 /homeassistant/components/iammeter/ @lewei50 @IAMMETER @miwyf
+/tests/components/iammeter/ @lewei50 @IAMMETER @miwyf
 /homeassistant/components/iaqualink/ @flz
 /tests/components/iaqualink/ @flz
 /homeassistant/components/icloud/ @Quentame @nzapponi @timlaing
