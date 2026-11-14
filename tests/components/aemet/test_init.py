@@ -2,12 +2,12 @@
 
 from unittest.mock import patch
 
-from aemet_opendata.exceptions import AemetTimeout
+from aemet_opendata.exceptions import AemetTimeout, AuthError
 from freezegun.api import FrozenDateTimeFactory
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.aemet.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -106,3 +106,31 @@ async def test_init_api_timeout(
         config_entry.add_to_hass(hass)
 
         assert await hass.config_entries.async_setup(config_entry.entry_id) is False
+
+
+async def test_init_auth_error(hass: HomeAssistant) -> None:
+    """Test an invalid API key when loading the AEMET integration starts reauth."""
+
+    with patch(
+        "homeassistant.components.aemet.AEMET.api_call",
+        side_effect=AuthError,
+    ):
+        config_entry = MockConfigEntry(
+            domain=DOMAIN,
+            data={
+                CONF_API_KEY: "api-key",
+                CONF_LATITUDE: "0.0",
+                CONF_LONGITUDE: "0.0",
+                CONF_NAME: "AEMET",
+            },
+        )
+        config_entry.add_to_hass(hass)
+
+        assert await hass.config_entries.async_setup(config_entry.entry_id) is False
+        assert config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == config_entry.entry_id
