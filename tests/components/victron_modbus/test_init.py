@@ -54,6 +54,19 @@ async def test_setup_retries_when_nothing_could_be_read(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_setup_retries_when_identification_fails(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_unit
+) -> None:
+    """A device that can't be identified yet is retried."""
+    mock_unit.fail_read(0x1000, ModbusTimeoutError())
+    mock_config_entry.add_to_hass(hass)
+
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
 @pytest.mark.parametrize(
     ("product_id", "serial"),
     [(VM_3P75CT, OTHER_SERIAL), (P1LINK, SERIAL), (0xA389, SERIAL)],
@@ -66,8 +79,12 @@ async def test_setup_refuses_another_device(
     product_id: int,
     serial: str,
 ) -> None:
-    """Another device at the entry's address is not set up as this one."""
+    """Another device at the entry's address is not set up as this one.
+
+    It is refused even when it rejects the reads of the entry's model.
+    """
     set_identity(mock_unit, product_id, serial=serial)
+    mock_unit.fail_read(0x3080, IllegalDataAddressError())  # total power
     mock_config_entry.add_to_hass(hass)
 
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)

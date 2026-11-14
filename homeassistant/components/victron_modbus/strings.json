@@ -61,6 +61,9 @@
     }
   },
   "exceptions": {
+    "cannot_connect": {
+      "message": "[%key:common::config_flow::error::cannot_connect%]"
+    },
     "device_mismatch": {
       "message": "The device at this address is not the device that was set up here. Remove the integration and add the right device."
     },

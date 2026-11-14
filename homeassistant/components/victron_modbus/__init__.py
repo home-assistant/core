@@ -9,13 +9,13 @@ pointed at the same host, and closes it once the last entry holding a unit on
 it unloads.
 """
 
-from modbus_connection import ModbusUdpParams
-from victron_modbus import PRODUCTS
+from modbus_connection import ModbusError, ModbusUdpParams
+from victron_modbus import UnsupportedDeviceError, async_identify
 
 from homeassistant.components.modbus import async_get_unit
 from homeassistant.const import CONF_HOST, CONF_MODEL, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 
 from .const import DOMAIN, PORT, UNIT_ID
 from .coordinator import VictronModbusConfigEntry, VictronModbusData
@@ -31,21 +31,28 @@ async def async_setup_entry(
     unit = async_get_unit(
         hass, entry, ModbusUdpParams(host=entry.data[CONF_HOST], port=PORT), UNIT_ID
     )
-    device_class = MODELS[entry.data[CONF_MODEL]].device_class
-    data = VictronModbusData.create(hass, entry, device_class(unit))
-
-    await data.power.async_config_entry_first_refresh()
-
-    # The first poll read the identification: refuse another device at this address.
-    info = data.power.device.info
+    # Identify the device before reading anything model-specific, so another
+    # device at this address is refused even when it rejects those reads.
+    try:
+        device = await async_identify(unit)
+    except UnsupportedDeviceError as err:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN, translation_key="device_mismatch"
+        ) from err
+    except ModbusError as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN, translation_key="cannot_connect"
+        ) from err
     if (
-        info.serial_number != entry.unique_id
-        or PRODUCTS.get(info.product_id or -1) is not device_class
+        device.info.serial_number != entry.unique_id
+        or type(device) is not MODELS[entry.data[CONF_MODEL]].device_class
     ):
         raise ConfigEntryError(
             translation_domain=DOMAIN, translation_key="device_mismatch"
         )
 
+    data = VictronModbusData.create(hass, entry, device)
+    await data.power.async_config_entry_first_refresh()
     await data.readings.async_config_entry_first_refresh()
 
     entry.runtime_data = data
