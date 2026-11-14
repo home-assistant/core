@@ -3,7 +3,6 @@
 import asyncio
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
-import logging
 from unittest.mock import Mock
 
 from gardena_bluetooth.const import (
@@ -26,6 +25,10 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.update_coordinator import (
+    UpdateFailed,
+    UpdateFailedUnreachable,
+)
 from homeassistant.util import utcnow
 
 from . import (
@@ -205,23 +208,22 @@ async def test_setup_retry(
 
 
 @pytest.mark.parametrize(
-    ("exception", "level"),
+    ("exception", "expected"),
     [
-        pytest.param(DeviceUnavailable, logging.INFO, id="unreachable"),
-        pytest.param(CommunicationFailure, logging.ERROR, id="communication_failure"),
+        pytest.param(DeviceUnavailable, UpdateFailedUnreachable, id="unreachable"),
+        pytest.param(CommunicationFailure, UpdateFailed, id="communication_failure"),
     ],
 )
 @pytest.mark.usefixtures("constant_advertisements")
-async def test_refresh_log_level(
+async def test_refresh_failure(
     hass: HomeAssistant,
     mock_entry: MockConfigEntry,
     mock_read_char_raw: dict[str, bytes | Exception],
     scan_step: Callable[[], Awaitable[None]],
-    caplog: pytest.LogCaptureFixture,
     exception: type[Exception],
-    level: int,
+    expected: type[UpdateFailed],
 ) -> None:
-    """Test an unreachable device is logged at info level."""
+    """Test the exception raised when a refresh fails."""
     mock_read_char_raw[Battery.battery_level.unique_id] = Battery.battery_level.encode(
         100
     )
@@ -232,9 +234,4 @@ async def test_refresh_log_level(
     mock_read_char_raw[Battery.battery_level.unique_id] = exception("Test")
     await scan_step()
 
-    assert [
-        record.levelno
-        for record in caplog.records
-        if record.name == "homeassistant.components.gardena_bluetooth"
-        and record.levelno > logging.DEBUG
-    ] == [level]
+    assert type(mock_entry.runtime_data.last_exception) is expected
