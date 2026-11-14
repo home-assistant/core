@@ -3,6 +3,7 @@
 from datetime import timedelta
 from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
@@ -14,7 +15,14 @@ from homeassistant.components.cover import (
     SERVICE_TOGGLE,
     CoverState,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_CLOSED, STATE_OPEN
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_CLOSED,
+    STATE_CLOSING,
+    STATE_OPEN,
+    STATE_OPENING,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -53,6 +61,161 @@ async def test_cover_position(
     state = hass.states.get("cover.garage_abcdef")
     assert state.state == expected_state
     assert state.attributes[ATTR_CURRENT_POSITION] == expected_position
+
+
+@pytest.mark.parametrize(
+    ("door_state", "expected_state", "expected_position"),
+    [
+        (2, STATE_OPEN, None),
+        (3, STATE_CLOSING, None),
+        (4, STATE_OPENING, None),
+        (5, STATE_UNKNOWN, None),
+    ],
+    ids=["stopped", "closing", "opening", "unknown"],
+)
+async def test_cover_extended_door_states(
+    hass: HomeAssistant,
+    mock_opengarage: MagicMock,
+    init_integration: MockConfigEntry,
+    door_state: int,
+    expected_state: str,
+    expected_position: int | None,
+) -> None:
+    """Test door states reported by firmware 1.2.x beyond open and closed."""
+    await _simulate_door_state(hass, mock_opengarage, door_state)
+
+    state = hass.states.get("cover.garage_abcdef")
+    assert state.state == expected_state
+    assert state.attributes.get(ATTR_CURRENT_POSITION) == expected_position
+
+
+@pytest.mark.parametrize(
+    ("door_states", "expected_states"),
+    [
+        ([0, 4, 1], [STATE_CLOSED, STATE_OPENING, STATE_OPEN]),
+        ([1, 3, 0], [STATE_OPEN, STATE_CLOSING, STATE_CLOSED]),
+        ([1, 3, 2], [STATE_OPEN, STATE_CLOSING, STATE_OPEN]),
+    ],
+    ids=["opening", "closing", "stopped_while_closing"],
+)
+async def test_cover_external_movement(
+    hass: HomeAssistant,
+    mock_opengarage: MagicMock,
+    init_integration: MockConfigEntry,
+    door_states: list[int],
+    expected_states: list[str],
+) -> None:
+    """Test a door moved outside HA never passes through unknown."""
+    for door_state, expected_state in zip(door_states, expected_states, strict=True):
+        await _simulate_door_state(hass, mock_opengarage, door_state)
+        assert hass.states.get("cover.garage_abcdef").state == expected_state
+
+
+@pytest.mark.parametrize(
+    ("service", "moving_door_state", "moving_state", "final_door_state", "final_state"),
+    [
+        (SERVICE_OPEN_COVER, 4, STATE_OPENING, 1, STATE_OPEN),
+        (SERVICE_CLOSE_COVER, 3, STATE_CLOSING, 0, STATE_CLOSED),
+    ],
+    ids=["open", "close"],
+)
+async def test_cover_command_from_stopped(
+    hass: HomeAssistant,
+    mock_opengarage: MagicMock,
+    init_integration: MockConfigEntry,
+    service: str,
+    moving_door_state: int,
+    moving_state: str,
+    final_door_state: int,
+    final_state: str,
+) -> None:
+    """Test a door stopped mid-travel can be opened or closed."""
+    mock_opengarage.push_button.return_value = 1
+    await _simulate_door_state(hass, mock_opengarage, 2)
+    assert hass.states.get("cover.garage_abcdef").state == STATE_OPEN
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: "cover.garage_abcdef"},
+        blocking=True,
+    )
+    assert mock_opengarage.push_button.call_count == 1
+    assert hass.states.get("cover.garage_abcdef").state == moving_state
+
+    await _simulate_door_state(hass, mock_opengarage, moving_door_state)
+    assert hass.states.get("cover.garage_abcdef").state == moving_state
+
+    await _simulate_door_state(hass, mock_opengarage, final_door_state)
+    assert hass.states.get("cover.garage_abcdef").state == final_state
+
+
+@pytest.mark.parametrize(
+    ("door_state", "service", "moving_state", "door_state_name"),
+    [
+        (2, SERVICE_OPEN_COVER, STATE_OPENING, STATE_OPEN),
+        (2, SERVICE_CLOSE_COVER, STATE_CLOSING, STATE_OPEN),
+        (0, SERVICE_OPEN_COVER, STATE_OPENING, STATE_CLOSED),
+        (1, SERVICE_CLOSE_COVER, STATE_CLOSING, STATE_OPEN),
+    ],
+    ids=["open_from_stopped", "close_from_stopped", "open", "close"],
+)
+async def test_cover_command_without_movement(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_opengarage: MagicMock,
+    init_integration: MockConfigEntry,
+    door_state: int,
+    service: str,
+    moving_state: str,
+    door_state_name: str,
+) -> None:
+    """Test a command that never moves the door does not leave it moving."""
+    mock_opengarage.push_button.return_value = 1
+    await _simulate_door_state(hass, mock_opengarage, door_state)
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: "cover.garage_abcdef"},
+        blocking=True,
+    )
+    assert hass.states.get("cover.garage_abcdef").state == moving_state
+
+    # The door may not start moving straight away.
+    freezer.tick(timedelta(seconds=50))
+    await _simulate_door_state(hass, mock_opengarage, door_state)
+    assert hass.states.get("cover.garage_abcdef").state == moving_state
+
+    freezer.tick(timedelta(seconds=11))
+    await _simulate_door_state(hass, mock_opengarage, door_state)
+    assert hass.states.get("cover.garage_abcdef").state == door_state_name
+
+
+async def test_cover_command_with_firmware_transition(
+    hass: HomeAssistant,
+    mock_opengarage: MagicMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test a close command while the firmware reports the closing state."""
+    mock_opengarage.push_button.return_value = 1
+    await _simulate_door_state(hass, mock_opengarage, 1)
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_CLOSE_COVER,
+        {ATTR_ENTITY_ID: "cover.garage_abcdef"},
+        blocking=True,
+    )
+    assert hass.states.get("cover.garage_abcdef").state == STATE_CLOSING
+
+    await _simulate_door_state(hass, mock_opengarage, 3)
+    assert hass.states.get("cover.garage_abcdef").state == STATE_CLOSING
+
+    await _simulate_door_state(hass, mock_opengarage, 0)
+    state = hass.states.get("cover.garage_abcdef")
+    assert state.state == STATE_CLOSED
+    assert state.attributes[ATTR_CURRENT_POSITION] == 0
 
 
 async def test_cover_position_during_transition(
