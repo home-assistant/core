@@ -8,8 +8,12 @@ from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.smartthings import MAIN
-from homeassistant.components.time import DOMAIN as TIME_DOMAIN, SERVICE_SET_VALUE
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TIME, Platform
+from homeassistant.components.time import (
+    DOMAIN as TIME_DOMAIN,
+    TimeService,
+    TimeServiceArgument,
+)
+from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -48,11 +52,25 @@ async def test_state_update(
         "01b28624-5907-c8bc-0325-8ad23f03a637",
         Capability.CUSTOM_DO_NOT_DISTURB_MODE,
         Attribute.END_TIME,
-        "0800",
+        "0830",
     )
 
     assert (
-        hass.states.get("time.robot_vacuum_do_not_disturb_end_time").state == "08:00:00"
+        hass.states.get("time.robot_vacuum_do_not_disturb_end_time").state == "08:30:00"
+    )
+
+    await trigger_update(
+        hass,
+        devices,
+        "01b28624-5907-c8bc-0325-8ad23f03a637",
+        Capability.CUSTOM_DO_NOT_DISTURB_MODE,
+        Attribute.END_TIME,
+        None,
+    )
+
+    assert (
+        hass.states.get("time.robot_vacuum_do_not_disturb_end_time").state
+        == STATE_UNKNOWN
     )
 
 
@@ -67,10 +85,10 @@ async def test_set_value(
 
     await hass.services.async_call(
         TIME_DOMAIN,
-        SERVICE_SET_VALUE,
+        TimeService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: "time.robot_vacuum_do_not_disturb_end_time",
-            ATTR_TIME: "09:00:00",
+            CommonServiceArgument.ENTITY_ID: "time.robot_vacuum_do_not_disturb_end_time",
+            TimeServiceArgument.TIME: "09:00:00",
         },
         blocking=True,
     )
@@ -107,10 +125,10 @@ async def test_dnd_mode_updates(
 
     await hass.services.async_call(
         TIME_DOMAIN,
-        SERVICE_SET_VALUE,
+        TimeService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: "time.robot_vacuum_do_not_disturb_end_time",
-            ATTR_TIME: "09:00:00",
+            CommonServiceArgument.ENTITY_ID: "time.robot_vacuum_do_not_disturb_end_time",
+            TimeServiceArgument.TIME: "09:00:00",
         },
         blocking=True,
     )

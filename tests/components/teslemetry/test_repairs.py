@@ -6,11 +6,6 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp import ClientError
-from aiopowerwall import (
-    PowerwallAuthenticationError,
-    PowerwallConnectionError,
-    PowerwallError,
-)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import (
@@ -24,6 +19,11 @@ from pytest_homeassistant.components.repairs import (
 )
 from pytest_homeassistant.typing import ClientSessionGenerator
 from tesla_fleet_api.exceptions import InvalidResponse, PrivateKeyError
+from tesla_fleet_api.tesla.powerwall import (
+    PowerwallAuthenticationError,
+    PowerwallConnectionError,
+    PowerwallError,
+)
 
 from homeassistant.components.repairs import ConfirmRepairFlow
 from homeassistant.components.teslemetry.const import (

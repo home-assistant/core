@@ -77,6 +77,11 @@
         }
       }
     },
+    "light": {
+      "nightlight": {
+        "name": "Night light"
+      }
+    },
     "number": {
       "mist_level": {
         "name": "Mist level"
@@ -166,6 +171,9 @@
       },
       "drying_mode_power_off": {
         "name": "Enable drying mode while power is off"
+      },
+      "mute": {
+        "name": "Mute"
       }
     }
   },
@@ -175,6 +183,9 @@
     },
     "invalid_auth": {
       "message": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "nightlight_command_failed": {
+      "message": "Failed to control the night light"
     },
     "server_error": {
       "message": "Server error occurred while connecting to VeSync"

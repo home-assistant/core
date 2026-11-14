@@ -1,6 +1,7 @@
 """Test the SMA sensor platform."""
 
 from collections.abc import Generator
+import logging
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -72,3 +73,36 @@ async def test_refresh_exceptions(
     state = hass.states.get("sensor.sma_device_name_battery_capacity_a")
     assert state
     assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    ("exception", "level"),
+    [
+        pytest.param(SmaConnectionException, logging.INFO, id="unreachable"),
+        pytest.param(SmaReadException, logging.ERROR, id="read_error"),
+    ],
+)
+async def test_refresh_log_level(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_sma_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    exception: type[Exception],
+    level: int,
+) -> None:
+    """Test an unreachable device is logged at info level."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_sma_client.read.side_effect = exception
+
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+
+    assert [
+        record.levelno
+        for record in caplog.records
+        if record.name == "homeassistant.components.sma.coordinator"
+        and record.levelno > logging.DEBUG
+    ] == [level]

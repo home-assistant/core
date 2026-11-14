@@ -12,7 +12,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.number import (
     ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
 )
 from homeassistant.components.renault.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
@@ -155,7 +155,7 @@ async def test_number_action(
     ) as mock_action:
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             service_data=service_data,
             blocking=True,
         )
@@ -199,7 +199,7 @@ async def test_number_action_(
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             service_data=service_data,
             blocking=True,
         )

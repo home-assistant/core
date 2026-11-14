@@ -2,6 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
+from enum import StrEnum
 from typing import Any, cast
 
 from aiopyarr import exceptions
@@ -13,20 +14,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector, service
 from homeassistant.util import dt as dt_util
 
-from .const import (
-    ATTR_DISKS,
-    ATTR_ENTRY_ID,
-    ATTR_EPISODES,
-    ATTR_SHOWS,
-    DEFAULT_UPCOMING_DAYS,
-    DOMAIN,
-    SERVICE_GET_DISKSPACE,
-    SERVICE_GET_EPISODES,
-    SERVICE_GET_QUEUE,
-    SERVICE_GET_SERIES,
-    SERVICE_GET_UPCOMING,
-    SERVICE_GET_WANTED,
-)
+from .const import ATTR_DISKS, ATTR_EPISODES, ATTR_SHOWS, DEFAULT_UPCOMING_DAYS, DOMAIN
 from .coordinator import SonarrConfigEntry
 from .helpers import (
     format_diskspace,
@@ -37,12 +25,28 @@ from .helpers import (
     format_wanted,
 )
 
-# Service parameter constants
-CONF_DAYS = "days"
-CONF_MAX_ITEMS = "max_items"
-CONF_SERIES_ID = "series_id"
-CONF_SEASON_NUMBER = "season_number"
-CONF_SPACE_UNIT = "space_unit"
+
+class SonarrService(StrEnum):
+    """Store keys for Sonarr services."""
+
+    GET_SERIES = "get_series"
+    GET_QUEUE = "get_queue"
+    GET_DISKSPACE = "get_diskspace"
+    GET_UPCOMING = "get_upcoming"
+    GET_WANTED = "get_wanted"
+    GET_EPISODES = "get_episodes"
+
+
+class SonarrServiceArgument(StrEnum):
+    """Store keys for Sonarr service arguments."""
+
+    ENTRY_ID = "entry_id"
+    MAX_ITEMS = "max_items"
+    SPACE_UNIT = "space_unit"
+    DAYS = "days"
+    SERIES_ID = "series_id"
+    SEASON_NUMBER = "season_number"
+
 
 # Valid space units
 SPACE_UNITS = ["bytes", "KB", "KiB", "MB", "MiB", "GB", "GiB", "TB", "TiB", "PB", "PiB"]
@@ -53,7 +57,7 @@ DEFAULT_MAX_ITEMS = 0
 
 SERVICE_BASE_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_ENTRY_ID): selector.ConfigEntrySelector(
+        probatio.Required(SonarrServiceArgument.ENTRY_ID): selector.ConfigEntrySelector(
             {"integration": DOMAIN}
         ),
     }
@@ -63,10 +67,10 @@ SERVICE_GET_SERIES_SCHEMA = SERVICE_BASE_SCHEMA
 
 SERVICE_GET_EPISODES_SCHEMA = SERVICE_BASE_SCHEMA.extend(
     {
-        probatio.Required(CONF_SERIES_ID): probatio.All(
+        probatio.Required(SonarrServiceArgument.SERIES_ID): probatio.All(
             probatio.Coerce(int), probatio.Range(min=1)
         ),
-        probatio.Optional(CONF_SEASON_NUMBER): probatio.All(
+        probatio.Optional(SonarrServiceArgument.SEASON_NUMBER): probatio.All(
             probatio.Coerce(int), probatio.Range(min=0)
         ),
     }
@@ -74,33 +78,33 @@ SERVICE_GET_EPISODES_SCHEMA = SERVICE_BASE_SCHEMA.extend(
 
 SERVICE_GET_QUEUE_SCHEMA = SERVICE_BASE_SCHEMA.extend(
     {
-        probatio.Optional(CONF_MAX_ITEMS, default=DEFAULT_MAX_ITEMS): probatio.All(
-            probatio.Coerce(int), probatio.Range(min=0, max=500)
-        ),
+        probatio.Optional(
+            SonarrServiceArgument.MAX_ITEMS, default=DEFAULT_MAX_ITEMS
+        ): probatio.All(probatio.Coerce(int), probatio.Range(min=0, max=500)),
     }
 )
 
 SERVICE_GET_DISKSPACE_SCHEMA = SERVICE_BASE_SCHEMA.extend(
     {
-        probatio.Optional(CONF_SPACE_UNIT, default=DEFAULT_SPACE_UNIT): probatio.In(
-            SPACE_UNITS
-        ),
+        probatio.Optional(
+            SonarrServiceArgument.SPACE_UNIT, default=DEFAULT_SPACE_UNIT
+        ): probatio.In(SPACE_UNITS),
     }
 )
 
 SERVICE_GET_UPCOMING_SCHEMA = SERVICE_BASE_SCHEMA.extend(
     {
-        probatio.Optional(CONF_DAYS, default=DEFAULT_UPCOMING_DAYS): probatio.All(
-            probatio.Coerce(int), probatio.Range(min=1, max=30)
-        ),
+        probatio.Optional(
+            SonarrServiceArgument.DAYS, default=DEFAULT_UPCOMING_DAYS
+        ): probatio.All(probatio.Coerce(int), probatio.Range(min=1, max=30)),
     }
 )
 
 SERVICE_GET_WANTED_SCHEMA = SERVICE_BASE_SCHEMA.extend(
     {
-        probatio.Optional(CONF_MAX_ITEMS, default=DEFAULT_MAX_ITEMS): probatio.All(
-            probatio.Coerce(int), probatio.Range(min=0, max=500)
-        ),
+        probatio.Optional(
+            SonarrServiceArgument.MAX_ITEMS, default=DEFAULT_MAX_ITEMS
+        ): probatio.All(probatio.Coerce(int), probatio.Range(min=0, max=500)),
     }
 )
 
@@ -120,7 +124,7 @@ async def _handle_api_errors[_T](func: Callable[[], Awaitable[_T]]) -> _T:
 async def _async_get_series(call: ServiceCall) -> dict[str, Any]:
     """Get all Sonarr series."""
     entry: SonarrConfigEntry = service.async_get_config_entry(
-        call.hass, DOMAIN, call.data[ATTR_ENTRY_ID]
+        call.hass, DOMAIN, call.data[SonarrServiceArgument.ENTRY_ID]
     )
 
     api_client = entry.runtime_data.status.api_client
@@ -135,10 +139,10 @@ async def _async_get_series(call: ServiceCall) -> dict[str, Any]:
 async def _async_get_episodes(call: ServiceCall) -> dict[str, Any]:
     """Get episodes for a specific series."""
     entry: SonarrConfigEntry = service.async_get_config_entry(
-        call.hass, DOMAIN, call.data[ATTR_ENTRY_ID]
+        call.hass, DOMAIN, call.data[SonarrServiceArgument.ENTRY_ID]
     )
-    series_id: int = call.data[CONF_SERIES_ID]
-    season_number: int | None = call.data.get(CONF_SEASON_NUMBER)
+    series_id: int = call.data[SonarrServiceArgument.SERIES_ID]
+    season_number: int | None = call.data.get(SonarrServiceArgument.SEASON_NUMBER)
 
     api_client = entry.runtime_data.status.api_client
     episodes = await _handle_api_errors(
@@ -153,9 +157,9 @@ async def _async_get_episodes(call: ServiceCall) -> dict[str, Any]:
 async def _async_get_queue(call: ServiceCall) -> dict[str, Any]:
     """Get Sonarr queue."""
     entry: SonarrConfigEntry = service.async_get_config_entry(
-        call.hass, DOMAIN, call.data[ATTR_ENTRY_ID]
+        call.hass, DOMAIN, call.data[SonarrServiceArgument.ENTRY_ID]
     )
-    max_items: int = call.data[CONF_MAX_ITEMS]
+    max_items: int = call.data[SonarrServiceArgument.MAX_ITEMS]
 
     api_client = entry.runtime_data.status.api_client
     # 0 means no limit - use a large page size to get all items
@@ -175,9 +179,9 @@ async def _async_get_queue(call: ServiceCall) -> dict[str, Any]:
 async def _async_get_diskspace(call: ServiceCall) -> dict[str, Any]:
     """Get Sonarr diskspace information."""
     entry: SonarrConfigEntry = service.async_get_config_entry(
-        call.hass, DOMAIN, call.data[ATTR_ENTRY_ID]
+        call.hass, DOMAIN, call.data[SonarrServiceArgument.ENTRY_ID]
     )
-    space_unit: str = call.data[CONF_SPACE_UNIT]
+    space_unit: str = call.data[SonarrServiceArgument.SPACE_UNIT]
 
     api_client = entry.runtime_data.status.api_client
     disks = await _handle_api_errors(api_client.async_get_diskspace)
@@ -188,9 +192,9 @@ async def _async_get_diskspace(call: ServiceCall) -> dict[str, Any]:
 async def _async_get_upcoming(call: ServiceCall) -> dict[str, Any]:
     """Get Sonarr upcoming episodes."""
     entry: SonarrConfigEntry = service.async_get_config_entry(
-        call.hass, DOMAIN, call.data[ATTR_ENTRY_ID]
+        call.hass, DOMAIN, call.data[SonarrServiceArgument.ENTRY_ID]
     )
-    days: int = call.data[CONF_DAYS]
+    days: int = call.data[SonarrServiceArgument.DAYS]
 
     api_client = entry.runtime_data.status.api_client
 
@@ -213,9 +217,9 @@ async def _async_get_upcoming(call: ServiceCall) -> dict[str, Any]:
 async def _async_get_wanted(call: ServiceCall) -> dict[str, Any]:
     """Get Sonarr wanted/missing episodes."""
     entry: SonarrConfigEntry = service.async_get_config_entry(
-        call.hass, DOMAIN, call.data[ATTR_ENTRY_ID]
+        call.hass, DOMAIN, call.data[SonarrServiceArgument.ENTRY_ID]
     )
-    max_items: int = call.data[CONF_MAX_ITEMS]
+    max_items: int = call.data[SonarrServiceArgument.MAX_ITEMS]
 
     api_client = entry.runtime_data.status.api_client
     # 0 means no limit - use a large page size to get all items
@@ -236,7 +240,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_GET_SERIES,
+        SonarrService.GET_SERIES,
         _async_get_series,
         schema=SERVICE_GET_SERIES_SCHEMA,
         supports_response=SupportsResponse.ONLY,
@@ -244,7 +248,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_GET_EPISODES,
+        SonarrService.GET_EPISODES,
         _async_get_episodes,
         schema=SERVICE_GET_EPISODES_SCHEMA,
         supports_response=SupportsResponse.ONLY,
@@ -252,7 +256,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_GET_QUEUE,
+        SonarrService.GET_QUEUE,
         _async_get_queue,
         schema=SERVICE_GET_QUEUE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
@@ -260,7 +264,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_GET_DISKSPACE,
+        SonarrService.GET_DISKSPACE,
         _async_get_diskspace,
         schema=SERVICE_GET_DISKSPACE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
@@ -268,7 +272,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_GET_UPCOMING,
+        SonarrService.GET_UPCOMING,
         _async_get_upcoming,
         schema=SERVICE_GET_UPCOMING_SCHEMA,
         supports_response=SupportsResponse.ONLY,
@@ -276,7 +280,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_GET_WANTED,
+        SonarrService.GET_WANTED,
         _async_get_wanted,
         schema=SERVICE_GET_WANTED_SCHEMA,
         supports_response=SupportsResponse.ONLY,
