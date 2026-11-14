@@ -18,7 +18,9 @@ from .const import DOMAIN
 class ViCareService(StrEnum):
     """Store keys for ViCare services."""
 
+    CANCEL_HOLIDAY = "cancel_holiday"
     GET_CIRCULATION_SCHEDULE = "get_circulation_schedule"
+    SCHEDULE_HOLIDAY = "schedule_holiday"
     SET_CIRCULATION_SCHEDULE = "set_circulation_schedule"
     SET_VICARE_MODE = "set_vicare_mode"
 
@@ -26,8 +28,15 @@ class ViCareService(StrEnum):
 class ViCareServiceArgument(StrEnum):
     """Store keys for ViCare service arguments."""
 
+    END_DATE = "end_date"
+    PROGRAM = "program"
+    START_DATE = "start_date"
     VICARE_MODE = "vicare_mode"
 
+
+HOLIDAY_PROGRAM_HOLIDAY = "holiday"
+HOLIDAY_PROGRAM_AT_HOME = "holiday_at_home"
+HOLIDAY_PROGRAM_SCHEMA = probatio.In([HOLIDAY_PROGRAM_HOLIDAY, HOLIDAY_PROGRAM_AT_HOME])
 
 WEEKDAYS = (
     "monday",
@@ -93,6 +102,32 @@ def async_setup_services(hass: HomeAssistant) -> None:
         entity_domain=CLIMATE_DOMAIN,
         schema={probatio.Required(ViCareServiceArgument.VICARE_MODE): cv.string},
         func="set_vicare_mode",
+    )
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        ViCareService.SCHEDULE_HOLIDAY,
+        entity_domain=CLIMATE_DOMAIN,
+        schema={
+            probatio.Optional(
+                ViCareServiceArgument.PROGRAM, default=HOLIDAY_PROGRAM_HOLIDAY
+            ): HOLIDAY_PROGRAM_SCHEMA,
+            probatio.Required(ViCareServiceArgument.START_DATE): cv.date,
+            probatio.Required(ViCareServiceArgument.END_DATE): cv.date,
+        },
+        func="schedule_holiday",
+    )
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        ViCareService.CANCEL_HOLIDAY,
+        entity_domain=CLIMATE_DOMAIN,
+        schema={
+            probatio.Optional(
+                ViCareServiceArgument.PROGRAM, default=HOLIDAY_PROGRAM_HOLIDAY
+            ): HOLIDAY_PROGRAM_SCHEMA,
+        },
+        func="cancel_holiday",
     )
     service.async_register_platform_entity_service(
         hass,
