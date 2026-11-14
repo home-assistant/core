@@ -5102,6 +5102,15 @@
       "config_flow": true,
       "iot_class": "cloud_push"
     },
+    "gentex_place": {
+      "name": "Place",
+      "integration_type": "hub",
+      "categories": [
+        "security_safety.smoke_co_alarms"
+      ],
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
     "geo_json_events": {
       "name": "GeoJSON",
       "integration_type": "service",
