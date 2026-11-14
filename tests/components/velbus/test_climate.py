@@ -7,18 +7,15 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
-    ATTR_HVAC_MODE,
-    ATTR_PRESET_MODE,
     DOMAIN as CLIMATE_DOMAIN,
     PRESET_AWAY,
     PRESET_COMFORT,
     PRESET_ECO,
     PRESET_HOME,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_PRESET_MODE,
-    SERVICE_SET_TEMPERATURE,
+    ClimateService,
+    ClimateServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -49,8 +46,11 @@ async def test_set_target_temperature(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: "climate.living_room_temperature", ATTR_TEMPERATURE: 29},
+        ClimateService.SET_TEMPERATURE,
+        {
+            CommonServiceArgument.ENTITY_ID: "climate.living_room_temperature",
+            ClimateServiceArgument.TEMPERATURE: 29,
+        },
         blocking=True,
     )
     mock_temperature.set_temp.assert_called_once_with(29)
@@ -76,8 +76,11 @@ async def test_set_preset_mode(
     await init_integration(hass, config_entry)
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: "climate.living_room_temperature", ATTR_PRESET_MODE: set_mode},
+        ClimateService.SET_PRESET_MODE,
+        {
+            CommonServiceArgument.ENTITY_ID: "climate.living_room_temperature",
+            ClimateServiceArgument.PRESET_MODE: set_mode,
+        },
         blocking=True,
     )
     mock_temperature.set_preset.assert_called_once_with(expected_mode)
@@ -100,8 +103,11 @@ async def test_set_hvac_mode(
     await init_integration(hass, config_entry)
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: "climate.living_room_temperature", ATTR_HVAC_MODE: set_mode},
+        ClimateService.SET_HVAC_MODE,
+        {
+            CommonServiceArgument.ENTITY_ID: "climate.living_room_temperature",
+            ClimateServiceArgument.HVAC_MODE: set_mode,
+        },
         blocking=True,
     )
     mock_temperature.set_mode.assert_called_once_with(set_mode)
@@ -117,8 +123,11 @@ async def test_set_hvac_mode_invalid(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: "climate.living_room_temperature", ATTR_HVAC_MODE: "auto"},
+            ClimateService.SET_HVAC_MODE,
+            {
+                CommonServiceArgument.ENTITY_ID: "climate.living_room_temperature",
+                ClimateServiceArgument.HVAC_MODE: "auto",
+            },
             blocking=True,
         )
     mock_temperature.set_mode.assert_not_called()

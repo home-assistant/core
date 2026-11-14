@@ -35,6 +35,7 @@ from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
+    ATTR_SUPPORTED_FEATURES,
     CommonServiceArgument,
 )
 from homeassistant.core import HomeAssistant
@@ -798,6 +799,54 @@ async def test_new_client_connected(
 
     state = hass.states.get("media_player.jellyfin_device_five")
     assert state
+
+
+async def test_capabilities_updated(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_jellyfin: MagicMock,
+    mock_api: MagicMock,
+) -> None:
+    """Test supported features follow capabilities posted after the session started."""
+    sessions = mock_api.sessions.return_value
+    mock_api.sessions.return_value = [
+        {
+            **sessions[0],
+            "Capabilities": {
+                **sessions[0]["Capabilities"],
+                "SupportedCommands": [],
+                "SupportsMediaControl": False,
+            },
+        },
+        *sessions[1:],
+    ]
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("media_player.jellyfin_device")
+    assert state
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
+
+    mock_api.sessions.return_value = sessions
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
+    await hass.async_block_till_done()
+
+    state = hass.states.get("media_player.jellyfin_device")
+    assert state
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == (
+        MediaPlayerEntityFeature.BROWSE_MEDIA
+        | MediaPlayerEntityFeature.PLAY_MEDIA
+        | MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.PLAY
+        | MediaPlayerEntityFeature.STOP
+        | MediaPlayerEntityFeature.SEEK
+        | MediaPlayerEntityFeature.SEARCH_MEDIA
+        | MediaPlayerEntityFeature.MEDIA_ENQUEUE
+        | MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.VOLUME_SET
+    )
 
 
 async def test_supports_media_control_fallback(

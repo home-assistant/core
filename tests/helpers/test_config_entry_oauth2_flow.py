@@ -632,8 +632,7 @@ async def test_abort_if_oauth_token_error(
         json=error_body,
     )
 
-    with caplog.at_level(logging.DEBUG):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert (
         f"Token request for {TEST_DOMAIN} failed ({status_code}): {expected_detail}"
         in caplog.text
@@ -696,8 +695,7 @@ async def test_abort_if_oauth_token_closing_error(
         closing=True,
     )
 
-    with caplog.at_level(logging.DEBUG):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert "Token request for oauth2_test failed (401): unknown" in caplog.text
 
     assert result["type"] is data_entry_flow.FlowResultType.ABORT
@@ -1145,7 +1143,6 @@ async def test_oauth_session_refresh_failure_exceptions(
 
     session = config_entry_oauth2_flow.OAuth2Session(hass, config_entry, local_impl)
     with (
-        caplog.at_level(logging.DEBUG),
         pytest.raises(expected_exception) as err,
     ):
         await session.async_request("post", "https://example.com")
@@ -1191,7 +1188,6 @@ async def test_oauth_session_refresh_connection_error_is_transient(
 
     session = config_entry_oauth2_flow.OAuth2Session(hass, config_entry, local_impl)
     with (
-        caplog.at_level(logging.DEBUG),
         pytest.raises(OAuth2TokenRequestConnectionError) as err,
     ):
         await session.async_ensure_token_valid()

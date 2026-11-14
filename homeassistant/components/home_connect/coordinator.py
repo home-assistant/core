@@ -185,7 +185,6 @@ class HomeConnectRuntimeData:
                             appliance_coordinator
                         )
 
-                    assert appliance_coordinator
                     await appliance_coordinator.event_listener(event_message)
 
             except (HomeConnectApiError, OAuth2TokenRequestReauthError) as error:
@@ -205,6 +204,14 @@ class HomeConnectRuntimeData:
                     "Non-breaking error (%s) while listening for events,"
                     " continuing in %s seconds",
                     error,
+                    retry_time,
+                )
+                await asyncio_sleep(retry_time)
+                retry_time = min(retry_time * 2, 3600)
+            except Exception:
+                _LOGGER.exception(
+                    "Unexpected error while listening for events,"
+                    " continuing in %s seconds",
                     retry_time,
                 )
                 await asyncio_sleep(retry_time)

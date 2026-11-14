@@ -35,6 +35,44 @@
         }
       }
     },
+    "climate": {
+      "ata_unit": {
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "auto": "mdi:fan-auto",
+              "speed_1": "mdi:numeric-1",
+              "speed_2": "mdi:numeric-2",
+              "speed_3": "mdi:numeric-3",
+              "speed_4": "mdi:numeric-4",
+              "speed_5": "mdi:numeric-5"
+            }
+          },
+          "swing_horizontal_mode": {
+            "state": {
+              "auto": "mdi:refresh-auto",
+              "centre": "mdi:minus",
+              "left": "mdi:arrow-left-bold",
+              "left_centre": "mdi:arrow-left",
+              "right": "mdi:arrow-right-bold",
+              "right_centre": "mdi:arrow-right",
+              "swing": "mdi:swap-horizontal"
+            }
+          },
+          "swing_mode": {
+            "state": {
+              "auto": "mdi:refresh-auto",
+              "position_1": "mdi:arrow-top-right",
+              "position_2": "mdi:arrow-right",
+              "position_3": "mdi:arrow-bottom-right",
+              "position_4": "mdi:arrow-down",
+              "position_5": "mdi:arrow-down-bold",
+              "swing": "mdi:swap-vertical"
+            }
+          }
+        }
+      }
+    },
     "number": {
       "frost_protection_max_temp": {
         "default": "mdi:thermometer"

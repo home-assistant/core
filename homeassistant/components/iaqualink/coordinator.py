@@ -8,11 +8,16 @@ from iaqualink.exception import (
     AqualinkServiceException,
     AqualinkServiceThrottledException,
     AqualinkServiceUnauthorizedException,
+    AqualinkSystemOfflineException,
 )
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailed,
+    UpdateFailedUnreachable,
+)
 
 from .const import DOMAIN, UPDATE_INTERVAL_BY_SYSTEM_TYPE, UPDATE_INTERVAL_DEFAULT
 from .utils import error_detail
@@ -60,10 +65,16 @@ class AqualinkDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 self.system.serial,
             )
             return
+        except AqualinkSystemOfflineException as err:
+            raise UpdateFailedUnreachable(
+                f"iAquaLink system {self.system.serial} is offline"
+            ) from err
         except (AqualinkServiceException, TimeoutError, httpx2.HTTPError) as err:
             raise UpdateFailed(
                 "Unable to update iAquaLink system "
                 f"{self.system.serial}: {error_detail(err)}"
             ) from err
         if self.system.online is not True:
-            raise UpdateFailed(f"iAquaLink system {self.system.serial} is offline")
+            raise UpdateFailedUnreachable(
+                f"iAquaLink system {self.system.serial} is offline"
+            )

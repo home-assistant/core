@@ -1,6 +1,7 @@
 """Volvo services."""
 
 import asyncio
+from enum import StrEnum
 import logging
 from typing import Any
 from urllib import parse
@@ -16,15 +17,28 @@ from homeassistant.helpers.httpx_client import get_async_client
 from .const import DOMAIN
 from .coordinator import VolvoConfigEntry
 
+
+class VolvoService(StrEnum):
+    """Store keys for Volvo services."""
+
+    GET_IMAGE_URL = "get_image_url"
+
+
+class VolvoServiceArgument(StrEnum):
+    """Store keys for Volvo service arguments."""
+
+    ENTRY = "entry"
+    IMAGES = "images"
+
+
 _LOGGER = logging.getLogger(__name__)
 
-CONF_CONFIG_ENTRY_ID = "entry"
-CONF_IMAGE_TYPES = "images"
-SERVICE_GET_IMAGE_URL = "get_image_url"
 SERVICE_GET_IMAGE_URL_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_CONFIG_ENTRY_ID): str,
-        probatio.Optional(CONF_IMAGE_TYPES): probatio.All(probatio.EnsureList(), [str]),
+        probatio.Required(VolvoServiceArgument.ENTRY): str,
+        probatio.Optional(VolvoServiceArgument.IMAGES): probatio.All(
+            probatio.EnsureList(), [str]
+        ),
     }
 )
 
@@ -59,7 +73,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_GET_IMAGE_URL,
+        VolvoService.GET_IMAGE_URL,
         _get_image_url,
         schema=SERVICE_GET_IMAGE_URL_SCHEMA,
         supports_response=SupportsResponse.ONLY,
@@ -67,8 +81,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
 
 async def _get_image_url(call: ServiceCall) -> dict[str, Any]:
-    entry_id = call.data.get(CONF_CONFIG_ENTRY_ID, "")
-    requested_images = call.data.get(CONF_IMAGE_TYPES, [])
+    entry_id = call.data.get(VolvoServiceArgument.ENTRY, "")
+    requested_images = call.data.get(VolvoServiceArgument.IMAGES, [])
 
     entry: VolvoConfigEntry = service.async_get_config_entry(
         call.hass, DOMAIN, entry_id

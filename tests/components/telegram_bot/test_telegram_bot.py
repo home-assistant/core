@@ -23,7 +23,7 @@ from telegram import (
     Message,
     Update,
 )
-from telegram.constants import ChatType, InputMediaType
+from telegram.constants import ChatAction, ChatType, InputMediaType
 from telegram.error import (
     InvalidToken,
     NetworkError,
@@ -37,24 +37,17 @@ from homeassistant.components.telegram_bot.bot import (
     _read_file_as_bytesio,
 )
 from homeassistant.components.telegram_bot.const import (
-    ATTR_CAPTION,
-    ATTR_CHAT_ID,
-    ATTR_MEDIA_TYPE,
-    ATTR_MESSAGE_ID,
     ATTR_MESSAGE_THREAD_ID,
     ATTR_PARSER,
     ATTR_REPLY_TO_MSGID,
-    ATTR_URL,
-    CHAT_ACTION_TYPING,
     DOMAIN,
-    PARSER_HTML,
-    PARSER_MD,
-    PARSER_MD2,
-    PARSER_PLAIN_TEXT,
     PLATFORM_BROADCAST,
     SECTION_ADDITIONAL_SETTINGS,
+    TelegramBotChatAction,
+    TelegramBotParseMode,
     TelegramBotService,
     TelegramBotServiceArgument,
+    TelegramBotServiceResponse,
 )
 from homeassistant.components.telegram_bot.webhooks import TELEGRAM_WEBHOOK_URL
 from homeassistant.config_entries import ConfigEntryState
@@ -179,7 +172,7 @@ async def test_polling_platform_init_failed_does_not_log_token(
                     "/command3",
                 ],
                 TelegramBotServiceArgument.MESSAGE: "test_message",
-                TelegramBotServiceArgument.PARSE_MODE: PARSER_HTML,
+                TelegramBotServiceArgument.PARSE_MODE: TelegramBotParseMode.HTML,
                 TelegramBotServiceArgument.DISABLE_NOTIFICATION: True,
                 TelegramBotServiceArgument.DISABLE_WEB_PAGE_PREVIEW: True,
                 TelegramBotServiceArgument.MESSAGE_TAG: "mock_tag",
@@ -243,11 +236,11 @@ async def test_send_message(
     assert events[0].data["bot"]["username"] == "mock_bot"
 
     assert response == {
-        "chats": [
+        TelegramBotServiceResponse.CHATS: [
             {
-                ATTR_CHAT_ID: 12345678,
-                ATTR_MESSAGE_ID: 12345,
-                ATTR_ENTITY_ID: "notify.mock_chat",
+                TelegramBotServiceResponse.CHAT_ID: 12345678,
+                TelegramBotServiceResponse.MESSAGE_ID: 12345,
+                TelegramBotServiceResponse.ENTITY_ID: "notify.mock_chat",
             }
         ]
     }
@@ -259,7 +252,7 @@ async def test_send_message(
         (
             {
                 TelegramBotServiceArgument.MESSAGE: "test_message",
-                TelegramBotServiceArgument.PARSE_MODE: PARSER_PLAIN_TEXT,
+                TelegramBotServiceArgument.PARSE_MODE: TelegramBotParseMode.PLAIN_TEXT,
                 TelegramBotServiceArgument.INLINE_KEYBOARD: "command1:/cmd1,/cmd2,mock_link:https://mock_link",
             },
             InlineKeyboardMarkup(
@@ -276,7 +269,7 @@ async def test_send_message(
         (
             {
                 TelegramBotServiceArgument.MESSAGE: "test_message",
-                TelegramBotServiceArgument.PARSE_MODE: PARSER_PLAIN_TEXT,
+                TelegramBotServiceArgument.PARSE_MODE: TelegramBotParseMode.PLAIN_TEXT,
                 TelegramBotServiceArgument.INLINE_KEYBOARD: [
                     [["command1", "/cmd1"]],
                     [["mock_link", "https://mock_link"]],
@@ -340,11 +333,11 @@ async def test_send_message_with_inline_keyboard(
     assert events[0].context == context
 
     assert response == {
-        "chats": [
+        TelegramBotServiceResponse.CHATS: [
             {
-                ATTR_CHAT_ID: 12345678,
-                ATTR_MESSAGE_ID: 12345,
-                ATTR_ENTITY_ID: "notify.mock_chat",
+                TelegramBotServiceResponse.CHAT_ID: 12345678,
+                TelegramBotServiceResponse.MESSAGE_ID: 12345,
+                TelegramBotServiceResponse.ENTITY_ID: "notify.mock_chat",
             }
         ]
     }
@@ -539,8 +532,8 @@ def _assert_download_file_response(
     """Assert download file response."""
     assert response is not None
     assert len(response.keys()) == 1
-    assert "file_path" in response
-    assert response["file_path"] == expected_path
+    assert TelegramBotServiceResponse.FILE_PATH in response
+    assert response[TelegramBotServiceResponse.FILE_PATH] == expected_path
 
 
 async def test_send_chat_action(
@@ -563,7 +556,7 @@ async def test_send_chat_action(
             {
                 CommonServiceArgument.CONFIG_ENTRY_ID: mock_broadcast_config_entry.entry_id,
                 TelegramBotServiceArgument.CHAT_ID: [123456],
-                TelegramBotServiceArgument.CHAT_ACTION: CHAT_ACTION_TYPING,
+                TelegramBotServiceArgument.CHAT_ACTION: TelegramBotChatAction.TYPING,
                 TelegramBotServiceArgument.MESSAGE_THREAD_ID: 123,
             },
             blocking=True,
@@ -573,7 +566,7 @@ async def test_send_chat_action(
     await hass.async_block_till_done()
     mock.assert_called_once()
     mock.assert_called_with(
-        chat_id=123456, action=CHAT_ACTION_TYPING, message_thread_id=123
+        chat_id=123456, action=ChatAction.TYPING, message_thread_id=123
     )
 
 
@@ -616,11 +609,11 @@ async def test_send_file(hass: HomeAssistant, webhook_bot, service: str) -> None
     assert events[0].context == context
 
     assert response == {
-        "chats": [
+        TelegramBotServiceResponse.CHATS: [
             {
-                ATTR_CHAT_ID: 12345678,
-                ATTR_MESSAGE_ID: 12345,
-                ATTR_ENTITY_ID: "notify.mock_chat",
+                TelegramBotServiceResponse.CHAT_ID: 12345678,
+                TelegramBotServiceResponse.MESSAGE_ID: 12345,
+                TelegramBotServiceResponse.ENTITY_ID: "notify.mock_chat",
             }
         ]
     }
@@ -1178,11 +1171,11 @@ async def test_send_message_with_config_entry(
     )
 
     assert response == {
-        "chats": [
+        TelegramBotServiceResponse.CHATS: [
             {
-                ATTR_CHAT_ID: 123456,
-                ATTR_MESSAGE_ID: 12345,
-                ATTR_ENTITY_ID: "notify.mock_chat_1",
+                TelegramBotServiceResponse.CHAT_ID: 123456,
+                TelegramBotServiceResponse.MESSAGE_ID: 12345,
+                TelegramBotServiceResponse.ENTITY_ID: "notify.mock_chat_1",
             }
         ]
     }
@@ -1201,7 +1194,7 @@ async def test_send_message_no_chat_id_error(
             CONF_API_KEY: "mock api key",
             SECTION_ADDITIONAL_SETTINGS: {},
         },
-        options={ATTR_PARSER: PARSER_PLAIN_TEXT},
+        options={ATTR_PARSER: TelegramBotParseMode.PLAIN_TEXT},
     )
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -1325,11 +1318,11 @@ async def test_delete_message(
         return_response=True,
     )
     assert response == {
-        "chats": [
+        TelegramBotServiceResponse.CHATS: [
             {
-                ATTR_CHAT_ID: 123456,
-                ATTR_MESSAGE_ID: 12345,
-                ATTR_ENTITY_ID: "notify.mock_chat_1",
+                TelegramBotServiceResponse.CHAT_ID: 123456,
+                TelegramBotServiceResponse.MESSAGE_ID: 12345,
+                TelegramBotServiceResponse.ENTITY_ID: "notify.mock_chat_1",
             }
         ]
     }
@@ -1406,7 +1399,7 @@ async def test_edit_message_media(
                 TelegramBotServiceArgument.MESSAGE_ID: 12345,
                 TelegramBotServiceArgument.CHAT_ID: 123456,
                 TelegramBotServiceArgument.INLINE_KEYBOARD: "/mock",
-                TelegramBotServiceArgument.PARSE_MODE: PARSER_MD,
+                TelegramBotServiceArgument.PARSE_MODE: TelegramBotParseMode.MARKDOWN,
             },
             blocking=True,
         )
@@ -1415,7 +1408,7 @@ async def test_edit_message_media(
     mock.assert_called_once()
     assert mock.call_args[1]["media"].__class__.__name__ == expected_media_class
     assert mock.call_args[1]["media"].caption == "mock caption"
-    assert mock.call_args[1]["media"].parse_mode == PARSER_MD
+    assert mock.call_args[1]["media"].parse_mode == TelegramBotParseMode.MARKDOWN
     assert mock.call_args[1]["chat_id"] == 123456
     assert mock.call_args[1]["message_id"] == 12345
     assert mock.call_args[1]["reply_markup"] == InlineKeyboardMarkup(
@@ -1444,7 +1437,7 @@ async def test_edit_message(
                 TelegramBotServiceArgument.MESSAGE: "mock message",
                 TelegramBotServiceArgument.CHAT_ID: 123456,
                 TelegramBotServiceArgument.MESSAGE_ID: 12345,
-                TelegramBotServiceArgument.PARSE_MODE: PARSER_PLAIN_TEXT,
+                TelegramBotServiceArgument.PARSE_MODE: TelegramBotParseMode.PLAIN_TEXT,
             },
             blocking=True,
         )
@@ -1471,7 +1464,7 @@ async def test_edit_message(
                 TelegramBotServiceArgument.CAPTION: "mock caption",
                 TelegramBotServiceArgument.CHAT_ID: 123456,
                 TelegramBotServiceArgument.MESSAGE_ID: 12345,
-                TelegramBotServiceArgument.PARSE_MODE: PARSER_MD2,
+                TelegramBotServiceArgument.PARSE_MODE: TelegramBotParseMode.MARKDOWN_V2,
             },
             blocking=True,
         )
@@ -1483,7 +1476,7 @@ async def test_edit_message(
         inline_message_id=None,
         caption="mock caption",
         reply_markup=None,
-        parse_mode=PARSER_MD2,
+        parse_mode=TelegramBotParseMode.MARKDOWN_V2,
     )
 
     with patch(
@@ -1768,10 +1761,10 @@ async def test_send_video(
 
     await hass.async_block_till_done()
 
-    assert err.value.translation_domain == DOMAIN
-    assert err.value.translation_key == "file_not_found"
+    assert err.value.translation_domain == "homeassistant"
+    assert err.value.translation_key == "os_read_not_found"
     assert err.value.translation_placeholders == {
-        "file_path": "/tmp/not-exists"  # noqa: S108
+        "path": "/tmp/not-exists"  # noqa: S108
     }
 
     # test: success with file
@@ -1789,11 +1782,11 @@ async def test_send_video(
 
     await hass.async_block_till_done()
     assert response == {
-        "chats": [
+        TelegramBotServiceResponse.CHATS: [
             {
-                ATTR_CHAT_ID: 123456,
-                ATTR_MESSAGE_ID: 12345,
-                ATTR_ENTITY_ID: "notify.mock_chat_1",
+                TelegramBotServiceResponse.CHAT_ID: 123456,
+                TelegramBotServiceResponse.MESSAGE_ID: 12345,
+                TelegramBotServiceResponse.ENTITY_ID: "notify.mock_chat_1",
             }
         ]
     }
@@ -1821,11 +1814,11 @@ async def test_send_video(
     await hass.async_block_till_done()
     assert mock_get.call_count > 0
     assert response == {
-        "chats": [
+        TelegramBotServiceResponse.CHATS: [
             {
-                ATTR_CHAT_ID: 123456,
-                ATTR_MESSAGE_ID: 12345,
-                ATTR_ENTITY_ID: "notify.mock_chat_1",
+                TelegramBotServiceResponse.CHAT_ID: 123456,
+                TelegramBotServiceResponse.MESSAGE_ID: 12345,
+                TelegramBotServiceResponse.ENTITY_ID: "notify.mock_chat_1",
             }
         ]
     }
@@ -1887,7 +1880,7 @@ async def test_send_message_draft(
                 TelegramBotServiceArgument.CHAT_ID: 123456,
                 TelegramBotServiceArgument.MESSAGE: "_Thinking..._",
                 TelegramBotServiceArgument.MESSAGE_THREAD_ID: "123",
-                TelegramBotServiceArgument.PARSE_MODE: PARSER_MD2,
+                TelegramBotServiceArgument.PARSE_MODE: TelegramBotParseMode.MARKDOWN_V2,
                 "draft_id": "3456",
             },
             blocking=True,
@@ -1899,7 +1892,7 @@ async def test_send_message_draft(
         draft_id=3456,
         text="_Thinking..._",
         message_thread_id=123,
-        parse_mode=PARSER_MD2,
+        parse_mode=TelegramBotParseMode.MARKDOWN_V2,
     )
 
 
@@ -2008,11 +2001,11 @@ async def test_send_message_multi_target(
 
     await hass.async_block_till_done()
     assert response == {
-        "chats": [
+        TelegramBotServiceResponse.CHATS: [
             {
-                ATTR_CHAT_ID: 654321,
-                ATTR_MESSAGE_ID: 12345,
-                ATTR_ENTITY_ID: "notify.mock_chat_2",
+                TelegramBotServiceResponse.CHAT_ID: 654321,
+                TelegramBotServiceResponse.MESSAGE_ID: 12345,
+                TelegramBotServiceResponse.ENTITY_ID: "notify.mock_chat_2",
             }
         ]
     }
@@ -2041,11 +2034,11 @@ async def test_notify_entity_send_message(
     )
 
     assert response == {
-        "chats": [
+        TelegramBotServiceResponse.CHATS: [
             {
-                ATTR_CHAT_ID: 654321,
-                ATTR_MESSAGE_ID: 12345,
-                ATTR_ENTITY_ID: "notify.mock_chat_2",
+                TelegramBotServiceResponse.CHAT_ID: 654321,
+                TelegramBotServiceResponse.MESSAGE_ID: 12345,
+                TelegramBotServiceResponse.ENTITY_ID: "notify.mock_chat_2",
             }
         ]
     }
@@ -2664,24 +2657,24 @@ async def test_send_media_group(
             {
                 TelegramBotServiceArgument.MEDIA: [
                     {
-                        ATTR_MEDIA_TYPE: InputMediaType.PHOTO,
-                        ATTR_URL: "https://mock/photo.jpg",
-                        ATTR_CAPTION: "mock photo",
+                        TelegramBotServiceArgument.MEDIA_TYPE: InputMediaType.PHOTO,
+                        TelegramBotServiceArgument.URL: "https://mock/photo.jpg",
+                        TelegramBotServiceArgument.CAPTION: "mock photo",
                     },
                     {
-                        ATTR_MEDIA_TYPE: InputMediaType.VIDEO,
-                        ATTR_URL: "https://mock/video.mp4",
-                        ATTR_CAPTION: "mock video",
+                        TelegramBotServiceArgument.MEDIA_TYPE: InputMediaType.VIDEO,
+                        TelegramBotServiceArgument.URL: "https://mock/video.mp4",
+                        TelegramBotServiceArgument.CAPTION: "mock video",
                     },
                     {
-                        ATTR_MEDIA_TYPE: InputMediaType.AUDIO,
-                        ATTR_URL: "https://mock/audio.mp3",
-                        ATTR_CAPTION: "mock url",
+                        TelegramBotServiceArgument.MEDIA_TYPE: InputMediaType.AUDIO,
+                        TelegramBotServiceArgument.URL: "https://mock/audio.mp3",
+                        TelegramBotServiceArgument.CAPTION: "mock url",
                     },
                     {
-                        ATTR_MEDIA_TYPE: InputMediaType.DOCUMENT,
-                        ATTR_URL: "https://mock/doc.pdf",
-                        ATTR_CAPTION: "mock document",
+                        TelegramBotServiceArgument.MEDIA_TYPE: InputMediaType.DOCUMENT,
+                        TelegramBotServiceArgument.URL: "https://mock/doc.pdf",
+                        TelegramBotServiceArgument.CAPTION: "mock document",
                     },
                 ],
             },
@@ -2690,11 +2683,11 @@ async def test_send_media_group(
         )
 
     assert response == {
-        "chats": [
+        TelegramBotServiceResponse.CHATS: [
             {
-                ATTR_CHAT_ID: 123456,
-                ATTR_ENTITY_ID: "notify.mock_chat_1",
-                ATTR_MESSAGE_ID: [12345, 12346, 12347, 12348],
+                TelegramBotServiceResponse.CHAT_ID: 123456,
+                TelegramBotServiceResponse.ENTITY_ID: "notify.mock_chat_1",
+                TelegramBotServiceResponse.MESSAGE_ID: [12345, 12346, 12347, 12348],
             }
         ]
     }
@@ -2733,16 +2726,16 @@ async def test_send_media_group_caption_parse_mode(
             DOMAIN,
             TelegramBotService.SEND_MEDIA_GROUP,
             {
-                TelegramBotServiceArgument.PARSE_MODE: PARSER_MD,
+                TelegramBotServiceArgument.PARSE_MODE: TelegramBotParseMode.MARKDOWN,
                 TelegramBotServiceArgument.MEDIA: [
                     {
-                        ATTR_MEDIA_TYPE: InputMediaType.PHOTO,
-                        ATTR_URL: "https://mock/photo.jpg",
-                        ATTR_CAPTION: "*bold*",
+                        TelegramBotServiceArgument.MEDIA_TYPE: InputMediaType.PHOTO,
+                        TelegramBotServiceArgument.URL: "https://mock/photo.jpg",
+                        TelegramBotServiceArgument.CAPTION: "*bold*",
                     },
                     {
-                        ATTR_MEDIA_TYPE: InputMediaType.PHOTO,
-                        ATTR_URL: "https://mock/photo2.jpg",
+                        TelegramBotServiceArgument.MEDIA_TYPE: InputMediaType.PHOTO,
+                        TelegramBotServiceArgument.URL: "https://mock/photo2.jpg",
                     },
                 ],
             },
@@ -2752,7 +2745,7 @@ async def test_send_media_group_caption_parse_mode(
 
     media = mock_send_media_group.call_args.kwargs["media"]
     assert media[0].caption == "*bold*"
-    assert media[0].parse_mode == PARSER_MD
+    assert media[0].parse_mode == TelegramBotParseMode.MARKDOWN
 
 
 @pytest.mark.parametrize(
@@ -2848,10 +2841,11 @@ async def test_download_file_rejects_symlink_out_of_allowlist(
 @pytest.mark.parametrize(
     ("error", "translation_key"),
     [
-        (OSError(errno.ENOENT, "No such file"), "file_not_found"),
-        (OSError(errno.EACCES, "Permission denied"), "file_permission_denied"),
-        (OSError(errno.EPERM, "Operation not permitted"), "file_permission_denied"),
-        (OSError(errno.EIO, "Input/output error"), "failed_to_load_file"),
+        (OSError(errno.ENOENT, "No such file"), "os_read_not_found"),
+        (OSError(errno.EACCES, "Permission denied"), "os_read_permission_denied"),
+        (OSError(errno.EPERM, "Operation not permitted"), "os_read_permission_denied"),
+        (OSError(errno.EISDIR, "Is a directory"), "os_read_is_directory"),
+        (OSError(errno.EIO, "Input/output error"), "os_read_error"),
     ],
 )
 def test_read_file_errors(error: OSError, translation_key: str) -> None:
@@ -2862,5 +2856,6 @@ def test_read_file_errors(error: OSError, translation_key: str) -> None:
     ):
         _read_file_as_bytesio("/some/file.jpg")
 
+    assert err.value.translation_domain == "homeassistant"
     assert err.value.translation_key == translation_key
-    assert err.value.translation_placeholders == {"file_path": "/some/file.jpg"}
+    assert err.value.translation_placeholders == {"path": "/some/file.jpg"}

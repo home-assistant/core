@@ -5,16 +5,16 @@ from collections.abc import Awaitable, Callable
 from typing import Any, cast
 
 from aiohttp import ClientError
-from aiopowerwall import (
+from tesla_fleet_api.exceptions import TeslaFleetError
+from tesla_fleet_api.tesla import EnergySiteRouter
+from tesla_fleet_api.tesla.bluetooth import TeslaBluetooth
+from tesla_fleet_api.tesla.powerwall import (
     PowerwallAuthenticationError,
     PowerwallClient,
     PowerwallCommandError,
     PowerwallError,
     PowerwallNotSupportedError,
 )
-from tesla_fleet_api.exceptions import TeslaFleetError
-from tesla_fleet_api.tesla import EnergySiteRouter
-from tesla_fleet_api.tesla.bluetooth import TeslaBluetooth
 from tesla_fleet_api.teslemetry import EnergySite, Vehicle
 from tesla_fleet_api.teslemetry.energysite import TeslemetryEnergySite
 
@@ -139,10 +139,12 @@ async def handle_command(command: Awaitable[dict[str, Any]]) -> dict[str, Any]:
     return result
 
 
-async def handle_local_command(command: Awaitable[None]) -> None:
-    """Handle a command sent to a local Powerwall gateway."""
+async def handle_energy_site_command(
+    command: Awaitable[dict[str, Any]],
+) -> dict[str, Any]:
+    """Handle a command that a paired energy site may send to its local Powerwall gateway."""
     try:
-        await command
+        return await handle_command(command)
     except PowerwallNotSupportedError as e:
         raise HomeAssistantError(
             translation_domain=DOMAIN,

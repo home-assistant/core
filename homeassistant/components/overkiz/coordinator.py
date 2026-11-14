@@ -42,9 +42,6 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.decorator import Registry
 
-if TYPE_CHECKING:
-    from . import OverkizDataConfigEntry
-
 from .const import (
     DOMAIN,
     IGNORED_OVERKIZ_DEVICES,
@@ -53,6 +50,9 @@ from .const import (
     UPDATE_INTERVAL,
     UPDATE_INTERVAL_EXECUTION,
 )
+
+if TYPE_CHECKING:
+    from . import OverkizDataConfigEntry
 
 # Events are a discriminated union; each handler narrows to its own subtype.
 EVENT_HANDLERS: Registry[

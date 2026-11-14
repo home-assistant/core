@@ -31,16 +31,24 @@ from homeassistant.util import dt as dt_util
 from .const import DOMAIN
 from .coordinator import EasyEnergyConfigEntry, EasyEnergyDataUpdateCoordinator
 
-ATTR_CONFIG_ENTRY: Final = "config_entry"
-ATTR_START: Final = "start"
-ATTR_END: Final = "end"
-ATTR_INCL_VAT: Final = "incl_vat"
-ATTR_GRANULARITY: Final = "granularity"
-ATTR_PRICE_TYPE: Final = "price_type"
 
-GAS_SERVICE_NAME: Final = "get_gas_prices"
-ENERGY_USAGE_SERVICE_NAME: Final = "get_energy_usage_prices"
-ENERGY_RETURN_SERVICE_NAME: Final = "get_energy_return_prices"
+class EasyEnergyService(StrEnum):
+    """Store keys for easyEnergy services."""
+
+    GET_GAS_PRICES = "get_gas_prices"
+    GET_ENERGY_USAGE_PRICES = "get_energy_usage_prices"
+    GET_ENERGY_RETURN_PRICES = "get_energy_return_prices"
+
+
+class EasyEnergyServiceArgument(StrEnum):
+    """Store keys for easyEnergy service arguments."""
+
+    CONFIG_ENTRY = "config_entry"
+    INCL_VAT = "incl_vat"
+    PRICE_TYPE = "price_type"
+    START = "start"
+    END = "end"
+    GRANULARITY = "granularity"
 
 
 class ServicePriceType(StrEnum):
@@ -60,38 +68,44 @@ PRICE_TYPE_OPTIONS: Final = tuple(
 
 BASE_SERVICE_SCHEMA: Final = probatio.Schema(
     {
-        probatio.Required(ATTR_CONFIG_ENTRY): selector.ConfigEntrySelector(
+        probatio.Required(
+            EasyEnergyServiceArgument.CONFIG_ENTRY
+        ): selector.ConfigEntrySelector(
             {
                 "integration": DOMAIN,
             }
         ),
-        probatio.Optional(ATTR_START): str,
-        probatio.Optional(ATTR_END): str,
+        probatio.Optional(EasyEnergyServiceArgument.START): str,
+        probatio.Optional(EasyEnergyServiceArgument.END): str,
     }
 )
 GAS_SERVICE_SCHEMA: Final = BASE_SERVICE_SCHEMA.extend(
     {
-        probatio.Required(ATTR_INCL_VAT): bool,
+        probatio.Required(EasyEnergyServiceArgument.INCL_VAT): bool,
         probatio.Optional(
-            ATTR_PRICE_TYPE, default=ElectricityPriceType.MARKET.value
+            EasyEnergyServiceArgument.PRICE_TYPE,
+            default=ElectricityPriceType.MARKET.value,
         ): probatio.In(PRICE_TYPE_OPTIONS),
     }
 )
 ENERGY_USAGE_SERVICE_SCHEMA: Final = BASE_SERVICE_SCHEMA.extend(
     {
-        probatio.Required(ATTR_INCL_VAT): bool,
+        probatio.Required(EasyEnergyServiceArgument.INCL_VAT): bool,
         probatio.Optional(
-            ATTR_GRANULARITY, default=ElectricityGranularity.HOUR.value
+            EasyEnergyServiceArgument.GRANULARITY,
+            default=ElectricityGranularity.HOUR.value,
         ): probatio.In(GRANULARITY_OPTIONS),
         probatio.Optional(
-            ATTR_PRICE_TYPE, default=ElectricityPriceType.MARKET.value
+            EasyEnergyServiceArgument.PRICE_TYPE,
+            default=ElectricityPriceType.MARKET.value,
         ): probatio.In(PRICE_TYPE_OPTIONS),
     }
 )
 ENERGY_RETURN_SERVICE_SCHEMA: Final = BASE_SERVICE_SCHEMA.extend(
     {
         probatio.Optional(
-            ATTR_GRANULARITY, default=ElectricityGranularity.HOUR.value
+            EasyEnergyServiceArgument.GRANULARITY,
+            default=ElectricityGranularity.HOUR.value,
         ): probatio.In(GRANULARITY_OPTIONS),
     }
 )
@@ -169,7 +183,7 @@ def __select_prices(
 def __get_coordinator(call: ServiceCall) -> EasyEnergyDataUpdateCoordinator:
     """Get the coordinator from the entry."""
     entry: EasyEnergyConfigEntry = service.async_get_config_entry(
-        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY]
+        call.hass, DOMAIN, call.data[EasyEnergyServiceArgument.CONFIG_ENTRY]
     )
     return entry.runtime_data
 
@@ -182,11 +196,13 @@ async def __get_prices(
     """Get prices from easyEnergy."""
     coordinator = __get_coordinator(call)
 
-    start_date, start_datetime = __get_date(call.data.get(ATTR_START))
-    end_date, end_datetime = __get_date(call.data.get(ATTR_END))
+    start_date, start_datetime = __get_date(
+        call.data.get(EasyEnergyServiceArgument.START)
+    )
+    end_date, end_datetime = __get_date(call.data.get(EasyEnergyServiceArgument.END))
 
     vat = VatOption.INCLUDE
-    if call.data.get(ATTR_INCL_VAT) is False:
+    if call.data.get(EasyEnergyServiceArgument.INCL_VAT) is False:
         vat = VatOption.EXCLUDE
 
     data: Electricity | Gas
@@ -205,14 +221,18 @@ async def __get_prices(
                 translation_key="fetch_prices_error",
             ) from err
         prices = __select_prices(
-            data, call.data[ATTR_PRICE_TYPE] == ElectricityPriceType.INVOICE.value
+            data,
+            call.data[EasyEnergyServiceArgument.PRICE_TYPE]
+            == ElectricityPriceType.INVOICE.value,
         )
     else:
         try:
             data = await coordinator.easyenergy.energy_prices(
                 start_date=start_date,
                 end_date=end_date,
-                granularity=ElectricityGranularity(call.data[ATTR_GRANULARITY]),
+                granularity=ElectricityGranularity(
+                    call.data[EasyEnergyServiceArgument.GRANULARITY]
+                ),
                 vat=vat,
             )
         except EasyEnergyError as err:
@@ -223,7 +243,9 @@ async def __get_prices(
 
         if service_price_type == ServicePriceType.ENERGY_USAGE:
             prices = __select_prices(
-                data, call.data[ATTR_PRICE_TYPE] == ElectricityPriceType.INVOICE.value
+                data,
+                call.data[EasyEnergyServiceArgument.PRICE_TYPE]
+                == ElectricityPriceType.INVOICE.value,
             )
         else:
             prices = data.timestamp_return_prices
@@ -251,21 +273,21 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        GAS_SERVICE_NAME,
+        EasyEnergyService.GET_GAS_PRICES,
         partial(__get_prices, service_price_type=ServicePriceType.GAS),
         schema=GAS_SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
     hass.services.async_register(
         DOMAIN,
-        ENERGY_USAGE_SERVICE_NAME,
+        EasyEnergyService.GET_ENERGY_USAGE_PRICES,
         partial(__get_prices, service_price_type=ServicePriceType.ENERGY_USAGE),
         schema=ENERGY_USAGE_SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
     hass.services.async_register(
         DOMAIN,
-        ENERGY_RETURN_SERVICE_NAME,
+        EasyEnergyService.GET_ENERGY_RETURN_PRICES,
         partial(__get_prices, service_price_type=ServicePriceType.ENERGY_RETURN),
         schema=ENERGY_RETURN_SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
