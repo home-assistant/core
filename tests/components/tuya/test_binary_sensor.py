@@ -185,3 +185,37 @@ async def test_camera_pet_feeder(
     await notification_helper.async_send_device_update(mock_device, {dpcode: True})
 
     assert hass.states.get(entity_id).state == "on"
+
+
+@pytest.mark.parametrize(
+    "mock_device_code",
+    ["qccdz_7bvgooyjhiua1yyq"],
+)
+@pytest.mark.parametrize(
+    ("work_state", "expected_state"),
+    [
+        pytest.param("charger_charging", "on", id="charger_charging"),
+        pytest.param("charger_end", "off", id="charger_end"),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "no_quirk")
+async def test_ev_charger_charging_state_update(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    notification_helper: TuyaNotificationHelper,
+    work_state: str,
+    expected_state: str,
+) -> None:
+    """Test EV charger work_state values map to the charging binary sensor."""
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    entity_id = "binary_sensor.ac_charging_control_box_charging"
+    assert hass.states.get(entity_id).state == "off"
+
+    await notification_helper.async_send_device_update(
+        mock_device, {"work_state": work_state}
+    )
+
+    assert hass.states.get(entity_id).state == expected_state
