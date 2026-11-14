@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 import gzip
 import math
 import os
+from pathlib import Path
 import shutil
 import tempfile
 from typing import TYPE_CHECKING, Any, Literal, Self, overload
@@ -41,6 +42,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.loader import async_mark_marketplace_integration
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -90,6 +92,7 @@ from .repositories.base import (
     RepositoryManifest,
     valid_integration_categories,
 )
+from .repositories.integration import write_marketplace_marker
 from .utils.data import MarketplaceData
 from .utils.file_system import async_exists, async_run_to_completion
 from .utils.identity import newest_id_per_name
@@ -918,6 +921,8 @@ class MarketplaceManager:
         """Tasks that are started after setup."""
         self.set_stage(MarketplaceStage.STARTUP)
 
+        await self.async_mark_installed_integrations()
+
         # Removals nobody confirmed yet, also those made before the takeover
         for critical in await async_load_from_storage(self.hass, "critical") or []:
             if not critical["acknowledged"]:
@@ -974,6 +979,25 @@ class MarketplaceManager:
         await self.async_process_queue()
 
         self.async_dispatch(MarketplaceSignal.STATUS, {})
+
+    async def async_mark_installed_integrations(self) -> None:
+        """Mark integrations installed before the marker existed."""
+        for repository in self.repositories.list_installed:
+            if (
+                repository.data.category == RepositoryCategory.INTEGRATION
+                and repository.data.domain
+            ):
+                try:
+                    await self.hass.async_add_executor_job(
+                        write_marketplace_marker, Path(repository.localpath)
+                    )
+                except OSError as err:
+                    LOGGER.warning(
+                        "Could not write Marketplace marker for %s: %s",
+                        repository.data.domain,
+                        err,
+                    )
+                async_mark_marketplace_integration(self.hass, repository.data.domain)
 
     async def async_download_file(
         self,

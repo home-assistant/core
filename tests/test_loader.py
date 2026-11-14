@@ -5,6 +5,7 @@ import os
 import pathlib
 import sys
 import threading
+from types import ModuleType
 from typing import Any
 from unittest.mock import MagicMock, patch
 
@@ -682,6 +683,109 @@ def test_integration_properties(hass: HomeAssistant) -> None:
     assert integration.ssdp is None
 
 
+@pytest.mark.parametrize(
+    ("pkg_path", "files", "expected"),
+    [
+        ("homeassistant.components.hue", set(), "built_in"),
+        ("homeassistant.components.hue", {loader.MARKETPLACE_MARKER}, "built_in"),
+        ("custom_components.hue", set(), "custom"),
+        ("custom_components.hue", {loader.MARKETPLACE_MARKER}, "marketplace"),
+    ],
+)
+def test_installation_type(
+    hass: HomeAssistant, pkg_path: str, files: set[str], expected: str
+) -> None:
+    """Test how an integration was installed."""
+    integration = loader.Integration(
+        hass, pkg_path, None, {"name": "Hue", "domain": "hue"}, set(files)
+    )
+    assert integration.installation_type == expected
+    assert integration.manifest["installation_type"] == expected
+
+
+async def test_mark_marketplace_integration(hass: HomeAssistant) -> None:
+    """Test an integration that is already resolved is marked as from the Marketplace."""
+    integration = loader.Integration(
+        hass, "custom_components.hue", None, {"name": "Hue", "domain": "hue"}
+    )
+    hass.data[loader.DATA_INTEGRATIONS]["hue"] = integration
+    assert integration.manifest_json_fragment is not None
+    assert integration.installation_type == "custom"
+
+    loader.async_mark_marketplace_integration(hass, "hue")
+
+    assert integration.installation_type == "marketplace"
+    manifest = json_loads(json_dumps(integration.manifest_json_fragment))
+    assert manifest["installation_type"] == "marketplace"
+
+
+@pytest.mark.parametrize("integration_type", ["virtual", "hub"])
+def test_resolve_from_root_marketplace_marker(
+    hass: HomeAssistant, tmp_path: pathlib.Path, integration_type: str
+) -> None:
+    """Test the marker is found when an integration is resolved from disk."""
+    directory = tmp_path / "test_store"
+    directory.mkdir()
+    (directory / "manifest.json").write_text(
+        json_dumps(
+            {
+                "domain": "test_store",
+                "name": "Test store",
+                "integration_type": integration_type,
+                "version": "1.0.0",
+            }
+        )
+    )
+    (directory / loader.MARKETPLACE_MARKER).touch()
+    root = ModuleType("custom_components")
+    root.__path__ = [str(tmp_path)]
+
+    integration = loader.Integration.resolve_from_root(hass, root, "test_store")
+
+    assert integration is not None
+    assert integration.installation_type == "marketplace"
+
+
+async def test_mark_marketplace_integration_during_scan(hass: HomeAssistant) -> None:
+    """Test a marker written while a scan runs is applied to its result."""
+    integration = loader.Integration(
+        hass, "custom_components.hue", None, {"name": "Hue", "domain": "hue"}
+    )
+    scan: asyncio.Future[dict[str, loader.Integration]] = hass.loop.create_future()
+    loader.async_clear_custom_components_cache(hass)
+
+    with patch.object(hass, "async_add_executor_job", return_value=scan):
+        task = hass.async_create_task(loader.async_get_custom_components(hass))
+        await asyncio.sleep(0)
+        loader.async_mark_marketplace_integration(hass, "hue")
+        scan.set_result({"hue": integration})
+        result = await task
+
+    assert result["hue"].installation_type == "marketplace"
+    assert (
+        hass.data[loader.DATA_CUSTOM_COMPONENTS]["hue"].installation_type
+        == "marketplace"
+    )
+
+
+async def test_forget_marketplace_integration(hass: HomeAssistant) -> None:
+    """Test a forgotten domain is not applied to the scans that follow."""
+    integration = loader.Integration(
+        hass, "custom_components.hue", None, {"name": "Hue", "domain": "hue"}
+    )
+    loader.async_mark_marketplace_integration(hass, "hue")
+    loader.async_forget_marketplace_integration(hass, "hue")
+    loader.async_clear_custom_components_cache(hass)
+
+    with patch(
+        "homeassistant.loader._get_custom_components",
+        return_value={"hue": integration},
+    ):
+        result = await loader.async_get_custom_components(hass)
+
+    assert result["hue"].installation_type == "custom"
+
+
 async def test_integrations_only_once(hass: HomeAssistant) -> None:
     """Test that we load integrations only once."""
     int_1 = hass.async_create_task(loader.async_get_integration(hass, "hue"))
@@ -938,6 +1042,35 @@ async def test_integration_descriptions_custom_connectivity(
     custom = descriptions["custom"]["integration"]
     assert custom["custom_zigbee"]["connectivity"] == ["zigbee", "cloud"]
     assert custom["custom_plain"]["connectivity"] == []
+
+
+async def test_integration_descriptions_custom_installation_type(
+    hass: HomeAssistant,
+) -> None:
+    """Test the descriptions tell how custom integrations were installed."""
+    custom_components = {
+        domain: loader.Integration(
+            hass,
+            f"custom_components.{domain}",
+            None,
+            {"domain": domain, "name": domain},
+            files,
+        )
+        for domain, files in (
+            ("custom_store", {loader.MARKETPLACE_MARKER}),
+            ("custom_plain", set()),
+        )
+    }
+
+    with patch(
+        "homeassistant.loader.async_get_custom_components",
+        return_value=custom_components,
+    ):
+        descriptions = await loader.async_get_integration_descriptions(hass)
+
+    custom = descriptions["custom"]["integration"]
+    assert custom["custom_store"]["installation_type"] == "marketplace"
+    assert custom["custom_plain"]["installation_type"] == "custom"
 
 
 @pytest.mark.usefixtures("enable_custom_integrations")
