@@ -918,14 +918,20 @@
     "update_error": {
       "message": "An error occurred while retrieving data from {device}"
     },
-    "update_error_device_disconnected": {
-      "message": "An error occurred while retrieving data from {device} because it is disconnected"
+    "update_error_disconnected": {
+      "message": "The device is disconnected"
     },
-    "update_error_reconnect_error": {
-      "message": "An error occurred while reconnecting to {device}"
+    "update_error_mac_mismatch": {
+      "message": "A different device responded at {host}"
+    },
+    "update_error_reconnect": {
+      "message": "The device could not be reconnected"
     },
     "update_error_sleeping_device": {
       "message": "Sleeping device {device} did not update within {period} seconds interval"
+    },
+    "update_error_unreachable": {
+      "message": "The device cannot be reached"
     }
   },
   "issues": {
