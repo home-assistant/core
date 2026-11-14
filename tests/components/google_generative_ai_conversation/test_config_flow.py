@@ -1,10 +1,12 @@
 """Test the Google Generative AI Conversation config flow."""
 
 from collections.abc import AsyncGenerator
+from functools import partial
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import aiohttp
+from google import genai
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -133,10 +135,14 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
 
+    client = await hass.async_add_executor_job(partial(genai.Client, api_key="bla"))
     with (
         patch(
-            "google.genai.models.AsyncModels.list",
+            "homeassistant.components.google_generative_ai_conversation.config_flow.genai.Client",
+            return_value=client,
         ),
+        patch.object(client.aio.models, "list", new_callable=AsyncMock),
+        patch.object(client.aio, "aclose", wraps=client.aio.aclose) as mock_aclose,
         patch(
             "homeassistant.components.google_generative_ai_conversation.async_setup_entry",
             return_value=None,
@@ -149,6 +155,8 @@ async def test_form(hass: HomeAssistant) -> None:
             },
         )
         await hass.async_block_till_done()
+
+    mock_aclose.assert_awaited_once()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == {
@@ -742,7 +750,24 @@ async def test_form_errors(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch("google.genai.models.AsyncModels.list", side_effect=side_effect):
+    failed_client = await hass.async_add_executor_job(
+        partial(genai.Client, api_key="bla")
+    )
+    with (
+        patch(
+            "homeassistant.components.google_generative_ai_conversation.config_flow.genai.Client",
+            return_value=failed_client,
+        ),
+        patch.object(
+            failed_client.aio.models,
+            "list",
+            new_callable=AsyncMock,
+            side_effect=side_effect,
+        ),
+        patch.object(
+            failed_client.aio, "aclose", wraps=failed_client.aio.aclose
+        ) as mock_failed_aclose,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -752,11 +777,20 @@ async def test_form_errors(
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": error}
+    mock_failed_aclose.assert_awaited_once()
 
+    valid_client = await hass.async_add_executor_job(
+        partial(genai.Client, api_key="bla")
+    )
     with (
         patch(
-            "google.genai.models.AsyncModels.list",
+            "homeassistant.components.google_generative_ai_conversation.config_flow.genai.Client",
+            return_value=valid_client,
         ),
+        patch.object(valid_client.aio.models, "list", new_callable=AsyncMock),
+        patch.object(
+            valid_client.aio, "aclose", wraps=valid_client.aio.aclose
+        ) as mock_valid_aclose,
         patch(
             "homeassistant.components.google_generative_ai_conversation.async_setup_entry",
             return_value=None,
@@ -769,6 +803,7 @@ async def test_form_errors(
             },
         )
     assert result3["type"] is FlowResultType.CREATE_ENTRY
+    mock_valid_aclose.assert_awaited_once()
 
 
 async def test_reauth_flow(hass: HomeAssistant) -> None:

@@ -1,10 +1,12 @@
 """Tests for the Google Generative AI Conversation integration."""
 
+from functools import partial
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import aiohttp
 import attr
+from google.genai import Client
 from google.genai.errors import ClientError, ServerError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -34,6 +36,29 @@ from homeassistant.helpers.device_registry import DeviceEntryDisabler
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 
 from . import API_ERROR_500, CLIENT_ERROR_API_KEY_INVALID, CLIENT_ERROR_BAD_REQUEST
+
+
+async def test_setup_entry(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test successful setup keeps the async client open."""
+    client = await hass.async_add_executor_job(partial(Client, api_key="bla"))
+    with (
+        patch(
+            "homeassistant.components.google_generative_ai_conversation.Client",
+            return_value=client,
+        ),
+        patch.object(client.aio.models, "get", new_callable=AsyncMock),
+        patch.object(client.aio, "aclose", wraps=client.aio.aclose) as mock_aclose,
+    ):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert mock_config_entry.state is ConfigEntryState.LOADED
+        assert mock_config_entry.runtime_data is client
+        mock_aclose.assert_not_awaited()
+
+    await client.aio.aclose()
 
 
 @pytest.mark.parametrize(
@@ -97,11 +122,22 @@ async def test_config_entry_error(
     reauth: bool,
 ) -> None:
     """Test different configuration entry errors."""
-    with patch("google.genai.models.AsyncModels.get", side_effect=side_effect):
+    client = await hass.async_add_executor_job(partial(Client, api_key="bla"))
+    with (
+        patch(
+            "homeassistant.components.google_generative_ai_conversation.Client",
+            return_value=client,
+        ),
+        patch.object(
+            client.aio.models, "get", new_callable=AsyncMock, side_effect=side_effect
+        ),
+        patch.object(client.aio, "aclose", wraps=client.aio.aclose) as mock_aclose,
+    ):
         assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
         assert mock_config_entry.state is state
         assert any(mock_config_entry.async_get_active_flows(hass, {"reauth"})) == reauth
+        mock_aclose.assert_awaited_once()
 
 
 async def test_migration_from_v1(
