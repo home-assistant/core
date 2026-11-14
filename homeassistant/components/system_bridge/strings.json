@@ -541,6 +541,16 @@
     }
   },
   "services": {
+    "dismiss_message": {
+      "description": "Closes a notification sent with the System Bridge send message action. Linux only.",
+      "fields": {
+        "id": {
+          "description": "The ID returned by the System Bridge send message action.",
+          "name": "ID"
+        }
+      },
+      "name": "Dismiss message"
+    },
     "get_process_by_id": {
       "description": "Gets a process by the ID.",
       "fields": {
