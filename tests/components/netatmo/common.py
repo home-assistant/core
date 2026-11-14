@@ -14,10 +14,12 @@ from homeassistant.components.netatmo.const import DOMAIN
 from homeassistant.components.webhook import async_handle_webhook
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util.aiohttp import MockRequest
 
 HOME_ID = "91763b24c43d3e344f424e8b"
+SCHEDULE_SELECT_UNIQUE_ID = f"{HOME_ID}-schedule-select"
+LEGACY_CLIMATE_ISSUE_ID = f"legacy_climate_device_disabled_{HOME_ID}"
 
 COMMON_RESPONSE = {
     "user_id": "91763b24c43d3e344f424e8d",
@@ -131,3 +133,32 @@ def selected_platforms(platforms: list[Platform]) -> Iterator[None]:
         ),
     ):
         yield
+
+
+def add_disabled_home_with_schedule_select(
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    config_entry: MockConfigEntry,
+    model: str,
+) -> tuple[dr.DeviceEntry, er.RegistryEntry]:
+    """Register a disabled device for HOME_ID with the schedule select on it.
+
+    With model "Climate" this is the pre-2026.9 device, which only carried the
+    select. With model "Home" it is the same device after 2026.9 renamed it.
+    """
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, HOME_ID)},
+        model=model,
+        name="MYHOME",
+        disabled_by=dr.DeviceEntryDisabler.USER,
+    )
+    entity = entity_registry.async_get_or_create(
+        Platform.SELECT,
+        DOMAIN,
+        SCHEDULE_SELECT_UNIQUE_ID,
+        config_entry=config_entry,
+        device_id=device.id,
+        disabled_by=er.RegistryEntryDisabler.DEVICE,
+    )
+    return device, entity

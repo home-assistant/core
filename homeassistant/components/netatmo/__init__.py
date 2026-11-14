@@ -23,6 +23,7 @@ from homeassistant.helpers.typing import ConfigType
 from . import api
 from .const import DOMAIN, PLATFORMS
 from .coordinator import NetatmoConfigEntry, NetatmoDataHandler
+from .device import async_migrate_legacy_climate_devices
 from .services import async_setup_services
 from .webhook import NetatmoWebhookManager
 
@@ -36,6 +37,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async_setup_services(hass)
 
     return True
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: NetatmoConfigEntry) -> None:
+    """Migrate a Netatmo config entry to the current version."""
+    if entry.minor_version < 2:
+        async_migrate_legacy_climate_devices(hass, entry)
+        hass.config_entries.async_update_entry(entry, minor_version=2)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: NetatmoConfigEntry) -> None:
