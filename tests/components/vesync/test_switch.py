@@ -170,6 +170,14 @@ async def test_turn_on_off_display_raises_error(
             "Device does not support toggling drying mode.",
             id="drying_mode",
         ),
+        pytest.param(
+            "Air Purifier Vital 200S",
+            "switch.air_purifier_vital_200s_light_detection",
+            SERVICE_TURN_ON,
+            "pyvesync.devices.vesyncpurifier.VeSyncAirBaseV2.toggle_light_detection",
+            "Device does not support toggling light detection.",
+            id="light_detection",
+        ),
     ],
 )
 async def test_switch_unsupported_command(
@@ -268,6 +276,19 @@ async def test_switch_unsupported_command(
             "switch.humidifier_6000s_enable_drying_mode_while_power_is_off",
             SERVICE_TURN_OFF,
             "pyvesync.devices.vesynchumidifier.VeSyncSuperior6000S.toggle_drying_mode",
+        ),
+        # light_detection switch for purifier
+        (
+            "Air Purifier Vital 200S",
+            "switch.air_purifier_vital_200s_light_detection",
+            SERVICE_TURN_ON,
+            "pyvesync.devices.vesyncpurifier.VeSyncAirBaseV2.toggle_light_detection",
+        ),
+        (
+            "Air Purifier Vital 200S",
+            "switch.air_purifier_vital_200s_light_detection",
+            SERVICE_TURN_OFF,
+            "pyvesync.devices.vesyncpurifier.VeSyncAirBaseV2.toggle_light_detection",
         ),
     ],
 )

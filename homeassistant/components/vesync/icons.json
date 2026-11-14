@@ -54,6 +54,9 @@
       },
       "drying_mode_power_off": {
         "default": "mdi:weather-windy"
+      },
+      "light_detection": {
+        "default": "mdi:brightness-auto"
       }
     }
   },
