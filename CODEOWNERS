@@ -1012,6 +1012,8 @@ AGENTS.md @home-assistant/core
 /tests/components/jellyfin/ @RunC0deRun @ctalkington
 /homeassistant/components/jewish_calendar/ @tsvi
 /tests/components/jewish_calendar/ @tsvi
+/homeassistant/components/junker/ @Jump-333
+/tests/components/junker/ @Jump-333
 /homeassistant/components/justnimbus/ @kvanzuijlen
 /tests/components/justnimbus/ @kvanzuijlen
 /homeassistant/components/jvc_projector/ @SteveEasley

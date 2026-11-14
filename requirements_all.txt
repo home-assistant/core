@@ -1483,6 +1483,9 @@ jellyfin-apiclient-python==1.21.0
 # homeassistant.components.rest
 jsonpath-python==1.1.6
 
+# homeassistant.components.junker
+junker-api==0.1.0
+
 # homeassistant.components.justnimbus
 justnimbus==0.7.4
 
