@@ -12,7 +12,6 @@ import probatio
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -22,7 +21,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service_info.ssdp import ATTR_UPNP_SERIAL, SsdpServiceInfo
 
-from . import create_hyperion_client
+from . import HyperionConfigEntry, create_hyperion_client
 from .const import (
     CONF_CREATE_TOKEN,
     CONF_EFFECT_HIDE_LIST,
@@ -420,7 +419,7 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: HyperionConfigEntry,
     ) -> HyperionOptionsFlow:
         """Get the Hyperion Options flow."""
         return HyperionOptionsFlow()

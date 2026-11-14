@@ -13,7 +13,6 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -69,7 +68,7 @@ class LutronLight(LutronDevice, LightEntity):
         area_name: str,
         lutron_device: LutronEntity,
         controller: Lutron,
-        config_entry: ConfigEntry,
+        config_entry: LutronConfigEntry,
     ) -> None:
         """Initialize the device."""
         super().__init__(

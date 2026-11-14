@@ -27,15 +27,15 @@ from homeassistant.components.update import (
     ATTR_INSTALLED_VERSION,
     ATTR_LATEST_VERSION,
     DOMAIN as UPDATE_DOMAIN,
-    SERVICE_INSTALL,
     UpdateEntityFeature,
+    UpdateService,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -135,8 +135,8 @@ async def test_install_firmware_success(
     # Call install service
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: entity_id},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -201,8 +201,8 @@ async def test_install_controller_firmware_success(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: entity_id},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -378,8 +378,10 @@ async def test_install_controller_firmware_without_latest_version(
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: "update.oc200_test_omada_controller_firmware"},
+            UpdateService.INSTALL,
+            {
+                CommonServiceArgument.ENTITY_ID: "update.oc200_test_omada_controller_firmware"
+            },
             blocking=True,
         )
     assert err.value.translation_key == "no_update_available"
@@ -508,8 +510,8 @@ async def test_install_firmware_exceptions(
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: entity_id},
+            UpdateService.INSTALL,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -563,8 +565,8 @@ async def test_install_controller_firmware_exceptions(
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: entity_id},
+            UpdateService.INSTALL,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
 

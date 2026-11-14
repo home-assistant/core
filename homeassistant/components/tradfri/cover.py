@@ -4,8 +4,12 @@ from typing import TYPE_CHECKING, Any, override
 
 from pytradfri.api.aiocoap_api import APIRequestProtocol
 
-from homeassistant.components.cover import ATTR_POSITION, CoverEntity
-from homeassistant.core import HomeAssistant
+from homeassistant.components.cover import (
+    ATTR_POSITION,
+    CoverEntity,
+    CoverEntityFeature,
+)
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_GATEWAY_ID
@@ -37,6 +41,12 @@ class TradfriCover(TradfriBaseEntity, CoverEntity):
     """The platform class required by Home Assistant."""
 
     _attr_name = None
+    _attr_supported_features = (
+        CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+        | CoverEntityFeature.STOP
+        | CoverEntityFeature.SET_POSITION
+    )
 
     def __init__(
         self,
@@ -56,6 +66,7 @@ class TradfriCover(TradfriBaseEntity, CoverEntity):
         self._device_control = self._device.blind_control
         self._device_data = self._device_control.blinds[0]
 
+    @callback
     @override
     def _refresh(self) -> None:
         """Refresh the device."""
@@ -74,40 +85,32 @@ class TradfriCover(TradfriBaseEntity, CoverEntity):
 
         None is unknown, 0 is closed, 100 is fully open.
         """
-        if not self._device_data:
-            return None
-        return 100 - self._device_data.current_cover_position
+        position = self._device_data.current_cover_position
+        return None if position is None else 100 - position
 
     @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        if not self._device_control:
-            return
         await self._api(self._device_control.set_state(100 - kwargs[ATTR_POSITION]))
 
     @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        if not self._device_control:
-            return
         await self._api(self._device_control.set_state(0))
 
     @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
-        if not self._device_control:
-            return
         await self._api(self._device_control.set_state(100))
 
     @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Close cover."""
-        if not self._device_control:
-            return
         await self._api(self._device_control.trigger_blind())
 
     @property
     @override
-    def is_closed(self) -> bool:
+    def is_closed(self) -> bool | None:
         """Return if the cover is closed or not."""
-        return self.current_cover_position == 0
+        position = self.current_cover_position
+        return None if position is None else position == 0

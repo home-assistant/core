@@ -1,23 +1,39 @@
 """Services for the motionEye integration."""
 
+from enum import StrEnum
+
 from motioneye_client.const import (
     KEY_TEXT_OVERLAY_CAMERA_NAME,
     KEY_TEXT_OVERLAY_CUSTOM_TEXT,
-    KEY_TEXT_OVERLAY_CUSTOM_TEXT_LEFT,
-    KEY_TEXT_OVERLAY_CUSTOM_TEXT_RIGHT,
     KEY_TEXT_OVERLAY_DISABLED,
-    KEY_TEXT_OVERLAY_LEFT,
-    KEY_TEXT_OVERLAY_RIGHT,
     KEY_TEXT_OVERLAY_TIMESTAMP,
 )
 import probatio
 
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
-from homeassistant.const import CONF_ACTION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, service
 
-from .const import DOMAIN, SERVICE_ACTION, SERVICE_SET_TEXT_OVERLAY, SERVICE_SNAPSHOT
+from .const import DOMAIN
+
+
+class MotionEyeService(StrEnum):
+    """Store keys for motionEye services."""
+
+    SET_TEXT_OVERLAY = "set_text_overlay"
+    ACTION = "action"
+    SNAPSHOT = "snapshot"
+
+
+class MotionEyeServiceArgument(StrEnum):
+    """Store keys for motionEye service arguments."""
+
+    LEFT_TEXT = "left_text"
+    CUSTOM_LEFT_TEXT = "custom_left_text"
+    RIGHT_TEXT = "right_text"
+    CUSTOM_RIGHT_TEXT = "custom_right_text"
+    ACTION = "action"
+
 
 SCHEMA_TEXT_OVERLAY = probatio.In(
     [
@@ -31,17 +47,23 @@ SCHEMA_SERVICE_SET_TEXT = probatio.Schema(
     probatio.All(
         cv.make_entity_service_schema(
             {
-                probatio.Optional(KEY_TEXT_OVERLAY_LEFT): SCHEMA_TEXT_OVERLAY,
-                probatio.Optional(KEY_TEXT_OVERLAY_CUSTOM_TEXT_LEFT): cv.string,
-                probatio.Optional(KEY_TEXT_OVERLAY_RIGHT): SCHEMA_TEXT_OVERLAY,
-                probatio.Optional(KEY_TEXT_OVERLAY_CUSTOM_TEXT_RIGHT): cv.string,
+                probatio.Optional(
+                    MotionEyeServiceArgument.LEFT_TEXT
+                ): SCHEMA_TEXT_OVERLAY,
+                probatio.Optional(MotionEyeServiceArgument.CUSTOM_LEFT_TEXT): cv.string,
+                probatio.Optional(
+                    MotionEyeServiceArgument.RIGHT_TEXT
+                ): SCHEMA_TEXT_OVERLAY,
+                probatio.Optional(
+                    MotionEyeServiceArgument.CUSTOM_RIGHT_TEXT
+                ): cv.string,
             },
         ),
         probatio.AtLeastOne(
-            KEY_TEXT_OVERLAY_LEFT,
-            KEY_TEXT_OVERLAY_CUSTOM_TEXT_LEFT,
-            KEY_TEXT_OVERLAY_RIGHT,
-            KEY_TEXT_OVERLAY_CUSTOM_TEXT_RIGHT,
+            MotionEyeServiceArgument.LEFT_TEXT,
+            MotionEyeServiceArgument.CUSTOM_LEFT_TEXT,
+            MotionEyeServiceArgument.RIGHT_TEXT,
+            MotionEyeServiceArgument.CUSTOM_RIGHT_TEXT,
         ),
     ),
 )
@@ -54,7 +76,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_SET_TEXT_OVERLAY,
+        MotionEyeService.SET_TEXT_OVERLAY,
         entity_domain=CAMERA_DOMAIN,
         schema=SCHEMA_SERVICE_SET_TEXT,
         func="async_set_text_overlay",
@@ -63,16 +85,16 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_ACTION,
+        MotionEyeService.ACTION,
         entity_domain=CAMERA_DOMAIN,
-        schema={probatio.Required(CONF_ACTION): cv.string},
+        schema={probatio.Required(MotionEyeServiceArgument.ACTION): cv.string},
         func="async_request_action",
     )
 
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_SNAPSHOT,
+        MotionEyeService.SNAPSHOT,
         entity_domain=CAMERA_DOMAIN,
         schema=None,
         func="async_request_snapshot",

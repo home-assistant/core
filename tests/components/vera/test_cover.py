@@ -21,7 +21,7 @@ async def test_cover(
     vera_device.category = pv.CATEGORY_CURTAIN
     vera_device.is_closed = False
     vera_device.get_level.return_value = 0
-    entity_id = "cover.dev1_1"
+    entity_id = "cover.dev1"
 
     component_data = await vera_component_factory.configure_component(
         hass=hass,

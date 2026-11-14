@@ -12,7 +12,6 @@ from volkszaehler.exceptions import (
 )
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentry,
@@ -24,6 +23,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from . import VolkszaehlerConfigEntry
 from .const import DEFAULT_PORT, DOMAIN, SUBENTRY_TYPE_CHANNEL
 
 _LOGGER = logging.getLogger(__name__)
@@ -90,7 +90,7 @@ class VolkszaehlerConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: VolkszaehlerConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this handler."""
         return {SUBENTRY_TYPE_CHANNEL: VolkszaehlerSubentryFlow}
