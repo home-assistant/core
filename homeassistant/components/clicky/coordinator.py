@@ -3,6 +3,7 @@
 import logging
 from typing import Any, override
 
+from aiohttp import ClientError
 from pyclicky import AuthenticationError, ClickyAPIError, ClickyClient, ConnectionError
 
 from homeassistant.config_entries import ConfigEntry
@@ -50,7 +51,7 @@ class ClickyCoordinator(DataUpdateCoordinator):
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",
             ) from error
-        except ConnectionError as error:
+        except (ConnectionError, ClientError, TimeoutError) as error:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",

@@ -3,6 +3,7 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, Mock
 
+from aiohttp import ClientResponseError
 from pyclicky import AuthenticationError, ClickyAPIError, ConnectionError
 import pytest
 
@@ -13,6 +14,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .common import _make_report
+from .const import TEST_SITEKEY
 
 
 def test_coordinator_init(hass: HomeAssistant) -> None:
@@ -78,6 +80,44 @@ async def test_async_update_data_connection_error(hass: HomeAssistant) -> None:
     assert exc_info.value.translation_key == "cannot_connect"
     assert exc_info.value.translation_placeholders is None
     assert exc_info.value.__cause__ is client.visitors_online.side_effect
+
+
+@pytest.mark.asyncio
+async def test_async_update_data_http_error_hides_sitekey(hass: HomeAssistant) -> None:
+    """Test that unwrapped HTTP errors become UpdateFailed without the sitekey."""
+
+    client = AsyncMock()
+    client.__aenter__.return_value = client
+    client.__aexit__.return_value = None
+
+    # pyclicky passes the sitekey as a query parameter and does not wrap
+    # ClientResponseError, whose string form includes the full request URL.
+    client.visitors_online.side_effect = ClientResponseError(
+        Mock(
+            real_url=(
+                "https://api.clicky.com/api/stats/4"
+                f"?site_id=12345&sitekey={TEST_SITEKEY}"
+            )
+        ),
+        (),
+        status=500,
+        message="Internal Server Error",
+    )
+
+    coordinator = ClickyCoordinator(
+        hass=hass,
+        config_entry=Mock(),
+        client=client,
+    )
+
+    with pytest.raises(UpdateFailed) as exc_info:
+        await coordinator._async_update_data()
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "cannot_connect"
+    assert exc_info.value.translation_placeholders is None
+    assert exc_info.value.__cause__ is client.visitors_online.side_effect
+    assert TEST_SITEKEY not in str(exc_info.value)
 
 
 @pytest.mark.asyncio
