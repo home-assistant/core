@@ -7,6 +7,7 @@ from datetime import date, datetime, timedelta
 import functools
 import logging
 import os
+import socket
 import time
 from typing import TYPE_CHECKING, Any, Concatenate, NamedTuple, NoReturn, cast
 
@@ -139,6 +140,31 @@ SUPPORTED_MYSQL_LTS = _lts_support("mysql", "2027.3.0")
 # before we no longer consider startup to be a "restart" and we
 # should do a check on the sqlite3 database.
 MAX_RESTART_TIME = timedelta(minutes=10)
+
+# A MySQL connection whose peer went away, for example across a network partition
+# around a database restart, otherwise blocks the recorder forever. Keepalive does
+# not limit how long a query may run, since the server acknowledges the probes.
+MYSQL_TCP_KEEPALIVE_IDLE = 60
+MYSQL_TCP_KEEPALIVE_INTERVAL = 10
+MYSQL_TCP_KEEPALIVE_COUNT = 6
+MYSQL_TCP_USER_TIMEOUT_MS = (
+    MYSQL_TCP_KEEPALIVE_IDLE + MYSQL_TCP_KEEPALIVE_INTERVAL * MYSQL_TCP_KEEPALIVE_COUNT
+) * 1000
+MYSQL_TCP_SOCKET_OPTIONS = tuple(
+    (level, getattr(socket, name), value)
+    for level, name, value in (
+        (socket.SOL_SOCKET, "SO_KEEPALIVE", 1),
+        # Linux names the idle time TCP_KEEPIDLE, macOS names it TCP_KEEPALIVE
+        (socket.IPPROTO_TCP, "TCP_KEEPIDLE", MYSQL_TCP_KEEPALIVE_IDLE),
+        (socket.IPPROTO_TCP, "TCP_KEEPALIVE", MYSQL_TCP_KEEPALIVE_IDLE),
+        (socket.IPPROTO_TCP, "TCP_KEEPINTVL", MYSQL_TCP_KEEPALIVE_INTERVAL),
+        (socket.IPPROTO_TCP, "TCP_KEEPCNT", MYSQL_TCP_KEEPALIVE_COUNT),
+        # Keepalive only probes an idle connection, this bounds how long a
+        # query sent into a partition is retransmitted
+        (socket.IPPROTO_TCP, "TCP_USER_TIMEOUT", MYSQL_TCP_USER_TIMEOUT_MS),
+    )
+    if hasattr(socket, name)
+)
 
 # Retry when one of the following MySQL errors occurred:
 RETRYABLE_MYSQL_ERRORS = (1205, 1206, 1213)
@@ -673,6 +699,46 @@ def async_create_backup_failure_issue(
     )
 
 
+def _set_mysql_socket_options(sock: socket.SocketType) -> None:
+    """Set the TCP keepalive options on a MySQL connection socket."""
+    if sock.family not in (socket.AF_INET, socket.AF_INET6):
+        return
+    for level, option, value in MYSQL_TCP_SOCKET_OPTIONS:
+        sock.setsockopt(level, option, value)
+
+
+def _set_mysql_fd_socket_options(fd: int) -> None:
+    """Set the TCP keepalive options on a MySQL connection file descriptor."""
+    # Wrapping the descriptor makes it non-blocking if a default socket timeout
+    # is set, which the driver does not expect
+    blocking = os.get_blocking(fd)
+    sock = socket.SocketType(fileno=fd)
+    try:
+        _set_mysql_socket_options(sock)
+    finally:
+        sock.detach()
+        os.set_blocking(fd, blocking)
+
+
+def _enable_mysql_tcp_keepalive(dbapi_connection: DBAPIConnection) -> None:
+    """Make a MySQL connection fail when its peer is gone instead of hanging."""
+    try:
+        if isinstance(
+            sock := getattr(dbapi_connection, "_sock", None), socket.SocketType
+        ):
+            # PyMySQL
+            _set_mysql_socket_options(sock)
+        elif callable(fileno := getattr(dbapi_connection, "fileno", None)) and (
+            isinstance(fd := fileno(), int)
+        ):
+            # mysqlclient only exposes the file descriptor
+            _set_mysql_fd_socket_options(fd)
+    except OSError:
+        _LOGGER.debug(
+            "Could not enable TCP keepalive on the database connection", exc_info=True
+        )
+
+
 def setup_connection_for_dialect(
     instance: Recorder,
     dialect_name: str,
@@ -719,6 +785,7 @@ def setup_connection_for_dialect(
         execute_on_connection(dbapi_connection, "PRAGMA foreign_keys=ON")
 
     elif dialect_name == SupportedDialect.MYSQL:
+        _enable_mysql_tcp_keepalive(dbapi_connection)
         execute_on_connection(dbapi_connection, "SET session wait_timeout=28800")
         if first_connection:
             result = query_on_connection(dbapi_connection, "SELECT VERSION()")
