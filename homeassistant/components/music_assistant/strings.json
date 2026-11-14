@@ -274,11 +274,23 @@
       "extra_bass": {
         "name": "Extra bass"
       },
+      "ir_repeater": {
+        "name": "IR repeater"
+      },
+      "loudness": {
+        "name": "Loudness"
+      },
+      "night_mode": {
+        "name": "Night mode"
+      },
       "party_mode": {
         "name": "Party mode"
       },
       "pure_direct": {
         "name": "Pure direct"
+      },
+      "remote_led_feedback": {
+        "name": "Status light on remote control"
       },
       "speaker_a": {
         "name": "Speaker A"
@@ -286,8 +298,29 @@
       "speaker_b": {
         "name": "Speaker B"
       },
+      "speech_enhancement": {
+        "name": "Speech enhancement"
+      },
+      "status_light": {
+        "name": "Status light"
+      },
+      "sub_enabled": {
+        "name": "Subwoofer"
+      },
       "surround_3d": {
         "name": "Surround 3D"
+      },
+      "surround_enabled": {
+        "name": "Surround speakers"
+      },
+      "surround_mode": {
+        "name": "Full-volume surround for music"
+      },
+      "touch_controls": {
+        "name": "Touch controls"
+      },
+      "trueplay": {
+        "name": "Trueplay"
       }
     },
     "text": {
