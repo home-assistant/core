@@ -5,9 +5,9 @@ from unittest.mock import patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.kitchen_sink import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -49,8 +49,8 @@ async def test_press(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> Non
     freezer.move_to(now)
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: ENTITY_RESTART},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_RESTART},
         blocking=True,
     )
 

@@ -1215,7 +1215,8 @@ AGENTS.md @home-assistant/core
 /tests/components/meteo_france/ @oncleben31 @Quentame
 /homeassistant/components/meteo_lt/ @xE1H
 /tests/components/meteo_lt/ @xE1H
-/homeassistant/components/meteoalarm/ @rolfberkenbosch
+/homeassistant/components/meteoalarm/ @rolfberkenbosch @mastermc0 @jjprz
+/tests/components/meteoalarm/ @rolfberkenbosch @mastermc0 @jjprz
 /homeassistant/components/meteoclimatic/ @adrianmo
 /tests/components/meteoclimatic/ @adrianmo
 /homeassistant/components/metoffice/ @MrHarcombe @avee87
@@ -1979,8 +1980,8 @@ AGENTS.md @home-assistant/core
 /tests/components/tesla_wall_connector/ @einarhauks @sarabveer
 /homeassistant/components/teslemetry/ @Bre77
 /tests/components/teslemetry/ @Bre77
-/homeassistant/components/tessie/ @Bre77
-/tests/components/tessie/ @Bre77
+/homeassistant/components/tessie/ @Bre77 @stx
+/tests/components/tessie/ @Bre77 @stx
 /homeassistant/components/text/ @home-assistant/core
 /tests/components/text/ @home-assistant/core
 /homeassistant/components/theben_conexa/ @mdluhosch
@@ -2148,6 +2149,8 @@ AGENTS.md @home-assistant/core
 /tests/components/vlc_telnet/ @rodripf @MartinHjelmare
 /homeassistant/components/vodafone_station/ @paoloantinori @chemelli74
 /tests/components/vodafone_station/ @paoloantinori @chemelli74
+/homeassistant/components/voice_support/ @synesthesiam @arturpragacz
+/tests/components/voice_support/ @synesthesiam @arturpragacz
 /homeassistant/components/voip/ @home-assistant/core @jaminh
 /tests/components/voip/ @home-assistant/core @jaminh
 /homeassistant/components/volkszaehler/ @StefanSchoof
