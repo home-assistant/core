@@ -180,17 +180,21 @@ class AssistSatelliteEntity(entity.Entity):
         per detection, so ``_async_wake_word_audio_wanted_changed`` says
         when to ask again.
 
-        One answer for the whole satellite, which is right while the thing
-        verifying knows every wake word a device can hear. When that stops
-        being true, what a device should be told is which of its wake words
-        are covered, and the threshold it lowers is the one for those.
+        The setting applies to the whole satellite, so every active wake
+        word must have verification support.
         """
         try:
             config = self.async_get_configuration()
         except NotImplementedError:
             return False
-        return any(
-            voice_support.async_verifies_wake_word(self.hass, wake_word)
+        wake_word_phrases = {
+            wake_word.id: wake_word.wake_word
+            for wake_word in config.available_wake_words
+        }
+        return bool(config.active_wake_words) and all(
+            voice_support.async_verifies_wake_word(
+                self.hass, wake_word_phrases.get(wake_word, wake_word)
+            )
             for wake_word in config.active_wake_words
         )
 

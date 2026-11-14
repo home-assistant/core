@@ -3327,10 +3327,10 @@ async def test_wake_word_audio_waits_for_the_satellite_configuration(
         AssistSatelliteConfiguration(
             available_wake_words=[
                 AssistSatelliteWakeWord(
-                    id="okay_nabu", wake_word="okay nabu", trained_languages=["en"]
+                    id="1234", wake_word="okay nabu", trained_languages=["en"]
                 )
             ],
-            active_wake_words=["okay_nabu"],
+            active_wake_words=["1234"],
             max_active_wake_words=1,
         )
     )
@@ -3338,7 +3338,7 @@ async def test_wake_word_audio_waits_for_the_satellite_configuration(
     with patch.object(
         voice_support,
         "async_verifies_wake_word",
-        lambda _hass, wake_word: wake_word == "okay_nabu",
+        lambda _hass, wake_word: wake_word == "okay nabu",
     ):
         mock_device = await mock_esphome_device(
             mock_client=mock_client,

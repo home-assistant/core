@@ -1226,17 +1226,37 @@ async def test_wake_word_start_keeps_responding(
 
 
 @pytest.mark.parametrize(
-    ("verified_wake_words", "expected"),
+    ("active_wake_words", "verified_wake_words", "expected"),
     [
-        pytest.param({"1234"}, True, id="active_wake_word"),
-        pytest.param({"5678"}, False, id="inactive_wake_word"),
+        pytest.param(["1234"], {"okay nabu"}, True, id="active_wake_word"),
+        pytest.param(["1234"], {"hey jarvis"}, False, id="inactive_wake_word"),
+        pytest.param(
+            ["1234", "5678"],
+            {"okay nabu", "hey jarvis"},
+            True,
+            id="all_active_wake_words_supported",
+        ),
+        pytest.param(
+            ["1234", "5678"],
+            {"okay nabu"},
+            False,
+            id="unsupported_active_wake_word",
+        ),
+        pytest.param([], {"okay nabu"}, False, id="no_active_wake_words"),
+        pytest.param(
+            ["hey_computer"], {"hey_computer"}, True, id="unknown_id_fallback"
+        ),
     ],
 )
 @pytest.mark.usefixtures("init_components")
 async def test_wake_word_audio_wanted(
-    entity: MockAssistSatellite, verified_wake_words: set[str], expected: bool
+    entity: MockAssistSatellite,
+    active_wake_words: list[str],
+    verified_wake_words: set[str],
+    expected: bool,
 ) -> None:
-    """Test wake word audio is wanted only if an active wake word is verified."""
+    """Test wake word audio requires verification of all active wake word phrases."""
+    entity.config.active_wake_words = active_wake_words
     with patch.object(
         voice_support,
         "async_verifies_wake_word",
