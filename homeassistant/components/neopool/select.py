@@ -32,10 +32,15 @@ from neopool_modbus.registers import (
     RelayKind,
     RelayMode,
     TimerRelayMode,
+    aux_relay_available,
     is_valid_relay_gpio,
 )
 
-from homeassistant.components.select import SelectEntity, SelectEntityDescription
+from homeassistant.components.select import (
+    DOMAIN as SELECT_DOMAIN,
+    SelectEntity,
+    SelectEntityDescription,
+)
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -53,6 +58,7 @@ from .const import (
 )
 from .coordinator import NeoPoolConfigEntry, NeoPoolCoordinator
 from .entity import NeoPoolEntity
+from .helpers import cleanup_occupied_aux_entities
 
 PARALLEL_UPDATES = 1
 
@@ -309,6 +315,11 @@ def _light_gpio_supported(data: dict[str, Any]) -> bool:
     return is_valid_relay_gpio(data.get("MBF_PAR_LIGHTING_GPIO", 0) or 0)
 
 
+def _aux_available(n: int) -> Callable[[dict[str, Any]], bool]:
+    """Return a supported_fn gating an AUX select on relay availability."""
+    return lambda data: aux_relay_available(n, data)
+
+
 SELECT_DESCRIPTIONS: dict[str, NeoPoolSelectEntityDescription] = {
     "MBF_PAR_FILT_MODE": NeoPoolSelectEntityDescription(
         key="MBF_PAR_FILT_MODE",
@@ -471,6 +482,7 @@ SELECT_DESCRIPTIONS: dict[str, NeoPoolSelectEntityDescription] = {
         translation_placeholders={"number": "1", "subtimer": "1"},
         entity_category=EntityCategory.CONFIG,
         select_type="timer_period",
+        supported_fn=_aux_available(1),
         write_fn=_write_timer_period,
     ),
     "relay_aux1b_period": NeoPoolSelectEntityDescription(
@@ -480,6 +492,7 @@ SELECT_DESCRIPTIONS: dict[str, NeoPoolSelectEntityDescription] = {
         entity_category=EntityCategory.CONFIG,
         select_type="timer_period",
         entity_registry_enabled_default=False,
+        supported_fn=_aux_available(1),
         write_fn=_write_timer_period,
     ),
     "relay_aux2_period": NeoPoolSelectEntityDescription(
@@ -488,6 +501,7 @@ SELECT_DESCRIPTIONS: dict[str, NeoPoolSelectEntityDescription] = {
         translation_placeholders={"number": "2", "subtimer": "1"},
         entity_category=EntityCategory.CONFIG,
         select_type="timer_period",
+        supported_fn=_aux_available(2),
         write_fn=_write_timer_period,
     ),
     "relay_aux2b_period": NeoPoolSelectEntityDescription(
@@ -497,6 +511,7 @@ SELECT_DESCRIPTIONS: dict[str, NeoPoolSelectEntityDescription] = {
         entity_category=EntityCategory.CONFIG,
         select_type="timer_period",
         entity_registry_enabled_default=False,
+        supported_fn=_aux_available(2),
         write_fn=_write_timer_period,
     ),
     "relay_aux3_period": NeoPoolSelectEntityDescription(
@@ -505,6 +520,7 @@ SELECT_DESCRIPTIONS: dict[str, NeoPoolSelectEntityDescription] = {
         translation_placeholders={"number": "3", "subtimer": "1"},
         entity_category=EntityCategory.CONFIG,
         select_type="timer_period",
+        supported_fn=_aux_available(3),
         write_fn=_write_timer_period,
     ),
     "relay_aux3b_period": NeoPoolSelectEntityDescription(
@@ -514,6 +530,7 @@ SELECT_DESCRIPTIONS: dict[str, NeoPoolSelectEntityDescription] = {
         entity_category=EntityCategory.CONFIG,
         select_type="timer_period",
         entity_registry_enabled_default=False,
+        supported_fn=_aux_available(3),
         write_fn=_write_timer_period,
     ),
     "relay_aux4_period": NeoPoolSelectEntityDescription(
@@ -522,6 +539,7 @@ SELECT_DESCRIPTIONS: dict[str, NeoPoolSelectEntityDescription] = {
         translation_placeholders={"number": "4", "subtimer": "1"},
         entity_category=EntityCategory.CONFIG,
         select_type="timer_period",
+        supported_fn=_aux_available(4),
         write_fn=_write_timer_period,
     ),
     "relay_aux4b_period": NeoPoolSelectEntityDescription(
@@ -531,6 +549,7 @@ SELECT_DESCRIPTIONS: dict[str, NeoPoolSelectEntityDescription] = {
         entity_category=EntityCategory.CONFIG,
         select_type="timer_period",
         entity_registry_enabled_default=False,
+        supported_fn=_aux_available(4),
         write_fn=_write_timer_period,
     ),
     "relay_light_period": NeoPoolSelectEntityDescription(
@@ -547,6 +566,7 @@ SELECT_DESCRIPTIONS: dict[str, NeoPoolSelectEntityDescription] = {
         translation_placeholders={"number": "1"},
         options_map={1: "auto", 4: "manual"},
         select_type="relay_mode",
+        supported_fn=_aux_available(1),
         write_fn=_write_relay_mode,
     ),
     "relay_aux2_mode": NeoPoolSelectEntityDescription(
@@ -555,6 +575,7 @@ SELECT_DESCRIPTIONS: dict[str, NeoPoolSelectEntityDescription] = {
         translation_placeholders={"number": "2"},
         options_map={1: "auto", 4: "manual"},
         select_type="relay_mode",
+        supported_fn=_aux_available(2),
         write_fn=_write_relay_mode,
     ),
     "relay_aux3_mode": NeoPoolSelectEntityDescription(
@@ -563,6 +584,7 @@ SELECT_DESCRIPTIONS: dict[str, NeoPoolSelectEntityDescription] = {
         translation_placeholders={"number": "3"},
         options_map={1: "auto", 4: "manual"},
         select_type="relay_mode",
+        supported_fn=_aux_available(3),
         write_fn=_write_relay_mode,
     ),
     "relay_aux4_mode": NeoPoolSelectEntityDescription(
@@ -571,6 +593,7 @@ SELECT_DESCRIPTIONS: dict[str, NeoPoolSelectEntityDescription] = {
         translation_placeholders={"number": "4"},
         options_map={1: "auto", 4: "manual"},
         select_type="relay_mode",
+        supported_fn=_aux_available(4),
         write_fn=_write_relay_mode,
     ),
     "relay_light_mode": NeoPoolSelectEntityDescription(
@@ -611,6 +634,8 @@ async def async_setup_entry(
     """Set up NeoPool select entities from a config entry."""
     coordinator = entry.runtime_data
     options = entry.options
+
+    cleanup_occupied_aux_entities(hass, entry.entry_id, SELECT_DOMAIN, coordinator.data)
 
     async_add_entities(
         NeoPoolSelect(coordinator, key, desc)
