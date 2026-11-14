@@ -1,20 +1,28 @@
 """Tests for the Clicky coordinator."""
 
 from datetime import timedelta
-from unittest.mock import AsyncMock, Mock
+import logging
+from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp import ClientResponseError
+from freezegun.api import FrozenDateTimeFactory
 from pyclicky import AuthenticationError, ClickyAPIError, ConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
-from homeassistant.components.clicky.const import DOMAIN
+from homeassistant.components.clicky.const import (
+    CONF_SITE_ID,
+    CONF_SITEKEY,
+    DOMAIN,
+    UPDATE_INTERVAL,
+)
 from homeassistant.components.clicky.coordinator import ClickyCoordinator
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .common import _make_report
-from .const import TEST_SITEKEY
+from .const import TEST_SITE_ID, TEST_SITEKEY
 
 
 def test_coordinator_init(hass: HomeAssistant) -> None:
@@ -82,42 +90,67 @@ async def test_async_update_data_connection_error(hass: HomeAssistant) -> None:
     assert exc_info.value.__cause__ is client.visitors_online.side_effect
 
 
-@pytest.mark.asyncio
-async def test_async_update_data_http_error_hides_sitekey(hass: HomeAssistant) -> None:
-    """Test that unwrapped HTTP errors become UpdateFailed without the sitekey."""
+async def test_http_error_hides_sitekey(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that HTTP errors don't leak the sitekey into logged tracebacks."""
 
-    client = AsyncMock()
-    client.__aenter__.return_value = client
-    client.__aexit__.return_value = None
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_SITE_ID: TEST_SITE_ID,
+            CONF_SITEKEY: TEST_SITEKEY,
+        },
+    )
+    entry.add_to_hass(hass)
 
     # pyclicky passes the sitekey as a query parameter and does not wrap
     # ClientResponseError, whose string form includes the full request URL.
-    client.visitors_online.side_effect = ClientResponseError(
+    http_error = ClientResponseError(
         Mock(
             real_url=(
                 "https://api.clicky.com/api/stats/4"
-                f"?site_id=12345&sitekey={TEST_SITEKEY}"
+                f"?site_id={TEST_SITE_ID}&sitekey={TEST_SITEKEY}"
             )
         ),
         (),
         status=500,
         message="Internal Server Error",
     )
+    assert TEST_SITEKEY in str(http_error)
 
-    coordinator = ClickyCoordinator(
-        hass=hass,
-        config_entry=Mock(),
-        client=client,
-    )
+    with (
+        patch(
+            "pyclicky.ClickyClient.visitors_online",
+            AsyncMock(return_value=_make_report(5)),
+        ) as mock_visitors_online,
+        patch(
+            "pyclicky.ClickyClient.time_total",
+            AsyncMock(return_value=_make_report(120)),
+        ),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
-    with pytest.raises(UpdateFailed) as exc_info:
-        await coordinator._async_update_data()
+        coordinator = entry.runtime_data
+        assert coordinator.last_update_success
 
-    assert exc_info.value.translation_domain == DOMAIN
-    assert exc_info.value.translation_key == "cannot_connect"
-    assert exc_info.value.translation_placeholders is None
-    assert exc_info.value.__cause__ is client.visitors_online.side_effect
-    assert TEST_SITEKEY not in str(exc_info.value)
+        mock_visitors_online.side_effect = http_error
+        caplog.set_level(logging.DEBUG)
+
+        freezer.tick(UPDATE_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert not coordinator.last_update_success
+    assert isinstance(coordinator.last_exception, UpdateFailed)
+    assert coordinator.last_exception.translation_key == "cannot_connect"
+    assert coordinator.last_exception.__cause__ is None
+    assert coordinator.last_exception.__suppress_context__
+    assert caplog.records
+    assert TEST_SITEKEY not in caplog.text
 
 
 @pytest.mark.asyncio

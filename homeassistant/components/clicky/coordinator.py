@@ -51,7 +51,15 @@ class ClickyCoordinator(DataUpdateCoordinator):
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",
             ) from error
-        except (ConnectionError, ClientError, TimeoutError) as error:
+        except ClientError:
+            # pyclicky passes the sitekey as a query parameter and does not wrap
+            # aiohttp errors, whose messages can include the request URL. Drop
+            # the chain so the sitekey doesn't end up in logged tracebacks.
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from None
+        except (ConnectionError, TimeoutError) as error:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
