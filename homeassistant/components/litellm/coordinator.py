@@ -9,6 +9,7 @@ from openai import AsyncOpenAI, AuthenticationError, OpenAIError, PermissionDeni
 # would happen inside the event loop. Import them with the integration instead.
 from openai.resources.audio import AsyncAudio  # noqa: F401
 from openai.resources.chat import AsyncChat  # noqa: F401
+from openai.resources.decisions import AsyncDecisions  # noqa: F401
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_URL
