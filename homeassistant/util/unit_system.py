@@ -341,6 +341,7 @@ METRIC_SYSTEM = UnitSystem(
         # Convert non-metric volumes of water meters
         ("water", UnitOfVolume.CENTUM_CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
         ("water", UnitOfVolume.CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
+        ("water", UnitOfVolume.FLUID_OUNCES): UnitOfVolume.LITERS,
         ("water", UnitOfVolume.GALLONS): UnitOfVolume.LITERS,
         ("water", UnitOfVolume.MILLE_CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
         # Convert wind speeds except knots to km/h
