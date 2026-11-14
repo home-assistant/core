@@ -77,6 +77,20 @@ effect_pulse:
       example: "[255, 100, 100]"
       selector:
         object:
+    hs_color:
+      example: "[300, 70]"
+      selector:
+        object:
+    xy_color:
+      example: "[0.52, 0.43]"
+      selector:
+        object:
+    color_temp_kelvin:
+      selector:
+        color_temp:
+          unit: "kelvin"
+          min: 1500
+          max: 9000
     period:
       default: 1.0
       selector:

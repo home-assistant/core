@@ -9,5 +9,5 @@
   "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["agent"],
-  "requirements": ["agent-py==0.0.24"]
+  "requirements": ["agent-py==0.0.25"]
 }

@@ -28,11 +28,17 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         },
+        "data_description": {
+          "host": "The IP address or hostname of your iZone bridge."
+        },
         "description": "Enter the IP address or hostname of your iZone controller."
       },
       "select_controller": {
         "data": {
           "selected_controller_uid": "Controller"
+        },
+        "data_description": {
+          "selected_controller_uid": "Select the controller to set up now. Controllers you skip stay available under Settings > Devices & services."
         },
         "description": "Multiple unconfigured iZone controllers were found:\n{controllers}\n\nChoose the controller you want to set up now. Any controller you do not select will remain available as a discovered device you can set up later under **Settings** > **Devices & services**."
       },
@@ -45,6 +51,14 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "damper_fault": {
+        "name": "Damper fault"
+      },
+      "sensor_fault": {
+        "name": "Sensor fault"
+      }
+    },
     "number": {
       "damper_max": {
         "name": "Damper maximum"
@@ -59,6 +73,9 @@
       },
       "return_temperature": {
         "name": "Return temperature"
+      },
+      "rf_signal": {
+        "name": "RF signal"
       },
       "supply_temperature": {
         "name": "Supply temperature"
@@ -80,6 +97,9 @@
     },
     "controller_not_found": {
       "message": "No iZone controller found for unique_id {uid}"
+    },
+    "controller_offline": {
+      "message": "The iZone bridge is reachable, but the iZone system is offline"
     },
     "discovery_failed_host": {
       "message": "iZone discovery failed while resolving config entry host"
@@ -114,6 +134,9 @@
     "setup_rejected": {
       "message": "iZone controller at {host} rejected setup"
     },
+    "system_reconfigured": {
+      "message": "The iZone system was reconfigured"
+    },
     "unable_to_connect": {
       "message": "Unable to connect to controller {uid}"
     },
@@ -121,9 +144,19 @@
       "message": "Error communicating with iZone controller: {error}"
     }
   },
+  "issues": {
+    "deprecated_airflow_action": {
+      "description": "The `{action}` action is deprecated and will be removed in Home Assistant 2027.6. Use the **Damper minimum** and **Damper maximum** number entities of each zone with the `number.set_value` action instead, and update any automations or scripts that use `{action}`.",
+      "title": "The `{action}` action is being removed"
+    },
+    "yaml_exclude_unused": {
+      "description": "iZone now sets up each controller as its own entry, so the `exclude` option in the `izone:` section of your `configuration.yaml` file is no longer needed and has no effect. Controllers that were listed in it now show up as discovered devices. Add them, or select **Ignore** to hide them.\n\nRemove `exclude` from your `configuration.yaml` file and restart Home Assistant to fix this issue.",
+      "title": "The iZone `exclude` option no longer has any effect"
+    }
+  },
   "services": {
     "airflow_max": {
-      "description": "Sets the airflow maximum percent for a zone.",
+      "description": "Sets the airflow maximum percent for a zone. Deprecated, use the zone's Damper maximum number entity instead.",
       "fields": {
         "airflow": {
           "description": "[%key:component::izone::services::airflow_min::fields::airflow::description%]",
@@ -133,7 +166,7 @@
       "name": "Set maximum airflow"
     },
     "airflow_min": {
-      "description": "Sets the airflow minimum percent for a zone.",
+      "description": "Sets the airflow minimum percent for a zone. Deprecated, use the zone's Damper minimum number entity instead.",
       "fields": {
         "airflow": {
           "description": "Airflow percent.",

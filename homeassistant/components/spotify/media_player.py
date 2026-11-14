@@ -214,7 +214,7 @@ class SpotifyMediaPlayer(SpotifyEntity, MediaPlayerEntity):
                 assert isinstance(item, Episode)
             if item.images:
                 return item.images[0].url
-            if item.show and item.show.images:
+            if item.show.images:
                 return item.show.images[0].url
             return None
         if TYPE_CHECKING:

@@ -28,8 +28,9 @@ EXCLUDED_FIELDS: Final = frozenset(
     {
         # Writable, but not exposed yet.
         "ac_o_switch",
-        # Writable, but the device's working mode, which is not readable, can
-        # put them back right after a write.
+        "d_working_mode",
+        # Writable, but the device's working mode can put them back right
+        # after a write.
         "g_i_switch",
         "g_o_switch",
         # The library only decodes their zero member, so a real code reads None.

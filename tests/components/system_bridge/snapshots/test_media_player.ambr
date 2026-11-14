@@ -203,7 +203,7 @@
     'object_id_base': 'Media',
     'options': dict({
     }),
-    'original_device_class': <MediaPlayerDeviceClass.RECEIVER: 'receiver'>,
+    'original_device_class': <MediaPlayerDeviceClass.SPEAKER: 'speaker'>,
     'original_icon': None,
     'original_name': 'Media',
     'platform': 'system_bridge',
@@ -218,7 +218,7 @@
 # name: test_media_player_platform[media_player.hostname_media-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'receiver',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'speaker',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'hostname Media',
       <MediaPlayerEntityStateAttribute.MEDIA_ALBUM_ARTIST: 'media_album_artist'>: 'Album Artist',
       <MediaPlayerEntityStateAttribute.MEDIA_ALBUM_NAME: 'media_album_name'>: 'Album Title',

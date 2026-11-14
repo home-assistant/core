@@ -26,16 +26,9 @@ from homeassistant.components.climate import (
 )
 from homeassistant.components.netatmo.climate import PRESET_FROST_GUARD, PRESET_SCHEDULE
 from homeassistant.components.netatmo.const import (
-    ATTR_END_DATETIME,
-    ATTR_SCHEDULE_NAME,
-    ATTR_TARGET_TEMPERATURE,
-    ATTR_TIME_PERIOD,
     DOMAIN,
-    SERVICE_CLEAR_TEMPERATURE_SETTING,
-    SERVICE_SET_PRESET_MODE_WITH_END_DATETIME,
-    SERVICE_SET_SCHEDULE,
-    SERVICE_SET_TEMPERATURE_WITH_END_DATETIME,
-    SERVICE_SET_TEMPERATURE_WITH_TIME_PERIOD,
+    NetatmoService,
+    NetatmoServiceArgument,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -447,11 +440,11 @@ async def test_service_set_temperature_with_end_datetime(
     # Test service setting the temperature without an end datetime
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_TEMPERATURE_WITH_END_DATETIME,
+        NetatmoService.SET_TEMPERATURE_WITH_END_DATETIME,
         {
             ATTR_ENTITY_ID: climate_entity_livingroom,
-            ATTR_TARGET_TEMPERATURE: 25,
-            ATTR_END_DATETIME: "2023-11-17 12:23:00",
+            NetatmoServiceArgument.TARGET_TEMPERATURE: 25,
+            NetatmoServiceArgument.END_DATETIME: "2023-11-17 12:23:00",
         },
         blocking=True,
     )
@@ -505,11 +498,11 @@ async def test_service_set_temperature_with_time_period(
     # Test service setting the temperature without an end datetime
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_TEMPERATURE_WITH_TIME_PERIOD,
+        NetatmoService.SET_TEMPERATURE_WITH_TIME_PERIOD,
         {
             ATTR_ENTITY_ID: climate_entity_livingroom,
-            ATTR_TARGET_TEMPERATURE: 25,
-            ATTR_TIME_PERIOD: "02:24:00",
+            NetatmoServiceArgument.TARGET_TEMPERATURE: 25,
+            NetatmoServiceArgument.TIME_PERIOD: "02:24:00",
         },
         blocking=True,
     )
@@ -593,7 +586,7 @@ async def test_service_clear_temperature_setting(
     # Test service setting the temperature without an end datetime
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_CLEAR_TEMPERATURE_SETTING,
+        NetatmoService.CLEAR_TEMPERATURE_SETTING,
         {ATTR_ENTITY_ID: climate_entity_livingroom},
         blocking=True,
     )
@@ -701,8 +694,11 @@ async def test_service_schedule_thermostats(
     with patch("pyatmo.home.Home.async_switch_schedule") as mock_switch_schedule:
         await hass.services.async_call(
             "netatmo",
-            SERVICE_SET_SCHEDULE,
-            {ATTR_ENTITY_ID: climate_entity_livingroom, ATTR_SCHEDULE_NAME: "Winter"},
+            NetatmoService.SET_SCHEDULE,
+            {
+                ATTR_ENTITY_ID: climate_entity_livingroom,
+                NetatmoServiceArgument.SCHEDULE_NAME: "Winter",
+            },
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -734,8 +730,11 @@ async def test_service_schedule_thermostats(
     with patch("pyatmo.home.Home.async_switch_schedule") as mock_switch_home_schedule:
         await hass.services.async_call(
             "netatmo",
-            SERVICE_SET_SCHEDULE,
-            {ATTR_ENTITY_ID: climate_entity_livingroom, ATTR_SCHEDULE_NAME: "summer"},
+            NetatmoService.SET_SCHEDULE,
+            {
+                ATTR_ENTITY_ID: climate_entity_livingroom,
+                NetatmoServiceArgument.SCHEDULE_NAME: "summer",
+            },
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -760,13 +759,13 @@ async def test_service_preset_mode_with_end_time_thermostats(
     # in Netatmo == THERM_MODES) and a valid end datetime
     await hass.services.async_call(
         "netatmo",
-        SERVICE_SET_PRESET_MODE_WITH_END_DATETIME,
+        NetatmoService.SET_PRESET_MODE_WITH_END_DATETIME,
         {
             ATTR_ENTITY_ID: climate_entity_livingroom,
             ATTR_PRESET_MODE: PRESET_AWAY,
-            ATTR_END_DATETIME: (dt_util.now() + timedelta(days=10)).strftime(
-                "%Y-%m-%d %H:%M:%S"
-            ),
+            NetatmoServiceArgument.END_DATETIME: (
+                dt_util.now() + timedelta(days=10)
+            ).strftime("%Y-%m-%d %H:%M:%S"),
         },
         blocking=True,
     )
@@ -791,13 +790,13 @@ async def test_service_preset_mode_with_end_time_thermostats(
     with pytest.raises(MultipleInvalid):
         await hass.services.async_call(
             "netatmo",
-            SERVICE_SET_PRESET_MODE_WITH_END_DATETIME,
+            NetatmoService.SET_PRESET_MODE_WITH_END_DATETIME,
             {
                 ATTR_ENTITY_ID: climate_entity_livingroom,
                 ATTR_PRESET_MODE: PRESET_BOOST,
-                ATTR_END_DATETIME: (dt_util.now() + timedelta(days=10)).strftime(
-                    "%Y-%m-%d %H:%M:%S"
-                ),
+                NetatmoServiceArgument.END_DATETIME: (
+                    dt_util.now() + timedelta(days=10)
+                ).strftime("%Y-%m-%d %H:%M:%S"),
             },
             blocking=True,
         )
@@ -807,7 +806,7 @@ async def test_service_preset_mode_with_end_time_thermostats(
     with pytest.raises(MultipleInvalid):
         await hass.services.async_call(
             "netatmo",
-            SERVICE_SET_PRESET_MODE_WITH_END_DATETIME,
+            NetatmoService.SET_PRESET_MODE_WITH_END_DATETIME,
             {
                 ATTR_ENTITY_ID: climate_entity_livingroom,
                 ATTR_PRESET_MODE: PRESET_AWAY,

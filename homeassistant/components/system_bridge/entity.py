@@ -2,7 +2,7 @@
 
 from collections import Counter
 from collections.abc import Awaitable, Callable, Iterable
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from systembridgeconnector.const import EventType
 from systembridgeconnector.exceptions import ConnectionClosedException
@@ -38,7 +38,8 @@ class SystemBridgeEntity(CoordinatorEntity[SystemBridgeDataUpdateCoordinator]):
         super().__init__(coordinator)
 
         system = coordinator.data.system
-        assert system is not None
+        if TYPE_CHECKING:
+            assert system is not None
 
         self._hostname = system.hostname
         self._attr_unique_id = (

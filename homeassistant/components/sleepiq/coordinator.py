@@ -13,7 +13,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailed,
+    UpdateFailedUnreachable,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,7 +58,9 @@ class SleepIQDataUpdateCoordinator(DataUpdateCoordinator[None]):
         try:
             await asyncio.gather(*tasks)
         except SleepIQTimeoutException as err:
-            raise UpdateFailed(f"Timed out fetching SleepIQ data: {err}") from err
+            raise UpdateFailedUnreachable(
+                f"Timed out fetching SleepIQ data: {err}"
+            ) from err
         except SleepIQAPIException as err:
             if err.code == HTTPStatus.UNAUTHORIZED:
                 raise ConfigEntryAuthFailed from err
@@ -94,7 +100,7 @@ class SleepIQPauseUpdateCoordinator(DataUpdateCoordinator[None]):
                 ],
             )
         except SleepIQTimeoutException as err:
-            raise UpdateFailed(
+            raise UpdateFailedUnreachable(
                 f"Timed out fetching SleepIQ pause and favorite data: {err}"
             ) from err
         except SleepIQAPIException as err:
@@ -138,7 +144,9 @@ class SleepIQSleepDataCoordinator(DataUpdateCoordinator[None]):
                 ]
             )
         except SleepIQTimeoutException as err:
-            raise UpdateFailed(f"Timed out fetching SleepIQ sleep data: {err}") from err
+            raise UpdateFailedUnreachable(
+                f"Timed out fetching SleepIQ sleep data: {err}"
+            ) from err
         except SleepIQAPIException as err:
             if err.code == HTTPStatus.UNAUTHORIZED:
                 raise ConfigEntryAuthFailed from err

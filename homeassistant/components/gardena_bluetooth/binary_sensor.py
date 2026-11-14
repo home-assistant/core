@@ -12,7 +12,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import GardenaBluetoothConfigEntry
@@ -78,6 +78,7 @@ class GardenaBluetoothBinarySensor(
 
     entity_description: GardenaBluetoothBinarySensorEntityDescription
 
+    @callback
     @override
     def _handle_coordinator_update(self) -> None:
         char = self.entity_description.char
