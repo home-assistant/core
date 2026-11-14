@@ -46,6 +46,7 @@ class ClickyConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
         if user_input is not None:
+            await self.async_set_unique_id(user_input[CONF_SITE_ID])
             self._async_abort_entries_match({CONF_SITE_ID: user_input[CONF_SITE_ID]})
 
             client = ClickyClient(
