@@ -52,8 +52,23 @@ DHW_ATLANTIC_IO = FixtureDevice(
     "water_heater.my_home_water_heater",
 )
 
+# Daikin Altherma DHW tank via DaikinCloud (ogp:DomesticHotWater)
+DHW_DYNAMIC = FixtureDevice(
+    "setup/cloud_somfy_tahoma_switch_sc_europe.json",
+    "ogcp://OGCP-S-DAIKIN-1234567890abcdef12345678/00000000-0000-0000-0000-000000000001_domesticHotWaterTank",
+    "water_heater.my_house_domestic_hot_water",
+)
+
+DHW_DYNAMIC_OFF = {"name": OverkizState.CORE_ON_OFF, "type": 3, "value": "off"}
+DHW_DYNAMIC_BOOST = {
+    "name": OverkizState.CORE_ACTIVATED_OPTIONS,
+    "type": 10,
+    "value": ["boost"],
+}
+
 SNAPSHOT_FIXTURES = [
     DHW_CE_FLAT_C2,
+    DHW_DYNAMIC,
 ]
 
 
@@ -582,3 +597,202 @@ async def test_atlantic_io_turn_away_mode_off(
             ("refreshAwayModeDuration", None),
         ],
     )
+
+
+# --- DynamicDomesticHotWaterProduction (ogp:DomesticHotWater) ---
+async def test_dynamic_set_temperature(
+    hass: HomeAssistant,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test setting the target temperature sends setTargetTemperature."""
+    await setup_overkiz_integration(fixture=DHW_DYNAMIC.fixture)
+
+    await hass.services.async_call(
+        "water_heater",
+        "set_temperature",
+        {"entity_id": DHW_DYNAMIC.entity_id, ATTR_TEMPERATURE: 50.0},
+        blocking=True,
+    )
+
+    assert_command_call(
+        mock_client,
+        device_url=DHW_DYNAMIC.device_url,
+        command_name="setTargetTemperature",
+        parameters=[50.0],
+    )
+
+
+@pytest.mark.parametrize(
+    ("service", "command_name"),
+    [
+        pytest.param("turn_on", "on", id="turn_on"),
+        pytest.param("turn_off", "off", id="turn_off"),
+    ],
+)
+async def test_dynamic_turn_on_off(
+    hass: HomeAssistant,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    service: str,
+    command_name: str,
+) -> None:
+    """Test turning hot water production on and off."""
+    await setup_overkiz_integration(fixture=DHW_DYNAMIC.fixture)
+
+    await hass.services.async_call(
+        "water_heater",
+        service,
+        {"entity_id": DHW_DYNAMIC.entity_id},
+        blocking=True,
+    )
+
+    assert_command_call(
+        mock_client, device_url=DHW_DYNAMIC.device_url, command_name=command_name
+    )
+
+
+@pytest.mark.parametrize(
+    ("device_states", "expected_operation"),
+    [
+        pytest.param(
+            [DHW_DYNAMIC_OFF],
+            STATE_OFF,
+            id="off",
+        ),
+        pytest.param(
+            [DHW_DYNAMIC_BOOST],
+            STATE_PERFORMANCE,
+            id="boost",
+        ),
+        pytest.param(
+            [
+                DHW_DYNAMIC_OFF,
+                DHW_DYNAMIC_BOOST,
+            ],
+            STATE_OFF,
+            id="off_with_boost",
+        ),
+    ],
+)
+async def test_dynamic_current_operation(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    device_states: list[dict[str, Any]],
+    expected_operation: str,
+) -> None:
+    """Test the operation follows the on/off state and the boost option."""
+    await setup_overkiz_integration(fixture=DHW_DYNAMIC.fixture)
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [device_state_changed_event(DHW_DYNAMIC.device_url, device_states)],
+    )
+
+    state = hass.states.get(DHW_DYNAMIC.entity_id)
+    assert state is not None
+    assert state.state == expected_operation
+
+
+@pytest.mark.parametrize(
+    ("device_states", "operation_mode", "expected_commands"),
+    [
+        pytest.param(
+            [],
+            STATE_PERFORMANCE,
+            [("activateOption", ["boost"])],
+            id="performance_from_on",
+        ),
+        pytest.param(
+            [DHW_DYNAMIC_OFF],
+            STATE_PERFORMANCE,
+            [("on", None), ("activateOption", ["boost"])],
+            id="performance_from_off",
+        ),
+        pytest.param(
+            [DHW_DYNAMIC_BOOST],
+            STATE_ON,
+            [("deactivateOption", ["boost"])],
+            id="on_from_boost",
+        ),
+        pytest.param(
+            [DHW_DYNAMIC_OFF],
+            STATE_ON,
+            [("on", None)],
+            id="on_from_off",
+        ),
+        pytest.param(
+            [DHW_DYNAMIC_BOOST],
+            STATE_OFF,
+            [("off", None)],
+            id="off_from_boost",
+        ),
+    ],
+)
+async def test_dynamic_set_operation_mode(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    device_states: list[dict[str, Any]],
+    operation_mode: str,
+    expected_commands: list[tuple[str, list[Any] | None]],
+) -> None:
+    """Test each operation mode is a single execution of the needed commands."""
+    await setup_overkiz_integration(fixture=DHW_DYNAMIC.fixture)
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [device_state_changed_event(DHW_DYNAMIC.device_url, device_states)],
+    )
+
+    await hass.services.async_call(
+        "water_heater",
+        "set_operation_mode",
+        {"entity_id": DHW_DYNAMIC.entity_id, ATTR_OPERATION_MODE: operation_mode},
+        blocking=True,
+    )
+
+    assert_commands_call(
+        mock_client, device_url=DHW_DYNAMIC.device_url, commands=expected_commands
+    )
+
+
+@pytest.mark.parametrize(
+    ("device_states", "operation_mode"),
+    [
+        pytest.param([], STATE_ON, id="on_from_on"),
+        pytest.param(
+            [DHW_DYNAMIC_BOOST], STATE_PERFORMANCE, id="performance_from_boost"
+        ),
+    ],
+)
+async def test_dynamic_set_operation_mode_unchanged(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    device_states: list[dict[str, Any]],
+    operation_mode: str,
+) -> None:
+    """Test selecting the current operation mode sends no execution."""
+    await setup_overkiz_integration(fixture=DHW_DYNAMIC.fixture)
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [device_state_changed_event(DHW_DYNAMIC.device_url, device_states)],
+    )
+
+    await hass.services.async_call(
+        "water_heater",
+        "set_operation_mode",
+        {"entity_id": DHW_DYNAMIC.entity_id, ATTR_OPERATION_MODE: operation_mode},
+        blocking=True,
+    )
+
+    mock_client.execute_action_group.assert_not_called()
