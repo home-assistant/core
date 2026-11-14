@@ -10,19 +10,23 @@ from energyid_webhooks.client_v2 import WebhookClient
 import probatio
 
 from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
+    OptionsFlow,
 )
 from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.instance_id import async_get as async_get_instance_id
+from homeassistant.helpers.selector import BooleanSelector
 
-from . import EnergyIDConfigEntry
 from .const import (
     CONF_DEVICE_NAME,
+    CONF_ENABLE_DIRECTIVES,
     CONF_PROVISIONING_KEY,
     CONF_PROVISIONING_SECRET,
     DOMAIN,
@@ -31,9 +35,21 @@ from .const import (
     NAME,
     POLLING_INTERVAL,
 )
+from .coordinator import EnergyIDConfigEntry, async_directives_enabled
 from .energyid_sensor_mapping_flow import EnergyIDSensorMappingFlowHandler
 
 _LOGGER = logging.getLogger(__name__)
+
+DIRECTIVES_PLACEHOLDERS = {
+    "directives_url": "https://app.energyid.eu/integrations/home-assistant"
+}
+
+
+def _directives_schema(enabled: bool) -> probatio.Schema:
+    """Return the schema of the directives opt-in."""
+    return probatio.Schema(
+        {probatio.Optional(CONF_ENABLE_DIRECTIVES, default=enabled): BooleanSelector()}
+    )
 
 
 class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -149,15 +165,7 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
             if auth_status is None:
                 await self.async_set_unique_id(device_id)
                 self._abort_if_unique_id_configured()
-                _LOGGER.debug(
-                    "Creating entry with title: %s", self._flow_data["record_name"]
-                )
-                return self.async_create_entry(
-                    title=self._flow_data["record_name"],
-                    data=self._flow_data,
-                    description="add_sensor_mapping_hint",
-                    description_placeholders={"integration_name": NAME},
-                )
+                return await self.async_step_directives()
 
             if auth_status == "needs_claim":
                 _LOGGER.debug("Redirecting to auth and claim step")
@@ -212,7 +220,7 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
             if self._polling_task and not self._polling_task.done():
                 self._polling_task.cancel()
                 self._polling_task = None
-            return self.async_external_step_done(next_step_id="create_entry")
+            return self.async_external_step_done(next_step_id="directives")
 
         # Device not claimed yet, show the external step again
         if self._polling_task and not self._polling_task.done():
@@ -224,17 +232,52 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders=claim_info,
         )
 
-    async def async_step_create_entry(
+    async def async_step_directives(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Final step to create the entry after successful claim."""
-        _LOGGER.debug("Creating entry with title: %s", self._flow_data["record_name"])
-        return self.async_create_entry(
-            title=self._flow_data["record_name"],
-            data=self._flow_data,
-            description="add_sensor_mapping_hint",
-            description_placeholders={"integration_name": NAME},
+        """Ask whether to receive directives, then create the entry."""
+        if self.source == SOURCE_REAUTH:
+            return self._async_finish_reauth()
+        await self.async_set_unique_id(self._flow_data[CONF_DEVICE_ID])
+        self._abort_if_unique_id_configured()
+        if user_input is not None:
+            _LOGGER.debug(
+                "Creating entry with title: %s", self._flow_data["record_name"]
+            )
+            return self.async_create_entry(
+                title=self._flow_data["record_name"],
+                data=self._flow_data,
+                options={CONF_ENABLE_DIRECTIVES: user_input[CONF_ENABLE_DIRECTIVES]},
+                description="add_sensor_mapping_hint",
+                description_placeholders={"integration_name": NAME},
+            )
+
+        return self.async_show_form(
+            step_id="directives",
+            data_schema=_directives_schema(False),
+            description_placeholders=DIRECTIVES_PLACEHOLDERS,
         )
+
+    @callback
+    def _async_finish_reauth(self) -> ConfigFlowResult:
+        """Store the new credentials when they still link the same record."""
+        reauth_entry = self._get_reauth_entry()
+        # The unique ID is the generated device ID, so the record is the identity.
+        if self._flow_data["record_number"] != reauth_entry.data["record_number"]:
+            return self.async_abort(reason="wrong_account")
+        credentials = {
+            CONF_PROVISIONING_KEY: self._flow_data[CONF_PROVISIONING_KEY],
+            CONF_PROVISIONING_SECRET: self._flow_data[CONF_PROVISIONING_SECRET],
+        }
+        # A loaded entry reloads from its update listener when the credentials
+        # change. Nothing else reloads an entry that failed setup, or one whose
+        # credentials stay the same because only the claim was renewed.
+        if (
+            reauth_entry.state is not ConfigEntryState.LOADED
+            or credentials.items() <= reauth_entry.data.items()
+        ):
+            self.hass.config_entries.async_schedule_reload(reauth_entry.entry_id)
+        return self.async_update_and_abort(reauth_entry, data_updates=credentials)
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
@@ -258,16 +301,7 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
             auth_status = await self._perform_auth_and_get_details()
 
             if auth_status is None:
-                # Authentication successful and claimed
-                await self.async_set_unique_id(self._flow_data["record_number"])
-                self._abort_if_unique_id_mismatch(reason="wrong_account")
-                return self.async_update_reload_and_abort(
-                    self._get_reauth_entry(),
-                    data_updates={
-                        CONF_PROVISIONING_KEY: user_input[CONF_PROVISIONING_KEY],
-                        CONF_PROVISIONING_SECRET: user_input[CONF_PROVISIONING_SECRET],
-                    },
-                )
+                return self._async_finish_reauth()
 
             if auth_status == "needs_claim":
                 return await self.async_step_auth_and_claim()
@@ -299,3 +333,33 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         return {"sensor_mapping": EnergyIDSensorMappingFlowHandler}
+
+    @staticmethod
+    @callback
+    @override
+    def async_get_options_flow(
+        config_entry: EnergyIDConfigEntry,
+    ) -> EnergyIDOptionsFlow:
+        """Return the options flow."""
+        return EnergyIDOptionsFlow()
+
+
+class EnergyIDOptionsFlow(OptionsFlow):
+    """Enable automatic discovery of record directives."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage optional inbound EnergyID directives."""
+        if user_input is not None:
+            return self.async_create_entry(
+                data={
+                    CONF_ENABLE_DIRECTIVES: user_input[CONF_ENABLE_DIRECTIVES],
+                }
+            )
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=_directives_schema(async_directives_enabled(self.config_entry)),
+            description_placeholders=DIRECTIVES_PLACEHOLDERS,
+        )
