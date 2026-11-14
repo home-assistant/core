@@ -2,11 +2,12 @@
 
 from typing import Any, Final, override
 
-from aioairzone.common import EcoAdapt
+from aioairzone.common import EcoAdapt, WebServerInterface
 from aioairzone.const import (
     AZD_ECO_ADAPT,
     AZD_HOT_WATER,
     AZD_HUMIDITY,
+    AZD_INTERFACE,
     AZD_TEMP,
     AZD_TEMP_UNIT,
     AZD_THERMOSTAT_BATTERY,
@@ -49,7 +50,19 @@ HOT_WATER_SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
     ),
 )
 
+WEBSERVER_INTERFACES: Final[dict[WebServerInterface, str]] = {
+    WebServerInterface.ETHERNET: "ethernet",
+    WebServerInterface.WIFI: "wifi",
+}
+
 WEBSERVER_SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
+    SensorEntityDescription(
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        key=AZD_INTERFACE,
+        options=list(WEBSERVER_INTERFACES.values()),
+        translation_key="interface",
+    ),
     SensorEntityDescription(
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -215,6 +228,19 @@ class AirzoneWebServerSensor(AirzoneWebServerEntity, AirzoneSensor):
         self._attr_unique_id = f"{self._attr_unique_id}_ws_{description.key}"
         self.entity_description = description
         self._async_update_attrs()
+
+    @callback
+    @override
+    def _async_update_attrs(self) -> None:
+        """Update sensor attributes."""
+        super()._async_update_attrs()
+        if self.entity_description.key == AZD_INTERFACE:
+            interface = self._attr_native_value
+            self._attr_native_value = (
+                WEBSERVER_INTERFACES.get(interface)
+                if isinstance(interface, WebServerInterface)
+                else None
+            )
 
 
 class AirzoneZoneSensor(AirzoneZoneEntity, AirzoneSensor):

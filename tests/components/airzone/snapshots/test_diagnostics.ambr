@@ -299,6 +299,8 @@
         'version': '1.62',
       }),
       'webserver': dict({
+        'cloud_connected': 0,
+        'interface': 'ethernet',
         'mac': '**REDACTED**',
         'wifi_channel': 6,
         'wifi_rssi': -42,
@@ -427,7 +429,9 @@
       }),
       'version': '1.62',
       'webserver': dict({
+        'cloud-connected': False,
         'full-name': 'Airzone WebServer',
+        'interface': 1,
         'mac': '**REDACTED**',
         'model': 'Airzone WebServer',
         'wifi-channel': 6,
