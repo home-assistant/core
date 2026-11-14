@@ -1,6 +1,7 @@
 """Test Matter binary sensors."""
 
 from collections.abc import Generator
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 from chip.clusters import Objects as clusters
@@ -78,11 +79,16 @@ async def test_occupancy_sensor(
     assert state.state == "off"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     ("node_fixture", "entity_id"),
     [
         ("eve_contact_sensor", "binary_sensor.eve_door_door"),
         ("mock_leak_sensor", "binary_sensor.water_leak_detector_water_leak"),
+        (
+            "mock_generic_boolean_sensor",
+            "binary_sensor.generic_boolean_sensor_state",
+        ),
     ],
 )
 async def test_boolean_state_sensors(
@@ -111,6 +117,41 @@ async def test_boolean_state_sensors(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "off"
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_generic_boolean_sensor"])
+async def test_boolean_state_fallback_disabled_by_default(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    matter_node: MatterNode,
+) -> None:
+    """Test the generic BooleanState fallback entity is disabled by default."""
+    entity_id = "binary_sensor.generic_boolean_sensor_state"
+    assert hass.states.get(entity_id) is None
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+
+@pytest.fixture(name="attributes")
+def attributes_fixture(request: pytest.FixtureRequest) -> dict[str, Any]:
+    """Override node attributes for a parametrized test."""
+    return getattr(request, "param", {})
+
+
+@pytest.mark.parametrize(
+    ("node_fixture", "attributes"),
+    [("mock_generic_boolean_sensor", {"1/29/1": [3, 4, 5, 29]})],
+    indirect=["attributes"],
+)
+async def test_boolean_state_fallback_requires_server_list(
+    hass: HomeAssistant,
+    matter_node: MatterNode,
+) -> None:
+    """Test the fallback ignores a BooleanState attribute outside the ServerList."""
+    assert matter_node
+    assert hass.states.get("binary_sensor.generic_boolean_sensor_state") is None
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
