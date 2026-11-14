@@ -1,5 +1,6 @@
 """Tests for Shelly climate platform."""
 
+import asyncio
 from copy import deepcopy
 from typing import Any
 from unittest.mock import AsyncMock, Mock, PropertyMock
@@ -11,6 +12,7 @@ from aioshelly.const import (
     MODEL_WALL_DISPLAY,
 )
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import (
     async_load_json_object_fixture,
@@ -28,8 +30,10 @@ from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     ATTR_HVAC_MODES,
     ATTR_PRESET_MODE,
+    ATTR_PRESET_MODES,
     DOMAIN as CLIMATE_DOMAIN,
     FAN_LOW,
+    PRESET_BOOST,
     PRESET_NONE,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HUMIDITY,
@@ -74,6 +78,7 @@ from homeassistant.util.unit_system import (
 from . import (
     MOCK_MAC,
     init_integration,
+    mock_polling_rpc_update,
     mutate_rpc_device_status,
     patch_platforms,
     register_device,
@@ -1167,6 +1172,264 @@ async def test_blu_trv_climate_hvac_action(
 
     assert (state := hass.states.get(entity_id))
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.HEATING
+
+
+async def test_blu_trv_climate_boost_preset(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_blu_trv: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test BLU TRV boost preset."""
+
+    entity_id = "climate.trv_name"
+    monkeypatch.delitem(mock_blu_trv.status, "thermostat:0")
+
+    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.attributes[ATTR_PRESET_MODES] == [PRESET_NONE, PRESET_BOOST]
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE
+
+    # The boost is assumed until the next poll
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_BOOST},
+        blocking=True,
+    )
+    mock_blu_trv.blu_trv_set_boost.assert_called_once_with(200)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_BOOST
+
+    # A push update without the boost does not change the assumed preset
+    mock_blu_trv.mock_update()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_BOOST
+
+    # The poll confirms the boost
+    monkeypatch.setitem(
+        mock_blu_trv.status[f"{BLU_TRV_IDENTIFIER}:200"],
+        "boost",
+        {"started_at": 1760365354, "duration": 1800},
+    )
+    await mock_polling_rpc_update(hass, freezer)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_BOOST
+
+    # The none preset is assumed until the next poll
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_NONE},
+        blocking=True,
+    )
+    mock_blu_trv.blu_trv_clear_boost.assert_called_once_with(200)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE
+
+    # The poll confirms the boost is over
+    monkeypatch.delitem(mock_blu_trv.status[f"{BLU_TRV_IDENTIFIER}:200"], "boost")
+    await mock_polling_rpc_update(hass, freezer)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE
+
+
+async def test_blu_trv_climate_boost_preset_poll_takes_over(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_blu_trv: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test the polled boost state replaces the assumed BLU TRV preset."""
+
+    entity_id = "climate.trv_name"
+    monkeypatch.delitem(mock_blu_trv.status, "thermostat:0")
+
+    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_BOOST},
+        blocking=True,
+    )
+
+    assert (state := hass.states.get(entity_id))
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_BOOST
+
+    # The poll does not report a boost, the real state wins
+    await mock_polling_rpc_update(hass, freezer)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE
+
+
+async def test_blu_trv_climate_boost_preset_while_command_running(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_blu_trv: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test the assumed BLU TRV preset is shown while the command is running."""
+
+    entity_id = "climate.trv_name"
+    monkeypatch.delitem(mock_blu_trv.status, "thermostat:0")
+
+    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
+
+    async def set_boost(trv_id: int) -> None:
+        # The preset is shown while the command is running
+        assert (state := hass.states.get(entity_id))
+        assert state.attributes[ATTR_PRESET_MODE] == PRESET_BOOST
+
+        # A poll can not know the result of the running command yet
+        await mock_polling_rpc_update(hass, freezer)
+
+        assert (state := hass.states.get(entity_id))
+        assert state.attributes[ATTR_PRESET_MODE] == PRESET_BOOST
+
+    mock_blu_trv.blu_trv_set_boost.side_effect = set_boost
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_BOOST},
+        blocking=True,
+    )
+
+    # The preset is still assumed after the command, until the next poll
+    assert (state := hass.states.get(entity_id))
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_BOOST
+
+    await mock_polling_rpc_update(hass, freezer)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE
+
+
+async def test_blu_trv_climate_boost_preset_command_error(
+    hass: HomeAssistant,
+    mock_blu_trv: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test the BLU TRV preset is restored when the command fails."""
+
+    entity_id = "climate.trv_name"
+    monkeypatch.delitem(mock_blu_trv.status, "thermostat:0")
+    mock_blu_trv.blu_trv_set_boost.side_effect = DeviceConnectionError
+
+    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_PRESET_MODE,
+            {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_BOOST},
+            blocking=True,
+        )
+
+    assert (state := hass.states.get(entity_id))
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE
+
+
+async def test_blu_trv_climate_boost_preset_poll_error(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_blu_trv: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test the assumed BLU TRV preset is kept when the poll fails."""
+
+    entity_id = "climate.trv_name"
+    monkeypatch.delitem(mock_blu_trv.status, "thermostat:0")
+
+    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_BOOST},
+        blocking=True,
+    )
+
+    # The status is not up to date after a failed poll
+    monkeypatch.setattr(
+        mock_blu_trv, "poll", AsyncMock(side_effect=DeviceConnectionError)
+    )
+    await mock_polling_rpc_update(hass, freezer)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_BOOST
+
+    # The next successful poll shows the real state
+    monkeypatch.setattr(mock_blu_trv, "poll", AsyncMock())
+    await mock_polling_rpc_update(hass, freezer)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE
+
+
+async def test_blu_trv_climate_preset_commands_run_one_at_a_time(
+    hass: HomeAssistant,
+    mock_blu_trv: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test a newer BLU TRV preset command waits for the running one."""
+
+    entity_id = "climate.trv_name"
+    monkeypatch.delitem(mock_blu_trv.status, "thermostat:0")
+
+    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
+
+    release = asyncio.Event()
+
+    async def set_boost(trv_id: int) -> None:
+        await release.wait()
+        raise RpcCallError(999)
+
+    mock_blu_trv.blu_trv_set_boost.side_effect = set_boost
+
+    boost_call = hass.async_create_task(
+        hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_PRESET_MODE,
+            {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_BOOST},
+            blocking=True,
+        )
+    )
+    for _ in range(10):
+        await asyncio.sleep(0)
+
+    none_call = hass.async_create_task(
+        hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_PRESET_MODE,
+            {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_NONE},
+            blocking=True,
+        )
+    )
+    for _ in range(10):
+        await asyncio.sleep(0)
+
+    # The second command waits for the first one
+    mock_blu_trv.blu_trv_clear_boost.assert_not_called()
+
+    release.set()
+    with pytest.raises(HomeAssistantError):
+        await boost_call
+    await none_call
+
+    # The failed boost command does not roll back the newer preset
+    mock_blu_trv.blu_trv_clear_boost.assert_called_once_with(200)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE
 
 
 @pytest.mark.parametrize(
