@@ -25,6 +25,7 @@ from homeassistant.components.event import DOMAIN as EVENT_DOMAIN
 from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
 from homeassistant.components.humidifier import DOMAIN as HUMIDIFIER_DOMAIN
 from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.components.media_player import (
     DOMAIN as MEDIA_PLAYER_DOMAIN,
@@ -74,6 +75,7 @@ from .const import (
     CONF_LINKED_FILTER_CHANGE_INDICATION,
     CONF_LINKED_FILTER_LIFE_LEVEL,
     CONF_LINKED_HUMIDITY_SENSOR,
+    CONF_LINKED_LIGHT,
     CONF_LINKED_MOTION_SENSOR,
     CONF_LINKED_OBSTRUCTION_SENSOR,
     CONF_LINKED_PM25_SENSOR,
@@ -169,7 +171,10 @@ BASIC_INFO_SCHEMA = probatio.Schema(
 )
 
 FEATURE_SCHEMA = BASIC_INFO_SCHEMA.extend(
-    {probatio.Optional(CONF_FEATURE_LIST, default=None): probatio.EnsureList()}
+    {
+        probatio.Optional(CONF_FEATURE_LIST, default=None): probatio.EnsureList(),
+        probatio.Optional(CONF_LINKED_LIGHT): cv.entity_domain(LIGHT_DOMAIN),
+    }
 )
 
 CAMERA_SCHEMA = BASIC_INFO_SCHEMA.extend(
@@ -228,6 +233,7 @@ FAN_SCHEMA = BASIC_INFO_SCHEMA.extend(
                 )
             ),
         ),
+        probatio.Optional(CONF_LINKED_LIGHT): cv.entity_domain(LIGHT_DOMAIN),
         probatio.Optional(CONF_LINKED_HUMIDITY_SENSOR): cv.entity_domain(SENSOR_DOMAIN),
         probatio.Optional(CONF_LINKED_PM25_SENSOR): cv.entity_domain(SENSOR_DOMAIN),
         probatio.Optional(CONF_LINKED_TEMPERATURE_SENSOR): cv.entity_domain(

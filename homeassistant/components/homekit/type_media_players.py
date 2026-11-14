@@ -5,6 +5,7 @@ from typing import Any, override
 
 from pyhap.characteristic import Characteristic
 from pyhap.const import CATEGORY_SWITCH
+from pyhap.util import callback as pyhap_callback
 
 from homeassistant.components.media_player import (
     DOMAIN as MEDIA_PLAYER_DOMAIN,
@@ -47,6 +48,7 @@ from .const import (
     SERV_SWITCH,
     SERV_TELEVISION_SPEAKER,
 )
+from .linked_light import async_create_linked_light
 from .type_remotes import REMOTE_KEYS, RemoteInputSelectAccessory
 from .util import cleanup_name_for_homekit, get_media_player_features
 
@@ -313,7 +315,17 @@ class TelevisionMediaPlayer(RemoteInputSelectAccessory):
                     CHAR_VOLUME, setter_callback=self.set_volume
                 )
 
+        self.linked_light = async_create_linked_light(self)
         self.async_update_state(state)
+
+    @callback
+    @pyhap_callback  # type: ignore[untyped-decorator]
+    @override
+    def run(self) -> None:
+        """Handle accessory driver started event."""
+        if self.linked_light:
+            self._subscriptions.append(self.linked_light.async_subscribe())
+        super().run()
 
     @override
     def set_on_off(self, value: bool) -> None:
