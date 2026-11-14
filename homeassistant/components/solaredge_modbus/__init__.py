@@ -87,6 +87,11 @@ async def async_setup_entry(
             translation_placeholders={"error": str(err)},
         ) from err
 
+    # Set before probing opens the connection: raising the timeout on an open
+    # link tears down and reopens the socket, and some SolarEdge inverters
+    # refuse or ignore a new TCP connection right after the previous one closed.
+    unit.require_timeout(READ_TIMEOUT)
+
     # Blocks that were still silent on the last attachment check are taken for
     # absent, so setting up does not wait out a timeout for each. The first
     # check after setup asks them for real again, which is where a block that
@@ -106,9 +111,6 @@ async def async_setup_entry(
             translation_domain=DOMAIN,
             translation_key="no_solaredge_device",
         ) from err
-
-    # Only now: the probe gives up on a silent block after the link's default.
-    unit.require_timeout(READ_TIMEOUT)
 
     readings = SolarEdgeModbusDataUpdateCoordinator(
         hass,
