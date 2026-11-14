@@ -1,6 +1,7 @@
 """Tests for Shelly light platform."""
 
 from copy import deepcopy
+from typing import Any
 from unittest.mock import AsyncMock, Mock
 
 from aioshelly.const import (
@@ -45,7 +46,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
-from homeassistant.helpers.entity_registry import EntityRegistry
+from homeassistant.helpers.entity_registry import EntityRegistry, RegistryEntryDisabler
 
 from . import (
     get_entity,
@@ -60,6 +61,7 @@ from .conftest import mock_white_light_set_state
 RELAY_BLOCK_ID = 0
 LIGHT_BLOCK_ID = 2
 SHELLY_PLUS_RGBW_CHANNELS = 4
+RGBW_WHITE_ENTITY_ID = "light.test_name_test_rgbw_0_white"
 
 
 @pytest.fixture(autouse=True)
@@ -694,6 +696,230 @@ async def test_rpc_device_rgbw_profile(
 
     assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-rgbw:0"
+
+
+@pytest.fixture
+def rgbw_profile(monkeypatch: pytest.MonkeyPatch, mock_rpc_device: Mock) -> None:
+    """Leave only the RGBW component in the device status."""
+    for i in range(SHELLY_PLUS_RGBW_CHANNELS):
+        monkeypatch.delitem(mock_rpc_device.status, f"light:{i}")
+    monkeypatch.delitem(mock_rpc_device.status, "rgb:0")
+
+
+@pytest.mark.usefixtures("rgbw_profile")
+async def test_rpc_rgbw_white_light_disabled_by_default(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+) -> None:
+    """Test the white light of a RGBW device is disabled by default."""
+    await init_integration(hass, 2)
+
+    assert hass.states.get(RGBW_WHITE_ENTITY_ID) is None
+    assert (entry := entity_registry.async_get(RGBW_WHITE_ENTITY_ID))
+    assert entry.unique_id == "123456789ABC-rgbw:0-rgbw_white"
+    assert entry.disabled_by is RegistryEntryDisabler.INTEGRATION
+
+
+@pytest.mark.usefixtures("rgbw_profile")
+async def test_rpc_rgbw_white_light(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test the white light reports and sets only the white channel."""
+    register_entity(
+        hass, LIGHT_DOMAIN, "test_name_test_rgbw_0_white", "rgbw:0-rgbw_white"
+    )
+    await init_integration(hass, 2)
+
+    assert (state := hass.states.get(RGBW_WHITE_ENTITY_ID))
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_BRIGHTNESS] == 120
+    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.BRIGHTNESS
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.BRIGHTNESS]
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == LightEntityFeature.TRANSITION
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: RGBW_WHITE_ENTITY_ID, ATTR_BRIGHTNESS: 42},
+        blocking=True,
+    )
+
+    mock_rpc_device.call_rpc.assert_called_once_with(
+        "RGBW.Set", {"id": 0, "on": True, "white": 42}
+    )
+
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "rgbw:0", "white", 42)
+    mock_rpc_device.mock_update()
+
+    assert (state := hass.states.get(RGBW_WHITE_ENTITY_ID))
+    assert state.attributes[ATTR_BRIGHTNESS] == 42
+
+
+@pytest.mark.parametrize(
+    ("status_key", "status_value"),
+    [
+        pytest.param("output", False, id="output_off"),
+        pytest.param("white", 0, id="white_zero"),
+    ],
+)
+@pytest.mark.usefixtures("rgbw_profile")
+async def test_rpc_rgbw_white_light_is_off(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    status_key: str,
+    status_value: bool | int,
+) -> None:
+    """Test the white light is off without output or without a white level."""
+    register_entity(
+        hass, LIGHT_DOMAIN, "test_name_test_rgbw_0_white", "rgbw:0-rgbw_white"
+    )
+    mutate_rpc_device_status(
+        monkeypatch, mock_rpc_device, "rgbw:0", status_key, status_value
+    )
+    await init_integration(hass, 2)
+
+    assert (state := hass.states.get(RGBW_WHITE_ENTITY_ID))
+    assert state.state == STATE_OFF
+
+
+@pytest.mark.parametrize(
+    ("status_key", "status_value", "expected_params"),
+    [
+        pytest.param("white", 120, {"id": 0, "white": 0}, id="color_lit"),
+        pytest.param(
+            "rgb", [0, 0, 0], {"id": 0, "white": 0, "on": False}, id="color_black"
+        ),
+        pytest.param(
+            "brightness", 0, {"id": 0, "white": 0, "on": False}, id="brightness_zero"
+        ),
+    ],
+)
+@pytest.mark.usefixtures("rgbw_profile")
+async def test_rpc_rgbw_white_light_turn_off(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    status_key: str,
+    status_value: Any,
+    expected_params: dict[str, Any],
+) -> None:
+    """Test turning off white keeps the output on while color is lit."""
+    register_entity(
+        hass, LIGHT_DOMAIN, "test_name_test_rgbw_0_white", "rgbw:0-rgbw_white"
+    )
+    mutate_rpc_device_status(
+        monkeypatch, mock_rpc_device, "rgbw:0", status_key, status_value
+    )
+    await init_integration(hass, 2)
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: RGBW_WHITE_ENTITY_ID},
+        blocking=True,
+    )
+
+    mock_rpc_device.call_rpc.assert_called_once_with("RGBW.Set", expected_params)
+
+
+@pytest.mark.usefixtures("rgbw_profile")
+async def test_rpc_rgbw_white_light_restores_level(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test turning on without brightness restores the level before turn off."""
+    register_entity(
+        hass, LIGHT_DOMAIN, "test_name_test_rgbw_0_white", "rgbw:0-rgbw_white"
+    )
+    await init_integration(hass, 2)
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: RGBW_WHITE_ENTITY_ID},
+        blocking=True,
+    )
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "rgbw:0", "white", 0)
+    mock_rpc_device.mock_update()
+    mock_rpc_device.call_rpc.reset_mock()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: RGBW_WHITE_ENTITY_ID},
+        blocking=True,
+    )
+
+    mock_rpc_device.call_rpc.assert_called_once_with(
+        "RGBW.Set", {"id": 0, "on": True, "white": 120}
+    )
+
+
+@pytest.mark.usefixtures("rgbw_profile")
+async def test_rpc_rgbw_white_light_default_level(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test turning on without brightness or a known level uses full white."""
+    register_entity(
+        hass, LIGHT_DOMAIN, "test_name_test_rgbw_0_white", "rgbw:0-rgbw_white"
+    )
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "rgbw:0", "white", 0)
+    await init_integration(hass, 2)
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: RGBW_WHITE_ENTITY_ID},
+        blocking=True,
+    )
+
+    mock_rpc_device.call_rpc.assert_called_once_with(
+        "RGBW.Set", {"id": 0, "on": True, "white": 255}
+    )
+
+
+@pytest.mark.parametrize(
+    ("service", "expected_params"),
+    [
+        pytest.param(
+            SERVICE_TURN_ON,
+            {"id": 0, "on": True, "white": 120, "transition_duration": 3},
+            id="turn_on",
+        ),
+        pytest.param(
+            SERVICE_TURN_OFF,
+            {"id": 0, "white": 0, "transition_duration": 3},
+            id="turn_off",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("rgbw_profile")
+async def test_rpc_rgbw_white_light_transition(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    service: str,
+    expected_params: dict[str, Any],
+) -> None:
+    """Test the white light passes the transition to the device."""
+    register_entity(
+        hass, LIGHT_DOMAIN, "test_name_test_rgbw_0_white", "rgbw:0-rgbw_white"
+    )
+    await init_integration(hass, 2)
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: RGBW_WHITE_ENTITY_ID, ATTR_TRANSITION: 3},
+        blocking=True,
+    )
+
+    mock_rpc_device.call_rpc.assert_called_once_with("RGBW.Set", expected_params)
 
 
 async def test_rpc_rgbw_device_light_mode_remove_others(
