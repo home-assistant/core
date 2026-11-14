@@ -1,9 +1,11 @@
 """Provides triggers for weather."""
 
+from typing import override
+
 import probatio
 
 from homeassistant.const import CONF_OPTIONS
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.trigger import (
     ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR,
@@ -43,6 +45,13 @@ class ConditionChangedTrigger(EntityTargetStateTriggerBase):
         """Initialize the trigger."""
         super().__init__(hass, config)
         self._to_states = set(self._options[CONF_CONDITION])
+
+    @override
+    def is_valid_transition(self, from_state: State, to_state: State) -> bool:
+        """Check the condition changed, including between two selected conditions."""
+        return bool(
+            self._get_tracked_value(from_state) != self._get_tracked_value(to_state)
+        )
 
 
 TRIGGERS: dict[str, type[Trigger]] = {

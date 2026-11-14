@@ -70,13 +70,15 @@ ALL_CONDITIONS: Final = (
 )
 
 # Conditions involving rain, matched by the started_raining/stopped_raining
-# triggers. Mirrors the frontend's rainStates (src/data/weather.ts).
+# triggers. Includes snowy-rainy, unlike the frontend's rainStates (used only
+# for icon coloring), so that rain mixed with snow still counts as rain here.
 RAIN_CONDITIONS: Final = frozenset(
     {
         ATTR_CONDITION_HAIL,
         ATTR_CONDITION_RAINY,
         ATTR_CONDITION_POURING,
         ATTR_CONDITION_LIGHTNING_RAINY,
+        ATTR_CONDITION_SNOWY_RAINY,
     }
 )
 

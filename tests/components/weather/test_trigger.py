@@ -147,6 +147,7 @@ async def test_weather_trigger_validation(
             trigger_options={CONF_CONDITION: _CONDITION_CHANGED_TARGETS},
             target_states=_CONDITION_CHANGED_TARGETS,
             other_states=_CONDITION_CHANGED_OTHERS,
+            retrigger_on_target_state=True,
         ),
         *parametrize_trigger_states(
             trigger="weather.started_raining",
