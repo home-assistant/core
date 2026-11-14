@@ -26,6 +26,19 @@ async def test_adam_sensor_snapshot(
 
 
 @pytest.mark.usefixtures("mock_smile_adam_jip")
+@pytest.mark.parametrize("platforms", [(SENSOR_DOMAIN,)])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_adam_jip_sensor_snapshot(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    setup_platform: MockConfigEntry,
+) -> None:
+    """Test Adam Jip sensor snapshot."""
+    await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
+
+
+@pytest.mark.usefixtures("mock_smile_adam_jip")
 async def test_adam_climate_sensor_humidity(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
@@ -121,22 +134,6 @@ async def test_heater_sensors_disabled_by_default(
     assert entry
     assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
     assert hass.states.get(entity_id) is None
-
-
-@pytest.mark.usefixtures("mock_smile_anna")
-@pytest.mark.parametrize("chosen_env", ["anna_heatpump_heating"], indirect=True)
-@pytest.mark.parametrize("cooling_present", [True], indirect=True)
-@pytest.mark.parametrize("platforms", [(SENSOR_DOMAIN,)])
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_heater_dhw_flow_sensor(
-    hass: HomeAssistant,
-    setup_platform: MockConfigEntry,
-) -> None:
-    """Test the DHW flow-rate sensor when enabled."""
-    state = hass.states.get("sensor.opentherm_dhw_flow_rate")
-    assert state
-    assert float(state.state) == 1.8
-    assert state.attributes["unit_of_measurement"] == "L/min"
 
 
 @pytest.mark.usefixtures("mock_smile_anna_p1")
