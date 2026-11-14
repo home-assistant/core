@@ -13,7 +13,10 @@ from tplink_omada_client.exceptions import (
 )
 
 from homeassistant.components.tplink_omada.config_flow import create_omada_client
-from homeassistant.components.tplink_omada.const import DOMAIN
+from homeassistant.components.tplink_omada.const import (
+    CONF_SHOW_ONLY_ADOPTED_DEVICES,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -55,8 +58,37 @@ async def test_form_single_site(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test Omada Controller (Display Name)"
     assert result["data"] == MOCK_ENTRY_DATA
+    assert result["options"] == {CONF_SHOW_ONLY_ADOPTED_DEVICES: True}
     assert result["result"].unique_id == "12345_SiteId"
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize("saved_value", [None, False, True])
+async def test_adopted_devices_option(
+    hass: HomeAssistant, saved_value: bool | None
+) -> None:
+    """Allow an existing site to opt out of Wi-Fi client tracking."""
+    options: dict[str, str | bool] = {"unrelated": "preserved"}
+    if saved_value is not None:
+        options[CONF_SHOW_ONLY_ADOPTED_DEVICES] = saved_value
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRY_DATA, options=options)
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["data_schema"]({}) == {
+        CONF_SHOW_ONLY_ADOPTED_DEVICES: bool(saved_value)
+    }
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {CONF_SHOW_ONLY_ADOPTED_DEVICES: True}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.options == {
+        "unrelated": "preserved",
+        CONF_SHOW_ONLY_ADOPTED_DEVICES: True,
+    }
 
 
 async def test_form_multiple_sites(

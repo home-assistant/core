@@ -3,6 +3,7 @@
 from enum import StrEnum
 
 DOMAIN = "tplink_omada"
+CONF_SHOW_ONLY_ADOPTED_DEVICES = "show_only_adopted_devices"
 
 
 class OmadaDeviceStatus(StrEnum):

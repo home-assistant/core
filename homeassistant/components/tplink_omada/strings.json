@@ -157,6 +157,19 @@
       "message": "Omada controller version not supported."
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "show_only_adopted_devices": "Exclude Wi-Fi clients"
+        },
+        "data_description": {
+          "show_only_adopted_devices": "Stop tracking Wi-Fi clients for this site. Automations using their presence will lose updates while this is enabled."
+        },
+        "title": "Omada device tracking"
+      }
+    }
+  },
   "services": {
     "reconnect_client": {
       "description": "Tries to get wireless client to reconnect to Omada network.",
