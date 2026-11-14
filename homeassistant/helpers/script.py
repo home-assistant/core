@@ -1,7 +1,7 @@
 """Helpers to execute scripts."""
 
 import asyncio
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Coroutine, Iterator, Mapping, Sequence
 from contextvars import ContextVar
 from copy import copy
 from dataclasses import dataclass
@@ -59,6 +59,7 @@ from homeassistant.const import (
     CONF_TARGET,
     CONF_THEN,
     CONF_TIMEOUT,
+    CONF_TRIGGERS,
     CONF_UNTIL,
     CONF_VARIABLES,
     CONF_WAIT_FOR_TRIGGER,
@@ -113,6 +114,11 @@ from .trace import (
     trace_update_result,
 )
 from .typing import ConfigType, TemplateVarsType, Undefined
+from .validation_errors import (
+    ValidationErrorInfo,
+    ValidationErrors,
+    iter_validation_errors,
+)
 
 SCRIPT_MODE_PARALLEL = "parallel"
 SCRIPT_MODE_QUEUED = "queued"
@@ -449,8 +455,204 @@ async def async_validate_action_config(
     if (layout := _NESTED_BLOCKS.get(action_type)) is None:
         raise ValueError(f"No validation for {action_type}")
 
+    # Only the nested blocks are validated: _async_collect_platform_errors
+    # relies on an action with nested blocks having no errors of its own
     await _async_validate_nested_blocks(hass, config, layout)
     return config
+
+
+_BLOCK_SCHEMAS: dict[_BlockKind, Callable[[Any], list[Any]]] = {
+    "triggers": cv.TRIGGER_SCHEMA,
+    "conditions": cv.CONDITIONS_SCHEMA,
+    "actions": cv.SCRIPT_SCHEMA,
+}
+
+# The schema and the platform validator of a single item of a block
+_ITEM_SCHEMAS: dict[_BlockKind, Callable[[Any], Any]] = {
+    "triggers": cv._TRIGGER_ITEM_SCHEMA,  # noqa: SLF001
+    "conditions": cv.CONDITION_SCHEMA,
+    "actions": cv.script_action,
+}
+
+_ITEM_VALIDATORS: dict[
+    _BlockKind, Callable[[HomeAssistant, Any], Coroutine[Any, Any, Any]]
+] = {
+    "triggers": trigger_helper._async_validate_trigger,  # noqa: SLF001
+    "conditions": condition.async_validate_condition_config,
+    "actions": async_validate_action_config,
+}
+
+type _SubmittedPath = tuple[str | int, ...]
+type _SubmittedItem = tuple[_BlockKind, Any, _SubmittedPath]
+
+
+def _iter_list_items(
+    value: Any, path: _SubmittedPath
+) -> Iterator[tuple[Any, _SubmittedPath]]:
+    """Yield the items of a value validated by cv._list_of, with their paths.
+
+    A single item has no index in its path, and None has no items.
+    """
+    if cv._is_item_list(value):  # noqa: SLF001
+        for index, item in enumerate(value):
+            yield item, (*path, index)
+    elif value is not None:
+        yield value, path
+
+
+def _submitted_layout(kind: _BlockKind, item: Any) -> _Layout | None:
+    """Return the layout of the blocks nested in a submitted item, if it has any.
+
+    The item is a condition or an action. The keys of the layout are the ones
+    in the item as written.
+    """
+    if kind == "actions":
+        if not isinstance(item, dict):
+            return None
+        try:
+            action_type = cv.determine_script_action(item)
+        except ValueError:
+            return None
+        if action_type != cv.SCRIPT_ACTION_CHECK_CONDITION:
+            return _NESTED_BLOCKS.get(action_type)
+    if (key := cv._condition_list_key(item)) is None:  # noqa: SLF001
+        return None
+    return {key: _Block("conditions")}
+
+
+def _iter_leaf_items(
+    kind: _BlockKind, block: Any, path: _SubmittedPath
+) -> Iterator[_SubmittedItem]:
+    """Yield the items without nested blocks of a block as it was submitted.
+
+    The items are yielded in the order they are validated, with the kind of
+    the block they are an item of and their path. Nothing is validated here:
+    the walk descends into what the schema takes for a nested block, and
+    yields anything else for the schema of an item to accept or reject.
+    """
+    for item, item_path in _iter_list_items(block, path):
+        if kind == "triggers":
+            if not cv._is_trigger_sublist(item):  # noqa: SLF001
+                yield kind, item, item_path
+                continue
+            # A sublist can't hold sublists
+            for trigger, trigger_path in _iter_list_items(
+                item[CONF_TRIGGERS], (*item_path, CONF_TRIGGERS)
+            ):
+                yield kind, trigger, trigger_path
+        elif (layout := _submitted_layout(kind, item)) is None:
+            yield kind, item, item_path
+        else:
+            yield from _iter_nested_leaf_items(item, layout, item_path)
+
+
+def _iter_nested_leaf_items(
+    config: Any, layout: _Layout, path: _SubmittedPath
+) -> Iterator[_SubmittedItem]:
+    """Yield the leaf items of the blocks in config as submitted, following layout.
+
+    This is _async_validate_nested_blocks for a config which did not pass its
+    schema: what is missing or malformed is skipped, and the forms the schema
+    normalizes are followed as written.
+    """
+    if not isinstance(config, dict):
+        return
+    for key, nested in layout.items():
+        if key not in config:
+            continue
+        if isinstance(nested, _Block):
+            yield from _iter_leaf_items(nested.kind, config[key], (*path, key))
+        elif isinstance(nested, list):
+            for item, item_path in _iter_list_items(config[key], (*path, key)):
+                if key != CONF_PARALLEL or cv._is_parallel_sequence_branch(item):  # noqa: SLF001
+                    yield from _iter_nested_leaf_items(item, nested[0], item_path)
+                else:
+                    # The schema wraps the actions of such a branch in a sequence
+                    yield from _iter_leaf_items("actions", item, item_path)
+        else:
+            yield from _iter_nested_leaf_items(config[key], nested, (*path, key))
+
+
+async def _async_collect_platform_errors(
+    hass: HomeAssistant, kind: _BlockKind, submitted: Any
+) -> list[ValidationErrorInfo]:
+    """Return the errors of the platforms for a block as it was submitted.
+
+    Only the leaf items which pass their own schema are validated by their
+    platform. An item with nested blocks is not validated itself: this assumes
+    async_validate_action_config and async_validate_condition_config only
+    validate the blocks of such an item.
+    """
+    errors: list[ValidationErrorInfo] = []
+    for item_kind, item, path in _iter_leaf_items(kind, submitted, ()):
+        try:
+            validated = _ITEM_SCHEMAS[item_kind](item)
+        except probatio.Invalid:
+            # Reported by the schema of the block
+            continue
+        try:
+            await _ITEM_VALIDATORS[item_kind](hass, validated)
+        except (probatio.Invalid, exceptions.HomeAssistantError) as err:
+            errors.extend(iter_validation_errors(err, path))
+    return errors
+
+
+def _is_same_error(error: ValidationErrorInfo, other: ValidationErrorInfo) -> bool:
+    """Return if two errors are the same, wherever they are located."""
+    return (
+        type(error.exception) is type(other.exception)
+        and error.message == other.message
+    )
+
+
+async def async_validate_block_collect_errors(
+    hass: HomeAssistant,
+    kind: Literal["triggers", "conditions", "actions"],
+    submitted: Any,
+) -> list[Any]:
+    """Validate a block of triggers, conditions or actions, collecting all errors.
+
+    The block is validated as it was submitted, with its schema and then by
+    the platforms. The result is the one of the schema of the block followed
+    by async_validate_trigger_config, async_validate_conditions_config or
+    async_validate_actions_config.
+
+    Raises ValidationErrors if the block is not valid. The path of each error
+    is its path in the submitted block. The errors of the schema come first,
+    followed by the errors of the platforms for the items which pass their
+    own schema.
+    """
+    validated: list[Any] | None = None
+    schema_errors: list[ValidationErrorInfo] = []
+    fail_fast_errors: list[ValidationErrorInfo] = []
+    try:
+        validated = _BLOCK_SCHEMAS[kind](submitted)
+    except probatio.Invalid as err:
+        schema_errors = list(iter_validation_errors(err))
+
+    if validated is not None:
+        try:
+            return await _async_validate_block(hass, kind, validated)
+        except (probatio.Invalid, exceptions.HomeAssistantError) as err:
+            fail_fast_errors = list(iter_validation_errors(err))
+
+    # Not awaited in an except block: each error would be chained in a cycle
+    platform_errors = await _async_collect_platform_errors(hass, kind, submitted)
+    if fail_fast_errors and not (
+        platform_errors and _is_same_error(platform_errors[0], fail_fast_errors[0])
+    ):
+        # The walk should find the error the block's validator raised. If it
+        # doesn't, the walk misses a submitted form (a bug in the walk), or a
+        # platform answered differently the second time, for example because a
+        # device was removed in between. Keep the error so it isn't lost.
+        _LOGGER.warning(
+            "Validating the items of a block of %s one by one did not give the "
+            "error of the block: %s",
+            kind,
+            fail_fast_errors[0],
+        )
+        platform_errors = [*fail_fast_errors, *platform_errors]
+    raise ValidationErrors([*schema_errors, *platform_errors])
 
 
 class _HaltScript(Exception):
