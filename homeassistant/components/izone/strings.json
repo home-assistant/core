@@ -104,9 +104,6 @@
     "discovery_failed_host": {
       "message": "iZone discovery failed while resolving config entry host"
     },
-    "discovery_failed_legacy": {
-      "message": "iZone discovery failed while resolving legacy config entry"
-    },
     "discovery_start_failed": {
       "message": "iZone discovery service failed to start"
     },
@@ -116,17 +113,8 @@
     "invalid_temperature_step": {
       "message": "Temperature {value}°C is not a multiple of 0.5°C"
     },
-    "missing_host": {
-      "message": "iZone config entry is missing host"
-    },
     "missing_unique_id": {
       "message": "iZone config entry is missing unique_id"
-    },
-    "multiple_eligible_controllers": {
-      "message": "Multiple eligible iZone controllers found for a legacy config entry; delete this entry and re-add each controller individually"
-    },
-    "no_eligible_controller": {
-      "message": "No eligible iZone controller found to bind to legacy config entry"
     },
     "refresh_rejected": {
       "message": "iZone controller rejected refresh: {error}"
@@ -148,6 +136,10 @@
     "deprecated_airflow_action": {
       "description": "The `{action}` action is deprecated and will be removed in Home Assistant 2027.6. Use the **Damper minimum** and **Damper maximum** number entities of each zone with the `number.set_value` action instead, and update any automations or scripts that use `{action}`.",
       "title": "The `{action}` action is being removed"
+    },
+    "legacy_entry_removed": {
+      "description": "Your iZone entry from before Home Assistant 2026.8 was set up for more than one controller ({uids}), so it couldn't be updated and was removed. To set up your controller again, go to **Settings** > **Devices & services** and add it from the discovered devices. If you add it within 30 days, its entities keep their previous names and areas.\n\nThis issue clears once one of these controllers is set up.",
+      "title": "Your old iZone entry was removed"
     },
     "yaml_exclude_unused": {
       "description": "iZone now sets up each controller as its own entry, so the `exclude` option in the `izone:` section of your `configuration.yaml` file is no longer needed and has no effect. Controllers that were listed in it now show up as discovered devices. Add them, or select **Ignore** to hide them.\n\nRemove `exclude` from your `configuration.yaml` file and restart Home Assistant to fix this issue.",

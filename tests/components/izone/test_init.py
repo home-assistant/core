@@ -25,13 +25,20 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_EXCLUDE, CONF_HOST, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 
 from .conftest import create_mock_controller, create_mock_zone
 
 EXCLUDE_ISSUE_ID = "yaml_exclude_unused"
+LEGACY_ISSUE_ID = "legacy_entry_removed"
 
 
 async def test_setup_and_unload(
@@ -61,12 +68,17 @@ async def test_setup_and_unload(
 
 
 @pytest.mark.usefixtures("mock_create_discovery", "mock_controller")
-async def test_setup_removes_stale_zone_devices(
+async def test_setup_removes_stale_devices(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Zone devices the controller no longer reports are removed on setup."""
+    """Devices that aren't this controller or its current zones are removed on setup.
+
+    That includes zones the controller no longer reports, and another
+    controller's device left behind by an old legacy rebind.
+    """
     mock_config_entry.add_to_hass(hass)
     controller_device = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
@@ -82,17 +94,24 @@ async def test_setup_removes_stale_zone_devices(
         identifiers={(DOMAIN, "000000001", 5)},  # type: ignore[arg-type]
         via_device_id=controller_device.id,
     )
+    foreign_controller_device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "000000002")},
+    )
+    foreign_climate = entity_registry.async_get_or_create(
+        "climate",
+        DOMAIN,
+        "000000002",
+        config_entry=mock_config_entry,
+        device_id=foreign_controller_device.id,
+    )
 
-    with patch.object(
-        device_registry,
-        "async_remove_device",
-        wraps=device_registry.async_remove_device,
-    ) as remove_device:
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    remove_device.assert_called_once_with(stale_zone_device.id)
     assert device_registry.async_get(stale_zone_device.id) is None
+    assert device_registry.async_get(foreign_controller_device.id) is None
+    assert entity_registry.async_get(foreign_climate.entity_id) is None
     assert device_registry.async_get(controller_device.id) is not None
     assert device_registry.async_get(live_zone_device.id) is not None
 
@@ -135,85 +154,343 @@ async def test_reconfigured_system_reloads_entry(
     )
 
 
-async def test_migrate_heals_legacy_domain_unique_id(
-    hass: HomeAssistant,
-    mock_create_discovery: AsyncMock,
-    mock_discovery_service: Mock,
-    mock_controller: Mock,
-) -> None:
-    """Migrate binds unique_id=DOMAIN to the sole discovered endpoint and loads."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=DOMAIN,
-        title="iZone Aircon",
-        data={},
-        version=2,
-    )
-    entry.add_to_hass(hass)
-    mock_discovery_service.discover_all = AsyncMock(
-        return_value=[ControllerEndpoint(uid="000000001", host="192.0.2.1")]
-    )
-
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert entry.state is ConfigEntryState.LOADED
-    assert entry.version == 2
-    assert entry.minor_version == 2
-    assert entry.unique_id == "000000001"
-    assert entry.data[CONF_HOST] == "192.0.2.1"
-    assert entry.title == "iZone 000000001"
-    mock_discovery_service.create_controller.assert_awaited_once()
-
-
-async def test_migrate_heals_legacy_domain_unique_id_keeps_custom_title(
-    hass: HomeAssistant,
-    mock_create_discovery: AsyncMock,
-    mock_discovery_service: Mock,
-    mock_controller: Mock,
-) -> None:
-    """Legacy rebind keeps a user-customised title instead of rewriting it."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=DOMAIN,
-        title="Living Room AC",
-        data={},
-        version=2,
-    )
-    entry.add_to_hass(hass)
-    mock_discovery_service.discover_all = AsyncMock(
-        return_value=[ControllerEndpoint(uid="000000001", host="192.0.2.1")]
-    )
-
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert entry.state is ConfigEntryState.LOADED
-    assert entry.unique_id == "000000001"
-    assert entry.title == "Living Room AC"
-
-
 async def _async_setup_yaml(hass: HomeAssistant, config: ConfigType) -> None:
     assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done()
 
 
-def _discovery_flow_uids(hass: HomeAssistant) -> set[str]:
-    return {
-        flow["context"]["unique_id"]
-        for flow in hass.config_entries.flow.async_progress_by_handler(DOMAIN)
-        if flow["context"]["source"] == SOURCE_INTEGRATION_DISCOVERY
-    }
-
-
-def _legacy_entry() -> MockConfigEntry:
+def _legacy_entry(
+    version: int = 2,
+    minor_version: int = 1,
+    title: str = "iZone Aircon",
+    data: dict[str, str] | None = None,
+    disabled_by: ConfigEntryDisabler | None = None,
+) -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         unique_id=DOMAIN,
-        title="iZone Aircon",
-        data={},
-        version=2,
+        title=title,
+        data=data or {},
+        version=version,
+        minor_version=minor_version,
+        disabled_by=disabled_by,
     )
+
+
+def _register_controller(
+    device_registry: dr.DeviceRegistry, entry: MockConfigEntry, uid: str
+) -> dr.DeviceEntry:
+    controller = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id, identifiers={(DOMAIN, uid)}
+    )
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, uid, 0)},  # type: ignore[arg-type]
+        via_device_id=controller.id,
+    )
+    return controller
+
+
+@pytest.mark.usefixtures("mock_create_discovery", "mock_controller")
+@pytest.mark.parametrize(
+    ("legacy", "title"),
+    [
+        pytest.param(_legacy_entry(), "iZone 000000001", id="v2_1"),
+        pytest.param(
+            _legacy_entry(version=1, data={CONF_HOST: "203.0.113.1"}),
+            "iZone 000000001",
+            id="v1_stale_host",
+        ),
+        pytest.param(
+            _legacy_entry(title="Living Room AC"), "Living Room AC", id="custom_title"
+        ),
+    ],
+)
+async def test_legacy_entry_bound_to_registered_controller(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    mock_discovery_service: Mock,
+    legacy: MockConfigEntry,
+    title: str,
+) -> None:
+    """A legacy entry takes the UID its controller device was registered under.
+
+    Its devices and entity IDs carry over unchanged.
+    """
+    legacy.add_to_hass(hass)
+    controller_device = _register_controller(device_registry, legacy, "000000001")
+    zone_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "000000001", 0),  # type: ignore[arg-type]
+        legacy.entry_id,
+    )
+    assert zone_device is not None
+    climate = entity_registry.async_get_or_create(
+        "climate",
+        DOMAIN,
+        "000000001",
+        config_entry=legacy,
+        device_id=controller_device.id,
+        suggested_object_id="my_aircon",
+    )
+
+    await _async_setup_yaml(hass, {})
+
+    assert legacy.state is ConfigEntryState.LOADED
+    assert {
+        device.id
+        for device in dr.async_entries_for_config_entry(
+            device_registry, legacy.entry_id
+        )
+    } == {controller_device.id, zone_device.id}
+    assert hass.states.get(climate.entity_id) is not None
+    assert legacy.unique_id == "000000001"
+    assert legacy.title == title
+    assert (legacy.version, legacy.minor_version) == (2, 2)
+    assert legacy.data == {CONF_HOST: "192.0.2.1"}
+    mock_discovery_service.discover_all.assert_not_called()
+    mock_discovery_service.discover_by_uid.assert_awaited_once_with("000000001")
+
+
+@pytest.mark.usefixtures("mock_create_discovery")
+async def test_disabled_legacy_entry_bound_without_setup(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_discovery_service: Mock,
+) -> None:
+    """A disabled legacy entry is bound too, and its controller can't be added again."""
+    legacy = _legacy_entry(disabled_by=ConfigEntryDisabler.USER)
+    legacy.add_to_hass(hass)
+    _register_controller(device_registry, legacy, "000000001")
+
+    await _async_setup_yaml(hass, {})
+
+    assert legacy.state is ConfigEntryState.NOT_LOADED
+    assert legacy.unique_id == "000000001"
+    assert (legacy.version, legacy.minor_version) == (2, 2)
+    assert legacy.data == {}
+    mock_discovery_service.discover_by_uid.assert_not_called()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": SOURCE_INTEGRATION_DISCOVERY,
+            "unique_id": "000000001",
+        },
+        data={CONF_HOST: "192.0.2.1"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("mock_create_discovery", "mock_controller")
+async def test_legacy_entry_bound_from_climate_entity(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Without a controller device, the controller climate entity gives the UID."""
+    legacy = _legacy_entry()
+    legacy.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        "climate", DOMAIN, "000000001", config_entry=legacy
+    )
+    entity_registry.async_get_or_create(
+        "climate", DOMAIN, "000000001_z1", config_entry=legacy
+    )
+
+    await _async_setup_yaml(hass, {})
+
+    assert legacy.state is ConfigEntryState.LOADED
+    assert legacy.unique_id == "000000001"
+
+
+@pytest.mark.usefixtures("mock_create_discovery", "mock_controller")
+@pytest.mark.parametrize(
+    "disabled_by",
+    [
+        pytest.param(None, id="enabled"),
+        pytest.param(ConfigEntryDisabler.USER, id="disabled"),
+    ],
+)
+async def test_legacy_entry_bound_to_controller_not_yet_added(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    disabled_by: ConfigEntryDisabler | None,
+) -> None:
+    """Controllers that already have their own entry don't count for a legacy entry.
+
+    Their leftover devices are removed from the legacy entry on setup.
+    """
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="000000002",
+        data={CONF_HOST: "192.0.2.2"},
+        version=2,
+        minor_version=2,
+        disabled_by=disabled_by,
+    ).add_to_hass(hass)
+    legacy = _legacy_entry()
+    legacy.add_to_hass(hass)
+    _register_controller(device_registry, legacy, "000000001")
+    _register_controller(device_registry, legacy, "000000002")
+
+    await _async_setup_yaml(hass, {})
+
+    assert legacy.state is ConfigEntryState.LOADED
+    assert legacy.unique_id == "000000001"
+    assert {
+        identifier
+        for device in dr.async_entries_for_config_entry(
+            device_registry, legacy.entry_id
+        )
+        for identifier in device.identifiers
+    } == {(DOMAIN, "000000001"), (DOMAIN, "000000001", 0)}
+
+
+@pytest.mark.usefixtures("mock_create_discovery", "mock_controller")
+async def test_legacy_entry_replaces_ignore_of_its_controller(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """An Ignore of the legacy entry's own controller gives way to the legacy entry."""
+    ignored = MockConfigEntry(
+        domain=DOMAIN, unique_id="000000001", source=SOURCE_IGNORE, data={}
+    )
+    ignored.add_to_hass(hass)
+    legacy = _legacy_entry()
+    legacy.add_to_hass(hass)
+    _register_controller(device_registry, legacy, "000000001")
+
+    await _async_setup_yaml(hass, {})
+
+    assert hass.config_entries.async_get_entry(ignored.entry_id) is None
+    assert legacy.state is ConfigEntryState.LOADED
+    assert legacy.unique_id == "000000001"
+
+
+@pytest.mark.usefixtures("mock_create_discovery", "mock_controller")
+@pytest.mark.parametrize(
+    "registered",
+    [
+        pytest.param([], id="never_had_controller"),
+        pytest.param(["000000001"], id="controller_already_added"),
+    ],
+)
+async def test_legacy_entry_without_controller_removed(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    mock_config_entry: MockConfigEntry,
+    registered: list[str],
+) -> None:
+    """A legacy entry with no controller of its own is removed without a repair.
+
+    The controller's own entry takes over the legacy entry's entities.
+    """
+    mock_config_entry.add_to_hass(hass)
+    legacy = _legacy_entry(disabled_by=ConfigEntryDisabler.USER)
+    legacy.add_to_hass(hass)
+    entity_ids = [
+        entity_registry.async_get_or_create(
+            "climate",
+            DOMAIN,
+            uid,
+            config_entry=legacy,
+            device_id=_register_controller(device_registry, legacy, uid).id,
+            suggested_object_id=f"legacy_{uid}",
+        ).entity_id
+        for uid in registered
+    ]
+
+    await _async_setup_yaml(hass, {})
+
+    assert hass.config_entries.async_get_entry(legacy.entry_id) is None
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert issue_registry.async_get_issue(DOMAIN, LEGACY_ISSUE_ID) is None
+    for entity_id in entity_ids:
+        entity = entity_registry.async_get(entity_id)
+        assert entity is not None
+        assert entity.config_entry_id == mock_config_entry.entry_id
+
+
+@pytest.mark.usefixtures("mock_create_discovery", "mock_controller")
+async def test_legacy_entry_devices_take_precedence_over_entities(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Climate entities are only used to find the UID when there are no devices."""
+    mock_config_entry.add_to_hass(hass)
+    legacy = _legacy_entry()
+    legacy.add_to_hass(hass)
+    _register_controller(device_registry, legacy, "000000001")
+    entity_registry.async_get_or_create(
+        "climate", DOMAIN, "000000002", config_entry=legacy
+    )
+
+    await _async_setup_yaml(hass, {})
+
+    assert hass.config_entries.async_get_entry(legacy.entry_id) is None
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.usefixtures("mock_create_discovery", "mock_controller")
+async def test_legacy_entry_with_several_controllers_removed_with_repair(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Several registered controllers remove the entry and raise a repair.
+
+    Setting up one of the listed controllers again clears the repair and
+    restores its device's area and name and its entity's ID and name, as the
+    repair promises.
+    """
+    legacy = _legacy_entry()
+    legacy.add_to_hass(hass)
+    _register_controller(device_registry, legacy, "000000002")
+    controller_device = _register_controller(device_registry, legacy, "000000001")
+    area = area_registry.async_create("Lounge")
+    device_registry.async_update_device(
+        controller_device.id, area_id=area.id, name_by_user="Main AC"
+    )
+    climate = entity_registry.async_get_or_create(
+        "climate",
+        DOMAIN,
+        "000000001",
+        config_entry=legacy,
+        device_id=controller_device.id,
+        suggested_object_id="my_aircon",
+    )
+    entity_registry.async_update_entity(climate.entity_id, name="My AC")
+
+    await _async_setup_yaml(hass, {})
+
+    assert hass.config_entries.async_get_entry(legacy.entry_id) is None
+    issue = issue_registry.async_get_issue(DOMAIN, LEGACY_ISSUE_ID)
+    assert issue is not None
+    assert issue.is_persistent
+    assert issue.translation_placeholders == {"uids": "000000001, 000000002"}
+
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, LEGACY_ISSUE_ID) is None
+    device = device_registry.async_get(controller_device.id)
+    assert device is not None
+    assert device.config_entry_id == mock_config_entry.entry_id
+    assert device.area_id == area.id
+    assert device.name_by_user == "Main AC"
+    entity = entity_registry.async_get(climate.entity_id)
+    assert entity is not None
+    assert entity.config_entry_id == mock_config_entry.entry_id
+    assert entity.name == "My AC"
 
 
 @pytest.mark.usefixtures("mock_create_discovery")
@@ -245,7 +522,7 @@ async def test_setup_removes_ignored_legacy_entry(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """An ignored legacy entry is removed and does not hold back the repair."""
+    """An ignored legacy entry is removed; other ignored entries are kept."""
     ignored = MockConfigEntry(
         domain=DOMAIN,
         unique_id=DOMAIN,
@@ -269,210 +546,24 @@ async def test_setup_removes_ignored_legacy_entry(
     assert issue_registry.async_get_issue(DOMAIN, EXCLUDE_ISSUE_ID)
 
 
-@pytest.mark.usefixtures("mock_create_discovery")
-async def test_disabled_legacy_entry_holds_exclude_issue(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """A disabled legacy entry has not migrated yet, so the repair waits."""
-    MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=DOMAIN,
-        data={},
-        version=2,
-        disabled_by=ConfigEntryDisabler.USER,
-    ).add_to_hass(hass)
-
-    await _async_setup_yaml(hass, {DOMAIN: {CONF_EXCLUDE: ["000000002"]}})
-
-    assert issue_registry.async_get_issue(DOMAIN, EXCLUDE_ISSUE_ID) is None
-
-
 @pytest.mark.usefixtures("mock_create_discovery", "mock_controller")
 @pytest.mark.parametrize(
-    "exclude",
+    "data",
     [
-        pytest.param(["000000002"], id="list"),
-        pytest.param("000000002", id="scalar"),
+        pytest.param({CONF_HOST: "192.0.2.1"}, id="with_host"),
+        pytest.param({}, id="without_host"),
     ],
 )
-async def test_migrate_legacy_domain_unique_id_filters_yaml_excluded(
+async def test_migrate_v2_1_bumps_minor_without_discovery(
     hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
     mock_discovery_service: Mock,
-    exclude: str | list[str],
+    data: dict[str, str],
 ) -> None:
-    """YAML exclude picks the controller and shelves the rest, then raises the repair."""
-    entry = _legacy_entry()
-    entry.add_to_hass(hass)
-    mock_discovery_service.discover_all = AsyncMock(
-        return_value=[
-            ControllerEndpoint(uid="000000001", host="192.0.2.1"),
-            ControllerEndpoint(uid="000000002", host="192.0.2.2"),
-        ]
-    )
-
-    await _async_setup_yaml(hass, {DOMAIN: {CONF_EXCLUDE: exclude}})
-
-    assert entry.state is ConfigEntryState.LOADED
-    assert entry.unique_id == "000000001"
-    assert entry.data[CONF_HOST] == "192.0.2.1"
-    assert _discovery_flow_uids(hass) == {"000000002"}
-    assert issue_registry.async_get_issue(DOMAIN, EXCLUDE_ISSUE_ID)
-
-
-@pytest.mark.usefixtures("mock_create_discovery")
-async def test_migrate_legacy_domain_unique_id_only_excluded_retries(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-    mock_discovery_service: Mock,
-) -> None:
-    """An excluded controller is never the legacy entry's controller, so it retries."""
-    entry = _legacy_entry()
-    entry.add_to_hass(hass)
-    mock_discovery_service.discover_all = AsyncMock(
-        return_value=[ControllerEndpoint(uid="000000002", host="192.0.2.2")]
-    )
-
-    await _async_setup_yaml(hass, {DOMAIN: {CONF_EXCLUDE: ["000000002"]}})
-
-    assert entry.state is ConfigEntryState.SETUP_RETRY
-    assert entry.unique_id == DOMAIN
-    assert _discovery_flow_uids(hass) == {"000000002"}
-    assert issue_registry.async_get_issue(DOMAIN, EXCLUDE_ISSUE_ID) is None
-
-
-@pytest.mark.usefixtures("mock_create_discovery")
-async def test_migrate_legacy_domain_unique_id_multiple_after_exclude_fails(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-    mock_discovery_service: Mock,
-) -> None:
-    """Several controllers left after exclude fail migration and hold the repair."""
-    entry = _legacy_entry()
-    entry.add_to_hass(hass)
-    mock_discovery_service.discover_all = AsyncMock(
-        return_value=[
-            ControllerEndpoint(uid="000000001", host="192.0.2.1"),
-            ControllerEndpoint(uid="000000002", host="192.0.2.2"),
-            ControllerEndpoint(uid="000000003", host="192.0.2.3"),
-        ]
-    )
-
-    await _async_setup_yaml(hass, {DOMAIN: {CONF_EXCLUDE: ["000000002"]}})
-
-    assert entry.state is ConfigEntryState.MIGRATION_ERROR
-    assert entry.unique_id == DOMAIN
-    assert issue_registry.async_get_issue(DOMAIN, EXCLUDE_ISSUE_ID) is None
-
-
-@pytest.mark.usefixtures("mock_create_discovery", "mock_controller")
-async def test_migrate_legacy_domain_unique_id_retry_defers_exclude_issue(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-    mock_discovery_service: Mock,
-) -> None:
-    """The repair waits until a retried legacy migration succeeds."""
-    entry = _legacy_entry()
-    entry.add_to_hass(hass)
-    mock_discovery_service.discover_all = AsyncMock(return_value=[])
-
-    await _async_setup_yaml(hass, {DOMAIN: {CONF_EXCLUDE: ["000000002"]}})
-
-    assert entry.state is ConfigEntryState.SETUP_RETRY
-    assert issue_registry.async_get_issue(DOMAIN, EXCLUDE_ISSUE_ID) is None
-
-    mock_discovery_service.discover_all.return_value = [
-        ControllerEndpoint(uid="000000001", host="192.0.2.1"),
-        ControllerEndpoint(uid="000000002", host="192.0.2.2"),
-    ]
-    assert await hass.config_entries.async_reload(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert entry.state is ConfigEntryState.LOADED
-    assert entry.unique_id == "000000001"
-    assert issue_registry.async_get_issue(DOMAIN, EXCLUDE_ISSUE_ID)
-
-
-async def test_migrate_legacy_domain_unique_id_filters_already_configured(
-    hass: HomeAssistant,
-    mock_create_discovery: AsyncMock,
-    mock_discovery_service: Mock,
-    mock_controller: Mock,
-) -> None:
-    """Already-configured UIDs are skipped when binding a legacy DOMAIN entry."""
-    configured = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="000000002",
-        data={CONF_HOST: "192.0.2.2"},
-        version=2,
-        minor_version=2,
-    )
-    configured.add_to_hass(hass)
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=DOMAIN,
-        title="iZone Aircon",
-        data={},
-        version=2,
-    )
-    entry.add_to_hass(hass)
-    mock_discovery_service.discover_all = AsyncMock(
-        return_value=[
-            ControllerEndpoint(uid="000000001", host="192.0.2.1"),
-            ControllerEndpoint(uid="000000002", host="192.0.2.2"),
-        ]
-    )
-
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert entry.state is ConfigEntryState.LOADED
-    assert entry.unique_id == "000000001"
-    assert entry.data[CONF_HOST] == "192.0.2.1"
-
-
-async def test_migrate_v1_legacy_domain_unique_id(
-    hass: HomeAssistant,
-    mock_create_discovery: AsyncMock,
-    mock_discovery_service: Mock,
-    mock_controller: Mock,
-) -> None:
-    """v1 migrate discovers and writes UID + CONF_HOST (no blank-data step)."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        version=1,
-        unique_id=DOMAIN,
-        title="iZone Aircon",
-        data={"host": "203.0.113.1"},
-    )
-    entry.add_to_hass(hass)
-    mock_discovery_service.discover_all = AsyncMock(
-        return_value=[ControllerEndpoint(uid="000000001", host="192.0.2.1")]
-    )
-
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert entry.version == 2
-    assert entry.minor_version == 2
-    assert entry.state is ConfigEntryState.LOADED
-    assert entry.unique_id == "000000001"
-    assert entry.data == {CONF_HOST: "192.0.2.1"}
-    assert entry.title == "iZone 000000001"
-
-
-async def test_migrate_complete_v2_1_bumps_minor_without_discovery(
-    hass: HomeAssistant,
-    mock_create_discovery: AsyncMock,
-    mock_discovery_service: Mock,
-    mock_controller: Mock,
-) -> None:
-    """Complete v2.1 entry (real UID + host) only bumps minor_version; no discover."""
+    """Migration only bumps the version; a missing host is looked up by setup."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="000000001",
-        data={CONF_HOST: "192.0.2.1"},
+        data=data,
         version=2,
         minor_version=1,
     )
@@ -482,205 +573,101 @@ async def test_migrate_complete_v2_1_bumps_minor_without_discovery(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
-    assert entry.version == 2
-    assert entry.minor_version == 2
-    assert entry.unique_id == "000000001"
+    assert (entry.version, entry.minor_version) == (2, 2)
     assert entry.data == {CONF_HOST: "192.0.2.1"}
     mock_discovery_service.discover_all.assert_not_called()
-    mock_discovery_service.discover_by_uid.assert_not_called()
     mock_discovery_service.create_controller.assert_awaited_once()
 
 
-async def test_migrate_legacy_domain_unique_id_no_eligible_retries(
+@pytest.mark.usefixtures("mock_create_discovery", "mock_controller")
+async def test_setup_without_host_finds_it_by_uid(
     hass: HomeAssistant,
-    mock_create_discovery: AsyncMock,
     mock_discovery_service: Mock,
 ) -> None:
-    """Legacy unique_id=DOMAIN with no eligible endpoint leaves SETUP_RETRY."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=DOMAIN,
-        title="iZone Aircon",
-        data={},
-        version=2,
-    )
-    entry.add_to_hass(hass)
-    mock_discovery_service.discover_all = AsyncMock(return_value=[])
-
-    assert not await hass.config_entries.async_setup(entry.entry_id)
-    assert entry.state is ConfigEntryState.SETUP_RETRY
-    assert entry.version == 2
-    assert entry.minor_version == 1
-    assert entry.unique_id == DOMAIN
-    assert entry.data == {}
-
-
-async def test_migrate_legacy_domain_unique_id_multiple_eligible_fails(
-    hass: HomeAssistant,
-    mock_create_discovery: AsyncMock,
-    mock_discovery_service: Mock,
-) -> None:
-    """Legacy unique_id=DOMAIN with multiple eligible endpoints is MIGRATION_ERROR."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=DOMAIN,
-        title="iZone Aircon",
-        data={},
-        version=2,
-    )
-    entry.add_to_hass(hass)
-    mock_discovery_service.discover_all = AsyncMock(
-        return_value=[
-            ControllerEndpoint(uid="000000001", host="192.0.2.1"),
-            ControllerEndpoint(uid="000000002", host="192.0.2.2"),
-        ]
-    )
-
-    assert not await hass.config_entries.async_setup(entry.entry_id)
-    assert entry.state is ConfigEntryState.MIGRATION_ERROR
-    assert entry.version == 2
-    assert entry.minor_version == 1
-
-
-async def test_migrate_heals_missing_host_via_discover_endpoint(
-    hass: HomeAssistant,
-    mock_create_discovery: AsyncMock,
-    mock_discovery_service: Mock,
-    mock_controller: Mock,
-) -> None:
-    """Real UID with empty data recovers CONF_HOST via discover_by_uid in migrate."""
+    """An entry without a host finds it by UID and stores it."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="000000001",
         data={},
         version=2,
+        minor_version=2,
     )
     entry.add_to_hass(hass)
     mock_discovery_service.discover_by_uid = AsyncMock(
-        return_value=ControllerEndpoint(uid="000000001", host="192.0.2.1")
+        return_value=ControllerEndpoint(uid="000000001", host="192.0.2.7")
     )
 
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
-    assert entry.minor_version == 2
-    assert entry.data[CONF_HOST] == "192.0.2.1"
+    assert entry.data == {CONF_HOST: "192.0.2.7"}
     mock_discovery_service.create_controller.assert_awaited_once()
-
-
-async def test_migrate_missing_host_not_found_retries(
-    hass: HomeAssistant,
-    mock_create_discovery: AsyncMock,
-    mock_discovery_service: Mock,
-) -> None:
-    """Real UID with empty data and no discovered endpoint leaves SETUP_RETRY."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="000000001",
-        data={},
-        version=2,
-    )
-    entry.add_to_hass(hass)
-    mock_discovery_service.discover_by_uid = AsyncMock(return_value=None)
-
-    assert not await hass.config_entries.async_setup(entry.entry_id)
-    assert entry.state is ConfigEntryState.SETUP_RETRY
-    assert entry.minor_version == 1
-    assert entry.error_reason_translation_key == "controller_not_found"
-    assert entry.error_reason_translation_placeholders == {"uid": "000000001"}
-    mock_discovery_service.create_controller.assert_not_awaited()
-
-
-async def test_migrate_missing_host_verify_error_retries(
-    hass: HomeAssistant,
-    mock_create_discovery: AsyncMock,
-    mock_discovery_service: Mock,
-) -> None:
-    """A UID whose address fails the HTTP check leaves SETUP_RETRY with its host."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="000000001",
-        data={},
-        version=2,
-    )
-    entry.add_to_hass(hass)
-    mock_discovery_service.discover_by_uid = AsyncMock(
-        side_effect=EndpointVerifyError(
-            "192.0.2.1", VerifyFailure.NO_REPLY, uid="000000001"
-        )
+    assert mock_discovery_service.create_controller.await_args.args == (
+        "000000001",
+        "192.0.2.7",
     )
 
-    assert not await hass.config_entries.async_setup(entry.entry_id)
-    assert entry.state is ConfigEntryState.SETUP_RETRY
-    assert entry.error_reason_translation_key == "cannot_connect"
-    assert entry.error_reason_translation_placeholders == {"host": "192.0.2.1"}
-    mock_discovery_service.create_controller.assert_not_awaited()
 
-
+@pytest.mark.usefixtures("mock_create_discovery")
 @pytest.mark.parametrize(
-    "side_effect",
+    ("discover_by_uid", "translation_key", "placeholders"),
     [
-        pytest.param(OSError("bind failed"), id="oserror"),
-        pytest.param(RuntimeError("discovery already exists"), id="runtimeerror"),
+        pytest.param(
+            AsyncMock(return_value=None),
+            "controller_not_found",
+            {"uid": "000000001"},
+            id="not_found",
+        ),
+        pytest.param(
+            AsyncMock(
+                side_effect=EndpointVerifyError(
+                    "192.0.2.1", VerifyFailure.NO_REPLY, uid="000000001"
+                )
+            ),
+            "cannot_connect",
+            {"host": "192.0.2.1"},
+            id="verify_error",
+        ),
+        pytest.param(
+            AsyncMock(side_effect=OSError("bind failed")),
+            "discovery_failed_host",
+            None,
+            id="oserror",
+        ),
+        pytest.param(
+            AsyncMock(side_effect=RuntimeError("discovery already exists")),
+            "discovery_failed_host",
+            None,
+            id="runtimeerror",
+        ),
     ],
 )
-async def test_migrate_legacy_domain_unique_id_discovery_error_retries(
+async def test_setup_without_host_lookup_failure_retries(
     hass: HomeAssistant,
-    mock_create_discovery: AsyncMock,
-    side_effect: Exception,
+    mock_discovery_service: Mock,
+    discover_by_uid: AsyncMock,
+    translation_key: str,
+    placeholders: dict[str, str] | None,
 ) -> None:
-    """Discovery startup errors for legacy DOMAIN unique_id leave SETUP_RETRY."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=DOMAIN,
-        title="iZone Aircon",
-        data={},
-        version=2,
-    )
-    entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.izone.async_discover_all_endpoints",
-        new=AsyncMock(side_effect=side_effect),
-    ):
-        assert not await hass.config_entries.async_setup(entry.entry_id)
-
-    assert entry.state is ConfigEntryState.SETUP_RETRY
-    assert entry.minor_version == 1
-    assert entry.error_reason_translation_key == "discovery_failed_legacy"
-
-
-@pytest.mark.parametrize(
-    "side_effect",
-    [
-        pytest.param(OSError("bind failed"), id="oserror"),
-        pytest.param(RuntimeError("discovery already exists"), id="runtimeerror"),
-    ],
-)
-async def test_migrate_missing_host_discover_error_retries(
-    hass: HomeAssistant,
-    mock_create_discovery: AsyncMock,
-    side_effect: Exception,
-) -> None:
-    """Discovery startup errors while resolving host leave SETUP_RETRY."""
+    """A failed host lookup leaves the entry retrying with no host stored."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="000000001",
         data={},
         version=2,
+        minor_version=2,
     )
     entry.add_to_hass(hass)
+    mock_discovery_service.discover_by_uid = discover_by_uid
 
-    with patch(
-        "homeassistant.components.izone.async_discover_endpoint",
-        new=AsyncMock(side_effect=side_effect),
-    ):
-        assert not await hass.config_entries.async_setup(entry.entry_id)
+    assert not await hass.config_entries.async_setup(entry.entry_id)
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
-    assert entry.minor_version == 1
-    assert entry.error_reason_translation_key == "discovery_failed_host"
+    assert entry.error_reason_translation_key == translation_key
+    assert entry.error_reason_translation_placeholders == placeholders
+    assert entry.data == {}
+    mock_discovery_service.create_controller.assert_not_awaited()
 
 
 @pytest.mark.parametrize(
