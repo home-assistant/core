@@ -1,0 +1,6 @@
+{
+  "domain": "certikin_neopool",
+  "name": "Certikin",
+  "integration_type": "virtual",
+  "supported_by": "neopool"
+}
