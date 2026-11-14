@@ -21,14 +21,14 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.homevolt.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -96,8 +96,11 @@ async def test_set_number_value(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: value},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            NumberServiceArgument.VALUE: value,
+        },
         blocking=True,
     )
 
@@ -156,8 +159,11 @@ async def test_invalid_number_value(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: SETPOINT_ENTITY_ID, ATTR_VALUE: value},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: SETPOINT_ENTITY_ID,
+                NumberServiceArgument.VALUE: value,
+            },
             blocking=True,
         )
 
@@ -240,8 +246,11 @@ async def test_set_number_value_error(
     with pytest.raises(expected_exception) as exc_info:
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: SETPOINT_ENTITY_ID, ATTR_VALUE: 1000},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: SETPOINT_ENTITY_ID,
+                NumberServiceArgument.VALUE: 1000,
+            },
             blocking=True,
         )
 
@@ -275,8 +284,11 @@ async def test_commands_preserve_telemetry_polling(
         await hass.async_block_till_done()
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: SETPOINT_ENTITY_ID, ATTR_VALUE: 1000},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: SETPOINT_ENTITY_ID,
+                NumberServiceArgument.VALUE: 1000,
+            },
             blocking=True,
         )
         mock_homevolt_client.update_info.assert_not_awaited()

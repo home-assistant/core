@@ -369,6 +369,9 @@ class WebSocketHandler:
                 disconnect_warn = disconnect_msg
 
             logger.debug("%s: Connection closed by client: %s", self.description, ex)
+        except ConnectionResetError:
+            # The client went away while a message was being written to it
+            disconnect_warn = "Connection reset by peer"
         except Exception:
             logger.exception(
                 "%s: Unexpected error inside websocket API", self.description

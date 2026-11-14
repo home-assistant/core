@@ -14,6 +14,7 @@ from homeassistant.components.notify import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers.os_error import os_read_error
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
@@ -108,11 +109,7 @@ class PushoverNotificationService(BaseNotificationService):
                 # pylint: disable-next=consider-using-with
                 file_handle = open(data[ATTR_ATTACHMENT], "rb")
             except OSError as err:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="attachment_open_failed",
-                    translation_placeholders={"attachment": data[ATTR_ATTACHMENT]},
-                ) from err
+                raise os_read_error(err, data[ATTR_ATTACHMENT]) from err
             # Replace the attachment identifier with file object.
             image = file_handle
 

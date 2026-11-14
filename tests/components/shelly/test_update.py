@@ -23,16 +23,16 @@ from homeassistant.components.update import (
     ATTR_RELEASE_URL,
     ATTR_UPDATE_PERCENTAGE,
     DOMAIN as UPDATE_DOMAIN,
-    SERVICE_INSTALL,
     UpdateEntityFeature,
+    UpdateService,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant, State
@@ -86,8 +86,8 @@ async def test_block_update(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: entity_id},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert mock_block_device.trigger_ota_update.call_count == 1
@@ -152,8 +152,8 @@ async def test_block_beta_update(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: entity_id},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert mock_block_device.trigger_ota_update.call_count == 1
@@ -203,8 +203,8 @@ async def test_block_update_connection_error(
     ):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: "update.test_name_firmware"},
+            UpdateService.INSTALL,
+            {CommonServiceArgument.ENTITY_ID: "update.test_name_firmware"},
             blocking=True,
         )
 
@@ -229,8 +229,8 @@ async def test_block_update_auth_error(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: "update.test_name_firmware"},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: "update.test_name_firmware"},
         blocking=True,
     )
 
@@ -324,8 +324,8 @@ async def test_rpc_update(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: entity_id},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -484,8 +484,8 @@ async def test_rpc_lora_update_in_progress(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: entity_id},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -589,8 +589,8 @@ async def test_rpc_lora_update_errors(
     with pytest.raises(HomeAssistantError, match=error):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: "update.test_name_lora_add_on_firmware"},
+            UpdateService.INSTALL,
+            {CommonServiceArgument.ENTITY_ID: "update.test_name_lora_add_on_firmware"},
             blocking=True,
         )
 
@@ -622,8 +622,8 @@ async def test_rpc_lora_update_auth_error(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: "update.test_name_lora_add_on_firmware"},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: "update.test_name_lora_add_on_firmware"},
         blocking=True,
     )
 
@@ -848,8 +848,8 @@ async def test_rpc_beta_update(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: entity_id},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
     inject_rpc_device_event(
@@ -965,8 +965,8 @@ async def test_rpc_update_errors(
     with pytest.raises(HomeAssistantError, match=error):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: "update.test_name_firmware"},
+            UpdateService.INSTALL,
+            {CommonServiceArgument.ENTITY_ID: "update.test_name_firmware"},
             blocking=True,
         )
 
@@ -999,8 +999,8 @@ async def test_rpc_update_auth_error(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: "update.test_name_firmware"},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: "update.test_name_firmware"},
         blocking=True,
     )
 
@@ -1046,8 +1046,8 @@ async def test_blu_trv_update(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: entity_id},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -1132,8 +1132,8 @@ async def test_blu_trv_update_progress(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: entity_id},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -1176,8 +1176,8 @@ async def test_blu_trv_update_refreshes_installed_version(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: entity_id},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -1205,8 +1205,8 @@ async def test_blu_trv_update_refresh_errors(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: entity_id},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -1382,8 +1382,8 @@ async def test_blu_trv_update_install_errors(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: entity_id},
+            UpdateService.INSTALL,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -1405,8 +1405,8 @@ async def test_blu_trv_update_install_auth_error(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: "update.trv_name_firmware"},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: "update.trv_name_firmware"},
         blocking=True,
     )
 

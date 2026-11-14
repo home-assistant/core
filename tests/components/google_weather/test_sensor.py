@@ -23,6 +23,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
     Platform,
     UnitOfLength,
     UnitOfPressure,
@@ -202,3 +203,37 @@ async def test_auth_failure_during_update(
         flow["step_id"] == "user"
         for flow in hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensor_missing_optional_fields(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_google_weather_api: AsyncMock,
+) -> None:
+    """Test sensors report unknown when optional regional fields are omitted."""
+    current = mock_google_weather_api.async_get_current_conditions.return_value
+    current.wind.gust = None
+    current.cloud_cover = None
+    current.thunderstorm_probability = None
+    current.heat_index.degrees = None
+    current.wind_chill.degrees = None
+    current.visibility.distance = None
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    for entity_id in (
+        "sensor.home_wind_gust_speed",
+        "sensor.home_cloud_coverage",
+        "sensor.home_thunderstorm_probability",
+        "sensor.home_heat_index_temperature",
+        "sensor.home_wind_chill_temperature",
+        "sensor.home_visibility",
+    ):
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == STATE_UNKNOWN
+
+    temperature_state = hass.states.get("sensor.home_temperature")
+    assert temperature_state
+    assert temperature_state.state == "13.7"

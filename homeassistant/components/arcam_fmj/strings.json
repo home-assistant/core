@@ -154,6 +154,12 @@
     }
   },
   "exceptions": {
+    "command_not_supported": {
+      "message": "The command is not supported by the device."
+    },
+    "command_rejected": {
+      "message": "The device rejected the command."
+    },
     "connection_failed": {
       "message": "Connection failed to the device."
     },

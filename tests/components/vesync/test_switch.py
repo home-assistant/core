@@ -1,15 +1,23 @@
 """Tests for the switch module."""
 
 from contextlib import nullcontext
-from unittest.mock import patch
+from unittest.mock import PropertyMock, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pyvesync.devices.vesynchumidifier import VeSyncHumid200S
+from pyvesync.utils.errors import ResponseInfo
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -17,6 +25,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from .common import ALL_DEVICE_NAMES, ENTITY_SWITCH_DISPLAY, mock_devices_response
 
 NoException = nullcontext()
+DEVICE_ERROR = ResponseInfo(name="error", error_type="error", message="Device error")
 
 
 @pytest.mark.parametrize("device_name", ALL_DEVICE_NAMES)
@@ -58,15 +67,25 @@ async def test_switch_state(
 
 
 @pytest.mark.parametrize(
-    ("action", "command"),
+    ("action", "last_response", "message"),
     [
-        (
-            SERVICE_TURN_ON,
-            "pyvesync.devices.vesynchumidifier.VeSyncHumid200S.toggle_display",
+        pytest.param(
+            SERVICE_TURN_ON, DEVICE_ERROR, "Device error", id="on_last_response"
         ),
-        (
+        pytest.param(
+            SERVICE_TURN_ON,
+            None,
+            "Unknown error turning on device, no response.",
+            id="on_no_last_response",
+        ),
+        pytest.param(
+            SERVICE_TURN_OFF, DEVICE_ERROR, "Device error", id="off_last_response"
+        ),
+        pytest.param(
             SERVICE_TURN_OFF,
-            "pyvesync.devices.vesynchumidifier.VeSyncHumid200S.toggle_display",
+            None,
+            "Unknown error turning off device, no response.",
+            id="off_no_last_response",
         ),
     ],
 )
@@ -75,18 +94,25 @@ async def test_turn_on_off_display_raises_error(
     humidifier_config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
     action: str,
-    command: str,
+    last_response: ResponseInfo | None,
+    message: str,
 ) -> None:
     """Test switch turn on and off command raises HomeAssistantError."""
 
     mock_devices_response(aioclient_mock, "Humidifier 200s")
 
+    async def _fail_toggle(device: VeSyncHumid200S, toggle: bool) -> bool:
+        device.last_response = last_response
+        return False
+
     with (
-        patch(
-            command,
-            return_value=False,
+        patch.object(
+            VeSyncHumid200S,
+            "toggle_display",
+            autospec=True,
+            side_effect=_fail_toggle,
         ) as method_mock,
-        pytest.raises(HomeAssistantError),
+        pytest.raises(HomeAssistantError, match=message),
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
@@ -97,6 +123,104 @@ async def test_turn_on_off_display_raises_error(
 
     await hass.async_block_till_done()
     method_mock.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("device_name", "entity_id", "action", "command", "message"),
+    [
+        pytest.param(
+            "Outlet",
+            "switch.outlet",
+            SERVICE_TURN_ON,
+            "pyvesync.devices.vesyncoutlet.VeSyncOutlet.turn_on",
+            "Device does not support toggling power.",
+            id="power_on",
+        ),
+        pytest.param(
+            "Outlet",
+            "switch.outlet",
+            SERVICE_TURN_OFF,
+            "pyvesync.devices.vesyncoutlet.VeSyncOutlet.turn_off",
+            "Device does not support toggling power.",
+            id="power_off",
+        ),
+        pytest.param(
+            "Humidifier 200s",
+            "switch.humidifier_200s_display",
+            SERVICE_TURN_ON,
+            "pyvesync.devices.vesynchumidifier.VeSyncHumid200S.toggle_display",
+            "Device does not support toggling display.",
+            id="display",
+        ),
+        pytest.param(
+            "Humidifier 6000s",
+            "switch.humidifier_6000s_child_lock",
+            SERVICE_TURN_ON,
+            "pyvesync.devices.vesynchumidifier.VeSyncSuperior6000S.toggle_child_lock",
+            "Device does not support toggling child lock.",
+            id="child_lock",
+        ),
+        pytest.param(
+            "Humidifier 200s",
+            "switch.humidifier_200s_auto_off",
+            SERVICE_TURN_ON,
+            "pyvesync.devices.vesynchumidifier.VeSyncHumid200S.toggle_automatic_stop",
+            "Device does not support toggling automatic stop.",
+            id="auto_stop",
+        ),
+        pytest.param(
+            "Humidifier 6000s",
+            "switch.humidifier_6000s_enable_drying_mode_while_power_is_off",
+            SERVICE_TURN_ON,
+            "pyvesync.devices.vesynchumidifier.VeSyncSuperior6000S.toggle_drying_mode",
+            "Device does not support toggling drying mode.",
+            id="drying_mode",
+        ),
+        pytest.param(
+            "Air Purifier Vital 200S",
+            "switch.air_purifier_vital_200s_light_detection",
+            SERVICE_TURN_ON,
+            "pyvesync.devices.vesyncpurifier.VeSyncAirBaseV2.toggle_light_detection",
+            "Device does not support toggling light detection.",
+            id="light_detection",
+        ),
+        pytest.param(
+            "SmartTowerFan",
+            "switch.smarttowerfan_mute",
+            SERVICE_TURN_ON,
+            "pyvesync.devices.vesyncfan.VeSyncTowerFan.toggle_mute",
+            "Device does not support toggling mute.",
+            id="mute",
+        ),
+    ],
+)
+async def test_switch_unsupported_command(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    device_name: str,
+    entity_id: str,
+    action: str,
+    command: str,
+    message: str,
+) -> None:
+    """Test an error is raised when the device lacks the switch command."""
+    mock_devices_response(aioclient_mock, device_name)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # hasattr() is False when attribute lookup raises AttributeError
+    with (
+        patch(command, new_callable=PropertyMock, side_effect=AttributeError),
+        pytest.raises(HomeAssistantError, match=message),
+    ):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            action,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
 
 
 @pytest.mark.parametrize(
@@ -167,6 +291,32 @@ async def test_turn_on_off_display_raises_error(
             SERVICE_TURN_OFF,
             "pyvesync.devices.vesynchumidifier.VeSyncSuperior6000S.toggle_drying_mode",
         ),
+        # light_detection switch for purifier
+        (
+            "Air Purifier Vital 200S",
+            "switch.air_purifier_vital_200s_light_detection",
+            SERVICE_TURN_ON,
+            "pyvesync.devices.vesyncpurifier.VeSyncAirBaseV2.toggle_light_detection",
+        ),
+        (
+            "Air Purifier Vital 200S",
+            "switch.air_purifier_vital_200s_light_detection",
+            SERVICE_TURN_OFF,
+            "pyvesync.devices.vesyncpurifier.VeSyncAirBaseV2.toggle_light_detection",
+        ),
+        # mute switch for fan
+        (
+            "SmartTowerFan",
+            "switch.smarttowerfan_mute",
+            SERVICE_TURN_ON,
+            "pyvesync.devices.vesyncfan.VeSyncTowerFan.toggle_mute",
+        ),
+        (
+            "SmartTowerFan",
+            "switch.smarttowerfan_mute",
+            SERVICE_TURN_OFF,
+            "pyvesync.devices.vesyncfan.VeSyncTowerFan.toggle_mute",
+        ),
     ],
 )
 async def test_switch_operations(
@@ -206,3 +356,32 @@ async def test_switch_operations(
     await hass.async_block_till_done()
     method_mock.assert_called_once()
     update_mock.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("light_detection_switch", "expected_state"),
+    [
+        pytest.param(0, STATE_OFF, id="off"),
+        pytest.param(1, STATE_ON, id="on"),
+    ],
+)
+async def test_light_detection_state(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    light_detection_switch: int,
+    expected_state: str,
+) -> None:
+    """Test the light detection switch reflects the device state."""
+    mock_devices_response(
+        aioclient_mock,
+        "Air Purifier Vital 200S",
+        details_override={"lightDetectionSwitch": light_detection_switch},
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.air_purifier_vital_200s_light_detection")
+    assert state
+    assert state.state == expected_state

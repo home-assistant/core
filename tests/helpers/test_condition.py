@@ -32,6 +32,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from homeassistant.components.device_automation import (
     DOMAIN as DEVICE_AUTOMATION_DOMAIN,
+    InvalidDeviceAutomationConfig,
 )
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.recorder import Recorder, get_instance, history
@@ -40,9 +41,7 @@ from homeassistant.components.sun import DOMAIN as SUN_DOMAIN
 from homeassistant.components.system_health import DOMAIN as SYSTEM_HEALTH_DOMAIN
 from homeassistant.const import (
     ATTR_AREA_ID,
-    ATTR_DEVICE_CLASS,
     ATTR_LABEL_ID,
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_CONDITION,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
@@ -57,6 +56,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     EntityCategory,
+    EntityStateAttribute,
     UnitOfTemperature,
 )
 from homeassistant.core import CoreState, HomeAssistant, State
@@ -217,6 +217,176 @@ async def test_unknown_condition(hass: HomeAssistant, config: dict, error: str) 
     config = cv.CONDITION_SCHEMA(config)
     with pytest.raises(HomeAssistantError, match=error):
         await condition.async_from_config(hass, config)
+
+
+_VALID_CONDITION = {"condition": "state", "entity_id": "light.kitchen", "state": "on"}
+_INVALID_CONDITION = {
+    "condition": "state",
+    "entity_id": "0123456789abcdef0123456789abcdef",
+    "state": "on",
+}
+_INVALID_CONDITION_ERROR = (
+    "Unknown entity registry entry 0123456789abcdef0123456789abcdef"
+)
+
+
+@pytest.mark.parametrize(
+    ("conditions", "expected_exception", "expected_error", "expected_path"),
+    [
+        pytest.param(
+            [_VALID_CONDITION, _INVALID_CONDITION],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [1],
+            id="condition_list",
+        ),
+        pytest.param(
+            [
+                {
+                    "condition": "and",
+                    "conditions": [_VALID_CONDITION, _INVALID_CONDITION],
+                }
+            ],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [0, "conditions", 1],
+            id="and",
+        ),
+        pytest.param(
+            [{"condition": "or", "conditions": [_VALID_CONDITION, _INVALID_CONDITION]}],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [0, "conditions", 1],
+            id="or",
+        ),
+        pytest.param(
+            [
+                {
+                    "condition": "not",
+                    "conditions": [_VALID_CONDITION, _INVALID_CONDITION],
+                }
+            ],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [0, "conditions", 1],
+            id="not",
+        ),
+        pytest.param(
+            [_VALID_CONDITION, {"and": [_VALID_CONDITION, _INVALID_CONDITION]}],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [1, "conditions", 1],
+            id="and_shorthand",
+        ),
+        pytest.param(
+            [{"condition": [_VALID_CONDITION, _INVALID_CONDITION]}],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [0, "conditions", 1],
+            id="list_shorthand",
+        ),
+        pytest.param(
+            [
+                {
+                    "condition": "or",
+                    "conditions": [
+                        {
+                            "condition": "and",
+                            "conditions": [
+                                _VALID_CONDITION,
+                                {
+                                    "condition": "not",
+                                    "conditions": [_INVALID_CONDITION],
+                                },
+                            ],
+                        }
+                    ],
+                }
+            ],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [0, "conditions", 0, "conditions", 1, "conditions", 0],
+            id="nested",
+        ),
+        pytest.param(
+            [_VALID_CONDITION, {"condition": "sun"}],
+            probatio.MultipleInvalid,
+            "at least one of ['before', 'after'] is required",
+            [1, "options"],
+            id="platform_path",
+        ),
+    ],
+)
+async def test_validate_conditions_config_error_path(
+    hass: HomeAssistant,
+    conditions: list[ConfigType],
+    expected_exception: type[probatio.Invalid],
+    expected_error: str,
+    expected_path: list[str | int],
+) -> None:
+    """Test a probatio.Invalid error is located in the validated conditions."""
+    config = cv.CONDITIONS_SCHEMA(conditions)
+
+    with pytest.raises(probatio.Invalid) as exc_info:
+        await condition.async_validate_conditions_config(hass, config)
+
+    assert type(exc_info.value) is expected_exception
+    assert exc_info.value.error_message == expected_error
+    assert exc_info.value.path == expected_path
+
+
+async def test_validate_condition_config_error_path(hass: HomeAssistant) -> None:
+    """Test a probatio.Invalid error is located in a validated condition."""
+    config = cv.CONDITION_SCHEMA(
+        {"condition": "or", "conditions": [_VALID_CONDITION, _INVALID_CONDITION]}
+    )
+
+    with pytest.raises(probatio.Invalid) as exc_info:
+        await condition.async_validate_condition_config(hass, config)
+
+    assert type(exc_info.value) is probatio.Invalid
+    assert exc_info.value.error_message == _INVALID_CONDITION_ERROR
+    assert exc_info.value.path == ["conditions", 1]
+
+
+@pytest.mark.parametrize(
+    ("conditions", "expected_exception", "expected_error"),
+    [
+        pytest.param(
+            [_VALID_CONDITION, {"condition": "non_existing"}],
+            HomeAssistantError,
+            'Invalid condition "non_existing" specified',
+            id="condition_list",
+        ),
+        pytest.param(
+            [
+                {
+                    "condition": "and",
+                    "conditions": [
+                        {"condition": "device", "domain": "light", "device_id": "abc"}
+                    ],
+                }
+            ],
+            InvalidDeviceAutomationConfig,
+            "Unknown device 'abc'",
+            id="nested",
+        ),
+    ],
+)
+async def test_validate_conditions_config_homeassistant_error(
+    hass: HomeAssistant,
+    conditions: list[ConfigType],
+    expected_exception: type[HomeAssistantError],
+    expected_error: str,
+) -> None:
+    """Test a HomeAssistantError keeps its type and message."""
+    config = cv.CONDITIONS_SCHEMA(conditions)
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await condition.async_validate_conditions_config(hass, config)
+
+    assert type(exc_info.value) is expected_exception
+    assert str(exc_info.value) == expected_error
 
 
 async def test_and_condition(hass: HomeAssistant) -> None:
@@ -1279,17 +1449,17 @@ async def test_time_using_sensor(hass: HomeAssistant) -> None:
     hass.states.async_set(
         "sensor.am",
         "2021-06-03 13:00:00.000000+00:00",  # 6 am local time
-        {ATTR_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP},
+        {EntityStateAttribute.DEVICE_CLASS: SensorDeviceClass.TIMESTAMP},
     )
     hass.states.async_set(
         "sensor.pm",
         "2020-06-01 01:00:00.000000+00:00",  # 6 pm local time
-        {ATTR_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP},
+        {EntityStateAttribute.DEVICE_CLASS: SensorDeviceClass.TIMESTAMP},
     )
     hass.states.async_set(
         "sensor.uptime_am",
         "2021-06-03 13:00:00.000000+00:00",  # 6 am local time
-        {ATTR_DEVICE_CLASS: SensorDeviceClass.UPTIME},
+        {EntityStateAttribute.DEVICE_CLASS: SensorDeviceClass.UPTIME},
     )
     hass.states.async_set(
         "sensor.no_device_class",
@@ -1298,7 +1468,7 @@ async def test_time_using_sensor(hass: HomeAssistant) -> None:
     hass.states.async_set(
         "sensor.invalid_timestamp",
         "This is not a timestamp",
-        {ATTR_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP},
+        {EntityStateAttribute.DEVICE_CLASS: SensorDeviceClass.TIMESTAMP},
     )
 
     with patch(
@@ -3666,7 +3836,9 @@ async def test_numerical_condition_valid_unit(
         valid_unit=valid_unit,
     )
 
-    attrs = {ATTR_UNIT_OF_MEASUREMENT: entity_unit} if entity_unit else {}
+    attrs = (
+        {EntityStateAttribute.UNIT_OF_MEASUREMENT: entity_unit} if entity_unit else {}
+    )
     hass.states.async_set("test.entity_1", "75", attrs)
     assert test.async_check() is expected
 
@@ -3934,7 +4106,7 @@ async def test_numerical_condition_with_unit_thresholds(
     hass.states.async_set(
         "test.entity_1",
         state_value,
-        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+        {EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
     assert test.async_check() is expected
 
@@ -3956,12 +4128,12 @@ async def test_numerical_condition_with_unit_entity_reference(
     hass.states.async_set(
         "test.entity_1",
         "25",
-        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+        {EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
     hass.states.async_set(
         "sensor.temp_limit",
         "75",
-        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT},
+        {EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT},
     )
     assert test.async_check() is True
 
@@ -3969,7 +4141,7 @@ async def test_numerical_condition_with_unit_entity_reference(
     hass.states.async_set(
         "test.entity_1",
         "20",
-        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+        {EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
     assert test.async_check() is False
 
@@ -3989,13 +4161,13 @@ async def test_numerical_condition_with_unit_entity_reference_incompatible_unit(
     hass.states.async_set(
         "test.entity_1",
         "25",
-        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+        {EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
     # "%" is not a temperature unit → conversion fails → condition false
     hass.states.async_set(
         "sensor.bad_limit",
         "75",
-        {ATTR_UNIT_OF_MEASUREMENT: "%"},
+        {EntityStateAttribute.UNIT_OF_MEASUREMENT: "%"},
     )
     assert test.async_check() is False
 
@@ -4019,7 +4191,7 @@ async def test_numerical_condition_with_unit_tracked_value_conversion(
     hass.states.async_set(
         "test.entity_1",
         "80",
-        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT},
+        {EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT},
     )
     assert test.async_check() is True
 
@@ -4027,7 +4199,7 @@ async def test_numerical_condition_with_unit_tracked_value_conversion(
     hass.states.async_set(
         "test.entity_1",
         "50",
-        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT},
+        {EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT},
     )
     assert test.async_check() is False
 
@@ -4056,7 +4228,7 @@ async def test_numerical_condition_with_unit_attribute_value_source(
         "on",
         {
             "temperature": 25,
-            ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
+            EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
         },
     )
     assert test.async_check() is True
@@ -4067,7 +4239,7 @@ async def test_numerical_condition_with_unit_attribute_value_source(
         "on",
         {
             "temperature": 20,
-            ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
+            EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
         },
     )
     assert test.async_check() is False
@@ -4214,7 +4386,7 @@ async def test_numerical_condition_with_unit_invalid_state(
     hass.states.async_set(
         "test.entity_1",
         state_value,
-        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+        {EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
     assert test.async_check() is False
 
@@ -4234,7 +4406,7 @@ async def test_numerical_condition_with_unit_missing_entity_reference(
     hass.states.async_set(
         "test.entity_1",
         "25",
-        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+        {EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
     assert test.async_check() is False
 
@@ -4268,12 +4440,12 @@ async def test_numerical_condition_with_unit_behavior(
     hass.states.async_set(
         "test.entity_1",
         "75",
-        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+        {EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
     hass.states.async_set(
         "test.entity_2",
         "80",
-        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+        {EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
     assert test.async_check() is True
 
@@ -4281,7 +4453,7 @@ async def test_numerical_condition_with_unit_behavior(
     hass.states.async_set(
         "test.entity_2",
         "25",
-        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+        {EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
     assert test.async_check() is one_match_expected
 
@@ -4289,7 +4461,7 @@ async def test_numerical_condition_with_unit_behavior(
     hass.states.async_set(
         "test.entity_1",
         "25",
-        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+        {EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
     assert test.async_check() is False
 
@@ -7029,9 +7201,11 @@ async def test_condition_entity_filter_by_device_class(hass: HomeAssistant) -> N
     """Test entity_filter filters by device_class when specified."""
     cond = _make_condition(hass, {"sensor": DomainSpec(device_class="humidity")})
 
-    hass.states.async_set("sensor.humidity_1", "50", {ATTR_DEVICE_CLASS: "humidity"})
     hass.states.async_set(
-        "sensor.temperature_1", "22", {ATTR_DEVICE_CLASS: "temperature"}
+        "sensor.humidity_1", "50", {EntityStateAttribute.DEVICE_CLASS: "humidity"}
+    )
+    hass.states.async_set(
+        "sensor.temperature_1", "22", {EntityStateAttribute.DEVICE_CLASS: "temperature"}
     )
     hass.states.async_set("sensor.no_class", "10", {})
 
@@ -7064,9 +7238,11 @@ async def test_condition_entity_filter_multiple_domains_with_device_class(
         },
     )
 
-    hass.states.async_set("sensor.humidity", "60", {ATTR_DEVICE_CLASS: "humidity"})
     hass.states.async_set(
-        "sensor.temperature", "20", {ATTR_DEVICE_CLASS: "temperature"}
+        "sensor.humidity", "60", {EntityStateAttribute.DEVICE_CLASS: "humidity"}
+    )
+    hass.states.async_set(
+        "sensor.temperature", "20", {EntityStateAttribute.DEVICE_CLASS: "temperature"}
     )
     hass.states.async_set("climate.hvac", "heat", {})
     hass.states.async_set("weather.home", "sunny", {})
@@ -7091,8 +7267,12 @@ async def test_condition_entity_filter_no_device_class_means_match_all_in_domain
     """Test that DomainSpec without device_class matches all entities in the domain."""
     cond = _make_condition(hass, {"cover": DomainSpec()})
 
-    hass.states.async_set("cover.door", "open", {ATTR_DEVICE_CLASS: "door"})
-    hass.states.async_set("cover.garage", "closed", {ATTR_DEVICE_CLASS: "garage"})
+    hass.states.async_set(
+        "cover.door", "open", {EntityStateAttribute.DEVICE_CLASS: "door"}
+    )
+    hass.states.async_set(
+        "cover.garage", "closed", {EntityStateAttribute.DEVICE_CLASS: "garage"}
+    )
     hass.states.async_set("cover.plain", "open", {})
 
     entities = {"cover.door", "cover.garage", "cover.plain"}
