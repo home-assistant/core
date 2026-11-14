@@ -114,6 +114,11 @@
       "thermostat_signal": {
         "name": "Signal strength"
       }
+    },
+    "switch": {
+      "anti_freeze": {
+        "name": "Anti-freeze"
+      }
     }
   }
 }
