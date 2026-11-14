@@ -566,3 +566,84 @@ async def test_setup_waits_for_info_before_update(
     app_manager.return_value.async_schedule_update_addon.assert_called_once_with(
         catch_error=True
     )
+
+
+@pytest.mark.parametrize(
+    ("wake_words", "expected_calls", "nabu_supported", "jarvis_supported"),
+    [
+        pytest.param(INFO["wake_words"], 0, True, False, id="unchanged"),
+        pytest.param(
+            [*INFO["wake_words"], {"id": "hey_jarvis", "phrase": "hey jarvis"}],
+            1,
+            True,
+            True,
+            id="model_added",
+        ),
+        pytest.param([], 1, False, False, id="model_removed"),
+    ],
+)
+@pytest.mark.usefixtures("setup_integration", "preview_feature_enabled")
+async def test_info_refresh_notifies_verification_changes(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    wake_words: list[dict[str, str]],
+    expected_calls: int,
+    nabu_supported: bool,
+    jarvis_supported: bool,
+) -> None:
+    """Test refreshes notify listeners only when verification support changes."""
+    listener = Mock()
+    async_on_wake_words_changed(hass, listener)
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        INFO_URL, json={**INFO, "version": "1.1.0", "wake_words": wake_words}
+    )
+
+    async_fire_time_changed(hass, dt_util.utcnow() + INFO_REFRESH_INTERVAL)
+    await hass.async_block_till_done()
+
+    assert listener.call_count == expected_calls
+    assert async_verifies_wake_word(hass, "okay nabu") is nabu_supported
+    assert async_verifies_wake_word(hass, "hey jarvis") is jarvis_supported
+
+
+@pytest.mark.parametrize(
+    ("connection_error", "send_error"),
+    [
+        pytest.param(aiohttp.ClientError, None, id="connection_failed"),
+        pytest.param(None, aiohttp.ClientError, id="run_start_failed"),
+    ],
+)
+@pytest.mark.usefixtures("setup_integration", "preview_feature_enabled")
+async def test_run_failure_notifies_verification_loss_and_recovery(
+    hass: HomeAssistant,
+    connection_error: type[Exception] | None,
+    send_error: type[Exception] | None,
+) -> None:
+    """Test listeners see lost verification and its recovery on the next refresh."""
+    supported: list[bool] = []
+    async_on_wake_words_changed(
+        hass, lambda: supported.append(async_verifies_wake_word(hass, "okay nabu"))
+    )
+    websocket = Mock(send_json=AsyncMock(side_effect=send_error), close=AsyncMock())
+    session = Mock(
+        ws_connect=AsyncMock(return_value=websocket, side_effect=connection_error)
+    )
+    request = AudioRunRequest(wake_word_phrase="okay nabu", wake_word_audio_ms=500)
+
+    with patch(
+        "homeassistant.components.voice_support.client.async_get_clientsession",
+        return_value=session,
+    ):
+        assert await async_start_run(hass, request, _no_audio()) is None
+        assert supported == [False]
+        assert await async_start_run(hass, request, _no_audio()) is None
+        assert supported == [False]
+
+    async_fire_time_changed(hass, dt_util.utcnow() + INFO_REFRESH_INTERVAL)
+    await hass.async_block_till_done()
+    assert supported == [False, True]
+
+    async_fire_time_changed(hass, dt_util.utcnow() + 2 * INFO_REFRESH_INTERVAL)
+    await hass.async_block_till_done()
+    assert supported == [False, True]

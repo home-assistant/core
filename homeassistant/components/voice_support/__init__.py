@@ -83,17 +83,7 @@ def async_verifies_wake_word(hass: HomeAssistant, wake_word: str) -> bool:
 def async_on_wake_words_changed(
     hass: HomeAssistant, listener: CALLBACK_TYPE
 ) -> CALLBACK_TYPE:
-    """Call listener when async_verifies_wake_word may answer differently.
-
-    A satellite asked for wake word audio buffers it and detects at a lower
-    threshold, so it is told once rather than per detection -- which means
-    it has to be told again when the answer moves: the app arriving or
-    going away, or the person turning the preview feature off. Not when an
-    app update changes the models it has, which would need the client to
-    say so and is the rarest of the three by a long way.
-
-    Returns a callable that stops listening.
-    """
+    """Listen for verification support changes and return a removal callback."""
     listeners = hass.data.setdefault(DATA_LISTENERS, [])
     listeners.append(listener)
 
@@ -160,11 +150,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
             get_app_manager(hass).async_schedule_update_addon(catch_error=True)
 
     async def _async_refresh_info(_now: datetime) -> None:
+        previous_info = client.info
         try:
-            await client.async_update_info()
+            info = await client.async_update_info()
         except (*CLIENT_ERRORS, UnsupportedVersionError) as err:
             _LOGGER.debug("Cannot use the app at %s (%r)", client.url, err)
             hass.config_entries.async_schedule_reload(entry.entry_id)
+        else:
+            if (
+                previous_info is None
+                or previous_info.wake_words.keys() != info.wake_words.keys()
+            ):
+                _async_wake_words_changed(hass)
 
     entry.async_on_unload(
         async_track_time_interval(hass, _async_refresh_info, INFO_REFRESH_INTERVAL)
@@ -221,4 +218,8 @@ async def async_start_run(
         return None
     if not async_is_enabled(hass):
         return None
-    return await client.async_start_run(request, audio)
+    had_info = client.info is not None
+    run = await client.async_start_run(request, audio)
+    if had_info and client.info is None:
+        _async_wake_words_changed(hass)
+    return run
