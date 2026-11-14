@@ -262,7 +262,7 @@ async def test_oven_core_probe_sensors_unknown_when_inactive(
 
     freezer.tick(timedelta(seconds=130))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(core_temp) is not None
     assert hass.states.get(core_temp).state == "22.0"
@@ -280,7 +280,7 @@ async def test_oven_core_probe_sensors_unknown_when_inactive(
 
     freezer.tick(timedelta(seconds=130))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(core_temp).state == STATE_UNKNOWN
     assert hass.states.get(core_target).state == STATE_UNKNOWN
@@ -306,7 +306,7 @@ async def test_oven_core_probe_unknown_when_inactive_raw_scaled(
 
     freezer.tick(timedelta(seconds=130))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(core_temp) is not None
     assert hass.states.get(core_temp).state == "22.0"
@@ -316,7 +316,7 @@ async def test_oven_core_probe_unknown_when_inactive_raw_scaled(
 
     freezer.tick(timedelta(seconds=130))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(core_temp).state == STATE_UNKNOWN
 
@@ -338,7 +338,7 @@ async def test_temperature_sensor_registry_lookup(
     device_fixture["DummyOven"]["state"]["coreTemperature"][0]["value_raw"] = 2200
     device_fixture["DummyOven"]["state"]["coreTemperature"][0]["value_localized"] = 22.0
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     entity_id = "sensor.oven_core_temperature"
 
