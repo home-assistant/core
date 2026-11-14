@@ -23,6 +23,7 @@ from pytest_homeassistant.typing import (
     RecorderInstanceContextManager,
     RecorderInstanceGenerator,
 )
+import pytest_socket
 from sqlalchemy import lambda_stmt, make_url, text
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm import Session
@@ -422,6 +423,41 @@ def test_setup_connection_for_dialect_mysql_tcp_user_timeout(
     )
 
     assert tcp_socket.getsockopt(socket.IPPROTO_TCP, socket.TCP_USER_TIMEOUT) == 120_000
+
+
+def test_setup_connection_for_dialect_mysqldb_socket_creation_blocked(
+    tcp_socket: socket.socket,
+) -> None:
+    """Test a mysqlclient connection is set up when socket.socket is replaced."""
+    pytest_socket.disable_socket(allow_unix_socket=True)
+
+    util.setup_connection_for_dialect(
+        MagicMock(), "mysql", _mysqldb_connection(tcp_socket), False
+    )
+
+    assert tcp_socket.getsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE)
+
+
+@pytest.fixture
+def socket_default_timeout() -> Generator[None]:
+    """Set a process wide default socket timeout."""
+    socket.setdefaulttimeout(5)
+    yield
+    socket.setdefaulttimeout(None)
+
+
+@pytest.mark.usefixtures("socket_default_timeout")
+def test_setup_connection_for_dialect_mysqldb_keeps_blocking_mode(
+    tcp_socket: socket.socket,
+) -> None:
+    """Test the mysqlclient socket stays blocking with a default socket timeout."""
+    tcp_socket.setblocking(True)
+
+    util.setup_connection_for_dialect(
+        MagicMock(), "mysql", _mysqldb_connection(tcp_socket), False
+    )
+
+    assert os.get_blocking(tcp_socket.fileno())
 
 
 @pytest.mark.usefixtures("socket_enabled")

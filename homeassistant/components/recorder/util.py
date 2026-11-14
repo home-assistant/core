@@ -699,37 +699,44 @@ def async_create_backup_failure_issue(
     )
 
 
-def _mysql_connection_fd(dbapi_connection: DBAPIConnection) -> int | None:
-    """Return the socket file descriptor of a PyMySQL or mysqlclient connection."""
-    if isinstance(sock := getattr(dbapi_connection, "_sock", None), socket.socket):
-        return sock.fileno()
-    if callable(fileno := getattr(dbapi_connection, "fileno", None)) and isinstance(
-        fd := fileno(), int
-    ):
-        return fd
-    return None
+def _set_mysql_socket_options(sock: socket.SocketType) -> None:
+    """Set the TCP keepalive options on a MySQL connection socket."""
+    if sock.family not in (socket.AF_INET, socket.AF_INET6):
+        return
+    for level, option, value in MYSQL_TCP_SOCKET_OPTIONS:
+        sock.setsockopt(level, option, value)
+
+
+def _set_mysql_fd_socket_options(fd: int) -> None:
+    """Set the TCP keepalive options on a MySQL connection file descriptor."""
+    # Wrapping the descriptor makes it non-blocking if a default socket timeout
+    # is set, which the driver does not expect
+    blocking = os.get_blocking(fd)
+    sock = socket.SocketType(fileno=fd)
+    try:
+        _set_mysql_socket_options(sock)
+    finally:
+        sock.detach()
+        os.set_blocking(fd, blocking)
 
 
 def _enable_mysql_tcp_keepalive(dbapi_connection: DBAPIConnection) -> None:
     """Make a MySQL connection fail when its peer is gone instead of hanging."""
-    if (fd := _mysql_connection_fd(dbapi_connection)) is None:
-        return
     try:
-        sock = socket.socket(fileno=fd)
-    except OSError:
-        _LOGGER.debug("Could not access the database connection socket", exc_info=True)
-        return
-    try:
-        if sock.family in (socket.AF_INET, socket.AF_INET6):
-            for level, option, value in MYSQL_TCP_SOCKET_OPTIONS:
-                sock.setsockopt(level, option, value)
+        if isinstance(
+            sock := getattr(dbapi_connection, "_sock", None), socket.SocketType
+        ):
+            # PyMySQL
+            _set_mysql_socket_options(sock)
+        elif callable(fileno := getattr(dbapi_connection, "fileno", None)) and (
+            isinstance(fd := fileno(), int)
+        ):
+            # mysqlclient only exposes the file descriptor
+            _set_mysql_fd_socket_options(fd)
     except OSError:
         _LOGGER.debug(
             "Could not enable TCP keepalive on the database connection", exc_info=True
         )
-    finally:
-        # The driver owns the file descriptor
-        sock.detach()
 
 
 def setup_connection_for_dialect(
