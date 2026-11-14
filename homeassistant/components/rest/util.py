@@ -8,6 +8,7 @@ from typing import Any
 
 import aiohttp
 from jsonpath import ExprSyntaxError, JSONPathTypeError, search
+from orjson import JSONDecodeError
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -50,13 +51,12 @@ from .data import RestData
 _LOGGER = logging.getLogger(__name__)
 
 
-def parse_json_attributes(
+def parse_json_attributes_raise_error(
     value: str | None, json_attrs: list[str], json_attrs_path: str | None
 ) -> dict[str, Any]:
-    """Parse JSON attributes."""
+    """Parse JSON attributes but raise an error."""
     if not value:
-        _LOGGER.warning("Empty reply found when expecting JSON data")
-        return {}
+        raise HomeAssistantError(translation_domain=DOMAIN, translation_key="no_json")
 
     try:
         json_dict = json_loads(value)
@@ -67,12 +67,37 @@ def parse_json_attributes(
         if isinstance(json_dict, dict):
             return {k: json_dict[k] for k in json_attrs if k in json_dict}
 
-        _LOGGER.warning(
-            "JSON result was not a dictionary or list with 0th element a dictionary"
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_result",
+            translation_placeholders={
+                "json_path": json_attrs_path or "$",
+            },
         )
-    except ValueError, TypeError, ExprSyntaxError, JSONPathTypeError:
-        _LOGGER.warning("REST result could not be parsed as JSON")
-        _LOGGER.debug("Erroneous JSON: %s", value)
+    except (
+        ValueError,
+        TypeError,
+        ExprSyntaxError,
+        JSONPathTypeError,
+        JSONDecodeError,
+    ) as ex:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="parse_error",
+            translation_placeholders={
+                "parse_error_message": str(ex),
+            },
+        ) from ex
+
+
+def parse_json_attributes(
+    value: str | None, json_attrs: list[str], json_attrs_path: str | None
+) -> dict[str, Any]:
+    """Parse JSON attributes."""
+    try:
+        return parse_json_attributes_raise_error(value, json_attrs, json_attrs_path)
+    except HomeAssistantError as ex:
+        _LOGGER.warning(str(ex))
 
     return {}
 
@@ -83,6 +108,7 @@ COORDINATOR_AWARE_PLATFORMS = [SENSOR_DOMAIN, BINARY_SENSOR_DOMAIN]
 @callback
 def async_setup_shared_data(hass: HomeAssistant) -> None:
     """Create shared data for platform config and rest coordinators."""
+    # pylint: disable-next=home-assistant-use-runtime-data
     hass.data[DOMAIN] = {key: [] for key in (COORDINATOR, *COORDINATOR_AWARE_PLATFORMS)}
 
 
@@ -103,6 +129,7 @@ async def async_process_config(hass: HomeAssistant, config: ConfigType) -> bool:
             hass, rest, None, resource_template, payload_template, scan_interval
         )
         refresh_coroutines.append(coordinator.async_refresh())
+        # pylint: disable-next=home-assistant-use-runtime-data
         hass.data[DOMAIN][COORDINATOR].append(coordinator)
 
         for platform_domain in COORDINATOR_AWARE_PLATFORMS:
@@ -110,8 +137,10 @@ async def async_process_config(hass: HomeAssistant, config: ConfigType) -> bool:
                 continue
 
             for platform_conf in conf[platform_domain]:
+                # pylint: disable=home-assistant-use-runtime-data
                 hass.data[DOMAIN][platform_domain].append(platform_conf)
                 platform_idx = len(hass.data[DOMAIN][platform_domain]) - 1
+                # pylint: enable=home-assistant-use-runtime-data
 
                 load_coroutine = discovery.async_load_platform(
                     hass,
