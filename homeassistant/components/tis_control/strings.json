@@ -1,0 +1,25 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This TIS Control bridge is already configured.",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "port": "Port"
+        },
+        "data_description": {
+          "port": "The port number used by the TIS Control bridge."
+        },
+        "description": "Please enter the port number for your TIS Control bridge.",
+        "title": "TIS Control Bridge"
+      }
+    }
+  }
+}
