@@ -128,8 +128,13 @@ async def async_token_request(
     domain: str,
     headers: Mapping[str, str] | None = None,
     allow_redirects: bool = True,
+    return_error_body: bool = False,
 ) -> dict:
-    """Post to a token endpoint and return the decoded response."""
+    """Post to a token endpoint and return the decoded response.
+
+    With return_error_body, a 4xx response that names an OAuth error code is
+    returned instead of raised, as a device flow poll (RFC 8628) needs it.
+    """
     session = async_get_clientsession(hass)
 
     _LOGGER.debug("Sending token request to %s", token_url)
@@ -140,6 +145,7 @@ async def async_token_request(
         )
         if resp.status >= 400:
             error_body = ""
+            error_data = None
             try:
                 error_body = await resp.text()
                 error_data = json.loads(error_body)
@@ -152,6 +158,13 @@ async def async_token_request(
                 )
             except ClientError, ValueError, AttributeError:
                 detail = error_body[:200] if error_body else "unknown error"
+            if (
+                return_error_body
+                and resp.status < 500
+                and isinstance(error_data, dict)
+                and isinstance(error_data.get("error"), str)
+            ):
+                return error_data
             _LOGGER.debug(
                 "Token request for %s failed (%s): %s", domain, resp.status, detail
             )

@@ -18,6 +18,8 @@ from homeassistant.components.application_credentials import (
     AuthImplementation,
     AuthorizationServer,
     ClientCredential,
+    DeviceFlowAuthorizationServer,
+    DeviceFlowClientCredential,
     async_import_client_credential,
 )
 from homeassistant.const import (
@@ -43,6 +45,8 @@ ACCESS_TOKEN = "mock-access-token"
 NAME = "Name"
 
 TEST_DOMAIN = "fake_integration"
+DEVICE_FLOW_DOMAIN = "fake_device_integration"
+DEVICE_AUTHORIZE_URL = "https://example.com/oauth2/device"
 
 
 @pytest.fixture
@@ -76,6 +80,9 @@ async def setup_application_credentials_integration(
         async_get_authorization_server=AsyncMock(return_value=authorization_server),
     )
     del mock_platform_impl.async_get_auth_implementation  # return False on hasattr
+    del mock_platform_impl.async_get_device_flow_authorization_server
+    del mock_platform_impl.async_get_device_flow_client_credential
+    del mock_platform_impl.async_get_description_placeholders  # return False on hasattr
     mock_platform(
         hass,
         f"{domain}.application_credentials",
@@ -696,6 +703,8 @@ async def test_websocket_without_authorization_server(
     # Platform does not implemenent async_get_authorization_server
     platform = Mock()
     del platform.async_get_authorization_server
+    del platform.async_get_device_flow_authorization_server
+    del platform.async_get_device_flow_client_credential
     del platform.async_get_auth_implementation
     mock_platform(
         hass,
@@ -747,6 +756,8 @@ async def test_platform_with_auth_implementation(
         async_get_auth_implementation=get_auth_impl,
     )
     del mock_platform_impl.async_get_authorization_server
+    del mock_platform_impl.async_get_device_flow_authorization_server
+    del mock_platform_impl.async_get_device_flow_client_credential
     mock_platform(
         hass,
         f"{TEST_DOMAIN}.application_credentials",
@@ -763,19 +774,134 @@ async def test_platform_with_auth_implementation(
     assert result["data"].get("auth_implementation") == TEST_DOMAIN
 
 
-async def test_websocket_integration_list(ws_client: ClientFixture) -> None:
+def _mock_device_flow_platform(hass: HomeAssistant) -> Mock:
+    """Mock an application_credentials platform that supplies a device flow client."""
+    platform = Mock(
+        async_get_device_flow_authorization_server=AsyncMock(
+            return_value=DeviceFlowAuthorizationServer(DEVICE_AUTHORIZE_URL, TOKEN_URL)
+        ),
+        async_get_device_flow_client_credential=AsyncMock(
+            return_value=DeviceFlowClientCredential(CLIENT_ID)
+        ),
+    )
+    del platform.async_get_authorization_server
+    del platform.async_get_auth_implementation
+    del platform.async_get_description_placeholders
+    mock_platform(hass, f"{DEVICE_FLOW_DOMAIN}.application_credentials", platform)
+    return platform
+
+
+async def test_websocket_integration_list(
+    hass: HomeAssistant, ws_client: ClientFixture
+) -> None:
     """Test websocket integration list command."""
+    placeholders_platform = Mock(
+        async_get_authorization_server=AsyncMock(),
+        async_get_description_placeholders=AsyncMock(
+            return_value={"console_url": "https://example.com/console"}
+        ),
+    )
+    del placeholders_platform.async_get_device_flow_authorization_server
+    del placeholders_platform.async_get_device_flow_client_credential
+    mock_platform(
+        hass, "placeholder_integration.application_credentials", placeholders_platform
+    )
+    _mock_device_flow_platform(hass)
+
     client = await ws_client()
     with patch(
-        "homeassistant.loader.APPLICATION_CREDENTIALS", ["example1", "example2"]
+        "homeassistant.loader.APPLICATION_CREDENTIALS",
+        [TEST_DOMAIN, "example1", "placeholder_integration", DEVICE_FLOW_DOMAIN],
     ):
         assert await client.cmd_result("config") == {
-            "domains": ["example1", "example2"],
+            "domains": [TEST_DOMAIN, "example1", "placeholder_integration"],
             "integrations": {
+                TEST_DOMAIN: {},
                 "example1": {},
-                "example2": {},
+                "placeholder_integration": {
+                    "description_placeholders": {
+                        "console_url": "https://example.com/console"
+                    }
+                },
             },
         }
+
+
+async def test_device_flow_platform(hass: HomeAssistant) -> None:
+    """Test a device flow platform provides its client without stored credentials."""
+    _mock_device_flow_platform(hass)
+
+    implementations = await config_entry_oauth2_flow.async_get_implementations(
+        hass, DEVICE_FLOW_DOMAIN
+    )
+
+    assert list(implementations) == [DEVICE_FLOW_DOMAIN]
+    implementation = implementations[DEVICE_FLOW_DOMAIN]
+    assert isinstance(implementation, config_entry_oauth2_flow.DeviceFlowImplementation)
+    assert implementation.client_id == CLIENT_ID
+    assert implementation.authorize_url == DEVICE_AUTHORIZE_URL
+    assert implementation.token_url == TOKEN_URL
+    assert implementation.domain == DEVICE_FLOW_DOMAIN
+    # Falls back to the integration name, which a mocked integration takes from its domain
+    assert implementation.name == DEVICE_FLOW_DOMAIN
+    assert implementation.extra_authorize_data == {}
+
+
+async def test_device_flow_platform_credential_name(hass: HomeAssistant) -> None:
+    """Test the name of the device flow client is the implementation name."""
+    platform = _mock_device_flow_platform(hass)
+    platform.async_get_device_flow_client_credential.return_value = (
+        DeviceFlowClientCredential(CLIENT_ID, name="Example app")
+    )
+
+    implementations = await config_entry_oauth2_flow.async_get_implementations(
+        hass, DEVICE_FLOW_DOMAIN
+    )
+
+    assert implementations[DEVICE_FLOW_DOMAIN].name == "Example app"
+
+
+@pytest.mark.parametrize(
+    "missing_hook",
+    [
+        "async_get_device_flow_authorization_server",
+        "async_get_device_flow_client_credential",
+    ],
+)
+async def test_device_flow_platform_requires_both_hooks(
+    hass: HomeAssistant, missing_hook: str
+) -> None:
+    """Test a device flow platform must implement both hooks."""
+    platform = _mock_device_flow_platform(hass)
+    delattr(platform, missing_hook)
+
+    with pytest.raises(ValueError, match="must implement both"):
+        await config_entry_oauth2_flow.async_get_implementations(
+            hass, DEVICE_FLOW_DOMAIN
+        )
+
+
+@pytest.mark.parametrize(
+    "authorization_code_hook",
+    ["async_get_authorization_server", "async_get_auth_implementation"],
+)
+async def test_device_flow_platform_rejects_both_grants(
+    hass: HomeAssistant, authorization_code_hook: str
+) -> None:
+    """Test a platform can't implement the device flow and authorization code."""
+    platform = _mock_device_flow_platform(hass)
+    setattr(platform, authorization_code_hook, AsyncMock())
+
+    with pytest.raises(ValueError, match="must implement one grant"):
+        await config_entry_oauth2_flow.async_get_implementations(
+            hass, DEVICE_FLOW_DOMAIN
+        )
+
+
+def test_client_credential_requires_secret() -> None:
+    """Test a client credential for the authorization code grant needs a secret."""
+    with pytest.raises(TypeError):
+        ClientCredential(CLIENT_ID)  # type: ignore[call-arg]
 
 
 async def test_name(
