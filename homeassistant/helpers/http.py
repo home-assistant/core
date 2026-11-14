@@ -37,6 +37,7 @@ KEY_AUTHENTICATED: Final = "ha_authenticated"
 KEY_ALLOW_ALL_CORS = AppKey[AllowCorsType]("allow_all_cors")
 KEY_ALLOW_CONFIGURED_CORS = AppKey[AllowCorsType]("allow_configured_cors")
 KEY_HASS: AppKey[HomeAssistant] = AppKey("hass")
+KEY_PROTECTED_RESOURCES = AppKey[set[AbstractResource]]("protected_resources")
 
 current_request: ContextVar[Request | None] = ContextVar(
     "current_request", default=None
@@ -70,11 +71,14 @@ def request_handler_factory(
             except NoURLAvailableError:
                 # Omit header to avoid leaking configured URLs
                 raise HTTPUnauthorized from None
+            resource_path = (
+                "" if request.rel_url.raw_path == "/" else request.rel_url.raw_path
+            )
             raise HTTPUnauthorized(
                 headers={
                     "WWW-Authenticate": (
                         f'Bearer resource_metadata="{url_prefix}'
-                        '/.well-known/oauth-protected-resource"'
+                        f'/.well-known/oauth-protected-resource{resource_path}"'
                     )
                 }
             )
@@ -202,6 +206,12 @@ class HomeAssistantView:
             handler = request_handler_factory(hass, self, handler)
 
             routes.extend(router.add_route(method, url, handler) for url in urls)
+
+        if self.requires_auth:
+            protected_resources = app.setdefault(KEY_PROTECTED_RESOURCES, set())
+            protected_resources.update(
+                route.resource for route in routes if route.resource is not None
+            )
 
         # Use `get` because CORS middleware is not be loaded in emulated_hue
         if self.cors_allowed:

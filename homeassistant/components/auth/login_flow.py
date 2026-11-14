@@ -75,6 +75,7 @@ from typing import TYPE_CHECKING, Any
 
 from aiohttp import web
 import probatio
+from yarl import URL
 
 from homeassistant import data_entry_flow
 from homeassistant.auth import AuthManagerFlowManager
@@ -90,6 +91,7 @@ from homeassistant.components.http.ban import (
 from homeassistant.components.http.const import MAX_UNAUTHENTICATED_BODY_SIZE
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.http import KEY_PROTECTED_RESOURCES
 from homeassistant.helpers.network import (
     NoURLAvailableError,
     get_url,
@@ -160,15 +162,28 @@ class WellKnownOAuthInfoView(HomeAssistantView):
         return self.json(metadata)
 
 
+async def _async_is_protected_resource(request: web.Request, raw_suffix: str) -> bool:
+    """Return whether raw_suffix resolves to a view that requires auth."""
+    probe_request = request.clone(rel_url=URL.build(path=raw_suffix, encoded=True))
+    for resource in request.app.get(KEY_PROTECTED_RESOURCES, ()):
+        _, allowed_methods = await resource.resolve(probe_request)
+        if allowed_methods:
+            return True
+    return False
+
+
 class WellKnownProtectedResourceView(HomeAssistantView):
     """View to host the OAuth2 Protected Resource Metadata per RFC9728."""
 
     requires_auth = False
     cors_allowed = True
     url = "/.well-known/oauth-protected-resource"
+    extra_urls = ["/.well-known/oauth-protected-resource/{resource_path:.+}"]
     name = "well-known/oauth-protected-resource"
 
-    async def get(self, request: web.Request) -> web.Response:
+    async def get(
+        self, request: web.Request, resource_path: str | None = None
+    ) -> web.Response:
         """Return the protected resource metadata."""
         hass = request.app[KEY_HASS]
         try:
@@ -176,9 +191,16 @@ class WellKnownProtectedResourceView(HomeAssistantView):
         except NoURLAvailableError:
             return self.json_message("No URL available", HTTPStatus.NOT_FOUND)
 
+        resource = url_prefix
+        if resource_path is not None:
+            raw_suffix = request.rel_url.raw_path.removeprefix(self.url)
+            if not await _async_is_protected_resource(request, raw_suffix):
+                return self.json_message("Resource not found", HTTPStatus.NOT_FOUND)
+            resource = f"{url_prefix}{raw_suffix}"
+
         return self.json(
             {
-                "resource": url_prefix,
+                "resource": resource,
                 "authorization_servers": [url_prefix],
                 "resource_documentation": (
                     "https://contributors.home-assistant.io/core/internals/auth-api/"
