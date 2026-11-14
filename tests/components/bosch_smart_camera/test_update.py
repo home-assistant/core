@@ -104,6 +104,24 @@ async def test_unknown_status_keeps_installed_version(
     assert state.attributes["latest_version"] == "9.40.25"
 
 
+async def test_installed_version_falls_back_to_firmware_status(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_list_cameras: AsyncMock,
+    mock_get_firmware_status: AsyncMock,
+) -> None:
+    """Test the firmware status supplies the version the camera list omits."""
+    mock_list_cameras.return_value = [replace(CAMERAS[0], firmware_version=None)]
+    mock_get_firmware_status.return_value = AVAILABLE
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_ON
+    assert state.attributes["installed_version"] == "9.40.25"
+    assert state.attributes["latest_version"] == "9.40.30"
+
+
 @pytest.mark.parametrize(
     "exception",
     [BoschCameraAuthError("rejected"), BoschCameraConnectionError("down")],

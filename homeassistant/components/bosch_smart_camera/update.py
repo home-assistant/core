@@ -69,7 +69,7 @@ class BoschFirmware(CoordinatorEntity[BoschFirmwareCoordinator], UpdateEntity):
     def installed_version(self) -> str | None:
         """Return the installed firmware version."""
         camera = self.coordinator.cameras.data[self._camera_id]
-        return camera.firmware_version
+        return camera.firmware_version or self.coordinator.data[self._camera_id].current
 
     @property
     @override
