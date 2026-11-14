@@ -79,7 +79,18 @@ class SatelIntegraBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         self.async_update_listeners()
 
 
-class SatelIntegraZonesCoordinator(SatelIntegraBaseCoordinator[dict[int, bool | None]]):
+@dataclass(frozen=True)
+class SatelIntegraZoneData:
+    """Snapshot of independently reported zone statuses."""
+
+    violated: bool | None
+    tampered: bool | None
+    bypassed: bool | None
+
+
+class SatelIntegraZonesCoordinator(
+    SatelIntegraBaseCoordinator[dict[int, SatelIntegraZoneData]]
+):
     """DataUpdateCoordinator to handle zone updates."""
 
     def __init__(
@@ -103,7 +114,12 @@ class SatelIntegraZonesCoordinator(SatelIntegraBaseCoordinator[dict[int, bool | 
         """Update zone objects as per notification from the alarm."""
         zone_states = self.client.controller.state.zones
         update_data = {
-            zone: zone_state.violated for zone, zone_state in zone_states.items()
+            zone: SatelIntegraZoneData(
+                violated=zone_state.violated,
+                tampered=zone_state.tampered,
+                bypassed=zone_state.bypassed,
+            )
+            for zone, zone_state in zone_states.items()
         }
         _LOGGER.debug("Zones callback, status: %s", update_data)
 
