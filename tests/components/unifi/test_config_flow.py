@@ -674,6 +674,54 @@ async def test_abort_reconfigure_flow_on_site_id_mismatch(
     assert config_entry.data[CONF_SITE_ID] == "site_id"
 
 
+@pytest.mark.parametrize(
+    "site_payload",
+    [
+        [
+            {
+                "name": "site_id",
+                "role": "admin",
+                "desc": "site name",
+                "_id": "0a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d",
+            },
+        ]
+    ],
+)
+async def test_reconfigure_flow_recovers_changed_site_id(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_requests: Callable[[str, str], None],
+) -> None:
+    """Allow reconfiguration when UniFi Network changed the site ID."""
+    old_site_id = "5f0a1b2c3d4e5f6a7b8c9d0e"
+    new_site_id = "0a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d"
+    hass.config_entries.async_update_entry(
+        config_entry,
+        unique_id=old_site_id,
+        data={**config_entry.data, CONF_VERIFY_SSL: True},
+    )
+    mock_requests(config_entry.data[CONF_HOST], config_entry.data[CONF_SITE_ID])
+
+    result = await config_entry.start_reconfigure_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: config_entry.data[CONF_HOST],
+            CONF_USERNAME: config_entry.data[CONF_USERNAME],
+            CONF_PASSWORD: config_entry.data[CONF_PASSWORD],
+            CONF_PORT: config_entry.data[CONF_PORT],
+            CONF_VERIFY_SSL: False,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.unique_id == new_site_id
+    assert config_entry.data[CONF_VERIFY_SSL] is False
+
+
 @pytest.mark.parametrize("client_payload", [CLIENTS])
 @pytest.mark.parametrize("device_payload", [DEVICES])
 @pytest.mark.parametrize("wlan_payload", [WLANS])
