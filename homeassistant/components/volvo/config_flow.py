@@ -1,13 +1,15 @@
 """Config flow for Volvo."""
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 import logging
 from typing import Any, override
 
 import probatio
 from volvocarsapi.api import VolvoCarsApi
+from volvocarsapi.auth import get_volvoid_server
 from volvocarsapi.models import VolvoApiException, VolvoCarsVehicle
 from volvocarsapi.scopes import ALL_SCOPES
+from yarl import URL
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -53,13 +55,18 @@ class VolvoOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         self._vehicles: list[VolvoCarsVehicle] = []
         self._config_data: dict = {}
 
-    @property
     @override
-    def extra_authorize_data(self) -> dict:
-        """Extra data that needs to be appended to the authorize url."""
-        return super().extra_authorize_data | {
-            "scope": " ".join(ALL_SCOPES),
-        }
+    async def async_generate_authorize_url(self) -> str:
+        """Generate a url for the user to authorize."""
+        url = URL(await super().async_generate_authorize_url())
+        scopes: Sequence[str] = ALL_SCOPES
+
+        # Home Assistant Link manages the client ID in Home Assistant Cloud, so read it
+        # from the URL to follow its Volvo ID migration as well.
+        if client_id := url.query.get("client_id"):
+            scopes = get_volvoid_server(client_id).all_scopes
+
+        return str(url.update_query(scope=" ".join(scopes)))
 
     @property
     @override

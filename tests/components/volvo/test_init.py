@@ -8,7 +8,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from volvocarsapi.api import VolvoCarsApi
-from volvocarsapi.auth import TOKEN_URL
+from volvocarsapi.auth import VOLVOID_SERVER
 from volvocarsapi.models import VolvoAuthException
 
 from homeassistant.components.volvo.const import DOMAIN
@@ -77,7 +77,7 @@ async def test_token_refresh_fail(
 ) -> None:
     """Test where token refresh fails."""
 
-    aioclient_mock.post(TOKEN_URL, status=token_response)
+    aioclient_mock.post(VOLVOID_SERVER.token_url, status=token_response)
 
     assert not await setup_integration()
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
@@ -99,7 +99,7 @@ async def test_token_refresh_reauth(
 ) -> None:
     """Test where token refresh indicates unauthorized."""
 
-    aioclient_mock.post(TOKEN_URL, status=token_response)
+    aioclient_mock.post(VOLVOID_SERVER.token_url, status=token_response)
 
     assert not await setup_integration()
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
