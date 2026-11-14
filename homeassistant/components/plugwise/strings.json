@@ -182,8 +182,29 @@
       }
     },
     "sensor": {
+      "burner_operation_time": {
+        "name": "Burner operation time"
+      },
+      "burner_starts": {
+        "name": "Burner starts"
+      },
       "cooling_setpoint": {
         "name": "Cooling setpoint"
+      },
+      "dhw_burner_operation_time": {
+        "name": "DHW burner operation time"
+      },
+      "dhw_burner_starts": {
+        "name": "DHW burner starts"
+      },
+      "dhw_flow": {
+        "name": "DHW flow rate"
+      },
+      "dhw_pump_operation_time": {
+        "name": "DHW pump operation time"
+      },
+      "dhw_pump_starts": {
+        "name": "DHW pump starts"
       },
       "dhw_temperature": {
         "name": "DHW temperature"
@@ -263,11 +284,26 @@
       "electricity_produced_point": {
         "name": "Electricity produced point"
       },
+      "failed_burner_flame_ignitions": {
+        "name": "Failed burner flame ignitions"
+      },
+      "failed_burner_starts": {
+        "name": "Failed burner starts"
+      },
+      "fault_flags": {
+        "name": "Application-specific fault code"
+      },
       "gas_consumed_cumulative": {
         "name": "Gas consumed cumulative"
       },
       "gas_consumed_interval": {
         "name": "Gas consumed interval"
+      },
+      "heating_pump_operation_time": {
+        "name": "Central heating pump operation time"
+      },
+      "heating_pump_starts": {
+        "name": "Central heating pump starts"
       },
       "heating_setpoint": {
         "name": "Heating setpoint"
@@ -278,6 +314,9 @@
       "maximum_boiler_temperature": {
         "name": "Maximum boiler temperature"
       },
+      "maximum_modulation_level": {
+        "name": "Maximum modulation level"
+      },
       "modulation_level": {
         "name": "Modulation level"
       },
@@ -286,6 +325,12 @@
       },
       "net_electricity_point": {
         "name": "Net electricity point"
+      },
+      "oem_diagnostic_code": {
+        "name": "OEM diagnostic code"
+      },
+      "oem_fault_code": {
+        "name": "OEM fault code"
       },
       "outdoor_air_temperature": {
         "name": "Outdoor air temperature"
