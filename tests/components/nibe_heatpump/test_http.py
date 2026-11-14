@@ -4,7 +4,6 @@ from http import HTTPStatus
 from typing import Any
 from unittest.mock import patch
 
-from freezegun.api import FrozenDateTimeFactory
 from nibe.heatpump import Model
 import pytest
 from pytest_homeassistant.typing import ClientSessionGenerator
@@ -33,16 +32,15 @@ async def fixture_platforms():
         yield
 
 
+@pytest.mark.freeze_time("2026-11-14 12:00:00")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_log_set_download(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    freezer: FrozenDateTimeFactory,
     coils: dict[int, Any],
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test downloading a LOG.SET of the coils in use, read only coils first."""
-    freezer.move_to("2026-11-14 12:00:00")
     coils.update({40004: 20.0, 43005: 1234, 43420: 100, 47011: 1})
     entry = await async_add_model(hass, Model.F1155)
 
