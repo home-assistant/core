@@ -58,11 +58,13 @@ ENERGY_HISTORY_FIELDS = [
 ]
 
 
+VEHICLE_ISSUE_KEY = "key"
+
 # Vehicle metadata "issue" values that map to an actionable repair issue, with
 # an optional "learn more" URL the user can visit to resolve it. The "no_data"
 # issue is intentionally ignored as it is not user-actionable.
 VEHICLE_ISSUE_LEARN_MORE: dict[str, str | None] = {
-    "key": "https://teslemetry.com/key",
+    VEHICLE_ISSUE_KEY: "https://teslemetry.com/key",
     "streaming_toggle": None,
 }
 
