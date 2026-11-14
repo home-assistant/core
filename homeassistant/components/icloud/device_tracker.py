@@ -41,6 +41,9 @@ async def async_setup_entry(
 @callback
 def add_entities(account: IcloudAccount, async_add_entities, tracked):
     """Add new tracker entities from the account."""
+    # A device the account dropped can come back and needs a new entity then.
+    tracked.intersection_update(account.devices)
+
     new_tracked = []
 
     for dev_id, device in account.devices.items():
