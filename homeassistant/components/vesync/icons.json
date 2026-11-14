@@ -1,6 +1,9 @@
 {
   "entity": {
     "binary_sensor": {
+      "sync_chambers": {
+        "default": "mdi:sync"
+      },
       "water_lacks": {
         "default": "mdi:water-alert"
       },
