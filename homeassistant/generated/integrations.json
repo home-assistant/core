@@ -5960,6 +5960,17 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "hayward_neopool": {
+      "name": "Hayward",
+      "integration_type": "virtual",
+      "categories": [
+        "water.pools_spas"
+      ],
+      "connectivity": [
+        "modbus"
+      ],
+      "supported_by": "neopool"
+    },
     "hddtemp": {
       "name": "hddtemp",
       "integration_type": "hub",
