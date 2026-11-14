@@ -56,6 +56,16 @@ DEVICE_CLASSES: dict[SensorType, SensorDeviceClass] = {
     SensorType.HUMIDITY: SensorDeviceClass.HUMIDITY,
 }
 
+# Sensor types without a device class get their icon via translation key
+TRANSLATION_KEYS: dict[SensorType, str] = {
+    SensorType.LOAD: "load",
+    SensorType.FAN: "fan",
+    SensorType.CONTROL: "control",
+    SensorType.LEVEL: "level",
+    SensorType.FACTOR: "factor",
+    SensorType.TIMING: "timing",
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -221,6 +231,8 @@ class LibreHardwareMonitorSensor(
             elif device_class is SensorDeviceClass.DATA_SIZE:
                 # LHM versions >= 0.9.7 report data sizes in raw bytes
                 self._attr_suggested_unit_of_measurement = UnitOfInformation.GIBIBYTES
+        elif translation_key := TRANSLATION_KEYS.get(sensor_data.type):
+            self._attr_translation_key = translation_key
 
         self._set_state(sensor_data)
         self._attr_unique_id: str = f"{entry_id}_{sensor_data.sensor_id}"

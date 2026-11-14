@@ -77,7 +77,7 @@ rules:
     comment: Desired devices are selected in Libre Hardware Monitor.
   entity-translations: todo
   exception-translations: done
-  icon-translations: todo
+  icon-translations: done
   reconfiguration-flow: done
   repair-issues:
     status: exempt
