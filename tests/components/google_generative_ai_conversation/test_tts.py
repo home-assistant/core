@@ -1,6 +1,7 @@
 """Tests for the Google Generative AI Conversation TTS entity."""
 
-from collections.abc import Generator
+import asyncio
+from collections.abc import AsyncGenerator, Generator
 from http import HTTPStatus
 from io import BytesIO
 from pathlib import Path
@@ -70,25 +71,32 @@ async def setup_internal_url(hass: HomeAssistant) -> None:
 @pytest.fixture
 def mock_genai_client() -> Generator[AsyncMock]:
     """Mock genai_client."""
+    response = types.GenerateContentResponse(
+        candidates=(
+            types.Candidate(
+                content=types.Content(
+                    parts=(
+                        types.Part(
+                            inline_data=types.Blob(
+                                data=b"raw-audio-bytes",
+                                mime_type="audio/L16;rate=24000",
+                            )
+                        ),
+                    )
+                )
+            ),
+        )
+    )
     client = Mock()
     client.aio.models.get = AsyncMock()
-    client.aio.models.generate_content = AsyncMock(
-        return_value=types.GenerateContentResponse(
-            candidates=(
-                types.Candidate(
-                    content=types.Content(
-                        parts=(
-                            types.Part(
-                                inline_data=types.Blob(
-                                    data=b"raw-audio-bytes",
-                                    mime_type="audio/L16;rate=24000",
-                                )
-                            ),
-                        )
-                    )
-                ),
-            )
-        )
+    client.aio.models.generate_content = AsyncMock(return_value=response)
+
+    async def _stream() -> AsyncGenerator[types.GenerateContentResponse]:
+        for chunk in client.aio.models.generate_content_stream.return_value:
+            yield chunk
+
+    client.aio.models.generate_content_stream = AsyncMock(
+        return_value=[response], side_effect=lambda **kwargs: _stream()
     )
     client.voices.list = Mock(return_value=VoiceListResponse(voices=[]))
     with patch(
@@ -169,7 +177,7 @@ async def test_tts_service_speak(
     """Test tts service."""
 
     tts_entity = hass.data[tts.DOMAIN].get_entity(service_data[ATTR_ENTITY_ID])
-    tts_entity._genai_client.aio.models.generate_content.reset_mock()
+    tts_entity._genai_client.aio.models.generate_content_stream.reset_mock()
 
     await hass.services.async_call(
         tts.DOMAIN,
@@ -187,7 +195,7 @@ async def test_tts_service_speak(
         TextToSpeechCommonOption.VOICE, "zephyr"
     )
 
-    tts_entity._genai_client.aio.models.generate_content.assert_called_once_with(
+    tts_entity._genai_client.aio.models.generate_content_stream.assert_called_once_with(
         model=TEST_CHAT_MODEL,
         contents="There is a person at the front door.",
         config=types.GenerateContentConfig(
@@ -332,8 +340,10 @@ async def test_tts_service_speak_error(
         tts.ATTR_OPTIONS: {TextToSpeechCommonOption.VOICE: "voice1"},
     }
     tts_entity = hass.data[tts.DOMAIN].get_entity(service_data[ATTR_ENTITY_ID])
-    tts_entity._genai_client.aio.models.generate_content.reset_mock()
-    tts_entity._genai_client.aio.models.generate_content.side_effect = API_ERROR_500
+    tts_entity._genai_client.aio.models.generate_content_stream.reset_mock()
+    tts_entity._genai_client.aio.models.generate_content_stream.side_effect = (
+        API_ERROR_500
+    )
 
     await hass.services.async_call(
         tts.DOMAIN,
@@ -350,7 +360,7 @@ async def test_tts_service_speak_error(
 
     voice_id = service_data[tts.ATTR_OPTIONS].get(TextToSpeechCommonOption.VOICE)
 
-    tts_entity._genai_client.aio.models.generate_content.assert_called_once_with(
+    tts_entity._genai_client.aio.models.generate_content_stream.assert_called_once_with(
         model=TEST_CHAT_MODEL,
         contents="There is a person at the front door.",
         config=types.GenerateContentConfig(
@@ -498,6 +508,118 @@ async def test_tts_audio_formats(
         assert audio.getframerate() == 24000
         assert audio.getnframes() == 4
         assert audio.readframes(4) == b"\x00\x00\x01\x00\xff\x7f\x00\x80"
+
+
+def _stream_chunk(data: bytes, mime_type: str) -> types.GenerateContentResponse:
+    """Build a response carrying an audio payload."""
+    return types.GenerateContentResponse(
+        candidates=(
+            types.Candidate(
+                content=types.Content(
+                    parts=(
+                        types.Part(
+                            inline_data=types.Blob(data=data, mime_type=mime_type)
+                        ),
+                    )
+                )
+            ),
+        )
+    )
+
+
+@pytest.mark.usefixtures("setup")
+async def test_tts_audio_stream(
+    hass: HomeAssistant, mock_genai_client: AsyncMock
+) -> None:
+    """Deliver audio before the model finishes generating it."""
+    next_chunk = asyncio.Event()
+
+    async def _stream() -> AsyncGenerator[types.GenerateContentResponse]:
+        yield _stream_chunk(b"\x00\x00\x01\x00", "audio/L16;rate=24000")
+        await next_chunk.wait()
+        yield _stream_chunk(b"\xff\x7f\x00\x80", "audio/L16;rate=24000")
+
+    mock_genai_client.return_value.aio.models.generate_content_stream.side_effect = (
+        lambda **kwargs: _stream()
+    )
+
+    stream = tts.async_create_stream(
+        hass,
+        "tts.google_ai_tts",
+        options={TextToSpeechCommonOption.PREFERRED_FORMAT: "wav"},
+    )
+    stream.async_set_message("Hello")
+    chunks = stream.async_stream_result()
+
+    try:
+        async with asyncio.timeout(1):
+            header = await anext(chunks)
+            first_chunk = await anext(chunks)
+        assert first_chunk == b"\x00\x00\x01\x00"
+    finally:
+        next_chunk.set()
+
+    audio = header + first_chunk + b"".join([chunk async for chunk in chunks])
+
+    assert header[4:8] == b"\xff\xff\xff\xff"
+    assert header[40:44] == b"\xff\xff\xff\xff"
+    with wave.open(BytesIO(audio), "rb") as wav_reader:
+        assert wav_reader.getnchannels() == 1
+        assert wav_reader.getsampwidth() == 2
+        assert wav_reader.getframerate() == 24000
+        assert wav_reader.readframes(4) == b"\x00\x00\x01\x00\xff\x7f\x00\x80"
+
+
+@pytest.mark.usefixtures("setup")
+async def test_tts_audio_stream_complete_wav(
+    hass: HomeAssistant, mock_genai_client: AsyncMock, wav_audio: bytes
+) -> None:
+    """Pass a complete WAV response through instead of adding a header."""
+    mock_genai_client.return_value.aio.models.generate_content_stream.return_value = [
+        _stream_chunk(wav_audio[:44], "audio/wav"),
+        _stream_chunk(wav_audio[44:], "audio/wav"),
+    ]
+
+    stream = tts.async_create_stream(
+        hass,
+        "tts.google_ai_tts",
+        options={TextToSpeechCommonOption.PREFERRED_FORMAT: "wav"},
+    )
+    stream.async_set_message("Hello")
+
+    assert (
+        b"".join([chunk async for chunk in stream.async_stream_result()]) == wav_audio
+    )
+
+
+@pytest.mark.usefixtures("setup")
+@pytest.mark.parametrize(
+    "response",
+    [
+        types.GenerateContentResponse(candidates=()),
+        _stream_chunk(b"", "audio/L16;rate=24000"),
+    ],
+    ids=["no_candidates", "empty_payload"],
+)
+async def test_tts_audio_stream_without_audio(
+    hass: HomeAssistant,
+    mock_genai_client: AsyncMock,
+    response: types.GenerateContentResponse,
+) -> None:
+    """Raise when the stream does not carry any audio."""
+    mock_genai_client.return_value.aio.models.generate_content_stream.return_value = [
+        response
+    ]
+
+    stream = tts.async_create_stream(
+        hass,
+        "tts.google_ai_tts",
+        options={TextToSpeechCommonOption.PREFERRED_FORMAT: "wav"},
+    )
+    stream.async_set_message("Hello")
+
+    with pytest.raises(HomeAssistantError):
+        _ = b"".join([chunk async for chunk in stream.async_stream_result()])
 
 
 @pytest.mark.usefixtures("mock_init_component")
