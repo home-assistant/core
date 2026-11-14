@@ -59,10 +59,10 @@ async def test_async_ping_unexpected_exceptions(
 
 
 class MockCompletedSubprocess:
-    """Mock of asyncio.subprocess.Process that completes with output."""
+    """Mock of asyncio.subprocess.Process that finishes with given output."""
 
     def __init__(self, stdout: bytes, stderr: bytes, returncode: int) -> None:
-        """Store the output and return code."""
+        """Store the output to return."""
         self._stdout = stdout
         self._stderr = stderr
         self.returncode = returncode
@@ -72,73 +72,140 @@ class MockCompletedSubprocess:
         return self._stdout, self._stderr
 
 
-IPUTILS_OUTPUT = (
-    b"PING 10.10.10.10 (10.10.10.10) 56(84) bytes of data.\n\n"
-    b"--- 10.10.10.10 ping statistics ---\n"
-    b"3 packets transmitted, 3 received, 0% packet loss, time 2003ms\n"
-    b"rtt min/avg/max/mdev = 1.012/2.345/3.678/0.912 ms\n"
-)
-BUSYBOX_OUTPUT = (
-    b"PING 10.10.10.10 (10.10.10.10): 56 data bytes\n\n"
-    b"--- 10.10.10.10 ping statistics ---\n"
-    b"3 packets transmitted, 3 packets received, 0% packet loss\n"
-    b"round-trip min/avg/max = 1.012/2.345/3.678 ms\n"
-)
-UNREACHABLE_OUTPUT = (
-    b"PING 10.10.10.10 (10.10.10.10) 56(84) bytes of data.\n\n"
-    b"--- 10.10.10.10 ping statistics ---\n"
-    b"3 packets transmitted, 0 received, 100% packet loss, time 2040ms\n"
-)
-
-
 @pytest.mark.parametrize(
-    ("stdout", "returncode", "expected"),
+    ("stdout", "returncode"),
     [
         pytest.param(
-            IPUTILS_OUTPUT,
-            0,
-            {"min": "1.012", "avg": "2.345", "max": "3.678", "mdev": "0.912"},
-            id="iputils",
+            b"PING 10.10.10.10 (10.10.10.10) 56(84) bytes of data.\n\n"
+            b"--- 10.10.10.10 ping statistics ---\n"
+            b"3 packets transmitted, 0 received, 100% packet loss, time 2040ms\n",
+            1,
+            id="linux",
         ),
         pytest.param(
-            BUSYBOX_OUTPUT,
-            0,
-            {"min": "1.012", "avg": "2.345", "max": "3.678"},
+            b"PING 10.10.10.10 (10.10.10.10): 56 data bytes\n\n"
+            b"--- 10.10.10.10 ping statistics ---\n"
+            b"3 packets transmitted, 0 packets received, 100.0% packet loss\n",
+            2,
+            id="macos",
+        ),
+        pytest.param(
+            b"PING 10.10.10.10 (10.10.10.10): 56 data bytes\n\n"
+            b"--- 10.10.10.10 ping statistics ---\n"
+            b"3 packets transmitted, 0 packets received, 100% packet loss\n",
+            1,
             id="busybox",
         ),
-        pytest.param(UNREACHABLE_OUTPUT, 1, None, id="unreachable"),
     ],
 )
-async def test_async_ping_subprocess_output(
-    hass: HomeAssistant,
-    stdout: bytes,
-    returncode: int,
-    expected: dict[str, str] | None,
+async def test_async_update_no_replies(
+    hass: HomeAssistant, stdout: bytes, returncode: int
 ) -> None:
-    """Test PingDataSubProcess parses the ping binary output."""
+    """Test a resolvable host without replies reports 100% packet loss."""
     with patch(
         "asyncio.create_subprocess_exec",
         return_value=MockCompletedSubprocess(stdout, b"", returncode),
     ):
-        ping = PingDataSubProcess(hass, host="10.10.10.10", count=3, privileged=None)
+        ping = PingDataSubProcess(hass, host="10.10.10.10", count=3, privileged=False)
         await ping.async_update()
 
-    assert ping.data == expected
-    assert ping.is_alive is (expected is not None)
+    assert ping.is_alive is False
+    assert ping.data == {"loss": 100.0}
 
 
-async def test_async_ping_subprocess_command_error(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
+@pytest.mark.parametrize(
+    ("stderr", "returncode"),
+    [
+        pytest.param(
+            b"ping: nohost.invalid: Name or service not known\n", 2, id="linux"
+        ),
+        pytest.param(
+            b"ping: cannot resolve nohost.invalid: Unknown host\n", 68, id="macos"
+        ),
+        pytest.param(b"ping: bad address 'nohost.invalid'\n", 1, id="busybox"),
+    ],
+)
+async def test_async_update_name_not_resolved(
+    hass: HomeAssistant, stderr: bytes, returncode: int
 ) -> None:
-    """Test a ping binary failure is logged and reported as not alive."""
+    """Test an unresolvable host clears stale data and reports no measurement."""
+    ping = PingDataSubProcess(hass, host="nohost.invalid", count=3, privileged=False)
+    ping.data = {"min": "1.0", "avg": "1.0", "max": "1.0", "loss": 0.0}
+    ping.is_alive = True
     with patch(
         "asyncio.create_subprocess_exec",
-        return_value=MockCompletedSubprocess(b"", b"ping: unknown host", 2),
+        return_value=MockCompletedSubprocess(b"", stderr, returncode),
     ):
-        ping = PingDataSubProcess(hass, host="10.10.10.10", count=3, privileged=None)
         await ping.async_update()
 
-    assert ping.data is None
     assert ping.is_alive is False
-    assert "Error running command" in caplog.text
+    assert ping.data is None
+
+
+@pytest.mark.parametrize(
+    ("stdout", "expected"),
+    [
+        pytest.param(
+            b"--- 10.10.10.10 ping statistics ---\n"
+            b"3 packets transmitted, 2 received, 33.3333% packet loss, time 2003ms\n"
+            b"rtt min/avg/max/mdev = 1.100/1.200/1.300/0.100 ms\n",
+            {
+                "min": "1.100",
+                "avg": "1.200",
+                "max": "1.300",
+                "mdev": "0.100",
+                "loss": 33.3333,
+            },
+            id="linux",
+        ),
+        pytest.param(
+            b"--- 10.10.10.10 ping statistics ---\n"
+            b"3 packets transmitted, 3 packets received, 0% packet loss\n"
+            b"round-trip min/avg/max = 1.100/1.200/1.300 ms\n",
+            {"min": "1.100", "avg": "1.200", "max": "1.300", "loss": 0.0},
+            id="busybox",
+        ),
+    ],
+)
+async def test_async_update_replies(
+    hass: HomeAssistant, stdout: bytes, expected: dict[str, str | float]
+) -> None:
+    """Test a reachable host reports round trip times and packet loss."""
+    with patch(
+        "asyncio.create_subprocess_exec",
+        return_value=MockCompletedSubprocess(stdout, b"", 0),
+    ):
+        ping = PingDataSubProcess(hass, host="10.10.10.10", count=3, privileged=False)
+        await ping.async_update()
+
+    assert ping.is_alive is True
+    assert ping.data == expected
+
+
+async def test_async_ping_subprocess_uses_c_locale(hass: HomeAssistant) -> None:
+    """Test the ping binary runs in the C locale so its output can be parsed."""
+    ping = PingDataSubProcess(hass, host="10.10.10.10", count=3, privileged=False)
+    with patch(
+        "asyncio.create_subprocess_exec",
+        return_value=MockCompletedSubprocess(b"", b"", 1),
+    ) as mock_exec:
+        await ping.async_update()
+
+    assert mock_exec.call_args.kwargs["env"]["LC_ALL"] == "C"
+
+
+async def test_async_ping_subprocess_unparsable_round_trip(hass: HomeAssistant) -> None:
+    """Test output with packet statistics but an unparsable round trip line."""
+    ping = PingDataSubProcess(hass, host="10.10.10.10", count=3, privileged=False)
+    with patch(
+        "asyncio.create_subprocess_exec",
+        return_value=MockCompletedSubprocess(
+            b"3 packets transmitted, 3 received, 0% packet loss\nrtt min/avg/max/mdev = garbled\n",
+            b"",
+            0,
+        ),
+    ):
+        await ping.async_update()
+
+    assert ping.is_alive is False
+    assert ping.data is None
