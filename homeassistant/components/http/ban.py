@@ -3,6 +3,7 @@
 import asyncio
 from collections import defaultdict
 from collections.abc import Awaitable, Callable, Coroutine
+from concurrent.futures import Future, ThreadPoolExecutor
 from contextlib import suppress
 from datetime import datetime
 from http import HTTPStatus
@@ -23,6 +24,7 @@ from aiohttp.web_exceptions import HTTPForbidden, HTTPUnauthorized
 import probatio
 
 from homeassistant.config import load_yaml_config_file
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
@@ -47,6 +49,80 @@ IP_BANS_FILE: Final = "ip_bans.yaml"
 # Bound the reverse DNS lookup so a slow resolver cannot stall the response
 REVERSE_DNS_TIMEOUT: Final = 1
 ATTR_BANNED_AT: Final = "banned_at"
+
+# A stalled resolver can take ~10s (5s x 2 retries) to give up on a PTR lookup.
+# The mobile companion app gives up after 10s, so a hanging lookup turns every
+# failed login into a connection timeout. Bound the lookup well below that so
+# the auth response is never delayed by a lookup that only enriches a log line.
+RESOLVE_HOST_TIMEOUT: Final = 1.0
+
+
+# A stalled gethostbyaddr blocks the thread it runs on for ~10s (5s x 2 resolver
+# retries). Running it on the shared executor would let one unresolvable IP
+# starve every other executor job, so give it a dedicated thread. The holder is
+# rebuilt after shutdown so a stopped instance does not leave a permanently
+# unusable pool behind for the next one.
+class _ResolveHostExecutor:
+    """Lazily create and recreate the dedicated reverse-DNS thread pool."""
+
+    def __init__(self) -> None:
+        """Initialize the holder."""
+        self._executor: ThreadPoolExecutor | None = None
+        self._lookup: Future[tuple[str, list[str], list[str]]] | None = None
+        self._shutdown_registered = False
+
+    def get(self) -> ThreadPoolExecutor:
+        """Return a live pool, rebuilding it if it was shut down."""
+        executor = self._executor
+        if executor is None or executor._shutdown:  # noqa: SLF001
+            executor = self._executor = ThreadPoolExecutor(
+                max_workers=1, thread_name_prefix="resolve-host"
+            )
+        return executor
+
+    def submit_lookup(
+        self, hass: HomeAssistant, address: str
+    ) -> Future[tuple[str, list[str], list[str]]] | None:
+        """Submit a reverse-DNS lookup, unless one is already running.
+
+        A lookup that timed out cannot be cancelled, so queueing more work
+        behind a stalled resolver only grows the pool queue. Skipping the
+        lookup falls back to the bare IP address, same as a timeout.
+        """
+        if self._lookup is not None and not self._lookup.done():
+            return None
+        self.register_shutdown(hass)
+        self._lookup = self.get().submit(gethostbyaddr, address)
+        return self._lookup
+
+    def register_shutdown(self, hass: HomeAssistant) -> None:
+        """Register the stop listener the first time the pool is used.
+
+        process_wrong_login can create the pool without setup_bans having
+        run, since log_invalid_auth also works when banning is disabled,
+        so the listener cannot only be registered from setup_bans.
+        """
+        if self._shutdown_registered:
+            return
+        self._shutdown_registered = True
+
+        @callback
+        def _shutdown_on_stop(_event: Any) -> None:
+            """Release the dedicated reverse-DNS thread on stop."""
+            self.shutdown()
+
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown_on_stop)
+
+    def shutdown(self) -> None:
+        """Release the thread."""
+        self._shutdown_registered = False
+        if self._executor is not None:
+            self._executor.shutdown(wait=False, cancel_futures=True)
+            self._executor = None
+
+
+_resolve_host_executor = _ResolveHostExecutor()
+
 
 SCHEMA_IP_BAN_ENTRY: Final = probatio.Schema(
     {probatio.Optional(ATTR_BANNED_AT, default=None): probatio.Any(None, cv.datetime)}
@@ -125,11 +201,14 @@ async def process_wrong_login(request: Request) -> None:
     banned = await _async_count_wrong_login(request.app, hass, remote_addr)
 
     remote_host = request.remote
-    # The hostname only feeds the log and notification below
-    with suppress(TimeoutError, OSError, UnicodeError):
-        async with asyncio.timeout(REVERSE_DNS_TIMEOUT):
-            remote_host, _, _ = await hass.async_add_executor_job(
-                gethostbyaddr, request.remote
+
+    # The lookup only enriches the log message, so it must never delay the
+    # auth response. On timeout, fall back to the bare IP address.
+    lookup = _resolve_host_executor.submit_lookup(hass, request.remote)
+    if lookup is not None:
+        with suppress(TimeoutError, OSError, UnicodeError):
+            remote_host, _, _ = await asyncio.wait_for(
+                asyncio.wrap_future(lookup), timeout=RESOLVE_HOST_TIMEOUT
             )
 
     base_msg = (

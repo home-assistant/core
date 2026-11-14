@@ -13,7 +13,7 @@ from lru import LRU
 CACHE_TIME: Final = 31 * 86400  # = 1 month
 CACHE_HEADER = f"public, max-age={CACHE_TIME}"
 CACHE_HEADERS: Mapping[str, str] = {CACHE_CONTROL: CACHE_HEADER}
-RESPONSE_CACHE: LRU[tuple[str, Path], tuple[Path, str]] = LRU(512)
+RESPONSE_CACHE: LRU[tuple[str, Path, bool], tuple[Path, str]] = LRU(512)
 
 _GUESSER = CONTENT_TYPES.guess_file_type
 
@@ -25,7 +25,7 @@ class CachingStaticResource(StaticResource):
     async def _handle(self, request: Request) -> StreamResponse:
         """Wrap base handler to cache file path resolution and content type guess."""
         rel_url = request.match_info["filename"]
-        key = (rel_url, self._directory)
+        key = (rel_url, self._directory, self._follow_symlinks)
         response: StreamResponse
 
         if key in RESPONSE_CACHE:
