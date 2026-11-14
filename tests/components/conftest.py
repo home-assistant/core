@@ -50,6 +50,7 @@ from aiohasupervisor.models import (
 from aiohasupervisor.mounts import MountsClient
 from aiohasupervisor.network import NetworkClient
 from aiohasupervisor.os import OSClient
+from aiohasupervisor.plugins import PluginsClient
 from aiohasupervisor.resolution import ResolutionClient
 from aiohasupervisor.store import StoreClient
 from aiohasupervisor.supervisor import SupervisorManagementClient
@@ -791,6 +792,7 @@ def supervisor_client() -> Generator[AsyncMock]:
     )
     supervisor_client.network = AsyncMock(spec=NetworkClient)
     supervisor_client.os = AsyncMock(spec=OSClient)
+    supervisor_client.plugins = AsyncMock(spec=PluginsClient)
     supervisor_client.resolution = AsyncMock(spec=ResolutionClient)
     supervisor_client.supervisor = AsyncMock(spec=SupervisorManagementClient)
     supervisor_client.store = AsyncMock(spec=StoreClient)
@@ -838,6 +840,10 @@ def supervisor_client() -> Generator[AsyncMock]:
         ),
         patch(
             "homeassistant.components.hassio.update_helper.get_supervisor_client",
+            return_value=supervisor_client,
+        ),
+        patch(
+            "homeassistant.components.hassio.llm.get_supervisor_client",
             return_value=supervisor_client,
         ),
         patch(
