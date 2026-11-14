@@ -22,9 +22,11 @@ from homeassistant.const import (
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import ChildDeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
+from .const import DOMAIN
 from .coordinator import BluettiModbusConfigEntry
 from .entity import BluettiModbusEntity
 
@@ -108,6 +110,22 @@ _PV_INPUT_DESCRIPTIONS = tuple(
             suggested_display_precision=1,
         ),
     )
+)
+
+# Readings of the built-in battery, which is part of the power station rather
+# than a product of its own, so they go on a child device.
+BUILT_IN_BATTERY_KEYS = frozenset(
+    {
+        "b_v",
+        "b_c",
+        "b_soc",
+        "b_soh",
+        "b_cycle_count",
+        "b_cell_count",
+        "b_ntc_count",
+        "b_i_e",
+        "b_o_e",
+    }
 )
 
 SENSOR_DESCRIPTIONS: tuple[BluettiModbusSensorEntityDescription, ...] = (
@@ -263,7 +281,6 @@ SENSOR_DESCRIPTIONS: tuple[BluettiModbusSensorEntityDescription, ...] = (
     *_PV_INPUT_DESCRIPTIONS,
     BluettiModbusSensorEntityDescription(
         key="b_v",
-        translation_key="battery_voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -271,7 +288,6 @@ SENSOR_DESCRIPTIONS: tuple[BluettiModbusSensorEntityDescription, ...] = (
     ),
     BluettiModbusSensorEntityDescription(
         key="b_c",
-        translation_key="battery_current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -279,21 +295,21 @@ SENSOR_DESCRIPTIONS: tuple[BluettiModbusSensorEntityDescription, ...] = (
     ),
     BluettiModbusSensorEntityDescription(
         key="b_soc",
-        translation_key="battery_soc",
+        translation_key="soc",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     BluettiModbusSensorEntityDescription(
         key="b_soh",
-        translation_key="battery_soh",
+        translation_key="soh",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     BluettiModbusSensorEntityDescription(
         key="b_cycle_count",
-        translation_key="battery_cycle_count",
+        translation_key="cycle_count",
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -309,14 +325,14 @@ SENSOR_DESCRIPTIONS: tuple[BluettiModbusSensorEntityDescription, ...] = (
     ),
     BluettiModbusSensorEntityDescription(
         key="b_i_e",
-        translation_key="total_battery_charged_energy",
+        translation_key="total_charged_energy",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     BluettiModbusSensorEntityDescription(
         key="b_o_e",
-        translation_key="total_battery_discharged_energy",
+        translation_key="total_discharged_energy",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -349,6 +365,12 @@ class BluettiModbusSensor(BluettiModbusEntity, SensorEntity):
         """Initialize a BLUETTI Modbus sensor."""
         super().__init__(entry=entry, field_name=description.key)
         self.entity_description = description
+        if description.key in BUILT_IN_BATTERY_KEYS:
+            self._attr_device_info = ChildDeviceInfo(
+                identifiers={(DOMAIN, f"{entry.runtime_data.serial}_battery")},
+                parent_device_id=entry.runtime_data.device_id,
+                translation_key="built_in_battery",
+            )
 
     @property
     @override
