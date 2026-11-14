@@ -1395,6 +1395,12 @@
     "device_not_tuya_device": {
       "message": "Device with ID {device_id} is not a Tuya feeder."
     },
+    "infrared_ac_fan_mode_not_supported": {
+      "message": "The Tuya cloud has no infrared code for the {fan_mode} fan speed in {hvac_mode} mode."
+    },
+    "infrared_ac_mode_not_supported": {
+      "message": "The Tuya cloud has no infrared code to switch this air conditioner to {hvac_mode} mode."
+    },
     "invalid_meal_plan_data": {
       "message": "Unable to parse meal plan data."
     },
