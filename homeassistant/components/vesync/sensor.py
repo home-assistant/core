@@ -70,6 +70,45 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         value_fn=lambda device: device.state.filter_life,
         exists_fn=lambda device: rgetattr(device, "state.filter_life") is not None,
     ),
+    # Air quality and filter maintenance sensors.
+    VeSyncSensorEntityDescription(
+        key="aqi",
+        device_class=SensorDeviceClass.AQI,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda device: device.state.aqi,
+        exists_fn=lambda device: rgetattr(device, "state.aqi") is not None,
+    ),
+    VeSyncSensorEntityDescription(
+        key="carbon-filter-life",
+        translation_key="carbon_filter_life",
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda device: device.state.carbon_filter_life,
+        exists_fn=lambda device: (
+            rgetattr(device, "state.carbon_filter_life") is not None
+        ),
+    ),
+    VeSyncSensorEntityDescription(
+        key="pre-filter-life",
+        translation_key="pre_filter_life",
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda device: device.state.pre_filter_life,
+        exists_fn=lambda device: rgetattr(device, "state.pre_filter_life") is not None,
+    ),
+    VeSyncSensorEntityDescription(
+        key="filter-remaining-days",
+        translation_key="filter_remaining_days",
+        native_unit_of_measurement=UnitOfTime.DAYS,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda device: device.state.filter_remain_day,
+        exists_fn=lambda device: (
+            rgetattr(device, "state.filter_remain_day") is not None
+        ),
+    ),
     VeSyncSensorEntityDescription(
         key="air-quality",
         translation_key="air_quality",

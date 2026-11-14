@@ -145,6 +145,12 @@ def fan_fixture():
         device_type="fan",
         device_name="Test Fan",
         product_type="fan",
+        state=Mock(
+            aqi=None,
+            carbon_filter_life=None,
+            pre_filter_life=None,
+            filter_remain_day=None,
+        ),
         device_status="on",
         modes=[],
         connection_status="online",
