@@ -1,0 +1,39 @@
+# serializer version: 1
+# name: test_database_usage
+  dict({
+    'duration': float,
+    'entities': list([
+      dict({
+        'attributes_bytes': int,
+        'entity_id': 'sensor.busy',
+        'states': 10,
+        'states_bytes': int,
+      }),
+      dict({
+        'attributes_bytes': int,
+        'entity_id': 'sensor.quiet',
+        'states': 1,
+        'states_bytes': int,
+      }),
+    ]),
+    'generated_at': '2026-01-01T12:00:00+00:00',
+    'statistics': list([
+      dict({
+        'source': 'recorder',
+        'statistic_id': 'sensor.busy',
+        'statistics': 3,
+        'statistics_bytes': int,
+        'statistics_short_term': 1,
+        'statistics_short_term_bytes': int,
+      }),
+      dict({
+        'source': 'test',
+        'statistic_id': 'test:external',
+        'statistics': 1,
+        'statistics_bytes': int,
+        'statistics_short_term': 0,
+        'statistics_short_term_bytes': int,
+      }),
+    ]),
+  })
+# ---
