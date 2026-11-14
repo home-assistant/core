@@ -19,16 +19,10 @@ import pytest
 from pytest_homeassistant.common import async_fire_time_changed, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockState
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockService, LockState
 from homeassistant.components.schlage.const import DOMAIN, UPDATE_INTERVAL
 from homeassistant.components.schlage.services import SchlageService
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_LOCK,
-    SERVICE_UNLOCK,
-    STATE_UNAVAILABLE,
-    Platform,
-)
+from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -90,8 +84,8 @@ async def test_lock_services(
     """Test lock services."""
     await hass.services.async_call(
         LOCK_DOMAIN,
-        SERVICE_LOCK,
-        service_data={ATTR_ENTITY_ID: "lock.vault_door"},
+        LockService.LOCK,
+        service_data={CommonServiceArgument.ENTITY_ID: "lock.vault_door"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -99,8 +93,8 @@ async def test_lock_services(
 
     await hass.services.async_call(
         LOCK_DOMAIN,
-        SERVICE_UNLOCK,
-        service_data={ATTR_ENTITY_ID: "lock.vault_door"},
+        LockService.UNLOCK,
+        service_data={CommonServiceArgument.ENTITY_ID: "lock.vault_door"},
         blocking=True,
     )
     await hass.async_block_till_done()

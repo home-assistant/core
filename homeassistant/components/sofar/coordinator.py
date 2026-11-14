@@ -6,15 +6,24 @@ from datetime import timedelta
 import logging
 from typing import override
 
-from modbus_connection import ModbusError
+from modbus_connection import ModbusConnectionError, ModbusError, ModbusTimeoutError
 from sofar_modbus.model import UpdateReport
-from sofar_modbus.modern.device import BATTERY_PACKS, READING_COMPONENTS, SofarInverter
+from sofar_modbus.modern.device import (
+    BATTERY_PACKS,
+    READING_COMPONENTS,
+    BatteryTowerSilentError,
+    SofarInverter,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailed,
+    UpdateFailedUnreachable,
+)
 
 from .const import ATTR_MANUFACTURER, DOMAIN
 
@@ -67,6 +76,16 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
     async def _async_update_data(self) -> UpdateReport:
         try:
             report = await self._poll()
+        except BatteryTowerSilentError as err:
+            raise UpdateFailedUnreachable(
+                translation_domain=DOMAIN,
+                translation_key="battery_tower_unreachable",
+            ) from err
+        except (ModbusConnectionError, ModbusTimeoutError) as err:
+            raise UpdateFailedUnreachable(
+                translation_domain=DOMAIN,
+                translation_key="inverter_unreachable",
+            ) from err
         except ModbusError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,

@@ -473,6 +473,15 @@
       "gas_summary_consumption_heating_lastsevendays": {
         "name": "Heating gas consumption last seven days"
       },
+      "heat_production_current": {
+        "name": "Heat production"
+      },
+      "heat_production_dhw_today": {
+        "name": "DHW heat production today"
+      },
+      "heat_production_heating_today": {
+        "name": "Heating heat production today"
+      },
       "heating_rod_hours": {
         "name": "Heating rod hours"
       },
