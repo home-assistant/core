@@ -1,6 +1,5 @@
 """Support for Atlantic Pass APC Heating Control."""
 
-from asyncio import sleep
 from typing import Any, cast, override
 
 from propcache.api import cached_property
@@ -51,6 +50,15 @@ HVAC_ACTION_TO_OVERKIZ_MODE_STATE: dict[HVACAction, OverkizState] = {
 }
 
 TEMPERATURE_ZONECONTROL_DEVICE_INDEX = 1
+
+# Appended after the writes: commands of one execution run in order.
+REFRESH_COMMAND_NAMES = (
+    OverkizCommand.REFRESH_PASS_APC_HEATING_MODE,
+    OverkizCommand.REFRESH_PASS_APC_HEATING_PROFILE,
+    OverkizCommand.REFRESH_PASS_APC_COOLING_MODE,
+    OverkizCommand.REFRESH_PASS_APC_COOLING_PROFILE,
+    OverkizCommand.REFRESH_TARGET_TEMPERATURE,
+)
 
 SUPPORTED_FEATURES: ClimateEntityFeature = (
     ClimateEntityFeature.PRESET_MODE
@@ -265,10 +273,9 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
                     name=OverkizCommand.SET_HEATING_ON_OFF,
                     parameters=[on_off_target_command_param],
                 ),
+                *self._refresh_commands(),
             ]
         )
-
-        await self.async_refresh_modes()
 
     @property
     @override
@@ -317,10 +324,9 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
                 Command(
                     name=OverkizCommand.SET_PASS_APC_COOLING_MODE, parameters=[mode]
                 ),
+                *self._refresh_commands(),
             ]
         )
-
-        await self.async_refresh_modes()
 
     @property
     @override
@@ -392,7 +398,9 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
         target_temperature = kwargs.get(ATTR_TEMPERATURE)
         target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
         target_temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
-        hvac_mode = self.hvac_mode
+        # Follow the thermal configuration rather than the on/off state, so a
+        # setpoint set on a stopped zone applies when it is turned back on.
+        hvac_mode = self.device_hvac_mode
 
         heating_target: float | None = None
         cooling_target: float | None = None
@@ -423,9 +431,6 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
                 )
             )
 
-        if not commands:
-            return
-
         commands.append(
             Command(
                 name=OverkizCommand.SET_DEROGATION_ON_OFF_STATE,
@@ -433,25 +438,14 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
             )
         )
 
-        await self.executor.async_execute_commands(commands)
-
-        await self.async_refresh_modes()
-
-    async def async_refresh_modes(self) -> None:
-        """Refresh the device modes to have new states."""
-
-        # The device needs a bit of time to update everything before a refresh.
-        await sleep(2)
-
         await self.executor.async_execute_commands(
-            [
-                Command(name=OverkizCommand.REFRESH_PASS_APC_HEATING_MODE),
-                Command(name=OverkizCommand.REFRESH_PASS_APC_HEATING_PROFILE),
-                Command(name=OverkizCommand.REFRESH_PASS_APC_COOLING_MODE),
-                Command(name=OverkizCommand.REFRESH_PASS_APC_COOLING_PROFILE),
-                Command(name=OverkizCommand.REFRESH_TARGET_TEMPERATURE),
-            ]
+            [*commands, *self._refresh_commands()]
         )
+
+    @staticmethod
+    def _refresh_commands() -> list[Command]:
+        """Return the commands refreshing the states a change can affect."""
+        return [Command(name=name) for name in REFRESH_COMMAND_NAMES]
 
     @property
     @override
