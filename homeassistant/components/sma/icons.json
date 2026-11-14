@@ -1,0 +1,13 @@
+{
+  "entity": {
+    "switch": {
+      "inverter_enabled": {
+        "default": "mdi:power",
+        "state": {
+          "off": "mdi:power-off",
+          "on": "mdi:power"
+        }
+      }
+    }
+  }
+}
