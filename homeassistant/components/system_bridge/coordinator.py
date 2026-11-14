@@ -77,6 +77,10 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
         self._reconnect_delay = UPDATE_INTERVAL
         self._unavailable_logged = False
         self._reconnect_after: datetime | None = None
+        # Counts the first display list after each connection, when the
+        # platforms remove the entities of displays that have gone
+        self.display_connections = 0
+        self._awaiting_displays = False
 
         super().__init__(
             hass,
@@ -173,6 +177,9 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
         """Handle data from the WebSocket client."""
         self.logger.debug("[async_handle_module] Set new data for: %s", module_name)
         setattr(self.data, module_name, module)
+        if module_name == Module.DISPLAYS and self._awaiting_displays:
+            self._awaiting_displays = False
+            self.display_connections += 1
         self.async_set_updated_data(self.data)
 
     async def async_handle_settings(self, settings: Settings) -> None:
@@ -313,6 +320,8 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
                 eager_start=False,
             )
             self.logger.debug("Listening for data from %s", self.title)
+            # Setup has already fetched the display list for the first connection
+            self._awaiting_displays = self.config_entry.state is ConfigEntryState.LOADED
 
             try:
                 await self._register_data_listener()

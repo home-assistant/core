@@ -1,7 +1,7 @@
 """Base entity for the system bridge integration."""
 
 from collections import Counter
-from collections.abc import Awaitable, Callable, Iterable
+from collections.abc import Awaitable, Callable, Container, Iterable
 from typing import TYPE_CHECKING, override
 
 from systembridgeconnector.const import EventType
@@ -15,7 +15,7 @@ from systembridgeconnector.models.response import Response
 from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -247,6 +247,57 @@ def async_add_new_audio_devices(
 
     _async_check()
     entry.async_on_unload(coordinator.async_add_listener(_async_check))
+
+
+@callback
+def async_remove_gone_entities(
+    entry: SystemBridgeConfigEntry,
+    domain: str,
+    translation_key_prefixes: tuple[str, ...],
+    current_keys: Container[str],
+) -> set[str]:
+    """Remove the entities of a kind whose key is no longer current.
+
+    The entity registry keeps removed entities, so a device that comes back
+    gets the same entity IDs and settings. Returns the keys removed.
+    """
+    coordinator = entry.runtime_data
+    # The entry's unique ID is the system's UUID, which the system module
+    # can stop reporting after setup
+    if TYPE_CHECKING:
+        assert entry.unique_id is not None
+    entity_registry = er.async_get(coordinator.hass)
+    prefix = f"{entry.unique_id}_"
+    removed: set[str] = set()
+    for registry_entry in er.async_entries_for_config_entry(
+        entity_registry, entry.entry_id
+    ):
+        if (
+            registry_entry.domain == domain
+            and registry_entry.translation_key is not None
+            and registry_entry.translation_key.startswith(translation_key_prefixes)
+            and registry_entry.unique_id.startswith(prefix)
+            and (key := registry_entry.unique_id.removeprefix(prefix))
+            not in current_keys
+        ):
+            entity_registry.async_remove(registry_entry.entity_id)
+            removed.add(key)
+    return removed
+
+
+@callback
+def async_remove_gone_displays(
+    entry: SystemBridgeConfigEntry, domain: str, key: str, known_displays: set[str]
+) -> None:
+    """Remove the display entities of displays that have gone."""
+    display_ids = {display.id for display in entry.runtime_data.data.displays}
+    async_remove_gone_entities(
+        entry,
+        domain,
+        ("display_",),
+        {f"display_{display_id}_{key}" for display_id in display_ids},
+    )
+    known_displays.intersection_update(display_ids)
 
 
 def unique_names(
