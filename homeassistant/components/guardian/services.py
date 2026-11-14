@@ -1,56 +1,53 @@
 """Support for Guardian services."""
 
 from collections.abc import Callable, Coroutine
+from enum import StrEnum
 from typing import TYPE_CHECKING, Any
 
 from aioguardian.errors import GuardianError
 import probatio
 
-from homeassistant.const import (
-    ATTR_DEVICE_ID,
-    CONF_DEVICE_ID,
-    CONF_FILENAME,
-    CONF_PORT,
-    CONF_URL,
-)
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, service
 
-from .const import CONF_UID, DOMAIN
+from .const import DOMAIN
 
 if TYPE_CHECKING:
     from . import GuardianConfigEntry, GuardianData
 
-SERVICE_NAME_PAIR_SENSOR = "pair_sensor"
-SERVICE_NAME_UNPAIR_SENSOR = "unpair_sensor"
-SERVICE_NAME_UPGRADE_FIRMWARE = "upgrade_firmware"
 
-SERVICES = (
-    SERVICE_NAME_PAIR_SENSOR,
-    SERVICE_NAME_UNPAIR_SENSOR,
-    SERVICE_NAME_UPGRADE_FIRMWARE,
-)
+class GuardianService(StrEnum):
+    """Store keys for Guardian services."""
 
-SERVICE_BASE_SCHEMA = probatio.Schema(
-    {
-        probatio.Required(ATTR_DEVICE_ID): cv.string,
-    }
-)
+    PAIR_SENSOR = "pair_sensor"
+    UNPAIR_SENSOR = "unpair_sensor"
+    UPGRADE_FIRMWARE = "upgrade_firmware"
+
+
+class GuardianServiceArgument(StrEnum):
+    """Store keys for Guardian service arguments."""
+
+    UID = "uid"
+    URL = "url"
+    PORT = "port"
+    FILENAME = "filename"
+
 
 SERVICE_PAIR_UNPAIR_SENSOR_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_DEVICE_ID): cv.string,
-        probatio.Required(CONF_UID): cv.string,
+        probatio.Required(CommonServiceArgument.DEVICE_ID): cv.string,
+        probatio.Required(GuardianServiceArgument.UID): cv.string,
     }
 )
 
 SERVICE_UPGRADE_FIRMWARE_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_DEVICE_ID): cv.string,
-        probatio.Optional(CONF_URL): cv.url,
-        probatio.Optional(CONF_PORT): probatio.Port(),
-        probatio.Optional(CONF_FILENAME): cv.string,
+        probatio.Required(CommonServiceArgument.DEVICE_ID): cv.string,
+        probatio.Optional(GuardianServiceArgument.URL): cv.url,
+        probatio.Optional(GuardianServiceArgument.PORT): probatio.Port(),
+        probatio.Optional(GuardianServiceArgument.FILENAME): cv.string,
     },
 )
 
@@ -60,7 +57,7 @@ def async_get_entry_id_for_service_call(call: ServiceCall) -> GuardianConfigEntr
     """Get the entry ID related to a service call (by device ID)."""
     config_entry: GuardianConfigEntry
     _, config_entry = service.async_get_device_and_config_entry(
-        call.hass, DOMAIN, call.data[CONF_DEVICE_ID]
+        call.hass, DOMAIN, call.data[CommonServiceArgument.DEVICE_ID]
     )
     return config_entry
 
@@ -89,7 +86,7 @@ def call_with_data(
 @call_with_data
 async def async_pair_sensor(call: ServiceCall, data: GuardianData) -> None:
     """Add a new paired sensor."""
-    uid = call.data[CONF_UID]
+    uid = call.data[GuardianServiceArgument.UID]
     await data.client.sensor.pair_sensor(uid)
     await data.paired_sensor_manager.async_pair_sensor(uid)
 
@@ -97,7 +94,7 @@ async def async_pair_sensor(call: ServiceCall, data: GuardianData) -> None:
 @call_with_data
 async def async_unpair_sensor(call: ServiceCall, data: GuardianData) -> None:
     """Remove a paired sensor."""
-    uid = call.data[CONF_UID]
+    uid = call.data[GuardianServiceArgument.UID]
     await data.client.sensor.unpair_sensor(uid)
     await data.paired_sensor_manager.async_unpair_sensor(uid)
 
@@ -106,9 +103,9 @@ async def async_unpair_sensor(call: ServiceCall, data: GuardianData) -> None:
 async def async_upgrade_firmware(call: ServiceCall, data: GuardianData) -> None:
     """Upgrade the device firmware."""
     await data.client.system.upgrade_firmware(
-        url=call.data[CONF_URL],
-        port=call.data[CONF_PORT],
-        filename=call.data[CONF_FILENAME],
+        url=call.data[GuardianServiceArgument.URL],
+        port=call.data[GuardianServiceArgument.PORT],
+        filename=call.data[GuardianServiceArgument.FILENAME],
     )
 
 
@@ -117,17 +114,17 @@ def async_setup_services(hass: HomeAssistant) -> None:
     """Register the guardian services."""
     for service_name, schema, method in (
         (
-            SERVICE_NAME_PAIR_SENSOR,
+            GuardianService.PAIR_SENSOR,
             SERVICE_PAIR_UNPAIR_SENSOR_SCHEMA,
             async_pair_sensor,
         ),
         (
-            SERVICE_NAME_UNPAIR_SENSOR,
+            GuardianService.UNPAIR_SENSOR,
             SERVICE_PAIR_UNPAIR_SENSOR_SCHEMA,
             async_unpair_sensor,
         ),
         (
-            SERVICE_NAME_UPGRADE_FIRMWARE,
+            GuardianService.UPGRADE_FIRMWARE,
             SERVICE_UPGRADE_FIRMWARE_SCHEMA,
             async_upgrade_firmware,
         ),

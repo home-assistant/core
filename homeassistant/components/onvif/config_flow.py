@@ -21,7 +21,6 @@ from homeassistant.components.stream import (
     RTSP_TRANSPORTS,
 )
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -51,7 +50,7 @@ from .const import (
     GET_CAPABILITIES_EXCEPTIONS,
     LOGGER,
 )
-from .device import get_device, get_mac_address
+from .device import ONVIFConfigEntry, get_device, get_mac_address
 
 CONF_MANUAL_INPUT = "Manually configure ONVIF device"
 
@@ -113,7 +112,7 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: ONVIFConfigEntry,
     ) -> OnvifOptionsFlowHandler:
         """Get the options flow for this handler."""
         return OnvifOptionsFlowHandler(config_entry)
@@ -230,7 +229,7 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     @callback
-    def _is_same_device(self, entry: ConfigEntry) -> bool:
+    def _is_same_device(self, entry: ONVIFConfigEntry) -> bool:
         """Return whether the reached device belongs to the config entry."""
         if self.device_id == entry.unique_id:
             return True
@@ -475,7 +474,7 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
 class OnvifOptionsFlowHandler(OptionsFlow):
     """Handle ONVIF options."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self, config_entry: ONVIFConfigEntry) -> None:
         """Initialize ONVIF options flow."""
         self.options = dict(config_entry.options)
 

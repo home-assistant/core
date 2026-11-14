@@ -16,6 +16,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
+    UnitOfElectricPotential,
     UnitOfPressure,
     UnitOfTemperature,
     UnitOfTime,
@@ -183,6 +184,17 @@ DESCRIPTIONS: list[WatergateSensorEntityDescription] = [
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+    WatergateSensorEntityDescription(
+        value_fn=lambda data: data.power.batteries_voltage if data.power else None,
+        translation_key="battery_voltage",
+        key="battery_voltage",
+        native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
+        suggested_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        suggested_display_precision=2,
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     WatergateSensorEntityDescription(
         value_fn=lambda data: (

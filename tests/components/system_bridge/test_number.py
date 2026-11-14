@@ -17,11 +17,11 @@ from systembridgeconnector.models.modules import Module
 from systembridgeconnector.models.response import Response
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -166,8 +166,11 @@ async def test_set_input_volume(
     """Test setting an input's volume sends an audio control."""
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: "number.hostname_microphone_input_volume", ATTR_VALUE: 40},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: "number.hostname_microphone_input_volume",
+            NumberServiceArgument.VALUE: 40,
+        },
         blocking=True,
     )
 
@@ -184,8 +187,8 @@ async def test_set_brightness(
     """Test setting the brightness sends a display control."""
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_VALUE: 50},
+        NumberService.SET_VALUE,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_ID, NumberServiceArgument.VALUE: 50},
         blocking=True,
     )
 
@@ -213,8 +216,11 @@ async def test_set_brightness_error(
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_VALUE: 50},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+                NumberServiceArgument.VALUE: 50,
+            },
             blocking=True,
         )
 
@@ -235,7 +241,10 @@ async def test_set_brightness_connection_closed(
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_VALUE: 50},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+                NumberServiceArgument.VALUE: 50,
+            },
             blocking=True,
         )

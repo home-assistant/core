@@ -1,7 +1,7 @@
 """Support for LIFX lights."""
 
 import asyncio
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Coroutine, Mapping, Sequence
 from typing import Any
 
 from lifx import (
@@ -23,42 +23,10 @@ from lifx import (
     TileEffectSkyType,
 )
 
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_BRIGHTNESS_PCT,
-    ATTR_TRANSITION,
-)
-from homeassistant.const import ATTR_MODE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 
-from .const import (
-    ATTR_CHANGE,
-    ATTR_CLOUD_SATURATION_MAX,
-    ATTR_CLOUD_SATURATION_MIN,
-    ATTR_CYCLES,
-    ATTR_DIRECTION,
-    ATTR_DURATION,
-    ATTR_PALETTE,
-    ATTR_PERIOD,
-    ATTR_POWER_ON,
-    ATTR_SATURATION_MAX,
-    ATTR_SATURATION_MIN,
-    ATTR_SKY_TYPE,
-    ATTR_SPEED,
-    ATTR_SPREAD,
-    ATTR_THEME,
-    DOMAIN,
-    SERVICE_EFFECT_COLORLOOP,
-    SERVICE_EFFECT_COLORSWEEP,
-    SERVICE_EFFECT_FLAME,
-    SERVICE_EFFECT_MORPH,
-    SERVICE_EFFECT_MOVE,
-    SERVICE_EFFECT_PULSE,
-    SERVICE_EFFECT_SKY,
-    SERVICE_EFFECT_STOP,
-    SERVICE_PAINT_THEME,
-)
+from .const import DOMAIN, LIFXService, LIFXServiceArgument
 from .coordinator import LIFXUpdateCoordinator
 from .util import (
     device_error,
@@ -195,7 +163,7 @@ class LIFXManager:
             device for device in devices if isinstance(device, device_type)
         ]
         await self._async_power_on(
-            compatible_devices, service.data.get(ATTR_POWER_ON, True)
+            compatible_devices, service.data.get(LIFXServiceArgument.POWER_ON, True)
         )
         await asyncio.gather(
             *(device.set_effect(effect, **kwargs) for device in compatible_devices)
@@ -207,8 +175,12 @@ class LIFXManager:
         service: ServiceCall,
     ) -> None:
         """Start the firmware-based Color Sweep effect."""
-        speed = service.data.get(ATTR_SPEED, EFFECT_COLORSWEEP_DEFAULT_SPEED)
-        duration = service.data.get(ATTR_DURATION, EFFECT_COLORSWEEP_DEFAULT_DURATION)
+        speed = service.data.get(
+            LIFXServiceArgument.SPEED, EFFECT_COLORSWEEP_DEFAULT_SPEED
+        )
+        duration = service.data.get(
+            LIFXServiceArgument.DURATION, EFFECT_COLORSWEEP_DEFAULT_DURATION
+        )
         # Speed 0 sweeps once across the duration, so it needs one: the
         # library would otherwise quietly run at its default speed instead
         if speed == 0 and duration == 0:
@@ -225,7 +197,9 @@ class LIFXManager:
             # The library takes the duration in nanoseconds
             duration=duration * 1_000_000_000,
             palette=self._build_palette(
-                service.data.get(ATTR_PALETTE, EFFECT_COLORSWEEP_DEFAULT_PALETTE)
+                service.data.get(
+                    LIFXServiceArgument.PALETTE, EFFECT_COLORSWEEP_DEFAULT_PALETTE
+                )
             ),
         )
 
@@ -239,7 +213,9 @@ class LIFXManager:
             devices,
             service,
             FirmwareEffect.FLAME,
-            speed=service.data.get(ATTR_SPEED, EFFECT_FLAME_DEFAULT_SPEED),
+            speed=service.data.get(
+                LIFXServiceArgument.SPEED, EFFECT_FLAME_DEFAULT_SPEED
+            ),
         )
 
     async def _start_paint_theme(
@@ -248,11 +224,13 @@ class LIFXManager:
         service: ServiceCall,
     ) -> None:
         """Paint a theme across one or more LIFX bulbs."""
-        theme_name = service.data.get(ATTR_THEME, "exciting")
-        palette = service.data.get(ATTR_PALETTE)
+        theme_name = service.data.get(LIFXServiceArgument.THEME, "exciting")
+        palette = service.data.get(LIFXServiceArgument.PALETTE)
         theme = self.build_theme(theme_name, palette)
-        power_on = service.data.get(ATTR_POWER_ON, True)
-        duration = service.data.get(ATTR_TRANSITION, PAINT_THEME_DEFAULT_TRANSITION)
+        power_on = service.data.get(LIFXServiceArgument.POWER_ON, True)
+        duration = service.data.get(
+            LIFXServiceArgument.TRANSITION, PAINT_THEME_DEFAULT_TRANSITION
+        )
         await asyncio.gather(
             *(
                 device.apply_theme(theme, power_on=power_on, duration=duration)
@@ -266,14 +244,18 @@ class LIFXManager:
         service: ServiceCall,
     ) -> None:
         """Start the firmware-based Morph effect."""
-        theme_name = service.data.get(ATTR_THEME, EFFECT_MORPH_DEFAULT_THEME)
-        palette = service.data.get(ATTR_PALETTE)
+        theme_name = service.data.get(
+            LIFXServiceArgument.THEME, EFFECT_MORPH_DEFAULT_THEME
+        )
+        palette = service.data.get(LIFXServiceArgument.PALETTE)
         theme = self.build_theme(theme_name, palette)
         await self._start_matrix_effect(
             devices,
             service,
             FirmwareEffect.MORPH,
-            speed=service.data.get(ATTR_SPEED, EFFECT_MORPH_DEFAULT_SPEED),
+            speed=service.data.get(
+                LIFXServiceArgument.SPEED, EFFECT_MORPH_DEFAULT_SPEED
+            ),
             palette=theme.colors,
         )
 
@@ -286,10 +268,10 @@ class LIFXManager:
         compatible_devices = [
             device for device in devices if isinstance(device, MultiZoneLight)
         ]
-        power_on = service.data.get(ATTR_POWER_ON, True)
+        power_on = service.data.get(LIFXServiceArgument.POWER_ON, True)
         await self._async_power_on(compatible_devices, power_on)
-        speed = service.data.get(ATTR_SPEED, EFFECT_MOVE_DEFAULT_SPEED)
-        if theme_name := service.data.get(ATTR_THEME):
+        speed = service.data.get(LIFXServiceArgument.SPEED, EFFECT_MOVE_DEFAULT_SPEED)
+        if theme_name := service.data.get(LIFXServiceArgument.THEME):
             theme = ThemeLibrary.get(theme_name)
             await asyncio.gather(
                 *(
@@ -298,7 +280,9 @@ class LIFXManager:
                 )
             )
         direction = EFFECT_MOVE_DIRECTION[
-            service.data.get(ATTR_DIRECTION, EFFECT_MOVE_DEFAULT_DIRECTION)
+            service.data.get(
+                LIFXServiceArgument.DIRECTION, EFFECT_MOVE_DEFAULT_DIRECTION
+            )
         ]
         effect = MultiZoneEffect(
             FirmwareEffect.MOVE,
@@ -324,10 +308,12 @@ class LIFXManager:
             *(
                 self.effects_conductor.start(
                     EffectPulse(
-                        power_on=service.data.get(ATTR_POWER_ON, True),
-                        mode=service.data.get(ATTR_MODE, EFFECT_PULSE_DEFAULT_MODE),
-                        period=service.data.get(ATTR_PERIOD),
-                        cycles=service.data.get(ATTR_CYCLES),
+                        power_on=service.data.get(LIFXServiceArgument.POWER_ON, True),
+                        mode=service.data.get(
+                            LIFXServiceArgument.MODE, EFFECT_PULSE_DEFAULT_MODE
+                        ),
+                        period=service.data.get(LIFXServiceArgument.PERIOD),
+                        cycles=service.data.get(LIFXServiceArgument.CYCLES),
                         color=color,
                     ),
                     [device],
@@ -343,26 +329,26 @@ class LIFXManager:
     ) -> None:
         """Start the software based Color Loop effect."""
         brightness = None
-        if ATTR_BRIGHTNESS in service.data:
-            brightness = service.data[ATTR_BRIGHTNESS] / 255
-        elif ATTR_BRIGHTNESS_PCT in service.data:
-            brightness = service.data[ATTR_BRIGHTNESS_PCT] / 100
+        if LIFXServiceArgument.BRIGHTNESS in service.data:
+            brightness = service.data[LIFXServiceArgument.BRIGHTNESS] / 255
+        elif LIFXServiceArgument.BRIGHTNESS_PCT in service.data:
+            brightness = service.data[LIFXServiceArgument.BRIGHTNESS_PCT] / 100
 
-        saturation_min = service.data.get(ATTR_SATURATION_MIN, 80) / 100
-        saturation_max = service.data.get(ATTR_SATURATION_MAX, 100) / 100
+        saturation_min = service.data.get(LIFXServiceArgument.SATURATION_MIN, 80) / 100
+        saturation_max = service.data.get(LIFXServiceArgument.SATURATION_MAX, 100) / 100
         # Only one bound has to be given, so they can arrive the wrong way around
         if saturation_min > saturation_max:
             saturation_min, saturation_max = saturation_max, saturation_min
 
         effect = EffectColorloop(
-            power_on=service.data.get(ATTR_POWER_ON, True),
-            period=service.data.get(ATTR_PERIOD, 60.0),
-            change=service.data.get(ATTR_CHANGE, 20.0),
-            spread=service.data.get(ATTR_SPREAD, 30.0),
+            power_on=service.data.get(LIFXServiceArgument.POWER_ON, True),
+            period=service.data.get(LIFXServiceArgument.PERIOD, 60.0),
+            change=service.data.get(LIFXServiceArgument.CHANGE, 20.0),
+            spread=service.data.get(LIFXServiceArgument.SPREAD, 30.0),
             brightness=brightness,
             saturation_min=saturation_min,
             saturation_max=saturation_max,
-            transition=service.data.get(ATTR_TRANSITION),
+            transition=service.data.get(LIFXServiceArgument.TRANSITION),
         )
         await self.effects_conductor.start(effect, devices)
 
@@ -372,8 +358,10 @@ class LIFXManager:
         service: ServiceCall,
     ) -> None:
         """Start the firmware-based Sky effect."""
-        speed = service.data.get(ATTR_SPEED, EFFECT_SKY_DEFAULT_SPEED)
-        duration = service.data.get(ATTR_DURATION, EFFECT_SKY_DEFAULT_DURATION)
+        speed = service.data.get(LIFXServiceArgument.SPEED, EFFECT_SKY_DEFAULT_SPEED)
+        duration = service.data.get(
+            LIFXServiceArgument.DURATION, EFFECT_SKY_DEFAULT_DURATION
+        )
         # Speed 0 plays the sky once across the duration, so it needs one: the
         # library would otherwise quietly run at its default speed instead
         if speed == 0 and duration == 0:
@@ -389,18 +377,21 @@ class LIFXManager:
             # The library takes the duration in nanoseconds
             duration=duration * 1_000_000_000,
             sky_type=EFFECT_SKY_TYPE[
-                service.data.get(ATTR_SKY_TYPE, EFFECT_SKY_DEFAULT_SKY_TYPE)
+                service.data.get(
+                    LIFXServiceArgument.SKY_TYPE, EFFECT_SKY_DEFAULT_SKY_TYPE
+                )
             ],
             cloud_saturation_min=service.data.get(
-                ATTR_CLOUD_SATURATION_MIN,
+                LIFXServiceArgument.CLOUD_SATURATION_MIN,
                 EFFECT_SKY_DEFAULT_CLOUD_SATURATION_MIN,
             ),
             cloud_saturation_max=service.data.get(
-                ATTR_CLOUD_SATURATION_MAX,
+                LIFXServiceArgument.CLOUD_SATURATION_MAX,
                 EFFECT_SKY_DEFAULT_CLOUD_SATURATION_MAX,
             ),
             # The library rejects an empty palette but accepts no palette at all
-            palette=self._build_palette(service.data.get(ATTR_PALETTE)) or None,
+            palette=self._build_palette(service.data.get(LIFXServiceArgument.PALETTE))
+            or None,
         )
 
     async def _start_effect_stop(
@@ -423,26 +414,29 @@ class LIFXManager:
             ),
         )
 
-    _effect_dispatch = {
-        SERVICE_EFFECT_COLORSWEEP: _start_effect_colorsweep,
-        SERVICE_EFFECT_COLORLOOP: _start_effect_colorloop,
-        SERVICE_EFFECT_FLAME: _start_effect_flame,
-        SERVICE_EFFECT_MORPH: _start_effect_morph,
-        SERVICE_EFFECT_MOVE: _start_effect_move,
-        SERVICE_EFFECT_PULSE: _start_effect_pulse,
-        SERVICE_EFFECT_SKY: _start_effect_sky,
-        SERVICE_EFFECT_STOP: _start_effect_stop,
-        SERVICE_PAINT_THEME: _start_paint_theme,
+    _effect_dispatch: dict[
+        str,
+        Callable[[LIFXManager, list[Light], ServiceCall], Coroutine[Any, Any, None]],
+    ] = {
+        LIFXService.EFFECT_COLORSWEEP: _start_effect_colorsweep,
+        LIFXService.EFFECT_COLORLOOP: _start_effect_colorloop,
+        LIFXService.EFFECT_FLAME: _start_effect_flame,
+        LIFXService.EFFECT_MORPH: _start_effect_morph,
+        LIFXService.EFFECT_MOVE: _start_effect_move,
+        LIFXService.EFFECT_PULSE: _start_effect_pulse,
+        LIFXService.EFFECT_SKY: _start_effect_sky,
+        LIFXService.EFFECT_STOP: _start_effect_stop,
+        LIFXService.PAINT_THEME: _start_paint_theme,
     }
 
     # A firmware effect only runs on the devices that implement it, so a target
     # set holding none of them can do nothing at all
     _effect_requires: dict[str, tuple[type[Light], str]] = {
-        SERVICE_EFFECT_COLORSWEEP: (MirrorLight, "no_mirror_target"),
-        SERVICE_EFFECT_FLAME: (MatrixLight, "no_matrix_target"),
-        SERVICE_EFFECT_MORPH: (MatrixLight, "no_matrix_target"),
-        SERVICE_EFFECT_MOVE: (MultiZoneLight, "no_multizone_target"),
-        SERVICE_EFFECT_SKY: (MatrixLight, "no_matrix_target"),
+        LIFXService.EFFECT_COLORSWEEP: (MirrorLight, "no_mirror_target"),
+        LIFXService.EFFECT_FLAME: (MatrixLight, "no_matrix_target"),
+        LIFXService.EFFECT_MORPH: (MatrixLight, "no_matrix_target"),
+        LIFXService.EFFECT_MOVE: (MultiZoneLight, "no_multizone_target"),
+        LIFXService.EFFECT_SKY: (MatrixLight, "no_matrix_target"),
     }
 
     async def start_effect(

@@ -12,7 +12,6 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -25,6 +24,7 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from . import DiscogsConfigEntry
 from .const import DEFAULT_NAME, DOMAIN
 
 ATTR_IDENTITY = "identity"
@@ -125,7 +125,7 @@ async def async_setup_platform(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: DiscogsConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Discogs sensor from a config entry."""
@@ -144,7 +144,7 @@ class DiscogsSensor(SensorEntity):
 
     def __init__(
         self,
-        entry: ConfigEntry,
+        entry: DiscogsConfigEntry,
         client: discogs_client.Client,
         description: SensorEntityDescription,
     ) -> None:

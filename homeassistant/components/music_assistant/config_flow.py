@@ -576,7 +576,7 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
         # Check if we're returning from the external auth step with a token
         if user_input is not None:
             if "error" in user_input:
-                return self.async_abort(reason="auth_error")
+                return self.async_external_step_done(next_step_id="auth_error")
             # OAuth2 callback sends token as "code" parameter
             if "code" in user_input:
                 self.token = user_input["code"]
@@ -603,6 +603,12 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         login_url = f"{self.url}/login?{params}"
         return self.async_external_step(step_id="auth", url=login_url)
+
+    async def async_step_auth_error(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Abort after the external authentication returned an error."""
+        return self.async_abort(reason="auth_error")
 
     async def async_step_finish_auth(
         self, user_input: dict[str, Any] | None = None

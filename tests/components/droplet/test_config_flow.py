@@ -1,13 +1,13 @@
 """Test Droplet config flow."""
 
 from ipaddress import IPv4Address
-from unittest.mock import AsyncMock
+from unittest.mock import ANY, AsyncMock
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.droplet.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import (
     ATTR_CODE,
     CONF_CODE,
@@ -238,6 +238,114 @@ async def test_zeroconf_update(
     assert result.get("reason") == "already_configured"
 
     assert mock_config_entry.data[CONF_IP_ADDRESS] == new_host
+    mock_droplet_discovery.try_connect.assert_awaited_once_with(ANY, MOCK_CODE)
+    mock_droplet_discovery.close.assert_awaited_once()
+
+
+@pytest.mark.parametrize(
+    ("connect_res", "device_ids"),
+    [
+        pytest.param(False, [MOCK_DEVICE_ID], id="cannot_connect"),
+        pytest.param(True, [MOCK_DEVICE_ID, "Droplet-5678"], id="other_device"),
+        pytest.param(True, [MOCK_DEVICE_ID, ""], id="no_device_id"),
+    ],
+)
+@pytest.mark.parametrize("mock_droplet_discovery", ["192.168.1.5"], indirect=True)
+async def test_zeroconf_update_device_mismatch(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_droplet_discovery: AsyncMock,
+    connect_res: bool,
+    device_ids: list[str],
+) -> None:
+    """Test a discovered host is not stored unless it is the configured Droplet."""
+    mock_config_entry.add_to_hass(hass)
+    mock_droplet_discovery.try_connect.return_value = connect_res
+    mock_droplet_discovery.get_device_id.side_effect = device_ids
+
+    discovery_info = ZeroconfServiceInfo(
+        ip_address=IPv4Address("192.168.1.5"),
+        ip_addresses=[IPv4Address("192.168.1.5")],
+        port=MOCK_PORT,
+        hostname=MOCK_DEVICE_ID,
+        type="_droplet._tcp.local.",
+        name=MOCK_DEVICE_ID,
+        properties={},
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "already_configured"
+
+    assert mock_config_entry.data[CONF_IP_ADDRESS] == MOCK_HOST
+    mock_droplet_discovery.close.assert_awaited_once()
+
+
+async def test_zeroconf_same_host(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_droplet_discovery: AsyncMock,
+) -> None:
+    """Test rediscovery at the configured host does not connect to the device."""
+    mock_config_entry.add_to_hass(hass)
+
+    discovery_info = ZeroconfServiceInfo(
+        ip_address=IPv4Address(MOCK_HOST),
+        ip_addresses=[IPv4Address(MOCK_HOST)],
+        port=MOCK_PORT,
+        hostname=MOCK_DEVICE_ID,
+        type="_droplet._tcp.local.",
+        name=MOCK_DEVICE_ID,
+        properties={},
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "already_configured"
+
+    assert mock_config_entry.data[CONF_IP_ADDRESS] == MOCK_HOST
+    mock_droplet_discovery.try_connect.assert_not_awaited()
+
+
+async def test_zeroconf_ignored_entry(
+    hass: HomeAssistant,
+    mock_droplet_discovery: AsyncMock,
+) -> None:
+    """Test rediscovery of an ignored Droplet aborts without connecting."""
+    # Ignored entries have no stored host or pairing code
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=SOURCE_IGNORE,
+        unique_id=MOCK_DEVICE_ID,
+        data={},
+    )
+    entry.add_to_hass(hass)
+
+    discovery_info = ZeroconfServiceInfo(
+        ip_address=IPv4Address(MOCK_HOST),
+        ip_addresses=[IPv4Address(MOCK_HOST)],
+        port=MOCK_PORT,
+        hostname=MOCK_DEVICE_ID,
+        type="_droplet._tcp.local.",
+        name=MOCK_DEVICE_ID,
+        properties={},
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "already_configured"
+
+    assert entry.data == {}
+    mock_droplet_discovery.try_connect.assert_not_awaited()
 
 
 async def test_zeroconf_invalid_discovery(hass: HomeAssistant) -> None:

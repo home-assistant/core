@@ -12,7 +12,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONFIG_STEAMER, CONFIG_STEAMER_AND_LIGHT
 from .coordinator import HuumConfigEntry, HuumDataUpdateCoordinator
-from .entity import HuumBaseEntity
+from .entity import HuumBaseEntity, huum_exception_handler
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,6 +67,7 @@ class HuumSteamer(HuumBaseEntity, NumberEntity):
         return super().native_max_value
 
     @override
+    @huum_exception_handler
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         target_temperature = self.coordinator.data.target_temperature

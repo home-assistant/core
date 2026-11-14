@@ -5,7 +5,7 @@
       'data': dict({
         'has_password': True,
         'host': '**REDACTED**',
-        'password': 'pwd',
+        'password': '**REDACTED**',
         'timeout': 30,
       }),
       'disabled_by': None,
@@ -41,6 +41,8 @@
       'consumption_year': 4587.0,
       'consumption_yesterday': 7.34,
       'efficiency': 98.1,
+      'firmware_release_date': None,
+      'firmware_version': None,
       'inverter_data': dict({
       }),
       'last_updated': '2024-08-01T15:20:45+00:00',

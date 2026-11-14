@@ -1,15 +1,21 @@
 """Test Hue migration logic."""
 
+from typing import Any
 from unittest.mock import Mock, patch
 
+import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import hue
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.util.json import JsonArrayType
 
-from .conftest import setup_bridge
+from .conftest import replace_resources, setup_bridge
 
 
 async def test_migrate_api_key(hass: HomeAssistant) -> None:
@@ -267,4 +273,113 @@ async def test_zigbee_connection_migration(
         (dr.CONNECTION_ZIGBEE, zigbee_mac),
         (dr.CONNECTION_NETWORK_MAC, network_mac),
     }
+    assert config_entry.minor_version == 2
+
+
+def _stored_hue_device(
+    device_id: str, entry_id: str, hue_id: str, connections: list[list[str]]
+) -> dict[str, Any]:
+    """Return a hue device as stored in an old device registry."""
+    return {
+        "area_id": None,
+        "config_entries": [entry_id],
+        "config_entries_subentries": {entry_id: [None]},
+        "configuration_url": None,
+        "connections": connections,
+        "created_at": "1970-01-01T00:00:00+00:00",
+        "disabled_by": None,
+        "entry_type": None,
+        "hw_version": None,
+        "id": device_id,
+        "identifiers": [[hue.DOMAIN, hue_id]],
+        "labels": [],
+        "manufacturer": None,
+        "model": None,
+        "model_id": None,
+        "modified_at": "1970-01-01T00:00:00+00:00",
+        "name": None,
+        "name_by_user": None,
+        "primary_config_entry": entry_id,
+        "serial_number": None,
+        "sw_version": None,
+        "via_device_id": None,
+    }
+
+
+@pytest.mark.parametrize("load_registries", [False])
+@pytest.mark.parametrize(
+    "first_connection_type",
+    [dr.CONNECTION_NETWORK_MAC, dr.CONNECTION_ZIGBEE],
+    ids=["not_migrated", "partially_migrated"],
+)
+async def test_zigbee_connection_migration_shared_mac(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    mock_bridge_v2: Mock,
+    v2_resources_test_data: JsonArrayType,
+    first_connection_type: str,
+) -> None:
+    """Test migrating devices that share a zigbee mac stored as a network mac."""
+    config_entry = MockConfigEntry(
+        domain=hue.DOMAIN,
+        data={"host": "mock-host", "api_version": 2, "api_key": ""},
+        minor_version=1,
+    )
+    config_entry.add_to_hass(hass)
+
+    zigbee_mac = "00:17:88:01:0b:aa:bb:99"
+    hass_storage[dr.STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 10,
+        "data": {
+            "devices": [
+                _stored_hue_device(
+                    "first0000000000000000000000000000",
+                    config_entry.entry_id,
+                    "3ff06175-29e8-44a8-8fe7-af591b0025da",
+                    [[first_connection_type, zigbee_mac]],
+                ),
+                _stored_hue_device(
+                    "second000000000000000000000000000",
+                    config_entry.entry_id,
+                    "0b216218-d811-4c95-8c55-bbcda50f9d50",
+                    [[dr.CONNECTION_NETWORK_MAC, zigbee_mac]],
+                ),
+            ],
+            "deleted_devices": [],
+        },
+    }
+    dr.async_setup(hass)
+    await dr.async_load(hass)
+    await er.async_load(hass)
+    await ar.async_load(hass)
+    device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
+
+    # The bridge also reports the shared mac for the second device
+    await mock_bridge_v2.api.load_test_data(
+        replace_resources(
+            v2_resources_test_data,
+            [
+                {
+                    "id": "1987ba66-c21d-48d0-98fb-121d939a71f3",
+                    "id_v1": "/lights/29",
+                    "mac_address": zigbee_mac,
+                    "owner": {
+                        "rid": "0b216218-d811-4c95-8c55-bbcda50f9d50",
+                        "rtype": "device",
+                    },
+                    "status": "connected",
+                    "type": "zigbee_connectivity",
+                }
+            ],
+        )
+    )
+    await setup_bridge(hass, mock_bridge_v2, config_entry)
+
+    first = device_registry.async_get("first0000000000000000000000000000")
+    second = device_registry.async_get("second000000000000000000000000000")
+    assert first is not None
+    assert second is not None
+    assert first.connections == {(dr.CONNECTION_ZIGBEE, zigbee_mac)}
+    assert second.connections == set()
     assert config_entry.minor_version == 2

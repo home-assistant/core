@@ -72,7 +72,7 @@ class VeSyncSelectEntityDescription(SelectEntityDescription):
     """Class to describe a Vesync select entity."""
 
     exists_fn: Callable[[VeSyncBaseDevice], bool]
-    current_option_fn: Callable[[VeSyncBaseDevice], str]
+    current_option_fn: Callable[[VeSyncBaseDevice], str | None]
     select_option_fn: Callable[[VeSyncBaseDevice, str], Awaitable[bool]]
 
 
@@ -89,10 +89,8 @@ SELECT_DESCRIPTIONS: list[VeSyncSelectEntityDescription] = [
         select_option_fn=lambda device, value: _set_humidifier_nightlight(
             device, HA_TO_VS_HUMIDIFIER_NIGHT_LIGHT_LEVEL_MAP.get(value, 0)
         ),
-        # Reporting "off" as the choice for unhandled level.
         current_option_fn=lambda device: VS_TO_HA_HUMIDIFIER_NIGHT_LIGHT_LEVEL_MAP.get(
-            device.state.nightlight_brightness,
-            HUMIDIFIER_NIGHT_LIGHT_LEVEL_OFF,
+            device.state.nightlight_brightness
         ),
     ),
     # night_light for air purifiers
@@ -191,5 +189,7 @@ class VeSyncSelectEntity(VeSyncBaseEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Set an option."""
         if not await self.entity_description.select_option_fn(self.device, option):
-            raise HomeAssistantError(self.device.last_response.message)
+            if self.device.last_response:
+                raise HomeAssistantError(self.device.last_response.message)
+            raise HomeAssistantError("Unknown error selecting option, no response.")
         self.async_write_ha_state()

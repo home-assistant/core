@@ -114,13 +114,13 @@ async def async_migrate_entry(
             raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",
-                translation_placeholders={CONF_USERNAME: entry.data[CONF_USERNAME]},
+                translation_placeholders={"username": entry.data[CONF_USERNAME]},
             ) from err
         except WFException as err:
             raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="login_failed",
-                translation_placeholders={CONF_USERNAME: entry.data[CONF_USERNAME]},
+                translation_placeholders={"username": entry.data[CONF_USERNAME]},
             ) from err
 
         if client.account_id is None:

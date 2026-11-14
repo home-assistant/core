@@ -119,5 +119,5 @@ class ToloConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="confirm",
-            description_placeholders={CONF_HOST: self._dhcp_discovery_info.ip},
+            description_placeholders={"host": self._dhcp_discovery_info.ip},
         )

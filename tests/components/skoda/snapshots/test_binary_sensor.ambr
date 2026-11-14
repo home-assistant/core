@@ -1,4 +1,157 @@
 # serializer version: 1
+# name: test_binary_sensors[vehicle_electric.json][binary_sensor.enyaq_coupe_air_conditioning-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('skoda', 'TMBJM7NP2M1TMP511')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.enyaq_coupe_air_conditioning',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Air conditioning',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_icon': None,
+    'original_name': 'Air conditioning',
+    'platform': 'skoda',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'air_conditioning',
+    'unique_id': 'TMBJM7NP2M1TMP511_air_conditioning',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[vehicle_electric.json][binary_sensor.enyaq_coupe_air_conditioning-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enyaq Coupé Air conditioning',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.enyaq_coupe_air_conditioning',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[vehicle_electric.json][binary_sensor.enyaq_coupe_auxiliary_heating-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('skoda', 'TMBJM7NP2M1TMP511')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.enyaq_coupe_auxiliary_heating',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Auxiliary heating',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_icon': None,
+    'original_name': 'Auxiliary heating',
+    'platform': 'skoda',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'auxiliary_heating',
+    'unique_id': 'TMBJM7NP2M1TMP511_auxiliary_heating',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[vehicle_electric.json][binary_sensor.enyaq_coupe_auxiliary_heating-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enyaq Coupé Auxiliary heating',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.enyaq_coupe_auxiliary_heating',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[vehicle_electric.json][binary_sensor.enyaq_coupe_charging_cable-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('skoda', 'TMBJM7NP2M1TMP511')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.enyaq_coupe_charging_cable',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Charging cable',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PLUG: 'plug'>,
+    'original_icon': None,
+    'original_name': 'Charging cable',
+    'platform': 'skoda',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'charging_cable',
+    'unique_id': 'TMBJM7NP2M1TMP511_charging_cable',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[vehicle_electric.json][binary_sensor.enyaq_coupe_charging_cable-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'plug',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enyaq Coupé Charging cable',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.enyaq_coupe_charging_cable',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_binary_sensors[vehicle_electric.json][binary_sensor.enyaq_coupe_doors-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -354,6 +507,159 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[vehicle_hybrid.json][binary_sensor.superb_air_conditioning-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('skoda', 'TMBJM7NP2M1TMP511')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.superb_air_conditioning',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Air conditioning',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_icon': None,
+    'original_name': 'Air conditioning',
+    'platform': 'skoda',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'air_conditioning',
+    'unique_id': 'TMBJM7NP2M1TMP511_air_conditioning',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[vehicle_hybrid.json][binary_sensor.superb_air_conditioning-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Superb Air conditioning',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.superb_air_conditioning',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensors[vehicle_hybrid.json][binary_sensor.superb_auxiliary_heating-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('skoda', 'TMBJM7NP2M1TMP511')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.superb_auxiliary_heating',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Auxiliary heating',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_icon': None,
+    'original_name': 'Auxiliary heating',
+    'platform': 'skoda',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'auxiliary_heating',
+    'unique_id': 'TMBJM7NP2M1TMP511_auxiliary_heating',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[vehicle_hybrid.json][binary_sensor.superb_auxiliary_heating-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Superb Auxiliary heating',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.superb_auxiliary_heating',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensors[vehicle_hybrid.json][binary_sensor.superb_charging_cable-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('skoda', 'TMBJM7NP2M1TMP511')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.superb_charging_cable',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Charging cable',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PLUG: 'plug'>,
+    'original_icon': None,
+    'original_name': 'Charging cable',
+    'platform': 'skoda',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'charging_cable',
+    'unique_id': 'TMBJM7NP2M1TMP511_charging_cable',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[vehicle_hybrid.json][binary_sensor.superb_charging_cable-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'plug',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Superb Charging cable',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.superb_charging_cable',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
   })
 # ---
 # name: test_binary_sensors[vehicle_hybrid.json][binary_sensor.superb_doors-entry]

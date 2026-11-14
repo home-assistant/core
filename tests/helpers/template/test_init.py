@@ -10,7 +10,7 @@ from freezegun import freeze_time
 import probatio
 import pytest
 
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT
+from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import entity_registry as er, template
@@ -608,8 +608,12 @@ def test_state_with_unit_and_rounding_options(
     )
     assert entry.entity_id == "sensor.test"
 
-    hass.states.async_set("sensor.test", "23", {ATTR_UNIT_OF_MEASUREMENT: "beers"})
-    hass.states.async_set("sensor.test2", "23", {ATTR_UNIT_OF_MEASUREMENT: "beers"})
+    hass.states.async_set(
+        "sensor.test", "23", {EntityStateAttribute.UNIT_OF_MEASUREMENT: "beers"}
+    )
+    hass.states.async_set(
+        "sensor.test2", "23", {EntityStateAttribute.UNIT_OF_MEASUREMENT: "beers"}
+    )
 
     tpl = template.Template(
         f"{{{{ states('sensor.test', rounded={rounded}, with_unit={with_unit}) }}}}",
@@ -623,8 +627,12 @@ def test_state_with_unit_and_rounding_options(
     assert tpl.async_render() == output1_1
     assert tpl2.async_render() == output2_1
 
-    hass.states.async_set("sensor.test", "23.015", {ATTR_UNIT_OF_MEASUREMENT: "beers"})
-    hass.states.async_set("sensor.test2", "23.015", {ATTR_UNIT_OF_MEASUREMENT: "beers"})
+    hass.states.async_set(
+        "sensor.test", "23.015", {EntityStateAttribute.UNIT_OF_MEASUREMENT: "beers"}
+    )
+    hass.states.async_set(
+        "sensor.test2", "23.015", {EntityStateAttribute.UNIT_OF_MEASUREMENT: "beers"}
+    )
 
     assert tpl.async_render() == output1_2
     assert tpl2.async_render() == output2_2
