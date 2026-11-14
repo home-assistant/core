@@ -27,7 +27,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity import Entity, async_generate_entity_id
+from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import (
     TrackTemplate,
     TrackTemplateResult,
@@ -45,7 +45,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_ATTRIBUTES, CONF_AVAILABILITY, CONF_PICTURE
 from .entity import AbstractTemplateEntity
-from .validators import log_validation_error, validate_attributes
+from .validators import log_validation_result_error, validate_attributes
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,7 +55,7 @@ class _TemplateAttribute:
 
     def __init__(
         self,
-        entity: Entity,
+        entity: AbstractTemplateEntity,
         attribute: str,
         template: Template,
         validator: Callable[[Any], Any] | None = None,
@@ -123,8 +123,8 @@ class _TemplateAttribute:
         try:
             validated = self.validator(result)
         except probatio.Invalid as ex:
-            log_validation_error(
-                result, self.template, self._attribute, self._entity.entity_id, ex
+            log_validation_result_error(
+                self._entity, self._attribute, result, ex.msg, template=self.template
             )
             assert self.on_update
             self.on_update(None)
@@ -587,8 +587,8 @@ class TemplateEntity(AbstractTemplateEntity):
                         validate_attributes(self.entity_id, self._blocked_attributes),
                     )(result)
                 except probatio.Invalid as err:
-                    log_validation_error(
-                        result, template, CONF_ATTRIBUTES, self.entity_id, err
+                    log_validation_result_error(
+                        self, CONF_ATTRIBUTES, result, err.msg, template=template
                     )
                     self._attr_extra_state_attributes = {}
 

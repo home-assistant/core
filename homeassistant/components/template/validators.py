@@ -4,7 +4,7 @@ from collections.abc import Callable
 from enum import StrEnum
 from itertools import chain
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import probatio
 
@@ -17,12 +17,14 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.condition import ConditionsChecker
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.trace import trace_get
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from .const import CONF_DEFAULT_ENTITY_ID, DEFAULT_NAMES
+
+if TYPE_CHECKING:
+    from .entity import AbstractTemplateEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -101,51 +103,35 @@ def validate_attributes(
     return validate
 
 
-def log_validation_error(
-    result: Any,
-    template: Template,
-    attribute: str,
-    entity_id: str | None,
-    exception: probatio.Invalid,
-):
-    """Log template entity validation error."""
-    logging.getLogger(
-        f"{__package__}.{entity_id.split('.', maxsplit=1)[0]}"
-        if entity_id
-        else __package__
-    ).error(
-        (
-            "Error validating template result '%s' "
-            "from template '%s' "
-            "for attribute '%s' in entity %s "
-            "validation message '%s'"
-        ),
-        result,
-        template,
-        attribute,
-        entity_id,
-        exception.msg,
-    )
-
-
 def log_validation_result_error(
-    entity: Entity,
+    entity: AbstractTemplateEntity,
     attribute: str,
     value: Any,
     expected: tuple[str, ...] | str,
+    *,
+    template: Template | None = None,
 ) -> None:
     """Log a template result error."""
+    if template is None:
+        template = entity.get_template(attribute)
 
     # in some cases, like `preview` entities, the entity_id does not exist.
     if entity.entity_id is None:
-        message = f"Received invalid {attribute}: {value} for entity {entity.name}, %s"
+        logger = logging.getLogger(__package__)
+        message = f"Received invalid {attribute}: {value} for entity {entity.name}"
     else:
+        domain = entity.entity_id.split(".", maxsplit=1)[0]
+        logger = logging.getLogger(f"{__package__}.{domain}")
         message = (
-            f"Received invalid {entity.entity_id.split('.')[0]} {attribute}"
-            f": {value} for entity {entity.entity_id}, %s"
+            f"Received invalid {domain} {attribute}"
+            f": {value} for entity {entity.entity_id}"
         )
 
-    _LOGGER.error(
+    if template is not None:
+        message = f"{message} from template '{template.template}'"
+
+    logger.error(
+        "%s, %s",
         message,
         expected
         if isinstance(expected, str)
@@ -165,7 +151,7 @@ def check_result_for_none(result: Any, **kwargs: Any) -> bool:
 
 
 def strenum[T: StrEnum](
-    entity: Entity,
+    entity: AbstractTemplateEntity,
     attribute: str,
     state_enum: type[T],
     state_on: T | None = None,
@@ -230,7 +216,7 @@ def strenum[T: StrEnum](
 
 
 def boolean(
-    entity: Entity,
+    entity: AbstractTemplateEntity,
     attribute: str,
     as_true: tuple[str, ...] | None = None,
     as_false: tuple[str, ...] | None = None,
@@ -277,7 +263,7 @@ def boolean(
 
 
 def number(
-    entity: Entity,
+    entity: AbstractTemplateEntity,
     attribute: str,
     minimum: float | None = None,
     maximum: float | None = None,
@@ -341,7 +327,7 @@ def number(
 
 
 def list_of_strings(
-    entity: Entity,
+    entity: AbstractTemplateEntity,
     attribute: str,
     none_on_empty: bool = False,
     **kwargs: Any,
@@ -377,7 +363,7 @@ def list_of_strings(
 
 
 def item_in_list[T](
-    entity: Entity,
+    entity: AbstractTemplateEntity,
     attribute: str,
     items: list[Any] | str | None,
     items_attribute: str | None = None,
@@ -431,7 +417,7 @@ def item_in_list[T](
 
 
 def url(
-    entity: Entity,
+    entity: AbstractTemplateEntity,
     attribute: str,
     **kwargs: Any,
 ) -> Callable[[Any], str | None]:
@@ -456,7 +442,7 @@ def url(
 
 
 def string(
-    entity: Entity,
+    entity: AbstractTemplateEntity,
     attribute: str,
     **kwargs: Any,
 ) -> Callable[[Any], str | None]:

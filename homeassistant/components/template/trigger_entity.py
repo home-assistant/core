@@ -25,7 +25,11 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import CONF_ATTRIBUTES
 from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
-from .validators import check_conditions, log_validation_error, validate_attributes
+from .validators import (
+    check_conditions,
+    log_validation_result_error,
+    validate_attributes,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -293,8 +297,12 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
                     self.entity_id, err, attribute=CONF_ATTRIBUTES
                 )
             except probatio.Invalid as err:
-                log_validation_error(
-                    result, attributes_template, CONF_ATTRIBUTES, self.entity_id, err
+                log_validation_result_error(
+                    self,
+                    CONF_ATTRIBUTES,
+                    result,
+                    err.msg,
+                    template=attributes_template,
                 )
             self._attr_extra_state_attributes = validated
 
@@ -327,13 +335,7 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
                     else rendered
                 )
             except probatio.Invalid as err:
-                log_validation_error(
-                    rendered,
-                    entity_template.template,
-                    entity_template.attribute,
-                    self.entity_id,
-                    err,
-                )
+                log_validation_result_error(self, option, rendered, err.msg)
                 value = None
 
             if entity_template.on_update:
