@@ -4,9 +4,9 @@ from collections.abc import AsyncGenerator
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
+import aiohttp
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
-from requests.exceptions import Timeout
 
 from homeassistant import config_entries
 from homeassistant.components import tts
@@ -715,19 +715,23 @@ async def test_subentry_options_switching(
 @pytest.mark.parametrize(
     ("side_effect", "error"),
     [
-        (
-            API_ERROR_500,
+        pytest.param(API_ERROR_500, "cannot_connect", id="api_error_500"),
+        pytest.param(
+            TimeoutError("deadline exceeded"),
             "cannot_connect",
+            id="timeout",
         ),
-        (
-            Timeout("deadline exceeded"),
+        pytest.param(
+            aiohttp.ClientConnectionError("Cannot connect"),
             "cannot_connect",
+            id="client_connection_error",
         ),
-        (
+        pytest.param(
             CLIENT_ERROR_API_KEY_INVALID,
             "invalid_auth",
+            id="invalid_api_key",
         ),
-        (Exception, "unknown"),
+        pytest.param(Exception, "unknown", id="unexpected_exception"),
     ],
 )
 async def test_form_errors(

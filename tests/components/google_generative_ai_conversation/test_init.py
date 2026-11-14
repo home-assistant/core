@@ -1,12 +1,13 @@
 """Tests for the Google Generative AI Conversation integration."""
 
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
+import aiohttp
 import attr
+from google.genai.errors import ClientError, ServerError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
-from requests.exceptions import Timeout
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.google_generative_ai_conversation.const import (
@@ -32,39 +33,74 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryDisabler
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 
-from . import API_ERROR_500, CLIENT_ERROR_API_KEY_INVALID
+from . import API_ERROR_500, CLIENT_ERROR_API_KEY_INVALID, CLIENT_ERROR_BAD_REQUEST
 
 
 @pytest.mark.parametrize(
     ("side_effect", "state", "reauth"),
     [
-        (
-            API_ERROR_500,
-            ConfigEntryState.SETUP_ERROR,
-            False,
-        ),
-        (
-            Timeout,
+        pytest.param(
+            TimeoutError,
             ConfigEntryState.SETUP_RETRY,
             False,
+            id="timeout",
         ),
-        (
+        pytest.param(
+            aiohttp.ClientConnectionError("Cannot connect"),
+            ConfigEntryState.SETUP_RETRY,
+            False,
+            id="client_connection_error",
+        ),
+        pytest.param(
+            API_ERROR_500,
+            ConfigEntryState.SETUP_RETRY,
+            False,
+            id="api_error_500",
+        ),
+        pytest.param(
+            ServerError(
+                503,
+                {"message": "Service Unavailable", "status": "unavailable"},
+            ),
+            ConfigEntryState.SETUP_RETRY,
+            False,
+            id="server_error_503",
+        ),
+        pytest.param(
+            ClientError(
+                429,
+                {"message": "Resource exhausted", "status": "resource-exhausted"},
+            ),
+            ConfigEntryState.SETUP_RETRY,
+            False,
+            id="rate_limited_429",
+        ),
+        pytest.param(
+            CLIENT_ERROR_BAD_REQUEST,
+            ConfigEntryState.SETUP_ERROR,
+            False,
+            id="bad_request_400",
+        ),
+        pytest.param(
             CLIENT_ERROR_API_KEY_INVALID,
             ConfigEntryState.SETUP_ERROR,
             True,
+            id="invalid_api_key",
         ),
     ],
 )
 async def test_config_entry_error(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, side_effect, state, reauth
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    side_effect: Exception | type[Exception],
+    state: ConfigEntryState,
+    reauth: bool,
 ) -> None:
     """Test different configuration entry errors."""
-    mock_client = AsyncMock()
-    mock_client.get_model.side_effect = side_effect
     with patch("google.genai.models.AsyncModels.get", side_effect=side_effect):
         assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
-        assert mock_config_entry.state == state
+        assert mock_config_entry.state is state
         assert any(mock_config_entry.async_get_active_flows(hass, {"reauth"})) == reauth
 
 
