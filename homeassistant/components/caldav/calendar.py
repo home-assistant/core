@@ -1,17 +1,31 @@
 """Support for WebDav Calendar."""
 
-from datetime import datetime
+from collections.abc import Callable
+from datetime import UTC, date, datetime, timedelta
 from functools import partial
 import logging
-from typing import Any, override
+from typing import Any, cast, override
 
+from caldav.calendarobjectresource import Event
 from caldav.davclient import DAVClient
-from caldav.lib.error import DAVError
+from caldav.lib.error import (
+    DAVError,
+    ETagMismatchError,
+    NotFoundError,
+    ScheduleTagMismatchError,
+)
 from caldav.lib.http_sync import requests as caldav_requests
+import icalendar
 import probatio
 
 from homeassistant.components.calendar import (
     ENTITY_ID_FORMAT,
+    EVENT_DESCRIPTION,
+    EVENT_END,
+    EVENT_LOCATION,
+    EVENT_RRULE,
+    EVENT_START,
+    EVENT_SUMMARY,
     PLATFORM_SCHEMA as CALENDAR_PLATFORM_SCHEMA,
     CalendarEntity,
     CalendarEntityFeature,
@@ -26,7 +40,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import (
@@ -35,10 +49,11 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from . import CalDavConfigEntry
 from .api import async_get_calendar_color, async_get_calendars
-from .const import TIMEOUT
+from .const import DOMAIN, TIMEOUT
 from .coordinator import CalDavUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,6 +69,8 @@ CONFIG_ENTRY_DEFAULT_DAYS = 7
 
 # Only allow VCALENDARs that support this component type
 SUPPORTED_COMPONENT = "VEVENT"
+
+THIS_AND_FUTURE = "THISANDFUTURE"
 
 PLATFORM_SCHEMA = CALENDAR_PLATFORM_SCHEMA.extend(
     {
@@ -191,7 +208,11 @@ async def async_setup_entry(
 class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarEntity):
     """A device for getting the next Task from a WebDav Calendar."""
 
-    _attr_supported_features = CalendarEntityFeature.CREATE_EVENT
+    _attr_supported_features = (
+        CalendarEntityFeature.CREATE_EVENT
+        | CalendarEntityFeature.DELETE_EVENT
+        | CalendarEntityFeature.UPDATE_EVENT
+    )
 
     def __init__(
         self,
@@ -208,6 +229,9 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         self._attr_name = name
         if unique_id is not None:
             self._attr_unique_id = unique_id
+        if coordinator.search is not None:
+            # Changes would not be checked against the filter
+            self._attr_supported_features = CalendarEntityFeature.CREATE_EVENT
         self._supports_offset = supports_offset
 
     @override
@@ -271,6 +295,121 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         ) as err:
             raise HomeAssistantError(f"CalDAV save error: {err}") from err
 
+    @override
+    async def async_update_event(
+        self,
+        uid: str,
+        event: dict[str, Any],
+        recurrence_id: str | None = None,
+        recurrence_range: str | None = None,
+    ) -> None:
+        """Update an event, a recurring one as a whole."""
+        await self._async_call(
+            self._update_event, uid, event, recurrence_id, recurrence_range
+        )
+        await self.coordinator.async_request_refresh()
+
+    def _update_event(
+        self,
+        uid: str,
+        event: dict[str, Any],
+        recurrence_id: str | None,
+        recurrence_range: str | None,
+    ) -> None:
+        """Change the fields of an event and save it."""
+        item = self._get_event(uid)
+        components = item.icalendar_instance.walk("VEVENT")
+        series = _get_series(components)
+        shown = _get_first_occurrence(
+            components, series, recurrence_id, recurrence_range
+        )
+        # Both are checked, so an end in the repeated hour isn't missed
+        same_start = _same_time(event[EVENT_START], shown.DTSTART)
+        same_end = _same_time(event[EVENT_END], _get_end(shown))
+        same_times = same_start and same_end
+        recurring = "RRULE" in series or "RDATE" in series
+        if EVENT_RRULE in event or (recurring and not same_times):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="recurrence_change_not_supported",
+            )
+        changed = [
+            key
+            for key in (EVENT_SUMMARY, EVENT_DESCRIPTION, EVENT_LOCATION)
+            if key in event and event[key] != shown.get(key, "")
+        ]
+        # A change to a whole recurring event also applies to its overrides
+        for component in components if recurring else [series]:
+            for key in changed:
+                component.pop(key)
+                if event[key]:
+                    component.add(key, event[key])
+        if not same_times:
+            # Start and end are saved together as sent, so they stay in order
+            for key in (EVENT_START, EVENT_END):
+                value = event[key]
+                if isinstance(value, datetime):
+                    # A TZID time can't tell apart the two hours that repeat
+                    # when clocks go back, UTC can
+                    value = value.astimezone(UTC)
+                series.pop(key)
+                series.add(key, value)
+            # DTEND replaces a DURATION
+            series.pop("DURATION")
+        # Otherwise save() merges just the first component into the stored
+        # event when that one is an override
+        item.save(only_this_recurrence=False)
+
+    @override
+    async def async_delete_event(
+        self,
+        uid: str,
+        recurrence_id: str | None = None,
+        recurrence_range: str | None = None,
+    ) -> None:
+        """Delete an event, a recurring one as a whole."""
+        await self._async_call(self._delete_event, uid, recurrence_id, recurrence_range)
+        await self.coordinator.async_request_refresh()
+
+    def _delete_event(
+        self, uid: str, recurrence_id: str | None, recurrence_range: str | None
+    ) -> None:
+        """Check and delete an event."""
+        item = self._get_event(uid)
+        components = item.icalendar_instance.walk("VEVENT")
+        _get_first_occurrence(
+            components, _get_series(components), recurrence_id, recurrence_range
+        )
+        # Only delete the version that was checked; If-Match can't use a weak ETag
+        etag = item.etag
+        if_match = bool(item.schedule_tag or (etag and not etag.startswith("W/")))
+        item.delete(if_match=if_match, precondition="etag")
+
+    def _get_event(self, uid: str) -> Event:
+        """Fetch the CalDAV object holding an event and its overrides."""
+        return cast(Event, self.coordinator.calendar.get_event_by_uid(uid))
+
+    async def _async_call(self, target: Callable[..., None], *args: Any) -> None:
+        """Run a CalDAV request in the executor."""
+        try:
+            await self.hass.async_add_executor_job(target, *args)
+        except NotFoundError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="event_not_found"
+            ) from err
+        except (ETagMismatchError, ScheduleTagMismatchError) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="event_changed"
+            ) from err
+        except (
+            caldav_requests.exceptions.ConnectionError,
+            caldav_requests.exceptions.Timeout,
+            DAVError,
+        ) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="request_error"
+            ) from err
+
     @callback
     @override
     def _handle_coordinator_update(self) -> None:
@@ -292,3 +431,116 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         """When entity is added to hass update state from existing coordinator data."""
         await super().async_added_to_hass()
         self._handle_coordinator_update()
+
+
+def _get_series(components: list[icalendar.Event]) -> icalendar.Event:
+    """Return the main component of an event, which may follow its overrides."""
+    return next(
+        (component for component in components if "RECURRENCE-ID" not in component),
+        components[0],
+    )
+
+
+def _get_first_occurrence(
+    components: list[icalendar.Event],
+    series: icalendar.Event,
+    recurrence_id: str | None,
+    recurrence_range: str | None,
+) -> icalendar.Event:
+    """Return the component shown for the first occurrence of an event.
+
+    Changes to other occurrences of a recurring event are refused, a change
+    from the first occurrence on is a change to the whole event. The recurrence
+    id is the occurrence start as the coordinator formats it.
+    """
+    start: date | datetime | None
+    if recurrence_id:
+        try:
+            start = dt_util.parse_date(recurrence_id) or dt_util.parse_datetime(
+                recurrence_id, raise_on_error=True
+            )
+        except ValueError:
+            start = None
+    else:
+        # A change without a recurrence id is a change to the whole event
+        start, recurrence_range = series.DTSTART, THIS_AND_FUTURE
+    # An object holding just one occurrence, like an invitation to it, is
+    # refused as well
+    if (
+        start is None
+        or recurrence_range != THIS_AND_FUTURE
+        or "RECURRENCE-ID" in series
+        or not _same_instant(start, series.DTSTART)
+    ):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN, translation_key="occurrence_not_supported"
+        )
+    # The first occurrence may have been moved
+    return next(
+        (
+            component
+            for component in components
+            if "RECURRENCE-ID" in component
+            and _same_instant(component["RECURRENCE-ID"].dt, series.DTSTART)
+        ),
+        series,
+    )
+
+
+def _get_end(component: icalendar.Event) -> date | datetime:
+    """Return the end of an event the way the coordinator shows it."""
+    start = component.DTSTART
+    if "DTEND" in component:
+        end = component["DTEND"].dt
+    elif "DURATION" in component:
+        end = start + component["DURATION"].dt
+    else:
+        end = start + timedelta(days=1)
+    if not isinstance(end, datetime) and end == start:
+        end += timedelta(days=1)
+    return end
+
+
+def _same_instant(value: date | datetime, stored: date | datetime) -> bool:
+    """Return if a time is the stored one, a floating one by its wall time."""
+    if isinstance(value, datetime) != isinstance(stored, datetime):
+        return False
+    if not isinstance(value, datetime):
+        return value == stored
+    stored = cast(datetime, stored)
+    value = dt_util.as_local(value)
+    if stored.tzinfo is None:
+        return value.replace(tzinfo=None) == stored
+    return value.astimezone(UTC) == stored.astimezone(UTC)
+
+
+def _same_time(value: date | datetime, stored: date | datetime) -> bool:
+    """Return if a time sent for an event is the stored one.
+
+    The frontend sends whole minutes in Home Assistant's time zone, so it
+    can't send seconds or the second of the two hours that repeat when clocks
+    go back. Such a time is the stored one if the frontend shows them the same.
+    """
+    if _same_instant(value, stored):
+        return True
+    if not isinstance(value, datetime) or not isinstance(stored, datetime):
+        return False
+    value = dt_util.as_local(value)
+    if (
+        value.second
+        or value.microsecond
+        or value.fold
+        or _as_shown(value) != _as_shown(stored)
+    ):
+        return False
+    if stored.tzinfo is not None and dt_util.as_local(stored).fold:
+        # Whether the first of the repeated hours is meant can't be told
+        raise ServiceValidationError(
+            translation_domain=DOMAIN, translation_key="repeated_hour"
+        )
+    return True
+
+
+def _as_shown(value: datetime) -> datetime:
+    """Return a time as the frontend shows it, floating times as local."""
+    return dt_util.as_local(value).replace(tzinfo=None, second=0, microsecond=0)

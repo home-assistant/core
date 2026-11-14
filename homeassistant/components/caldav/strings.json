@@ -44,6 +44,24 @@
     }
   },
   "exceptions": {
+    "event_changed": {
+      "message": "The event was changed on the CalDAV server in the meantime"
+    },
+    "event_not_found": {
+      "message": "The event was not found on the CalDAV server"
+    },
+    "occurrence_not_supported": {
+      "message": "A recurring event can only be changed or deleted as a whole, from its first occurrence"
+    },
+    "recurrence_change_not_supported": {
+      "message": "The repeat rule and the times of a recurring event can't be changed"
+    },
+    "repeated_hour": {
+      "message": "The event is in the second of the two hours that repeat when clocks go back, which Home Assistant can't tell apart from the first"
+    },
+    "request_error": {
+      "message": "Error talking to the CalDAV server"
+    },
     "unexpected_response": {
       "message": "Unexpected response from the CalDAV server"
     }
