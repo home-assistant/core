@@ -14,7 +14,7 @@
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "api_key_date": "API key generation date"
         },
-        "description": "The AEMET API key is no longer valid. Enter a new API key. To generate one go to {api_key_url}. The generation date defaults to today and controls automatic reauthentication and optional expiry reminders."
+        "description": "The AEMET API key is no longer valid. Enter a new API key. To generate one go to {api_key_url}. The generation date defaults to today and is used to estimate the expiry date and schedule optional reminders. Reauthentication starts when AEMET rejects the key."
       },
       "user": {
         "data": {
@@ -24,7 +24,7 @@
           "location": "[%key:common::config_flow::data::location%]",
           "name": "Name of the integration"
         },
-        "description": "To generate API key go to {api_key_url}. AEMET API keys expire every 3 months. Enter the actual generation date; it controls automatic reauthentication and optional expiry reminders."
+        "description": "To generate API key go to {api_key_url}. AEMET API keys are expected to expire every 3 months. Enter the actual generation date; it is used to estimate the expiry date and schedule optional reminders. Reauthentication starts when AEMET rejects the key."
       }
     }
   },
@@ -59,7 +59,7 @@
           "radar_updates": "Gather data from AEMET weather radar",
           "station_updates": "Gather data from AEMET weather stations"
         },
-        "description": "Current generation date: {current_issue_date}. Enter a new API key to replace the current one, or leave it blank to keep it. AEMET API keys expire every 3 months. The generation date controls automatic reauthentication and optional expiry reminders. For a new key, leave the date empty to use today, or enter its actual generation date."
+        "description": "Current generation date: {current_issue_date}. Enter a new API key to replace the current one, or leave it blank to keep it. AEMET API keys are expected to expire every 3 months. The generation date is used to estimate the expiry date and schedule optional reminders. Reauthentication starts when AEMET rejects the key. For a new key, leave the date empty to use today, or enter its actual generation date."
       }
     }
   }
