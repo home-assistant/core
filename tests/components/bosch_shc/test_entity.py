@@ -1,18 +1,18 @@
 """Tests for the Bosch SHC entity base classes."""
 
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from unittest.mock import MagicMock, patch
 
-from boschshcpy import BatteryLevelService
+from boschshcpy import BatteryLevelService, ShutterContactService
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.bosch_shc.const import DOMAIN
-from homeassistant.const import STATE_ON, Platform
+from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .conftest import battery_only_device, setup_integration
+from .conftest import battery_only_device, setup_integration, shutter_contact2_device
 
 HUB_IDENTIFIER = (DOMAIN, "test-mac")
 
@@ -118,8 +118,10 @@ async def test_callbacks_after_entity_id_change(
 
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     motion_device.subscribe_callback.assert_called_once()
-    motion_device.unsubscribe_callback.assert_called_once_with(key)
-    service.unsubscribe_callback.assert_called_once_with(key)
+    device_callback = motion_device.subscribe_callback.call_args.args[1]
+    service_callback = service.subscribe_callback.call_args.args[1]
+    motion_device.unsubscribe_callback.assert_called_once_with(key, device_callback)
+    service.unsubscribe_callback.assert_called_once_with(key, service_callback)
 
 
 @pytest.mark.parametrize(
@@ -141,4 +143,77 @@ async def test_callbacks_unsubscribed_after_failed_entity_add(
     # HA calls this instead of async_will_remove_from_hass if adding fails.
     entity.add_to_platform_abort()
 
-    motion_device.unsubscribe_callback.assert_called_once_with(key)
+    callback = motion_device.subscribe_callback.call_args.args[1]
+    motion_device.unsubscribe_callback.assert_called_once_with(key, callback)
+
+
+class _CallbackService:
+    """Service double that keeps a list of callbacks per key like boschshcpy."""
+
+    def __init__(self) -> None:
+        self.callbacks: dict[object, list[Callable[[], None]]] = {}
+
+    def subscribe_callback(self, key: object, callback: Callable[[], None]) -> None:
+        self.callbacks.setdefault(key, []).append(callback)
+
+    def unsubscribe_callback(
+        self, key: object, callback: Callable[[], None] | None = None
+    ) -> None:
+        if callback is None:
+            self.callbacks.pop(key, None)
+        elif callback in self.callbacks.get(key, []):
+            self.callbacks[key].remove(callback)
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"shutter_contacts2": [shutter_contact2_device()]}],
+    indirect=True,
+)
+async def test_entities_sharing_unique_id_keep_callbacks(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Entities of different platforms with one unique_id all get updates.
+
+    The contact sensor and the bypass switch both use the device serial as
+    unique_id; the last one to subscribe must not drop the other's callback.
+    """
+    device = mock_session.device_helper.shutter_contacts2[0]
+    service = _CallbackService()
+    device.device_services = [service]
+    device.state = ShutterContactService.State.CLOSED
+
+    with patch(
+        "homeassistant.components.bosch_shc.PLATFORMS",
+        [Platform.BINARY_SENSOR, Platform.SWITCH],
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("binary_sensor.shutter_contact").state == STATE_OFF
+
+    # Every entity on the device keeps its own callback
+    entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    assert sum(len(callbacks) for callbacks in service.callbacks.values()) == len(
+        entries
+    )
+
+    # Removing the bypass switch must not drop the contact sensor's callback
+    switch_entry = next(entry for entry in entries if entry.domain == Platform.SWITCH)
+    entity_registry.async_remove(switch_entry.entity_id)
+    await hass.async_block_till_done()
+    assert sum(len(callbacks) for callbacks in service.callbacks.values()) == (
+        len(entries) - 1
+    )
+
+    device.state = ShutterContactService.State.OPEN
+    for callbacks in list(service.callbacks.values()):
+        for callback in callbacks:
+            callback()
+    await hass.async_block_till_done()
+
+    assert hass.states.get("binary_sensor.shutter_contact").state == STATE_ON
