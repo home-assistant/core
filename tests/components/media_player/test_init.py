@@ -2,6 +2,7 @@
 
 from http import HTTPStatus
 import logging
+from typing import Any
 from unittest.mock import patch
 
 import aiohttp
@@ -218,15 +219,72 @@ async def test_get_image_http_missing_image(
     assert resp.status == HTTPStatus.NOT_FOUND
 
 
-async def test_get_image_http_log_credentials_redacted(
+_CREDENTIALS_URL = "http://usr51:s3cr3t99@example.com/default.jpg"
+
+
+@pytest.mark.parametrize(
+    ("url", "mock_kwargs", "warning_reason", "debug_detail"),
+    [
+        pytest.param(
+            _CREDENTIALS_URL,
+            {"exc": TimeoutError()},
+            "TimeoutError",
+            "TimeoutError",
+            id="timeout",
+        ),
+        pytest.param(
+            _CREDENTIALS_URL,
+            # InvalidUrlClientError stringifies to the offending URL itself
+            {"exc": aiohttp.InvalidUrlClientError(_CREDENTIALS_URL)},
+            "InvalidUrlClientError",
+            _CREDENTIALS_URL,
+            id="exception_text_contains_url",
+        ),
+        pytest.param(
+            _CREDENTIALS_URL,
+            {"exc": aiohttp.ClientPayloadError("incomplete chunked read")},
+            "ClientPayloadError",
+            "incomplete chunked read",
+            id="client_payload_error",
+        ),
+        pytest.param(
+            _CREDENTIALS_URL,
+            {"exc": aiohttp.ClientConnectionError("connection reset")},
+            "ClientConnectionError",
+            "connection reset",
+            id="client_connection_error",
+        ),
+        pytest.param(
+            _CREDENTIALS_URL,
+            {"status": HTTPStatus.NOT_FOUND},
+            "HTTP 404",
+            "HTTP 404",
+            id="http_status",
+        ),
+        pytest.param(
+            _CREDENTIALS_URL,
+            {
+                "content": b"hello-world",
+                "headers": {"Content-Type": "image/jpeg", "Content-Length": "9999"},
+            },
+            "truncated response, 11 of 9999 bytes",
+            "truncated response, 11 of 9999 bytes",
+            id="truncated_response",
+        ),
+    ],
+)
+async def test_get_image_http_fetch_failure_logging(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     caplog: pytest.LogCaptureFixture,
+    url: str,
+    mock_kwargs: dict[str, Any],
+    warning_reason: str,
+    debug_detail: str,
 ) -> None:
-    """Test only the host is logged at warning level when fetching an image fails."""
+    """Test a failed fetch logs only the host at warning and the URL at debug."""
     caplog.set_level(logging.DEBUG)
-    url = "http://vi:pass@example.com/default.jpg"
     with patch(
         "homeassistant.components.demo.media_player.DemoYoutubePlayer.media_image_url",
         url,
@@ -239,52 +297,18 @@ async def test_get_image_http_log_credentials_redacted(
         state = hass.states.get("media_player.bedroom")
         assert "entity_picture_local" not in state.attributes
 
-        aioclient_mock.get(url, exc=TimeoutError())
-
-        client = await hass_client_no_auth()
-
-        resp = await client.get(state.attributes["entity_picture"])
-
-    assert resp.status == HTTPStatus.NOT_FOUND
-    warnings = [r.getMessage() for r in caplog.records if r.levelno == logging.WARNING]
-    assert "Error retrieving proxied image from example.com: TimeoutError" in warnings
-    assert not any("pass" in message for message in warnings)
-    debug = [r.getMessage() for r in caplog.records if r.levelno == logging.DEBUG]
-    assert f"Error retrieving proxied image from {url}: TimeoutError" in debug
-
-
-async def test_get_image_http_exception_text_logged_at_debug_only(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test exception text, which can contain the URL, is only logged at debug."""
-    caplog.set_level(logging.DEBUG)
-    url = "http://usr51:s3cr3t99@example.com/default.jpg"
-    with patch(
-        "homeassistant.components.demo.media_player.DemoYoutubePlayer.media_image_url",
-        url,
-    ):
-        await async_setup_component(
-            hass, "media_player", {"media_player": {"platform": "demo"}}
-        )
-        await hass.async_block_till_done()
-        state = hass.states.get("media_player.bedroom")
-        # InvalidUrlClientError stringifies to the offending URL itself
-        aioclient_mock.get(url, exc=aiohttp.InvalidUrlClientError(url))
+        aioclient_mock.get(url, **mock_kwargs)
         client = await hass_client_no_auth()
         resp = await client.get(state.attributes["entity_picture"])
 
     assert resp.status == HTTPStatus.NOT_FOUND
     warnings = [r.getMessage() for r in caplog.records if r.levelno == logging.WARNING]
     assert (
-        "Error retrieving proxied image from example.com: InvalidUrlClientError"
-        in warnings
+        f"Error retrieving proxied image from example.com: {warning_reason}" in warnings
     )
     assert not any("s3cr3t99" in message for message in warnings)
     debug = [r.getMessage() for r in caplog.records if r.levelno == logging.DEBUG]
-    assert f"Error retrieving proxied image from {url}: {url}" in debug
+    assert f"Error retrieving proxied image from {url}: {debug_detail}" in debug
 
 
 @pytest.mark.parametrize(
@@ -300,80 +324,10 @@ def test_url_host(url: str, expected: str) -> None:
     assert media_player_entity._url_host(url) == expected
 
 
-@pytest.mark.parametrize(
-    "fetch_exception",
-    [
-        pytest.param(TimeoutError(), id="timeout"),
-        pytest.param(
-            aiohttp.ClientPayloadError("incomplete chunked read"),
-            id="client_payload_error",
-        ),
-        pytest.param(
-            aiohttp.ClientConnectionError("connection reset"),
-            id="client_connection_error",
-        ),
-    ],
-)
-async def test_get_image_http_aiohttp_failure_returns_404(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
-    caplog: pytest.LogCaptureFixture,
-    fetch_exception: Exception,
-) -> None:
-    """Test aiohttp errors during image fetch are caught and surfaced as 404."""
-    url = "http://example.com/image.jpg"
-    with patch(
-        "homeassistant.components.demo.media_player.DemoYoutubePlayer.media_image_url",
-        url,
-    ):
-        await async_setup_component(
-            hass, "media_player", {"media_player": {"platform": "demo"}}
-        )
-        await hass.async_block_till_done()
-
-        state = hass.states.get("media_player.bedroom")
-        aioclient_mock.get(url, exc=fetch_exception)
-        client = await hass_client_no_auth()
-        resp = await client.get(state.attributes["entity_picture"])
-
-    assert resp.status == HTTPStatus.NOT_FOUND
-    assert (
-        "Error retrieving proxied image from example.com: "
-        f"{type(fetch_exception).__name__}"
-    ) in caplog.text
-
-
-async def test_get_image_http_non_ok_status_logs_status_code(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test non-200 upstream responses surface the status code in the warning."""
-    url = "http://example.com/missing.jpg"
-    with patch(
-        "homeassistant.components.demo.media_player.DemoYoutubePlayer.media_image_url",
-        url,
-    ):
-        await async_setup_component(
-            hass, "media_player", {"media_player": {"platform": "demo"}}
-        )
-        await hass.async_block_till_done()
-        state = hass.states.get("media_player.bedroom")
-        aioclient_mock.get(url, status=HTTPStatus.NOT_FOUND)
-        client = await hass_client_no_auth()
-        resp = await client.get(state.attributes["entity_picture"])
-
-    assert resp.status == HTTPStatus.NOT_FOUND
-    assert "Error retrieving proxied image from example.com: HTTP 404" in caplog.text
-
-
 async def test_get_image_http_truncated_response(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test responses with Content-Length larger than the body are discarded."""
     url = "http://example.com/truncated.jpg"
@@ -394,10 +348,6 @@ async def test_get_image_http_truncated_response(
         resp = await client.get(state.attributes["entity_picture"])
 
     assert resp.status == HTTPStatus.NOT_FOUND
-    assert (
-        "Error retrieving proxied image from example.com: "
-        "truncated response, 11 of 9999 bytes"
-    ) in caplog.text
 
 
 async def test_get_image_http_complete_response(

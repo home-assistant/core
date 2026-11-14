@@ -515,12 +515,7 @@ async def test_media_image_proxy(
     fake_picture_data = "test.test"
 
     class MockResponse:
-        """Test response.
-
-        Doubles as its own async context manager so it can be used with
-        `async with websession.get(...) as response:`, matching the shape
-        of aiohttp's real `_RequestContextManager`.
-        """
+        """Test response, usable as an async context manager."""
 
         def __init__(self) -> None:
             """Test response init."""
@@ -535,9 +530,11 @@ async def test_media_image_proxy(
             """Test response release."""
 
         async def __aenter__(self):
+            """Enter the response context."""
             return self
 
         async def __aexit__(self, exc_type, exc, tb):
+            """Release the response on exit."""
             await self.release()
 
     class MockWebsession:
