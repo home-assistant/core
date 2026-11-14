@@ -232,6 +232,7 @@ class EsphomeMediaPlayer(
         rate: int | None = None
         channels: int | None = None
         width: int | None = None
+        bitrate: int | None = None
         if format_to_use.sample_rate > 0:
             rate = format_to_use.sample_rate
 
@@ -241,6 +242,9 @@ class EsphomeMediaPlayer(
         if format_to_use.sample_bytes > 0:
             width = format_to_use.sample_bytes
 
+        if format_to_use.bitrate > 0:
+            bitrate = format_to_use.bitrate
+
         proxy_url = async_create_proxy_url(
             self.hass,
             device_id,
@@ -249,6 +253,7 @@ class EsphomeMediaPlayer(
             rate=rate,
             channels=channels,
             width=width,
+            bitrate=bitrate,
         )
 
         # Resolve URL

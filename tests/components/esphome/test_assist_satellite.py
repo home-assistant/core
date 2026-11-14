@@ -1011,6 +1011,7 @@ async def test_tts_format_from_media_player(
                         num_channels=1,
                         purpose=MediaPlayerFormatPurpose.ANNOUNCEMENT,
                         sample_bytes=2,
+                        bitrate=48,
                     ),
                 ],
             )
@@ -1045,6 +1046,7 @@ async def test_tts_format_from_media_player(
             TextToSpeechCommonOption.PREFERRED_SAMPLE_RATE: 22050,
             TextToSpeechCommonOption.PREFERRED_SAMPLE_CHANNELS: 1,
             TextToSpeechCommonOption.PREFERRED_SAMPLE_BYTES: 2,
+            TextToSpeechCommonOption.PREFERRED_BITRATE: 48,
         }
 
 
@@ -1255,11 +1257,14 @@ async def test_announce_message(
             assert satellite.state == AssistSatelliteState.IDLE
 
 
+@pytest.mark.parametrize(("bitrate", "expected_bitrate"), [(0, None), (48, 48)])
 async def test_announce_media_id(
     hass: HomeAssistant,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
     device_registry: dr.DeviceRegistry,
+    bitrate: int,
+    expected_bitrate: int | None,
 ) -> None:
     """Test announcement with media id."""
     mock_device = await mock_esphome_device(
@@ -1277,6 +1282,7 @@ async def test_announce_media_id(
                         num_channels=2,
                         purpose=MediaPlayerFormatPurpose.ANNOUNCEMENT,
                         sample_bytes=2,
+                        bitrate=bitrate,
                     ),
                 ],
             )
@@ -1349,6 +1355,7 @@ async def test_announce_media_id(
             rate=48000,
             channels=2,
             width=2,
+            bitrate=expected_bitrate,
         )
 
 
@@ -1649,6 +1656,7 @@ async def test_start_conversation_media_id(
             rate=48000,
             channels=2,
             width=2,
+            bitrate=None,
         )
 
 
