@@ -2,7 +2,6 @@
 
 from collections.abc import Callable, Coroutine
 from functools import partial
-import threading
 from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 from urllib.parse import quote, unquote
@@ -627,27 +626,18 @@ async def test_search_media_invalid_media_content_type(
     }
 
 
-def test_get_thumbnail_url_full_caches_track_art() -> None:
-    """Test a non-internal browse caches the item's art URI without decoding the URL.
+def test_get_thumbnail_url_full_keeps_track_id_query() -> None:
+    """Test the proxy URL is not unquoted, so a track id keeps its query string.
 
-    The proxy URL must not be unquoted: get_browse_image_url percent-encodes the
-    content id into the path, and a track URI's "?sid=...&..." query string would
-    otherwise collapse into the proxy URL and truncate the id.
+    get_browse_image_url percent-encodes the content id into the path. Unquoting
+    the result would let the track URI's "?sid=...&..." query collapse into the
+    proxy URL and truncate the id.
     """
     media = Mock()
-    media.browse_image_uris = {}
-    media.browse_image_uris_lock = threading.Lock()
     track_uri = "x-sonos-spotify:spotify%3atrack%3a5bcTCx?sid=12&flags=8224&sn=3"
-    item = MockMusicServiceItem(
-        "Come Together",
-        track_uri,
-        "playlist",
-        "object.item.audioItem.musicTrack",
-        album_art_uri="http://192.168.42.2:1400/getaa?u=track&v=1",
-    )
     proxy_url = (
         "/api/media_player_proxy/media_player.zone_a/browse_media/track/"
-        + quote(track_uri)
+        + quote(track_uri, safe="")
         + "?token=abc"
     )
     get_browse_image_url = Mock(return_value=proxy_url)
@@ -659,22 +649,20 @@ def test_get_thumbnail_url_full_caches_track_art() -> None:
         MediaType.TRACK,
         track_uri,
         None,
-        item,
+        None,
     )
 
-    assert media.browse_image_uris[track_uri] == item.album_art_uri
+    get_browse_image_url.assert_called_once_with(MediaType.TRACK, track_uri, None)
     assert result == proxy_url
 
 
 def test_get_thumbnail_url_full_preserves_encoded_content_id() -> None:
     """Test the proxy URL is returned without unquoting so ids with spaces survive.
 
-    Regression guard for #102557: the content id is percent-encoded into the proxy
-    URL path and aiohttp unquotes it on the way back in, so unquoting here would turn
-    "%20" back into a space (and collapse reserved characters) and break the lookup.
+    Regression guard for #102557: aiohttp unquotes the proxy path on the way back
+    in, so unquoting here would turn "%20" back into a space and break the lookup.
     """
     media = Mock()
-    media.browse_image_uris = {}
     content_id = "A:ALBUM/Abbey Road/Come Together & Friends"
     proxy_url = (
         "/api/media_player_proxy/media_player.zone_a/browse_media/album/"
@@ -699,78 +687,40 @@ def test_get_thumbnail_url_full_preserves_encoded_content_id() -> None:
     assert result != unquote(proxy_url)
 
 
-def test_get_thumbnail_url_full_skips_non_track_cache() -> None:
-    """Test only track art is cached; albums and artists resolve via get_media."""
-    media = Mock()
-    media.browse_image_uris = {}
-    content_id = "A:ALBUM/Abbey%20Road"
-    item = MockMusicServiceItem(
-        "Abbey Road",
-        content_id,
-        "A:ALBUM",
-        "object.container.album.musicAlbum",
-        album_art_uri="http://192.168.42.2:1400/getaa?u=album&v=1",
-    )
-    get_browse_image_url = Mock(return_value="/proxy/album")
-
-    get_thumbnail_url_full(
-        media,
-        False,
-        get_browse_image_url,
-        MediaType.ALBUM,
-        content_id,
-        None,
-        item,
-    )
-
-    assert media.browse_image_uris == {}
-
-
-def test_get_thumbnail_url_full_evicts_oldest_track_art() -> None:
-    """Test the browse-image cache is bounded and evicts the oldest entry first."""
-    media = Mock()
-    media.browse_image_uris = {}
-    media.browse_image_uris_lock = threading.Lock()
-    get_browse_image_url = Mock(return_value="/proxy")
-
-    with patch(
-        "homeassistant.components.sonos.media_browser.BROWSE_IMAGE_CACHE_SIZE", 2
-    ):
-        for i in range(3):
-            track_uri = f"x-sonos-spotify:track{i}?sid=1"
-            item = MockMusicServiceItem(
-                f"Track {i}",
-                track_uri,
-                "playlist",
-                "object.item.audioItem.musicTrack",
-                album_art_uri=f"http://192.168.42.2:1400/getaa?u=track{i}",
-            )
-            get_thumbnail_url_full(
-                media,
-                False,
-                get_browse_image_url,
-                MediaType.TRACK,
-                track_uri,
-                None,
-                item,
-            )
-
-    assert list(media.browse_image_uris) == [
-        "x-sonos-spotify:track1?sid=1",
-        "x-sonos-spotify:track2?sid=1",
-    ]
-
-
+@pytest.mark.parametrize(
+    ("track_uri", "expected_query"),
+    [
+        (
+            "x-sonos-spotify:spotify%3atrack%3a5bcTCx?sid=12&flags=8224&sn=3",
+            "s=1&u=x-sonos-spotify%3Aspotify%253atrack%253a5bcTCx%3Fsid%3D12"
+            "%26flags%3D8224%26sn%3D3",
+        ),
+        (
+            "x-sonosapi-hls-static:track-%3esoundcloud%3atracks%3a1610992905"
+            "?sid=160&flags=8232&sn=25",
+            "s=1&u=x-sonosapi-hls-static%3Atrack-%253esoundcloud%253atracks"
+            "%253a1610992905%3Fsid%3D160%26flags%3D8232%26sn%3D25",
+        ),
+        (
+            "x-file-cifs://server/Music/Abbey%20Road/01%20-%20Come%20Together.mp3",
+            "u=x-file-cifs%3A%2F%2Fserver%2FMusic%2FAbbey%2520Road%2F01%2520-"
+            "%2520Come%2520Together.mp3",
+        ),
+    ],
+    ids=["music_service", "soundcloud", "local_library"],
+)
 @pytest.mark.usefixtures("async_autosetup_sonos")
-async def test_browse_image_for_track_uses_cached_art(
+async def test_browse_image_for_track(
     hass: HomeAssistant,
+    track_uri: str,
+    expected_query: str,
 ) -> None:
-    """Test a track's browse image is served from the art URI captured at browse time."""
+    """Test a track's browse image is fetched from the art URL built from its URI."""
     entity_comp = hass.data["entity_components"]["media_player"]
     player = entity_comp.get_entity("media_player.zone_a")
-    track_uri = "x-sonos-spotify:spotify%3atrack%3a5bcTCx?sid=12&flags=8224&sn=3"
-    art_url = "http://192.168.42.2:1400/getaa?u=track&v=1"
-    player.media.browse_image_uris[track_uri] = art_url
+    player.media.library.build_album_art_full_uri = Mock(
+        side_effect=lambda path: f"http://192.168.42.2:1400{path}"
+    )
 
     with patch.object(
         player, "_async_fetch_image", return_value=(b"image", "image/jpeg")
@@ -778,36 +728,6 @@ async def test_browse_image_for_track_uses_cached_art(
         result = await player.async_get_browse_image(MediaType.TRACK, track_uri)
 
     assert result == (b"image", "image/jpeg")
-    mock_fetch.assert_awaited_once_with(art_url)
-
-
-@pytest.mark.usefixtures("async_autosetup_sonos")
-async def test_browse_image_for_track_falls_back_to_library(
-    hass: HomeAssistant,
-) -> None:
-    """Test a track with no cached art falls back to a library lookup."""
-    entity_comp = hass.data["entity_components"]["media_player"]
-    player = entity_comp.get_entity("media_player.zone_a")
-    track_uri = "A:TRACKS/Some%20Track"
-    art_url = "http://192.168.42.2:1400/getaa?u=local&v=1"
-    item = MockMusicServiceItem(
-        "Some Track",
-        track_uri,
-        "A:TRACKS",
-        "object.item.audioItem.musicTrack",
-        album_art_uri=art_url,
+    mock_fetch.assert_awaited_once_with(
+        f"http://192.168.42.2:1400/getaa?{expected_query}"
     )
-
-    with (
-        patch(
-            "homeassistant.components.sonos.media_browser.get_media", return_value=item
-        ) as mock_get_media,
-        patch.object(
-            player, "_async_fetch_image", return_value=(b"image", "image/jpeg")
-        ) as mock_fetch,
-    ):
-        result = await player.async_get_browse_image(MediaType.TRACK, track_uri)
-
-    assert result == (b"image", "image/jpeg")
-    mock_get_media.assert_called_once()
-    mock_fetch.assert_awaited_once_with(art_url)
