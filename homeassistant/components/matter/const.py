@@ -151,3 +151,23 @@ CONCENTRATION_BECQUERELS_PER_CUBIC_METER: Final = "Bq/m³"
 
 # Seconds from Matter 2000 epoch to Unix epoch
 MATTER_2000_TO_UNIX_EPOCH_OFFSET: Final = 946684800
+
+ATTR_COOLING_SETPOINT = "cooling_setpoint"
+ATTR_HEATING_SETPOINT = "heating_setpoint"
+ATTR_PRESET_NAME = "name"
+ATTR_PRESET_SCENARIO = "preset_scenario"
+
+# PresetScenario mapping (Matter Thermostat PresetScenarioEnum)
+_PresetScenario = clusters.Thermostat.Enums.PresetScenarioEnum
+PRESET_SCENARIO_MAP: dict[int, str] = {
+    _PresetScenario.kOccupied: "occupied",
+    _PresetScenario.kUnoccupied: "unoccupied",
+    _PresetScenario.kSleep: "sleep",
+    _PresetScenario.kWake: "wake",
+    _PresetScenario.kVacation: "vacation",
+    _PresetScenario.kGoingToSleep: "going_to_sleep",
+    _PresetScenario.kUserDefined: "user_defined",
+}
+PRESET_SCENARIO_REVERSE_MAP: dict[str, int] = {
+    v: k for k, v in PRESET_SCENARIO_MAP.items()
+}
