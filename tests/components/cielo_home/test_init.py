@@ -2,12 +2,12 @@
 
 from unittest.mock import MagicMock
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.cielo_home.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry
 
 
 async def test_async_setup_and_unload_entry(

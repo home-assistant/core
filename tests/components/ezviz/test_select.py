@@ -4,19 +4,18 @@ from unittest.mock import AsyncMock
 
 from pyezvizapi.constants import BatteryCameraWorkMode, DeviceCatagories, SupportExt
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.select import (
-    ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
 from .test_init import _mock_camera_data
-
-from tests.common import MockConfigEntry
 
 ENTITY_ID = "select.camera_1_battery_work_mode"
 
@@ -74,8 +73,11 @@ async def test_battery_work_mode_select_option(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_OPTION: "high_performance"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+            SelectServiceArgument.OPTION: "high_performance",
+        },
         blocking=True,
     )
 

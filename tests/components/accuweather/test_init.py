@@ -5,6 +5,8 @@ from unittest.mock import AsyncMock
 
 from accuweather import ApiError, InvalidApiKeyError
 from freezegun.api import FrozenDateTimeFactory
+import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.accuweather.const import (
     DOMAIN,
@@ -18,8 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_async_setup_entry(
@@ -121,14 +121,23 @@ async def test_remove_ozone_sensors(
     assert entry is None
 
 
+@pytest.mark.parametrize(
+    "method",
+    [
+        "async_get_current_conditions",
+        "async_get_daily_forecast",
+        "async_get_hourly_forecast",
+    ],
+)
 async def test_auth_error(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_accuweather_client: AsyncMock,
+    method: str,
 ) -> None:
-    """Test authentication error when polling data."""
-    mock_accuweather_client.async_get_current_conditions.side_effect = (
-        InvalidApiKeyError("Invalid API Key")
+    """Test authentication error during setup."""
+    getattr(mock_accuweather_client, method).side_effect = InvalidApiKeyError(
+        "Invalid API Key"
     )
 
     mock_config_entry = await init_integration(hass)

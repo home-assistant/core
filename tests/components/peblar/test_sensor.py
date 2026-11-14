@@ -4,6 +4,7 @@ from enum import StrEnum
 
 from peblar import ChargeLimiter, CPState
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.peblar.const import (
@@ -14,8 +15,6 @@ from homeassistant.components.peblar.const import (
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.freeze_time("2024-12-21 21:45:00")

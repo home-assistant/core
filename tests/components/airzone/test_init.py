@@ -3,7 +3,13 @@
 from unittest.mock import patch
 
 from aioairzone.const import DEFAULT_SYSTEM_ID
-from aioairzone.exceptions import HotWaterNotAvailable, InvalidMethod, SystemOutOfRange
+from aioairzone.exceptions import (
+    HotWaterNotAvailable,
+    IaqSensorNotAvailable,
+    InvalidMethod,
+    SystemOutOfRange,
+)
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.airzone.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -19,8 +25,6 @@ from .util import (
     USER_INPUT,
     async_init_integration,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_unique_id_migrate(
@@ -47,6 +51,10 @@ async def test_unique_id_migrate(
         patch(
             "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
             side_effect=SystemOutOfRange,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_iaq",
+            side_effect=IaqSensorNotAvailable,
         ),
         patch(
             "homeassistant.components.airzone.AirzoneLocalApi.get_version",
@@ -78,6 +86,10 @@ async def test_unique_id_migrate(
         patch(
             "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
             side_effect=SystemOutOfRange,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_iaq",
+            side_effect=IaqSensorNotAvailable,
         ),
         patch(
             "homeassistant.components.airzone.AirzoneLocalApi.get_version",
@@ -175,6 +187,10 @@ async def test_migrate_entry_v2(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
             side_effect=SystemOutOfRange,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_iaq",
+            side_effect=IaqSensorNotAvailable,
         ),
         patch(
             "homeassistant.components.airzone.AirzoneLocalApi.get_version",

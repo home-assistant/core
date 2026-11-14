@@ -14,17 +14,16 @@ from fjaraskupan import (
 )
 from habluetooth import BluetoothServiceInfo
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.fjaraskupan.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from . import COOKER_SERVICE_INFO
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import inject_bluetooth_service_info
 
 BUTTON_ENTITY_ID = "button.fjaraskupan_reset_grease_filter"
 GREASE_FILTER_ENTITY_ID = "binary_sensor.fjaraskupan_grease_filter"
@@ -87,7 +86,10 @@ async def test_reset_grease_filter(
     assert state.state == STATE_ON
 
     await hass.services.async_call(
-        BUTTON_DOMAIN, SERVICE_PRESS, {ATTR_ENTITY_ID: BUTTON_ENTITY_ID}, blocking=True
+        BUTTON_DOMAIN,
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: BUTTON_ENTITY_ID},
+        blocking=True,
     )
 
     mock_send_command.assert_awaited_once_with(COMMAND_RESETGREASEFILTER)
@@ -106,8 +108,8 @@ async def test_reset_grease_filter_error(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: BUTTON_ENTITY_ID},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: BUTTON_ENTITY_ID},
             blocking=True,
         )
     assert exc_info.value.translation_key == "write_error"

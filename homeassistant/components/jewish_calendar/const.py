@@ -4,8 +4,6 @@ from enum import StrEnum
 
 DOMAIN = "jewish_calendar"
 
-ATTR_AFTER_SUNSET = "after_sunset"
-ATTR_NUSACH = "nusach"
 
 CONF_ALTITUDE = "altitude"  # The name used by the hdate library for elevation
 CONF_DIASPORA = "diaspora"
@@ -71,6 +69,3 @@ DEFAULT_CALENDAR_EVENTS = {
         YearlyCalendarEventType.HAVDALAH,
     ],
 }
-
-
-SERVICE_COUNT_OMER = "count_omer"

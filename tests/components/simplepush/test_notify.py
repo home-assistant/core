@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from simplepush.legacy import BadRequest, UnknownError
 
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
@@ -13,8 +14,6 @@ from homeassistant.const import CONF_NAME, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 MOCK_CONFIG = {
     CONF_DEVICE_KEY: "abc",

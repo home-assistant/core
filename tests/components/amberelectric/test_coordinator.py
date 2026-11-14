@@ -12,6 +12,7 @@ from amberelectric.models.site_status import SiteStatus
 from amberelectric.models.spike_status import SpikeStatus
 from dateutil import parser
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.amberelectric.const import (
     CONF_SITE_ID,
@@ -33,8 +34,6 @@ from .helpers import (
     GENERAL_ONLY_SITE_ID,
     generate_current_interval,
 )
-
-from tests.common import MockConfigEntry
 
 MOCKED_ENTRY = MockConfigEntry(
     domain=DOMAIN,

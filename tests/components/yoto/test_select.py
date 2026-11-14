@@ -3,23 +3,22 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 from yoto_api import YotoError
 
 from homeassistant.components.select import (
-    ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 from .conftest import PLAYER_ID
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 pytestmark = pytest.mark.usefixtures("setup_credentials")
 
@@ -86,8 +85,11 @@ async def test_select_option(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "sky_blue"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            SelectServiceArgument.OPTION: "sky_blue",
+        },
         blocking=True,
     )
 
@@ -111,10 +113,10 @@ async def test_select_option_failure(
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: "select.nursery_yoto_day_mode_color",
-                ATTR_OPTION: "sky_blue",
+                CommonServiceArgument.ENTITY_ID: "select.nursery_yoto_day_mode_color",
+                SelectServiceArgument.OPTION: "sky_blue",
             },
             blocking=True,
         )

@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from python_picnic_api2.models import User
 from python_picnic_api2.session import (
     Picnic2FAError,
@@ -16,8 +17,6 @@ from homeassistant.components.picnic.const import DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_COUNTRY_CODE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -57,7 +56,7 @@ async def test_form(hass: HomeAssistant, picnic_api) -> None:
 
     with patch(
         "homeassistant.components.picnic.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -89,7 +88,7 @@ async def test_form_2fa_required(hass: HomeAssistant, picnic_api) -> None:
 
     with patch(
         "homeassistant.components.picnic.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result_step_user = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -142,7 +141,7 @@ async def test_form_2fa_channel_cannot_connect(
 
     with patch(
         "homeassistant.components.picnic.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result_step_user = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -191,7 +190,7 @@ async def test_form_2fa_channel_exception(
 
     with patch(
         "homeassistant.components.picnic.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result_step_user = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -238,7 +237,7 @@ async def test_form_2fa_wrong_code(hass: HomeAssistant, picnic_api: MagicMock) -
 
     with patch(
         "homeassistant.components.picnic.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result_step_user = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -290,7 +289,7 @@ async def test_form_2fa_cannot_connect(
 
     with patch(
         "homeassistant.components.picnic.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result_step_user = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -338,7 +337,7 @@ async def test_form_2fa_exception(hass: HomeAssistant, picnic_api: MagicMock) ->
 
     with patch(
         "homeassistant.components.picnic.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result_step_user = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -396,7 +395,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, picnic_api: MagicMock) -> 
     assert result2["errors"] == {"base": "invalid_auth"}
 
     picnic_api.return_value.login.side_effect = None
-    with patch("homeassistant.components.picnic.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.picnic.async_setup_entry", return_value=None):
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -429,7 +428,7 @@ async def test_form_cannot_connect(hass: HomeAssistant, picnic_api: MagicMock) -
     assert result2["errors"] == {"base": "cannot_connect"}
 
     picnic_api.return_value.login.side_effect = None
-    with patch("homeassistant.components.picnic.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.picnic.async_setup_entry", return_value=None):
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -462,7 +461,7 @@ async def test_form_exception(hass: HomeAssistant, picnic_api: MagicMock) -> Non
     assert result2["errors"] == {"base": "unknown"}
 
     picnic_api.return_value.login.side_effect = None
-    with patch("homeassistant.components.picnic.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.picnic.async_setup_entry", return_value=None):
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -521,7 +520,7 @@ async def test_step_reauth(hass: HomeAssistant, picnic_api) -> None:
 
     with patch(
         "homeassistant.components.picnic.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result_configure = await hass.config_entries.flow.async_configure(
             result_init["flow_id"],
@@ -578,7 +577,7 @@ async def test_step_reauth_failed(hass: HomeAssistant, picnic_api: MagicMock) ->
     assert len(hass.config_entries.async_entries()) == 1
 
     picnic_api.return_value.login.side_effect = None
-    with patch("homeassistant.components.picnic.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.picnic.async_setup_entry", return_value=None):
         result_configure = await hass.config_entries.flow.async_configure(
             result_init["flow_id"],
             {
@@ -615,7 +614,7 @@ async def test_step_reauth_different_account(
 
     with patch(
         "homeassistant.components.picnic.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result_configure = await hass.config_entries.flow.async_configure(
             result_init["flow_id"],

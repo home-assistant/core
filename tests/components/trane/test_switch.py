@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from steamloop import HoldType
 from syrupy.assertion import SnapshotAssertion
 
@@ -16,8 +17,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture

@@ -5,6 +5,7 @@ from copy import deepcopy
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.upnp.const import (
@@ -36,8 +37,6 @@ from .conftest import (
     TEST_UDN,
     TEST_USN,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures(

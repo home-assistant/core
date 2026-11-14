@@ -5,12 +5,8 @@ from typing import Any, override
 
 import probatio
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant import data_entry_flow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import llm
@@ -19,9 +15,11 @@ from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
+    SelectSelectorMode,
 )
 
 from .const import CONF_ALL_LLM_APIS, CONF_READ_ONLY, CONF_REQUIRE_ADMIN, DOMAIN
+from .types import MCPServerConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +41,9 @@ def _llm_api_title(
     return ", ".join(llm_apis[api_id] for api_id in api_ids if api_id in llm_apis)
 
 
-def _selected_llm_apis(entry: ConfigEntry, llm_apis: dict[str, str]) -> list[str]:
+def _selected_llm_apis(
+    entry: MCPServerConfigEntry, llm_apis: dict[str, str]
+) -> list[str]:
     """Return the still registered LLM APIs selected by the config entry."""
     api_ids = entry.data.get(CONF_LLM_HASS_API) or []
     if isinstance(api_ids, str):  # Old config entries stored a single API
@@ -61,9 +61,11 @@ def _options_schema(
     """Return the schema for the options flow."""
     schema: dict[probatio.Marker, Any] = {
         probatio.Required(CONF_ALL_LLM_APIS, default=all_llm_apis): BooleanSelector(),
-    }
-    if not all_llm_apis:
-        schema[probatio.Optional(CONF_LLM_HASS_API, default=default)] = SelectSelector(
+        data_entry_flow.Optional(
+            CONF_LLM_HASS_API,
+            default=default,
+            visible={"field": CONF_ALL_LLM_APIS, "value": False},
+        ): SelectSelector(
             SelectSelectorConfig(
                 options=[
                     SelectOptionDict(
@@ -73,8 +75,10 @@ def _options_schema(
                     for llm_api_id, name in llm_apis.items()
                 ],
                 multiple=True,
+                mode=SelectSelectorMode.LIST,
             )
-        )
+        ),
+    }
     schema[probatio.Required(CONF_REQUIRE_ADMIN, default=require_admin)] = (
         BooleanSelector()
     )
@@ -92,7 +96,7 @@ class ModelContextServerProtocolConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: MCPServerConfigEntry,
     ) -> ModelContextServerProtocolOptionsFlow:
         """Create the options flow."""
         return ModelContextServerProtocolOptionsFlow()
@@ -121,8 +125,6 @@ class ModelContextServerProtocolConfigFlow(ConfigFlow, domain=DOMAIN):
 class ModelContextServerProtocolOptionsFlow(OptionsFlow):
     """Handle an options flow to change the exposed LLM APIs."""
 
-    last_rendered_all_llm_apis = False
-
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -135,16 +137,13 @@ class ModelContextServerProtocolOptionsFlow(OptionsFlow):
         require_admin = self.config_entry.data.get(CONF_REQUIRE_ADMIN, False)
         read_only = self.config_entry.data.get(CONF_READ_ONLY, False)
 
-        if user_input is None:
-            self.last_rendered_all_llm_apis = current_all
-        elif user_input[CONF_ALL_LLM_APIS] != self.last_rendered_all_llm_apis:
-            # Re-render the form to show or hide the LLM API picker
-            self.last_rendered_all_llm_apis = user_input[CONF_ALL_LLM_APIS]
-            require_admin = user_input[CONF_REQUIRE_ADMIN]
-            read_only = user_input[CONF_READ_ONLY]
-        elif not user_input[CONF_ALL_LLM_APIS] and not user_input[CONF_LLM_HASS_API]:
+        if (
+            user_input is not None
+            and not user_input[CONF_ALL_LLM_APIS]
+            and not user_input[CONF_LLM_HASS_API]
+        ):
             errors[CONF_LLM_HASS_API] = "llm_api_required"
-        else:
+        elif user_input is not None:
             updates: dict[str, Any] = {"data": {**self.config_entry.data, **user_input}}
             # Keep a title the user renamed, only refresh a generated one.
             if self.config_entry.title == _llm_api_title(
@@ -162,12 +161,12 @@ class ModelContextServerProtocolOptionsFlow(OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=_options_schema(
-                llm_apis,
-                self.last_rendered_all_llm_apis,
-                current,
-                require_admin,
-                read_only,
+            # Show the submitted values again after an error
+            data_schema=self.add_suggested_values_to_schema(
+                _options_schema(
+                    llm_apis, current_all, current, require_admin, read_only
+                ),
+                user_input,
             ),
             description_placeholders={"more_info_url": MORE_INFO_URL},
             errors=errors,

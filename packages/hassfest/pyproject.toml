@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=78.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hassfest"
+dynamic = ["version", "requires-python"]
+dependencies = ["ruff"]
+license = "Apache-2.0"
+license-files = ["LICENSE.md"]
+description = "Validate Home Assistant integrations."
+readme = "README.md"
+authors = [
+  { name = "The Home Assistant Authors", email = "hello@home-assistant.io" },
+]
+
+[project.urls]
+Repository = "https://github.com/home-assistant/core"
+Documentation = "https://contributors.home-assistant.io"
+
+[tool.setuptools.packages.find]
+include = ["hassfest*"]
+
+[tool.setuptools.package-data]
+hassfest = ["_data/build.json"]
+
+[tool.pytest.ini_options]
+addopts = "-p no:respx -p no:pytest_homeassistant"
+pythonpath = ["."]
+testpaths = ["tests"]

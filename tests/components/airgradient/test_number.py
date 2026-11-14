@@ -6,12 +6,17 @@ from unittest.mock import AsyncMock, patch
 from airgradient import AirGradientConnectionError, AirGradientError, ApiVersion
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
@@ -19,8 +24,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import async_load_config_fixture, load_config_fixture, setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 async def test_all_entities(
@@ -47,8 +50,8 @@ async def test_setting_value(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        service_data={ATTR_VALUE: 50},
+        NumberService.SET_VALUE,
+        service_data={NumberServiceArgument.VALUE: 50},
         target={ATTR_ENTITY_ID: "number.airgradient_display_brightness"},
         blocking=True,
     )
@@ -56,8 +59,8 @@ async def test_setting_value(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        service_data={ATTR_VALUE: 50},
+        NumberService.SET_VALUE,
+        service_data={NumberServiceArgument.VALUE: 50},
         target={ATTR_ENTITY_ID: "number.airgradient_led_bar_brightness"},
         blocking=True,
     )
@@ -91,8 +94,8 @@ async def test_v1_number_writes(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        service_data={ATTR_VALUE: value},
+        NumberService.SET_VALUE,
+        service_data={NumberServiceArgument.VALUE: value},
         target={ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
@@ -180,8 +183,8 @@ async def test_exception_handling(
     with pytest.raises(HomeAssistantError, match=error_message):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            service_data={ATTR_VALUE: 50},
+            NumberService.SET_VALUE,
+            service_data={NumberServiceArgument.VALUE: 50},
             target={ATTR_ENTITY_ID: "number.airgradient_display_brightness"},
             blocking=True,
         )

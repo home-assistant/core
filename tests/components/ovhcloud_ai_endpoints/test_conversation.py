@@ -14,6 +14,7 @@ from openai.types.chat import (
 from openai.types.chat.chat_completion import Choice
 from openai.types.chat.chat_completion_message_function_tool_call_param import Function
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import conversation
@@ -29,7 +30,6 @@ from homeassistant.helpers.llm import ToolInput
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, snapshot_platform
 from tests.components.conversation import MockChatLog, mock_chat_log  # noqa: F401
 
 

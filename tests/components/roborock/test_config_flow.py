@@ -4,6 +4,7 @@ from copy import deepcopy
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from roborock import RoborockTooFrequentCodeRequests
 from roborock.exceptions import (
     RoborockAccountDoesNotExist,
@@ -34,8 +35,6 @@ from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .mock_data import MOCK_CONFIG, NETWORK_INFO, ROBOROCK_RRUID, USER_DATA, USER_EMAIL
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture
 def cleanup_map_storage():
@@ -54,7 +53,7 @@ async def test_config_flow_success(
 ) -> None:
     """Handle the config flow and make sure it succeeds."""
     with patch(
-        "homeassistant.components.roborock.async_setup_entry", return_value=True
+        "homeassistant.components.roborock.async_setup_entry", return_value=None
     ) as mock_setup:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -108,7 +107,7 @@ async def test_config_flow_failures_request_code(
 ) -> None:
     """Handle applying errors to request code recovering from the errors."""
     with patch(
-        "homeassistant.components.roborock.async_setup_entry", return_value=True
+        "homeassistant.components.roborock.async_setup_entry", return_value=None
     ) as mock_setup:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -170,7 +169,7 @@ async def test_config_flow_failures_code_login(
 ) -> None:
     """Handle applying errors to code login and recovering from the errors."""
     with patch(
-        "homeassistant.components.roborock.async_setup_entry", return_value=True
+        "homeassistant.components.roborock.async_setup_entry", return_value=None
     ) as mock_setup:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -228,7 +227,7 @@ async def test_options_flow_drawables(
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == DRAWABLES
         with patch(
-            "homeassistant.components.roborock.async_setup_entry", return_value=True
+            "homeassistant.components.roborock.async_setup_entry", return_value=None
         ) as mock_setup:
             result = await hass.config_entries.options.async_configure(
                 result["flow_id"],
@@ -259,7 +258,7 @@ async def test_reauth_flow(
         patch(
             "homeassistant.components.roborock.config_flow.RoborockApiClient.request_code_v4"
         ),
-        patch("homeassistant.components.roborock.async_setup_entry", return_value=True),
+        patch("homeassistant.components.roborock.async_setup_entry", return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
@@ -274,7 +273,7 @@ async def test_reauth_flow(
             "homeassistant.components.roborock.config_flow.RoborockApiClient.code_login_v4",
             return_value=new_user_data,
         ),
-        patch("homeassistant.components.roborock.async_setup_entry", return_value=True),
+        patch("homeassistant.components.roborock.async_setup_entry", return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_ENTRY_CODE: "123456"}
@@ -292,7 +291,7 @@ async def test_account_already_configured(
     """Ensure the same account cannot be setup twice."""
     assert mock_roborock_entry.unique_id == ROBOROCK_RRUID
     with patch(
-        "homeassistant.components.roborock.async_setup_entry", return_value=True
+        "homeassistant.components.roborock.async_setup_entry", return_value=None
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -329,7 +328,7 @@ async def test_reauth_wrong_account(
     assert result["step_id"] == "reauth_confirm"
 
     with patch(
-        "homeassistant.components.roborock.async_setup_entry", return_value=True
+        "homeassistant.components.roborock.async_setup_entry", return_value=None
     ):
         with patch(
             "homeassistant.components.roborock.config_flow.RoborockApiClient.request_code_v4"
@@ -358,7 +357,7 @@ async def test_discovery_not_setup(
 ) -> None:
     """Handle the config flow and make sure it succeeds."""
     with (
-        patch("homeassistant.components.roborock.async_setup_entry", return_value=True),
+        patch("homeassistant.components.roborock.async_setup_entry", return_value=None),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -423,7 +422,7 @@ async def test_config_flow_with_region(
 ) -> None:
     """Handle the config flow with a specific region."""
     with patch(
-        "homeassistant.components.roborock.async_setup_entry", return_value=True
+        "homeassistant.components.roborock.async_setup_entry", return_value=None
     ) as mock_setup:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -474,7 +473,7 @@ async def test_config_flow_with_custom_url(
     """Handle the config flow with a custom server URL."""
     custom_url = "https://api-roborock.example.com:555"
     with patch(
-        "homeassistant.components.roborock.async_setup_entry", return_value=True
+        "homeassistant.components.roborock.async_setup_entry", return_value=None
     ) as mock_setup:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -544,7 +543,7 @@ async def test_config_flow_custom_url_failures(
     """Handle errors in the custom URL step and recover."""
     custom_url = "https://api-roborock.example.com:555"
     with patch(
-        "homeassistant.components.roborock.async_setup_entry", return_value=True
+        "homeassistant.components.roborock.async_setup_entry", return_value=None
     ) as mock_setup:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -621,7 +620,7 @@ async def test_config_flow_custom_url_invalid_format(
 
     custom_url = "https://api-roborock.example.com:555"
     with (
-        patch("homeassistant.components.roborock.async_setup_entry", return_value=True),
+        patch("homeassistant.components.roborock.async_setup_entry", return_value=None),
         patch(
             "homeassistant.components.roborock.config_flow.RoborockApiClient"
         ) as mock_client_cls,

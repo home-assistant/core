@@ -20,7 +20,7 @@ from homeassistant.helpers.llm import (
 )
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, SERVICE_GET_EVENTS
+from .const import DOMAIN, CalendarService
 
 
 class CalendarGetEventsTool(Tool):
@@ -80,7 +80,7 @@ class CalendarGetEventsTool(Tool):
 
         service_result = await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_EVENTS,
+            CalendarService.GET_EVENTS,
             service_data,
             context=llm_context.context,
             blocking=True,

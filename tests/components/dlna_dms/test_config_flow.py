@@ -8,6 +8,7 @@ from unittest.mock import Mock, patch
 
 from async_upnp_client.exceptions import UpnpError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.dlna_dms.const import CONF_SOURCE_ID, DOMAIN
@@ -32,8 +33,6 @@ from .conftest import (
     MOCK_SOURCE_ID,
     NEW_DEVICE_LOCATION,
 )
-
-from tests.common import MockConfigEntry
 
 WRONG_DEVICE_TYPE: Final = "urn:schemas-upnp-org:device:InternetGatewayDevice:1"
 
@@ -76,7 +75,7 @@ def mock_setup_entry() -> Generator[Mock]:
     """Avoid setting up the entire integration."""
     with patch(
         "homeassistant.components.dlna_dms.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock:
         yield mock
 

@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.co2signal.const import DOMAIN
 from homeassistant.const import CONF_API_KEY
@@ -11,8 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import VALID_RESPONSE
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="electricity_maps")

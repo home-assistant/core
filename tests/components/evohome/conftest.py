@@ -10,6 +10,10 @@ from evohomeasync2 import ControlSystem, EvohomeClient, HotWater, Zone
 from evohomeasync2.auth import AbstractTokenManager, Auth
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 
 from homeassistant.components.evohome.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
@@ -21,8 +25,6 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonArrayType, JsonObjectType
 
 from .const import ACCESS_TOKEN, REFRESH_TOKEN, SESSION_ID, USERNAME
-
-from tests.common import load_json_array_fixture, load_json_object_fixture
 
 
 def user_account_config_fixture(install: str) -> JsonObjectType:
@@ -208,37 +210,26 @@ async def evohome(
         yield mock_client
 
 
-def _tcs_for_config(evo: EvohomeClient, config: ConfigType) -> ControlSystem:
-    """Return the configured location's TCS; evo.tcs only supports one location."""
+@pytest.fixture
+def tcs(evohome: MagicMock, config: ConfigType) -> ControlSystem:
+    """Return the TCS of the configured location."""
 
-    loc_idx: int = config.get("location_idx", 0)
-    return evo.locations[loc_idx].gateways[0].systems[0]
+    evo: EvohomeClient = evohome.return_value
+    tcs = evo.locations[config.get("location_idx", 0)].tcs
+    assert tcs is not None, "Fixture has no TCS"
+    return tcs
 
 
 @pytest.fixture
-def ctl_id(
-    evohome: MagicMock,
-    config: ConfigType,
-    entity_id: Callable[[Platform, str], str],
-) -> str:
+def ctl_id(tcs: ControlSystem, entity_id: Callable[[Platform, str], str]) -> str:
     """Return the entity_id of evohome's controller (a Climate entity)."""
-
-    evo: EvohomeClient = evohome.return_value
-    tcs = _tcs_for_config(evo, config)
 
     return entity_id(Platform.CLIMATE, tcs.id)
 
 
 @pytest.fixture
-def zone_id(
-    evohome: MagicMock,
-    config: ConfigType,
-    entity_id: Callable[[Platform, str], str],
-) -> str:
+def zone_id(tcs: ControlSystem, entity_id: Callable[[Platform, str], str]) -> str:
     """Return the entity_id of evohome's first zone (a Climate entity)."""
-
-    evo: EvohomeClient = evohome.return_value
-    tcs = _tcs_for_config(evo, config)
 
     zone: Zone = tcs.zones[0]
 
@@ -246,15 +237,10 @@ def zone_id(
 
 
 @pytest.fixture
-def dhw_id(
-    evohome: MagicMock,
-    config: ConfigType,
-    entity_id: Callable[[Platform, str], str],
-) -> str:
+def dhw_id(tcs: ControlSystem, entity_id: Callable[[Platform, str], str]) -> str:
     """Return the entity_id of Evohome's DHW controller (a WaterHeater entity)."""
 
-    evo: EvohomeClient = evohome.return_value
-    dhw: HotWater | None = _tcs_for_config(evo, config).hotwater
+    dhw: HotWater | None = tcs.hotwater
 
     assert dhw is not None, "Fixture has no DHW zone"
 

@@ -1,13 +1,13 @@
 """Test LastFM component setup process."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.lastfm.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import MockUser
 from .conftest import ComponentSetup
-
-from tests.common import MockConfigEntry
 
 
 async def test_load_unload_entry(

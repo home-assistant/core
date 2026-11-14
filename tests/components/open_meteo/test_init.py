@@ -4,13 +4,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from open_meteo import OpenMeteoConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.open_meteo.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ZONE
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def test_load_unload_config_entry(

@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 import temescal
 
 from homeassistant.components.media_player import (
@@ -19,8 +20,6 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
 from . import find_update_callback, setup_integration
-
-from tests.common import MockConfigEntry
 
 ENTITY_ID = "media_player.127_0_0_1"
 

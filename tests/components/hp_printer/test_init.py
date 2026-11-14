@@ -1,0 +1,158 @@
+"""Test the HP Printer integration setup."""
+
+from collections.abc import Callable
+from dataclasses import replace
+import logging
+from unittest.mock import AsyncMock
+
+from aiohpprinter import HpPrinterData
+from freezegun.api import FrozenDateTimeFactory
+import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from syrupy.assertion import SnapshotAssertion
+
+from homeassistant.components.hp_printer.const import DOMAIN
+from homeassistant.components.hp_printer.coordinator import UPDATE_INTERVAL
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_HOST, CONF_SSL, STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
+
+from . import setup_integration
+from .conftest import HOST, SERIAL_NUMBER, TITLE
+
+STATUS = "sensor.hp_officejet_pro_9020_series_status"
+
+UNUSABLE_DATA = [
+    pytest.param(lambda data: HpPrinterData(online=False), id="offline"),
+    pytest.param(
+        # The host now points to another printer, e.g. after a DHCP change.
+        lambda data: replace(
+            data, device=replace(data.device, serial_number="OTHER_SERIAL")
+        ),
+        id="other_printer",
+    ),
+    pytest.param(lambda data: replace(data, device=None), id="no_device"),
+    pytest.param(
+        lambda data: replace(data, device=replace(data.device, serial_number=None)),
+        id="no_serial_number",
+    ),
+]
+
+
+@pytest.mark.usefixtures("mock_hp_printer")
+async def test_load_unload_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a config entry loads and unloads cleanly."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+@pytest.mark.usefixtures("mock_hp_printer")
+async def test_device_info(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the printer is registered as a device."""
+    await setup_integration(hass, mock_config_entry)
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, SERIAL_NUMBER), mock_config_entry.entry_id
+    )
+    assert device == snapshot
+
+
+@pytest.mark.parametrize("unusable_data", UNUSABLE_DATA)
+async def test_setup_is_retried(
+    hass: HomeAssistant,
+    mock_hp_printer: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_data: HpPrinterData,
+    unusable_data: Callable[[HpPrinterData], HpPrinterData],
+) -> None:
+    """Test setup is retried when the printer data cannot be used."""
+    mock_hp_printer.update.return_value = unusable_data(mock_data)
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize("unusable_data", UNUSABLE_DATA)
+async def test_entities_unavailable(
+    hass: HomeAssistant,
+    mock_hp_printer: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_data: HpPrinterData,
+    freezer: FrozenDateTimeFactory,
+    unusable_data: Callable[[HpPrinterData], HpPrinterData],
+) -> None:
+    """Test entities go unavailable while the printer data cannot be used."""
+    await setup_integration(hass, mock_config_entry)
+    assert (state := hass.states.get(STATUS))
+    assert state.state == "in_power_save"
+
+    mock_hp_printer.update.return_value = unusable_data(mock_data)
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(STATUS))
+    assert state.state == STATE_UNAVAILABLE
+
+    mock_hp_printer.update.return_value = mock_data
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(STATUS))
+    assert state.state == "in_power_save"
+
+
+async def test_offline_logged_at_info(
+    hass: HomeAssistant,
+    mock_hp_printer: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a powered off printer is logged at info level, not as an error."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_hp_printer.update.return_value = HpPrinterData(online=False)
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert [
+        record.levelno
+        for record in caplog.records
+        if record.name.startswith("homeassistant.components.hp_printer")
+        and record.levelno > logging.DEBUG
+    ] == [logging.INFO]
+
+
+@pytest.mark.usefixtures("mock_hp_printer")
+async def test_migrate_entry_minor_version_1(hass: HomeAssistant) -> None:
+    """Test a version 1.1 entry is migrated to plain HTTP."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=TITLE,
+        data={CONF_HOST: HOST},
+        unique_id=SERIAL_NUMBER,
+        minor_version=1,
+    )
+
+    await setup_integration(hass, entry)
+
+    assert entry.minor_version == 2
+    assert entry.data == {CONF_HOST: HOST, CONF_SSL: False}

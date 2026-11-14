@@ -2,8 +2,10 @@
   "domain": "rachio",
   "name": "Rachio",
   "after_dependencies": ["cloud"],
+  "categories": ["garden_plants"],
   "codeowners": ["@bdraco", "@rfverbruggen"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["http"],
   "dhcp": [
     {

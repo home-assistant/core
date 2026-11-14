@@ -13,7 +13,7 @@ from bring_api import (
 import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_EMAIL, CONF_NAME, CONF_PASSWORD
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     TextSelector,
@@ -21,8 +21,8 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from . import BringConfigEntry
 from .const import DOMAIN
+from .coordinator import BringConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -102,7 +102,7 @@ class BringConfigFlow(ConfigFlow, domain=DOMAIN):
                 data_schema=STEP_USER_DATA_SCHEMA,
                 suggested_values={CONF_EMAIL: self.reauth_entry.data[CONF_EMAIL]},
             ),
-            description_placeholders={CONF_NAME: self.reauth_entry.title},
+            description_placeholders={"name": self.reauth_entry.title},
             errors=errors,
         )
 

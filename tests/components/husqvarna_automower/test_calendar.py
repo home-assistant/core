@@ -11,6 +11,12 @@ import zoneinfo
 from aioautomower.utils import mower_list_to_dictionary_dataclass
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    load_json_value_fixture,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.calendar import (
@@ -26,13 +32,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    load_json_value_fixture,
-)
-from tests.typing import ClientSessionGenerator
 
 TEST_ENTITY = "calendar.garden_test_mower_1"
 type GetEventsFn = Callable[[str, str], Awaitable[dict[str, Any]]]

@@ -111,7 +111,7 @@ async def async_migrate_entry(
                 raise ConfigEntryError(
                     translation_domain=DOMAIN,
                     translation_key="address_lookup_failed",
-                    translation_placeholders={"host": config_data[CONF_HOST]},
+                    translation_placeholders={"address": address},
                 ) from error
 
         _LOGGER.debug(

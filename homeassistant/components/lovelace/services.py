@@ -16,7 +16,7 @@ from .const import (
     LOVELACE_DATA,
     MODE_YAML,
     RESOURCE_RELOAD_SERVICE_SCHEMA,
-    SERVICE_RELOAD_RESOURCES,
+    LovelaceService,
 )
 
 
@@ -55,7 +55,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_RELOAD_RESOURCES,
+        LovelaceService.RELOAD_RESOURCES,
         _reload_resources_service_handler,
         schema=RESOURCE_RELOAD_SERVICE_SCHEMA,
     )

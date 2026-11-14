@@ -8,6 +8,7 @@ from aiohttp import ClientSession
 from google.oauth2.credentials import Credentials
 from google_nest_sdm.admin_client import PUBSUB_API_HOST, AdminClient
 from google_nest_sdm.auth import AbstractAuth
+from google_nest_sdm.exceptions import ApiException, ConfigurationException
 from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
 
 from homeassistant.core import HomeAssistant
@@ -18,6 +19,7 @@ from .const import (
     CONF_PROJECT_ID,
     CONF_SUBSCRIBER_ID,
     CONF_SUBSCRIPTION_NAME,
+    LEGACY_TOPIC_PREFIX,
     OAUTH2_TOKEN,
     SDM_SCOPES,
 )
@@ -166,3 +168,34 @@ def new_pubsub_admin_client(
         ),
         cloud_project_id=cloud_project_id,
     )
+
+
+def is_legacy_topic(topic_name: str) -> bool:
+    """Return True if the topic is a Google-hosted Pub/Sub topic."""
+    return topic_name.startswith(LEGACY_TOPIC_PREFIX)
+
+
+def cloud_project_from_subscription(subscription_name: str) -> str | None:
+    """Return the cloud project id from a `projects/X/subscriptions/Y` name."""
+    parts = subscription_name.split("/")
+    if len(parts) != 4 or parts[0] != "projects" or parts[2] != "subscriptions":
+        return None
+    return parts[1]
+
+
+async def async_delete_subscription(
+    admin_client: AdminClient, subscription_name: str
+) -> None:
+    """Delete a Pub/Sub subscription created by Home Assistant, best effort."""
+    _LOGGER.debug("Deleting subscription '%s'", subscription_name)
+    try:
+        await admin_client.delete_subscription(subscription_name)
+    except (ApiException, ConfigurationException) as err:
+        _LOGGER.warning(
+            (
+                "Unable to delete subscription '%s'; Will be automatically cleaned up"
+                " by cloud console: %s"
+            ),
+            subscription_name,
+            err,
+        )

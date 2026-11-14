@@ -10,6 +10,13 @@ from aiohttp import hdrs
 from freezegun.api import FrozenDateTimeFactory
 import httpx2
 import pytest
+from pytest_homeassistant.common import (
+    MockModule,
+    async_fire_time_changed,
+    mock_integration,
+    mock_platform,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 import respx
 
 from homeassistant.components import image
@@ -30,14 +37,6 @@ from .conftest import (
     MockImageSyncEntity,
     MockURLImageEntity,
 )
-
-from tests.common import (
-    MockModule,
-    async_fire_time_changed,
-    mock_integration,
-    mock_platform,
-)
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.freeze_time("2023-04-01 00:00:00+00:00")

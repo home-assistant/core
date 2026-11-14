@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from aiohortos import HortosAuthenticationError, HortosConnectionError, Organisation
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.hortimax.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import API_KEY, ORGANISATION_ID
-
-from tests.common import MockConfigEntry
 
 USER_INPUT = {CONF_API_KEY: API_KEY}
 NEW_API_KEY = "new-api-key"

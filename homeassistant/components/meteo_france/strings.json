@@ -1,10 +1,10 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
     },
     "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "empty": "No result in city search: please check the city field"
     },
     "step": {
@@ -12,14 +12,68 @@
         "data": {
           "city": "[%key:component::meteo_france::config::step::user::data::city%]"
         },
-        "description": "Choose your city from the list"
+        "data_description": {
+          "city": "The city you want weather forecasts for."
+        },
+        "description": "Several cities match your search."
       },
       "user": {
         "data": {
           "city": "City"
         },
-        "description": "Enter the postal code (only for France, recommended) or city name"
+        "data_description": {
+          "city": "Postal code or city name. Postal codes are only supported in France."
+        },
+        "description": "Search for the city you want weather forecasts for."
       }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "cloud_cover": {
+        "name": "Cloud cover"
+      },
+      "current_weather": {
+        "name": "Current weather"
+      },
+      "frost_probability": {
+        "name": "Frost probability"
+      },
+      "next_rain": {
+        "name": "Next rain"
+      },
+      "rain_probability": {
+        "name": "Rain probability"
+      },
+      "snow_probability": {
+        "name": "Snow probability"
+      },
+      "today_precipitation": {
+        "name": "Today's precipitation"
+      },
+      "today_weather": {
+        "name": "Today's weather"
+      },
+      "uv_index": {
+        "name": "UV index"
+      },
+      "weather_alert": {
+        "name": "Weather alert",
+        "state": {
+          "green": "Green",
+          "orange": "Orange",
+          "red": "Red",
+          "yellow": "Yellow"
+        }
+      },
+      "wind_gust": {
+        "name": "Wind gust"
+      }
+    }
+  },
+  "exceptions": {
+    "update_failed": {
+      "message": "An error occurred while fetching data from Météo-France."
     }
   }
 }

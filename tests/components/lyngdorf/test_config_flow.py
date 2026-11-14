@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock
 
 from lyngdorf import LyngdorfModel
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.lyngdorf.const import CONF_SERIAL_NUMBER, DOMAIN
 from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
@@ -19,8 +20,6 @@ from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_SERIAL,
     SsdpServiceInfo,
 )
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 

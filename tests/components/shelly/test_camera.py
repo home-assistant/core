@@ -12,6 +12,7 @@ from aioshelly.exceptions import (
     InvalidAuthError,
 )
 import pytest
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.camera import (
@@ -33,8 +34,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_registry import EntityRegistry
 
 from . import MOCK_MAC, init_integration, patch_platforms, register_entity
-
-from tests.common import snapshot_platform
 
 CAMERA_ENTITY_ID = "camera.test_name_stream_0"
 

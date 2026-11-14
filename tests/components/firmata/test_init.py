@@ -2,13 +2,13 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.firmata.const import CONF_SERIAL_PORT, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_board_failed(hass: HomeAssistant) -> None:

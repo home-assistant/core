@@ -5,6 +5,7 @@ import time
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 from spotifyaio.models import (
     Album,
     Artist,
@@ -33,8 +34,6 @@ from homeassistant.components.application_credentials import (
 from homeassistant.components.spotify.const import DOMAIN, SPOTIFY_SCOPES
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, load_fixture
 
 SCOPES = " ".join(SPOTIFY_SCOPES)
 

@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
 from mozart_api.models import BeolinkSelf, PairedRemote, PairedRemoteResponse
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.bang_olufsen.sensor import SCAN_INTERVAL
 from homeassistant.const import STATE_UNKNOWN
@@ -18,8 +19,6 @@ from .const import (
     TEST_REMOTE_BATTERY_LEVEL_SENSOR_ENTITY_ID,
     TEST_REMOTE_SERIAL,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_battery_level(

@@ -1,8 +1,10 @@
 {
   "domain": "lojack",
   "name": "LoJack",
+  "categories": ["vehicles_transport.cars_evs", "presence_location.trackers"],
   "codeowners": ["@devinslick"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/lojack",
   "integration_type": "hub",
   "iot_class": "cloud_polling",

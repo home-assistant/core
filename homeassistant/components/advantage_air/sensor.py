@@ -12,12 +12,10 @@ from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AdvantageAirDataConfigEntry
-from .const import ADVANTAGE_AIR_STATE_OPEN
-from .coordinator import AdvantageAirCoordinator
+from .const import ADVANTAGE_AIR_STATE_OPEN, AdvantageAirServiceArgument
+from .coordinator import AdvantageAirCoordinator, AdvantageAirDataConfigEntry
 from .entity import AdvantageAirAcEntity, AdvantageAirZoneEntity
 
-ADVANTAGE_AIR_SET_COUNTDOWN_VALUE = "minutes"
 ADVANTAGE_AIR_SET_COUNTDOWN_UNIT = "min"
 
 PARALLEL_UPDATES = 0
@@ -82,7 +80,7 @@ class AdvantageAirTimeTo(AdvantageAirAcEntity, SensorEntity):
 
     async def set_time_to(self, **kwargs: Any) -> None:
         """Set the timer value."""
-        value = min(720, max(0, int(kwargs[ADVANTAGE_AIR_SET_COUNTDOWN_VALUE])))
+        value = min(720, max(0, int(kwargs[AdvantageAirServiceArgument.MINUTES])))
         await self.async_update_ac({self._time_key: value})
 
 

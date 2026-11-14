@@ -5,6 +5,11 @@ from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 import serial
 from syrupy.assertion import SnapshotAssertion
 
@@ -21,8 +26,6 @@ from .conftest import (
     MOCK_DECODED_DATA_TEMPO,
     MOCK_FRAME,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ADCO = "021861348497"
 

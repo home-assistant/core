@@ -153,13 +153,18 @@ async def async_cloudhook_generate_url(
 async def async_unregister_webhook(
     hass: HomeAssistant, entry: NetatmoConfigEntry
 ) -> None:
-    """Unregister the webhook from the Netatmo backend."""
+    """Unregister the webhook from the Netatmo backend.
+
+    Dropped at most once per teardown, and never gated on whether this load was
+    the one that registered: what Netatmo holds outlives a restart.
+    """
     if CONF_WEBHOOK_ID not in entry.data:
         return
 
-    if not entry.runtime_data.webhook_registered:
+    if entry.runtime_data.webhook_dropped:
         return
 
+    entry.runtime_data.webhook_dropped = True
     entry.runtime_data.webhook_registered = False
 
     _LOGGER.debug("Unregister Netatmo webhook (%s)", entry.data[CONF_WEBHOOK_ID])
@@ -219,6 +224,7 @@ async def async_register_webhook(
         async_handle_webhook,
     )
     entry.runtime_data.webhook_registered = True
+    entry.runtime_data.webhook_dropped = False
 
     try:
         await entry.runtime_data.auth.async_addwebhook(webhook_url)

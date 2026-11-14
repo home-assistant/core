@@ -5,6 +5,7 @@ import datetime as dt
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from victron_vrm.models.aggregations import ForecastAggregations
 
 from homeassistant.components.victron_remote_monitoring.const import (
@@ -13,8 +14,6 @@ from homeassistant.components.victron_remote_monitoring.const import (
 )
 from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 CONST_1_HOUR = 3600000
 CONST_12_HOURS = 43200000
@@ -40,7 +39,7 @@ def mock_setup_entry(mock_vrm_client) -> Generator[AsyncMock]:
     """Override async_setup_entry while client is patched."""
     with patch(
         "homeassistant.components.victron_remote_monitoring.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 

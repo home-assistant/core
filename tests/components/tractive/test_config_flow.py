@@ -8,13 +8,12 @@ from unittest.mock import patch
 import aiohttp
 import aiotractive
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
 
 from homeassistant import config_entries
 from homeassistant.components.tractive.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry, get_schema_suggested_value
 
 USER_INPUT = {
     "email": "test-email@example.com",
@@ -37,7 +36,7 @@ def _patch_success(user_id: str = "user_id") -> Generator[None]:
         patch("aiotractive.api.API.user_id", return_value=user_id),
         patch(
             "homeassistant.components.tractive.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         yield
@@ -65,7 +64,7 @@ async def test_form(hass: HomeAssistant) -> None:
         patch("aiotractive.api.API.user_id", return_value="user_id"),
         patch(
             "homeassistant.components.tractive.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -253,7 +252,7 @@ async def test_update_credentials(
         patch("aiotractive.api.API.user_id", return_value="USERID"),
         patch(
             "homeassistant.components.tractive.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -346,7 +345,7 @@ async def test_update_credentials_unique_id_mismatch(
         patch("aiotractive.api.API.user_id", return_value="USERID_DIFFERENT"),
         patch(
             "homeassistant.components.tractive.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(

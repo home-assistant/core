@@ -5,11 +5,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from openhomedevice.device import Device
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.openhome.const import DOMAIN
 from homeassistant.const import CONF_HOST, Platform
-
-from tests.common import MockConfigEntry
 
 HOST = "http://localhost"
 

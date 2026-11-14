@@ -1,19 +1,26 @@
 """The Anthropic integration."""
 
-from anthropic.resources.messages.messages import DEPRECATED_MODELS
+from functools import partial
 
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_API_KEY, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
     issue_registry as ir,
 )
-from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
+from homeassistant.helpers.typing import ConfigType, Undefined
 
-from .const import CONF_CHAT_MODEL, DEFAULT_CONVERSATION_NAME, DOMAIN, LOGGER
+from .const import (
+    CONF_CHAT_MODEL,
+    CONF_EFFORT,
+    CONF_THINKING_TYPE,
+    DEFAULT_CONVERSATION_NAME,
+    DOMAIN,
+    LOGGER,
+)
 from .coordinator import AnthropicConfigEntry, AnthropicCoordinator
 
 PLATFORMS = (Platform.AI_TASK, Platform.CONVERSATION)
@@ -36,20 +43,41 @@ async def async_setup_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) ->
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(async_update_options))
+    entry.async_on_unload(
+        coordinator.async_add_listener(
+            partial(_async_check_model_lifecycle, hass, entry)
+        )
+    )
+    _async_check_model_lifecycle(hass, entry)
 
+
+@callback
+def _async_check_model_lifecycle(
+    hass: HomeAssistant, entry: AnthropicConfigEntry
+) -> None:
+    """Update the entry's repair issue for deprecated or retired models."""
+    issue_id = f"model_deprecated_{entry.entry_id}"
     for subentry in entry.subentries.values():
-        if (model := subentry.data.get(CONF_CHAT_MODEL)) and model in DEPRECATED_MODELS:
+        if not (model := subentry.data.get(CONF_CHAT_MODEL)):
+            continue
+        model_info, found = entry.runtime_data.get_model_info(model)
+        if found and model_info.lifecycle in ("deprecated", "retired"):
             ir.async_create_issue(
                 hass,
                 DOMAIN,
-                "model_deprecated",
+                issue_id,
+                config_entry_id=entry.entry_id,
+                data={"entry_id": entry.entry_id},
                 is_fixable=True,
                 is_persistent=False,
                 learn_more_url="https://platform.claude.com/docs/en/about-claude/model-deprecations",
                 severity=ir.IssueSeverity.WARNING,
                 translation_key="model_deprecated",
+                translation_placeholders={"entry_name": entry.title},
             )
-            break
+            return
+
+    ir.async_delete_issue(hass, DOMAIN, issue_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) -> None:
@@ -135,7 +163,7 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
             # Device and entity registries will set the disabled_by flag to None
             # when moving a device or entity disabled by CONFIG_ENTRY to an enabled
             # config entry, but we want to set it to USER instead,
-            device_disabled_by: dr.DeviceEntryDisabler | UndefinedType = UNDEFINED
+            device_disabled_by: dr.DeviceEntryDisabler | Undefined = Undefined
             if (
                 device.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY
                 and not all_disabled
@@ -215,6 +243,20 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) 
             hass.config_entries.async_update_subentry(entry, subentry, data=data)
 
         hass.config_entries.async_update_entry(entry, minor_version=4)
+
+    if entry.version == 2 and entry.minor_version == 4:
+        for subentry in entry.subentries.values():
+            data = subentry.data.copy()
+            if "thinking_effort" not in data:
+                continue
+            effort = data.pop("thinking_effort")
+            if effort == "none":
+                data[CONF_THINKING_TYPE] = "disabled"
+            else:
+                data[CONF_EFFORT] = effort
+            hass.config_entries.async_update_subentry(entry, subentry, data=data)
+
+        hass.config_entries.async_update_entry(entry, minor_version=5)
 
     LOGGER.debug(
         "Migration to version %s:%s successful", entry.version, entry.minor_version

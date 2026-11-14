@@ -12,11 +12,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import RitualsConfigEntry
-from .entity import DiffuserSensorsEntity
+from .entity import DiffuserSensorsEntity, async_add_diffusers
 
 PARALLEL_UPDATES = 0
 
@@ -39,6 +39,14 @@ ENTITY_DESCRIPTIONS = (
         has_fn=lambda hub: hub.has_battery,
         sensor=Sensor.BATTERY,
     ),
+    RitualsBinarySensorEntityDescription(
+        key="cartridge",
+        translation_key="cartridge",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        is_on_fn=lambda sensors: sensors.has_cartridge,
+        has_fn=lambda _: True,
+        sensor=Sensor.PERFUME,
+    ),
 )
 
 
@@ -50,12 +58,18 @@ async def async_setup_entry(
     """Set up the diffuser binary sensors."""
     runtime_data = config_entry.runtime_data
 
-    async_add_entities(
-        RitualsBinarySensorEntity(coordinator, description, description.sensor)
-        for hublot, coordinator in runtime_data.sensors.items()
-        for description in ENTITY_DESCRIPTIONS
-        if description.has_fn(runtime_data.hubs.data[hublot])
-    )
+    @callback
+    def add_diffusers(hublots: list[str]) -> None:
+        async_add_entities(
+            RitualsBinarySensorEntity(
+                runtime_data.sensors[hublot], description, description.sensor
+            )
+            for hublot in hublots
+            for description in ENTITY_DESCRIPTIONS
+            if description.has_fn(runtime_data.hubs.data[hublot])
+        )
+
+    async_add_diffusers(config_entry, add_diffusers)
 
 
 class RitualsBinarySensorEntity(DiffuserSensorsEntity, BinarySensorEntity):

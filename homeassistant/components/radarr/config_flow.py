@@ -36,7 +36,6 @@ class RadarrConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return await self.async_step_user()
 
-        self._set_confirm_only()
         return self.async_show_form(step_id="reauth_confirm")
 
     @override

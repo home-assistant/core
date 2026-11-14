@@ -6,17 +6,22 @@ from unittest.mock import MagicMock, patch
 from aio_ownet.exceptions import OWServerConnectionError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.onewire.onewirehub import _DEVICE_SCAN_INTERVAL
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -25,8 +30,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_owproxy_mock_devices
 from .const import MOCK_OWPROXY_DEVICES
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -97,8 +100,8 @@ async def test_switch_toggle(
     owproxy.return_value.read.side_effect = [b"         0"]
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TOGGLE,
-        {ATTR_ENTITY_ID: entity_id},
+        SwitchService.TOGGLE,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -108,8 +111,8 @@ async def test_switch_toggle(
     owproxy.return_value.read.side_effect = [b"         1"]
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TOGGLE,
-        {ATTR_ENTITY_ID: entity_id},
+        SwitchService.TOGGLE,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()

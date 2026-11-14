@@ -12,6 +12,7 @@ from collections.abc import (
 from dataclasses import replace
 import datetime as dt
 from datetime import datetime
+import inspect
 from io import StringIO
 import os
 from pathlib import PurePath
@@ -34,6 +35,8 @@ from aiohasupervisor.models.mounts import MountsInfo
 from aiohttp import FormData
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_load_json_object_fixture, mock_platform
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.backup import (
@@ -53,9 +56,6 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from .test_init import MOCK_ENVIRON
-
-from tests.common import async_load_json_object_fixture, mock_platform
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 TEST_BACKUP = supervisor_backups.Backup(
     compressed=False,
@@ -2436,6 +2436,16 @@ async def test_reader_writer_restore_remote_backup(
         size=0,
     )
     remote_agent = mock_backup_agent("remote", backups=[test_backup])
+    download_backup = remote_agent.async_download_backup.side_effect
+    streams: list[AsyncGenerator[bytes]] = []
+
+    async def download_and_track(backup_id: str, **kwargs: Any) -> AsyncIterator[bytes]:
+        """Download a backup and keep track of the stream."""
+        stream = await download_backup(backup_id, **kwargs)
+        streams.append(stream)
+        return stream
+
+    remote_agent.async_download_backup.side_effect = download_and_track
     await _setup_backup_platform(
         hass,
         domain="test",
@@ -2465,6 +2475,8 @@ async def test_reader_writer_restore_remote_backup(
     }
 
     remote_agent.async_download_backup.assert_called_once_with(backup_id)
+    # The supervisor client is mocked and doesn't consume the stream
+    assert inspect.getasyncgenstate(streams[0]) == inspect.AGEN_CLOSED
     assert len(remote_agent.async_get_backup.mock_calls) == 2
     for call in remote_agent.async_get_backup.mock_calls:
         assert call.args[0] == backup_id
@@ -3006,6 +3018,7 @@ async def test_restore_progress_after_restart_unknown_job(
                         "retention": {"copies": None, "days": None},
                         "last_attempted_automatic_backup": None,
                         "last_completed_automatic_backup": None,
+                        "last_completed_automatic_backup_size": None,
                         "schedule": {
                             "days": [],
                             "recurrence": "never",
@@ -3038,6 +3051,7 @@ async def test_restore_progress_after_restart_unknown_job(
                         "retention": {"copies": None, "days": None},
                         "last_attempted_automatic_backup": None,
                         "last_completed_automatic_backup": None,
+                        "last_completed_automatic_backup_size": None,
                         "schedule": {
                             "days": [],
                             "recurrence": "never",

@@ -12,12 +12,13 @@ from modbus_connection import (
 )
 from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from solaredged import SolarEdge, SolarEdgeConnectionError
 
 from homeassistant.components.select import (
-    ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
 from homeassistant.components.solaredge_modbus.const import (
     ATTACHMENT_SCAN_INTERVAL,
@@ -27,14 +28,9 @@ from homeassistant.components.solaredge_modbus.const import (
     SCAN_INTERVAL,
     SETTINGS_SCAN_INTERVAL,
 )
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_ON,
-    STATE_ON,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
@@ -51,9 +47,10 @@ from .conftest import (
     tcp_data,
 )
 
-from tests.common import MockConfigEntry, async_fire_time_changed
-
 POWER_ENTITY = "sensor.solaredge_se10000h_power"
+
+# The first register of the common block, which every readings poll starts at.
+COMMON_REGISTER = 40004
 
 # An address inside the inverter's read, to make that read fail.
 INVERTER_REGISTER = 40069
@@ -454,11 +451,13 @@ async def test_battery_without_a_serial_number_is_known_by_its_slot(
     assert battery.serial_number is None
 
 
+@pytest.mark.parametrize("failing_register", [COMMON_REGISTER, INVERTER_REGISTER])
 async def test_single_late_answer_is_retried(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_modbus_unit: MockModbusUnit,
+    failing_register: int,
 ) -> None:
     """One missed read gets a second chance before the entities go unavailable."""
     await _setup(hass, mock_config_entry)
@@ -466,19 +465,17 @@ async def test_single_late_answer_is_retried(
     read_holding_registers = mock_modbus_unit.read_holding_registers
     missed: list[int] = []
 
-    async def miss_the_inverter_once(address: int, count: int) -> list[int]:
-        """Time out on the first read covering the inverter, then behave."""
-        if not missed and address <= INVERTER_REGISTER < address + count:
+    async def miss_once(address: int, count: int) -> list[int]:
+        """Time out on the first read covering the target register, then behave."""
+        if not missed and address <= failing_register < address + count:
             missed.append(address)
             raise ModbusTimeoutError("timed out")
         return await read_holding_registers(address, count)
 
-    with patch.object(
-        mock_modbus_unit, "read_holding_registers", miss_the_inverter_once
-    ):
+    with patch.object(mock_modbus_unit, "read_holding_registers", miss_once):
         freezer.tick(SCAN_INTERVAL)
         async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert missed  # the read really did fail
 
@@ -504,13 +501,30 @@ async def test_dead_link_fails_the_refresh(
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert mock_config_entry.runtime_data.readings.last_update_success is False
 
     state = hass.states.get(POWER_ENTITY)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+
+    # Once the link is known to be down, later polls do not retry until a poll
+    # succeeds again.
+    attempts = 0
+    read_holding_registers = mock_modbus_unit.read_holding_registers
+
+    async def count_attempts(address: int, count: int) -> list[int]:
+        nonlocal attempts
+        attempts += 1
+        return await read_holding_registers(address, count)
+
+    with patch.object(mock_modbus_unit, "read_holding_registers", count_attempts):
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert attempts == 1
 
 
 async def test_another_inverter_on_the_address_fails_the_refresh(
@@ -538,7 +552,7 @@ async def test_another_inverter_on_the_address_fails_the_refresh(
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert mock_config_entry.runtime_data.readings.last_update_success is False
 
@@ -559,7 +573,7 @@ async def test_silent_control_block_leaves_the_others_alone(
     mock_modbus_unit.fail_read(SITE_CONTROL_REGISTER, ServerDeviceFailureError())
     freezer.tick(SETTINGS_SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("number.solaredge_se10000h_backup_reserve")
     assert state is not None
@@ -615,17 +629,17 @@ async def test_concurrent_control_writes_keep_both_changes(
     await asyncio.gather(
         hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: EXPORT_LIMITATION_ENTITY,
-                ATTR_OPTION: "production_control",
+                CommonServiceArgument.ENTITY_ID: EXPORT_LIMITATION_ENTITY,
+                SelectServiceArgument.OPTION: "production_control",
             },
             blocking=True,
         ),
         hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: EXTERNAL_PRODUCTION_ENTITY},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: EXTERNAL_PRODUCTION_ENTITY},
             blocking=True,
         ),
     )
@@ -660,7 +674,7 @@ async def _tick_attachment_check(
     with patch.object(SolarEdge, "async_probe", counting_probe):
         freezer.tick(ATTACHMENT_SCAN_INTERVAL)
         async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     return probes
 
@@ -754,6 +768,10 @@ async def test_replaced_meter_is_picked_up(
             for index in range(16)
         }
     )
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # The swap is seen without probing, so the only probe here is the reload's.
     assert await _tick_attachment_check(hass, freezer) == 1
@@ -1030,7 +1048,7 @@ async def test_retry_that_finds_nothing_keeps_the_first_poll(
     ):
         freezer.tick(SCAN_INTERVAL)
         async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     # The identity block answered the first attempt and the refresh stands;
     # only the sub-systems that stayed silent are reported as failed.
@@ -1080,7 +1098,7 @@ async def test_a_block_that_stays_silent_stops_being_asked(
         for _ in range(2):
             freezer.tick(ATTACHMENT_SCAN_INTERVAL)
             async_fire_time_changed(hass)
-            await hass.async_block_till_done()
+            await hass.async_block_till_done(wait_background_tasks=True)
 
     assert asked[0] == frozenset(), "the first check still looks for it"
     assert "power_control" in asked[1], "a block still silent is not asked again"
@@ -1114,12 +1132,12 @@ async def test_a_block_that_blips_once_keeps_being_asked(
         )
         freezer.tick(ATTACHMENT_SCAN_INTERVAL)
         async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         mock_modbus_unit.fail_read(POWER_CONTROL_REGISTER, None)
         freezer.tick(ATTACHMENT_SCAN_INTERVAL)
         async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "power_control" not in asked[1], "a blip settled a block that answered"
 
@@ -1162,7 +1180,7 @@ async def test_a_block_discovery_depends_on_keeps_being_asked(
         for _ in range(2):
             freezer.tick(ATTACHMENT_SCAN_INTERVAL)
             async_fire_time_changed(hass)
-            await hass.async_block_till_done()
+            await hass.async_block_till_done(wait_background_tasks=True)
 
     assert subsystem not in asked[1], "a block discovery depends on was settled"
 

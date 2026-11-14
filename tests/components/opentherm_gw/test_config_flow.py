@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from serial import SerialException
 
 from homeassistant import config_entries
@@ -16,8 +17,6 @@ from homeassistant.components.opentherm_gw.const import (
 from homeassistant.const import CONF_DEVICE, CONF_ID, PRECISION_HALVES, PRECISION_TENTHS
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

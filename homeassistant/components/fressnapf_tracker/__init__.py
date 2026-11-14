@@ -35,7 +35,9 @@ PLATFORMS: list[Platform] = [
 _LOGGER = logging.getLogger(__name__)
 
 
-async def _get_valid_tracker(hass: HomeAssistant, device: Device) -> Tracker | None:
+async def _get_valid_tracker(
+    hass: HomeAssistant, entry: FressnapfTrackerConfigEntry, device: Device
+) -> Tracker | None:
     """Test if the tracker returns valid data and return it.
 
     Malformed data might indicate the tracker is broken or
@@ -56,7 +58,9 @@ async def _get_valid_tracker(hass: HomeAssistant, device: Device) -> Tracker | N
         async_create_issue(
             hass,
             DOMAIN,
-            f"invalid_fressnapf_tracker_{device.serialnumber}",
+            # A tracker can be shared between accounts
+            f"invalid_fressnapf_tracker_{entry.entry_id}_{device.serialnumber}",
+            config_entry_id=entry.entry_id,
             issue_domain=DOMAIN,
             learn_more_url="https://www.home-assistant.io/integrations/fressnapf_tracker/",
             is_fixable=False,
@@ -89,7 +93,7 @@ async def async_setup_entry(
 
     coordinators: list[FressnapfTrackerDataUpdateCoordinator] = []
     for device in devices:
-        tracker = await _get_valid_tracker(hass, device)
+        tracker = await _get_valid_tracker(hass, entry, device)
         if tracker is None:
             continue
         coordinator = FressnapfTrackerDataUpdateCoordinator(

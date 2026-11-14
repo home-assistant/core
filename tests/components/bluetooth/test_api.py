@@ -4,6 +4,15 @@ import time
 
 from bleak.backends.scanner import AdvertisementData, BLEDevice
 import pytest
+from pytest_homeassistant.components.bluetooth import (
+    FakeRemoteScanner,
+    FakeScanner,
+    MockBleakClient,
+    _get_manager,
+    generate_advertisement_data,
+    generate_ble_device,
+    inject_advertisement,
+)
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
@@ -21,16 +30,6 @@ from homeassistant.components.bluetooth import (
     async_scanner_devices_by_address,
 )
 from homeassistant.core import HomeAssistant, callback
-
-from . import (
-    FakeRemoteScanner,
-    FakeScanner,
-    MockBleakClient,
-    _get_manager,
-    generate_advertisement_data,
-    generate_ble_device,
-    inject_advertisement,
-)
 
 
 @pytest.mark.usefixtures("enable_bluetooth")

@@ -11,6 +11,8 @@ from hatasmota.utils import (
 )
 from probatio import MultipleInvalid
 import pytest
+from pytest_homeassistant.common import async_fire_mqtt_message
+from pytest_homeassistant.typing import MqttMockHAClient, MqttMockPahoClient
 
 from homeassistant.components import fan
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX
@@ -32,9 +34,7 @@ from .test_common import (
     help_test_entity_id_update_subscriptions,
 )
 
-from tests.common import async_fire_mqtt_message
 from tests.components.fan import common
-from tests.typing import MqttMockHAClient, MqttMockPahoClient
 
 
 async def test_controlling_state_via_mqtt(

@@ -5,15 +5,14 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp.client_exceptions import ClientError
 import pytest
+from pytest_homeassistant.common import get_system_health_info, mock_platform
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components import system_health
 from homeassistant.components.system_health import DOMAIN, async_register_info
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import get_system_health_info, mock_platform
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import WebSocketGenerator
 
 
 async def gather_system_health_info(
@@ -197,3 +196,21 @@ async def test_platform_loading(
         },
         "manage_url": "/config/fake_integration",
     }
+
+
+async def test_check_can_reach_url_session(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test the reachability check uses the session passed to it."""
+    session = AsyncMock()
+
+    assert (
+        await system_health.async_check_can_reach_url(
+            hass, "http://localhost/status", session=session
+        )
+        == "ok"
+    )
+
+    session.get.assert_awaited_once()
+    assert session.get.await_args.args == ("http://localhost/status",)
+    assert len(aioclient_mock.mock_calls) == 0

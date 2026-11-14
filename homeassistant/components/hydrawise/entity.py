@@ -52,7 +52,12 @@ class HydrawiseEntity(CoordinatorEntity[HydrawiseDataUpdateCoordinator]):
             ),
             manufacturer=MANUFACTURER,
         )
-        if zone_id is not None:
+        if zone_id is None:
+            self._attr_device_info.serial_number = (
+                controller.hardware.serial_number or None
+            )
+            self._attr_device_info.sw_version = controller.software_version or None
+        else:
             # Only zones get their own device; sensor entities share the
             # controller device, so linking them to the controller would create
             # a self-referential via_device.

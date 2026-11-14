@@ -22,7 +22,7 @@ from homeassistant.const import (
     DEVICE_DEFAULT_NAME,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.entity_platform import (
@@ -31,9 +31,8 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import FlexitConfigEntry
 from .const import DOMAIN
-from .coordinator import FlexitDataCoordinator
+from .coordinator import FlexitConfigEntry, FlexitDataCoordinator
 from .entity import FlexitEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -273,6 +272,7 @@ class FlexitClimate(FlexitEntity, ClimateEntity):
         self._attr_unique_id = coordinator.config_entry.entry_id
         self._set_attr()
 
+    @callback
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle entity update."""

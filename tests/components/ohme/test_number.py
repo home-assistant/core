@@ -2,20 +2,19 @@
 
 from unittest.mock import MagicMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def test_numbers(
@@ -52,9 +51,9 @@ async def test_set_target_percentage(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         service_data={
-            ATTR_VALUE: 100,
+            NumberServiceArgument.VALUE: 100,
         },
         target={
             ATTR_ENTITY_ID: "number.ohme_home_pro_target_percentage",
@@ -84,9 +83,9 @@ async def test_set_state_of_charge_input(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         service_data={
-            ATTR_VALUE: 100,
+            NumberServiceArgument.VALUE: 100,
         },
         target={
             ATTR_ENTITY_ID: "number.ohme_home_pro_state_of_charge_input",

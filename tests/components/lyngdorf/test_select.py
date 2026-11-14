@@ -4,21 +4,20 @@ from unittest.mock import AsyncMock, MagicMock
 
 from lyngdorf import LyngdorfInvalidValueError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
-    ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import notify_receiver_update
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture
@@ -55,10 +54,10 @@ async def test_room_perfect_select_option(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: ROOM_PERFECT_ENTITY_ID,
-            ATTR_OPTION: "global",
+            CommonServiceArgument.ENTITY_ID: ROOM_PERFECT_ENTITY_ID,
+            SelectServiceArgument.OPTION: "global",
         },
         blocking=True,
     )
@@ -80,8 +79,11 @@ async def test_select_option_awaits_an_awaitable_setter(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: VOICING_ENTITY_ID, ATTR_OPTION: "Music"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: VOICING_ENTITY_ID,
+            SelectServiceArgument.OPTION: "Music",
+        },
         blocking=True,
     )
 
@@ -102,10 +104,10 @@ async def test_voicing_select_option(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: VOICING_ENTITY_ID,
-            ATTR_OPTION: "Movie",
+            CommonServiceArgument.ENTITY_ID: VOICING_ENTITY_ID,
+            SelectServiceArgument.OPTION: "Movie",
         },
         blocking=True,
     )
@@ -124,8 +126,11 @@ async def test_select_invalid_option(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: VOICING_ENTITY_ID, ATTR_OPTION: "Movie"},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: VOICING_ENTITY_ID,
+                SelectServiceArgument.OPTION: "Movie",
+            },
             blocking=True,
         )
 

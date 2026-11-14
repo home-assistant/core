@@ -27,10 +27,6 @@ RATE_LIMIT_BACKOFF = (
     timedelta(hours=1),
 )
 
-SERVICE_CAPTURE_SMARTCAM = "capture_smartcam"
-SERVICE_DISABLE_AUTOLOCK = "disable_autolock"
-SERVICE_ENABLE_AUTOLOCK = "enable_autolock"
-
 # Mapping of device types to a human readable name
 DEVICE_TYPE_NAME = {
     "CAMERAPIR2": "Camera detector",

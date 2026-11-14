@@ -18,6 +18,9 @@
       "disk_free": {
         "name": "Disk free"
       },
+      "disk_life_time": {
+        "name": "Disk lifetime"
+      },
       "disk_total": {
         "name": "Disk total"
       },
@@ -224,22 +227,12 @@
         },
         "step": {
           "system_execute_reboot": {
-            "description": "Settings were changed which require a system reboot to take effect.\n\nThis fix will initiate a system reboot which will make Home Assistant and all the apps inaccessible for a brief period."
+            "description": "Settings were changed which require a system reboot to take effect.\n\nSelect **Reboot** to reboot the system now. Home Assistant and all apps will be inaccessible for a brief period.",
+            "submit": "[%key:common::action::reboot%]"
           }
         }
       },
       "title": "Reboot required"
-    },
-    "legacy_homeassistant_folder": {
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "description": "An automation or script called the `hassio.backup_partial` or `hassio.restore_partial` action with `\"homeassistant\"` listed in `folders`. This is a legacy alias for the `homeassistant: true` option and will stop being accepted in a future release.\n\nUpdate the affected automations and scripts to set `homeassistant: true` and remove `\"homeassistant\"` from the `folders` list. When this is done, select **Submit** to mark this issue as resolved.",
-            "title": "Legacy \"homeassistant\" folder used in partial backup/restore"
-          }
-        }
-      },
-      "title": "Legacy \"homeassistant\" folder used in partial backup/restore"
     },
     "unhealthy": {
       "description": "System is currently unhealthy due to {reason}. For troubleshooting information, select Learn more.",

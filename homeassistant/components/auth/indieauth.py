@@ -3,11 +3,11 @@
 from contextlib import suppress
 from html.parser import HTMLParser
 from http import HTTPStatus
-from ipaddress import ip_address
+from ipaddress import IPv4Address, IPv6Address, ip_address
 import json
 import logging
 from typing import override
-from urllib.parse import ParseResult, urljoin, urlparse
+from urllib.parse import ParseResult, urljoin, urlparse, urlsplit
 
 import aiohttp
 import aiohttp.client_exceptions
@@ -20,6 +20,8 @@ _LOGGER = logging.getLogger(__name__)
 # We limit reads of a client_id page to the first 10kB.
 MAX_FETCH_BYTES = 10240
 
+DEFAULT_PORTS = {"http": 80, "https": 443}
+
 
 async def verify_redirect_uri(
     hass: HomeAssistant,
@@ -27,10 +29,14 @@ async def verify_redirect_uri(
     redirect_uri: str,
     *,
     allow_loopback_port_change: bool = False,
+    request_scheme: str,
+    request_netloc: str,
 ) -> bool:
     """Verify the redirect URI, allowing loopback port changes only with PKCE."""
     try:
-        client_id_parts = _parse_client_id(client_id)
+        client_id_parts = _parse_client_id(
+            client_id, request_scheme=request_scheme, request_netloc=request_netloc
+        )
     except ValueError:
         return False
 
@@ -317,10 +323,17 @@ def _parse_metadata_document_redirect_uris(
     return redirect_uris
 
 
-def verify_client_id(client_id: str) -> bool:
+def verify_client_id(
+    client_id: str,
+    *,
+    request_scheme: str,
+    request_netloc: str,
+) -> bool:
     """Verify that the client id is valid."""
     try:
-        _parse_client_id(client_id)
+        _parse_client_id(
+            client_id, request_scheme=request_scheme, request_netloc=request_netloc
+        )
     except ValueError:
         return False
     return True
@@ -343,8 +356,46 @@ def _parse_url(url: str) -> ParseResult:
     return parts
 
 
-def _parse_client_id(client_id: str) -> ParseResult:
+def _normalize_ip_netloc(
+    scheme: str, netloc: str
+) -> tuple[str, str | None, IPv4Address | IPv6Address, int | None] | None:
+    """Normalize the scheme, username, IP address and port of an IP netloc."""
+    try:
+        parts = urlsplit(f"{scheme}://{netloc}")
+        scheme = parts.scheme
+        hostname = parts.hostname
+        username = parts.username
+        port = parts.port
+    except ValueError:
+        return None
+
+    if hostname is None:
+        return None
+
+    try:
+        address = ip_address(hostname)
+    except ValueError:
+        return None
+
+    return (
+        scheme,
+        username,
+        address,
+        DEFAULT_PORTS.get(scheme) if port is None else port,
+    )
+
+
+def _parse_client_id(
+    client_id: str,
+    *,
+    request_scheme: str,
+    request_netloc: str,
+) -> ParseResult:
     """Test if client id is a valid URL according to IndieAuth section 3.2.
+
+    An IP address that is not local is allowed when the client_id has the same
+    scheme and netloc (host including port) as the request, which is how the
+    frontend builds its client_id.
 
     https://indieauth.spec.indieweb.org/#client-identifier
     """
@@ -378,7 +429,7 @@ def _parse_client_id(client_id: str) -> ParseResult:
     # MAY contain a port
     try:
         # parts raises ValueError when port cannot be parsed as int
-        _ = parts.port
+        port = parts.port
     except ValueError as ex:
         raise ValueError("Client ID contains invalid port") from ex
 
@@ -389,6 +440,9 @@ def _parse_client_id(client_id: str) -> ParseResult:
 
     # We are not goint to follow the spec here. We are going to allow
     # any internal network IP to be used inside a client id.
+
+    # We additionally allow the netloc the request was made to, since the
+    # frontend uses its own origin as client_id.
 
     # hostname excludes the port and the [, ] around ipv6 addresses
     if parts.hostname is None:
@@ -401,4 +455,15 @@ def _parse_client_id(client_id: str) -> ParseResult:
     if address is None or is_local(address):
         return parts
 
-    raise ValueError("Hostname should be a domain name or local IP address")
+    # Compare parsed values so default ports and IPv6 notation do not matter.
+    if _normalize_ip_netloc(request_scheme, request_netloc) == (
+        parts.scheme,
+        parts.username,
+        address,
+        DEFAULT_PORTS.get(parts.scheme) if port is None else port,
+    ):
+        return parts
+
+    raise ValueError(
+        "Hostname should be a domain name, a local IP address or the request netloc"
+    )

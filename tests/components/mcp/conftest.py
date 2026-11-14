@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.application_credentials import (
     DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
@@ -18,12 +19,11 @@ from homeassistant.components.mcp.const import (
     CONF_TOKEN_URL,
     DOMAIN,
 )
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN, CONF_URL
+from homeassistant.config_entries import SOURCE_HASSIO
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_API_TOKEN, CONF_TOKEN, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry
 
 TEST_API_NAME = "Memory Server"
 MCP_SERVER_URL = "http://1.1.1.1:8080/mcp"
@@ -32,13 +32,14 @@ CLIENT_SECRET = "test-client-secret"
 AUTH_DOMAIN = "some-auth-domain"
 OAUTH_AUTHORIZE_URL = "https://example-auth-server.com/authorize-path"
 OAUTH_TOKEN_URL = "https://example-auth-server.com/token-path"
+API_TOKEN = "test-api-token"
 
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.mcp.async_setup_entry", return_value=True
+        "homeassistant.components.mcp.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -59,7 +60,6 @@ def mock_http_streamable_client() -> Generator[AsyncMock]:
         "homeassistant.components.mcp.coordinator.streamable_http_client"
     ) as mock_streamable_client:
         mock_streamable_client.return_value.__aenter__.return_value = (
-            AsyncMock(),
             AsyncMock(),
             AsyncMock(),
         )
@@ -84,6 +84,20 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_URL: "http://1.1.1.1/sse"},
+        title=TEST_API_NAME,
+    )
+    config_entry.add_to_hass(hass)
+    return config_entry
+
+
+@pytest.fixture(name="config_entry_with_api_token")
+def mock_config_entry_with_api_token(hass: HomeAssistant) -> MockConfigEntry:
+    """Fixture to load the integration with a token from the app discovery."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=SOURCE_HASSIO,
+        unique_id="1234",
+        data={CONF_URL: MCP_SERVER_URL, CONF_API_TOKEN: API_TOKEN},
         title=TEST_API_NAME,
     )
     config_entry.add_to_hass(hass)

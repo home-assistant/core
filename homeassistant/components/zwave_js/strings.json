@@ -452,11 +452,23 @@
     "get_users_failed": {
       "message": "Failed to get users: {error}"
     },
+    "multicast_broadcast_requires_target": {
+      "message": "Include at least one device or entity when broadcasting with more than one Z-Wave network."
+    },
+    "multicast_different_networks": {
+      "message": "Multicast only works for devices in the same Z-Wave network."
+    },
     "no_available_credential_slots": {
       "message": "No available {credential_type} credential slots on this device"
     },
     "no_available_user_slots": {
       "message": "No available user slots on this device"
+    },
+    "no_entities_found": {
+      "message": "None of the given entities are Z-Wave entities."
+    },
+    "no_nodes_found": {
+      "message": "No Z-Wave devices found for the given targets."
     },
     "set_credential_failed": {
       "message": "Failed to set credential: {error}"
@@ -485,6 +497,10 @@
     "deprecated_legacy_door_tilt_state": {
       "description": "The binary sensor `{entity_id}` is deprecated because it has been replaced with the binary sensor `{replacement_entity_id}`.\n\nThe entity was found in the following automations or scripts:\n{items}\n\nPlease update the above automations or scripts to use the binary sensor `{replacement_entity_id}` and disable the binary sensor `{entity_id}` and then restart Home Assistant, to fix this issue.\n\nNote that `{replacement_entity_id}` is on only when the door or window is tilted.",
       "title": "Deprecation: {entity_name}"
+    },
+    "deprecated_ping_action": {
+      "description": "The `{action}` action is deprecated and will be removed in Home Assistant 2027.6. Use the **Ping** button entity of each Z-Wave device with the `button.press` action instead, and update any automations or scripts that use `{action}`.",
+      "title": "The `{action}` action is being removed"
     },
     "device_config_file_changed": {
       "fix_flow": {

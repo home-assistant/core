@@ -1,6 +1,7 @@
 {
   "domain": "filter",
   "name": "Filter",
+  "categories": ["helpers.calculate_value"],
   "codeowners": ["@dgomes"],
   "config_flow": true,
   "dependencies": ["recorder"],

@@ -5,6 +5,11 @@ from unittest.mock import call
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from samsung_exlink import MODELS, CommandRejected, InputSource, SamsungTVError, TVState
 from syrupy.assertion import SnapshotAssertion
 
@@ -43,8 +48,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util.json import load_json
 
 from .conftest import MockSamsungTV, _default_state
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY_ID = "media_player.samsung_tv"
 

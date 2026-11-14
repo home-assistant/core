@@ -9,6 +9,8 @@ from aioesphomeapi import APIClient, UpdateCommand, UpdateInfo, UpdateState
 from awesomeversion import AwesomeVersion
 from awesomeversion.exceptions import AwesomeVersionCompareException
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.esphome import dashboard
 from homeassistant.components.esphome.coordinator import REFRESH_INTERVAL
@@ -21,8 +23,8 @@ from homeassistant.components.update import (
     ATTR_IN_PROGRESS,
     ATTR_UPDATE_PERCENTAGE,
     DOMAIN as UPDATE_DOMAIN,
-    SERVICE_INSTALL,
     UpdateEntityFeature,
+    UpdateService,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -30,6 +32,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    CommonServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -37,9 +40,6 @@ from homeassistant.util import dt as dt_util
 
 from . import DASHBOARD_HOST, DASHBOARD_PORT, DASHBOARD_SLUG
 from .conftest import MockESPHomeDeviceType, MockGenericDeviceEntryType
-
-from tests.common import async_fire_time_changed
-from tests.typing import WebSocketGenerator
 
 
 async def _async_dashboard_poll(hass: HomeAssistant) -> None:
@@ -143,8 +143,8 @@ async def test_update_entity(
     ):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: "update.test_firmware"},
+            UpdateService.INSTALL,
+            {CommonServiceArgument.ENTITY_ID: "update.test_firmware"},
             blocking=True,
         )
 
@@ -170,8 +170,8 @@ async def test_update_entity(
     ):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: "update.test_firmware"},
+            UpdateService.INSTALL,
+            {CommonServiceArgument.ENTITY_ID: "update.test_firmware"},
             blocking=True,
         )
 
@@ -194,8 +194,8 @@ async def test_update_entity(
     ):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: "update.test_firmware"},
+            UpdateService.INSTALL,
+            {CommonServiceArgument.ENTITY_ID: "update.test_firmware"},
             blocking=True,
         )
 
@@ -522,8 +522,8 @@ async def test_generic_device_update_entity_has_update(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -825,8 +825,8 @@ async def test_attempt_to_update_twice(
         update_task = hass.async_create_task(
             hass.services.async_call(
                 UPDATE_DOMAIN,
-                SERVICE_INSTALL,
-                {ATTR_ENTITY_ID: "update.test_firmware"},
+                UpdateService.INSTALL,
+                {CommonServiceArgument.ENTITY_ID: "update.test_firmware"},
                 blocking=True,
             )
         )
@@ -834,8 +834,8 @@ async def test_attempt_to_update_twice(
         with pytest.raises(HomeAssistantError, match="update is already in progress"):
             await hass.services.async_call(
                 UPDATE_DOMAIN,
-                SERVICE_INSTALL,
-                {ATTR_ENTITY_ID: "update.test_firmware"},
+                UpdateService.INSTALL,
+                {CommonServiceArgument.ENTITY_ID: "update.test_firmware"},
                 blocking=True,
             )
 
@@ -880,8 +880,8 @@ async def test_update_dashboard_with_build_queue_skips_global_lock(
     ):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: "update.test_firmware"},
+            UpdateService.INSTALL,
+            {CommonServiceArgument.ENTITY_ID: "update.test_firmware"},
             blocking=True,
         )
     lock.release()
@@ -927,8 +927,8 @@ async def test_update_dashboard_without_build_queue_waits_for_global_lock(
         update_task = hass.async_create_task(
             hass.services.async_call(
                 UPDATE_DOMAIN,
-                SERVICE_INSTALL,
-                {ATTR_ENTITY_ID: "update.test_firmware"},
+                UpdateService.INSTALL,
+                {CommonServiceArgument.ENTITY_ID: "update.test_firmware"},
                 blocking=True,
             )
         )
@@ -983,8 +983,8 @@ async def test_update_deep_sleep_already_online(
     ):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: "update.test_firmware"},
+            UpdateService.INSTALL,
+            {CommonServiceArgument.ENTITY_ID: "update.test_firmware"},
             blocking=True,
         )
 
@@ -1031,8 +1031,8 @@ async def test_update_deep_sleep_offline(
         update_task = hass.async_create_task(
             hass.services.async_call(
                 UPDATE_DOMAIN,
-                SERVICE_INSTALL,
-                {ATTR_ENTITY_ID: "update.test_firmware"},
+                UpdateService.INSTALL,
+                {CommonServiceArgument.ENTITY_ID: "update.test_firmware"},
                 blocking=True,
             )
         )
@@ -1102,8 +1102,8 @@ async def test_update_deep_sleep_offline_sleep_during_ota(
         update_task = hass.async_create_task(
             hass.services.async_call(
                 UPDATE_DOMAIN,
-                SERVICE_INSTALL,
-                {ATTR_ENTITY_ID: "update.test_firmware"},
+                UpdateService.INSTALL,
+                {CommonServiceArgument.ENTITY_ID: "update.test_firmware"},
                 blocking=True,
             )
         )
@@ -1166,8 +1166,8 @@ async def test_update_deep_sleep_offline_cancelled_unload(
         update_task = hass.async_create_task(
             hass.services.async_call(
                 UPDATE_DOMAIN,
-                SERVICE_INSTALL,
-                {ATTR_ENTITY_ID: "update.test_firmware"},
+                UpdateService.INSTALL,
+                {CommonServiceArgument.ENTITY_ID: "update.test_firmware"},
                 blocking=True,
             )
         )

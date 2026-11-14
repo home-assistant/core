@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 import probatio
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 
 from homeassistant.components.media_player import (
     ATTR_GROUP_MEMBERS,
@@ -54,8 +55,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import DATA_CLIENTSESSION, _make_key
 from homeassistant.setup import async_setup_component
-
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 TEST_ENTITY_ID = "media_player.walkman"
 

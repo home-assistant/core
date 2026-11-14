@@ -14,6 +14,7 @@ from fritzconnection.core.exceptions import (
 from fritzconnection.lib.fritzstatus import FritzStatus
 from fritzconnection.lib.fritztools import ArgumentNamespace
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.fritz.const import (
     CONF_FEATURE_DEVICE_TRACKING,
@@ -51,8 +52,6 @@ from .const import (
     MOCK_STATUS_DEVICE_INFO_DATA,
     MOCK_USER_DATA,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture(name="mock_config_entry")
@@ -155,31 +154,6 @@ async def test_clear_connection_cache(
     fc_class_mock.return_value.clear_cache()
 
     assert "Cleared FritzConnection call action cache" in caplog.text
-
-
-async def test_no_connection(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    fc_class_mock,
-    fh_class_mock,
-    fs_class_mock,
-) -> None:
-    """Test no connection established."""
-
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
-    entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.fritz.coordinator.FritzConnectionCached",
-        return_value=None,
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done(wait_background_tasks=True)
-
-        assert (
-            f"Unable to establish a connection with {MOCK_USER_DATA[CONF_HOST]}"
-            in caplog.text
-        )
 
 
 async def test_no_software_version(
@@ -616,6 +590,7 @@ async def test_avmwrapper_passthrough_methods(
 
     wrapper.device_is_router = False
     assert await wrapper.async_ipv6_active() is False
+    assert await wrapper.async_addon_infos_supported() is False
 
     assert await wrapper.async_set_wlan_configuration(1, True) == {}
     assert await wrapper.async_set_deflection_enable(1, False) == {}

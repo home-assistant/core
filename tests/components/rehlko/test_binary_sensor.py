@@ -6,6 +6,11 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.rehlko.const import GENERATOR_DATA_DEVICE
@@ -13,8 +18,6 @@ from homeassistant.components.rehlko.coordinator import SCAN_INTERVAL_MINUTES
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.fixture(name="platform_binary_sensor", autouse=True)

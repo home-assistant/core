@@ -5,13 +5,14 @@ from unittest.mock import AsyncMock
 from pysmartthings import Attribute, Capability, Command
 from pysmartthings.models import HealthStatus
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import automation, script
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.script import scripts_with_entity
 from homeassistant.components.smartthings.const import DOMAIN, MAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -19,6 +20,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -33,8 +35,6 @@ from . import (
     trigger_health_update,
     trigger_update,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_all_entities(
@@ -312,12 +312,14 @@ async def test_create_issue_with_items(
     entity_id = f"switch.{suggested_object_id}"
     issue_id = f"deprecated_switch_{issue_string}_{entity_id}"
 
+    mock_config_entry.add_to_hass(hass)
     entity_entry = entity_registry.async_get_or_create(
         SWITCH_DOMAIN,
         DOMAIN,
         f"{device_id}_{MAIN}_{Capability.SWITCH}_{Attribute.SWITCH}_{Attribute.SWITCH}",
         suggested_object_id=suggested_object_id,
         original_name=suggested_object_id,
+        config_entry=mock_config_entry,
     )
 
     assert await async_setup_component(
@@ -364,6 +366,7 @@ async def test_create_issue_with_items(
 
     issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert issue is not None
+    assert issue.config_entry_id == mock_config_entry.entry_id
     assert issue.translation_key == f"deprecated_switch_{issue_string}_scripts"
     assert issue.translation_placeholders == {
         "entity_id": entity_id,
@@ -475,12 +478,14 @@ async def test_create_issue(
     entity_id = f"switch.{suggested_object_id}"
     issue_id = f"deprecated_switch_{issue_string}_{entity_id}"
 
+    mock_config_entry.add_to_hass(hass)
     entity_entry = entity_registry.async_get_or_create(
         SWITCH_DOMAIN,
         DOMAIN,
         f"{device_id}_{MAIN}_{Capability.SWITCH}_{Attribute.SWITCH}_{Attribute.SWITCH}",
         suggested_object_id=suggested_object_id,
         original_name=suggested_object_id,
+        config_entry=mock_config_entry,
     )
 
     await setup_integration(hass, mock_config_entry)
@@ -489,6 +494,7 @@ async def test_create_issue(
 
     issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert issue is not None
+    assert issue.config_entry_id == mock_config_entry.entry_id
     assert issue.translation_key == f"deprecated_switch_{issue_string}"
     assert issue.translation_placeholders == {
         "entity_id": entity_id,
@@ -568,8 +574,8 @@ async def test_turn_on_without_remote_control(
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.dishwasher_1_speed_booster"},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: "switch.dishwasher_1_speed_booster"},
             blocking=True,
         )
     devices.execute_device_command.assert_not_called()
@@ -602,8 +608,8 @@ async def test_turn_on_with_wrong_dishwasher_machine_state(
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.dishwasher_1_speed_booster"},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: "switch.dishwasher_1_speed_booster"},
             blocking=True,
         )
     devices.execute_device_command.assert_not_called()
@@ -636,8 +642,8 @@ async def test_turn_on_with_wrong_dishwasher_cycle(
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.dishwasher_1_speed_booster"},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: "switch.dishwasher_1_speed_booster"},
             blocking=True,
         )
     devices.execute_device_command.assert_not_called()

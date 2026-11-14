@@ -4,20 +4,19 @@ from collections.abc import AsyncGenerator
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import build_mock_node, setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -77,8 +76,11 @@ async def test_set_value(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: value},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            NumberServiceArgument.VALUE: value,
+        },
         blocking=True,
     )
     number = mock_homee.nodes[0].attributes[attribute_index]
@@ -95,8 +97,11 @@ async def test_set_value_not_editable(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: "number.test_number_motion_alarm_delay", ATTR_VALUE: 10000},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: "number.test_number_motion_alarm_delay",
+            NumberServiceArgument.VALUE: 10000,
+        },
         blocking=True,
     )
     assert not mock_homee.set_value.called

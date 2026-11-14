@@ -4,6 +4,7 @@ import json
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 from spotifyaio import Playlist, Track
 from syrupy.assertion import SnapshotAssertion
 
@@ -15,8 +16,6 @@ from homeassistant.core import HomeAssistant
 
 from . import setup_integration
 from .conftest import SCOPES
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 @pytest.mark.usefixtures("setup_credentials")

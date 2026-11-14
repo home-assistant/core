@@ -6,14 +6,13 @@ from unittest.mock import MagicMock, patch
 import lupupy.constants as CONST
 from lupupy.exceptions import LupusecException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.lupusec.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-
-from tests.common import MockConfigEntry
 
 MOCK_DATA = {
     CONF_HOST: "test-host.lan",

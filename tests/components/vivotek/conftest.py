@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.vivotek import CONF_SECURITY_LEVEL
 from homeassistant.components.vivotek.const import (
@@ -23,8 +24,6 @@ from homeassistant.const import (
     HTTP_BASIC_AUTHENTICATION,
 )
 
-from tests.common import MockConfigEntry
-
 TEST_DATA = {
     CONF_NAME: "Test Camera",
     CONF_IP_ADDRESS: "1.2.3.4",
@@ -43,7 +42,7 @@ TEST_DATA = {
 @pytest.fixture
 def mock_setup_entry() -> Generator[None]:
     """Mock setting up a config entry."""
-    with patch("homeassistant.components.vivotek.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.vivotek.async_setup_entry", return_value=None):
         yield
 
 

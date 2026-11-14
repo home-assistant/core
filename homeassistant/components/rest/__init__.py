@@ -5,24 +5,27 @@ import logging
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import (
-    CONF_PAYLOAD_TEMPLATE,  # noqa: F401
-    COORDINATOR,
-    DOMAIN,
-    PLATFORM_IDX,
-    REST_IDX,
-)
+from .const import CONF_PAYLOAD_TEMPLATE, COORDINATOR, DOMAIN, PLATFORM_IDX, REST_IDX
 from .coordinator import RestCoordinator
 from .data import RestData
-from .schema import CONFIG_SCHEMA, RESOURCE_SCHEMA  # noqa: F401
+from .schema import CONFIG_SCHEMA, RESOURCE_SCHEMA
 from .services import async_setup_services
 from .util import (
     async_process_config,
     async_setup_shared_data,
-    create_rest_data_from_config,  # noqa: F401
+    create_rest_data_from_config,
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+__all__ = [
+    "CONFIG_SCHEMA",
+    "CONF_PAYLOAD_TEMPLATE",
+    "DOMAIN",
+    "RESOURCE_SCHEMA",
+    "RestData",
+    "create_rest_data_from_config",
+]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

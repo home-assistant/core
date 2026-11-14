@@ -2,6 +2,8 @@
 
 from datetime import time, timedelta
 
+from pytest_homeassistant.common import async_fire_time_changed
+
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -12,13 +14,11 @@ from .conftest import (
     patch_melnor_device,
 )
 
-from tests.common import async_fire_time_changed
-
 
 async def test_schedule_start_time(hass: HomeAssistant) -> None:
     """Test the frequency schedule start time."""
 
-    now = dt_util.now()
+    now = dt_util.utcnow()
 
     entry = mock_config_entry(hass)
 

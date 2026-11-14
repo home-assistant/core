@@ -5,14 +5,13 @@ from contextlib import contextmanager
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.prosegur.config_flow import CannotConnect, InvalidAuth
 from homeassistant.components.prosegur.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 @contextmanager
@@ -25,7 +24,7 @@ def _patch_success(contracts: list[dict[str, str]]) -> Generator[None]:
         ),
         patch(
             "homeassistant.components.prosegur.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         yield
@@ -47,7 +46,7 @@ async def test_form(hass: HomeAssistant, mock_list_contracts) -> None:
         ) as mock_retrieve,
         patch(
             "homeassistant.components.prosegur.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -228,7 +227,7 @@ async def test_reauth_flow(hass: HomeAssistant, mock_list_contracts) -> None:
         ) as mock_installation,
         patch(
             "homeassistant.components.prosegur.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(

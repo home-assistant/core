@@ -8,6 +8,8 @@ from freezegun.api import FrozenDateTimeFactory
 from pylitterbot import LitterRobot4
 from pylitterbot.exceptions import LitterRobotException, LitterRobotLoginException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.litterrobot.coordinator import UPDATE_INTERVAL
 from homeassistant.components.vacuum import (
@@ -27,9 +29,6 @@ from homeassistant.setup import async_setup_component
 
 from .common import ACCOUNT_USER_ID, CONFIG, DOMAIN, VACUUM_ENTITY_ID
 from .conftest import ROBOT_4_DATA, setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.typing import WebSocketGenerator
 
 
 async def test_unload_entry(hass: HomeAssistant, mock_account: MagicMock) -> None:

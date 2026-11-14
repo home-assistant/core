@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 from freezegun.api import FrozenDateTimeFactory
 from pymystrom.exceptions import MyStromConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.light import SCAN_INTERVAL
 from homeassistant.components.mystrom.const import DOMAIN
@@ -13,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from .test_init import init_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.parametrize("service", [SERVICE_TURN_ON, SERVICE_TURN_OFF])

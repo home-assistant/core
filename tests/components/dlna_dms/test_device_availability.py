@@ -2,13 +2,13 @@
 
 import asyncio
 from collections.abc import AsyncIterable
-import logging
 from typing import Final
 from unittest.mock import ANY, DEFAULT, Mock
 
 from async_upnp_client.exceptions import UpnpConnectionError, UpnpError
 from didl_lite import didl_lite
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import media_source, ssdp
 from homeassistant.components.dlna_dms.const import DOMAIN
@@ -26,8 +26,6 @@ from .conftest import (
     MOCK_SOURCE_ID,
     NEW_DEVICE_LOCATION,
 )
-
-from tests.common import MockConfigEntry
 
 DUMMY_OBJECT_ID: Final = "123"
 
@@ -630,8 +628,7 @@ async def test_repeated_connect(
     # time 2 SSDP messages carefully
     domain_data = get_domain_data(hass)
     device_source = domain_data.sources[MOCK_SOURCE_ID]
-    with caplog.at_level(logging.DEBUG):
-        await device_source.device_connect()
+    await device_source.device_connect()
 
     assert not upnp_factory_mock.async_create_device.await_count
     await assert_source_available(hass)

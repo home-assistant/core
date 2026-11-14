@@ -15,24 +15,23 @@ from pyliebherrhomeapi import (
 )
 from pyliebherrhomeapi.exceptions import LiebherrConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DEFAULT_MAX_VALUE,
     DEFAULT_MIN_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .conftest import MOCK_DEVICE, MOCK_DEVICE_STATE, SSEStreamHelper
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture
@@ -152,8 +151,8 @@ async def test_set_temperature(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 6},
+        NumberService.SET_VALUE,
+        {CommonServiceArgument.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 6},
         blocking=True,
     )
 
@@ -187,10 +186,10 @@ async def test_set_temperature_preserves_sse_update_during_command(
     service_call = hass.async_create_task(
         hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: "number.test_fridge_top_zone_setpoint",
-                ATTR_VALUE: 6,
+                CommonServiceArgument.ENTITY_ID: "number.test_fridge_top_zone_setpoint",
+                NumberServiceArgument.VALUE: 6,
             },
             blocking=True,
         )
@@ -237,10 +236,10 @@ async def test_set_temperature_preserves_sse_disconnect_during_command(
     service_call = hass.async_create_task(
         hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: "number.test_fridge_top_zone_setpoint",
-                ATTR_VALUE: 6,
+                CommonServiceArgument.ENTITY_ID: "number.test_fridge_top_zone_setpoint",
+                NumberServiceArgument.VALUE: 6,
             },
             blocking=True,
         )
@@ -274,10 +273,10 @@ async def test_set_temperature_after_unit_conversion(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: "number.test_fridge_top_zone_setpoint",
-            ATTR_VALUE: 39,
+            CommonServiceArgument.ENTITY_ID: "number.test_fridge_top_zone_setpoint",
+            NumberServiceArgument.VALUE: 39,
         },
         blocking=True,
     )
@@ -304,10 +303,10 @@ async def test_set_temperature_not_in_allowed_steps(
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: "number.test_fridge_top_zone_setpoint",
-                ATTR_VALUE: value,
+                CommonServiceArgument.ENTITY_ID: "number.test_fridge_top_zone_setpoint",
+                NumberServiceArgument.VALUE: value,
             },
             blocking=True,
         )
@@ -333,8 +332,11 @@ async def test_set_temperature_failure(
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 6},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: entity_id,
+                NumberServiceArgument.VALUE: 6,
+            },
             blocking=True,
         )
 

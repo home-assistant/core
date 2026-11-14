@@ -15,20 +15,24 @@ from airgradient import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import async_load_config_fixture, load_config_fixture, setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -56,10 +60,10 @@ async def test_setting_value(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: "select.airgradient_configuration_source",
-            ATTR_OPTION: "local",
+            CommonServiceArgument.ENTITY_ID: "select.airgradient_configuration_source",
+            SelectServiceArgument.OPTION: "local",
         },
         blocking=True,
     )
@@ -178,6 +182,7 @@ async def test_v1_entities(
 @pytest.mark.parametrize(
     ("entity_id", "option", "method", "expected"),
     [
+        ("select.airgradient_altitude_unit", "ft", "set_altitude_unit", "ft"),
         ("select.airgradient_gps_mode", "always", "set_gps_mode", "always"),
         (
             "select.airgradient_front_led_brightness",
@@ -223,8 +228,11 @@ async def test_v1_select_writes(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: option},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            SelectServiceArgument.OPTION: option,
+        },
         blocking=True,
     )
 
@@ -273,10 +281,10 @@ async def test_exception_handling(
     with pytest.raises(HomeAssistantError, match=error_message):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: "select.airgradient_configuration_source",
-                ATTR_OPTION: "local",
+                CommonServiceArgument.ENTITY_ID: "select.airgradient_configuration_source",
+                SelectServiceArgument.OPTION: "local",
             },
             blocking=True,
         )

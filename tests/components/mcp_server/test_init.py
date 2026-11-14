@@ -1,6 +1,7 @@
 """Test the Model Context Protocol Server init module."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.mcp_server.const import (
     CONF_ALL_LLM_APIS,
@@ -12,8 +13,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import llm
-
-from tests.common import MockConfigEntry
 
 
 async def test_init(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:

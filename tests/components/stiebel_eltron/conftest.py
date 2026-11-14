@@ -7,11 +7,10 @@ from modbus_connection.mock import MockModbusConnection
 from pystiebeleltron import ControllerModel
 from pystiebeleltron.lwz import OperatingMode
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.stiebel_eltron.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)

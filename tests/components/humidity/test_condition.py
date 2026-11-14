@@ -3,20 +3,7 @@
 from typing import Any
 
 import pytest
-
-from homeassistant.components.climate import (
-    ATTR_CURRENT_HUMIDITY as CLIMATE_ATTR_CURRENT_HUMIDITY,
-    HVACMode,
-)
-from homeassistant.components.humidifier import (
-    ATTR_CURRENT_HUMIDITY as HUMIDIFIER_ATTR_CURRENT_HUMIDITY,
-)
-from homeassistant.components.humidity.condition import CONDITIONS
-from homeassistant.components.weather import ATTR_WEATHER_HUMIDITY
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, STATE_ON
-from homeassistant.core import HomeAssistant
-
-from tests.components.common import (
+from pytest_homeassistant.components.common import (
     ConditionStateDescription,
     TargetSupport,
     assert_condition_behavior_all,
@@ -30,6 +17,18 @@ from tests.components.common import (
     parametrize_target_entities,
     target_entities,
 )
+
+from homeassistant.components.climate import (
+    ATTR_CURRENT_HUMIDITY as CLIMATE_ATTR_CURRENT_HUMIDITY,
+    HVACMode,
+)
+from homeassistant.components.humidifier import (
+    ATTR_CURRENT_HUMIDITY as HUMIDIFIER_ATTR_CURRENT_HUMIDITY,
+)
+from homeassistant.components.humidity.condition import CONDITIONS
+from homeassistant.components.weather import WeatherEntityStateAttribute
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, STATE_ON
+from homeassistant.core import HomeAssistant
 
 _HUMIDITY_UNIT_ATTRS = {ATTR_UNIT_OF_MEASUREMENT: "%"}
 
@@ -317,7 +316,7 @@ async def test_humidity_humidifier_condition_behavior_all(
     parametrize_numerical_attribute_condition_above_below_any(
         "humidity.is_value",
         "sunny",
-        ATTR_WEATHER_HUMIDITY,
+        WeatherEntityStateAttribute.HUMIDITY,
         attribute_required=True,
     ),
 )
@@ -353,7 +352,7 @@ async def test_humidity_weather_condition_behavior_any(
     parametrize_numerical_attribute_condition_above_below_all(
         "humidity.is_value",
         "sunny",
-        ATTR_WEATHER_HUMIDITY,
+        WeatherEntityStateAttribute.HUMIDITY,
         attribute_required=True,
     ),
 )

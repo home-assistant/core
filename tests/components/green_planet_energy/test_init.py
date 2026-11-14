@@ -7,12 +7,11 @@ from greenplanet_energy_api import (
     GreenPlanetEnergyConnectionError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_entry(

@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, call, patch
 from goodwe import InverterError, SensorKind
 from goodwe.sensor import Current
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.goodwe.const import (
     CONF_MODEL_FAMILY,
@@ -17,18 +18,18 @@ from homeassistant.components.number import (
     ATTR_MIN,
     ATTR_MODE,
     ATTR_STEP,
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
     NumberDeviceClass,
     NumberMode,
+    NumberService,
+    NumberServiceArgument,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
-    ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_HOST,
     CONF_PORT,
+    CommonServiceArgument,
     EntityCategory,
     Platform,
     UnitOfElectricCurrent,
@@ -38,8 +39,6 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import TEST_HOST, TEST_PORT, TEST_SERIAL
-
-from tests.common import MockConfigEntry
 
 BATTERY_CHARGE_CURRENT = "battery_charge_current"
 BATTERY_CHARGE_CURRENT_ENTITY_ID = "number.goodwe_battery_charge_current_limit"
@@ -186,10 +185,10 @@ async def test_set_battery_charge_current_limit(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: BATTERY_CHARGE_CURRENT_ENTITY_ID,
-            ATTR_VALUE: requested_value,
+            CommonServiceArgument.ENTITY_ID: BATTERY_CHARGE_CURRENT_ENTITY_ID,
+            NumberServiceArgument.VALUE: requested_value,
         },
         blocking=True,
     )
@@ -214,10 +213,10 @@ async def test_set_battery_charge_current_limit_out_of_range(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: BATTERY_CHARGE_CURRENT_ENTITY_ID,
-                ATTR_VALUE: requested_value,
+                CommonServiceArgument.ENTITY_ID: BATTERY_CHARGE_CURRENT_ENTITY_ID,
+                NumberServiceArgument.VALUE: requested_value,
             },
             blocking=True,
         )
@@ -239,10 +238,10 @@ async def test_set_battery_charge_current_limit_write_error(
     with pytest.raises(InverterError):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: BATTERY_CHARGE_CURRENT_ENTITY_ID,
-                ATTR_VALUE: 20.3,
+                CommonServiceArgument.ENTITY_ID: BATTERY_CHARGE_CURRENT_ENTITY_ID,
+                NumberServiceArgument.VALUE: 20.3,
             },
             blocking=True,
         )

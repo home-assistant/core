@@ -5,19 +5,18 @@ from unittest.mock import patch
 from modbus_connection import ModbusTimeoutError
 from modbus_connection.mock import MockModbusUnit
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 BACKUP_RESERVE_ENTITY = "number.solaredge_se10000h_backup_reserve"
 BACKUP_RESERVE_REGISTER = 57352
@@ -71,8 +70,11 @@ async def test_set_value(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: BACKUP_RESERVE_ENTITY, ATTR_VALUE: 25},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: BACKUP_RESERVE_ENTITY,
+            NumberServiceArgument.VALUE: 25,
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -95,8 +97,11 @@ async def test_set_value_communication_error(
     with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: BACKUP_RESERVE_ENTITY, ATTR_VALUE: 25},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: BACKUP_RESERVE_ENTITY,
+                NumberServiceArgument.VALUE: 25,
+            },
             blocking=True,
         )
 
@@ -116,8 +121,11 @@ async def test_set_value_rejected(
     with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: BACKUP_RESERVE_ENTITY, ATTR_VALUE: 25},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: BACKUP_RESERVE_ENTITY,
+                NumberServiceArgument.VALUE: 25,
+            },
             blocking=True,
         )
 

@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 from openhomedevice.exceptions import OpenhomeConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.update import (
     ATTR_INSTALLED_VERSION,
@@ -11,22 +12,20 @@ from homeassistant.components.update import (
     ATTR_RELEASE_SUMMARY,
     ATTR_RELEASE_URL,
     DOMAIN as UPDATE_DOMAIN,
-    SERVICE_INSTALL,
     UpdateDeviceClass,
+    UpdateService,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
-    ATTR_ENTITY_ID,
     STATE_ON,
     STATE_UNKNOWN,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 LATEST_FIRMWARE_INSTALLED = {
     "status": "on_latest",
@@ -138,8 +137,8 @@ async def test_update_available(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -161,8 +160,8 @@ async def test_firmware_update_error(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: ENTITY_ID},
+            UpdateService.INSTALL,
+            {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
     mock_device.update_firmware.assert_awaited_once()
@@ -180,8 +179,8 @@ async def test_firmware_update_not_required(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: ENTITY_ID},
+            UpdateService.INSTALL,
+            {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
     mock_device.update_firmware.assert_not_called()

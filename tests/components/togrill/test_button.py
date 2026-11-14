@@ -3,19 +3,18 @@
 from unittest.mock import Mock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
 from syrupy.assertion import SnapshotAssertion
 from togrill_bluetooth.packets import PacketA5Write
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import TOGRILL_SERVICE_INFO, setup_entry
-
-from tests.common import MockConfigEntry, snapshot_platform
-from tests.components.bluetooth import inject_bluetooth_service_info
 
 
 async def test_setup(
@@ -47,7 +46,7 @@ async def test_press(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
+        ButtonService.PRESS,
         target={
             ATTR_ENTITY_ID: "button.pro_05_silence_alarm",
         },
@@ -73,7 +72,7 @@ async def test_press_disconnected(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
+            ButtonService.PRESS,
             target={
                 ATTR_ENTITY_ID: "button.pro_05_silence_alarm",
             },

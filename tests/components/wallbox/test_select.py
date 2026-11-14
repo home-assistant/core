@@ -3,14 +3,15 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.select import (
-    ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
 from homeassistant.components.wallbox.const import EcoSmartMode
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant, HomeAssistantError
 
 from .conftest import http_404_error, http_429_error, setup_integration
@@ -21,8 +22,6 @@ from .const import (
     WALLBOX_STATUS_RESPONSE_FULL_SOLAR,
     WALLBOX_STATUS_RESPONSE_NO_POWER_BOOST,
 )
-
-from tests.common import MockConfigEntry
 
 TEST_OPTIONS = [
     (EcoSmartMode.OFF, WALLBOX_STATUS_RESPONSE),
@@ -41,10 +40,10 @@ async def test_wallbox_select_solar_charging_class(
 
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: MOCK_SELECT_ENTITY_ID,
-                ATTR_OPTION: mode,
+                CommonServiceArgument.ENTITY_ID: MOCK_SELECT_ENTITY_ID,
+                SelectServiceArgument.OPTION: mode,
             },
             blocking=True,
         )
@@ -89,10 +88,10 @@ async def test_wallbox_select_class_error(
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: MOCK_SELECT_ENTITY_ID,
-                ATTR_OPTION: mode,
+                CommonServiceArgument.ENTITY_ID: MOCK_SELECT_ENTITY_ID,
+                SelectServiceArgument.OPTION: mode,
             },
             blocking=True,
         )
@@ -118,10 +117,10 @@ async def test_wallbox_select_too_many_requests_error(
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: MOCK_SELECT_ENTITY_ID,
-                ATTR_OPTION: mode,
+                CommonServiceArgument.ENTITY_ID: MOCK_SELECT_ENTITY_ID,
+                SelectServiceArgument.OPTION: mode,
             },
             blocking=True,
         )
@@ -147,10 +146,10 @@ async def test_wallbox_select_connection_error(
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: MOCK_SELECT_ENTITY_ID,
-                ATTR_OPTION: mode,
+                CommonServiceArgument.ENTITY_ID: MOCK_SELECT_ENTITY_ID,
+                SelectServiceArgument.OPTION: mode,
             },
             blocking=True,
         )

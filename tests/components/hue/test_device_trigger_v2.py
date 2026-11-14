@@ -6,6 +6,11 @@ from unittest.mock import Mock, patch
 from aiohue.v2.models.button import ButtonEvent
 import attr
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_get_device_automations,
+)
 from pytest_unordered import unordered
 
 from homeassistant.components import automation, hue
@@ -33,12 +38,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.json import JsonArrayType
 
 from .conftest import create_config_entry, setup_platform
-
-from tests.common import (
-    MockConfigEntry,
-    async_capture_events,
-    async_get_device_automations,
-)
 
 WALL_SWITCH_DEVICE_ID = "3ff06175-29e8-44a8-8fe7-af591b0025da"
 WALL_SWITCH_BUTTON_PRESS = {

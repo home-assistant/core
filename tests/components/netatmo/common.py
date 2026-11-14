@@ -6,6 +6,8 @@ import json
 from typing import Any
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMockResponse
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.netatmo.const import DOMAIN
@@ -14,9 +16,6 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.aiohttp import MockRequest
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
-from tests.test_util.aiohttp import AiohttpClientMockResponse
 
 HOME_ID = "91763b24c43d3e344f424e8b"
 

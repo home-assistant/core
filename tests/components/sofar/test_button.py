@@ -6,12 +6,13 @@ from unittest.mock import patch
 from modbus_connection import ModbusError
 from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.sofar.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -24,8 +25,6 @@ from . import (
     seed_hybrid_inverter,
     seed_pv_inverter,
 )
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def _setup(
@@ -101,8 +100,8 @@ async def test_button_press(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: entity_id},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -142,8 +141,8 @@ async def test_rtc_sync_reported_to_hass(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: button_id},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: button_id},
         blocking=True,
     )
 
@@ -165,7 +164,7 @@ async def test_press_modbus_error(
     with pytest.raises(ModbusError, match="busy"):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: entity_id},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
