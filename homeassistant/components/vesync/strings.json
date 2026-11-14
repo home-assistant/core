@@ -171,6 +171,9 @@
       },
       "drying_mode_power_off": {
         "name": "Enable drying mode while power is off"
+      },
+      "mute": {
+        "name": "Mute"
       }
     }
   },
