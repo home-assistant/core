@@ -1,0 +1,40 @@
+{
+  "entity": {
+    "sensor": {
+      "battery_cycle_count": {
+        "default": "mdi:battery-sync"
+      },
+      "battery_soh": {
+        "default": "mdi:battery-heart-variant"
+      },
+      "cell_count": {
+        "default": "mdi:counter"
+      },
+      "dc_pv_input_count": {
+        "default": "mdi:counter"
+      },
+      "inverter_count": {
+        "default": "mdi:counter"
+      },
+      "inverter_status": {
+        "default": "mdi:solar-power",
+        "state": {
+          "abnormal_off_grid": "mdi:transmission-tower-off",
+          "inverter_fault": "mdi:alert-circle",
+          "off_grid": "mdi:transmission-tower-off",
+          "stop": "mdi:power-off"
+        }
+      },
+      "pv_input_type": {
+        "default": "mdi:solar-panel",
+        "state": {
+          "adapter": "mdi:power-plug",
+          "car": "mdi:car-electric"
+        }
+      },
+      "temperature_sensor_count": {
+        "default": "mdi:counter"
+      }
+    }
+  }
+}

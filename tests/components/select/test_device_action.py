@@ -2,6 +2,11 @@
 
 from probatio import Invalid, to_field_list
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_get_device_automations,
+    async_mock_service,
+)
 from pytest_unordered import unordered
 
 from homeassistant.components import automation
@@ -19,12 +24,6 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 from homeassistant.setup import async_setup_component
-
-from tests.common import (
-    MockConfigEntry,
-    async_get_device_automations,
-    async_mock_service,
-)
 
 
 async def test_get_actions(

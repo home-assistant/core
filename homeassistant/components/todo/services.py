@@ -14,15 +14,11 @@ from homeassistant.util import dt as dt_util
 from .const import (
     ATTR_DESCRIPTION,
     ATTR_DUE,
-    ATTR_DUE_DATE,
-    ATTR_DUE_DATETIME,
-    ATTR_ITEM,
-    ATTR_RENAME,
-    ATTR_STATUS,
     DATA_COMPONENT,
     DOMAIN,
     TodoItemStatus,
     TodoListEntityFeature,
+    TodoServiceArgument,
     TodoServices,
 )
 from .entity import TodoItem, TodoListEntity, api_items_factory
@@ -47,19 +43,19 @@ class TodoItemFieldDescription:
 
 TODO_ITEM_FIELDS = [
     TodoItemFieldDescription(
-        service_field=ATTR_DUE_DATE,
+        service_field=TodoServiceArgument.DUE_DATE,
         validation=probatio.Any(cv.date, None),
         todo_item_field=ATTR_DUE,
         required_feature=TodoListEntityFeature.SET_DUE_DATE_ON_ITEM,
     ),
     TodoItemFieldDescription(
-        service_field=ATTR_DUE_DATETIME,
+        service_field=TodoServiceArgument.DUE_DATETIME,
         validation=probatio.Any(probatio.All(cv.datetime, dt_util.as_local), None),
         todo_item_field=ATTR_DUE,
         required_feature=TodoListEntityFeature.SET_DUE_DATETIME_ON_ITEM,
     ),
     TodoItemFieldDescription(
-        service_field=ATTR_DESCRIPTION,
+        service_field=TodoServiceArgument.DESCRIPTION,
         validation=probatio.Any(cv.string, None),
         todo_item_field=ATTR_DESCRIPTION,
         required_feature=TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM,
@@ -72,11 +68,15 @@ TODO_ITEM_FIELD_SCHEMA = {
 }
 
 
-TODO_ITEM_FIELD_VALIDATIONS = [probatio.AtMostOne(ATTR_DUE_DATE, ATTR_DUE_DATETIME)]
+TODO_ITEM_FIELD_VALIDATIONS = [
+    probatio.AtMostOne(
+        TodoServiceArgument.DUE_DATE.value, TodoServiceArgument.DUE_DATETIME.value
+    )
+]
 
 
 TODO_SERVICE_GET_ITEMS_SCHEMA = {
-    probatio.Optional(ATTR_STATUS): probatio.All(
+    probatio.Optional(TodoServiceArgument.STATUS): probatio.All(
         probatio.EnsureList(),
         [probatio.In({TodoItemStatus.NEEDS_ACTION, TodoItemStatus.COMPLETED})],
     ),
@@ -113,7 +113,7 @@ async def _async_add_todo_item(entity: TodoListEntity, call: ServiceCall) -> Non
     _validate_supported_features(entity.supported_features, call.data)
     await entity.async_create_todo_item(
         item=TodoItem(
-            summary=call.data["item"],
+            summary=call.data[TodoServiceArgument.ITEM],
             status=TodoItemStatus.NEEDS_ACTION,
             **{
                 desc.todo_item_field: call.data[desc.service_field]
@@ -126,7 +126,7 @@ async def _async_add_todo_item(entity: TodoListEntity, call: ServiceCall) -> Non
 
 async def _async_update_todo_item(entity: TodoListEntity, call: ServiceCall) -> None:
     """Update an item in the To-do list."""
-    item = call.data["item"]
+    item = call.data[TodoServiceArgument.ITEM]
     found = _find_by_uid_or_summary(item, entity.todo_items)
     if not found:
         raise ServiceValidationError(
@@ -141,9 +141,9 @@ async def _async_update_todo_item(entity: TodoListEntity, call: ServiceCall) -> 
     # present in the update. This allows explicitly clearing any of the
     # extended fields present and set to None.
     updated_data = dataclasses.asdict(found)
-    if summary := call.data.get("rename"):
+    if summary := call.data.get(TodoServiceArgument.RENAME):
         updated_data["summary"] = summary
-    if status := call.data.get("status"):
+    if status := call.data.get(TodoServiceArgument.STATUS):
         updated_data["status"] = status
     updated_data.update(
         {
@@ -158,7 +158,7 @@ async def _async_update_todo_item(entity: TodoListEntity, call: ServiceCall) -> 
 async def _async_remove_todo_items(entity: TodoListEntity, call: ServiceCall) -> None:
     """Remove an item in the To-do list."""
     uids = []
-    for item in call.data.get("item", []):
+    for item in call.data.get(TodoServiceArgument.ITEM, []):
         found = _find_by_uid_or_summary(item, entity.todo_items)
         if not found or not found.uid:
             raise ServiceValidationError(
@@ -178,7 +178,8 @@ async def _async_get_todo_items(
         "items": [
             dataclasses.asdict(item, dict_factory=api_items_factory)
             for item in entity.todo_items or ()
-            if not (statuses := call.data.get("status")) or item.status in statuses
+            if not (statuses := call.data.get(TodoServiceArgument.STATUS))
+            or item.status in statuses
         ]
     }
 
@@ -204,7 +205,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         probatio.All(
             cv.make_entity_service_schema(
                 {
-                    probatio.Required(ATTR_ITEM): probatio.All(
+                    probatio.Required(TodoServiceArgument.ITEM): probatio.All(
                         cv.string, str.strip, probatio.NonEmpty()
                     ),
                     **TODO_ITEM_FIELD_SCHEMA,
@@ -220,13 +221,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
         probatio.All(
             cv.make_entity_service_schema(
                 {
-                    probatio.Required(ATTR_ITEM): probatio.All(
+                    probatio.Required(TodoServiceArgument.ITEM): probatio.All(
                         cv.string, probatio.NonEmpty()
                     ),
-                    probatio.Optional(ATTR_RENAME): probatio.All(
+                    probatio.Optional(TodoServiceArgument.RENAME): probatio.All(
                         cv.string, str.strip, probatio.NonEmpty()
                     ),
-                    probatio.Optional(ATTR_STATUS): probatio.In(
+                    probatio.Optional(TodoServiceArgument.STATUS): probatio.In(
                         {TodoItemStatus.NEEDS_ACTION, TodoItemStatus.COMPLETED},
                     ),
                     **TODO_ITEM_FIELD_SCHEMA,
@@ -234,9 +235,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
             ),
             *TODO_ITEM_FIELD_VALIDATIONS,
             probatio.AtLeastOne(
-                ATTR_RENAME,
-                ATTR_STATUS,
-                *[desc.service_field for desc in TODO_ITEM_FIELDS],
+                TodoServiceArgument.RENAME.value,
+                TodoServiceArgument.STATUS.value,
+                *[str(desc.service_field) for desc in TODO_ITEM_FIELDS],
             ),
         ),
         _async_update_todo_item,
@@ -246,7 +247,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         TodoServices.REMOVE_ITEM,
         cv.make_entity_service_schema(
             {
-                probatio.Required(ATTR_ITEM): probatio.All(
+                probatio.Required(TodoServiceArgument.ITEM): probatio.All(
                     probatio.EnsureList(), [cv.string]
                 ),
             }

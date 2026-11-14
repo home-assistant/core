@@ -33,7 +33,3 @@ DATA_USER_ID = "user_id"
 DATA_SLNET_TOKEN = "slnet_token"
 DATA_SLID_TOKEN = "slid_token"
 DATA_EXPIRES = "expires"
-
-SERVICE_UPDATE_STATE = "update_state"
-SERVICE_SET_SCAN_INTERVAL = "set_scan_interval"
-SERVICE_SET_SCAN_OBD_INTERVAL = "set_scan_obd_interval"

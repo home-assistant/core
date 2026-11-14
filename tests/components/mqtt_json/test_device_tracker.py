@@ -7,6 +7,8 @@ import os
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import async_fire_mqtt_message
+from pytest_homeassistant.typing import MqttMockHAClient
 
 from homeassistant.components.device_tracker.legacy import (
     DOMAIN as DT_DOMAIN,
@@ -19,9 +21,6 @@ from homeassistant.const import CONF_PLATFORM
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import async_setup_component
-
-from tests.common import async_fire_mqtt_message
-from tests.typing import MqttMockHAClient
 
 LOCATION_MESSAGE = {
     "longitude": 1.0,

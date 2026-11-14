@@ -297,8 +297,10 @@ class BaseNotificationService:
                 service_desc = {
                     CONF_NAME: f"Send a notification via {target_name}",
                     CONF_DESCRIPTION: (
-                        "Sends a notification message using the"
-                        f" {target_name} integration."
+                        "This notification action is provided by a notification "
+                        "integration or notification group. To change where "
+                        "notifications are sent or which options are available, "
+                        "update that integration or group."
                     ),
                     CONF_FIELDS: self.services_dict[SERVICE_NOTIFY][CONF_FIELDS],
                 }
@@ -326,7 +328,9 @@ class BaseNotificationService:
         service_desc = {
             CONF_NAME: f"Send a notification with {self._service_name}",
             CONF_DESCRIPTION: (
-                f"Sends a notification message using the {self._service_name} service."
+                "This notification action is provided by a notification integration "
+                "or notification group. To change where notifications are sent or "
+                "which options are available, update that integration or group."
             ),
             CONF_FIELDS: self.services_dict[SERVICE_NOTIFY][CONF_FIELDS],
         }

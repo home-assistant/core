@@ -7,6 +7,7 @@ from pysmlight.const import Events as SmEvents
 from pysmlight.exceptions import SmlightError
 from pysmlight.models import IRPayload
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.infrared import (
     async_send_command,
@@ -18,8 +19,6 @@ from homeassistant.exceptions import HomeAssistantError
 
 from . import get_mock_event_function
 from .conftest import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 class MockCommand(Command):

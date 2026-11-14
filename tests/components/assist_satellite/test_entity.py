@@ -7,6 +7,7 @@ from unittest.mock import Mock, patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import MockUser
 
 from homeassistant.components import stt
 from homeassistant.components.assist_pipeline import (
@@ -39,7 +40,6 @@ from homeassistant.exceptions import (
 from . import ENTITY_ID
 from .conftest import MockAssistSatellite
 
-from tests.common import MockUser
 from tests.components.tts.common import MockResultStream
 
 
@@ -592,6 +592,34 @@ async def test_vad_sensitivity_entity(
         async with asyncio.timeout(1):
             await entity.async_accept_pipeline_from_satellite(audio_stream)
             await done.wait()
+
+
+async def test_audio_settings_from_satellite(
+    hass: HomeAssistant, init_components: ConfigEntry, entity: MockAssistSatellite
+) -> None:
+    """Test audio settings from the satellite are passed to the pipeline."""
+    with patch(
+        "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream"
+    ) as mock_start_pipeline:
+        await entity.async_accept_pipeline_from_satellite(
+            object(),
+            audio_settings=AudioSettings(
+                noise_suppression_level=2,
+                auto_gain_dbfs=15,
+                volume_multiplier=1.5,
+                is_vad_enabled=False,
+                silence_seconds=10.0,
+            ),
+        )
+
+    # silence_seconds comes from the satellite's VAD sensitivity instead
+    assert mock_start_pipeline.call_args.kwargs["audio_settings"] == AudioSettings(
+        noise_suppression_level=2,
+        auto_gain_dbfs=15,
+        volume_multiplier=1.5,
+        is_vad_enabled=False,
+        silence_seconds=vad.VadSensitivity.to_seconds(vad.VadSensitivity.DEFAULT),
+    )
 
 
 async def test_pipeline_entity_not_found(

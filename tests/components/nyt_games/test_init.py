@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 from nyt_games import NYTGamesAuthenticationError
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.nyt_games.const import DOMAIN
@@ -11,8 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_device_info(

@@ -77,7 +77,7 @@ class SubaruDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
 
 async def _refresh_subaru_data(
-    config_entry: ConfigEntry,
+    config_entry: SubaruConfigEntry,
     vehicle_info: dict[str, dict[str, Any]],
     controller: SubaruAPI,
 ) -> dict[str, Any]:

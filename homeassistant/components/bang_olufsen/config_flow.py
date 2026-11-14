@@ -19,7 +19,6 @@ from .const import (
     ATTR_ITEM_NUMBER,
     ATTR_SERIAL_NUMBER,
     ATTR_TYPE_NUMBER,
-    CONF_SERIAL_NUMBER,
     DEFAULT_MODEL,
     DOMAIN,
     SELECTABLE_MODELS,
@@ -189,14 +188,12 @@ class BeoConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return await self._create_entry()
 
-        self._set_confirm_only()
-
         return self.async_show_form(
             step_id="zeroconf_confirm",
             description_placeholders={
-                CONF_HOST: self._host,
-                CONF_MODEL: self._model,
-                CONF_SERIAL_NUMBER: self._serial_number,
+                "host": self._host,
+                "model": self._model,
+                "serial_number": self._serial_number,
             },
             last_step=True,
         )

@@ -1,5 +1,6 @@
 """Passive update processors for the Bluetooth integration."""
 
+from copy import copy
 import dataclasses
 from datetime import timedelta
 from functools import cache
@@ -19,19 +20,22 @@ from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceIn
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_platform import async_get_current_platform
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.frame import ReportBehavior, report_usage
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.helpers.typing import Undefined
 from homeassistant.util.enum import try_parse_enum
 
 from .const import DOMAIN
 from .update_coordinator import BasePassiveBluetoothCoordinator
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Mapping
+
+    from home_assistant_bluetooth import BluetoothServiceInfoBleak
 
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-    from .models import BluetoothChange, BluetoothServiceInfoBleak
+    from .models import BluetoothChange
 
 STORAGE_KEY = "bluetooth.passive_update_processor"
 STORAGE_VERSION = 1
@@ -154,7 +158,7 @@ class PassiveBluetoothDataUpdate[_T]:
         for device_key, device_info in new_data.devices.items():
             if (
                 not device_change
-                and self.devices.get(device_key, UNDEFINED) != device_info
+                and self.devices.get(device_key, Undefined) != device_info
             ):
                 device_change = True
             # Stored even when equal, so the next comparison is with the same object
@@ -165,7 +169,7 @@ class PassiveBluetoothDataUpdate[_T]:
             (new_data.entity_data, self.entity_data),
         ):
             for key, data in incoming.items():
-                if current.get(key, UNDEFINED) != data:
+                if current.get(key, Undefined) != data:
                     changed_entity_keys.add(key)
                     current[key] = data  # type: ignore[assignment]
         # If the device changed we don't need to return the changed
@@ -177,7 +181,7 @@ class PassiveBluetoothDataUpdate[_T]:
         return {
             "devices": {
                 # A plain dict, as orjson would also write the unset dataclass fields
-                key or "": dict(device_info)
+                key or "": device_info.as_dict()
                 for key, device_info in self.devices.items()
             },
             "entity_descriptions": {
@@ -317,8 +321,10 @@ class PassiveBluetoothProcessorCoordinator[_DataT](BasePassiveBluetoothCoordinat
         self.last_update_success = True
         self.restore_data: dict[str, RestoredPassiveBluetoothDataUpdate] = {}
         self.restore_key = None
+        self.integration_domain: str | None = None
         if config_entry := config_entries.current_entry.get():
             self.restore_key = config_entry.entry_id
+            self.integration_domain = config_entry.domain
         self._on_stop.append(async_register_coordinator_for_restore(self.hass, self))
 
     @property
@@ -470,6 +476,7 @@ class PassiveBluetoothDataProcessor[_T, _DataT]:
         ] = {}
         self.update_method = update_method
         self.last_update_success = True
+        self._plain_device_info_reported = False
 
     @callback
     def async_register_coordinator(
@@ -633,8 +640,34 @@ class PassiveBluetoothDataProcessor[_T, _DataT]:
                 "Processing %s data recovered", self.coordinator.name
             )
 
+        for device_key, device_info in new_data.devices.items():
+            if not isinstance(device_info, DeviceInfo):
+                new_data.devices[device_key] = (  # type: ignore[unreachable]
+                    self._async_convert_plain_device_info(device_info)
+                )
+
         changed_entity_keys = self.data.update(new_data)
         self.async_update_listeners(new_data, was_available, changed_entity_keys)
+
+    @callback
+    def _async_convert_plain_device_info(
+        self, device_info: Mapping[str, Any]
+    ) -> DeviceInfo:
+        """Convert a plain device info, which is deprecated."""
+        if not self._plain_device_info_reported:
+            self._plain_device_info_reported = True
+            # The integration is not in the stack when handling an advertisement
+            report_usage(
+                "passes a plain dict as a device info in a PassiveBluetoothDataUpdate"
+                " instead of a DeviceInfo",
+                breaks_in_ha_version="2027.12",
+                core_behavior=ReportBehavior.LOG,
+                exclude_integrations={DOMAIN},
+                integration_domain=self.coordinator.integration_domain,
+            )
+        return DeviceInfo(
+            **{k: v for k, v in device_info.items() if k in _DEVICE_INFO_FIELDS}
+        )
 
 
 # pylint: disable-next=home-assistant-enforce-class-module
@@ -668,10 +701,10 @@ class PassiveBluetoothProcessorEntity[
         else:
             identifier = address
             self._attr_unique_id = f"{address}-{key}"
+        device_info = copy(devices[device_id]) if device_id in devices else DeviceInfo()
         # The coordinator name is only a default for the device's own name
-        device_info = DeviceInfo(name=processor.coordinator.name)
-        if device_id in devices:
-            device_info.update(devices[device_id])
+        if device_info.name is Undefined:
+            device_info.name = processor.coordinator.name
         device_info.identifiers = {(DOMAIN, identifier)}
         if device_id is None:
             device_info.connections = {(CONNECTION_BLUETOOTH, address)}

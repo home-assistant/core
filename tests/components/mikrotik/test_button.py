@@ -2,17 +2,16 @@
 
 from unittest.mock import MagicMock, patch
 
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_mikrotik_entry
 from .conftest import MockConfigEntryFactory
-
-from tests.common import snapshot_platform
 
 
 async def test_button_entities_created(
@@ -52,8 +51,8 @@ async def test_button_press(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.mikrotik_restart"},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: "button.mikrotik_restart"},
         blocking=True,
     )
 

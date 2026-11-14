@@ -5,18 +5,17 @@ from unittest.mock import AsyncMock, patch
 from aiovitesy.api import VitesyDevice
 from aiovitesy.exceptions import VitesyError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 from .conftest import DEVICE_ID
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 FILTER_CHANGED = "button.kitchen_shelfy_mark_filter_as_changed"
 FRIDGE_CLEANED = "button.kitchen_shelfy_mark_fridge_as_cleaned"
@@ -55,7 +54,10 @@ async def test_press_resets_maintenance(
     mock_vitesy_client.get_all_devices.reset_mock()
 
     await hass.services.async_call(
-        BUTTON_DOMAIN, SERVICE_PRESS, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        BUTTON_DOMAIN,
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
+        blocking=True,
     )
 
     mock_vitesy_client.reset_maintenance.assert_awaited_once_with(DEVICE_ID, component)
@@ -74,8 +76,8 @@ async def test_press_error(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: FILTER_CHANGED},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: FILTER_CHANGED},
             blocking=True,
         )
 

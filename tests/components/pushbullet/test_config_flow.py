@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from pushbullet import InvalidKeyError, PushbulletError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.pushbullet.const import DOMAIN
@@ -13,8 +14,6 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import MOCK_CONFIG
 
-from tests.common import MockConfigEntry
-
 USER_INPUT = {CONF_API_KEY: "MYAPIKEY"}
 
 
@@ -22,7 +21,7 @@ USER_INPUT = {CONF_API_KEY: "MYAPIKEY"}
 def pushbullet_setup_fixture():
     """Patch pushbullet setup entry."""
     with patch(
-        "homeassistant.components.pushbullet.async_setup_entry", return_value=True
+        "homeassistant.components.pushbullet.async_setup_entry", return_value=None
     ):
         yield
 

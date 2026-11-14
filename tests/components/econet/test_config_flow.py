@@ -6,14 +6,13 @@ from aiohttp import ClientConnectionError
 from pyeconet.api import EcoNetApiInterface
 from pyeconet.errors import InvalidCredentialsError, PyeconetError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.econet.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 async def test_bad_credentials(hass: HomeAssistant) -> None:
@@ -30,7 +29,7 @@ async def test_bad_credentials(hass: HomeAssistant) -> None:
             "pyeconet.EcoNetApiInterface.login",
             side_effect=InvalidCredentialsError(),
         ) as mock_login,
-        patch("homeassistant.components.econet.async_setup_entry", return_value=True),
+        patch("homeassistant.components.econet.async_setup_entry", return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -82,7 +81,7 @@ async def test_generic_error_from_library(
             "pyeconet.EcoNetApiInterface.login",
             side_effect=side_effect,
         ) as mock_login,
-        patch("homeassistant.components.econet.async_setup_entry", return_value=True),
+        patch("homeassistant.components.econet.async_setup_entry", return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -124,7 +123,7 @@ async def test_auth_worked(hass: HomeAssistant) -> None:
             "pyeconet.EcoNetApiInterface.login",
             return_value=EcoNetApiInterface,
         ),
-        patch("homeassistant.components.econet.async_setup_entry", return_value=True),
+        patch("homeassistant.components.econet.async_setup_entry", return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -163,7 +162,7 @@ async def test_already_configured(hass: HomeAssistant) -> None:
             "pyeconet.EcoNetApiInterface.login",
             return_value=EcoNetApiInterface,
         ),
-        patch("homeassistant.components.econet.async_setup_entry", return_value=True),
+        patch("homeassistant.components.econet.async_setup_entry", return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -195,7 +194,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
             "pyeconet.EcoNetApiInterface.login",
             return_value=EcoNetApiInterface,
         ) as mock_login,
-        patch("homeassistant.components.econet.async_setup_entry", return_value=True),
+        patch("homeassistant.components.econet.async_setup_entry", return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_PASSWORD: "new_password"}
@@ -239,7 +238,7 @@ async def test_reauth_errors(
         patch(
             "pyeconet.EcoNetApiInterface.login", side_effect=side_effect
         ) as mock_login,
-        patch("homeassistant.components.econet.async_setup_entry", return_value=True),
+        patch("homeassistant.components.econet.async_setup_entry", return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_PASSWORD: "wrong_password"}

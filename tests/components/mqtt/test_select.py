@@ -3,26 +3,12 @@
 from collections.abc import Generator
 import copy
 import json
-import logging
 from typing import Any
 from unittest.mock import patch
 
 import pytest
-
-from homeassistant.components import select
-from homeassistant.components.mqtt.const import DOMAIN
-from homeassistant.components.mqtt.select import MQTT_SELECT_ATTRIBUTES_BLOCKED
-from homeassistant.components.select import (
-    ATTR_OPTION,
-    ATTR_OPTIONS,
-    DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
-)
-from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers.typing import ConfigType
-
-from .common import (
+from pytest_homeassistant.common import async_fire_mqtt_message, mock_restore_cache
+from pytest_homeassistant.components.mqtt.common import (
     help_custom_config,
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
@@ -53,9 +39,21 @@ from .common import (
     help_test_update_with_json_attrs_bad_json,
     help_test_update_with_json_attrs_not_dict,
 )
+from pytest_homeassistant.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
-from tests.common import async_fire_mqtt_message, mock_restore_cache
-from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
+from homeassistant.components import select
+from homeassistant.components.mqtt.const import DOMAIN
+from homeassistant.components.mqtt.select import MQTT_SELECT_ATTRIBUTES_BLOCKED
+from homeassistant.components.select import (
+    ATTR_OPTION,
+    ATTR_OPTIONS,
+    DOMAIN as SELECT_DOMAIN,
+    SelectService,
+    SelectServiceArgument,
+)
+from homeassistant.const import ATTR_ASSUMED_STATE, STATE_UNKNOWN, CommonServiceArgument
+from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers.typing import ConfigType
 
 DEFAULT_CONFIG = {
     DOMAIN: {
@@ -114,11 +112,10 @@ async def test_run_select_setup(
     state = hass.states.get("select.test_select")
     assert state.state == "beer"
 
-    if caplog.at_level(logging.DEBUG):
-        async_fire_mqtt_message(hass, topic, "")
-        await hass.async_block_till_done()
+    async_fire_mqtt_message(hass, topic, "")
+    await hass.async_block_till_done()
 
-        assert "Ignoring empty payload" in caplog.text
+    assert "Ignoring empty payload" in caplog.text
 
     state = hass.states.get("select.test_select")
     assert state.state == "beer"
@@ -197,8 +194,11 @@ async def test_run_select_service_optimistic(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.test_select", ATTR_OPTION: "beer"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: "select.test_select",
+            SelectServiceArgument.OPTION: "beer",
+        },
         blocking=True,
     )
 
@@ -240,8 +240,11 @@ async def test_run_select_service_optimistic_with_command_template(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.test_select", ATTR_OPTION: "beer"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: "select.test_select",
+            SelectServiceArgument.OPTION: "beer",
+        },
         blocking=True,
     )
 
@@ -283,8 +286,11 @@ async def test_run_select_service(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.test_select", ATTR_OPTION: "milk"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: "select.test_select",
+            SelectServiceArgument.OPTION: "milk",
+        },
         blocking=True,
     )
     mqtt_mock.async_publish.assert_called_once_with(
@@ -325,8 +331,11 @@ async def test_run_select_service_with_command_template(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.test_select", ATTR_OPTION: "milk"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: "select.test_select",
+            SelectServiceArgument.OPTION: "milk",
+        },
         blocking=True,
     )
     mqtt_mock.async_publish.assert_called_once_with(

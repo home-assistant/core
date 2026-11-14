@@ -2,10 +2,9 @@
 
 from pyoverkiz.converter import converter
 from pyoverkiz.models import Setup
+from pytest_homeassistant.common import load_json_object_fixture
 
 from homeassistant.components.overkiz.const import DOMAIN
-
-from tests.common import load_json_object_fixture
 
 DEFAULT_SETUP_FIXTURE = "setup/cloud_somfy_tahoma_switch_europe.json"
 

@@ -21,8 +21,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import TRMNLConfigEntry
-from .coordinator import TRMNLCoordinator
+from .coordinator import TRMNLConfigEntry, TRMNLCoordinator
 from .entity import TRMNLEntity
 
 PARALLEL_UPDATES = 0

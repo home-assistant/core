@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components import config
 from homeassistant.components.config import DOMAIN, automation
@@ -14,8 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import yaml as yaml_util
-
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture
@@ -107,7 +106,8 @@ async def test_update_automation_config(
                 "trigger": {"trigger": "automation"},
                 "action": [],
             },
-            "Integration 'automation' does not provide trigger support",
+            "Integration 'automation' does not provide trigger support"
+            " at 'triggers[0]'",
         ),
         (
             {
@@ -120,7 +120,8 @@ async def test_update_automation_config(
                 },
                 "action": [],
             },
-            "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd",
+            "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd"
+            " at 'conditions[0]'",
         ),
         (
             {
@@ -132,7 +133,8 @@ async def test_update_automation_config(
                     "state": "blah",
                 },
             },
-            "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd",
+            "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd"
+            " at 'actions[0]'",
         ),
         (
             {

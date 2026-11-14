@@ -3,14 +3,13 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON, Platform
+from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN, SceneService
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -50,8 +49,8 @@ async def test_scene_activate(
 
     await hass.services.async_call(
         SCENE_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
+        SceneService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
 

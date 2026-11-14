@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from aiohttp import ClientError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from smart_meter_texas.exceptions import (
     SmartMeterTexasAPIError,
     SmartMeterTexasAuthError,
@@ -17,8 +18,6 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
-
 TEST_LOGIN = {CONF_USERNAME: "test-username", CONF_PASSWORD: "test-password"}
 
 
@@ -29,7 +28,7 @@ def _patch_success() -> Generator[None]:
         patch("smart_meter_texas.Client.authenticate", return_value=True),
         patch(
             "homeassistant.components.smart_meter_texas.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         yield
@@ -48,7 +47,7 @@ async def test_form(hass: HomeAssistant) -> None:
         patch("smart_meter_texas.Client.authenticate", return_value=True),
         patch(
             "homeassistant.components.smart_meter_texas.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(

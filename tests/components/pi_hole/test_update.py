@@ -1,12 +1,12 @@
 """Test pi_hole component."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components import pi_hole
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 from . import CONFIG_DATA_DEFAULTS, _create_mocked_hole, _patch_init_hole
-
-from tests.common import MockConfigEntry
 
 
 async def test_update(hass: HomeAssistant) -> None:

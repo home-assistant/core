@@ -2,19 +2,14 @@
 
 from datetime import time
 
-from homeassistant.components.time import DOMAIN, SERVICE_SET_VALUE
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_FRIENDLY_NAME,
-    ATTR_TIME,
-    CONF_PLATFORM,
-)
+from pytest_homeassistant.common import setup_test_component_platform
+
+from homeassistant.components.time import DOMAIN, TimeService, TimeServiceArgument
+from homeassistant.const import ATTR_FRIENDLY_NAME, CONF_PLATFORM, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .common import MockTimeEntity
-
-from tests.common import setup_test_component_platform
 
 
 async def test_date(hass: HomeAssistant) -> None:
@@ -35,8 +30,11 @@ async def test_date(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_TIME: time(2, 3, 4), ATTR_ENTITY_ID: "time.test"},
+        TimeService.SET_VALUE,
+        {
+            TimeServiceArgument.TIME: time(2, 3, 4),
+            CommonServiceArgument.ENTITY_ID: "time.test",
+        },
         blocking=True,
     )
     await hass.async_block_till_done()

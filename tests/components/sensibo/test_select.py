@@ -5,20 +5,19 @@ from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
-    ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.parametrize(
@@ -83,8 +82,11 @@ async def test_select_set_option(
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: state.entity_id, ATTR_OPTION: "dim"},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: state.entity_id,
+                SelectServiceArgument.OPTION: "dim",
+            },
             blocking=True,
         )
 
@@ -113,8 +115,11 @@ async def test_select_set_option(
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: state.entity_id, ATTR_OPTION: "dim"},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: state.entity_id,
+                SelectServiceArgument.OPTION: "dim",
+            },
             blocking=True,
         )
 
@@ -127,8 +132,11 @@ async def test_select_set_option(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: state.entity_id, ATTR_OPTION: "dim"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: state.entity_id,
+            SelectServiceArgument.OPTION: "dim",
+        },
         blocking=True,
     )
 

@@ -10,15 +10,16 @@ from openevsehttp.exceptions import (
     UnsupportedFeature,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
 from homeassistant.components.openevse.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -26,8 +27,6 @@ from homeassistant.exceptions import (
     ServiceValidationError,
 )
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -58,8 +57,11 @@ async def test_set_value(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: "number.openevse_mock_config_charge_rate", ATTR_VALUE: 32.0},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: "number.openevse_mock_config_charge_rate",
+            NumberServiceArgument.VALUE: 32.0,
+        },
         blocking=True,
     )
     mock_charger.set_current.assert_called_once_with(32.0)
@@ -152,10 +154,10 @@ async def test_set_value_raises(
     with pytest.raises(expected) as exc_info:
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: "number.openevse_mock_config_charge_rate",
-                ATTR_VALUE: 32.0,
+                CommonServiceArgument.ENTITY_ID: "number.openevse_mock_config_charge_rate",
+                NumberServiceArgument.VALUE: 32.0,
             },
             blocking=True,
         )

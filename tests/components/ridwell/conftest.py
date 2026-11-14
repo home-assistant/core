@@ -7,12 +7,11 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from aioridwell.model import EventState, RidwellPickup, RidwellPickupEvent
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.ridwell.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 TEST_ACCOUNT_ID = "12345"
 TEST_DASHBOARD_URL = "https://www.ridwell.com/users/12345/dashboard"

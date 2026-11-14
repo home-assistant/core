@@ -1,0 +1,61 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'coordinator_data': dict({
+      'file_counts': dict({
+        '6490a72d-4c26-4020-ad00-1b72fb2c88c9': 1,
+      }),
+      'history_limits': dict({
+        '6490a72d-4c26-4020-ad00-1b72fb2c88c9': -1,
+      }),
+      'libraries': dict({
+        '6490a72d-4c26-4020-ad00-1b72fb2c88c9': dict({
+          'encrypted': False,
+          'head_commit_id': '983edae73d8c12866073579196551cee8cccee09',
+          'id': '6490a72d-4c26-4020-ad00-1b72fb2c88c9',
+          'modified': '2026-10-15T07:07:46+00:00',
+          'modifier_email': '**REDACTED**',
+          'modifier_name': '**REDACTED**',
+          'name': 'Documents',
+          'owner': '**REDACTED**',
+          'owner_name': '**REDACTED**',
+          'permission': 'rw',
+          'size': 300000,
+          'type': 'repo',
+          'virtual': False,
+        }),
+        'f7ca59ed-d5bb-4a64-a968-b4d95b33b527': dict({
+          'encrypted': True,
+          'head_commit_id': '5a9b5a8a0e6d0d6229cb4aad852f3fe9414a8453',
+          'id': 'f7ca59ed-d5bb-4a64-a968-b4d95b33b527',
+          'modified': '2026-10-15T07:07:34+00:00',
+          'modifier_email': '**REDACTED**',
+          'modifier_name': '**REDACTED**',
+          'name': 'Vault',
+          'owner': '**REDACTED**',
+          'owner_name': '**REDACTED**',
+          'permission': 'rw',
+          'size': 0,
+          'type': 'repo',
+          'virtual': False,
+        }),
+      }),
+    }),
+    'entry_data': dict({
+      'token': '**REDACTED**',
+      'url': '**REDACTED**',
+      'verify_ssl': True,
+    }),
+    'subentries': dict({
+      'documents-subentry-id': dict({
+        'data': dict({
+          'backup': True,
+          'backup_path': '/Home Assistant backups',
+          'library_id': '6490a72d-4c26-4020-ad00-1b72fb2c88c9',
+        }),
+        'subentry_type': 'library',
+        'title': 'Documents',
+      }),
+    }),
+  })
+# ---

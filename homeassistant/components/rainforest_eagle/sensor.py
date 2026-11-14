@@ -15,7 +15,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DOMAIN, SUMMATION_DELIVERED, SUMMATION_RECEIVED
 from .coordinator import EagleDataCoordinator, RainforestEagleConfigEntry
 
 SENSORS = (
@@ -27,14 +27,14 @@ SENSORS = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
-        key="zigbee:CurrentSummationDelivered",
+        key=SUMMATION_DELIVERED,
         translation_key="total_energy_delivered",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
-        key="zigbee:CurrentSummationReceived",
+        key=SUMMATION_RECEIVED,
         translation_key="total_energy_received",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,

@@ -6,14 +6,13 @@ from urllib.error import URLError
 
 from pylutron import LutronException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.lutron.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_entry(

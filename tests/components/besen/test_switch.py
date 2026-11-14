@@ -4,10 +4,11 @@ from unittest.mock import Mock
 
 from besen.exceptions import CommandFailed
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.besen.const import DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -15,6 +16,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -24,8 +26,6 @@ from homeassistant.helpers.entity_component import async_update_entity
 
 from . import publish_besen_state
 from .conftest import charger_state, setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 ENTITY_ID = "switch.garage_charge"
 
@@ -120,8 +120,8 @@ async def test_switch_services(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -133,8 +133,8 @@ async def test_switch_services(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -178,7 +178,7 @@ async def test_switch_command_failure(
         )
     await hass.async_block_till_done()
 
-    mock_command.assert_awaited_once_with()
+    mock_command.assert_awaited_once()
     assert err.value.translation_domain == DOMAIN
     assert err.value.translation_key == "command_failed"
     assert err.value.__cause__ is failure

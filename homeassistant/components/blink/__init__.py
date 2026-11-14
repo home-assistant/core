@@ -11,11 +11,11 @@ from homeassistant.components import persistent_notification
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, PLATFORMS
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, LEGACY_HARDWARE_ID, PLATFORMS
 from .coordinator import BlinkConfigEntry, BlinkUpdateCoordinator
 from .services import async_setup_services
 
@@ -59,12 +59,21 @@ async def async_migrate_entry(hass: HomeAssistant, entry: BlinkConfigEntry) -> N
             translation_key="migration_reauth_required",
             translation_placeholders={"version": str(entry.version)},
         )
-    if entry.version == 3:
+    version = entry.version
+    if version == 3:
         # Migrate device_id to hardware_id for blinkpy 0.25.x OAuth2 compatibility
         if "device_id" in data:
             data["hardware_id"] = data.pop("device_id")
-            hass.config_entries.async_update_entry(entry, data=data, version=4)
-        return
+        version = 4
+    if version == 4:
+        # Blink's OAuth endpoint rejects LEGACY_HARDWARE_ID; drop it so blinkpy
+        # mints a fresh per-install UUID on next setup.
+        if data.get("hardware_id") == LEGACY_HARDWARE_ID:
+            data.pop("hardware_id", None)
+        version = 5
+
+    if version != entry.version or data != dict(entry.data):
+        hass.config_entries.async_update_entry(entry, data=data, version=version)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -120,3 +129,17 @@ def _async_import_options_from_data_if_missing(
 async def async_unload_entry(hass: HomeAssistant, entry: BlinkConfigEntry) -> None:
     """Unload Blink entry."""
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, entry: BlinkConfigEntry, device_entry: dr.AnyDeviceEntry
+) -> bool:
+    """Allow removal of a device that is no longer on the Blink account."""
+    blink = entry.runtime_data.api
+    serials = {camera.serial for camera in blink.cameras.values()} | {
+        sync_module.serial for sync_module in blink.sync.values()
+    }
+    return not any(
+        identifier[0] == DOMAIN and identifier[1] in serials
+        for identifier in device_entry.identifiers
+    )

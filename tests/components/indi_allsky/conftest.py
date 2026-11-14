@@ -6,11 +6,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from aioindiallsky import ExposureData, SensorData
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.indi_allsky.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_VERIFY_SSL
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture(autouse=True)
@@ -24,7 +23,7 @@ def mock_system_random() -> Generator[None]:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.indi_allsky.async_setup_entry", return_value=True
+        "homeassistant.components.indi_allsky.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

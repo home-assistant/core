@@ -4,14 +4,13 @@ from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
 from pyseventeentrack.errors import SeventeenTrackError
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from . import goto_future, init_integration
 from .conftest import DEFAULT_SUMMARY, get_package
-
-from tests.common import MockConfigEntry
 
 IN_TRANSIT_ENTITY_ID = "sensor.17track_in_transit"
 

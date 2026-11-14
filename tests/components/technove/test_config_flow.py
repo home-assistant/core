@@ -5,6 +5,7 @@ from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from technove import TechnoVEConnectionError, TechnoVEError
 
 from homeassistant.components.technove.const import DOMAIN
@@ -13,8 +14,6 @@ from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_technove")

@@ -3,14 +3,35 @@
 import asyncio
 from collections.abc import Awaitable, Callable
 import copy
+from datetime import timedelta
 import json
-import logging
 from pathlib import Path
 import re
 from typing import Any
 from unittest.mock import ANY, AsyncMock, call, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    async_capture_events,
+    async_fire_mqtt_message,
+    async_fire_time_changed,
+    async_get_device_automations,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+)
+from pytest_homeassistant.components.mqtt.common import (
+    MOCK_NOTIFY_SUBENTRY_DATA_MULTI,
+    help_all_subscribe_calls,
+    help_test_unload_config_entry,
+)
+from pytest_homeassistant.typing import (
+    MqttMockHAClientGenerator,
+    MqttMockPahoClient,
+    WebSocketGenerator,
+)
 
 from homeassistant import config_entries
 from homeassistant.components import mqtt
@@ -50,31 +71,11 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 from homeassistant.util.signal_type import SignalTypeFormat
 
-from .common import (
-    MOCK_NOTIFY_SUBENTRY_DATA_MULTI,
-    help_all_subscribe_calls,
-    help_test_unload_config_entry,
-)
 from .conftest import ENTRY_DEFAULT_BIRTH_MESSAGE
 from .test_tag import DEFAULT_TAG_ID, DEFAULT_TAG_SCAN
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    async_capture_events,
-    async_fire_mqtt_message,
-    async_get_device_automations,
-    mock_config_flow,
-    mock_integration,
-    mock_platform,
-)
-from tests.typing import (
-    MqttMockHAClientGenerator,
-    MqttMockPahoClient,
-    WebSocketGenerator,
-)
 
 
 def _get_device_for_config_entry(
@@ -297,7 +298,10 @@ async def test_invalid_json(
 
         async_fire_mqtt_message(hass, discovery_topic, "not json")
         await hass.async_block_till_done()
-        assert "Unable to parse JSON" in caplog.text
+        assert (
+            f"Unable to parse JSON discovery payload on topic '{discovery_topic}': "
+            "'not json'" in caplog.text
+        )
         assert not mock_dispatcher_send.called
 
 
@@ -326,22 +330,40 @@ async def test_discovery_schema_error(
         assert "AttributeError: Attribute abc not found" in caplog.text
 
 
+@pytest.mark.parametrize(
+    ("payload", "error"),
+    [
+        pytest.param(
+            '{"name": "abc", "state_topic": "home/alarm", '
+            '"command_topic": "home/alarm/set", '
+            '"qos": "some_invalid_value"}',
+            "Error 'expected int at 'qos''",
+            id="qos",
+        ),
+        pytest.param(
+            '{"name": "abc", "state_topic": "home/alarm", '
+            '"command_topic": "home/alarm/set", '
+            '"encoding": "unknown-encoding"}',
+            "Error 'Unknown payload encoding 'unknown-encoding' at 'encoding''",
+            id="encoding",
+        ),
+    ],
+)
 async def test_invalid_config(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
+    payload: str,
+    error: str,
 ) -> None:
     """Test sending in JSON that violates the platform schema."""
     await mqtt_mock_entry()
     async_fire_mqtt_message(
-        hass,
-        "homeassistant/alarm_control_panel/bla/config",
-        '{"name": "abc", "state_topic": "home/alarm", '
-        '"command_topic": "home/alarm/set", '
-        '"qos": "some_invalid_value"}',
+        hass, "homeassistant/alarm_control_panel/bla/config", payload
     )
     await hass.async_block_till_done()
-    assert "Error 'expected int at 'qos''" in caplog.text
+    assert error in caplog.text
+    assert hass.states.get("alarm_control_panel.abc") is None
 
 
 async def test_invalid_device_discovery_config(
@@ -2786,7 +2808,7 @@ async def test_mqtt_discovery_flow_starts_once(
     and after an entry was removed, to trigger re-discovery.
     """
     mock_integration(
-        hass, MockModule(domain="comp", async_setup_entry=AsyncMock(return_value=True))
+        hass, MockModule(domain="comp", async_setup_entry=AsyncMock(return_value=None))
     )
     mock_platform(hass, "comp.config_flow", None)
 
@@ -2828,13 +2850,10 @@ async def test_mqtt_discovery_flow_starts_once(
         assert mqtt_data_flow_calls[0].payload == "initial message"
 
         # Test we can ignore updates if they are the same
-        with caplog.at_level(logging.DEBUG):
-            async_fire_mqtt_message(
-                hass, "comp/discovery/bla/config1", "initial message"
-            )
-            await hass.async_block_till_done(wait_background_tasks=True)
-            assert "Ignoring already processed discovery message" in caplog.text
-            assert len(mqtt_data_flow_calls) == 1
+        async_fire_mqtt_message(hass, "comp/discovery/bla/config1", "initial message")
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert "Ignoring already processed discovery message" in caplog.text
+        assert len(mqtt_data_flow_calls) == 1
 
         # Test we can apply updates
         async_fire_mqtt_message(hass, "comp/discovery/bla/config1", "update message")
@@ -2924,7 +2943,7 @@ async def test_mqtt_discovery_flow_subscribes_atr_configured_qos(
 ) -> None:
     """Check MQTT integration discovery subscribes at the configured QoS."""
     mock_integration(
-        hass, MockModule(domain="comp", async_setup_entry=AsyncMock(return_value=True))
+        hass, MockModule(domain="comp", async_setup_entry=AsyncMock(return_value=None))
     )
     mock_platform(hass, "comp.config_flow", None)
 
@@ -3881,6 +3900,200 @@ async def test_unique_id_collission_has_priority(
     assert entity_registry.async_get("sensor.abc123_sbfspot_12345_2") is None
 
 
+DUPLICATE_UNIQUE_ID_DISABLED_DEVICE = "0AFFD2"
+DUPLICATE_UNIQUE_ID_ENABLED_DEVICE = "0AFFD3"
+DUPLICATE_UNIQUE_ID_ENTITY_ID = "sensor.wall_clock"
+
+
+def _single_component_duplicate_unique_id(device_identifier: str) -> tuple[str, str]:
+    """Return a single component discovery topic and payload."""
+    return f"homeassistant/sensor/{device_identifier}/clock/config", json.dumps(
+        {
+            "device": {"identifiers": [device_identifier], "name": "Wall"},
+            "o": {"name": "bla2mqtt"},
+            "name": "Clock",
+            "state_topic": "test-topic",
+            "unique_id": "clock",
+        }
+    )
+
+
+def _device_duplicate_unique_id(device_identifier: str) -> tuple[str, str]:
+    """Return a device discovery topic and payload."""
+    return f"homeassistant/device/{device_identifier}/config", json.dumps(
+        {
+            "device": {"identifiers": [device_identifier], "name": "Wall"},
+            "o": {"name": "bla2mqtt"},
+            "cmps": {
+                "clock": {
+                    "platform": "sensor",
+                    "name": "Clock",
+                    "state_topic": "test-topic",
+                    "unique_id": "clock",
+                }
+            },
+        }
+    )
+
+
+async def _async_reload_and_replay(
+    hass: HomeAssistant, retained_discovery: list[tuple[str, str]]
+) -> int:
+    """Reload the MQTT entry, replay retained discovery and return requested reloads."""
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    with patch("homeassistant.components.mqtt.client.AsyncMQTTClient"):
+        assert await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+    for topic, payload in retained_discovery:
+        async_fire_mqtt_message(hass, topic, payload, retain=True)
+    await hass.async_block_till_done()
+    # An entity that was enabled in the registry requests a delayed reload
+    with patch.object(
+        hass.config_entries, "async_schedule_reload"
+    ) as mock_schedule_reload:
+        async_fire_time_changed(
+            hass,
+            dt_util.utcnow()
+            + timedelta(seconds=config_entries.RELOAD_AFTER_UPDATE_DELAY + 1),
+        )
+        await hass.async_block_till_done()
+    return mock_schedule_reload.call_count
+
+
+@pytest.mark.parametrize(
+    "discovery",
+    [
+        pytest.param(_single_component_duplicate_unique_id, id="single_component"),
+        pytest.param(_device_duplicate_unique_id, id="device_discovery"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("replay_order", "owner", "disabled_by", "error"),
+    [
+        pytest.param(
+            (DUPLICATE_UNIQUE_ID_DISABLED_DEVICE, DUPLICATE_UNIQUE_ID_ENABLED_DEVICE),
+            DUPLICATE_UNIQUE_ID_DISABLED_DEVICE,
+            er.RegistryEntryDisabler.DEVICE,
+            "unique ID 'clock' is already used by disabled entity sensor.wall_clock",
+            id="disabled_device_first",
+        ),
+        pytest.param(
+            (DUPLICATE_UNIQUE_ID_ENABLED_DEVICE, DUPLICATE_UNIQUE_ID_DISABLED_DEVICE),
+            DUPLICATE_UNIQUE_ID_ENABLED_DEVICE,
+            None,
+            "Platform mqtt does not generate unique IDs",
+            id="enabled_device_first",
+        ),
+    ],
+)
+async def test_duplicate_unique_id_on_disabled_device_does_not_reload(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+    discovery: Callable[[str], tuple[str, str]],
+    replay_order: tuple[str, str],
+    owner: str,
+    disabled_by: er.RegistryEntryDisabler | None,
+    error: str,
+) -> None:
+    """Test a unique ID shared with a disabled device does not cause a reload loop."""
+    await mqtt_mock_entry()
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, DUPLICATE_UNIQUE_ID_DISABLED_DEVICE)},
+        disabled_by=dr.DeviceEntryDisabler.USER,
+    )
+    async_fire_mqtt_message(
+        hass, *discovery(DUPLICATE_UNIQUE_ID_ENABLED_DEVICE), retain=True
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(DUPLICATE_UNIQUE_ID_ENTITY_ID) is not None
+    retained_discovery = [discovery(identifier) for identifier in replay_order]
+
+    assert await _async_reload_and_replay(hass, retained_discovery) == 0
+    assert error in caplog.text
+    caplog.clear()
+
+    # The first discovered entity still wins after the next reload
+    assert await _async_reload_and_replay(hass, retained_discovery) == 0
+    assert error in caplog.text
+    owner_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, owner), entry.entry_id
+    )
+    assert owner_device is not None
+    registry_entry = entity_registry.async_get(DUPLICATE_UNIQUE_ID_ENTITY_ID)
+    assert registry_entry is not None
+    assert registry_entry.device_id == owner_device.id
+    assert registry_entry.disabled_by is disabled_by
+
+
+async def test_duplicate_unique_id_of_disabled_entity_logs_discovery_topics(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the error for a duplicate unique ID refers to both discovery topics."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/sensor/bla/sens2/config",
+        json.dumps(SINGLE_DISABLED_COMPONENT_CONFIG),
+    )
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/sensor/other/sens2/config",
+        json.dumps(
+            SINGLE_DISABLED_COMPONENT_CONFIG
+            | {"dev": {"identifiers": ["other"], "name": "other"}}
+        ),
+    )
+    await hass.async_block_till_done()
+    assert (
+        "Ignoring discovered sensor on topic homeassistant/sensor/other/sens2/config "
+        "from external application bla2mqtt, version: 0.9, unique ID 'very_unique2' "
+        "is already used by disabled entity sensor.bla_disabled which was discovered "
+        "on topic homeassistant/sensor/bla/sens2/config from external application "
+        "bla2mqtt, version: 0.9; to resolve the duplicate unique ID, publish an "
+        "empty retained payload to at least one of these discovery topics"
+        in caplog.text
+    )
+    assert not entity_registry.async_is_registered("sensor.other_disabled")
+
+
+async def test_duplicate_unique_id_of_re_enabled_entity_is_discovered(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a duplicate unique ID is not ignored when the entity was enabled."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/sensor/bla/sens2/config",
+        json.dumps(SINGLE_DISABLED_COMPONENT_CONFIG),
+    )
+    await hass.async_block_till_done()
+    # The entity is not loaded until the config entry is reloaded
+    entity_registry.async_update_entity("sensor.bla_disabled", disabled_by=None)
+
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/sensor/other/sens2/config",
+        json.dumps(
+            SINGLE_DISABLED_COMPONENT_CONFIG
+            | {"dev": {"identifiers": ["other"], "name": "other"}}
+        ),
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.bla_disabled") is not None
+    assert "is already used by disabled entity" not in caplog.text
+
+
 async def test_update_with_bad_config_not_breaks_discovery(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
@@ -4343,6 +4556,7 @@ async def test_shared_options_in_sync_with_device_schema() -> None:
         "device",
         "origin",
         "components",
+        "child_devices",
     }:
         assert option in SHARED_OPTIONS
 
@@ -4520,3 +4734,183 @@ async def test_async_removed_from_device(
     """
     event = Event(dr.EVENT_DEVICE_REGISTRY_UPDATED, event_data)
     assert async_removed_from_device(event) is expected
+
+
+# The identifiers and the connections belong to two devices registered this session
+CONFLICTING_DEVICE = {
+    "identifiers": ["device_a"],
+    "connections": [["mac", "02:5b:26:a8:dc:12"]],
+}
+DEVICE_INFO_ERROR = "Unable to register MQTT device"
+
+
+async def _discover_conflicting_devices(hass: HomeAssistant) -> None:
+    """Discover the two devices the conflicting device config refers to."""
+    for object_id, device in (
+        ("a", {"identifiers": ["device_a"]}),
+        ("b", {"connections": [["mac", "02:5b:26:a8:dc:12"]]}),
+    ):
+        async_fire_mqtt_message(
+            hass,
+            f"homeassistant/tag/{object_id}/config",
+            json.dumps({"topic": f"{object_id}/tag", "device": device}),
+        )
+    await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(
+    ("discovery_topic", "config"),
+    [
+        pytest.param(
+            "homeassistant/device_automation/c/config",
+            {
+                "automation_type": "trigger",
+                "topic": "c/trigger",
+                "type": "button_short_press",
+                "subtype": "button_1",
+            },
+            id="device_trigger",
+        ),
+        pytest.param("homeassistant/tag/c/config", {"topic": "c/tag"}, id="tag"),
+    ],
+)
+async def test_discovery_device_registration_error(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+    discovery_topic: str,
+    config: dict[str, Any],
+) -> None:
+    """Test a device trigger or tag of a device that can not be registered."""
+    await mqtt_mock_entry()
+    await _discover_conflicting_devices(hass)
+
+    async_fire_mqtt_message(
+        hass, discovery_topic, json.dumps({**config, "device": CONFLICTING_DEVICE})
+    )
+    await hass.async_block_till_done()
+    assert DEVICE_INFO_ERROR in caplog.text
+    assert not [record for record in caplog.records if record.exc_info]
+
+    # The discovery is cancelled, so a valid config is discovered
+    async_fire_mqtt_message(
+        hass,
+        discovery_topic,
+        json.dumps({**config, "device": {"identifiers": ["device_c"]}}),
+    )
+    await hass.async_block_till_done()
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "device_c"), hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    )
+
+
+@pytest.mark.parametrize(
+    ("discovery_topic", "config"),
+    [
+        pytest.param(
+            "homeassistant/device_automation/c/config",
+            {
+                "automation_type": "trigger",
+                "topic": "c/trigger",
+                "type": "button_short_press",
+                "subtype": "button_1",
+            },
+            id="device_trigger",
+        ),
+        pytest.param("homeassistant/tag/c/config", {"topic": "c/tag"}, id="tag"),
+    ],
+)
+async def test_discovery_update_device_registration_error(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+    discovery_topic: str,
+    config: dict[str, Any],
+) -> None:
+    """Test a device trigger or tag update with a device that can not be registered.
+
+    The update is cancelled, and is processed again when it is received again.
+    """
+    await mqtt_mock_entry()
+    await _discover_conflicting_devices(hass)
+    async_fire_mqtt_message(
+        hass,
+        discovery_topic,
+        json.dumps({**config, "device": {"identifiers": ["device_c"]}}),
+    )
+    await hass.async_block_till_done()
+    update = json.dumps({**config, "device": CONFLICTING_DEVICE})
+
+    async_fire_mqtt_message(hass, discovery_topic, update)
+    await hass.async_block_till_done()
+    assert DEVICE_INFO_ERROR in caplog.text
+    assert not [record for record in caplog.records if record.exc_info]
+
+    caplog.clear()
+    async_fire_mqtt_message(hass, discovery_topic, update)
+    await hass.async_block_till_done()
+    assert DEVICE_INFO_ERROR in caplog.text
+
+
+DEVICE_WITH_VIA_DEVICE = {"identifiers": ["no_unique_id"], "via_device": "hub"}
+ATTACH_DEVICE_WARNING = "attempts to attach a device to an entity without a unique ID"
+
+
+async def test_discovery_without_unique_id_ignores_device(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the device config of a discovered entity without unique ID is ignored."""
+    await mqtt_mock_entry()
+    config = {
+        "name": "Test",
+        "command_topic": "test/set",
+        "device": DEVICE_WITH_VIA_DEVICE,
+    }
+    async_fire_mqtt_message(hass, "homeassistant/switch/bla/config", json.dumps(config))
+    await hass.async_block_till_done()
+    assert hass.states.get("switch.test") is not None
+
+    # A discovery update ignores the device config too
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/switch/bla/config",
+        json.dumps({**config, "name": "Updated"}),
+    )
+    await hass.async_block_till_done()
+    assert not dr.async_entries_for_config_entry(
+        device_registry, hass.config_entries.async_entries(mqtt.DOMAIN)[0].entry_id
+    )
+    assert ATTACH_DEVICE_WARNING not in caplog.text
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                "switch": {
+                    "name": "Test",
+                    "command_topic": "test/set",
+                    "device": DEVICE_WITH_VIA_DEVICE,
+                }
+            }
+        }
+    ],
+)
+async def test_yaml_without_unique_id_ignores_device(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the device config of a YAML entity without unique ID is ignored."""
+    await mqtt_mock_entry()
+    assert hass.states.get("switch.test") is not None
+    assert not dr.async_entries_for_config_entry(
+        device_registry, hass.config_entries.async_entries(mqtt.DOMAIN)[0].entry_id
+    )
+    assert ATTACH_DEVICE_WARNING not in caplog.text

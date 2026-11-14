@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from energyflip import EnergyFlipException
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.huisbaasje.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -10,8 +11,6 @@ from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME, STATE_UNA
 from homeassistant.core import HomeAssistant
 
 from .test_data import MOCK_CURRENT_MEASUREMENTS
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_entry(hass: HomeAssistant) -> None:

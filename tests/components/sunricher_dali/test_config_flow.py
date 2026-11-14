@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock
 
 from PySrDaliGateway.exceptions import DaliGatewayError
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.sunricher_dali.const import CONF_SERIAL_NUMBER, DOMAIN
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
@@ -18,8 +19,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .conftest import GATEWAY_SERIAL
-
-from tests.common import MockConfigEntry
 
 
 async def test_discovery_flow_success(

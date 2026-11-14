@@ -128,7 +128,7 @@ class SMTConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=REAUTH_SCHEMA,
-            description_placeholders={CONF_USERNAME: reauth_entry.data[CONF_USERNAME]},
+            description_placeholders={"username": reauth_entry.data[CONF_USERNAME]},
             errors=errors,
         )
 

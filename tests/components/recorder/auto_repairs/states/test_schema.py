@@ -3,12 +3,10 @@
 from unittest.mock import ANY, patch
 
 import pytest
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
+from pytest_homeassistant.typing import RecorderInstanceContextManager
 
 from homeassistant.core import HomeAssistant
-
-from ...common import async_wait_recording_done
-
-from tests.typing import RecorderInstanceContextManager
 
 
 @pytest.fixture

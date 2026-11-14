@@ -5,14 +5,13 @@ from unittest.mock import AsyncMock
 from aioptdevices import PTDevicesRequestError, PTDevicesUnauthorizedError
 from aioptdevices.interface import PTDevicesResponse
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.ptdevices.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 async def test_flow_success(

@@ -1,6 +1,7 @@
 {
   "domain": "collection_image",
   "name": "Collection image",
+  "categories": ["helpers", "productivity_information.documents_photos"],
   "codeowners": ["@karwosts"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/collection_image",

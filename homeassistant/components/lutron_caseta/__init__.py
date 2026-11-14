@@ -10,16 +10,19 @@ import probatio
 from pylutron_caseta import BUTTON_STATUS_MULTITAP, BUTTON_STATUS_PRESSED
 from pylutron_caseta.smartbridge import Smartbridge
 
-from homeassistant import config_entries
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import ATTR_DEVICE_ID, CONF_HOST, Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
+    issue_registry as ir,
 )
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -46,6 +49,7 @@ from .const import (
     DOMAIN,
     LUTRON_CASETA_BUTTON_EVENT,
     MANUFACTURER,
+    SIGNAL_BUTTON_EVENT,
     UNASSIGNED_AREA,
 )
 from .device_trigger import (
@@ -75,6 +79,7 @@ from .util import area_name_from_id, serial_to_unique_id
 _LOGGER = logging.getLogger(__name__)
 
 DATA_BRIDGE_CONFIG = "lutron_caseta_bridges"
+INTEGRATION_TITLE = "Lutron Caséta"
 
 CONFIG_SCHEMA = probatio.Schema(
     {
@@ -97,6 +102,7 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.COVER,
+    Platform.EVENT,
     Platform.FAN,
     Platform.LIGHT,
     Platform.SCENE,
@@ -107,23 +113,79 @@ PLATFORMS = [
 async def async_setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
     """Set up the Lutron component."""
     if DOMAIN in base_config:
-        bridge_configs = base_config[DOMAIN]
-        for config in bridge_configs:
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": config_entries.SOURCE_IMPORT},
-                    # extract the config keys one-by-one just to be explicit
-                    data={
+        hass.async_create_task(
+            _async_import_yaml(
+                hass,
+                # extract the config keys one-by-one just to be explicit
+                [
+                    {
                         CONF_HOST: config[CONF_HOST],
                         CONF_KEYFILE: config[CONF_KEYFILE],
                         CONF_CERTFILE: config[CONF_CERTFILE],
                         CONF_CA_CERTS: config[CONF_CA_CERTS],
-                    },
-                )
+                    }
+                    for config in base_config[DOMAIN]
+                ],
             )
+        )
 
     return True
+
+
+async def _async_import_yaml(
+    hass: HomeAssistant, import_data: list[dict[str, Any]]
+) -> None:
+    """Import the YAML devices into config entries."""
+    # Eager tasks register the import flows before setup waits for them.
+    results = await asyncio.gather(
+        *(
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN, context={"source": SOURCE_IMPORT}, data=data
+                )
+            )
+            for data in import_data
+        )
+    )
+    failed_reasons = {
+        result["reason"]
+        for result in results
+        if result["type"] is FlowResultType.ABORT
+        and result["reason"] != "already_configured"
+    }
+    for reason in failed_reasons:
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{reason}",
+            breaks_in_ha_version="2027.6.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=f"deprecated_yaml_import_issue_{reason}",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": INTEGRATION_TITLE,
+            },
+        )
+    # The shared issue tells users to remove all YAML, which would drop failed devices.
+    if failed_reasons:
+        return
+
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2027.6.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": INTEGRATION_TITLE,
+        },
+    )
 
 
 async def _async_migrate_unique_ids(
@@ -197,10 +259,18 @@ async def async_setup_entry(
         except TimeoutError as ex:
             connect_task.cancel()
             await bridge.close()
-            raise ConfigEntryNotReady(f"Timed out on {name} for {host}") from ex
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="setup_timeout",
+                translation_placeholders={"step": name, "host": host},
+            ) from ex
 
     if not bridge.is_connected():
-        raise ConfigEntryNotReady(f"Connection failed to {host}")
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={"host": host},
+        )
 
     _LOGGER.debug("Connected to Lutron Caseta bridge via LEAP at %s", host)
     await _async_migrate_unique_ids(hass, entry)
@@ -244,7 +314,9 @@ def _async_register_bridge_device(
     if area != UNASSIGNED_AREA:
         device_args.suggested_area = area
 
-    device_registry.async_get_or_create(**device_args, config_entry_id=config_entry_id)
+    device_registry.async_get_or_create_from_info(
+        device_info=device_args, config_entry_id=config_entry_id
+    )
 
 
 @callback
@@ -289,8 +361,8 @@ def _async_setup_keypads(
             )
 
             # Register the keypad device
-            dr_device = device_registry.async_get_or_create(
-                **keypad["device_info"], config_entry_id=config_entry_id
+            dr_device = device_registry.async_get_or_create_from_info(
+                device_info=keypad["device_info"], config_entry_id=config_entry_id
             )
             keypad[LUTRON_KEYPAD_DEVICE_REGISTRY_DEVICE_ID] = dr_device.id
             dr_device_id_to_keypad[dr_device.id] = keypad
@@ -323,6 +395,7 @@ def _async_setup_keypads(
 
     _async_subscribe_keypad_events(
         hass=hass,
+        config_entry_id=config_entry_id,
         bridge=bridge,
         keypads=keypads,
         keypad_buttons=keypad_buttons,
@@ -448,6 +521,7 @@ def async_get_lip_button(device_type: str, leap_button: int) -> int | None:
 @callback
 def _async_subscribe_keypad_events(
     hass: HomeAssistant,
+    config_entry_id: str,
     bridge: Smartbridge,
     keypads: dict[int, LutronKeypad],
     keypad_buttons: dict[int, LutronButton],
@@ -492,6 +566,11 @@ def _async_subscribe_keypad_events(
                 ATTR_BUTTON_TYPE: button_type,
                 ATTR_ACTION: action,
             },
+        )
+        # The bridge allows one subscriber per button, so event entities
+        # receive the button status through this signal instead.
+        async_dispatcher_send(
+            hass, SIGNAL_BUTTON_EVENT.format(config_entry_id, button_id), event_type
         )
 
     for button_id in keypad_buttons:

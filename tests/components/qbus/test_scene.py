@@ -1,11 +1,11 @@
 """Test Qbus scene entities."""
 
-from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN, SERVICE_TURN_ON
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
+from pytest_homeassistant.common import async_fire_mqtt_message
+from pytest_homeassistant.typing import MqttMockHAClient
 
-from tests.common import async_fire_mqtt_message
-from tests.typing import MqttMockHAClient
+from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN, SceneService
+from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument
+from homeassistant.core import HomeAssistant
 
 _PAYLOAD_SCENE_STATE = '{"id":"UL25","properties":{"value":true},"type":"state"}'
 _PAYLOAD_SCENE_ACTIVATE = '{"id": "UL25", "type": "action", "action": "active"}'
@@ -29,8 +29,8 @@ async def test_scene(
     mqtt_mock.reset_mock()
     await hass.services.async_call(
         SCENE_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: _SCENE_ENTITY_ID},
+        SceneService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: _SCENE_ENTITY_ID},
         blocking=True,
     )
 

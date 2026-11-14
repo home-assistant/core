@@ -5,6 +5,7 @@ import json
 
 from aiohttp.test_utils import TestClient
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components import device_tracker
 from homeassistant.components.device_tracker import legacy
@@ -16,8 +17,6 @@ from homeassistant.components.meraki.device_tracker import (
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture

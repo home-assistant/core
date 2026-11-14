@@ -11,19 +11,19 @@ from gardena_bluetooth.const import (
 )
 from habluetooth import BluetoothServiceInfo
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import AQUA_CONTOUR_SERVICE_INFO, setup_entry
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 pytestmark = pytest.mark.usefixtures("constant_advertisements")
 
@@ -120,15 +120,21 @@ async def test_select(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "rest"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            SelectServiceArgument.OPTION: "rest",
+        },
         blocking=True,
     )
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "contour_3"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            SelectServiceArgument.OPTION: "contour_3",
+        },
         blocking=True,
     )
 

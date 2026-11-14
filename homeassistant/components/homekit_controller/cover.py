@@ -7,11 +7,10 @@ from aiohomekit.model.services import Service, ServicesTypes
 from propcache.api import cached_property
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
-    ATTR_TILT_POSITION,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
+    CoverServiceArgument,
     CoverState,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -19,8 +18,8 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import KNOWN_DEVICES
 from .connection import HKDevice
+from .const import KNOWN_DEVICES
 from .entity import HomeKitEntity
 
 STATE_STOPPED = "stopped"
@@ -276,7 +275,7 @@ class HomeKitWindowCover(HomeKitEntity, CoverEntity):
     @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Send position command."""
-        position = kwargs[ATTR_POSITION]
+        position = kwargs[CoverServiceArgument.POSITION]
         await self.async_put_characteristics(
             {CharacteristicsTypes.POSITION_TARGET: position}
         )
@@ -284,7 +283,7 @@ class HomeKitWindowCover(HomeKitEntity, CoverEntity):
     @override
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
-        tilt_position = kwargs[ATTR_TILT_POSITION]
+        tilt_position = kwargs[CoverServiceArgument.TILT_POSITION]
 
         if self.is_vertical_tilt:
             char = self.service[CharacteristicsTypes.VERTICAL_TILT_TARGET]

@@ -1,15 +1,27 @@
 """The WiiM integration."""
 
+from async_upnp_client.client import UpnpService, UpnpStateVariable
 from wiim.controller import WiimController
 from wiim.discovery import async_create_wiim_device
 from wiim.exceptions import WiimDeviceException, WiimRequestException
+from wiim.wiim_device import WiimDevice
 
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import DATA_WIIM, DOMAIN, LOGGER, PLATFORMS, UPNP_PORT, WiimConfigEntry
+from .const import (
+    DATA_WIIM,
+    DOMAIN,
+    LOGGER,
+    PLATFORMS,
+    SIGNAL_DEVICE_GENERAL_UPDATED,
+    SIGNAL_DEVICE_RENDERING_CONTROL_UPDATED,
+    UPNP_PORT,
+    WiimConfigEntry,
+)
 from .models import WiimData
 from .util import async_get_event_callback_host
 
@@ -80,6 +92,38 @@ async def async_setup_entry(hass: HomeAssistant, entry: WiimConfigEntry) -> None
     await controller.add_device(wiim_device)
 
     entry.runtime_data = wiim_device
+
+    @callback
+    def _handle_general_update(device: WiimDevice) -> None:
+        async_dispatcher_send(
+            hass, SIGNAL_DEVICE_GENERAL_UPDATED.format(device.udn), device
+        )
+        if device.available and device.supports_http_api:
+            entry.async_create_background_task(
+                hass,
+                device.ensure_subscriptions(),
+                name=f"wiim_{device.udn}_ensure_subscriptions",
+            )
+
+    @callback
+    def _handle_rendering_control_update(
+        service: UpnpService, state_variables: list[UpnpStateVariable]
+    ) -> None:
+        async_dispatcher_send(
+            hass,
+            SIGNAL_DEVICE_RENDERING_CONTROL_UPDATED.format(wiim_device.udn),
+            service,
+            state_variables,
+        )
+
+    wiim_device.general_event_callback = _handle_general_update
+    wiim_device.rendering_control_event_callback = _handle_rendering_control_update
+
+    def _clear_device_event_callbacks() -> None:
+        wiim_device.general_event_callback = None
+        wiim_device.rendering_control_event_callback = None
+
+    entry.async_on_unload(_clear_device_event_callbacks)
     LOGGER.info(
         "WiiM device %s (UDN: %s) linked to HASS. Name: '%s', HTTP: %s, UPnP Location: %s",
         entry.entry_id,

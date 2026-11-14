@@ -8,17 +8,11 @@ import probatio
 
 from homeassistant import data_entry_flow
 from homeassistant.components.rest import create_rest_data_from_config
-from homeassistant.components.rest.data import (  # pylint: disable=home-assistant-component-root-import
-    DEFAULT_TIMEOUT,
-)
-from homeassistant.components.rest.schema import (  # pylint: disable=home-assistant-component-root-import
-    DEFAULT_METHOD,
-    METHODS,
-)
+from homeassistant.components.rest.const import DEFAULT_METHOD, METHODS  # pylint: disable=home-assistant-component-root-import
+from homeassistant.components.rest.data import DEFAULT_TIMEOUT  # pylint: disable=home-assistant-component-root-import
 from homeassistant.components.sensor import CONF_STATE_CLASS
 from homeassistant.config_entries import (
     SOURCE_USER,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
@@ -68,7 +62,7 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.trigger_template_entity import CONF_AVAILABILITY
 
-from . import COMBINED_SCHEMA
+from . import COMBINED_SCHEMA, ScrapeConfigEntry
 from .const import (
     CONF_ADDITIONAL,
     CONF_AUTH,
@@ -210,7 +204,7 @@ class ScrapeConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     @override
-    def async_get_options_flow(config_entry: ConfigEntry) -> ScrapeOptionFlow:
+    def async_get_options_flow(config_entry: ScrapeConfigEntry) -> ScrapeOptionFlow:
         """Get the options flow for this handler."""
         return ScrapeOptionFlow()
 
@@ -218,7 +212,7 @@ class ScrapeConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: ScrapeConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this handler."""
         return {"entity": ScrapeSubentryFlowHandler}

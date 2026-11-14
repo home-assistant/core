@@ -5,12 +5,13 @@ from typing import Any, override
 import probatio
 
 from homeassistant.components.valve import (
-    ATTR_POSITION,
     DOMAIN as VALVE_DOMAIN,
     PLATFORM_SCHEMA as VALVE_PLATFORM_SCHEMA,
     ValveEntity,
     ValveEntityFeature,
     ValveEntityStateAttribute,
+    ValveService,
+    ValveServiceArgument,
     ValveState,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -19,10 +20,6 @@ from homeassistant.const import (
     CONF_ENTITIES,
     CONF_NAME,
     CONF_UNIQUE_ID,
-    SERVICE_CLOSE_VALVE,
-    SERVICE_OPEN_VALVE,
-    SERVICE_SET_VALVE_POSITION,
-    SERVICE_STOP_VALVE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     EntityStateAttribute,
@@ -35,6 +32,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .const import GroupEntityStateAttribute
 from .entity import GroupEntity
 from .util import reduce_attribute
 
@@ -120,7 +118,9 @@ class ValveGroup(GroupEntity, ValveEntity):
         }
 
         self._attr_name = name
-        self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entities}
+        self._attr_extra_state_attributes = {
+            GroupEntityStateAttribute.ENTITY_ID: entities
+        }
         self._attr_unique_id = unique_id
 
     @callback
@@ -156,7 +156,11 @@ class ValveGroup(GroupEntity, ValveEntity):
         """Open the valves."""
         data = {ATTR_ENTITY_ID: self._valves[KEY_OPEN_CLOSE]}
         await self.hass.services.async_call(
-            VALVE_DOMAIN, SERVICE_OPEN_VALVE, data, blocking=True, context=self._context
+            VALVE_DOMAIN,
+            ValveService.OPEN,
+            data,
+            blocking=True,
+            context=self._context,
         )
 
     @override  # type: ignore[misc]
@@ -175,7 +179,7 @@ class ValveGroup(GroupEntity, ValveEntity):
         data = {ATTR_ENTITY_ID: self._valves[KEY_OPEN_CLOSE]}
         await self.hass.services.async_call(
             VALVE_DOMAIN,
-            SERVICE_CLOSE_VALVE,
+            ValveService.CLOSE,
             data,
             blocking=True,
             context=self._context,
@@ -196,11 +200,11 @@ class ValveGroup(GroupEntity, ValveEntity):
         """Move the valves to a specific position."""
         data = {
             ATTR_ENTITY_ID: self._valves[KEY_SET_POSITION],
-            ATTR_POSITION: position,
+            ValveServiceArgument.POSITION: position,
         }
         await self.hass.services.async_call(
             VALVE_DOMAIN,
-            SERVICE_SET_VALVE_POSITION,
+            ValveService.SET_POSITION,
             data,
             blocking=True,
             context=self._context,
@@ -211,7 +215,11 @@ class ValveGroup(GroupEntity, ValveEntity):
         """Stop the valves."""
         data = {ATTR_ENTITY_ID: self._valves[KEY_STOP]}
         await self.hass.services.async_call(
-            VALVE_DOMAIN, SERVICE_STOP_VALVE, data, blocking=True, context=self._context
+            VALVE_DOMAIN,
+            ValveService.STOP,
+            data,
+            blocking=True,
+            context=self._context,
         )
 
     @callback

@@ -6,19 +6,18 @@ from unittest.mock import AsyncMock, patch
 
 from aioaquarite import AquariteError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -262,8 +261,11 @@ async def test_number_set_value(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: user_value},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            NumberServiceArgument.VALUE: user_value,
+        },
         blocking=True,
     )
 
@@ -291,8 +293,11 @@ async def test_number_set_value_raises_on_api_error(
     with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: "number.my_pool_redox_setpoint", ATTR_VALUE: 700},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: "number.my_pool_redox_setpoint",
+                NumberServiceArgument.VALUE: 700,
+            },
             blocking=True,
         )
     assert excinfo.value.translation_key == "set_failed"

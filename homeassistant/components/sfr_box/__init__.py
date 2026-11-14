@@ -81,7 +81,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SFRConfigEntry) -> None:
         model=None,
         model_id=system_info.product_id,
         sw_version=system_info.version_mainfirmware,
-        configuration_url=f"http://{entry.data[CONF_HOST]}",
+        configuration_url=box.url,
     )
 
     entry.runtime_data = data

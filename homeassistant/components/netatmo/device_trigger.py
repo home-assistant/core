@@ -7,6 +7,7 @@ from homeassistant.components.device_automation import (
     InvalidDeviceAutomationConfig,
 )
 from homeassistant.components.homeassistant.triggers import event as event_trigger
+from homeassistant.components.homeassistant.triggers.event import EventTriggerArgument
 from homeassistant.const import (
     ATTR_DEVICE_ID,
     CONF_DEVICE_ID,
@@ -80,11 +81,7 @@ async def async_validate_trigger_config(
 
     trigger = config[CONF_TYPE]
 
-    if (
-        not device
-        or device.model not in DEVICES
-        or trigger not in DEVICES[device.model]
-    ):
+    if device.model not in DEVICES or trigger not in DEVICES[device.model]:
         raise InvalidDeviceAutomationConfig(f"Unsupported model {device.model}")
 
     return config
@@ -150,9 +147,9 @@ async def async_attach_trigger(
         return async_noop
 
     event_config = {
-        event_trigger.CONF_PLATFORM: "event",
-        event_trigger.CONF_EVENT_TYPE: NETATMO_EVENT,
-        event_trigger.CONF_EVENT_DATA: {
+        EventTriggerArgument.PLATFORM: "event",
+        EventTriggerArgument.EVENT_TYPE: NETATMO_EVENT,
+        EventTriggerArgument.EVENT_DATA: {
             "type": config[CONF_TYPE],
             ATTR_DEVICE_ID: config[ATTR_DEVICE_ID],
         },
@@ -160,7 +157,7 @@ async def async_attach_trigger(
 
     if config[CONF_TYPE] in SUBTYPES:
         event_config.update(
-            {event_trigger.CONF_EVENT_DATA: {"data": {"mode": config[CONF_SUBTYPE]}}}
+            {EventTriggerArgument.EVENT_DATA: {"data": {"mode": config[CONF_SUBTYPE]}}}
         )
 
     event_config = event_trigger.TRIGGER_SCHEMA(event_config)

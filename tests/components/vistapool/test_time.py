@@ -7,19 +7,18 @@ from unittest.mock import AsyncMock, patch
 
 from aioaquarite import AquariteError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.time import (
-    ATTR_TIME,
     DOMAIN as TIME_DOMAIN,
-    SERVICE_SET_VALUE,
+    TimeService,
+    TimeServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -142,8 +141,11 @@ async def test_time_set_value(
 
     await hass.services.async_call(
         TIME_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_TIME: time_value},
+        TimeService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            TimeServiceArgument.TIME: time_value,
+        },
         blocking=True,
     )
 
@@ -169,10 +171,10 @@ async def test_time_set_value_raises_on_api_error(
     with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             TIME_DOMAIN,
-            SERVICE_SET_VALUE,
+            TimeService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: "time.my_pool_filtration_interval_1_start",
-                ATTR_TIME: "12:30:00",
+                CommonServiceArgument.ENTITY_ID: "time.my_pool_filtration_interval_1_start",
+                TimeServiceArgument.TIME: "12:30:00",
             },
             blocking=True,
         )
@@ -233,8 +235,11 @@ async def test_light_schedule_time_set_value(
 
     await hass.services.async_call(
         TIME_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: "time.my_pool_light_schedule_start", ATTR_TIME: "21:30:00"},
+        TimeService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: "time.my_pool_light_schedule_start",
+            TimeServiceArgument.TIME: "21:30:00",
+        },
         blocking=True,
     )
 

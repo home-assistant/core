@@ -4,27 +4,22 @@ from unittest.mock import MagicMock
 
 from demetriek import LaMetricConnectionError, LaMetricError
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.lametric.const import DOMAIN, SCAN_INTERVAL
-from homeassistant.components.switch import (
-    DOMAIN as SWITCH_DOMAIN,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-)
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
-    ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     STATE_OFF,
     STATE_UNAVAILABLE,
+    CommonServiceArgument,
     EntityCategory,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
-
-from tests.common import async_fire_time_changed
 
 pytestmark = pytest.mark.usefixtures("init_integration")
 
@@ -65,9 +60,9 @@ async def test_bluetooth(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
+        SwitchService.TURN_ON,
         {
-            ATTR_ENTITY_ID: "switch.frenck_s_lametric_bluetooth",
+            CommonServiceArgument.ENTITY_ID: "switch.frenck_s_lametric_bluetooth",
         },
         blocking=True,
     )
@@ -77,9 +72,9 @@ async def test_bluetooth(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
+        SwitchService.TURN_OFF,
         {
-            ATTR_ENTITY_ID: "switch.frenck_s_lametric_bluetooth",
+            CommonServiceArgument.ENTITY_ID: "switch.frenck_s_lametric_bluetooth",
         },
         blocking=True,
     )
@@ -112,9 +107,9 @@ async def test_switch_error(
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
+            SwitchService.TURN_ON,
             {
-                ATTR_ENTITY_ID: "switch.frenck_s_lametric_bluetooth",
+                CommonServiceArgument.ENTITY_ID: "switch.frenck_s_lametric_bluetooth",
             },
             blocking=True,
         )
@@ -140,9 +135,9 @@ async def test_switch_connection_error(
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
+            SwitchService.TURN_ON,
             {
-                ATTR_ENTITY_ID: "switch.frenck_s_lametric_bluetooth",
+                CommonServiceArgument.ENTITY_ID: "switch.frenck_s_lametric_bluetooth",
             },
             blocking=True,
         )
@@ -182,8 +177,8 @@ async def test_screensaver(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.frenck_s_lametric_screensaver"},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: "switch.frenck_s_lametric_screensaver"},
         blocking=True,
     )
 
@@ -191,8 +186,8 @@ async def test_screensaver(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.frenck_s_lametric_screensaver"},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: "switch.frenck_s_lametric_screensaver"},
         blocking=True,
     )
 

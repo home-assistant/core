@@ -15,6 +15,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import (
     DEGREE,
     PERCENTAGE,
@@ -36,8 +37,14 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import DeviceTuple, RfxtrxConfigEntry, async_setup_platform_entry, get_rfx_object
-from .const import ATTR_EVENT
+from . import (
+    DeviceTuple,
+    RfxtrxConfigEntry,
+    async_setup_platform_entry,
+    get_device_tuple_from_device,
+    get_rfx_object,
+)
+from .const import ATTR_EVENT, CONF_DATA_BITS
 from .entity import RfxtrxEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -248,13 +255,16 @@ async def async_setup_entry(
     def _constructor(
         event: RFXtrxEvent,
         auto: RFXtrxEvent | None,
-        device_id: DeviceTuple,
-        entity_info: dict[str, Any],
+        subentry: ConfigSubentry,
     ) -> list[Entity]:
+        device_id = get_device_tuple_from_device(
+            event.device, data_bits=subentry.data.get(CONF_DATA_BITS)
+        )
         return [
             RfxtrxSensor(
                 event.device,
                 device_id,
+                subentry.subentry_id,
                 SENSOR_TYPES_DICT[data_type],
                 event=event if auto else None,
             )
@@ -281,13 +291,14 @@ class RfxtrxSensor(RfxtrxEntity, SensorEntity):
         self,
         device: RFXtrxDevice,
         device_id: DeviceTuple,
+        subentry_id: str,
         entity_description: RfxtrxSensorEntityDescription,
         event: RFXtrxEvent | None = None,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(device, device_id, event=event)
+        super().__init__(device, device_id, subentry_id, event=event)
         self.entity_description = entity_description
-        self._attr_unique_id = f"{device_id.unique_id}_{entity_description.key}"
+        self._attr_unique_id = f"{subentry_id}_{entity_description.key}"
 
     @override
     async def async_added_to_hass(self) -> None:

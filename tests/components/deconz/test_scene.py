@@ -5,17 +5,16 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import snapshot_platform
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN, SERVICE_TURN_ON
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN, SceneService
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import ConfigEntryFactoryType, WebsocketDataType
-
-from tests.common import snapshot_platform
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 TEST_DATA = [
     (  # Scene
@@ -58,8 +57,8 @@ async def test_scenes(
 
     await hass.services.async_call(
         SCENE_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: expected["entity_id"]},
+        SceneService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: expected["entity_id"]},
         blocking=True,
     )
     assert aioclient_mock.mock_calls[1][2] == {}

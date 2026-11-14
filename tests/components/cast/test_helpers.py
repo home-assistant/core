@@ -5,6 +5,8 @@ from unittest.mock import MagicMock, patch
 
 from aiohttp import client_exceptions
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_fixture
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.cast import media_player as cast_media_player
 from homeassistant.components.cast.const import DOMAIN
@@ -16,9 +18,6 @@ from homeassistant.components.cast.helpers import (
     parse_playlist,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, async_load_fixture
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.mark.parametrize(

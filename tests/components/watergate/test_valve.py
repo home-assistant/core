@@ -3,6 +3,7 @@
 from collections.abc import Generator
 
 import pytest
+from pytest_homeassistant.common import AsyncMock, MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 from watergate_local_api import WatergateApiException, WatergateIndeterminateError
 
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from . import init_integration
-
-from tests.common import AsyncMock, MockConfigEntry
 
 
 async def test_change_valve_state_snapshot(

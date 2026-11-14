@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "sensor": {
+      "weight": {
+        "default": "mdi:scale-bathroom"
+      }
+    }
+  }
+}

@@ -7,14 +7,15 @@ from unittest.mock import patch
 from freezegun.api import FrozenDateTimeFactory
 from pyoverkiz.enums import OverkizState
 import pytest
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -25,8 +26,6 @@ from .helpers import (
     device_state_changed_event,
     device_unavailable_event,
 )
-
-from tests.common import snapshot_platform
 
 MEMORIZED_POSITION = FixtureDevice(
     "setup/cloud_somfy_tahoma_v2_europe.json",
@@ -126,8 +125,11 @@ async def test_number_set_value(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: device.entity_id, ATTR_VALUE: value},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: device.entity_id,
+            NumberServiceArgument.VALUE: value,
+        },
         blocking=True,
     )
 
@@ -149,8 +151,11 @@ async def test_number_inverted_memorized_position_set(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: OFFICE_BLINDS_MEMORIZED_POSITION.entity_id, ATTR_VALUE: 15},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: OFFICE_BLINDS_MEMORIZED_POSITION.entity_id,
+            NumberServiceArgument.VALUE: 15,
+        },
         blocking=True,
     )
 

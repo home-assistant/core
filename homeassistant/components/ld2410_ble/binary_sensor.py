@@ -2,6 +2,8 @@
 
 from typing import override
 
+from ld2410_ble import LD2410BLE
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -13,7 +15,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import LD2410BLE, LD2410BLECoordinator
+from .coordinator import LD2410BLECoordinator
 from .models import LD2410BLEConfigEntry
 
 ENTITY_DESCRIPTIONS = (

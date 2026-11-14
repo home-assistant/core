@@ -34,7 +34,13 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, INFRARED_LEVELS, LIFX_IDENTIFY_DELAY, LOGGER
+from .const import (
+    DOMAIN,
+    INFRARED_LEVELS,
+    LIFX_IDENTIFY_DELAY,
+    LOGGER,
+    MAX_MISSED_POLLS,
+)
 from .util import device_error
 
 type LIFXState = (
@@ -59,6 +65,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[LIFXState]):
         """Initialize the coordinator."""
         self.device = device
         self.last_used_theme: str | None = None
+        self._missed_polls = 0
         super().__init__(
             hass,
             LOGGER,
@@ -82,14 +89,36 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[LIFXState]):
         try:
             await self.device.refresh_state()
         except LifxError as err:
+            self._missed_polls += 1
+            # Before the first read there is no last state to keep showing, and
+            # returning it would bring back a light that is already unavailable
+            if (
+                self.data is not None
+                and self.last_update_success
+                and self._missed_polls < MAX_MISSED_POLLS
+            ):
+                LOGGER.debug(
+                    "%s missed %s of %s polls: %s",
+                    self.name,
+                    self._missed_polls,
+                    MAX_MISSED_POLLS,
+                    err,
+                )
+                return self.data
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
                 translation_placeholders={"error": str(err)},
             ) from err
+        self._missed_polls = 0
         state = self.device.state
         assert state is not None
         return cast(LIFXState, state)
+
+    @property
+    def last_read_succeeded(self) -> bool:
+        """Return whether the device answered the latest read of its state."""
+        return self._missed_polls == 0
 
     @property
     def serial_number(self) -> str:

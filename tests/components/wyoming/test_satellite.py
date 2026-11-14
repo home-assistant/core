@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import wave
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from wyoming.asr import Transcribe, Transcript
 from wyoming.audio import AudioChunk, AudioStart, AudioStop
 from wyoming.error import Error
@@ -33,7 +34,6 @@ from homeassistant.setup import async_setup_component
 
 from . import SATELLITE_INFO, WAKE_WORD_INFO, MockAsyncTcpClient
 
-from tests.common import MockConfigEntry
 from tests.components.tts.common import MockResultStream
 
 

@@ -9,6 +9,7 @@ from librehardwaremonitor_api import (
     LibreHardwareMonitorUnauthorizedError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.libre_hardware_monitor.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -24,8 +25,6 @@ from .conftest import (
     VALID_CONFIG,
     VALID_CONFIG_WITH_AUTH,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_create_entry_without_auth(

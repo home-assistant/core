@@ -2,6 +2,10 @@
 
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    assert_platform_setup_creates_issue,
+    assert_setup_component,
+)
 
 from homeassistant.components.template import DOMAIN
 from homeassistant.components.template.config import (
@@ -31,8 +35,6 @@ from .conftest import (
     setup_entity,
     setup_mock_devices,
 )
-
-from tests.common import assert_platform_setup_creates_issue, assert_setup_component
 
 
 @pytest.mark.parametrize(
@@ -130,6 +132,25 @@ async def test_platform_device_tracker_creates_issue(
                 "name": "test",
                 "icon": "mdi:test",
             },
+        },
+        {
+            "trigger": {"trigger": "event", "event_type": "my_event"},
+            "trigger_variables": {"a": 1},
+            "button": {
+                "press": {"action": "test.automation"},
+                "name": "test",
+            },
+        },
+        {
+            "trigger_variables": {"a": 1},
+            "button": {
+                "press": {"action": "test.automation"},
+                "name": "test",
+            },
+        },
+        {
+            "trigger_variables": {"a": 1},
+            "sensor": {"name": "test", "state": "{{ 1 }}"},
         },
     ],
 )
@@ -911,6 +932,42 @@ async def test_combined_state_variables(
     assert variables.as_dict() == expected
 
 
+async def test_trigger_variables_schema(hass: HomeAssistant) -> None:
+    """Test trigger variables are validated as script variables."""
+    validated = CONFIG_SECTION_SCHEMA(
+        {
+            "triggers": {"trigger": "event", "event_type": "my_event"},
+            "trigger_variables": {"a": 1, "b": "two"},
+            "sensor": {"name": "test", "state": "{{ b }}"},
+        }
+    )
+    trigger_variables: ScriptVariables = validated["trigger_variables"]
+    assert isinstance(trigger_variables, ScriptVariables)
+    assert trigger_variables.as_dict() == {"a": 1, "b": "two"}
+
+
+async def test_trigger_variables_requires_trigger(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test trigger variables without a trigger logs an error."""
+    with assert_setup_component(0, DOMAIN):
+        assert await async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                DOMAIN: {
+                    "trigger_variables": {"a": 1},
+                    "sensor": {"name": "test", "state": "{{ 1 }}"},
+                }
+            },
+        )
+
+    assert (
+        "The trigger_variables option requires a trigger, remove the"
+        " trigger_variables option or rewrite configuration to use a trigger"
+    ) in caplog.text
+
+
 @pytest.mark.parametrize(
     ("config", "expected_error"),
     [
@@ -923,11 +980,61 @@ async def test_combined_state_variables(
                 "binary_sensor": {"name": "test", "state": "{{ true }}"},
             },
             "Invalid config for 'template':"
-            " Invalid trigger 'not_a_platform' specified '', got"
-            " {'triggers': [{'trigger': 'event', 'event_type': 'valid'},"
-            " {'trigger': 'not_a_platform'}],"
-            " 'binary_sensor': {'name': 'test', 'state': '{{ true }}'}}",
+            " Invalid trigger 'not_a_platform' specified 'triggers->1', got"
+            " {'platform': 'not_a_platform'}",
             id="trigger",
+        ),
+        pytest.param(
+            {
+                "triggers": {"trigger": "not_a_platform"},
+                "binary_sensor": {"name": "test", "state": "{{ true }}"},
+            },
+            "Invalid config for 'template':"
+            " Invalid trigger 'not_a_platform' specified 'triggers->0', got"
+            " {'platform': 'not_a_platform'}",
+            id="single_trigger",
+        ),
+        pytest.param(
+            {
+                "trigger": {"platform": "not_a_platform"},
+                "binary_sensor": {"name": "test", "state": "{{ true }}"},
+            },
+            "Invalid config for 'template':"
+            " Invalid trigger 'not_a_platform' specified 'triggers->0', got"
+            " {'platform': 'not_a_platform'}",
+            id="single_trigger_legacy_key",
+        ),
+        pytest.param(
+            {
+                "triggers": [
+                    {
+                        "triggers": [
+                            {"trigger": "event", "event_type": "valid"},
+                            {"trigger": "not_a_platform"},
+                        ]
+                    },
+                    {"trigger": "event", "event_type": "also_valid"},
+                ],
+                "binary_sensor": {"name": "test", "state": "{{ true }}"},
+            },
+            "Invalid config for 'template':"
+            " Invalid trigger 'not_a_platform' specified 'triggers->1', got"
+            " {'platform': 'not_a_platform'}",
+            id="trigger_sublist",
+        ),
+        pytest.param(
+            {
+                "use_blueprint": {
+                    "path": "test_event_sensor.yaml",
+                    "input": {"event_type": "state_reported", "event_data": {}},
+                },
+                "name": "test",
+            },
+            "Invalid config for 'template' at"
+            " blueprints/template/test_event_sensor.yaml, line 19:"
+            " Can't listen to state_reported in event trigger for dictionary value"
+            " 'triggers->0->event_type', got 'state_reported'",
+            id="blueprint_trigger",
         ),
         pytest.param(
             {
@@ -948,13 +1055,43 @@ async def test_combined_state_variables(
             },
             "Invalid config for 'template':"
             " Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd"
-            " '', got"
-            " {'triggers': {'trigger': 'event', 'event_type': 'valid'},"
-            " 'conditions': [{'condition': 'state', 'entity_id': 'sensor.foo',"
-            " 'state': 'on'}, {'condition': 'state',"
-            " 'entity_id': 'abcdabcdabcdabcdabcdabcdabcdabcd', 'state': 'on'}],"
-            " 'binary_sensor': {'name': 'test', 'state': '{{ true }}'}}",
+            " 'conditions->1', got {'condition': 'state',"
+            " 'entity_id': ['abcdabcdabcdabcdabcdabcdabcdabcd'], 'state': 'on',"
+            " 'match': 'all'}",
             id="condition",
+        ),
+        pytest.param(
+            {
+                "triggers": {"trigger": "event", "event_type": "valid"},
+                "conditions": {
+                    "condition": "state",
+                    "entity_id": "abcdabcdabcdabcdabcdabcdabcdabcd",
+                    "state": "on",
+                },
+                "binary_sensor": {"name": "test", "state": "{{ true }}"},
+            },
+            "Invalid config for 'template':"
+            " Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd"
+            " 'conditions->0', got {'condition': 'state',"
+            " 'entity_id': ['abcdabcdabcdabcdabcdabcdabcdabcd'], 'state': 'on',"
+            " 'match': 'all'}",
+            id="single_condition",
+        ),
+        pytest.param(
+            {
+                "triggers": {"trigger": "event", "event_type": "valid"},
+                "conditions": {
+                    "condition": "state",
+                    "entity_id": "sensor.foo",
+                    "state": "on",
+                    "for": "invalid",
+                },
+                "binary_sensor": {"name": "test", "state": "{{ true }}"},
+            },
+            "Invalid config for 'template': offset invalid should be format 'HH:MM',"
+            " 'HH:MM:SS' or 'HH:MM:SS.F' for dictionary value 'conditions->for',"
+            " got 'invalid'",
+            id="schema_error_single_condition",
         ),
     ],
 )

@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.ws66i.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -12,8 +14,6 @@ from .test_media_player import (
     MOCK_OPTIONS,
     MockWs66i,
 )
-
-from tests.common import MockConfigEntry
 
 ZONE_1_ID = "media_player.zone_11"
 

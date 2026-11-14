@@ -16,8 +16,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SIGNAL_ARMING_STATE_CHANGED, NessAlarmConfigEntry
-from .const import CONF_SHOW_HOME_MODE, DOMAIN
+from . import NessAlarmConfigEntry
+from .const import CONF_SHOW_HOME_MODE, DOMAIN, SIGNAL_ARMING_STATE_CHANGED
 
 _LOGGER = logging.getLogger(__name__)
 

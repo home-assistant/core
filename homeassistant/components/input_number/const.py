@@ -29,3 +29,18 @@ class InputNumberEntityStateAttribute(StrEnum):
 
     INITIAL = "initial"
     EDITABLE = "editable"
+
+
+class InputNumberService(StrEnum):
+    """Store keys for input number services."""
+
+    DECREMENT = "decrement"
+    INCREMENT = "increment"
+    RELOAD = "reload"
+    SET_VALUE = "set_value"
+
+
+class InputNumberServiceArgument(StrEnum):
+    """Store keys for input number service arguments."""
+
+    VALUE = "value"

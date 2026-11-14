@@ -18,6 +18,7 @@ from duco_connectivity import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.duco.const import BOX_NODE_ID, DOMAIN
@@ -26,8 +27,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import async_fire_coordinator_update, setup_platform_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 FILTER_REMAINING_ENTITY_ID = "sensor.living_filter_remaining"
 VENTILATION_TEMPERATURE_ENTITY_IDS = (

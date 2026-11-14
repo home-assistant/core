@@ -6,23 +6,26 @@ from aiovitesy.api import VitesyDevice, VitesyModeStatus
 from aiovitesy.exceptions import VitesyError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
-    ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
 from homeassistant.components.vitesy.coordinator import UPDATE_INTERVAL
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 from .conftest import DEVICE_ID
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 MODE = "select.kitchen_shelfy_mode"
 AIR_QUALITY_SCORE = "sensor.kitchen_shelfy_air_quality_score"
@@ -85,8 +88,8 @@ async def test_select_option(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: MODE, ATTR_OPTION: "boost"},
+        SelectService.SELECT_OPTION,
+        {CommonServiceArgument.ENTITY_ID: MODE, SelectServiceArgument.OPTION: "boost"},
         blocking=True,
     )
 
@@ -106,8 +109,11 @@ async def test_select_option_error(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: MODE, ATTR_OPTION: "boost"},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: MODE,
+                SelectServiceArgument.OPTION: "boost",
+            },
             blocking=True,
         )
 

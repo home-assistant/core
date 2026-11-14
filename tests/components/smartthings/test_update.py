@@ -5,19 +5,20 @@ from unittest.mock import AsyncMock
 from pysmartthings import Attribute, Capability, Command
 from pysmartthings.models import HealthStatus
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.smartthings.const import MAIN
 from homeassistant.components.update import (
     ATTR_IN_PROGRESS,
     DOMAIN as UPDATE_DOMAIN,
-    SERVICE_INSTALL,
+    UpdateService,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -29,8 +30,6 @@ from . import (
     trigger_health_update,
     trigger_update,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_all_entities(
@@ -57,8 +56,10 @@ async def test_installing_update(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: "update.theater_front_door_open_closed_sensor_firmware"},
+        UpdateService.INSTALL,
+        {
+            CommonServiceArgument.ENTITY_ID: "update.theater_front_door_open_closed_sensor_firmware"
+        },
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(

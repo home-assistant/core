@@ -1,6 +1,6 @@
 """Support for media metadata handling."""
 
-import datetime
+import datetime as dt
 import threading
 from typing import Any
 
@@ -81,7 +81,7 @@ class SonosMedia:
         self.uri: str | None = None
 
         self.position: int | None = None
-        self.position_updated_at: datetime.datetime | None = None
+        self.position_updated_at: dt.datetime | None = None
 
     def clear(self) -> None:
         """Clear basic media info."""

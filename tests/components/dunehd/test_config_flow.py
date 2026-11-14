@@ -4,13 +4,13 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.dunehd.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 CONFIG_HOSTNAME = {CONF_HOST: "dunehd-host"}
 CONFIG_IP = {CONF_HOST: "10.10.10.12"}

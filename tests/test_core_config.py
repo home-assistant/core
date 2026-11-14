@@ -11,11 +11,14 @@ from unittest.mock import Mock, PropertyMock, patch
 
 from probatio import Invalid, MultipleInvalid
 import pytest
+from pytest_homeassistant.common import (
+    MockEntityPlatform,
+    MockUser,
+    async_capture_events,
+)
 from webrtc_models import RTCConfiguration, RTCIceServer
 
 from homeassistant.const import (
-    ATTR_ASSUMED_STATE,
-    ATTR_FRIENDLY_NAME,
     CONF_AUTH_MFA_MODULES,
     CONF_AUTH_PROVIDERS,
     CONF_CUSTOMIZE,
@@ -24,6 +27,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_UNIT_SYSTEM,
     EVENT_CORE_CONFIG_UPDATE,
+    EntityStateAttribute,
     __version__,
 )
 from homeassistant.core import HomeAssistant, State
@@ -44,8 +48,6 @@ from homeassistant.util.unit_system import (
     US_CUSTOMARY_SYSTEM,
     UnitSystem,
 )
-
-from .common import MockEntityPlatform, MockUser, async_capture_events
 
 
 def test_core_config_schema() -> None:
@@ -105,15 +107,20 @@ def test_core_config_schema_internal_external_warning(
 
 def test_customize_dict_schema() -> None:
     """Test basic customize config validation."""
-    values = ({ATTR_FRIENDLY_NAME: None}, {ATTR_ASSUMED_STATE: "2"})
+    values = (
+        {EntityStateAttribute.FRIENDLY_NAME: None},
+        {EntityStateAttribute.ASSUMED_STATE: "2"},
+    )
 
     for val in values:
         with pytest.raises(MultipleInvalid):
             _CUSTOMIZE_DICT_SCHEMA(val)
 
-    assert _CUSTOMIZE_DICT_SCHEMA({ATTR_FRIENDLY_NAME: 2, ATTR_ASSUMED_STATE: "0"}) == {
-        ATTR_FRIENDLY_NAME: "2",
-        ATTR_ASSUMED_STATE: False,
+    assert _CUSTOMIZE_DICT_SCHEMA(
+        {EntityStateAttribute.FRIENDLY_NAME: 2, EntityStateAttribute.ASSUMED_STATE: "0"}
+    ) == {
+        EntityStateAttribute.FRIENDLY_NAME: "2",
+        EntityStateAttribute.ASSUMED_STATE: False,
     }
 
 

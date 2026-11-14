@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from voip_utils import CallInfo
 from voip_utils.sip import SipEndpoint
 
@@ -11,8 +12,6 @@ from homeassistant.components.voip.devices import VoIPDevice, VoIPDevices
 from homeassistant.components.voip.store import VoipStore
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry
 
 
 async def test_device_registry_info(

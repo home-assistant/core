@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fan import (
@@ -22,8 +23,6 @@ from homeassistant.helpers import entity_registry as er
 
 from .conftest import FixtureDevice, MockOverkizClient, SetupOverkizIntegration
 from .helpers import assert_command_call
-
-from tests.common import snapshot_platform
 
 NEXITY = "setup/cloud_nexity_rail_din_europe.json"
 

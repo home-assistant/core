@@ -4,6 +4,7 @@ from copy import deepcopy
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import mock_restore_cache_with_extra_data
 from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.const import CabinOverheatProtectionTemp
 from tesla_fleet_api.exceptions import InvalidCommand
@@ -49,8 +50,6 @@ from .const import (
     METADATA_NOSCOPE,
     VEHICLE_DATA_ALT,
 )
-
-from tests.common import mock_restore_cache_with_extra_data
 
 VIN = "LRW3F7EK4NC700000"
 

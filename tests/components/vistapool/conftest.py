@@ -7,11 +7,10 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.vistapool.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 MOCK_USERNAME = "testuser@example.com"
 MOCK_PASSWORD = "testpassword"

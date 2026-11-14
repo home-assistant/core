@@ -6,6 +6,9 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, mock_config_flow, mock_platform
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.application_credentials import (
@@ -27,10 +30,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, mock_config_flow, mock_platform
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 CLIENT_ID = "some-client-id"
 CLIENT_SECRET = "some-client-secret"

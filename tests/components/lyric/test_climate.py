@@ -8,6 +8,11 @@ from unittest.mock import ANY, MagicMock, call, patch
 from aiolyric.exceptions import LyricException
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -27,15 +32,18 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.lyric.const import DOMAIN
-from homeassistant.components.lyric.services import SERVICE_HOLD_TIME
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform
+from homeassistant.components.lyric.services import LyricService
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_TEMPERATURE,
+    CommonServiceArgument,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 LCC_ENTITY_ID = "climate.hallway_thermostat"
 LCC_MAC_ID = "AABBCC000011"
@@ -132,7 +140,7 @@ async def test_set_temperature(
         pytest.param(
             TCC_ENTITY_ID,
             TCC_MAC_ID,
-            {"heat_setpoint": 68, "cool_setpoint": 77, "mode": HVACMode.HEAT},
+            {"heat_setpoint": 68, "cool_setpoint": 77, "mode": "Heat"},
             id="tcc",
         ),
     ],
@@ -268,8 +276,8 @@ async def test_set_hvac_mode_tcc_heat_cool_from_off(
 
     mock_sleep.assert_awaited_once_with(3)
     assert mock_lyric.update_thermostat.await_args_list == [
-        call(ANY, ANY, mode=HVACMode.HEAT, auto_changeover_active=False),
-        call(ANY, ANY, mode=HVACMode.HEAT, auto_changeover_active=True),
+        call(ANY, ANY, mode="Heat", auto_changeover_active=False),
+        call(ANY, ANY, mode="Heat", auto_changeover_active=True),
     ]
 
 
@@ -303,8 +311,8 @@ async def test_set_hold_time(hass: HomeAssistant, mock_lyric: MagicMock) -> None
     """Test the set hold time action."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_HOLD_TIME,
-        {ATTR_ENTITY_ID: LCC_ENTITY_ID, "time_period": "01:00:00"},
+        LyricService.SET_HOLD_TIME,
+        {CommonServiceArgument.ENTITY_ID: LCC_ENTITY_ID, "time_period": "01:00:00"},
         blocking=True,
     )
 
@@ -346,7 +354,7 @@ async def test_set_hold_time(hass: HomeAssistant, mock_lyric: MagicMock) -> None
         ),
         pytest.param(
             DOMAIN,
-            SERVICE_HOLD_TIME,
+            LyricService.SET_HOLD_TIME,
             {"time_period": "01:00:00"},
             "failed_to_set_hold_time",
             id="hold_time",

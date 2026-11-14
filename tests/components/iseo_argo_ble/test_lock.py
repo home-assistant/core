@@ -5,17 +5,20 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from iseo_argo_ble import IseoAuthError, IseoConnectionError
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.iseo_argo_ble.const import DOMAIN
 from homeassistant.components.iseo_argo_ble.lock import _POLL_INTERVAL
-from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockState
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockService, LockState
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
-    ATTR_ENTITY_ID,
-    SERVICE_LOCK,
-    SERVICE_UNLOCK,
     STATE_UNAVAILABLE,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -23,8 +26,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY_ID = "lock.iseo_lock"
 
@@ -38,8 +39,8 @@ async def _unlock(hass: HomeAssistant) -> None:
     """Call the unlock action on the lock."""
     await hass.services.async_call(
         LOCK_DOMAIN,
-        SERVICE_UNLOCK,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        LockService.UNLOCK,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -289,8 +290,8 @@ async def test_lock_action_is_not_supported(
     with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             LOCK_DOMAIN,
-            SERVICE_LOCK,
-            {ATTR_ENTITY_ID: ENTITY_ID},
+            LockService.LOCK,
+            {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
 

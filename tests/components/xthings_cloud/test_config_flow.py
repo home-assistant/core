@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from ha_xthings_cloud import XthingsCloudApiError, XthingsCloudAuthError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.xthings_cloud.const import CONF_REFRESH_TOKEN, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -18,8 +19,6 @@ from .const import (
     MOCK_TOKEN,
     MOCK_USER_ID,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_user_flow_success(

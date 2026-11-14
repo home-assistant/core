@@ -7,14 +7,13 @@ from unittest.mock import AsyncMock
 from aiohttp import ClientError
 from pajgps_api.pajgps_api_error import AuthenticationError, TokenRefreshError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.paj_gps.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 VALID_USER_INPUT = {
     CONF_EMAIL: "user@example.com",

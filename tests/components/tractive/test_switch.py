@@ -4,17 +4,16 @@ from unittest.mock import AsyncMock, patch
 
 from aiotractive.exceptions import TractiveError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.components.tractive.const import DOMAIN
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -22,8 +21,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import init_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def test_switch(
@@ -63,8 +60,8 @@ async def test_switch_on(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -97,8 +94,8 @@ async def test_switch_off(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -132,8 +129,8 @@ async def test_live_tracking_switch(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -178,8 +175,8 @@ async def test_switch_on_with_exception(
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_id},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
     await hass.async_block_till_done()
@@ -216,8 +213,8 @@ async def test_switch_off_with_exception(
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: entity_id},
+            SwitchService.TURN_OFF,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
     await hass.async_block_till_done()

@@ -5,18 +5,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from jvcprojector import command as cmd
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.switch import (
-    DOMAIN as SWITCH_DOMAIN,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-)
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 ESHIFT_ENTITY_ID = "switch.jvc_projector_e_shift"
 LOW_LATENCY_ENTITY_ID = "switch.jvc_projector_low_latency_mode"
@@ -53,8 +48,8 @@ async def test_switch_entities(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ESHIFT_ENTITY_ID},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: ESHIFT_ENTITY_ID},
         blocking=True,
     )
 
@@ -62,8 +57,8 @@ async def test_switch_entities(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ESHIFT_ENTITY_ID},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: ESHIFT_ENTITY_ID},
         blocking=True,
     )
 

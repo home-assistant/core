@@ -5,6 +5,11 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    assert_platform_setup_creates_issue,
+    async_fire_time_changed,
+)
 
 from homeassistant.components.scrape.const import (
     CONF_ENCODING,
@@ -45,12 +50,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from . import MockRestData, return_integration_config
-
-from tests.common import (
-    MockConfigEntry,
-    assert_platform_setup_creates_issue,
-    async_fire_time_changed,
-)
 
 DOMAIN = "scrape"
 
@@ -262,6 +261,37 @@ async def test_scrape_uom_and_classes(hass: HomeAssistant) -> None:
     assert state.attributes[CONF_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
     assert state.attributes[CONF_DEVICE_CLASS] == SensorDeviceClass.TEMPERATURE
     assert state.attributes[CONF_STATE_CLASS] == SensorStateClass.MEASUREMENT
+
+
+async def test_scrape_numeric_value_template_none(hass: HomeAssistant) -> None:
+    """Test a numeric Scrape sensor is unknown when the value template renders none."""
+    config = {
+        DOMAIN: [
+            return_integration_config(
+                sensors=[
+                    {
+                        "select": ".current-temp h3",
+                        "name": "Current Temp",
+                        "value_template": "{{ none }}",
+                        "unit_of_measurement": "°C",
+                        "device_class": "temperature",
+                        "state_class": "measurement",
+                    }
+                ]
+            )
+        ]
+    }
+
+    mocker = MockRestData("test_scrape_uom_and_classes")
+    with patch(
+        "homeassistant.components.rest.util.RestData",
+        return_value=mocker,
+    ):
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.current_temp")
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_scrape_unique_id(

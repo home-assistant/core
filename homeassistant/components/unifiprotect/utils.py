@@ -5,22 +5,17 @@ import contextlib
 from functools import wraps
 from pathlib import Path
 import socket
-from typing import TYPE_CHECKING, Any, Concatenate, cast
+from typing import TYPE_CHECKING, Any, Concatenate
 
 from aiohttp import CookieJar
 from uiprotect import ProtectApiClient
 from uiprotect.data import (
     Bootstrap,
     ChannelQuality,
-    LightModeEnableType,
-    LightModeType,
+    ModelType,
     ProtectAdoptableDeviceModel,
 )
-from uiprotect.data.public_devices import (
-    PublicDeviceModel,
-    PublicDoorbellSettings,
-    PublicLight,
-)
+from uiprotect.data.public_devices import PublicDoorbellSettings
 from uiprotect.exceptions import ClientError, NotAuthorized
 
 from homeassistant.const import (
@@ -44,7 +39,6 @@ from .const import (
     DEVICES_FOR_SUBSCRIBE,
     DEVICES_WS_SUBSCRIBED_MODELS,
     DOMAIN,
-    ModelType,
 )
 
 if TYPE_CHECKING:
@@ -99,17 +93,6 @@ def async_get_devices(
         for device_type in model_type
         for device in async_get_devices_by_type(bootstrap, device_type).values()
     )
-
-
-@callback
-def async_get_light_motion_current_public(obj: PublicDeviceModel) -> str | None:
-    """Get light motion mode for a Flood Light from the public API."""
-    settings = cast(PublicLight, obj).light_mode_settings
-    if (mode := settings.mode) is None:
-        return None
-    if mode is LightModeType.MOTION and settings.enable_at is LightModeEnableType.DARK:
-        return f"{LightModeType.MOTION.value}_dark"
-    return mode.value
 
 
 @callback

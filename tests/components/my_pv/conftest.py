@@ -4,14 +4,14 @@ from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
+from my_pv import MyPVDeviceMainMode
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.my_pv.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 
 from . import ELWA2_SERIAL_NUMBER
-
-from tests.common import MockConfigEntry
 
 SETUP_CONFIGURATION = {
     "bstmode": {
@@ -90,8 +90,10 @@ def setup_values() -> dict[str, Any]:
     return SETUP_VALUE
 
 
-def _data_value_lookup(key):
-    return DATA_VALUE.get(key)
+@pytest.fixture
+def data_values() -> dict[str, Any]:
+    """The data values."""
+    return DATA_VALUE
 
 
 @pytest.fixture
@@ -113,24 +115,22 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Prevent running the real integration setup during tests."""
     with patch(
         "homeassistant.components.my_pv.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup:
         yield mock_setup
 
 
 @pytest.fixture
 def mock_my_pv_client(
-    setup_configuration: dict[str, Any], setup_values: dict[str, Any]
+    setup_configuration: dict[str, Any],
+    setup_values: dict[str, Any],
+    data_values: dict[str, Any],
 ) -> Generator[AsyncMock]:
     """Mock the my-PV client across the integration."""
     with (
         patch(
             "homeassistant.components.my_pv.MyPVLocalDevice",
             autospec=True,
-        ) as mock_client,
-        patch(
-            "homeassistant.components.my_pv.coordinator.MyPVDevice",
-            new=mock_client,
         ) as mock_client,
         patch(
             "homeassistant.components.my_pv.config_flow.MyPVLocalDevice",
@@ -146,20 +146,27 @@ def mock_my_pv_client(
         client.setup_uri = "http://127.0.0.1/"
         client.hardware_version = "v1.5A"
         client.firmware_version = "e0002200"
+        client.latest_firmware_version = "e0002200"
+        client.firmware_update_available = False
+        client.firmware_update_progress = None
         client.connected = True
         client.is_on = True
+        client.turn_on = AsyncMock(return_value=True)
+        client.turn_off = AsyncMock(return_value=True)
+        client.primary_mode = MyPVDeviceMainMode.HOT_WATER
         client.current_temperature = 54.3
         client.target_temperature = 62.1
+        client.set_target_temperature = AsyncMock(return_value=True)
         client.get_setup_configurations = Mock(return_value=setup_configuration)
         client.get_setup_configuration = Mock(side_effect=setup_configuration.get)
         client.get_setup_value = Mock(side_effect=setup_values.get)
-        client.set_setup_value = AsyncMock()
+        client.set_setup_value = AsyncMock(return_value=True)
         client.get_command_configuration = Mock(side_effect=COMMAND_CONFIGURATION.get)
-        client.connected = True
-        client.is_on = True
         client.send_command = AsyncMock(return_value=True)
         client.get_data_configurations = Mock(return_value=DATA_CONFIGURATION)
-        client.get_data_value = Mock(side_effect=_data_value_lookup)
+        client.get_data_configuration = Mock(side_effect=DATA_CONFIGURATION.get)
+        client.get_data_value = Mock(side_effect=data_values.get)
         client.supports_data = Mock(side_effect=DATA_CONFIGURATION.__contains__)
+        client.fetch_data = AsyncMock(return_value=True)
 
         yield client

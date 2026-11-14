@@ -4,14 +4,16 @@ from collections.abc import Callable
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.switchbot.const import DOMAIN
 from homeassistant.components.switchbot.services import (
-    SERVICE_ADD_PASSWORD,
+    SwitchbotService,
     async_setup_services,
 )
-from homeassistant.const import ATTR_DEVICE_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
@@ -21,9 +23,6 @@ from . import (
     KEYPAD_VISION_PRO_INFO,
     SMART_THERMOSTAT_RADIATOR_SERVICE_INFO,
 )
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import inject_bluetooth_service_info
 
 
 @pytest.mark.parametrize(
@@ -53,7 +52,7 @@ async def test_add_password_service(
         add_password=mocked_instance,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         device_entry = dr.async_entries_for_config_entry(
             device_registry, entry.entry_id
@@ -61,9 +60,9 @@ async def test_add_password_service(
 
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ADD_PASSWORD,
+            SwitchbotService.ADD_PASSWORD,
             {
-                ATTR_DEVICE_ID: device_entry.id,
+                CommonServiceArgument.DEVICE_ID: device_entry.id,
                 "password": "123456",
             },
             blocking=True,
@@ -87,14 +86,14 @@ async def test_device_not_found(
         update=AsyncMock(return_value=None),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         with pytest.raises(ServiceValidationError) as err:
             await hass.services.async_call(
                 DOMAIN,
-                SERVICE_ADD_PASSWORD,
+                SwitchbotService.ADD_PASSWORD,
                 {
-                    ATTR_DEVICE_ID: "nonexistent_device",
+                    CommonServiceArgument.DEVICE_ID: "nonexistent_device",
                     "password": "123456",
                 },
                 blocking=True,
@@ -121,7 +120,7 @@ async def test_device_not_belonging(
         update=AsyncMock(return_value=None),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
     other_entry = MockConfigEntry(domain="not_switchbot", data={}, title="Other")
     other_entry.add_to_hass(hass)
 
@@ -134,9 +133,9 @@ async def test_device_not_belonging(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ADD_PASSWORD,
+            SwitchbotService.ADD_PASSWORD,
             {
-                ATTR_DEVICE_ID: device_entry.id,
+                CommonServiceArgument.DEVICE_ID: device_entry.id,
                 "password": "123456",
             },
             blocking=True,
@@ -166,8 +165,10 @@ async def test_device_entry_not_loaded(
         update=AsyncMock(return_value=None),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-    second_entry = mock_entry_encrypted_factory(sensor_type="keypad_vision")
+        await hass.async_block_till_done(wait_background_tasks=True)
+    second_entry = MockConfigEntry(
+        domain=DOMAIN, data={}, title="Not loaded", unique_id="112233445566"
+    )
     second_entry.add_to_hass(hass)
 
     device_entry = device_registry.async_get_or_create(
@@ -179,9 +180,9 @@ async def test_device_entry_not_loaded(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ADD_PASSWORD,
+            SwitchbotService.ADD_PASSWORD,
             {
-                ATTR_DEVICE_ID: device_entry.id,
+                CommonServiceArgument.DEVICE_ID: device_entry.id,
                 "password": "123456",
             },
             blocking=True,
@@ -211,16 +212,16 @@ async def test_service_unsupported_device(
         update=AsyncMock(return_value=None),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     device_entry = dr.async_entries_for_config_entry(device_registry, entry.entry_id)[0]
 
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ADD_PASSWORD,
+            SwitchbotService.ADD_PASSWORD,
             {
-                ATTR_DEVICE_ID: device_entry.id,
+                CommonServiceArgument.DEVICE_ID: device_entry.id,
                 "password": "123456",
             },
             blocking=True,
@@ -243,9 +244,9 @@ async def test_device_without_config_entry_id(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ADD_PASSWORD,
+            SwitchbotService.ADD_PASSWORD,
             {
-                ATTR_DEVICE_ID: "abc",
+                CommonServiceArgument.DEVICE_ID: "abc",
                 "password": "123456",
             },
             blocking=True,

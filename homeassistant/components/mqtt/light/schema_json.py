@@ -7,18 +7,6 @@ from typing import TYPE_CHECKING, Any, cast, override
 import probatio
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_COLOR_MODE,
-    ATTR_COLOR_TEMP_KELVIN,
-    ATTR_EFFECT,
-    ATTR_FLASH,
-    ATTR_HS_COLOR,
-    ATTR_RGB_COLOR,
-    ATTR_RGBW_COLOR,
-    ATTR_RGBWW_COLOR,
-    ATTR_TRANSITION,
-    ATTR_WHITE,
-    ATTR_XY_COLOR,
     DEFAULT_MAX_KELVIN,
     DEFAULT_MIN_KELVIN,
     ENTITY_ID_FORMAT,
@@ -28,6 +16,8 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
     LightEntityFeature,
+    LightEntityStateAttribute,
+    LightServiceArgument,
     brightness_supported,
     valid_supported_color_modes,
 )
@@ -47,8 +37,9 @@ from homeassistant.util import color as color_util
 from homeassistant.util.json import json_loads_object
 
 from .. import subscription
-from ..config import DEFAULT_QOS, DEFAULT_RETAIN, MQTT_RW_SCHEMA
+from ..config import MQTT_RW_SCHEMA
 from ..const import (
+    CONF_BRIGHTNESS_SCALE,
     CONF_COLOR_TEMP_KELVIN,
     CONF_COMMAND_TOPIC,
     CONF_EFFECT_LIST,
@@ -64,11 +55,14 @@ from ..const import (
     CONF_STATE_TOPIC,
     CONF_SUPPORTED_COLOR_MODES,
     CONF_TRANSITION,
+    CONF_WHITE_SCALE,
     DEFAULT_BRIGHTNESS,
     DEFAULT_BRIGHTNESS_SCALE,
     DEFAULT_EFFECT,
     DEFAULT_FLASH_TIME_LONG,
     DEFAULT_FLASH_TIME_SHORT,
+    DEFAULT_QOS,
+    DEFAULT_RETAIN,
     DEFAULT_WHITE_SCALE,
 )
 from ..entity import MqttEntity
@@ -76,11 +70,7 @@ from ..models import ReceiveMessage
 from ..schemas import MQTT_ENTITY_COMMON_SCHEMA
 from ..util import valid_subscribe_topic
 from .schema import MQTT_LIGHT_SCHEMA_SCHEMA
-from .schema_basic import (
-    CONF_BRIGHTNESS_SCALE,
-    CONF_WHITE_SCALE,
-    MQTT_LIGHT_ATTRIBUTES_BLOCKED,
-)
+from .schema_basic import MQTT_LIGHT_ATTRIBUTES_BLOCKED
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -339,31 +329,40 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             self._attr_is_on = last_state.state == STATE_ON
             last_attributes = last_state.attributes
             self._attr_brightness = last_attributes.get(
-                ATTR_BRIGHTNESS, self.brightness
+                LightEntityStateAttribute.BRIGHTNESS, self.brightness
             )
             self._attr_color_mode = (
-                last_attributes.get(ATTR_COLOR_MODE) or self.color_mode
+                last_attributes.get(LightEntityStateAttribute.COLOR_MODE)
+                or self.color_mode
             )
             self._attr_color_temp_kelvin = last_attributes.get(
-                ATTR_COLOR_TEMP_KELVIN, self.color_temp_kelvin
+                LightEntityStateAttribute.COLOR_TEMP_KELVIN, self.color_temp_kelvin
             )
-            self._attr_effect = last_attributes.get(ATTR_EFFECT, self.effect)
-            self._attr_hs_color = last_attributes.get(ATTR_HS_COLOR, self.hs_color)
-            self._attr_rgb_color = last_attributes.get(ATTR_RGB_COLOR, self.rgb_color)
+            self._attr_effect = last_attributes.get(
+                LightEntityStateAttribute.EFFECT, self.effect
+            )
+            self._attr_hs_color = last_attributes.get(
+                LightEntityStateAttribute.HS_COLOR, self.hs_color
+            )
+            self._attr_rgb_color = last_attributes.get(
+                LightEntityStateAttribute.RGB_COLOR, self.rgb_color
+            )
             self._attr_rgbw_color = last_attributes.get(
-                ATTR_RGBW_COLOR, self.rgbw_color
+                LightEntityStateAttribute.RGBW_COLOR, self.rgbw_color
             )
             self._attr_rgbww_color = last_attributes.get(
-                ATTR_RGBWW_COLOR, self.rgbww_color
+                LightEntityStateAttribute.RGBWW_COLOR, self.rgbww_color
             )
-            self._attr_xy_color = last_attributes.get(ATTR_XY_COLOR, self.xy_color)
+            self._attr_xy_color = last_attributes.get(
+                LightEntityStateAttribute.XY_COLOR, self.xy_color
+            )
 
     def _set_flash_and_transition(self, message: dict[str, Any], **kwargs: Any) -> None:
-        if ATTR_TRANSITION in kwargs:
-            message["transition"] = kwargs[ATTR_TRANSITION]
+        if LightServiceArgument.TRANSITION in kwargs:
+            message["transition"] = kwargs[LightServiceArgument.TRANSITION]
 
-        if ATTR_FLASH in kwargs:
-            flash: str = kwargs[ATTR_FLASH]
+        if LightServiceArgument.FLASH in kwargs:
+            flash: str = kwargs[LightServiceArgument.FLASH]
 
             if flash == FLASH_LONG:
                 message["flash"] = self._flash_times[CONF_FLASH_TIME_LONG]
@@ -378,7 +377,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
         if self._config[CONF_BRIGHTNESS]:
             brightness = 255
         else:
-            brightness = kwargs.pop(ATTR_BRIGHTNESS, 255)
+            brightness = kwargs.pop(LightServiceArgument.BRIGHTNESS, 255)
         return tuple(round(i / 255 * brightness) for i in rgbxx)
 
     def _supports_color_mode(self, color_mode: ColorMode | str) -> bool:
@@ -402,32 +401,40 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
         rgbcw: tuple[int, ...]
         xy_color: tuple[float, float]
 
-        if ATTR_HS_COLOR in kwargs and self._supports_color_mode(ColorMode.HS):
-            hs_color = kwargs[ATTR_HS_COLOR]
+        if LightServiceArgument.HS_COLOR in kwargs and self._supports_color_mode(
+            ColorMode.HS
+        ):
+            hs_color = kwargs[LightServiceArgument.HS_COLOR]
             message["color"] = {"h": hs_color[0], "s": hs_color[1]}
             if self._optimistic:
                 self._attr_color_mode = ColorMode.HS
                 self._attr_hs_color = hs_color
                 should_update = True
 
-        if ATTR_RGB_COLOR in kwargs and self._supports_color_mode(ColorMode.RGB):
-            rgb = self._scale_rgbxx(kwargs[ATTR_RGB_COLOR], kwargs)
+        if LightServiceArgument.RGB_COLOR in kwargs and self._supports_color_mode(
+            ColorMode.RGB
+        ):
+            rgb = self._scale_rgbxx(kwargs[LightServiceArgument.RGB_COLOR], kwargs)
             message["color"] = {"r": rgb[0], "g": rgb[1], "b": rgb[2]}
             if self._optimistic:
                 self._attr_color_mode = ColorMode.RGB
                 self._attr_rgb_color = cast(tuple[int, int, int], rgb)
                 should_update = True
 
-        if ATTR_RGBW_COLOR in kwargs and self._supports_color_mode(ColorMode.RGBW):
-            rgbw = self._scale_rgbxx(kwargs[ATTR_RGBW_COLOR], kwargs)
+        if LightServiceArgument.RGBW_COLOR in kwargs and self._supports_color_mode(
+            ColorMode.RGBW
+        ):
+            rgbw = self._scale_rgbxx(kwargs[LightServiceArgument.RGBW_COLOR], kwargs)
             message["color"] = {"r": rgbw[0], "g": rgbw[1], "b": rgbw[2], "w": rgbw[3]}
             if self._optimistic:
                 self._attr_color_mode = ColorMode.RGBW
                 self._attr_rgbw_color = cast(tuple[int, int, int, int], rgbw)
                 should_update = True
 
-        if ATTR_RGBWW_COLOR in kwargs and self._supports_color_mode(ColorMode.RGBWW):
-            rgbcw = self._scale_rgbxx(kwargs[ATTR_RGBWW_COLOR], kwargs)
+        if LightServiceArgument.RGBWW_COLOR in kwargs and self._supports_color_mode(
+            ColorMode.RGBWW
+        ):
+            rgbcw = self._scale_rgbxx(kwargs[LightServiceArgument.RGBWW_COLOR], kwargs)
             message["color"] = {
                 "r": rgbcw[0],
                 "g": rgbcw[1],
@@ -440,8 +447,10 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 self._attr_rgbww_color = cast(tuple[int, int, int, int, int], rgbcw)
                 should_update = True
 
-        if ATTR_XY_COLOR in kwargs and self._supports_color_mode(ColorMode.XY):
-            xy_color = kwargs[ATTR_XY_COLOR]
+        if LightServiceArgument.XY_COLOR in kwargs and self._supports_color_mode(
+            ColorMode.XY
+        ):
+            xy_color = kwargs[LightServiceArgument.XY_COLOR]
             message["color"] = {"x": xy_color[0], "y": xy_color[1]}
             if self._optimistic:
                 self._attr_color_mode = ColorMode.XY
@@ -450,44 +459,48 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
 
         self._set_flash_and_transition(message, **kwargs)
 
-        if ATTR_BRIGHTNESS in kwargs and brightness_supported(
+        if LightServiceArgument.BRIGHTNESS in kwargs and brightness_supported(
             self.supported_color_modes
         ):
             device_brightness = color_util.brightness_to_value(
                 (1, self._config[CONF_BRIGHTNESS_SCALE]),
-                kwargs[ATTR_BRIGHTNESS],
+                kwargs[LightServiceArgument.BRIGHTNESS],
             )
             # Make sure the brightness is not rounded down to 0
             device_brightness = max(round(device_brightness), 1)
             message["brightness"] = device_brightness
 
             if self._optimistic:
-                self._attr_brightness = kwargs[ATTR_BRIGHTNESS]
+                self._attr_brightness = kwargs[LightServiceArgument.BRIGHTNESS]
                 should_update = True
 
-        if ATTR_COLOR_TEMP_KELVIN in kwargs:
+        if LightServiceArgument.COLOR_TEMP_KELVIN in kwargs:
             message["color_temp"] = (
-                kwargs[ATTR_COLOR_TEMP_KELVIN]
+                kwargs[LightServiceArgument.COLOR_TEMP_KELVIN]
                 if self._color_temp_kelvin
                 else color_util.color_temperature_kelvin_to_mired(
-                    kwargs[ATTR_COLOR_TEMP_KELVIN]
+                    kwargs[LightServiceArgument.COLOR_TEMP_KELVIN]
                 )
             )
             if self._optimistic:
                 self._attr_color_mode = ColorMode.COLOR_TEMP
-                self._attr_color_temp_kelvin = kwargs[ATTR_COLOR_TEMP_KELVIN]
+                self._attr_color_temp_kelvin = kwargs[
+                    LightServiceArgument.COLOR_TEMP_KELVIN
+                ]
                 self._attr_hs_color = None
                 should_update = True
 
-        if ATTR_EFFECT in kwargs:
-            message["effect"] = kwargs[ATTR_EFFECT]
+        if LightServiceArgument.EFFECT in kwargs:
+            message["effect"] = kwargs[LightServiceArgument.EFFECT]
 
             if self._optimistic:
-                self._attr_effect = kwargs[ATTR_EFFECT]
+                self._attr_effect = kwargs[LightServiceArgument.EFFECT]
                 should_update = True
 
-        if ATTR_WHITE in kwargs and self._supports_color_mode(ColorMode.WHITE):
-            white_normalized = kwargs[ATTR_WHITE] / DEFAULT_WHITE_SCALE
+        if LightServiceArgument.WHITE in kwargs and self._supports_color_mode(
+            ColorMode.WHITE
+        ):
+            white_normalized = kwargs[LightServiceArgument.WHITE] / DEFAULT_WHITE_SCALE
             white_scale = self._config[CONF_WHITE_SCALE]
             device_white_level = min(round(white_normalized * white_scale), white_scale)
             # Make sure the brightness is not rounded down to 0
@@ -496,7 +509,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
 
             if self._optimistic:
                 self._attr_color_mode = ColorMode.WHITE
-                self._attr_brightness = kwargs[ATTR_WHITE]
+                self._attr_brightness = kwargs[LightServiceArgument.WHITE]
                 should_update = True
 
         await self.async_publish_with_config(

@@ -1,6 +1,5 @@
 """Test the Bang & Olufsen WebSocket listener."""
 
-import logging
 from unittest.mock import AsyncMock, Mock
 
 from mozart_api.models import (
@@ -10,6 +9,7 @@ from mozart_api.models import (
     WebsocketNotificationTag,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from pytest_unordered import unordered
 from syrupy.assertion import SnapshotAssertion
 
@@ -32,8 +32,6 @@ from .const import (
 )
 from .util import get_balance_entity_ids, get_remote_entity_ids
 
-from tests.common import MockConfigEntry
-
 
 async def test_connection(
     hass: HomeAssistant,
@@ -46,8 +44,6 @@ async def test_connection(
     mock_mozart_client.websocket_connected = True
 
     connection_callback = mock_mozart_client.get_on_connection.call_args[0][0]
-
-    caplog.set_level(logging.DEBUG)
 
     mock_connection_callback = Mock()
 
@@ -387,8 +383,6 @@ async def test_on_all_notifications_raw(
         "serial_number": int(mock_config_entry.unique_id),
         **raw_notification,
     }
-
-    caplog.set_level(logging.DEBUG)
 
     mock_event_callback = Mock()
 
