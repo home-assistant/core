@@ -40,6 +40,9 @@ async def async_setup_entry(
         if checked_displays != coordinator.display_connections:
             checked_displays = coordinator.display_connections
             async_remove_gone_displays(entry, SWITCH_DOMAIN, "power", known_displays)
+        # Entities are named after the system, so new ones wait for its data
+        if coordinator.data.system is None:
+            return
         # Only displays that report a power state can be turned on or off
         new_displays = [
             display.id

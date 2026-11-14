@@ -126,8 +126,16 @@ async def test_display_power_removed_on_reconnect(
     assert hass.states.get(ENTITY_ID) is None
     assert entity_registry.async_get(ENTITY_ID) is None
 
-    # It comes back when the display is plugged in again
+    # Plugged in again, it waits for the system data, which names it
+    system = coordinator.data.system
+    await coordinator.async_handle_module(Module.SYSTEM, None)
     await coordinator.async_handle_module(Module.DISPLAYS, FIXTURE_DISPLAYS)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get(ENTITY_ID) is None
+
+    # It comes back once the system data is back
+    await coordinator.async_handle_module(Module.SYSTEM, system)
     await hass.async_block_till_done()
 
     assert hass.states.get(ENTITY_ID)

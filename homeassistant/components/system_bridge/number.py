@@ -42,6 +42,9 @@ async def async_setup_entry(
             async_remove_gone_displays(
                 entry, NUMBER_DOMAIN, "brightness", known_displays
             )
+        # Entities are named after the system, so new ones wait for its data
+        if coordinator.data.system is None:
+            return
         # Only displays that report a brightness can have it set
         new_displays = [
             display.id

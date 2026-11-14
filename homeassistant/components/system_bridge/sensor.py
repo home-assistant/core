@@ -1210,6 +1210,9 @@ async def async_setup_entry(
                 )
             )
 
+        # Entities are named after the system, so new ones wait for its data
+        if data.system is None:
+            return
         new_descriptions = [
             description
             for description in (

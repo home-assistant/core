@@ -847,19 +847,33 @@ async def test_sensor_removed_without_system_data(
     mock_websocket_client: MagicMock,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test gone GPUs are still removed once the system module has no data."""
+    """Test GPUs are removed without system data, and added once it's back."""
     mock_websocket_client.listen.side_effect = None
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
+    entity_id = "sensor.hostname_name_usage"
     coordinator = mock_config_entry.runtime_data
+    system = coordinator.data.system
     await coordinator.async_handle_module(Module.SYSTEM, None)
     await coordinator.async_handle_module(Module.GPUS, [])
     await hass.async_block_till_done()
 
-    assert entity_registry.async_get("sensor.hostname_name_usage") is None
+    assert entity_registry.async_get(entity_id) is None
+
+    # The GPU's entities wait for the system data, which names them
+    await coordinator.async_handle_module(Module.GPUS, FIXTURE_GPUS)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get(entity_id) is None
+
+    await coordinator.async_handle_module(Module.SYSTEM, system)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id)
+    assert entity_registry.async_get(entity_id)
 
 
 @pytest.mark.usefixtures("mock_version")
