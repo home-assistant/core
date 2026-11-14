@@ -2,11 +2,13 @@
 
 from collections.abc import Callable
 from datetime import timedelta
+import logging
 from typing import Any
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 from modbus_connection import (
+    GatewayTargetError,
     ModbusConnectionError,
     ModbusError,
     ModbusExceptionError,
@@ -1002,6 +1004,61 @@ async def test_every_component_failing_recovers_on_a_later_poll(
     assert "is available again" not in caplog.text
 
 
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(ModbusTimeoutError("asleep"), id="asleep"),
+        pytest.param(GatewayTargetError(), id="silent_behind_gateway"),
+        pytest.param(ModbusConnectionError("link lost"), id="link_lost"),
+    ],
+)
+async def test_unreachable_inverter_is_logged_at_info(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    mock_connection: MockModbusConnection,
+    init_integration: MockConfigEntry,
+    error: ModbusError,
+) -> None:
+    """Test an unreachable inverter is logged at info, not as an error."""
+    mock_connection.for_unit(1).fail_requests(error)
+    freezer.tick(timedelta(seconds=SETTINGS_SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (
+        "homeassistant.components.sofar.coordinator",
+        logging.INFO,
+        f"{init_integration.title} is unavailable: The inverter cannot be reached",
+    ) in caplog.record_tuples
+    assert "Error fetching" not in caplog.text
+
+
+async def test_unreachable_adapter_is_logged_at_info(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    mock_connection: MockModbusConnection,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test a timeout opening the link is logged at info."""
+    mock_connection.simulate_connection_lost()
+    with patch.object(
+        MockModbusConnection,
+        "_connect_client",
+        side_effect=ModbusTimeoutError("no adapter"),
+    ):
+        freezer.tick(timedelta(seconds=SCAN_INTERVAL))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (
+        "homeassistant.components.sofar.coordinator",
+        logging.INFO,
+        f"{init_integration.title} is unavailable: The inverter cannot be reached",
+    ) in caplog.record_tuples
+
+
 async def test_component_failure_is_logged_once_until_it_recovers(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -1341,7 +1398,10 @@ async def test_a_known_tower_survives_a_silent_probe(
     assert entry.state is ConfigEntryState.LOADED
     assert "battery_packs" in entry.data[SERVED_COMPONENTS]
     # The silent packs must not read as a readings failure.
-    assert f"Error fetching {MOCK_HYBRID_MODEL} battery packs data" in caplog.text
+    assert (
+        f"{MOCK_HYBRID_MODEL} battery packs is unavailable: "
+        "The battery tower cannot be reached" in caplog.text
+    )
 
 
 async def test_only_silent_bts_packs_can_be_removed(

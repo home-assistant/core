@@ -6,7 +6,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_capture_events
 
 from homeassistant.components.hunterdouglas_powerview.const import DOMAIN
-from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN, SERVICE_TURN_ON
+from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN, SceneService
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -113,7 +113,7 @@ async def test_scenes(
     ) as mock_activate:
         await hass.services.async_call(
             SCENE_DOMAIN,
-            SERVICE_TURN_ON,
+            SceneService.TURN_ON,
             {"entity_id": f"scene.powerview_generation_{api_version}_open_study"},
             blocking=True,
         )

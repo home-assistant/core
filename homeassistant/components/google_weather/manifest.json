@@ -10,5 +10,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["google_weather_api"],
   "quality_scale": "platinum",
-  "requirements": ["python-google-weather-api==0.0.10"]
+  "requirements": ["python-google-weather-api==0.0.11"]
 }

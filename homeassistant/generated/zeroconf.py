@@ -753,10 +753,18 @@ ZEROCONF = {
     ],
     "_ipp._tcp.local.": [
         {
+            "domain": "hp_printer",
+            "name": "hp*",
+        },
+        {
             "domain": "ipp",
         },
     ],
     "_ipps._tcp.local.": [
+        {
+            "domain": "hp_printer",
+            "name": "hp*",
+        },
         {
             "domain": "ipp",
         },
@@ -1130,6 +1138,11 @@ ZEROCONF = {
     "_viziocast._tcp.local.": [
         {
             "domain": "vizio",
+        },
+    ],
+    "_voice-support._tcp.local.": [
+        {
+            "domain": "voice_support",
         },
     ],
     "_waermeleser._tcp.local.": [
