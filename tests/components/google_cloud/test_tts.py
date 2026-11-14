@@ -1,5 +1,6 @@
 """Tests for the Google Cloud TTS entity."""
 
+import asyncio
 from collections.abc import AsyncGenerator, AsyncIterator
 import io
 from typing import Any
@@ -111,6 +112,54 @@ async def test_stream_tts_audio(
         assert wav_file.readframes(150) == bytes(300)
     assert requests == snapshot
     mock_api_tts.synthesize_speech.assert_not_called()
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_stream_tts_audio_while_message_pending(
+    hass: HomeAssistant,
+    mock_api_tts: AsyncMock,
+) -> None:
+    """Test audio is streamed before the whole message is generated."""
+    message_finished = asyncio.Event()
+
+    async def pending_message_gen() -> AsyncGenerator[str]:
+        yield "Hello world. How"
+        await message_finished.wait()
+        yield " are you?"
+
+    async def streaming_synthesize(
+        request_gen: AsyncIterator[cloud_tts.StreamingSynthesizeRequest],
+    ) -> AsyncGenerator[cloud_tts.StreamingSynthesizeResponse]:
+        async def response_gen() -> AsyncGenerator[
+            cloud_tts.StreamingSynthesizeResponse
+        ]:
+            async for request in request_gen:
+                if request.input.text:
+                    yield cloud_tts.StreamingSynthesizeResponse(
+                        audio_content=bytes(100)
+                    )
+
+        return response_gen()
+
+    mock_api_tts.streaming_synthesize.side_effect = streaming_synthesize
+
+    stream = tts.async_create_stream(
+        hass,
+        TTS_ENTITY_ID,
+        "en-US",
+        options={
+            "voice": CHIRP_VOICE,
+            tts.TextToSpeechCommonOption.PREFERRED_FORMAT: "wav",
+        },
+    )
+    stream.async_set_message_stream(pending_message_gen())
+    audio = stream.async_stream_result()
+
+    assert len(await anext(audio)) == 44  # WAV header
+    assert await anext(audio) == bytes(100)
+
+    message_finished.set()
+    assert [chunk async for chunk in audio] == [bytes(100)]
 
 
 @pytest.mark.usefixtures("setup_integration")
