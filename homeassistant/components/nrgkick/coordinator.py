@@ -20,7 +20,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailed,
+    UpdateFailedUnreachable,
+)
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
@@ -94,7 +98,7 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator[NRGkickData]):
                 translation_key="timeout",
             ) from error
         except NRGkickUnreachableError as error:
-            raise UpdateFailed(
+            raise UpdateFailedUnreachable(
                 translation_domain=DOMAIN,
                 translation_key="unreachable",
             ) from error
