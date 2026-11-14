@@ -36,9 +36,7 @@ rules:
     status: exempt
     comment: Integration does not register actions
   config-entry-unloading: done
-  docs-configuration-parameters:
-    status: exempt
-    comment: Integration does not expose configuration options
+  docs-configuration-parameters: done
   docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done

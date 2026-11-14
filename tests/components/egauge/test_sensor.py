@@ -14,9 +14,10 @@ from pytest_homeassistant.common import (
 )
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.egauge.const import DOMAIN
+from homeassistant.components.egauge.const import CONF_INVERT_REGISTERS, DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 pytestmark = pytest.mark.usefixtures("init_integration")
@@ -39,6 +40,36 @@ async def test_sensors(
     )
     assert device_entry
     assert device_entry == snapshot
+
+
+async def test_inverted_register_reports_the_opposite_sign(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    init_integration: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that only power sensors of an inverted register flip sign."""
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {CONF_INVERT_REGISTERS: ["Grid"]}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
+
+    def state_for(register: str, key: str) -> str | None:
+        entity_id = entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"ABC123456_{register}_{key}"
+        )
+        return hass.states.get(entity_id).state if entity_id else None
+
+    assert state_for("Grid", "power") == "-1500.0"
+    # Energy stays as the meter reports it: a negated total-increasing sensor
+    # is rejected by the recorder, so energy inversion is not offered.
+    assert state_for("Grid", "energy") == "125.0"
+    # The register beside it, and a register of another type, are untouched.
+    assert state_for("Solar", "power") == "-2500.0"
+    assert state_for("L1", "voltage") == "123.4"
+    assert state_for("S1", "current") == "1.2"
 
 
 @pytest.mark.parametrize(
