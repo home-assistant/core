@@ -170,6 +170,14 @@ async def test_turn_on_off_display_raises_error(
             "Device does not support toggling drying mode.",
             id="drying_mode",
         ),
+        pytest.param(
+            "SmartTowerFan",
+            "switch.smarttowerfan_mute",
+            SERVICE_TURN_ON,
+            "pyvesync.devices.vesyncfan.VeSyncTowerFan.toggle_mute",
+            "Device does not support toggling mute.",
+            id="mute",
+        ),
     ],
 )
 async def test_switch_unsupported_command(
@@ -268,6 +276,19 @@ async def test_switch_unsupported_command(
             "switch.humidifier_6000s_enable_drying_mode_while_power_is_off",
             SERVICE_TURN_OFF,
             "pyvesync.devices.vesynchumidifier.VeSyncSuperior6000S.toggle_drying_mode",
+        ),
+        # mute switch for fan
+        (
+            "SmartTowerFan",
+            "switch.smarttowerfan_mute",
+            SERVICE_TURN_ON,
+            "pyvesync.devices.vesyncfan.VeSyncTowerFan.toggle_mute",
+        ),
+        (
+            "SmartTowerFan",
+            "switch.smarttowerfan_mute",
+            SERVICE_TURN_OFF,
+            "pyvesync.devices.vesyncfan.VeSyncTowerFan.toggle_mute",
         ),
     ],
 )

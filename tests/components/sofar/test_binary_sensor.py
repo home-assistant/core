@@ -1,16 +1,22 @@
 """Tests for the Sofar binary sensor platform."""
 
+from datetime import timedelta
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 from modbus_connection.mock import MockModbusConnection
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
-from sofar_modbus.modern.faults import FaultCategory
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
+from sofar_modbus import FaultCategory
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.sofar.binary_sensor import FAULT_SENSOR_DESCRIPTIONS
-from homeassistant.components.sofar.const import DOMAIN
+from homeassistant.components.sofar.const import DOMAIN, PACKS_SCAN_INTERVAL
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -21,10 +27,11 @@ from . import MOCK_ENTRY_DATA, MOCK_MODEL, MOCK_SERIAL, seed_pv_inverter
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_all_entities(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test all entities match their snapshot on a PV device."""
+    """Test all entities match their snapshot on a PV device after a poll."""
     connection = MockModbusConnection()
     seed_pv_inverter(connection.for_unit(1))
     entry = MockConfigEntry(
@@ -42,6 +49,14 @@ async def test_all_entities(
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
+
+    unit = connection.for_unit(1)
+    unit.holding[0x0405] = 0b1  # ID001_GRID_OVER_VOLTAGE
+    unit.holding[0x1105] = 0b1  # active power limit armed
+    unit.holding[0x1106] = 800  # 80% limit, on while armed
+    freezer.tick(timedelta(seconds=PACKS_SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
     await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
 
@@ -125,11 +140,10 @@ async def test_enabled_by_default_excludes_commercial_hardware(
 
 
 @pytest.mark.parametrize(
-    ("armed", "expected"),
+    "flags",
     [
-        pytest.param(0b0, STATE_OFF, id="not_armed"),
-        pytest.param(0b1, STATE_ON, id="armed"),
-        pytest.param(0b10, STATE_OFF, id="unrelated_flag_only"),
+        pytest.param(0b0, id="not_armed"),
+        pytest.param(0b10, id="unrelated_flag_only"),
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -138,12 +152,11 @@ async def test_active_power_limit_enabled_follows_its_bit(
     entity_registry: er.EntityRegistry,
     mock_connection: MockModbusConnection,
     mock_config_entry: MockConfigEntry,
-    armed: int,
-    expected: str,
+    flags: int,
 ) -> None:
     """Test the arm bit of 1105 drives the state, not the limit itself."""
     unit = mock_connection.for_unit(1)
-    unit.holding[0x1105] = armed
+    unit.holding[0x1105] = flags
     unit.holding[0x1106] = 800  # 80% limit, ignored while the bit is unset
 
     with patch(
@@ -161,4 +174,4 @@ async def test_active_power_limit_enabled_follows_its_bit(
     )
     assert entity_id is not None
     assert (state := hass.states.get(entity_id)) is not None
-    assert state.state == expected
+    assert state.state == STATE_OFF

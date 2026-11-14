@@ -8,9 +8,9 @@ import requests_mock
 from homeassistant.components.update import (
     DOMAIN as UPDATE_DOMAIN,
     SCAN_INTERVAL as UPDATER_SCAN_INTERVAL,
-    SERVICE_INSTALL,
+    UpdateService,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import dt as dt_util
@@ -62,9 +62,9 @@ async def test_plex_update(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
+            UpdateService.INSTALL,
             {
-                ATTR_ENTITY_ID: UPDATE_ENTITY,
+                CommonServiceArgument.ENTITY_ID: UPDATE_ENTITY,
             },
             blocking=True,
         )
@@ -91,9 +91,9 @@ async def test_plex_update(
     # Successful upgrade request
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
+        UpdateService.INSTALL,
         {
-            ATTR_ENTITY_ID: UPDATE_ENTITY,
+            CommonServiceArgument.ENTITY_ID: UPDATE_ENTITY,
         },
         blocking=True,
     )
@@ -104,9 +104,9 @@ async def test_plex_update(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
+            UpdateService.INSTALL,
             {
-                ATTR_ENTITY_ID: UPDATE_ENTITY,
+                CommonServiceArgument.ENTITY_ID: UPDATE_ENTITY,
             },
             blocking=True,
         )

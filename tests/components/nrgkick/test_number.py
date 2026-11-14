@@ -20,11 +20,11 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.nrgkick.const import DEFAULT_SCAN_INTERVAL
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -68,8 +68,8 @@ async def test_set_charging_current(
     mock_nrgkick_api.get_control.return_value = control_data
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 10.0},
+        NumberService.SET_VALUE,
+        {CommonServiceArgument.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 10.0},
         blocking=True,
     )
     assert (state := hass.states.get(entity_id))
@@ -97,8 +97,8 @@ async def test_set_energy_limit(
     mock_nrgkick_api.get_control.return_value = control_data
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 5000},
+        NumberService.SET_VALUE,
+        {CommonServiceArgument.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 5000},
         blocking=True,
     )
     assert (state := hass.states.get(entity_id))
@@ -126,8 +126,8 @@ async def test_set_phase_count(
     mock_nrgkick_api.get_control.return_value = control_data
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 1},
+        NumberService.SET_VALUE,
+        {CommonServiceArgument.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 1},
         blocking=True,
     )
     assert (state := hass.states.get(entity_id))
@@ -213,8 +213,8 @@ async def test_phase_count_filters_transient_zero_on_service_call(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 1},
+        NumberService.SET_VALUE,
+        {CommonServiceArgument.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 1},
         blocking=True,
     )
     mock_nrgkick_api.set_phase_count.assert_awaited_once_with(1)
@@ -256,8 +256,11 @@ async def test_number_command_rejected_by_device(
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 10.0},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: entity_id,
+                NumberServiceArgument.VALUE: 10.0,
+            },
             blocking=True,
         )
 
