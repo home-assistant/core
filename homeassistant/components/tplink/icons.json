@@ -28,6 +28,9 @@
       "pan_right": {
         "default": "mdi:chevron-right"
       },
+      "ptz_preset": {
+        "default": "mdi:camera-switch"
+      },
       "sensor_reset": {
         "default": "mdi:eye-outline"
       },
