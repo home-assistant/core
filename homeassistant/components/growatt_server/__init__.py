@@ -50,7 +50,6 @@ from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.hass_dict import HassKey
 
 from .const import (
     AUTH_API_TOKEN,
@@ -80,11 +79,10 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-# Logged-in sessions by (server URL, username), so setup retries and the setup
-# after migration reuse them instead of logging in again.
-DATA_CLASSIC_SESSIONS: HassKey[dict[tuple[str, str], GrowattClassicSession]] = HassKey(
-    "growatt_server_classic_sessions"
-)
+# Temporary handoff of authenticated Classic API sessions from async_migrate_entry
+# to async_setup_entry. Avoids a second login() during the same startup, which
+# would hit Growatt's 5-minute per-endpoint rate limit. Popped after first use.
+_CACHED_APIS: dict[str, GrowattClassicSession] = {}
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -209,6 +207,9 @@ async def async_migrate_entry(
                     config_entry, data=new_data, minor_version=1
                 )
 
+                # Cache the logged-in session for reuse in async_setup_entry()
+                _CACHED_APIS[config_entry.entry_id] = session
+
                 _LOGGER.info(
                     "Migrated config entry to use specific plant_id '%s'",
                     first_plant_id,
@@ -237,10 +238,9 @@ async def _create_api_and_login(
     """
     api = growattServer.GrowattApi(add_random_user_id=True, agent_identifier=username)
     api.server_url = url
-    session = GrowattClassicSession(hass, api, username, password)
+    session = GrowattClassicSession(api, username, password)
 
     login_response = await hass.async_add_executor_job(_login_classic_api, session)
-    hass.data.setdefault(DATA_CLASSIC_SESSIONS, {})[session.account] = session
 
     return session, login_response
 
@@ -363,9 +363,18 @@ async def async_setup_entry(
         password = config[CONF_PASSWORD]
 
         # Reuse the session from migration or an earlier setup attempt, so
-        # neither costs another login.
-        cached_session = hass.data.get(DATA_CLASSIC_SESSIONS, {}).get((url, username))
-        if cached_session is not None and cached_session.password == password:
+        # neither costs another login. runtime_data survives setup retries and
+        # is dropped when a loaded entry unloads, so a reload logs in again.
+        cached_session = _CACHED_APIS.pop(config_entry.entry_id, None)
+        if cached_session is None and (
+            previous := getattr(config_entry, "runtime_data", None)
+        ):
+            cached_session = previous.total_coordinator.classic_session
+        if cached_session is not None and (
+            cached_session.api.server_url,
+            cached_session.username,
+            cached_session.password,
+        ) == (url, username, password):
             classic_session = cached_session
             _LOGGER.debug("Reusing logged-in Growatt session")
         else:
@@ -383,6 +392,10 @@ async def async_setup_entry(
     # Create a coordinator for the total sensors
     total_coordinator = GrowattCoordinator(
         hass, config_entry, plant_id, "total", plant_id, api, classic_session
+    )
+    # Set before the first refresh, so a setup retry can reuse the session.
+    config_entry.runtime_data = GrowattRuntimeData(
+        total_coordinator=total_coordinator, devices={}
     )
 
     if classic_session is not None:
@@ -526,8 +539,3 @@ async def async_unload_entry(
 ) -> None:
     """Unload a config entry."""
     await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)
-    # A reload or reauth starts from a fresh login.
-    if config_entry.data.get(CONF_AUTH_TYPE) == AUTH_PASSWORD:
-        hass.data.get(DATA_CLASSIC_SESSIONS, {}).pop(
-            (_server_url(config_entry.data), config_entry.data[CONF_USERNAME]), None
-        )

@@ -22,7 +22,6 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
-from homeassistant.util.hass_dict import HassKey
 
 from .const import (
     BATT_MODE_BATTERY_FIRST,
@@ -49,10 +48,6 @@ LOGIN_COOLDOWN = dt.timedelta(hours=2)
 # Growatt keeps answering data requests with a web page.
 RELOGIN_INTERVAL = dt.timedelta(minutes=30)
 ISSUE_UNEXPECTED_WEB_PAGE = "unexpected_web_page"
-# Classic API login cooldown deadlines, keyed by (server URL, username)
-DATA_LOGIN_BLOCKED_UNTIL: HassKey[dict[tuple[str, str], dt.datetime]] = HassKey(
-    "growatt_server_login_blocked_until"
-)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -89,7 +84,6 @@ class GrowattClassicSession:
 
     def __init__(
         self,
-        hass: HomeAssistant,
         api: growattServer.GrowattApi,
         username: str,
         password: str,
@@ -105,17 +99,11 @@ class GrowattClassicSession:
         # False until a data request succeeds on the current login.
         self.fetched_since_login = False
         self._lock = threading.RLock()
-        # Shared across reloads, since the lockout belongs to the account.
-        self._blocked_until = hass.data.setdefault(DATA_LOGIN_BLOCKED_UNTIL, {})
-
-    @property
-    def account(self) -> tuple[str, str]:
-        """Return the server URL and username that logins are limited by."""
-        return (self.api.server_url, self.username)
+        self._blocked_until: dt.datetime | None = None
 
     def _raise_if_rate_limited(self, now: dt.datetime) -> None:
         """Raise GrowattLoginRateLimited while the cooldown after a 507 runs."""
-        if (until := self._blocked_until.get(self.account)) and now < until:
+        if (until := self._blocked_until) and now < until:
             raise GrowattLoginRateLimited((until - now).total_seconds())
 
     def login(self) -> dict[str, Any]:
@@ -132,7 +120,7 @@ class GrowattClassicSession:
             # growattServer releases after 2.2.0 raise GrowattRateLimitError
             # from any call instead.
             if login_response.get("msg") == LOGIN_RATE_LIMITED_CODE:
-                self._blocked_until[self.account] = now + LOGIN_COOLDOWN
+                self._blocked_until = now + LOGIN_COOLDOWN
                 raise GrowattLoginRateLimited(LOGIN_COOLDOWN.total_seconds())
             if login_response.get("success"):
                 self.generation += 1

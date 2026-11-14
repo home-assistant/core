@@ -471,9 +471,7 @@ async def test_classic_api_rate_limited_relogin_cooldown(
     assert hass.states.get(TLX_OUTPUT_POWER).state == "1700"
 
 
-async def test_classic_session_concurrent_renew_logs_in_once(
-    hass: HomeAssistant,
-) -> None:
+async def test_classic_session_concurrent_renew_logs_in_once() -> None:
     """Test a renew that waits on another coordinator's login does not log in."""
     entered = threading.Event()
     release = threading.Event()
@@ -485,7 +483,7 @@ async def test_classic_session_concurrent_renew_logs_in_once(
 
     api = Mock()
     api.login.side_effect = blocking_login
-    session = GrowattClassicSession(hass, api, "test_user", "test_password")
+    session = GrowattClassicSession(api, "test_user", "test_password")
 
     with ThreadPoolExecutor(max_workers=2) as pool:
         first = pool.submit(session.renew, 0)
@@ -719,6 +717,30 @@ async def test_classic_api_setup_retry_reuses_session(
     assert hass.states.get(TLX_OUTPUT_POWER).state == "2100"
 
 
+async def test_classic_api_setup_retry_new_password_logs_in_again(
+    hass: HomeAssistant,
+    mock_growatt_classic_api: MagicMock,
+    mock_config_entry_classic: MockConfigEntry,
+) -> None:
+    """Test a setup retry does not reuse a session made with an old password."""
+    mock_growatt_classic_api.plant_info.side_effect = (
+        requests.exceptions.ConnectionError("Connection reset")
+    )
+
+    await setup_integration(hass, mock_config_entry_classic)
+    assert mock_config_entry_classic.state is ConfigEntryState.SETUP_RETRY
+
+    hass.config_entries.async_update_entry(
+        mock_config_entry_classic,
+        data={**mock_config_entry_classic.data, CONF_PASSWORD: "new_password"},
+    )
+    await hass.config_entries.async_reload(mock_config_entry_classic.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_growatt_classic_api.login.call_count == 2
+    mock_growatt_classic_api.login.assert_called_with("test_user", "new_password")
+
+
 async def test_classic_api_reload_logs_in_again(
     hass: HomeAssistant,
     mock_growatt_classic_api: MagicMock,
@@ -741,13 +763,11 @@ async def test_classic_api_reload_logs_in_again(
 
 
 @pytest.mark.usefixtures("freezer")
-async def test_classic_session_cooldown_wins_over_relogin_interval(
-    hass: HomeAssistant,
-) -> None:
+async def test_classic_session_cooldown_wins_over_relogin_interval() -> None:
     """Test a renew after a 507 reports the cooldown, not the re-login interval."""
     api = Mock(server_url="https://openapi.growatt.com/")
     api.login.return_value = {"success": False, "msg": "507"}
-    session = GrowattClassicSession(hass, api, "test_user", "test_password")
+    session = GrowattClassicSession(api, "test_user", "test_password")
 
     with pytest.raises(GrowattLoginRateLimited):
         session.renew(0)
@@ -757,23 +777,6 @@ async def test_classic_session_cooldown_wins_over_relogin_interval(
 
     assert err.value.retry_after == LOGIN_COOLDOWN.total_seconds()
     api.login.assert_called_once()
-
-
-async def test_classic_session_cooldown_is_per_server(
-    hass: HomeAssistant,
-) -> None:
-    """Test a 507 on one Growatt server does not block the same user elsewhere."""
-    blocked_api = Mock(server_url="https://openapi.growatt.com/")
-    blocked_api.login.return_value = {"success": False, "msg": "507"}
-    other_api = Mock(server_url="https://openapi-au.growatt.com/")
-    other_api.login.return_value = {"success": True}
-
-    blocked = GrowattClassicSession(hass, blocked_api, "test_user", "test_password")
-    other = GrowattClassicSession(hass, other_api, "test_user", "test_password")
-
-    with pytest.raises(GrowattLoginRateLimited):
-        blocked.login()
-    assert other.login() == {"success": True}
 
 
 async def test_classic_api_setup(
@@ -952,13 +955,15 @@ async def test_classic_api_setup_skips_login_during_cooldown(
     mock_config_entry_classic: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test setup does not log in again until the 507 cooldown has passed."""
+    """Test the setup retry after a 507 waits out the cooldown."""
     mock_growatt_classic_api.login.return_value = {"success": False, "msg": "507"}
 
     await setup_integration(hass, mock_config_entry_classic)
     assert mock_config_entry_classic.state is ConfigEntryState.SETUP_RETRY
 
-    await hass.config_entries.async_reload(mock_config_entry_classic.entry_id)
+    freezer.tick(LOGIN_COOLDOWN - timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert mock_config_entry_classic.state is ConfigEntryState.SETUP_RETRY
     mock_growatt_classic_api.login.assert_called_once()
 
@@ -966,8 +971,9 @@ async def test_classic_api_setup_skips_login_during_cooldown(
         "success": True,
         "user": {"id": 12345},
     }
-    freezer.tick(LOGIN_COOLDOWN)
-    await hass.config_entries.async_reload(mock_config_entry_classic.entry_id)
+    freezer.tick(timedelta(minutes=2))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert mock_config_entry_classic.state is ConfigEntryState.LOADED
     assert mock_growatt_classic_api.login.call_count == 2
 
