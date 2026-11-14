@@ -96,7 +96,7 @@ def get_thumbnail_url_full(
             )
         return fix_image_url(getattr(item, "album_art_uri", ""))
 
-    # Don't unquote: aiohttp decodes the path, and unquoting here truncates track ids.
+    # The content id must stay percent-encoded; aiohttp decodes the path once.
     return get_browse_image_url(
         media_content_type,
         media_content_id,

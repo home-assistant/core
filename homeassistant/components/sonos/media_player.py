@@ -9,6 +9,7 @@ from urllib.parse import quote, urlparse
 
 from soco import SoCo, alarms
 from soco.core import (
+    MUSIC_SRC_LIBRARY,
     MUSIC_SRC_LINE_IN,
     MUSIC_SRC_RADIO,
     PLAY_MODE_BY_MEANING,
@@ -888,9 +889,12 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             if image_url := getattr(item, "album_art_uri", None):
                 return await self._async_fetch_image(image_url)
         elif media_content_type == MediaType.TRACK and media_content_id:
-            # The speaker serves a track's art from its URI. Local library
-            # tracks are looked up as is; music service tracks need s=1.
-            service = "" if media_content_id.startswith("x-file-cifs:") else "s=1&"
+            # The speaker serves a track's art from its URI; music service
+            # tracks need s=1, local library tracks must not have it.
+            is_library = (
+                SoCo.music_source_from_uri(media_content_id) == MUSIC_SRC_LIBRARY
+            )
+            service = "" if is_library else "s=1&"
             image_url = self.media.library.build_album_art_full_uri(
                 f"/getaa?{service}u={quote(media_content_id, safe='')}"
             )

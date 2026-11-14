@@ -2,12 +2,12 @@
 
 from collections.abc import Callable, Coroutine
 from functools import partial
+from http import HTTPStatus
 from typing import Any
 from unittest.mock import MagicMock, Mock, patch
-from urllib.parse import quote, unquote
 
 import pytest
-from pytest_homeassistant.typing import WebSocketGenerator
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 from soco.data_structures import SearchResult
 from syrupy.assertion import SnapshotAssertion
 
@@ -626,88 +626,79 @@ async def test_search_media_invalid_media_content_type(
     }
 
 
-def test_get_thumbnail_url_full_keeps_track_id_query() -> None:
-    """Test the proxy URL is not unquoted, so a track id keeps its query string.
-
-    get_browse_image_url percent-encodes the content id into the path. Unquoting
-    the result would let the track URI's "?sid=...&..." query collapse into the
-    proxy URL and truncate the id.
-    """
-    media = Mock()
-    track_uri = "x-sonos-spotify:spotify%3atrack%3a5bcTCx?sid=12&flags=8224&sn=3"
-    proxy_url = (
-        "/api/media_player_proxy/media_player.zone_a/browse_media/track/"
-        + quote(track_uri, safe="")
-        + "?token=abc"
-    )
-    get_browse_image_url = Mock(return_value=proxy_url)
-
-    result = get_thumbnail_url_full(
-        media,
+@pytest.mark.parametrize(
+    ("media_content_type", "media_content_id"),
+    [
+        pytest.param(
+            MediaType.TRACK,
+            "x-sonos-spotify:spotify%3atrack%3a5bcTCx?sid=12&flags=8224&sn=3",
+            id="music_service_track",
+        ),
+        pytest.param(
+            MediaType.TRACK,
+            "x-file-cifs://server/Music/Abbey%20Road/01%20-%20Come%20Together.mp3",
+            id="local_library_track",
+        ),
+        pytest.param(
+            MediaType.ALBUM,
+            "A:ALBUM/Abbey%20Road",
+            id="album",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("async_autosetup_sonos")
+async def test_browse_image_url_round_trip(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    media_content_type: str,
+    media_content_id: str,
+) -> None:
+    """Test the browse thumbnail URL hands the exact content id back to the proxy."""
+    entity_comp = hass.data["entity_components"]["media_player"]
+    player = entity_comp.get_entity("media_player.zone_a")
+    url = get_thumbnail_url_full(
+        player.media,
         False,
-        get_browse_image_url,
-        MediaType.TRACK,
-        track_uri,
-        None,
-        None,
+        player.get_browse_image_url,
+        media_content_type,
+        media_content_id,
     )
 
-    get_browse_image_url.assert_called_once_with(MediaType.TRACK, track_uri, None)
-    assert result == proxy_url
+    client = await hass_client()
+    with patch.object(
+        player, "async_get_browse_image", return_value=(b"image", "image/jpeg")
+    ) as mock_get_browse_image:
+        resp = await client.get(url)
 
-
-def test_get_thumbnail_url_full_preserves_encoded_content_id() -> None:
-    """Test the proxy URL is returned without unquoting so ids with spaces survive.
-
-    Regression guard for #102557: aiohttp unquotes the proxy path on the way back
-    in, so unquoting here would turn "%20" back into a space and break the lookup.
-    """
-    media = Mock()
-    content_id = "A:ALBUM/Abbey Road/Come Together & Friends"
-    proxy_url = (
-        "/api/media_player_proxy/media_player.zone_a/browse_media/album/"
-        + quote(content_id)
-        + "?token=abc"
+    assert resp.status == HTTPStatus.OK
+    mock_get_browse_image.assert_awaited_once_with(
+        media_content_type, media_content_id, None
     )
-    get_browse_image_url = Mock(return_value=proxy_url)
-
-    result = get_thumbnail_url_full(
-        media,
-        False,
-        get_browse_image_url,
-        MediaType.ALBUM,
-        content_id,
-        None,
-        None,
-    )
-
-    get_browse_image_url.assert_called_once_with(MediaType.ALBUM, content_id, None)
-    assert result == proxy_url
-    assert "%20" in result
-    assert result != unquote(proxy_url)
 
 
 @pytest.mark.parametrize(
     ("track_uri", "expected_query"),
     [
-        (
+        pytest.param(
             "x-sonos-spotify:spotify%3atrack%3a5bcTCx?sid=12&flags=8224&sn=3",
             "s=1&u=x-sonos-spotify%3Aspotify%253atrack%253a5bcTCx%3Fsid%3D12"
             "%26flags%3D8224%26sn%3D3",
+            id="music_service",
         ),
-        (
+        pytest.param(
             "x-sonosapi-hls-static:track-%3esoundcloud%3atracks%3a1610992905"
             "?sid=160&flags=8232&sn=25",
             "s=1&u=x-sonosapi-hls-static%3Atrack-%253esoundcloud%253atracks"
             "%253a1610992905%3Fsid%3D160%26flags%3D8232%26sn%3D25",
+            id="soundcloud",
         ),
-        (
+        pytest.param(
             "x-file-cifs://server/Music/Abbey%20Road/01%20-%20Come%20Together.mp3",
             "u=x-file-cifs%3A%2F%2Fserver%2FMusic%2FAbbey%2520Road%2F01%2520-"
             "%2520Come%2520Together.mp3",
+            id="local_library",
         ),
     ],
-    ids=["music_service", "soundcloud", "local_library"],
 )
 @pytest.mark.usefixtures("async_autosetup_sonos")
 async def test_browse_image_for_track(
