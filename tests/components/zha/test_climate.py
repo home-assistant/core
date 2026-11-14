@@ -34,6 +34,7 @@ from homeassistant.components.climate import (
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_TEMPERATURE,
+    ClimateEntityStateAttribute,
     HVACAction,
     HVACMode,
 )
@@ -78,6 +79,21 @@ CLIMATE_FAN = {
             zigpy.zcl.clusters.hvac.Fan.cluster_id,
             zigpy.zcl.clusters.hvac.Thermostat.cluster_id,
             zigpy.zcl.clusters.hvac.UserInterface.cluster_id,
+        ],
+        SIG_EP_OUTPUT: [zigpy.zcl.clusters.general.Ota.cluster_id],
+    }
+}
+
+CLIMATE_HUMIDITY = {
+    1: {
+        SIG_EP_PROFILE: zha.PROFILE_ID,
+        SIG_EP_TYPE: zha.DeviceType.THERMOSTAT,
+        SIG_EP_INPUT: [
+            zigpy.zcl.clusters.general.Basic.cluster_id,
+            zigpy.zcl.clusters.general.Identify.cluster_id,
+            zigpy.zcl.clusters.hvac.Thermostat.cluster_id,
+            zigpy.zcl.clusters.hvac.UserInterface.cluster_id,
+            zigpy.zcl.clusters.measurement.RelativeHumidity.cluster_id,
         ],
         SIG_EP_OUTPUT: [zigpy.zcl.clusters.general.Ota.cluster_id],
     }
@@ -224,6 +240,31 @@ async def test_climate_local_temperature(hass: HomeAssistant, device_climate) ->
     await send_attributes_report(hass, thrm_cluster, {0: 2100})
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 21.0
+
+
+async def test_climate_current_humidity(
+    hass: HomeAssistant, device_climate_mock
+) -> None:
+    """Test current humidity from a humidity cluster on the thermostat endpoint."""
+
+    device_climate = await device_climate_mock(CLIMATE_HUMIDITY)
+    humidity_cluster = device_climate.device.device.endpoints[1].humidity
+    entity_id = find_entity_id(Platform.CLIMATE, device_climate, hass)
+
+    state = hass.states.get(entity_id)
+    assert ClimateEntityStateAttribute.CURRENT_HUMIDITY not in state.attributes
+
+    await send_attributes_report(hass, humidity_cluster, {"measured_value": 4550})
+    state = hass.states.get(entity_id)
+    assert state.attributes[ClimateEntityStateAttribute.CURRENT_HUMIDITY] == 45.5
+
+
+async def test_climate_no_humidity_cluster(hass: HomeAssistant, device_climate) -> None:
+    """Test no current humidity without a humidity cluster."""
+
+    entity_id = find_entity_id(Platform.CLIMATE, device_climate, hass)
+    state = hass.states.get(entity_id)
+    assert ClimateEntityStateAttribute.CURRENT_HUMIDITY not in state.attributes
 
 
 async def test_climate_hvac_action_running_state(
