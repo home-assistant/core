@@ -48,6 +48,7 @@ from . import (
     GARAGE_DOOR_OPENER_SERVICE_INFO,
     ROLLER_SHADE_SERVICE_INFO,
     WOBLINDTILT_SERVICE_INFO,
+    WOCURTAIN3_PASSIVE_SERVICE_INFO,
     WOCURTAIN3_SERVICE_INFO,
     make_advertisement,
 )
@@ -342,6 +343,56 @@ async def test_curtain_speed_not_supported(
             blocking=True,
         )
         mock_open.assert_awaited_once_with(255)
+
+
+async def test_curtain3_speed_detected_from_later_advertisement(
+    hass: HomeAssistant, mock_entry_factory: Callable[[str], MockConfigEntry]
+) -> None:
+    """Test a Curtain 3 set up as a curtain gains speeds once it is identified."""
+    # Without service data the advertisement is parsed as the entry's model,
+    # so the Curtain 3 is not identified yet.
+    inject_bluetooth_service_info(hass, WOCURTAIN3_PASSIVE_SERVICE_INFO)
+
+    entry = mock_entry_factory(sensor_type="curtain")
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.switchbot.cover.switchbot.SwitchbotCurtain.close",
+        new=AsyncMock(return_value=True),
+    ) as mock_close:
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        entity_id = "cover.test_name"
+
+        state = hass.states.get(entity_id)
+        assert not state.attributes[ATTR_SUPPORTED_FEATURES] & CoverEntityFeature.SPEED
+        assert CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS not in state.attributes
+
+        inject_bluetooth_service_info(hass, WOCURTAIN3_SERVICE_INFO)
+        await hass.async_block_till_done()
+
+        state = hass.states.get(entity_id)
+        assert state.attributes[ATTR_SUPPORTED_FEATURES] & CoverEntityFeature.SPEED
+        assert state.attributes[CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS] == [
+            CURTAIN_SPEED_NORMAL,
+            CURTAIN_SPEED_SILENT,
+        ]
+
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_CLOSE_COVER,
+            {ATTR_ENTITY_ID: entity_id, ATTR_SPEED: CURTAIN_SPEED_SILENT},
+            blocking=True,
+        )
+        mock_close.assert_awaited_once_with(1)
+
+        # The speeds are kept when the next advertisement lacks service data.
+        inject_bluetooth_service_info(hass, WOCURTAIN3_PASSIVE_SERVICE_INFO)
+        await hass.async_block_till_done()
+
+        state = hass.states.get(entity_id)
+        assert state.attributes[ATTR_SUPPORTED_FEATURES] & CoverEntityFeature.SPEED
 
 
 async def test_blindtilt_setup(
