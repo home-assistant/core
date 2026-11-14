@@ -63,29 +63,16 @@ async def async_get_config_entry_diagnostics(
 
     appliances_manager = config_entry.runtime_data
     diagnostics_data = {
-        "washers": {
-            washer.name: get_appliance_diagnostics(washer)
-            for washer in appliances_manager.washers
-        },
-        "dryers": {
-            dryer.name: get_appliance_diagnostics(dryer)
-            for dryer in appliances_manager.dryers
-        },
-        "aircons": {
-            ac.name: get_appliance_diagnostics(ac) for ac in appliances_manager.aircons
-        },
-        "ovens": {
-            oven.name: get_appliance_diagnostics(oven)
-            for oven in appliances_manager.ovens
-        },
-        "refrigerators": {
-            refrigerator.name: get_appliance_diagnostics(refrigerator)
-            for refrigerator in appliances_manager.refrigerators
-        },
-        "unsupported": {
-            appliance.name: get_appliance_diagnostics(appliance)
-            for appliance in appliances_manager.unsupported_appliances
-        },
+        category: [get_appliance_diagnostics(appliance) for appliance in appliances]
+        for category, appliances in (
+            ("washers", appliances_manager.washers),
+            ("dryers", appliances_manager.dryers),
+            ("aircons", appliances_manager.aircons),
+            ("ovens", appliances_manager.ovens),
+            ("microwaves", appliances_manager.microwaves),
+            ("refrigerators", appliances_manager.refrigerators),
+            ("unsupported", appliances_manager.unsupported_appliances),
+        )
     }
 
     return {

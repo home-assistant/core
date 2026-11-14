@@ -295,7 +295,7 @@ async def test_bad_config_validation_critical(
             },
             "failed to setup sequence",
             "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd"
-            ". Got {'alias': 'bad_script',",
+            " at 'sequence[0]'. Got {'condition': 'state',",
             "validation_failed_sequence",
         ),
         (
@@ -309,7 +309,8 @@ async def test_bad_config_validation_critical(
                 },
             },
             "failed to setup sequence",
-            "Invalid trigger 'not_a_platform' specified. Got {'alias': 'bad_script',",
+            "Invalid trigger 'not_a_platform' specified"
+            " at 'sequence[0].wait_for_trigger[1]'. Got {'platform': 'not_a_platform'}",
             "validation_failed_sequence",
         ),
     ],
