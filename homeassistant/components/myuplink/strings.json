@@ -46,6 +46,9 @@
     "config_entry_not_ready": {
       "message": "Error while loading the integration."
     },
+    "get_datapoint_error": {
+      "message": "Failed to get value for datapoint {point} on device {device}."
+    },
     "incorrect_oauth2_scope": {
       "message": "Stored permissions are invalid. Please login again to update permissions."
     },
@@ -65,7 +68,31 @@
       "message": "Failed to set state for {entity}."
     }
   },
+  "selector": {
+    "datapoint": {
+      "fields": {
+        "datapoint_id": {
+          "description": "The ID of the datapoint. Typically a five-digit number.",
+          "name": "Datapoint"
+        }
+      }
+    }
+  },
   "services": {
+    "get_datapoints": {
+      "description": "Gets the values for a list of datapoint on a device.",
+      "fields": {
+        "datapoints": {
+          "description": "A list of datapoints to get, each containing a datapoint ID.",
+          "name": "Datapoints"
+        },
+        "device_id": {
+          "description": "The target device for this action.",
+          "name": "Device"
+        }
+      },
+      "name": "Get datapoints"
+    },
     "set_datapoint": {
       "description": "Sets the value for a datapoint on a device.",
       "fields": {
