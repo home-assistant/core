@@ -289,7 +289,6 @@ async def test_websocket_supervisor_api_error_log_level(
         json={"result": "error", "message": "example error"},
         status=401,
     )
-    caplog.set_level(logging.DEBUG)
 
     await websocket_client.send_json(
         {
