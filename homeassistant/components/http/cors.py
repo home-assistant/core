@@ -27,6 +27,9 @@ ALLOWED_CORS_HEADERS: Final[list[str]] = [
     HTTP_HEADER_X_REQUESTED_WITH,
     CONTENT_TYPE,
     AUTHORIZATION,
+    # Sent by the frontend with config flow requests, see
+    # HEADER_FRONTEND_BASE in helpers/config_entry_oauth2_flow.py
+    "HA-Frontend-Base",
 ]
 VALID_CORS_TYPES: Final = (Resource, ResourceRoute, StaticResource)
 
