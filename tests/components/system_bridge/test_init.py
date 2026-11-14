@@ -18,6 +18,7 @@ from systembridgeconnector.exceptions import (
 )
 from systembridgeconnector.models.fixtures.modules.system import FIXTURE_SYSTEM
 from systembridgeconnector.models.modules import GetData, Module, ModulesData
+from systembridgeconnector.models.modules.system import DeviceInfo
 from systembridgeconnector.models.system_control import PowerState, PowerStateEvent
 
 from homeassistant.components.system_bridge.config_flow import SystemBridgeConfigFlow
@@ -34,7 +35,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.setup import async_setup_component
 
 from . import FIXTURE_USER_INPUT, FIXTURE_UUID
@@ -116,6 +121,50 @@ async def test_setup_without_audio_data(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.parametrize(
+    ("device_info", "expected"),
+    [
+        pytest.param(
+            FIXTURE_SYSTEM.device_info,
+            ("manufacturer", "model", "version"),
+            id="dmi",
+        ),
+        pytest.param(
+            replace(FIXTURE_SYSTEM.device_info, model=None),
+            ("board_vendor", "board_name", "version"),
+            id="board",
+        ),
+        pytest.param(None, (None, None, None), id="no_dmi"),
+    ],
+)
+@pytest.mark.usefixtures("mock_version")
+async def test_device_info(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    device_info: DeviceInfo | None,
+    expected: tuple[str | None, str | None, str | None],
+) -> None:
+    """Test the device's manufacturer, model and hardware version come from DMI."""
+    system = replace(FIXTURE_SYSTEM, device_info=device_info)
+    mock_websocket_client.get_data.return_value = replace(
+        mock_websocket_client.get_data.return_value, system=system
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    # The mocked listener sends the system data again before the platforms load
+    with patch("tests.components.system_bridge.FIXTURE_SYSTEM", system):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, FIXTURE_UUID), mock_config_entry.entry_id
+    )
+    assert device is not None
+    assert (device.manufacturer, device.model, device.hw_version) == expected
 
 
 async def test_migration_minor_1_to_2(hass: HomeAssistant) -> None:
