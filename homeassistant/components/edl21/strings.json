@@ -3,13 +3,20 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
+    "error": {
+      "invalid_update_interval": "Enter a number of seconds between 1 and 3600."
+    },
     "step": {
       "user": {
         "data": {
-          "serial_port": "[%key:common::config_flow::data::port%]"
+          "limit_interval": "Limit device update interval",
+          "serial_port": "[%key:common::config_flow::data::port%]",
+          "update_interval": "Max 1 update every x seconds"
         },
         "data_description": {
-          "serial_port": "Serial port path to connect to"
+          "limit_interval": "When enabled, at most one telegram update is forwarded per interval. When disabled, every update is forwarded.",
+          "serial_port": "Serial port path to connect to",
+          "update_interval": "Forward at most one update every x seconds, from 1 to 3600."
         },
         "title": "Add your EDL21 smart meter"
       }
@@ -109,6 +116,23 @@
       },
       "u_l3_u_l1_phase_angle": {
         "name": "U(L3)/U(L1) phase angle"
+      }
+    }
+  },
+  "options": {
+    "error": {
+      "invalid_update_interval": "Enter a number of seconds between 1 and 3600."
+    },
+    "step": {
+      "init": {
+        "data": {
+          "limit_interval": "Limit device update interval",
+          "update_interval": "Max 1 update every x seconds"
+        },
+        "data_description": {
+          "limit_interval": "When enabled, at most one telegram update is forwarded per interval. When disabled, every update is forwarded.",
+          "update_interval": "Forward at most one update every x seconds, from 1 to 3600."
+        }
       }
     }
   }

@@ -1,6 +1,7 @@
 """Support for EDL21 Smart Meters."""
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
+import time
 from typing import Any, override
 
 from sml import SmlGetListResponse
@@ -31,7 +32,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     CONF_SERIAL_PORT,
+    CONF_UPDATE_INTERVAL,
     DEFAULT_DEVICE_NAME,
+    DEFAULT_UPDATE_INTERVAL,
     DOMAIN,
     LOGGER,
     SIGNAL_EDL21_TELEGRAM,
@@ -282,11 +285,16 @@ SENSOR_UNIT_MAPPING = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ConfigEntry[EDL21],
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the EDL21 sensor."""
-    api = EDL21(hass, config_entry.data, async_add_entities)
+    api = EDL21(
+        hass,
+        {**config_entry.data, **config_entry.options},
+        async_add_entities,
+    )
+    config_entry.runtime_data = api
     await api.connect()
 
 
@@ -318,16 +326,34 @@ class EDL21:
         self._hass = hass
         self._async_add_entities = async_add_entities
         self._serial_port = config[CONF_SERIAL_PORT]
+        self._update_interval = config.get(
+            CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL
+        )
+        self._last_forwarded: dict[tuple[str, str], float] = {}
         self._proto = SmlProtocol(config[CONF_SERIAL_PORT])
         self._proto.add_listener(self.event, ["SmlGetListResponse"])
         LOGGER.debug(
-            "Initialized EDL21 on %s",
+            "Initialized EDL21 on %s with update interval %s s",
             config[CONF_SERIAL_PORT],
+            self._update_interval,
         )
 
     async def connect(self) -> None:
         """Connect to an EDL21 reader."""
         await self._proto.connect(self._hass.loop)
+
+    async def disconnect(self) -> None:
+        """Disconnect from the meter."""
+        # pysml exposes no public close API; drive its internals to stop the
+        # protocol and its pending reconnects when the entry is unloaded.
+        serial = self._proto._impl  # noqa: SLF001
+        # pysml 0.1.9 exposes no public shutdown API: _disconnect() and
+        # _running are private, and _reconnect() does not check _running.
+        # Clear it so the protocol cannot open a new connection after the
+        # entry was unloaded. Switch to a public disconnect() once pysml
+        # offers one (upstream PR).
+        serial._running = False  # noqa: SLF001
+        await serial._disconnect()  # noqa: SLF001
 
     def event(self, message_body) -> None:
         """Handle events from pysml."""
@@ -343,16 +369,14 @@ class EDL21:
             return
         electricity_id = electricity_id.replace(" ", "")
 
+        now = time.monotonic()
         new_entities: list[EDL21Entity] = []
         for telegram in message_body.get("valList", []):
             if not (obis := telegram.get("objName")):
                 continue
 
-            if (electricity_id, obis) in self._registered_obis:
-                async_dispatcher_send(
-                    self._hass, SIGNAL_EDL21_TELEGRAM, electricity_id, telegram
-                )
-            else:
+            key = (electricity_id, obis)
+            if key not in self._registered_obis:
                 entity_description = SENSORS.get(obis)
                 if entity_description:
                     new_entities.append(
@@ -363,7 +387,10 @@ class EDL21:
                             telegram,
                         )
                     )
-                    self._registered_obis.add((electricity_id, obis))
+                    self._registered_obis.add(key)
+                    # The registration telegram starts the stream's throttle
+                    # window; its value is already applied to the new entity.
+                    self._last_forwarded[key] = now
                 elif obis not in self._OBIS_BLACKLIST:
                     LOGGER.warning(
                         "Unhandled sensor %s detected. Please report at %s",
@@ -371,6 +398,26 @@ class EDL21:
                         "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+edl21%22",
                     )
                     self._OBIS_BLACKLIST.add(obis)
+                continue
+
+            # Throttle each OBIS stream independently so meters that
+            # interleave different sensors across telegrams keep every
+            # stream updating: an interval of 0 forwards every telegram.
+            if (
+                self._update_interval == 0
+                or (now - self._last_forwarded[key]) >= self._update_interval
+            ):
+                self._last_forwarded[key] = now
+                async_dispatcher_send(
+                    self._hass, SIGNAL_EDL21_TELEGRAM, electricity_id, telegram
+                )
+            else:
+                LOGGER.debug(
+                    "Throttled sml value on %s for %s (interval %s s)",
+                    self._serial_port,
+                    obis,
+                    self._update_interval,
+                )
 
         if new_entities:
             self._async_add_entities(new_entities, update_before_add=True)
@@ -382,12 +429,12 @@ class EDL21Entity(SensorEntity):
     _attr_should_poll = False
     _attr_has_entity_name = True
 
-    def __init__(self, electricity_id, obis, entity_description, telegram):
+    def __init__(self, electricity_id, obis, entity_description, telegram) -> None:
         """Initialize an EDL21Entity."""
         self._electricity_id = electricity_id
         self._obis = obis
         self._telegram = telegram
-        self._async_remove_dispatcher = None
+        self._async_remove_dispatcher: Callable[[], None] | None = None
         self.entity_description = entity_description
         self._attr_unique_id = f"{electricity_id}_{obis}"
         self._attr_device_info = DeviceInfo(
