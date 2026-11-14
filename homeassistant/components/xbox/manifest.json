@@ -4,6 +4,7 @@
   "categories": ["media_entertainment.gaming"],
   "codeowners": ["@tr4nt0r"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["application_credentials"],
   "dhcp": [
     {

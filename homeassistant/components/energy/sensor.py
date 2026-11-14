@@ -87,7 +87,7 @@ class SourceAdapter:
     flow_type: Literal["flow_from", "flow_to"] | None
     stat_energy_key: Literal["stat_energy_from", "stat_energy_to"]
     total_money_key: Literal["stat_cost", "stat_compensation"]
-    name_suffix: str
+    translation_key: str
     entity_id_suffix: str
 
 
@@ -98,7 +98,7 @@ SOURCE_ADAPTERS: Final = (
         None,  # No flow_type - unified format
         "stat_energy_from",
         "stat_cost",
-        "Cost",
+        "cost",
         "cost",
     ),
     SourceAdapter(
@@ -106,7 +106,7 @@ SOURCE_ADAPTERS: Final = (
         None,
         "stat_energy_from",
         "stat_cost",
-        "Cost",
+        "cost",
         "cost",
     ),
     SourceAdapter(
@@ -114,7 +114,7 @@ SOURCE_ADAPTERS: Final = (
         None,
         "stat_energy_from",
         "stat_cost",
-        "Cost",
+        "cost",
         "cost",
     ),
 )
@@ -125,7 +125,7 @@ GRID_EXPORT_ADAPTER: Final = SourceAdapter(
     None,  # No flow_type - unified format
     "stat_energy_to",
     "stat_compensation",
-    "Compensation",
+    "compensation",
     "compensation",
 )
 
@@ -355,6 +355,11 @@ class SensorManager:
         to_add.append(sensor)
 
 
+def _name_from_entity_id(entity_id: str) -> str:
+    """Return a name for an entity that has none."""
+    return split_entity_id(entity_id)[1].replace("_", " ").capitalize()
+
+
 def _unit_converter(unit: str) -> type[unit_conversion.BaseUnitConverter]:
     """Return the converter for an energy or volume unit."""
     if unit in VALID_ENERGY_UNITS:
@@ -428,6 +433,7 @@ class EnergyCostSensor(RestoreSensor):
     """
 
     _attr_entity_registry_visible_default = False
+    _attr_has_entity_name = True
     _attr_should_poll = False
 
     _wrong_state_class_reported = False
@@ -444,6 +450,7 @@ class EnergyCostSensor(RestoreSensor):
 
         self._adapter = adapter
         self.entity_id = f"{config[adapter.stat_energy_key]}_{adapter.entity_id_suffix}"
+        self._attr_translation_key = adapter.translation_key
         self._attr_device_class = SensorDeviceClass.MONETARY
         self._attr_state_class = SensorStateClass.TOTAL
         self._config = config
@@ -454,6 +461,17 @@ class EnergyCostSensor(RestoreSensor):
             asyncio.get_running_loop().create_future()
         )
         self.async_on_remove(lambda: _set_result_unless_done(self.add_finished))
+
+    @override
+    async def async_prepare_to_add_to_hass(self) -> None:
+        """Name the sensor after its energy sensor before it is registered."""
+        await super().async_prepare_to_add_to_hass()
+        energy_entity_id = self._config[self._adapter.stat_energy_key]
+        if energy_state := self.hass.states.get(energy_entity_id):
+            energy_name = energy_state.name
+        else:
+            energy_name = _name_from_entity_id(energy_entity_id)
+        self._attr_translation_placeholders = {"energy_name": energy_name}
 
     def _reset(self, energy_state: State) -> None:
         """Reset the cost sensor."""
@@ -667,16 +685,6 @@ class EnergyCostSensor(RestoreSensor):
     @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
-        energy_state = self.hass.states.get(self._config[self._adapter.stat_energy_key])
-        if energy_state:
-            name = energy_state.name
-        else:
-            name = split_entity_id(self._config[self._adapter.stat_energy_key])[
-                0
-            ].replace("_", " ")
-
-        self._attr_name = f"{name} {self._adapter.name_suffix}"
-
         # Start a new cycle from the last priced reading, so the energy used
         # while stopped is priced too
         if (restored := await self.async_get_last_sensor_data()) is not None:
@@ -813,10 +821,12 @@ class EnergyPowerSensor(SensorEntity):
         # the source unit in _update_state to track source changes.
         if self._is_combined:
             self._attr_native_unit_of_measurement = UnitOfPower.WATT
+            self._attr_translation_key = f"{source_type}_power"
 
         # Determine source sensors
         if self._is_inverted:
             self._source_sensors = [config["stat_rate_inverted"]]
+            self._attr_translation_key = "power_inverted"
         elif self._is_combined:
             self._source_sensors = [
                 config["stat_rate_from"],
@@ -829,6 +839,20 @@ class EnergyPowerSensor(SensorEntity):
             asyncio.get_running_loop().create_future()
         )
         self.async_on_remove(lambda: _set_result_unless_done(self.add_finished))
+
+    @override
+    async def async_prepare_to_add_to_hass(self) -> None:
+        """Name the sensor after its source sensor before it is registered."""
+        await super().async_prepare_to_add_to_hass()
+        if not self._is_inverted:
+            return
+        source = self._source_sensors[0]
+        if not (
+            (entry := er.async_get(self.hass).async_get(source))
+            and (source_name := entry.name or entry.original_name)
+        ):
+            source_name = _name_from_entity_id(source)
+        self._attr_translation_placeholders = {"source_name": source_name}
 
     @property
     @override
@@ -925,16 +949,12 @@ class EnergyPowerSensor(SensorEntity):
     @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
-        # Set name based on source sensor(s)
         if self._source_sensors:
             entity_reg = er.async_get(self.hass)
             device_id = None
-            source_name = None
             # Check first sensor
             if source_entry := entity_reg.async_get(self._source_sensors[0]):
                 device_id = source_entry.device_id
-                # Get source name from registry
-                source_name = source_entry.name or source_entry.original_name
             # Assign power sensor to same device as source sensor(s)
             # Note: We use manual entity registry update instead of _attr_device_info
             # because device assignment depends on runtime information from the entity
@@ -951,24 +971,6 @@ class EnergyPowerSensor(SensorEntity):
                 entity_reg.async_update_entity(
                     power_entry.entity_id, device_id=device_id
                 )
-            else:
-                self._attr_has_entity_name = False
-
-            # Set name for inverted mode
-            if self._is_inverted:
-                if source_name:
-                    self._attr_name = f"{source_name} Inverted"
-                else:
-                    # Fall back to entity_id if no name in registry
-                    sensor_name = split_entity_id(self._source_sensors[0])[1].replace(
-                        "_", " "
-                    )
-                    self._attr_name = f"{sensor_name.title()} Inverted"
-
-        # Set name for combined mode
-        if self._is_combined:
-            self._attr_name = f"{self._source_type.title()} Power"
-
         self._update_state()
 
         # Track state changes on all source sensors

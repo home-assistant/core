@@ -7,12 +7,9 @@ import pytest
 from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.bond.const import DOMAIN
-from homeassistant.components.bond.services import (
-    ATTR_POWER_STATE,
-    SERVICE_SET_POWER_TRACKED_STATE,
-)
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.components.bond.services import BondService, BondServiceArgument
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
+from homeassistant.const import ATTR_ENTITY_ID, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -58,8 +55,8 @@ async def test_turn_on_switch(hass: HomeAssistant) -> None:
     with patch_bond_action() as mock_turn_on, patch_bond_device_state():
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.name_1"},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: "switch.name_1"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -76,8 +73,8 @@ async def test_turn_off_switch(hass: HomeAssistant) -> None:
     with patch_bond_action() as mock_turn_off, patch_bond_device_state():
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "switch.name_1"},
+            SwitchService.TURN_OFF,
+            {CommonServiceArgument.ENTITY_ID: "switch.name_1"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -94,8 +91,8 @@ async def test_switch_set_power_belief(hass: HomeAssistant) -> None:
     with patch_bond_action() as mock_bond_action, patch_bond_device_state():
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_POWER_TRACKED_STATE,
-            {ATTR_ENTITY_ID: "switch.name_1", ATTR_POWER_STATE: False},
+            BondService.SET_SWITCH_POWER_TRACKED_STATE,
+            {ATTR_ENTITY_ID: "switch.name_1", BondServiceArgument.POWER_STATE: False},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -118,8 +115,8 @@ async def test_switch_set_power_belief_api_error(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_POWER_TRACKED_STATE,
-            {ATTR_ENTITY_ID: "switch.name_1", ATTR_POWER_STATE: False},
+            BondService.SET_SWITCH_POWER_TRACKED_STATE,
+            {ATTR_ENTITY_ID: "switch.name_1", BondServiceArgument.POWER_STATE: False},
             blocking=True,
         )
 

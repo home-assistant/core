@@ -119,6 +119,39 @@ async def test_services(
     assert is_closing(hass, ent5, 100)
 
 
+async def test_toggle_after_opened_outside_home_assistant(
+    hass: HomeAssistant,
+    mock_cover_entities: list[MockCover],
+) -> None:
+    """Test toggle closes a cover that opened without reporting opening."""
+    setup_test_component_platform(hass, cover.DOMAIN, mock_cover_entities)
+
+    assert await async_setup_component(
+        hass, cover.DOMAIN, {cover.DOMAIN: {CONF_PLATFORM: "test"}}
+    )
+    await hass.async_block_till_done()
+
+    # ent6 = cover with only open/close, but also reports opening/closing,
+    # like a garage door opener with a contact sensor
+    ent6 = mock_cover_entities[5]
+
+    # Closed by Home Assistant: it reports closing, then closed
+    await call_service(hass, SERVICE_TOGGLE, ent6)
+    assert is_closing(hass, ent6)
+    set_state(ent6, CoverState.CLOSED)
+    ent6.async_write_ha_state()
+    assert is_closed(hass, ent6)
+
+    # Opened outside Home Assistant (a wall button or remote): straight to open
+    set_state(ent6, CoverState.OPEN)
+    ent6.async_write_ha_state()
+    assert is_open(hass, ent6)
+
+    # Toggle should close it, not send open to an open cover
+    await call_service(hass, SERVICE_TOGGLE, ent6)
+    assert is_closing(hass, ent6)
+
+
 def call_service(hass: HomeAssistant, service: str, ent: Entity) -> ServiceResponse:
     """Call any service on entity."""
     return hass.services.async_call(
@@ -221,7 +254,7 @@ async def test_services_with_speed(
     ent1, ent2, _, _, _, _, speed_cover = mock_cover_entities
 
     state = hass.states.get(speed_cover.entity_id)
-    assert state.attributes["supported_speeds"] == ["slow", "fast", "default"]
+    assert state.attributes["supported_speeds"] == ["slow", "medium", "fast"]
 
     speed_cover.last_kwargs = None
     await hass.services.async_call(
@@ -250,18 +283,18 @@ async def test_services_with_speed(
         {
             ATTR_ENTITY_ID: speed_cover.entity_id,
             ATTR_POSITION: 75,
-            ATTR_SPEED: "default",
+            ATTR_SPEED: "medium",
         },
         blocking=True,
     )
-    assert speed_cover.last_kwargs == {"position": 75, "speed": "default"}
+    assert speed_cover.last_kwargs == {"position": 75, "speed": "medium"}
 
     # A speed the cover does not list is dropped and the cover still moves
     speed_cover.last_kwargs = None
     await hass.services.async_call(
         cover.DOMAIN,
         SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: speed_cover.entity_id, ATTR_SPEED: "invalid"},
+        {ATTR_ENTITY_ID: speed_cover.entity_id, ATTR_SPEED: "default"},
         blocking=True,
     )
     assert speed_cover.last_kwargs == {}

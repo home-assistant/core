@@ -865,6 +865,16 @@ async def test_audio_processing_custom(hass: HomeAssistant, tmp_path: Path) -> N
 @pytest.mark.parametrize(
     "setup", ["mock_setup", "mock_config_entry_setup"], indirect=True
 )
+async def test_get_audio_processing_defaults_to_property(
+    setup: MockSTTProvider | MockSTTProviderEntity,
+) -> None:
+    """Test per-request audio processing defaults to the audio_processing property."""
+    assert setup.async_get_audio_processing(_TEST_METADATA) is setup.audio_processing
+
+
+@pytest.mark.parametrize(
+    "setup", ["mock_setup", "mock_config_entry_setup"], indirect=True
+)
 async def test_stream_audio_large_no_newline_block(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,

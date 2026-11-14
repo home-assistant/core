@@ -7,7 +7,7 @@ from pathlib import Path
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
-from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
+from homeassistant.helpers.typing import ConfigType, Undefined
 from homeassistant.util import package
 
 from . import util
@@ -73,7 +73,7 @@ async def async_reload_adapters(hass: HomeAssistant) -> None:
 
 
 async def async_get_source_ip(
-    hass: HomeAssistant, target_ip: str | UndefinedType = UNDEFINED
+    hass: HomeAssistant, target_ip: str | Undefined = Undefined
 ) -> str:
     """Get the source ip for a target ip."""
     adapters = await async_get_adapters(hass)
@@ -82,7 +82,7 @@ async def async_get_source_ip(
         if adapter["enabled"] and (ipv4s := adapter["ipv4"]):
             all_ipv4s.extend([ipv4["address"] for ipv4 in ipv4s])
 
-    if target_ip is UNDEFINED:
+    if target_ip is Undefined:
         source_ip = (
             util.async_get_source_ip(PUBLIC_TARGET_IP)
             or util.async_get_source_ip(MDNS_TARGET_IP)

@@ -5,6 +5,7 @@
   "categories": ["computers_network.nas_servers"],
   "codeowners": ["@maretodoric"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["file_upload"],
   "documentation": "https://www.home-assistant.io/integrations/sftp_storage",
   "integration_type": "service",

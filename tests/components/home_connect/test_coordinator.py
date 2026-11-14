@@ -5,10 +5,11 @@ from datetime import timedelta
 from http import HTTPStatus
 import re
 from typing import Any, cast
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from aiohomeconnect.const import OAUTH2_TOKEN
 from aiohomeconnect.model import (
+    ApplianceType,
     ArrayOfEvents,
     ArrayOfHomeAppliances,
     ArrayOfPrograms,
@@ -21,6 +22,8 @@ from aiohomeconnect.model import (
     GetSetting,
     HomeAppliance,
     SettingKey,
+    Status,
+    StatusKey,
 )
 from aiohomeconnect.model.error import (
     EventStreamInterruptedError,
@@ -31,6 +34,7 @@ from aiohomeconnect.model.error import (
     UnauthorizedError,
 )
 from aiohomeconnect.model.program import (
+    EnumerateProgram,
     Option,
     OptionKey,
     Program,
@@ -46,8 +50,11 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.home_connect.const import (
+    BSH_DOOR_STATE_LOCKED,
     BSH_DOOR_STATE_OPEN,
     BSH_EVENT_PRESENT_STATE_PRESENT,
+    BSH_OPERATION_STATE_FINISHED,
+    BSH_OPERATION_STATE_READY,
     BSH_POWER_OFF,
     DOMAIN,
 )
@@ -92,7 +99,7 @@ def platforms() -> list[Platform]:
 
 
 @pytest.mark.parametrize("platforms", [("binary_sensor",)])
-@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.WASHER], indirect=True)
 async def test_coordinator_failure_refresh_and_stream(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -212,7 +219,7 @@ async def test_coordinator_failure_refresh_and_stream(
     assert state.state != STATE_UNAVAILABLE
 
 
-@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
 async def test_coordinator_not_fetching_on_disconnected_appliance(
     client: MagicMock,
     config_entry: MockConfigEntry,
@@ -253,7 +260,7 @@ async def test_coordinator_update_failing(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
 @pytest.mark.parametrize(
     ("event_type", "event_key", "event_value", ATTR_ENTITY_ID),
     [
@@ -330,7 +337,7 @@ async def test_event_listener(
     def event_filter(_: EventStateReportedData) -> bool:
         return True
 
-    hass.bus.async_listen_once(EVENT_STATE_REPORTED, listener_callback, event_filter)
+    hass.bus.async_listen(EVENT_STATE_REPORTED, listener_callback, event_filter)
 
     entity_registry.async_update_entity(entity_id, new_entity_id=new_entity_id)
     await hass.async_block_till_done()
@@ -343,7 +350,7 @@ async def test_event_listener(
     listener.assert_called_once_with(new_entity_id)
 
 
-@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.WASHER], indirect=True)
 async def tests_receive_setting_and_status_for_first_time_at_events(
     hass: HomeAssistant,
     client: MagicMock,
@@ -448,7 +455,7 @@ async def _setup_with_token_refresh_on_connect(
 
 
 @pytest.mark.parametrize("platforms", [("sensor",)])
-@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.WASHER], indirect=True)
 @pytest.mark.parametrize(
     "token_request_failure",
     [
@@ -526,7 +533,7 @@ async def test_event_listener_token_refresh_error(
 
 
 @pytest.mark.parametrize("platforms", [("sensor",)])
-@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.WASHER], indirect=True)
 async def test_event_listener_token_refresh_reauth_error(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -574,26 +581,47 @@ async def test_event_listener_token_refresh_reauth_error(
 
 
 @pytest.mark.parametrize("platforms", [("sensor",)])
-@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.WASHER], indirect=True)
 @pytest.mark.parametrize(
-    "exception",
-    [HomeConnectRequestError(), EventStreamInterruptedError()],
+    ("exception", "log_level", "log_message"),
+    [
+        pytest.param(
+            HomeConnectRequestError(),
+            "DEBUG",
+            "Non-breaking error",
+            id="request_error",
+        ),
+        pytest.param(
+            EventStreamInterruptedError(),
+            "DEBUG",
+            "Non-breaking error",
+            id="stream_interrupted",
+        ),
+        pytest.param(Exception(), "ERROR", "Unexpected error", id="unexpected_error"),
+    ],
 )
 @pytest.mark.parametrize(
     (
         "entity_id",
         "initial_state",
+        "status_key",
+        "status_value",
+        "after_refresh_expected_state",
         "event_key",
         "event_value",
         "after_event_expected_state",
     ),
     [
-        (
+        pytest.param(
             "sensor.washer_door",
             "closed",
+            StatusKey.BSH_COMMON_DOOR_STATE,
+            BSH_DOOR_STATE_LOCKED,
+            "locked",
             EventKey.BSH_COMMON_STATUS_DOOR_STATE,
             BSH_DOOR_STATE_OPEN,
             "open",
+            id="door_state",
         ),
     ],
 )
@@ -603,14 +631,21 @@ async def test_event_listener_resilience(
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
-    exception: HomeConnectError,
+    caplog: pytest.LogCaptureFixture,
+    exception: Exception,
+    log_level: str,
+    log_message: str,
     entity_id: str,
     initial_state: str,
+    status_key: StatusKey,
+    status_value: Any,
+    after_refresh_expected_state: str,
     event_key: EventKey,
     event_value: Any,
     after_event_expected_state: str,
 ) -> None:
     """Test that the event listener is resilient to interruptions."""
+    caplog.set_level("DEBUG")
     future = hass.loop.create_future()
 
     async def stream_exception():
@@ -633,10 +668,31 @@ async def test_event_listener_resilience(
     future.set_exception(exception)
     await hass.async_block_till_done()
 
+    assert any(
+        record.levelname == log_level and log_message in record.message
+        for record in caplog.records
+    )
+
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
     await hass.async_block_till_done()
 
     assert client.stream_all_events.call_count == 2
+
+    for method in INITIAL_FETCH_CLIENT_METHODS:
+        # Reset call count to check only the next refresh
+        getattr(client, method).reset_mock()
+    client.get_status.return_value = ArrayOfStatus(
+        [Status(status_key, status_key.value, status_value)]
+    )
+
+    await client.add_events([None])
+    await hass.async_block_till_done()
+
+    for method in INITIAL_FETCH_CLIENT_METHODS:
+        assert getattr(client, method).call_count == 1
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == after_refresh_expected_state
 
     await client.add_events(
         [
@@ -716,7 +772,7 @@ async def test_devices_updated_on_refresh(
         )
 
 
-@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.WASHER], indirect=True)
 async def test_paired_event(
     hass: HomeAssistant,
     client: MagicMock,
@@ -745,13 +801,13 @@ async def test_paired_event(
     # called twice. One when creating the coordinator,
     # and another on first coordinator refresh (to get connected status)
     assert client.get_specific_appliance.call_count == 2
-    for call in client.get_specific_appliance.call_args_list:
-        assert call.args[0] == appliance.ha_id
+    for _call in client.get_specific_appliance.call_args_list:
+        assert _call.args[0] == appliance.ha_id
     for method in INITIAL_FETCH_CLIENT_METHODS:
         getattr(client, method).assert_awaited_once()
 
 
-@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.WASHER], indirect=True)
 async def test_paired_disconnected_devices_not_fetching(
     hass: HomeAssistant,
     client: MagicMock,
@@ -781,8 +837,8 @@ async def test_paired_disconnected_devices_not_fetching(
     # called twice. One when creating the coordinator,
     # and another on first coordinator refresh (to get connected status)
     assert client.get_specific_appliance.call_count == 2
-    for call in client.get_specific_appliance.call_args_list:
-        assert call.args[0] == appliance.ha_id
+    for _call in client.get_specific_appliance.call_args_list:
+        assert _call.args[0] == appliance.ha_id
     for method in INITIAL_FETCH_CLIENT_METHODS:
         getattr(client, method).assert_not_awaited()
 
@@ -974,7 +1030,7 @@ async def test_coordinator_disabling_updates_for_appliance_is_gone_after_entry_r
     assert hass.states.is_state("switch.dishwasher_power", STATE_OFF)
 
 
-@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
 async def test_auth_error_while_updating_appliance(
     hass: HomeAssistant,
     client: MagicMock,
@@ -1008,7 +1064,7 @@ async def test_auth_error_while_updating_appliance(
     assert result["context"]["source"] == "reauth"
 
 
-@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
 @pytest.mark.parametrize(
     ("side_effect", "log_level", "string_in_log"),
     [
@@ -1061,7 +1117,7 @@ async def test_other_errors_while_updating_appliance(
     )
 
 
-@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
 @pytest.mark.parametrize("array_of_programs_param", ["active", "selected"])
 async def test_fetch_base_program_options_when_active_favorite_program(
     client: MagicMock,
@@ -1100,7 +1156,7 @@ async def test_fetch_base_program_options_when_active_favorite_program(
     )
 
 
-@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
 @pytest.mark.parametrize(
     "event_key",
     [
@@ -1161,7 +1217,233 @@ async def test_fetch_base_program_options_when_favorite_program_event(
     )
 
 
-@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+@pytest.mark.parametrize(
+    ("event_order", "initially_selected_program", "programs_fetched"),
+    [
+        pytest.param(
+            [0, 1, 2],
+            ProgramKey.DISHCARE_DISHWASHER_AUTO_1,
+            [ProgramKey.DISHCARE_DISHWASHER_ECO_50],
+            id="active_program_selected_program_operation_state",
+        ),
+        pytest.param(
+            [0, 2, 1],
+            ProgramKey.DISHCARE_DISHWASHER_AUTO_1,
+            [
+                ProgramKey.DISHCARE_DISHWASHER_AUTO_1,
+                ProgramKey.DISHCARE_DISHWASHER_ECO_50,
+            ],
+            id="active_program_operation_state_selected_program",
+        ),
+        pytest.param(
+            [1, 0, 2],
+            ProgramKey.DISHCARE_DISHWASHER_AUTO_1,
+            [ProgramKey.DISHCARE_DISHWASHER_ECO_50],
+            id="selected_program_active_program_operation_state",
+        ),
+        pytest.param(
+            [1, 2, 0],
+            ProgramKey.DISHCARE_DISHWASHER_AUTO_1,
+            [ProgramKey.DISHCARE_DISHWASHER_ECO_50],
+            id="selected_program_operation_state_active_program",
+        ),
+        pytest.param(
+            [2, 1, 0],
+            ProgramKey.DISHCARE_DISHWASHER_AUTO_1,
+            [ProgramKey.DISHCARE_DISHWASHER_ECO_50],
+            id="operation_state_selected_program_active_program",
+        ),
+        pytest.param(
+            [2, 0, 1],
+            ProgramKey.DISHCARE_DISHWASHER_AUTO_1,
+            [
+                ProgramKey.DISHCARE_DISHWASHER_AUTO_1,
+                ProgramKey.DISHCARE_DISHWASHER_ECO_50,
+            ],
+            id="operation_state_active_program_selected_program",
+        ),
+        # When the selected program is the default, no selected-program event
+        # is emitted.
+        pytest.param(
+            [0, 2],
+            ProgramKey.DISHCARE_DISHWASHER_ECO_50,
+            [ProgramKey.DISHCARE_DISHWASHER_ECO_50],
+            id="active_program_operation_state",
+        ),
+        pytest.param(
+            [2, 0],
+            ProgramKey.DISHCARE_DISHWASHER_ECO_50,
+            [ProgramKey.DISHCARE_DISHWASHER_ECO_50],
+            id="operation_state_active_program",
+        ),
+    ],
+)
+@pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
+async def test_fetch_options_for_selected_program_when_active_program_finishes(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+    event_order: list[int],
+    initially_selected_program: ProgramKey,
+    programs_fetched: list[ProgramKey],
+) -> None:
+    """Test selected program options are fetched when the active program finishes.
+
+    This should update the options to the selected program options; otherwise,
+    we would keep the options from the last active program, which is no longer active.
+    If the selected program has already been fetched, it should not be fetched again
+    if it is the same.
+    """
+    appliance_ha_id = appliance.ha_id
+
+    events = [
+        EventMessage(
+            appliance_ha_id,
+            EventType.NOTIFY,
+            data=ArrayOfEvents(
+                [
+                    Event(
+                        key=EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
+                        raw_key=EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM.value,
+                        timestamp=0,
+                        level="",
+                        handling="",
+                        value=None,
+                    )
+                ]
+            ),
+        ),
+        EventMessage(
+            appliance_ha_id,
+            EventType.NOTIFY,
+            data=ArrayOfEvents(
+                [
+                    Event(
+                        key=EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
+                        raw_key=EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM.value,
+                        timestamp=0,
+                        level="",
+                        handling="",
+                        value=ProgramKey.DISHCARE_DISHWASHER_ECO_50.value,
+                    )
+                ]
+            ),
+        ),
+        EventMessage(
+            appliance_ha_id,
+            EventType.STATUS,
+            data=ArrayOfEvents(
+                [
+                    Event(
+                        key=StatusKey.BSH_COMMON_OPERATION_STATE,
+                        raw_key=StatusKey.BSH_COMMON_OPERATION_STATE.value,
+                        timestamp=0,
+                        level="",
+                        handling="",
+                        value=BSH_OPERATION_STATE_READY,
+                    )
+                ]
+            ),
+        ),
+    ]
+    events = [events[i] for i in event_order]
+
+    client.get_all_programs = AsyncMock(
+        return_value=ArrayOfPrograms(
+            [
+                EnumerateProgram(
+                    ProgramKey.DISHCARE_DISHWASHER_AUTO_1,
+                    ProgramKey.DISHCARE_DISHWASHER_AUTO_1.value,
+                )
+            ],
+            Program(
+                key=ProgramKey.DISHCARE_DISHWASHER_AUTO_1,
+                options=[
+                    Option(
+                        value=True,
+                        key=OptionKey.DISHCARE_DISHWASHER_SILENCE_ON_DEMAND,
+                    )
+                ],
+            ),
+            Program(
+                key=initially_selected_program,
+            ),
+        )
+    )
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            ProgramKey.DISHCARE_DISHWASHER_AUTO_1,
+            options=[
+                ProgramDefinitionOption(
+                    OptionKey.DISHCARE_DISHWASHER_SILENCE_ON_DEMAND,
+                    "Boolean",
+                    constraints=ProgramDefinitionConstraints(default=False),
+                )
+            ],
+        )
+    )
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+    selected_program_option_entity_id = "switch.dishwasher_half_load"
+    active_program_option_entity_id = "switch.dishwasher_silence_on_demand"
+    await hass.async_block_till_done()
+    await client.add_events(
+        [
+            EventMessage(
+                appliance_ha_id,
+                EventType.STATUS,
+                data=ArrayOfEvents(
+                    [
+                        Event(
+                            key=StatusKey.BSH_COMMON_OPERATION_STATE,
+                            raw_key=StatusKey.BSH_COMMON_OPERATION_STATE.value,
+                            timestamp=0,
+                            level="",
+                            handling="",
+                            value=BSH_OPERATION_STATE_FINISHED,
+                        )
+                    ]
+                ),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    assert not hass.states.is_state(active_program_option_entity_id, STATE_UNAVAILABLE)
+    assert not hass.states.get(selected_program_option_entity_id)
+
+    client.get_available_program = AsyncMock(
+        side_effect=[
+            ProgramDefinition(
+                program_key,
+                options=[
+                    ProgramDefinitionOption(
+                        OptionKey.DISHCARE_DISHWASHER_HALF_LOAD,
+                        "Boolean",
+                        constraints=ProgramDefinitionConstraints(default=False),
+                    )
+                ],
+            )
+            for program_key in programs_fetched
+        ]
+    )
+
+    await client.add_events(events)
+    await hass.async_block_till_done()
+
+    assert client.get_available_program.await_args_list == [
+        call(appliance_ha_id, program_key=program_key)
+        for program_key in programs_fetched
+    ]
+    assert hass.states.is_state(active_program_option_entity_id, STATE_UNAVAILABLE)
+    selected_program_option_state = hass.states.get(selected_program_option_entity_id)
+    assert selected_program_option_state
+    assert selected_program_option_state.state != STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
 @pytest.mark.parametrize(
     "event_key",
     [

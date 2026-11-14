@@ -5,8 +5,10 @@ from unittest.mock import MagicMock
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
 
-from homeassistant.core import HomeAssistant
+from homeassistant.components.event import ButtonEventType
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.event import async_track_state_change_event
 
 from . import (
     TEST_ADDRESS,
@@ -14,6 +16,19 @@ from . import (
     make_button_device_config,
     make_v1_service_info,
 )
+
+
+def _track_event_types(hass: HomeAssistant, entity_id: str) -> list[str]:
+    """Return a list that collects the event types fired by an entity."""
+    event_types: list[str] = []
+
+    @callback
+    def _state_changed(event: Event[EventStateChangedData]) -> None:
+        assert (new_state := event.data["new_state"]) is not None
+        event_types.append(new_state.attributes["event_type"])
+
+    async_track_state_change_event(hass, entity_id, _state_changed)
+    return event_types
 
 
 async def test_no_entities_without_binary_inputs(
@@ -131,12 +146,12 @@ async def test_stale_entities_removed_on_config_change(
     assert event_entries[0].unique_id == f"{TEST_ADDRESS}-button_0_0"
 
 
-async def test_button_down_event_fired(
+async def test_press_start_event_fired(
     hass: HomeAssistant,
     mock_button_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """A 'button_down' event fires when the button transitions to the down state."""
+    """A press start event fires when the button transitions to the down state."""
     mock_button_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_button_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -150,23 +165,32 @@ async def test_button_down_event_fired(
     )
     assert entity_id is not None
     state_before = hass.states.get(entity_id)
+    assert state_before is not None
+    assert state_before.attributes["event_types"] == [
+        ButtonEventType.PRESS_START,
+        ButtonEventType.PRESS_END,
+        "button_down",
+        "button_up",
+    ]
+    event_types = _track_event_types(hass, entity_id)
 
     # Second advertisement — byte 0: pressed=True, button_id=0 → raw=0x80
     inject_bluetooth_service_info(hass, make_v1_service_info(b"\x80" + b"\x00" * 10))
     await hass.async_block_till_done()
 
+    # Deprecated legacy event is fired before the standard one
+    assert event_types == ["button_down", ButtonEventType.PRESS_START]
     state_after = hass.states.get(entity_id)
     assert state_after is not None
-    assert state_after.attributes.get("event_type") == "button_down"
-    assert state_before != state_after
+    assert state_after.attributes.get("event_type") == ButtonEventType.PRESS_START
 
 
-async def test_button_up_event_fired(
+async def test_press_end_event_fired(
     hass: HomeAssistant,
     mock_button_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """A 'button_up' event fires when the button transitions from down to up."""
+    """A press end event fires when the button transitions from down to up."""
     mock_button_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_button_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -179,14 +203,17 @@ async def test_button_up_event_fired(
     # Seed with pressed state (pressed=True, button_id=0 → raw=0x80)
     inject_bluetooth_service_info(hass, make_v1_service_info(b"\x80" + b"\x00" * 10))
     await hass.async_block_till_done()
+    event_types = _track_event_types(hass, entity_id)
 
     # Transition to released (pressed=False, button_id=0 → raw=0x00)
     inject_bluetooth_service_info(hass, make_v1_service_info())
     await hass.async_block_till_done()
 
+    # Deprecated legacy event is fired before the standard one
+    assert event_types == ["button_up", ButtonEventType.PRESS_END]
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.attributes.get("event_type") == "button_up"
+    assert state.attributes.get("event_type") == ButtonEventType.PRESS_END
 
 
 async def test_no_event_for_wrong_button_id(

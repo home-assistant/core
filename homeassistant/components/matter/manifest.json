@@ -5,6 +5,7 @@
   "categories": ["hubs_protocols.wireless_protocols"],
   "codeowners": ["@home-assistant/matter"],
   "config_flow": true,
+  "connectivity": ["matter"],
   "dependencies": ["websocket_api"],
   "documentation": "https://www.home-assistant.io/integrations/matter",
   "integration_type": "hub",

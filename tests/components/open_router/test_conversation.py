@@ -2,6 +2,7 @@
 
 from collections.abc import AsyncGenerator
 import datetime as dt
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from freezegun import freeze_time
@@ -80,6 +81,35 @@ async def test_default_prompt(
         "HTTP-Referer": "https://www.home-assistant.io/integrations/open_router",
         "X-Title": "Home Assistant",
     }
+
+
+@pytest.mark.parametrize(
+    ("reasoning", "expected_reasoning"),
+    [
+        pytest.param("auto", None, id="auto"),
+        pytest.param("off", {"enabled": False}, id="off"),
+        pytest.param("on", {"enabled": True}, id="on"),
+        pytest.param("high", {"effort": "high"}, id="effort"),
+    ],
+)
+async def test_reasoning(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_openai_client: AsyncMock,
+    mock_chat_log: MockChatLog,  # noqa: F811
+    expected_reasoning: dict[str, Any] | None,
+) -> None:
+    """Test the reasoning setting is sent with the request."""
+    await setup_integration(hass, mock_config_entry)
+    await conversation.async_converse(
+        hass,
+        "hello",
+        mock_chat_log.conversation_id,
+        Context(),
+        agent_id="conversation.gpt_3_5_turbo",
+    )
+    call = mock_openai_client.chat.completions.create.call_args_list[0][1]
+    assert call["extra_body"].get("reasoning") == expected_reasoning
 
 
 @pytest.mark.parametrize(
@@ -420,6 +450,115 @@ async def test_function_call(
         mock_openai_client.chat.completions.create.call_args.kwargs["messages"]
         == snapshot
     )
+
+
+@pytest.mark.parametrize("enable_assist", [True])
+async def test_function_call_repeated_finish_reason(
+    hass: HomeAssistant,
+    mock_chat_log: MockChatLog,  # noqa: F811
+    mock_config_entry: MockConfigEntry,
+    mock_openai_client: AsyncMock,
+) -> None:
+    """Test a finish reason repeated in the usage chunk calls the tool once."""
+    await setup_integration(hass, mock_config_entry)
+    mock_chat_log.mock_tool_results({"call_call_1": "value1"})
+    finish_choice = ChunkChoice.model_construct(
+        index=0,
+        finish_reason="tool_calls",
+        delta=ChoiceDelta(role="assistant", content=""),
+    )
+
+    mock_openai_client.chat.completions.create.side_effect = (
+        get_generator_from_data(
+            [
+                ChatCompletionChunk.model_construct(
+                    id="chatcmpl-1",
+                    choices=[
+                        ChunkChoice.model_construct(
+                            index=0,
+                            finish_reason=None,
+                            delta=ChoiceDelta(
+                                role="assistant",
+                                tool_calls=[
+                                    ChoiceDeltaToolCall(
+                                        index=0,
+                                        id="call_call_1",
+                                        type="function",
+                                        function=ChoiceDeltaToolCallFunction(
+                                            name="test_tool",
+                                            arguments='{"param1": "call1"}',
+                                        ),
+                                    )
+                                ],
+                            ),
+                        )
+                    ],
+                    created=1700000000,
+                    model="gpt-4-1106-preview",
+                    object="chat.completion.chunk",
+                ),
+                ChatCompletionChunk.model_construct(
+                    id="chatcmpl-1",
+                    choices=[finish_choice],
+                    created=1700000000,
+                    model="gpt-4-1106-preview",
+                    object="chat.completion.chunk",
+                ),
+                ChatCompletionChunk.model_construct(
+                    id="chatcmpl-1",
+                    choices=[finish_choice],
+                    created=1700000000,
+                    model="gpt-4-1106-preview",
+                    object="chat.completion.chunk",
+                    usage=CompletionUsage(
+                        completion_tokens=9, prompt_tokens=8, total_tokens=17
+                    ),
+                ),
+            ]
+        ),
+        get_generator_from_data(
+            [
+                ChatCompletionChunk.model_construct(
+                    id="chatcmpl-2",
+                    choices=[
+                        ChunkChoice.model_construct(
+                            index=0,
+                            delta=ChoiceDelta(role="assistant", content="Done"),
+                            finish_reason="stop",
+                        )
+                    ],
+                    created=1700000000,
+                    model="gpt-4-1106-preview",
+                    object="chat.completion.chunk",
+                )
+            ]
+        ),
+    )
+
+    result = await conversation.async_converse(
+        hass,
+        "Please call the test function",
+        mock_chat_log.conversation_id,
+        Context(),
+        agent_id="conversation.gpt_3_5_turbo",
+    )
+
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+    tool_results = [
+        content
+        for content in mock_chat_log.content
+        if isinstance(content, conversation.ToolResultContent)
+    ]
+    assert [content.tool_call_id for content in tool_results] == ["call_call_1"]
+    messages = mock_openai_client.chat.completions.create.call_args.kwargs["messages"]
+    assert [
+        tool_call["id"]
+        for message in messages
+        for tool_call in message.get("tool_calls", [])
+    ] == ["call_call_1"]
+    assert [
+        message["tool_call_id"] for message in messages if message["role"] == "tool"
+    ] == ["call_call_1"]
 
 
 async def test_streaming_response(

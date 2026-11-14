@@ -5,6 +5,7 @@
   "categories": ["hubs_protocols.building_automation"],
   "codeowners": ["@Julius2342", "@farmio", "@marvin-w"],
   "config_flow": true,
+  "connectivity": ["knx"],
   "dependencies": ["file_upload", "http", "websocket_api"],
   "documentation": "https://www.home-assistant.io/integrations/knx",
   "integration_type": "hub",
@@ -12,9 +13,9 @@
   "loggers": ["xknx", "xknxproject"],
   "quality_scale": "platinum",
   "requirements": [
-    "xknx==4.0.0",
+    "xknx==4.1.1",
     "xknxproject==3.10.0",
-    "knx-frontend==2026.10.5.160528",
+    "knx-frontend==2026.11.8.11926",
     "knx-telegram-store[sqlite,postgres]==0.15.2"
   ],
   "single_config_entry": true

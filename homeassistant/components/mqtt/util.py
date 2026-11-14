@@ -337,6 +337,19 @@ def valid_publish_topic(topic: Any) -> str:
     return validated_topic
 
 
+def valid_encoding(value: Any) -> str:
+    """Validate a payload encoding, an empty string passes the raw payload."""
+    encoding = cv.string(value)
+    if not encoding:
+        return encoding
+    # An empty string skips the codec lookup, so encode a character
+    try:
+        "a".encode(encoding)
+    except LookupError as err:
+        raise probatio.Invalid(f"Unknown payload encoding '{encoding}'") from err
+    return encoding
+
+
 def entity_category_without_config(value: Any) -> EntityCategory:
     """Validate the entity category of a platform not supporting `CONFIG`.
 
@@ -528,9 +541,9 @@ async def async_cleanup_device_registry(
 
 
 @callback
-def async_begin_mqtt_issues_refresh(hass: HomeAssistant) -> ir.IssuesRefresh:
+def async_refresh_mqtt_issues(hass: HomeAssistant) -> ir.IssuesRefresh:
     """Begin a refresh of the issues for invalid manually configured items."""
-    return ir.async_begin_issues_refresh(
+    return ir.async_refresh_issues(
         hass, DOMAIN, issue_id_pattern=INVALID_PLATFORM_CONFIG_ISSUE_PREFIX
     )
 

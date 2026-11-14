@@ -10,9 +10,15 @@ from homeassistant.components.select import (
     ATTR_OPTION,
     ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, EntityCategory
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_UNKNOWN,
+    CommonServiceArgument,
+    EntityCategory,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -42,7 +48,7 @@ async def test_wait_time_select(
 
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             data,
             blocking=True,
         )
@@ -62,7 +68,7 @@ async def test_invalid_wait_time_select(hass: HomeAssistant, mock_account) -> No
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             data,
             blocking=True,
         )
@@ -107,7 +113,7 @@ async def test_litterrobot_4_select(
 
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             data,
             blocking=True,
         )
@@ -124,8 +130,11 @@ async def test_select_command_exception(
     with pytest.raises(HomeAssistantError, match="Invalid command: oops"):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: SELECT_ENTITY_ID, ATTR_OPTION: "7"},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: SELECT_ENTITY_ID,
+                SelectServiceArgument.OPTION: "7",
+            },
             blocking=True,
         )
 
@@ -157,7 +166,7 @@ async def test_litterrobot_5_globe_light(
 
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             data,
             blocking=True,
         )
@@ -196,7 +205,7 @@ async def test_litterrobot_5_panel_brightness(
 
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             data,
             blocking=True,
         )

@@ -2,7 +2,6 @@
 
 from datetime import timedelta
 import glob
-import logging
 import os
 
 import probatio
@@ -11,18 +10,24 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
+    SensorStateClass,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import UnitOfInformation
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-_LOGGER = logging.getLogger(__name__)
+from .const import CONF_FILTER, CONF_FOLDER_PATHS, DEFAULT_FILTER, DOMAIN
 
-CONF_FOLDER_PATHS = "folder"
-CONF_FILTER = "filter"
-DEFAULT_FILTER = "*"
+BREAKS_IN_HA_VERSION = "2027.5.0"
+INTEGRATION_TITLE = "Folder"
 
 SCAN_INTERVAL = timedelta(minutes=1)
 
@@ -58,29 +63,89 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the folder sensor."""
+    """Import the YAML sensor platform into a config entry."""
     path: str = config[CONF_FOLDER_PATHS]
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+    )
 
-    if not await hass.async_add_executor_job(hass.config.is_allowed_path, path):
-        _LOGGER.error("Folder %s is not valid or allowed", path)
-    else:
-        folder = Folder(path, config[CONF_FILTER])
-        async_add_entities([folder], True)
+    if (
+        result["type"] is FlowResultType.ABORT
+        and (reason := result["reason"]) != "already_configured"
+    ):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{reason}_{path}",
+            breaks_in_ha_version=BREAKS_IN_HA_VERSION,
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=f"deprecated_yaml_import_issue_{reason}",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": INTEGRATION_TITLE,
+                "path": path,
+                "config_variable": "allowlist_external_dirs",
+            },
+        )
+        return
+
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version=BREAKS_IN_HA_VERSION,
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": INTEGRATION_TITLE,
+        },
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the folder sensor from a config entry."""
+    async_add_entities(
+        [
+            Folder(
+                entry.options[CONF_FOLDER_PATHS],
+                entry.options[CONF_FILTER],
+                entry.entry_id,
+            )
+        ],
+        True,
+    )
 
 
 class Folder(SensorEntity):
     """Representation of a folder."""
 
     _attr_device_class = SensorDeviceClass.DATA_SIZE
+    _attr_has_entity_name = True
     _attr_icon = "mdi:folder"
+    _attr_name = None
     _attr_native_unit_of_measurement = UnitOfInformation.MEGABYTES
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
-    def __init__(self, folder_path: str, filter_term: str) -> None:
+    def __init__(self, folder_path: str, filter_term: str, entry_id: str) -> None:
         """Initialize the data object."""
         folder_path = os.path.join(folder_path, "")  # If no trailing / add it
-        self._folder_path = folder_path  # Need to check its a valid path
+        self._folder_path = folder_path
         self._filter_term = filter_term
-        self._attr_name = os.path.split(os.path.split(folder_path)[0])[1]
+        self._attr_unique_id = entry_id
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, entry_id)},
+            name=os.path.split(os.path.split(folder_path)[0])[1],
+        )
 
     async def async_update(self) -> None:
         """Update the sensor."""

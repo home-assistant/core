@@ -1,21 +1,25 @@
 """Tests for the Mitsubishi Comfort integration setup."""
 
+from collections.abc import Generator
+from dataclasses import replace
 import logging
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from mitsubishi_comfort import DeviceInfo
+from freezegun.api import FrozenDateTimeFactory
+from mitsubishi_comfort import DeviceInfo, DeviceStatus
 from mitsubishi_comfort.exceptions import AuthenticationError, DeviceConnectionError
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.mitsubishi_comfort.const import (
     CONF_ADDRESSES,
     CONF_CREDENTIALS,
+    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     device_registry as dr,
@@ -24,7 +28,133 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from .conftest import MOCK_ADDRESS, MOCK_MAC, MOCK_PASSWORD, MOCK_SERIAL, MOCK_USERNAME
+from .conftest import (
+    MOCK_ADDRESS,
+    MOCK_MAC,
+    MOCK_PASSWORD,
+    MOCK_SERIAL,
+    MOCK_USERNAME,
+    create_mock_indoor_unit,
+)
+
+LIVING_ROOM = "climate.living_room"
+BEDROOM = "climate.bedroom"
+
+
+@pytest.fixture
+def mock_two_devices(
+    mock_config_entry: MockConfigEntry,
+    mock_cloud_account: AsyncMock,
+    mock_device_info: DeviceInfo,
+) -> Generator[tuple[MagicMock, MagicMock]]:
+    """Discover two units with known local addresses."""
+    second_info = replace(
+        mock_device_info, serial="SECOND", label="Bedroom", mac="11:22:33:44:55:66"
+    )
+    mock_cloud_account.discover_devices.return_value["SECOND"] = second_info
+    mock_config_entry.data[CONF_ADDRESSES][second_info.mac] = "192.168.1.101"
+    first = create_mock_indoor_unit()
+    second = create_mock_indoor_unit()
+    second.serial = "SECOND"
+    second.name = "Bedroom"
+    with patch(
+        "homeassistant.components.mitsubishi_comfort._make_device",
+        side_effect=[first, second],
+    ):
+        yield first, second
+
+
+@pytest.mark.parametrize(
+    "failure",
+    [
+        pytest.param(False, id="no-data"),
+        pytest.param(DeviceConnectionError("offline"), id="connection-error"),
+    ],
+)
+async def test_setup_partial_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_two_devices: tuple[MagicMock, MagicMock],
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    failure: bool | DeviceConnectionError,
+) -> None:
+    """An initially offline unit recovers through polling without blocking others."""
+    healthy, offline = mock_two_devices
+    recovered_status = offline.status
+    offline.status = DeviceStatus()
+    offline.update_status.side_effect = [failure, failure, True]
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get(LIVING_ROOM).state == "cool"
+    assert hass.states.get(BEDROOM).state == STATE_UNAVAILABLE
+    assert caplog.text.count("Error fetching initial data for Bedroom:") == 1
+    healthy.update_status.assert_awaited_once()
+    offline.update_status.assert_awaited_once()
+
+    caplog.clear()
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert offline.update_status.await_count == 2
+    assert hass.states.get(LIVING_ROOM).state == "cool"
+    assert hass.states.get(BEDROOM).state == STATE_UNAVAILABLE
+    assert not [record for record in caplog.records if record.levelno >= logging.ERROR]
+
+    offline.status = recovered_status
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert offline.update_status.await_count == 3
+    assert hass.states.get(BEDROOM).state == "cool"
+    assert hass.states.get(BEDROOM).attributes["current_temperature"] == 23.5
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.parametrize(
+    "failure",
+    [
+        pytest.param(False, id="no-data"),
+        pytest.param(DeviceConnectionError("offline"), id="connection-error"),
+    ],
+)
+async def test_setup_all_devices_offline(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_two_devices: tuple[MagicMock, MagicMock],
+    failure: bool | DeviceConnectionError,
+) -> None:
+    """Retry setup when none of the units can be reached."""
+    first, second = mock_two_devices
+    first.update_status.side_effect = [failure]
+    second.update_status.side_effect = [failure]
+    mock_config_entry.add_to_hass(hass)
+
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    first.update_status.assert_awaited_once()
+    second.update_status.assert_awaited_once()
+    assert hass.states.get(LIVING_ROOM) is None
+    assert hass.states.get(BEDROOM) is None
+
+
+@pytest.mark.usefixtures("mock_two_devices")
+async def test_setup_unexpected_refresh_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Partial setup must not suppress unexpected coordinator errors."""
+    mock_config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.mitsubishi_comfort.coordinator.MitsubishiComfortCoordinator.async_config_entry_first_refresh",
+        side_effect=[None, RuntimeError("unexpected")],
+    ):
+        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 def _cache_entry(ip: str, mac: str = MOCK_MAC) -> DhcpServiceInfo:

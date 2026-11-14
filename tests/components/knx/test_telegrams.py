@@ -21,6 +21,7 @@ from pytest_homeassistant.common import (
     async_fire_time_changed,
     async_load_json_object_fixture,
 )
+from xknx.exceptions import XKNXException
 from xknx.telegram import Telegram, TelegramDirection
 from xknx.telegram.address import GroupAddress, IndividualAddress
 from xknx.telegram.apci import GroupValueRead
@@ -38,7 +39,9 @@ from homeassistant.components.knx.telegrams import (
     FLUSH_INTERVAL_SECONDS_POSTGRES,
     FLUSH_INTERVAL_SECONDS_SQLITE,
     TelegramDict,
+    Telegrams,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.util import dt as dt_util
@@ -281,6 +284,43 @@ async def test_stop_cancels_in_flight_store_init(
 
     assert telegrams_module._store_init_task is None
     assert telegrams_module._uninitialized_store is None
+
+
+async def test_failed_setup_stops_the_store_initialization(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+) -> None:
+    """A setup that fails after the store started initializing tears the store down.
+
+    The entry is not unloaded on a failed setup, and the retry builds a new store
+    on the same database, so the first initialization must not keep running.
+    """
+    handlers: list[Telegrams] = []
+    original_async_start = Telegrams.async_start
+
+    def recording_async_start(self: Telegrams) -> None:
+        handlers.append(self)
+        original_async_start(self)
+
+    async def hanging_initialize(self: BufferedSqliteStore) -> None:
+        await asyncio.Event().wait()
+
+    with (
+        patch.object(Telegrams, "async_start", recording_async_start),
+        patch.object(BufferedSqliteStore, "initialize", hanging_initialize),
+        patch("xknx.xknx.XKNX.start", side_effect=XKNXException("no gateway")),
+    ):
+        await knx.setup_integration(
+            real_telegram_store=True, wait_for_telegram_store=False
+        )
+
+    assert knx.mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    (telegrams,) = handlers
+    assert telegrams._store_init_task is None
+    assert telegrams._uninitialized_store is None
+    assert telegrams.store is None
+    # The entry's unload hooks and the module's stop may both run; the second is a no-op.
+    await telegrams.stop()
 
 
 async def test_migrate_telegrams_from_json(

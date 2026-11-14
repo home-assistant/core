@@ -78,10 +78,13 @@ def async_calculate_period(
 
 def pretty_ratio(value: float, period: tuple[dt.datetime, dt.datetime]) -> float:
     """Format the ratio of value / period duration."""
-    if len(period) != 2 or period[0] == period[1]:
+    # Subtracting datetimes of the same time zone ignores daylight saving changes
+    duration = dt_util.as_utc(period[1]) - dt_util.as_utc(period[0])
+    # Bounds in a skipped hour can be distinct datetimes at the same instant
+    if not duration:
         return 0.0
 
-    ratio = 100 * value / (period[1] - period[0]).total_seconds()
+    ratio = 100 * value / duration.total_seconds()
     return round(ratio, 1)
 
 

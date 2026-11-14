@@ -5,7 +5,6 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from functools import partial
-import re
 from typing import Any, TypedDict, cast, override
 from xml.etree.ElementTree import ParseError
 
@@ -47,7 +46,7 @@ from .const import (
     SCAN_INTERVAL,
     MeshRoles,
 )
-from .helpers import ha_is_stopping
+from .helpers import ha_is_stopping, normalize_version
 from .models import (
     ConnectionInfo,
     Device,
@@ -222,10 +221,6 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             redact_debug_log=True,
         )
 
-        if not self.connection:
-            LOGGER.error("Unable to establish a connection with %s", self.host)
-            return
-
         LOGGER.debug(
             "detected services on %s %s",
             self.host,
@@ -260,12 +255,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             self._unique_id = info.serial_number
 
         self._model = info.model_name
-        if (
-            version_normalized := re.search(r"^\d+\.[0]?(.*)", info.software_version)
-        ) is not None:
-            self._current_firmware = version_normalized.group(1)
-        else:
-            self._current_firmware = info.software_version
+        self._current_firmware = normalize_version(info.software_version)
 
         (
             self._update_available,
@@ -611,7 +601,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
     def _update_device_info(self) -> tuple[bool, str | None, str | None]:
         """Retrieve latest device information from the FRITZ!Box."""
         info = self.connection.call_action("UserInterface1", "GetInfo")
-        version = info.get("NewX_AVM-DE_Version")
+        version = normalize_version(info.get("NewX_AVM-DE_Version"))
         release_url = info.get("NewX_AVM-DE_InfoURL")
         return bool(version), version, release_url
 
@@ -948,6 +938,23 @@ class AvmWrapper(FritzBoxTools):
 
         return bool(await self.hass.async_add_executor_job(wrap_external_ipv6))
 
+    async def async_addon_infos_supported(self) -> bool:
+        """Check if the WAN interface provides transmission rate and traffic data."""
+
+        if not self.device_is_router:
+            return False
+
+        try:
+            await self.hass.async_add_executor_job(
+                partial(self.connection.call_action, "WANCommonIFC1", "GetAddonInfos")
+            )
+        except FritzConnectionException:
+            LOGGER.debug(
+                "Transmission rate and traffic data not supported by the device"
+            )
+            return False
+        return True
+
     async def async_get_connection_info(self) -> ConnectionInfo:
         """Return ConnectionInfo data."""
 
@@ -957,6 +964,7 @@ class AvmWrapper(FritzBoxTools):
             mesh_role=self.mesh_role,
             wan_enabled=self.device_is_router,
             ipv6_active=await self.async_ipv6_active(),
+            addon_infos_supported=await self.async_addon_infos_supported(),
         )
         LOGGER.debug(
             "ConnectionInfo for FritzBox %s: %s",
@@ -1038,6 +1046,9 @@ class AvmWrapper(FritzBoxTools):
 
     async def async_get_current_user_rights(self) -> dict[str, Any]:
         """Call X_AVM-DE_GetCurrentUser service."""
+
+        if "LANConfigSecurity1" not in self.connection.services:
+            return {}
 
         result = await self._async_service_call(
             "LANConfigSecurity",

@@ -1,6 +1,6 @@
 """DataUpdateCoordinator for the OpenWrt (ubus) integration."""
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 from typing import override
 
@@ -10,12 +10,14 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import CONF_DHCP_SOFTWARE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 UPDATE_INTERVAL = timedelta(seconds=30)
+LEASE_REREAD_INTERVAL = timedelta(minutes=10)
 
 type UbusConfigEntry = ConfigEntry[UbusDataUpdateCoordinator]
 
@@ -37,6 +39,8 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
         self._hostapd: list[str] = []
         self._leasefile: str | None = None
         self._mac2name: dict[str, str] | None = None
+        self._unnamed: set[str] = set()
+        self._last_lease_read = datetime.min.replace(tzinfo=dt_util.UTC)
 
         super().__init__(
             hass,
@@ -82,13 +86,23 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
         PermissionError is left to propagate so the caller can re-authenticate.
         """
         clients = self._fetch_hostapd_clients()
-        if self._mac2name is None:
-            self._mac2name = self._generate_mac2name()
-        return {
-            mac: self._name_for(mac)
-            for mac, client in clients.items()
-            if client["authorized"]
-        }
+        authorized = [mac for mac, client in clients.items() if client["authorized"]]
+        known = self._mac2name or {}
+        unnamed = {mac.upper() for mac in authorized} - known.keys()
+        now = dt_util.utcnow()
+        # Reread the leases for a new client without a hostname, and only
+        # periodically for clients which never get one (e.g. static IPs).
+        if (
+            self._mac2name is None
+            or unnamed - self._unnamed
+            or (unnamed and now - self._last_lease_read >= LEASE_REREAD_INTERVAL)
+        ):
+            self._last_lease_read = now
+            if (mac2name := self._generate_mac2name()) is not None:
+                # Merge, as an empty or partial read must not forget names.
+                self._mac2name = {**known, **mac2name}
+                self._unnamed = unnamed - mac2name.keys()
+        return {mac: self._name_for(mac) for mac in authorized}
 
     def _fetch_hostapd_clients(self) -> dict[str, dict]:
         """Return the raw hostapd client table merged across all interfaces."""
@@ -138,7 +152,9 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
         mac2name = {}
         for line in result["data"].splitlines():
             hosts = line.split(" ")
-            mac2name[hosts[1].upper()] = hosts[3]
+            # dnsmasq writes "*" when the client did not send a hostname.
+            if hosts[3] != "*":
+                mac2name[hosts[1].upper()] = hosts[3]
         return mac2name
 
     def _odhcpd_mac2name(self) -> dict[str, str] | None:
@@ -159,5 +175,6 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
                 mac = ":".join(
                     lease["mac"][i : i + 2] for i in range(0, len(lease["mac"]), 2)
                 )
-                mac2name[mac.upper()] = lease["hostname"]
+                if hostname := lease["hostname"]:
+                    mac2name[mac.upper()] = hostname
         return mac2name

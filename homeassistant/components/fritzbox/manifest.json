@@ -4,6 +4,7 @@
   "categories": ["hubs_protocols.smart_home_hubs"],
   "codeowners": ["@mib1185", "@flabbamann"],
   "config_flow": true,
+  "connectivity": ["dect"],
   "documentation": "https://www.home-assistant.io/integrations/fritzbox",
   "integration_type": "hub",
   "iot_class": "local_polling",

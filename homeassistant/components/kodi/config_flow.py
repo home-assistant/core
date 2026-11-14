@@ -83,6 +83,12 @@ async def validate_ws(hass: HomeAssistant, data):
         await kodi.ping()
     except CannotConnectError as error:
         raise WSCannotConnect from error
+    finally:
+        try:
+            await kwc.close()
+        except Exception:
+            # A failed close must not replace the outcome of the probe
+            _LOGGER.debug("Error closing the WebSocket probe", exc_info=True)
 
 
 class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -123,7 +129,7 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
             }
         )
 
-        self.context.update({"title_placeholders": {CONF_NAME: self._name}})
+        self.context.update({"title_placeholders": {"name": self._name}})
 
         try:
             await validate_http(self.hass, self._get_data())
@@ -276,7 +282,7 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=schema,
-            description_placeholders={CONF_HOST: reauth_entry.data[CONF_HOST]},
+            description_placeholders={"host": reauth_entry.data[CONF_HOST]},
             errors=errors,
         )
 

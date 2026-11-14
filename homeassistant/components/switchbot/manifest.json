@@ -37,11 +37,12 @@
     "@zerzhang"
   ],
   "config_flow": true,
+  "connectivity": ["bluetooth"],
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/switchbot",
   "integration_type": "device",
   "iot_class": "local_push",
   "loggers": ["switchbot"],
   "quality_scale": "gold",
-  "requirements": ["PySwitchbot==3.1.0"]
+  "requirements": ["PySwitchbot==3.5.0"]
 }
