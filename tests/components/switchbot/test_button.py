@@ -6,7 +6,10 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
-from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
+from pytest_homeassistant.components.bluetooth import (
+    generate_advertisement_data,
+    inject_bluetooth_service_info,
+)
 from switchbot import SwitchbotOperationError
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
@@ -44,6 +47,13 @@ from . import (
 
 
 @pytest.mark.parametrize(
+    ("frame_model", "frame_class", "model_bytes"),
+    [
+        ("art_frame", "SwitchbotArtFrame", "01113e10"),
+        ("ai_memory_frame", "SwitchbotAIMemoryFrame", "011295d0"),
+    ],
+)
+@pytest.mark.parametrize(
     ("service", "mock_method", "entity_id"),
     [
         (ButtonService.PRESS, "next_image", "button.test_name_next_image"),
@@ -54,14 +64,30 @@ from . import (
 async def test_art_frame_button_press(
     hass: HomeAssistant,
     mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+    frame_model: str,
+    frame_class: str,
+    model_bytes: str,
     service: str,
     mock_method: str,
     entity_id: str,
 ) -> None:
     """Test pressing the button on the art frame device."""
-    inject_bluetooth_service_info(hass, ART_FRAME_INFO)
+    service_info = BluetoothServiceInfoBleak.from_device_and_advertisement_data(
+        ART_FRAME_INFO.device,
+        generate_advertisement_data(
+            service_data={
+                "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x007"
+                + bytes.fromhex(model_bytes)
+            },
+            manufacturer_data={2409: bytes.fromhex("b0e9fee2fa381537030008")},
+        ),
+        source="local",
+        connectable=True,
+        time=0,
+    )
+    inject_bluetooth_service_info(hass, service_info)
 
-    entry = mock_entry_encrypted_factory("art_frame")
+    entry = mock_entry_encrypted_factory(frame_model)
     entry.add_to_hass(hass)
 
     mock_basic_info = AsyncMock(
@@ -69,7 +95,7 @@ async def test_art_frame_button_press(
     )
     mocked_instance = AsyncMock(return_value=True)
     with patch.multiple(
-        "homeassistant.components.switchbot.button.switchbot.SwitchbotArtFrame",
+        f"homeassistant.components.switchbot.button.switchbot.{frame_class}",
         _get_basic_info=mock_basic_info,
         **{mock_method: mocked_instance},
     ):
