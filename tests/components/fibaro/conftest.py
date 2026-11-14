@@ -467,7 +467,11 @@ def mock_hvac_system() -> Mock:
     climate.has_heating_thermostat_setpoint = True
     climate.heating_thermostat_setpoint = 20.5
     climate.has_heating_thermostat_setpoint_future = True
-    climate.heating_thermostat_setpoint_future = 20.5
+    climate.heating_thermostat_setpoint_future = 21.5
+    climate.has_cooling_thermostat_setpoint = True
+    climate.cooling_thermostat_setpoint = 25.0
+    climate.has_cooling_thermostat_setpoint_future = True
+    climate.cooling_thermostat_setpoint_future = 24.0
     value_mock = Mock()
     value_mock.has_value = False
     climate.value = value_mock

@@ -99,11 +99,10 @@ TARGET_TEMP_ACTIONS = (
     "setTargetLevel",
     "setThermostatSetpoint",
     "setHeatingThermostatSetpoint",
+    "setCoolingThermostatSetpoint",
 )
 
 OP_MODE_ACTIONS = ("setMode", "setOperatingMode", "setThermostatMode")
-
-COOLING_SETPOINT_ACTION = "setCoolingThermostatSetpoint"
 
 
 async def async_setup_entry(
@@ -149,7 +148,11 @@ class FibaroThermostat(FibaroEntity, ClimateEntity):
             if device.type == "com.fibaro.temperatureSensor" or (
                 self._temp_sensor_device is None
                 and device.has_unit
-                and (device.value.has_value or device.has_heating_thermostat_setpoint)
+                and (
+                    device.value.has_value
+                    or device.has_heating_thermostat_setpoint
+                    or device.has_cooling_thermostat_setpoint
+                )
                 and device.unit in ("C", "F")
             ):
                 self._temp_sensor_device = device
@@ -365,19 +368,15 @@ class FibaroThermostat(FibaroEntity, ClimateEntity):
         """Return the current temperature."""
         if self._temp_sensor_device:
             device = self._temp_sensor_device
+            if (
+                device.has_cooling_thermostat_setpoint
+                and self.hvac_mode == HVACMode.COOL
+            ):
+                return device.cooling_thermostat_setpoint
             if device.has_heating_thermostat_setpoint:
                 return device.heating_thermostat_setpoint
             return device.value.float_value()
         return None
-
-    @property
-    def _uses_cooling_setpoint(self) -> bool:
-        """Return True if the device keeps a separate setpoint for cooling."""
-        return (
-            self._target_temp_device is not None
-            and COOLING_SETPOINT_ACTION in self._target_temp_device.actions
-            and self.hvac_mode == HVACMode.COOL
-        )
 
     @property
     @override
@@ -385,12 +384,11 @@ class FibaroThermostat(FibaroEntity, ClimateEntity):
         """Return the temperature we try to reach."""
         if self._target_temp_device:
             device = self._target_temp_device
-            if self._uses_cooling_setpoint:
-                properties = device.properties
-                if "coolingThermostatSetpointFuture" in properties:
-                    return float(properties["coolingThermostatSetpointFuture"])
-                if "coolingThermostatSetpoint" in properties:
-                    return float(properties["coolingThermostatSetpoint"])
+            if (
+                device.has_cooling_thermostat_setpoint_future
+                and self.hvac_mode == HVACMode.COOL
+            ):
+                return device.cooling_thermostat_setpoint_future
             if device.has_heating_thermostat_setpoint_future:
                 return device.heating_thermostat_setpoint_future
             return device.target_level
@@ -402,12 +400,18 @@ class FibaroThermostat(FibaroEntity, ClimateEntity):
         temperature = kwargs.get(ATTR_TEMPERATURE)
         target = self._target_temp_device
         if target is not None and temperature is not None:
-            if self._uses_cooling_setpoint:
-                target.execute_action(COOLING_SETPOINT_ACTION, [temperature])
-            elif "setThermostatSetpoint" in target.actions:
+            if "setThermostatSetpoint" in target.actions:
                 target.execute_action(
                     "setThermostatSetpoint", [self.fibaro_op_mode, temperature]
                 )
+            elif "setCoolingThermostatSetpoint" in target.actions and (
+                self.hvac_mode == HVACMode.COOL
+                or (
+                    "setHeatingThermostatSetpoint" not in target.actions
+                    and "setTargetLevel" not in target.actions
+                )
+            ):
+                target.execute_action("setCoolingThermostatSetpoint", [temperature])
             elif "setHeatingThermostatSetpoint" in target.actions:
                 target.execute_action("setHeatingThermostatSetpoint", [temperature])
             else:
