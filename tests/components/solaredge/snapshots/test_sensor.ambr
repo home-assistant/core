@@ -1279,15 +1279,13 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarEdge Sensors',
-      'sensors': list([
-      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solaredge_sensors',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'unavailable',
   })
 # ---
 # name: test_all_entities[sensor.solaredge_site_details-entry]

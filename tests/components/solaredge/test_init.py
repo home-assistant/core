@@ -8,15 +8,19 @@ from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.recorder import Recorder
+from homeassistant.components.solaredge.api import (
+    SolarEdgeConnectionError,
+    SolarEdgeRateLimitError,
+)
 from homeassistant.components.solaredge.const import CONF_SITE_ID, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from . import setup_integration
-from .conftest import API_KEY, PASSWORD, SITE_ID, USERNAME
+from .conftest import PASSWORD, SITE_ID, TOKEN, USERNAME
 
 
 @patch(
@@ -32,7 +36,7 @@ async def test_setup_unload_api_key(
     """Test successful setup and unload of a config entry with API key."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_SITE_ID: SITE_ID, CONF_API_KEY: API_KEY},
+        data={CONF_SITE_ID: SITE_ID, CONF_TOKEN: TOKEN},
     )
     entry.add_to_hass(hass)
 
@@ -102,7 +106,7 @@ async def test_setup_unload_both(
         domain=DOMAIN,
         data={
             CONF_SITE_ID: SITE_ID,
-            CONF_API_KEY: API_KEY,
+            CONF_TOKEN: TOKEN,
             CONF_USERNAME: USERNAME,
             CONF_PASSWORD: PASSWORD,
         },
@@ -128,10 +132,10 @@ async def test_api_key_config_not_ready(
     recorder_mock: Recorder, hass: HomeAssistant, solaredge_api: Mock
 ) -> None:
     """Test for setup failure with API key."""
-    solaredge_api.get_details.side_effect = ClientError()
+    solaredge_api.get_details.side_effect = SolarEdgeConnectionError()
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_SITE_ID: SITE_ID, CONF_API_KEY: API_KEY},
+        data={CONF_SITE_ID: SITE_ID, CONF_TOKEN: TOKEN},
     )
     entry.add_to_hass(hass)
 
@@ -139,6 +143,25 @@ async def test_api_key_config_not_ready(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_rate_limit_retry_after_is_preserved(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    solaredge_api: Mock,
+) -> None:
+    """Test setup preserves the provider retry delay."""
+    solaredge_api.get_details.side_effect = SolarEdgeRateLimitError(
+        retry_after=120, monthly_limit=False
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.config_entries.async_call_later") as mock_call:
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert int(mock_call.call_args.args[1]) == 120
 
 
 async def test_web_login_config_not_ready(
@@ -211,7 +234,7 @@ async def test_remove_device(
     mock_config_entry: MockConfigEntry,
     solaredge_api: Mock,
 ) -> None:
-    """Test removing a device is only allowed when no API key is configured."""
+    """Test removing a device is only allowed without monitoring credentials."""
     assert await async_setup_component(hass, "config", {})
     await setup_integration(hass, mock_config_entry)
 
@@ -222,12 +245,12 @@ async def test_remove_device(
 
     client = await hass_ws_client(hass)
 
-    # Cannot remove the device while the API key is configured.
+    # Cannot remove the device while OAuth monitoring is configured.
     response = await client.remove_device(device_entry.id)
     assert not response["success"]
     assert device_registry.async_get(device_entry.id) is not None
 
-    # After removing the API key (switching to web login only), the device can be removed.
+    # After switching to web login only, the device can be removed.
     hass.config_entries.async_update_entry(
         mock_config_entry,
         data={
