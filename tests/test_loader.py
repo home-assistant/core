@@ -1,6 +1,8 @@
 """Test to verify that we can load components."""
 
 import asyncio
+from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
 import os
 import pathlib
 import sys
@@ -1318,6 +1320,183 @@ async def test_get_mqtt(hass: HomeAssistant) -> None:
         mqtt = await loader.async_get_mqtt(hass)
         assert mqtt["test_1"] == ["test_1/discovery"]
         assert mqtt["test_2"] == ["test_2/discovery"]
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class _OverrideCase:
+    """A discovery source, and its result when "overridden" is a custom integration."""
+
+    get_matchers: Callable[[HomeAssistant], Awaitable[Any]]
+    generated_name: str
+    generated: Any
+    manifest_key: str
+    custom_matchers: Any
+    without_custom: Any
+    with_custom: Any
+
+
+OVERRIDE_CASES = {
+    "bluetooth": _OverrideCase(
+        get_matchers=loader.async_get_bluetooth,
+        generated_name="BLUETOOTH",
+        generated=[
+            {"domain": "overridden", "local_name": "Core*"},
+            {"domain": "kept", "local_name": "Kept*"},
+        ],
+        manifest_key="bluetooth",
+        custom_matchers=[{"local_name": "Custom*"}],
+        without_custom=[{"domain": "kept", "local_name": "Kept*"}],
+        with_custom=[
+            {"domain": "kept", "local_name": "Kept*"},
+            {"domain": "overridden", "local_name": "Custom*"},
+        ],
+    ),
+    "dhcp": _OverrideCase(
+        get_matchers=loader.async_get_dhcp,
+        generated_name="DHCP",
+        generated=[
+            {"domain": "overridden", "hostname": "core*"},
+            {"domain": "kept", "hostname": "kept*"},
+        ],
+        manifest_key="dhcp",
+        custom_matchers=[{"hostname": "custom*"}],
+        without_custom=[{"domain": "kept", "hostname": "kept*"}],
+        with_custom=[
+            {"domain": "kept", "hostname": "kept*"},
+            {"domain": "overridden", "hostname": "custom*"},
+        ],
+    ),
+    "usb": _OverrideCase(
+        get_matchers=loader.async_get_usb,
+        generated_name="USB",
+        generated=[
+            {"domain": "overridden", "vid": "1234", "pid": "0001"},
+            {"domain": "kept", "vid": "1234", "pid": "0002"},
+        ],
+        manifest_key="usb",
+        custom_matchers=[{"vid": "1234", "pid": "0003"}],
+        without_custom=[{"domain": "kept", "vid": "1234", "pid": "0002"}],
+        with_custom=[
+            {"domain": "kept", "vid": "1234", "pid": "0002"},
+            {"domain": "overridden", "vid": "1234", "pid": "0003"},
+        ],
+    ),
+    "zeroconf": _OverrideCase(
+        get_matchers=loader.async_get_zeroconf,
+        generated_name="ZEROCONF",
+        generated={
+            "_core._tcp.local.": [{"domain": "overridden"}],
+            "_shared._tcp.local.": [
+                {"domain": "overridden", "name": "core*"},
+                {"domain": "kept", "name": "kept*"},
+            ],
+            "_empty._tcp.local.": [],
+        },
+        manifest_key="zeroconf",
+        custom_matchers=["_custom._tcp.local."],
+        # The type only the override used is no longer browsed
+        without_custom={
+            "_shared._tcp.local.": [{"domain": "kept", "name": "kept*"}],
+            "_empty._tcp.local.": [],
+        },
+        with_custom={
+            "_shared._tcp.local.": [{"domain": "kept", "name": "kept*"}],
+            "_empty._tcp.local.": [],
+            "_custom._tcp.local.": [{"domain": "overridden"}],
+        },
+    ),
+    "homekit": _OverrideCase(
+        get_matchers=loader.async_get_homekit,
+        generated_name="HOMEKIT",
+        generated={
+            "Core Model": {"domain": "overridden", "always_discover": True},
+            "Kept Model": {"domain": "kept", "always_discover": True},
+        },
+        manifest_key="homekit",
+        custom_matchers={"models": ["Custom Model"]},
+        without_custom={
+            "Kept Model": loader.HomeKitDiscoveredIntegration("kept", True),
+        },
+        with_custom={
+            "Kept Model": loader.HomeKitDiscoveredIntegration("kept", True),
+            "Custom Model": loader.HomeKitDiscoveredIntegration("overridden", True),
+        },
+    ),
+    "ssdp": _OverrideCase(
+        get_matchers=loader.async_get_ssdp,
+        generated_name="SSDP",
+        generated={
+            "overridden": [{"manufacturer": "Core"}],
+            "kept": [{"manufacturer": "Kept"}],
+        },
+        manifest_key="ssdp",
+        custom_matchers=[{"manufacturer": "Custom"}],
+        without_custom={"kept": [{"manufacturer": "Kept"}]},
+        with_custom={
+            "kept": [{"manufacturer": "Kept"}],
+            "overridden": [{"manufacturer": "Custom"}],
+        },
+    ),
+    "mqtt": _OverrideCase(
+        get_matchers=loader.async_get_mqtt,
+        generated_name="MQTT",
+        generated={"overridden": ["core/discovery"], "kept": ["kept/discovery"]},
+        manifest_key="mqtt",
+        custom_matchers=["custom/discovery"],
+        without_custom={"kept": ["kept/discovery"]},
+        with_custom={"kept": ["kept/discovery"], "overridden": ["custom/discovery"]},
+    ),
+}
+
+
+def _get_overriding_integration(
+    hass: HomeAssistant, discovery: dict[str, Any]
+) -> loader.Integration:
+    """Return a custom "overridden" integration declaring only the given discovery."""
+    integration = _get_test_integration(hass, "overridden", True)
+    for key in OVERRIDE_CASES:
+        integration.manifest.pop(key, None)
+    integration.manifest.update(discovery)
+    return integration
+
+
+@pytest.mark.parametrize(
+    ("case", "discovery", "expected"),
+    [
+        *(
+            pytest.param(case, {}, case.without_custom, id=f"{source}-no-matchers")
+            for source, case in OVERRIDE_CASES.items()
+        ),
+        *(
+            pytest.param(
+                case,
+                {case.manifest_key: case.custom_matchers},
+                case.with_custom,
+                id=f"{source}-own-matchers",
+            )
+            for source, case in OVERRIDE_CASES.items()
+        ),
+    ],
+)
+async def test_custom_override_replaces_core_matchers(
+    hass: HomeAssistant,
+    case: _OverrideCase,
+    discovery: dict[str, Any],
+    expected: Any,
+) -> None:
+    """A custom integration overriding a core one is discovered by its own manifest only."""
+    integration = _get_overriding_integration(hass, discovery)
+    generated = json_dumps(case.generated)
+    with (
+        patch(f"homeassistant.loader.{case.generated_name}", case.generated),
+        patch(
+            "homeassistant.loader.async_get_custom_components",
+            return_value={"overridden": integration},
+        ),
+    ):
+        assert await case.get_matchers(hass) == expected
+
+    assert json_dumps(case.generated) == generated
 
 
 @pytest.mark.usefixtures("enable_custom_integrations")

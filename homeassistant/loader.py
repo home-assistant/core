@@ -595,14 +595,18 @@ async def async_get_zeroconf(
     hass: HomeAssistant,
 ) -> dict[str, list[ZeroconfMatcher]]:
     """Return cached list of zeroconf types."""
-    # Copy the lists too, custom integrations append to them below
-    generated_zeroconf = cast(dict[str, list[ZeroconfMatcher]], ZEROCONF)
-    zeroconf = {
-        service_type: list(matchers)
-        for service_type, matchers in generated_zeroconf.items()
-    }
-
     integrations = await async_get_custom_components(hass)
+    # Copy the lists too, custom integrations append to them below. A type left
+    # empty by an overridden domain is no longer browsed; one listed empty is kept.
+    generated_zeroconf = cast(dict[str, list[ZeroconfMatcher]], ZEROCONF)
+    zeroconf: dict[str, list[ZeroconfMatcher]] = {}
+    for service_type, matchers in generated_zeroconf.items():
+        kept = [
+            matcher for matcher in matchers if matcher["domain"] not in integrations
+        ]
+        if kept or not matchers:
+            zeroconf[service_type] = kept
+
     for integration in integrations.values():
         if not integration.zeroconf:
             continue
@@ -621,9 +625,12 @@ async def async_get_zeroconf(
 
 async def async_get_bluetooth(hass: HomeAssistant) -> list[BluetoothMatcher]:
     """Return cached list of bluetooth types."""
-    bluetooth = cast(list[BluetoothMatcher], BLUETOOTH.copy())
-
     integrations = await async_get_custom_components(hass)
+    bluetooth = cast(
+        list[BluetoothMatcher],
+        [matcher for matcher in BLUETOOTH if matcher["domain"] not in integrations],
+    )
+
     for integration in integrations.values():
         if not integration.bluetooth:
             continue
@@ -637,9 +644,12 @@ async def async_get_bluetooth(hass: HomeAssistant) -> list[BluetoothMatcher]:
 
 async def async_get_dhcp(hass: HomeAssistant) -> list[DHCPMatcher]:
     """Return cached list of dhcp types."""
-    dhcp = cast(list[DHCPMatcher], DHCP.copy())
-
     integrations = await async_get_custom_components(hass)
+    dhcp = cast(
+        list[DHCPMatcher],
+        [matcher for matcher in DHCP if matcher["domain"] not in integrations],
+    )
+
     for integration in integrations.values():
         if not integration.dhcp:
             continue
@@ -651,9 +661,12 @@ async def async_get_dhcp(hass: HomeAssistant) -> list[DHCPMatcher]:
 
 async def async_get_usb(hass: HomeAssistant) -> list[USBMatcher]:
     """Return cached list of usb types."""
-    usb = cast(list[USBMatcher], USB.copy())
-
     integrations = await async_get_custom_components(hass)
+    usb = cast(
+        list[USBMatcher],
+        [matcher for matcher in USB if matcher["domain"] not in integrations],
+    )
+
     for integration in integrations.values():
         if not integration.usb:
             continue
@@ -689,14 +702,15 @@ async def async_get_homekit(
     hass: HomeAssistant,
 ) -> dict[str, HomeKitDiscoveredIntegration]:
     """Return cached list of homekit models."""
+    integrations = await async_get_custom_components(hass)
     homekit: dict[str, HomeKitDiscoveredIntegration] = {
         model: HomeKitDiscoveredIntegration(
             cast(str, details["domain"]), cast(bool, details["always_discover"])
         )
         for model, details in HOMEKIT.items()
+        if details["domain"] not in integrations
     }
 
-    integrations = await async_get_custom_components(hass)
     for integration in integrations.values():
         if (
             not integration.homekit
@@ -739,9 +753,13 @@ async def async_get_lorawan(
 async def async_get_ssdp(hass: HomeAssistant) -> dict[str, list[dict[str, str]]]:
     """Return cached list of ssdp mappings."""
 
-    ssdp: dict[str, list[dict[str, str]]] = SSDP.copy()
-
     integrations = await async_get_custom_components(hass)
+    ssdp: dict[str, list[dict[str, str]]] = {
+        domain: matchers
+        for domain, matchers in SSDP.items()
+        if domain not in integrations
+    }
+
     for integration in integrations.values():
         if not integration.ssdp:
             continue
@@ -754,9 +772,11 @@ async def async_get_ssdp(hass: HomeAssistant) -> dict[str, list[dict[str, str]]]
 async def async_get_mqtt(hass: HomeAssistant) -> dict[str, list[str]]:
     """Return cached list of MQTT mappings."""
 
-    mqtt: dict[str, list[str]] = MQTT.copy()
-
     integrations = await async_get_custom_components(hass)
+    mqtt: dict[str, list[str]] = {
+        domain: topics for domain, topics in MQTT.items() if domain not in integrations
+    }
+
     for integration in integrations.values():
         if not integration.mqtt:
             continue
