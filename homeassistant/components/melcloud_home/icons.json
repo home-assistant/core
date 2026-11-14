@@ -48,26 +48,26 @@
               "speed_5": "mdi:numeric-5"
             }
           },
+          "swing_horizontal_mode": {
+            "state": {
+              "auto": "mdi:refresh-auto",
+              "centre": "mdi:minus",
+              "left": "mdi:arrow-left-bold",
+              "left_centre": "mdi:arrow-left",
+              "right": "mdi:arrow-right-bold",
+              "right_centre": "mdi:arrow-right",
+              "swing": "mdi:swap-horizontal"
+            }
+          },
           "swing_mode": {
             "state": {
               "auto": "mdi:refresh-auto",
-              "swing": "mdi:swap-vertical",
               "position_1": "mdi:arrow-top-right",
               "position_2": "mdi:arrow-right",
               "position_3": "mdi:arrow-bottom-right",
               "position_4": "mdi:arrow-down",
-              "position_5": "mdi:arrow-down-bold"
-            }
-          },
-          "swing_horizontal_mode": {
-            "state": {
-              "auto": "mdi:refresh-auto",
-              "swing": "mdi:swap-horizontal",
-              "left": "mdi:arrow-left-bold",
-              "left_centre": "mdi:arrow-left",
-              "centre": "mdi:minus",
-              "right_centre": "mdi:arrow-right",
-              "right": "mdi:arrow-right-bold"
+              "position_5": "mdi:arrow-down-bold",
+              "swing": "mdi:swap-vertical"
             }
           }
         }
