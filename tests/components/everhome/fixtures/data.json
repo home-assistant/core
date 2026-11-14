@@ -1,0 +1,11 @@
+{
+  "power": 594.54,
+  "powerPhase1": 360.57,
+  "powerPhase2": 101.54,
+  "powerPhase3": 132.42,
+  "powerAvg": 606,
+  "energyCounterIn": 77498562.3864,
+  "rssi": -71,
+  "serial": "abcdef123456",
+  "firmwareVersion": "1.0.0"
+}
