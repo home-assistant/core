@@ -4,7 +4,11 @@ from unittest.mock import AsyncMock
 
 from aionut import NUTError
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, async_get_device_automations
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_get_device_automation_capabilities,
+    async_get_device_automations,
+)
 from pytest_unordered import unordered
 
 from homeassistant.components import automation, device_automation
@@ -208,11 +212,11 @@ async def test_action(hass: HomeAssistant, device_registry: dr.DeviceRegistry) -
 
     hass.bus.async_fire("test_some_event")
     await hass.async_block_till_done()
-    run_command.assert_called_with("someUps", "beeper.enable")
+    run_command.assert_called_with("someUps", "beeper.enable", None)
 
     hass.bus.async_fire("test_another_event")
     await hass.async_block_till_done()
-    run_command.assert_called_with("someUps", "beeper.disable")
+    run_command.assert_called_with("someUps", "beeper.disable", None)
 
 
 async def test_run_command_exception(
@@ -333,3 +337,74 @@ async def test_action_exception_device_invalid(
             {},
             None,
         )
+
+
+@pytest.mark.parametrize(
+    ("action_extra", "expected_param"),
+    [
+        pytest.param({}, None, id="no_value"),
+        pytest.param({"value": "30"}, "30", id="string_value"),
+        pytest.param({"value": 30}, "30", id="numeric_value"),
+    ],
+)
+async def test_action_with_value(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    action_extra: dict[str, str | int],
+    expected_param: str | None,
+) -> None:
+    """Test the optional value is passed to the command only when set."""
+    run_command = AsyncMock()
+    await async_init_integration(
+        hass,
+        list_ups={"someUps": "Some UPS"},
+        list_vars={"ups.status": "OL"},
+        list_commands_return_value={"shutdown.return": None},
+        run_command=run_command,
+    )
+    device_entry = next(device for device in device_registry.devices)
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {"platform": "event", "event_type": "test_some_event"},
+                "action": {
+                    "domain": DOMAIN,
+                    "device_id": device_entry.id,
+                    "type": "shutdown_return",
+                    **action_extra,
+                },
+            }
+        },
+    )
+
+    hass.bus.async_fire("test_some_event")
+    await hass.async_block_till_done()
+    run_command.assert_called_once_with("someUps", "shutdown.return", expected_param)
+
+
+async def test_get_action_capabilities(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test actions expose an optional value field."""
+    await async_init_integration(
+        hass,
+        list_vars={"ups.status": "OL"},
+        list_commands_return_value={"shutdown.return": None},
+    )
+    device_entry = next(device for device in device_registry.devices)
+    actions = await async_get_device_automations(
+        hass, DeviceAutomationType.ACTION, device_entry.id
+    )
+
+    capabilities = await async_get_device_automation_capabilities(
+        hass, DeviceAutomationType.ACTION, actions[0]
+    )
+
+    assert capabilities == {
+        "extra_fields": [
+            {"name": "value", "required": False, "optional": True, "type": "string"}
+        ]
+    }
