@@ -4,7 +4,6 @@ from collections.abc import Iterator
 from typing import TYPE_CHECKING, cast
 
 import anthropic
-from anthropic.resources.messages.messages import DEPRECATED_MODELS
 import probatio
 
 from homeassistant.components.repairs import RepairsFlow, RepairsFlowResult
@@ -91,17 +90,14 @@ class ModelDeprecatedRepairFlow(RepairsFlow):
             model
             for model in self._model_list_cache[entry.entry_id]
             if model.lifecycle == "active"
-            and model_alias(model.id) not in DEPRECATED_MODELS
-            and model.id not in DEPRECATED_MODELS
         ]
         model_list: list[SelectOptionDict] = [
-            {"label": model.display_name, "value": model_alias(model.id)}
-            for model in active_models
+            {"label": model.display_name, "value": model.id} for model in active_models
         ]
 
         suggested_model = next(
             (
-                model_alias(model.id)
+                model.id
                 for model in active_models
                 if model_info.line is not None and model.line == model_info.line
             ),
@@ -206,29 +202,23 @@ class ModelDeprecatedRepairFlow(RepairsFlow):
                 translation_domain=DOMAIN, translation_key="subentry_not_found"
             )
 
+        model_id = user_input[CONF_CHAT_MODEL]
         updated_data = {
             **subentry.data,
-            CONF_CHAT_MODEL: user_input[CONF_CHAT_MODEL],
+            CONF_CHAT_MODEL: model_id,
         }
-        alias = model_alias(user_input[CONF_CHAT_MODEL])
-        model_info = next(
-            (
-                model
-                for model in (self._model_list_cache or {}).get(entry.entry_id, [])
-                if model_alias(model.id) == alias
-            ),
-            None,
-        )
+        models = (self._model_list_cache or {}).get(entry.entry_id, [])
+        model_info = next((model for model in models if model.id == model_id), None)
+        if model_info is None:
+            alias = model_alias(model_id)
+            model_info = next(
+                (model for model in models if model_alias(model.id) == alias), None
+            )
         if model_info is None:
             model_info = await entry.runtime_data.client.models.retrieve(
-                user_input[CONF_CHAT_MODEL], timeout=10.0
+                model_id, timeout=10.0
             )
-        if (
-            model_info.lifecycle != "active"
-            or user_input[CONF_CHAT_MODEL] in DEPRECATED_MODELS
-            or model_info.id in DEPRECATED_MODELS
-            or model_alias(model_info.id) in DEPRECATED_MODELS
-        ):
+        if model_info.lifecycle != "active":
             return False
         reconcile_model_options(updated_data, model_info)
 
