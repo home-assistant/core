@@ -425,6 +425,12 @@ async def test_forecast_service_partial_dayparts(
     """Test daily and twice-daily forecasts when dayparts or optional values are omitted."""
     daily = mock_google_weather_api.async_get_daily_forecast.return_value
     day = daily.forecast_days[0]
+    mixed_qpf_day = deepcopy(day)
+    assert mixed_qpf_day.daytime_forecast is not None
+    assert mixed_qpf_day.nighttime_forecast is not None
+    mixed_qpf_day.daytime_forecast.precipitation.qpf.quantity = 0.0
+    mixed_qpf_day.nighttime_forecast.precipitation.qpf.quantity = None
+
     day.daytime_forecast = None
     nighttime = day.nighttime_forecast
     assert nighttime is not None
@@ -433,7 +439,7 @@ async def test_forecast_service_partial_dayparts(
 
     empty_day = deepcopy(day)
     empty_day.nighttime_forecast = None
-    daily.forecast_days.append(empty_day)
+    daily.forecast_days.extend([empty_day, mixed_qpf_day])
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
@@ -500,6 +506,21 @@ async def test_supported_features_updated_on_response(
     freezer.tick(timedelta(hours=1) + timedelta(seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
+
+    # Daily forecasts are only polled when subscribed or fetched on demand.
+    assert mock_regional_weather_api.async_get_daily_forecast.call_count == 1
+
+    await hass.services.async_call(
+        WEATHER_DOMAIN,
+        WeatherService.GET_FORECASTS,
+        {
+            "entity_id": entity_id,
+            "type": "daily",
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert mock_regional_weather_api.async_get_daily_forecast.call_count == 2
 
     expected_updated = expected_initial | WeatherEntityFeature.FORECAST_TWICE_DAILY
     state = hass.states.get(entity_id)

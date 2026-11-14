@@ -3,7 +3,6 @@
 from typing import Any, override
 
 from google_weather_api import (
-    DailyForecastResponse,
     GoogleWeatherApiError,
     HourlyForecastResponse,
     PrecipitationSegment,
@@ -308,16 +307,6 @@ class GoogleWeatherEntity(
         self._latitude: float = subentry.data[CONF_LATITUDE]
         self._longitude: float = subentry.data[CONF_LONGITUDE]
 
-    @override
-    async def async_added_to_hass(self) -> None:
-        """When entity is added to hass."""
-        await super().async_added_to_hass()
-        self.async_on_remove(
-            self._daily_coordinator.async_add_listener(
-                self._handle_daily_coordinator_update
-            )
-        )
-
     @callback
     def _update_supported_features(self) -> bool:
         """Update supported features from the daily forecast response."""
@@ -335,8 +324,8 @@ class GoogleWeatherEntity(
         return True
 
     @callback
-    def _handle_daily_coordinator_update(self) -> None:
-        """Handle updated data from the daily forecast coordinator."""
+    def _refresh_supported_features(self) -> None:
+        """Refresh supported features and write state if they changed."""
         if self._update_supported_features():
             self.async_write_ha_state()
 
@@ -471,10 +460,8 @@ class GoogleWeatherEntity(
     @override
     def _async_forecast_daily(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
-        coordinator = self.forecast_coordinators["daily"]
-        assert coordinator
-        daily_data = coordinator.data
-        assert isinstance(daily_data, DailyForecastResponse)
+        self._refresh_supported_features()
+        daily_data = self._daily_coordinator.data
         forecasts: list[Forecast] = []
         for item in daily_data.forecast_days:
             parts = [
@@ -516,7 +503,7 @@ class GoogleWeatherEntity(
                     ),
                     ATTR_FORECAST_CLOUD_COVERAGE: primary.cloud_cover,
                     ATTR_FORECAST_NATIVE_PRECIPITATION: (
-                        sum(quantities) if quantities else None
+                        sum(quantities) if len(quantities) == len(parts) else None
                     ),
                     ATTR_FORECAST_NATIVE_TEMP: item.max_temperature.degrees,
                     ATTR_FORECAST_NATIVE_TEMP_LOW: item.min_temperature.degrees,
@@ -574,10 +561,8 @@ class GoogleWeatherEntity(
     @override
     def _async_forecast_twice_daily(self) -> list[Forecast] | None:
         """Return the twice daily forecast in native units."""
-        coordinator = self.forecast_coordinators["twice_daily"]
-        assert coordinator
-        daily_data = coordinator.data
-        assert isinstance(daily_data, DailyForecastResponse)
+        self._refresh_supported_features()
+        daily_data = self._daily_coordinator.data
         forecasts: list[Forecast] = []
         for item in daily_data.forecast_days:
             for is_daytime, part, temp, apparent_temp in (
