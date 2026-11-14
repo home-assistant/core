@@ -2,10 +2,16 @@
 
 from collections.abc import Generator
 from dataclasses import replace
+from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 from systembridgeconnector.const import EventType
 from systembridgeconnector.exceptions import ConnectionClosedException
@@ -109,6 +115,47 @@ async def test_brightness_display_disconnected(
         )
         == 2
     )
+
+
+@pytest.mark.usefixtures("mock_version")
+async def test_brightness_removed_on_reconnect(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a display's brightness stays until it's still gone after reconnecting."""
+    mock_websocket_client.listen.side_effect = None
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_registry.async_update_entity(ENTITY_ID, name="Custom")
+    coordinator = mock_config_entry.runtime_data
+    await coordinator.async_handle_module(Module.DISPLAYS, [])
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == STATE_UNAVAILABLE
+
+    # System Bridge reconnects, here after a lost connection
+    freezer.tick(timedelta(minutes=2))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    await coordinator.async_handle_module(Module.DISPLAYS, [])
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID) is None
+    assert entity_registry.async_get(ENTITY_ID) is None
+
+    # It comes back with its settings when the display is plugged in again
+    await coordinator.async_handle_module(Module.DISPLAYS, FIXTURE_DISPLAYS)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID)
+    assert (entry := entity_registry.async_get(ENTITY_ID))
+    assert entry.name == "Custom"
 
 
 @pytest.mark.usefixtures("init_integration")

@@ -262,11 +262,12 @@ def async_remove_gone_entities(
     gets the same entity IDs and settings. Returns the keys removed.
     """
     coordinator = entry.runtime_data
-    system = coordinator.data.system
+    # The entry's unique ID is the system's UUID, which the system module
+    # can stop reporting after setup
     if TYPE_CHECKING:
-        assert system is not None
+        assert entry.unique_id is not None
     entity_registry = er.async_get(coordinator.hass)
-    prefix = f"{system.uuid}_"
+    prefix = f"{entry.unique_id}_"
     removed: set[str] = set()
     for registry_entry in er.async_entries_for_config_entry(
         entity_registry, entry.entry_id
@@ -275,6 +276,7 @@ def async_remove_gone_entities(
             registry_entry.domain == domain
             and registry_entry.translation_key is not None
             and registry_entry.translation_key.startswith(translation_key_prefixes)
+            and registry_entry.unique_id.startswith(prefix)
             and (key := registry_entry.unique_id.removeprefix(prefix))
             not in current_keys
         ):

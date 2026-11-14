@@ -801,6 +801,67 @@ async def test_sensor_removed_device_restored(
         assert entry.name == "Custom"
 
 
+@pytest.mark.usefixtures("mock_version", "entity_registry_enabled_by_default")
+async def test_sensor_removed_while_unloaded(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a GPU that went while unloaded is removed, and restored when it's back."""
+    mock_websocket_client.listen.side_effect = None
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = "sensor.hostname_name_usage"
+    entity_registry.async_update_entity(entity_id, name="Custom")
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_websocket_client.get_data.return_value = replace(
+        mock_websocket_client.get_data.return_value, gpus=[]
+    )
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get(entity_id) is None
+    assert entity_registry.async_get(entity_id) is None
+
+    coordinator = mock_config_entry.runtime_data
+    await coordinator.async_handle_module(Module.GPUS, FIXTURE_GPUS)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id)
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry.name == "Custom"
+
+
+@pytest.mark.usefixtures("mock_version")
+async def test_sensor_removed_without_system_data(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test gone GPUs are still removed once the system module has no data."""
+    mock_websocket_client.listen.side_effect = None
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = mock_config_entry.runtime_data
+    await coordinator.async_handle_module(Module.SYSTEM, None)
+    await coordinator.async_handle_module(Module.GPUS, [])
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get("sensor.hostname_name_usage") is None
+
+
 @pytest.mark.usefixtures("mock_version")
 async def test_sensor_display_removed_on_reconnect(
     hass: HomeAssistant,
