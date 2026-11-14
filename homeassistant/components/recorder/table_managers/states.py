@@ -17,6 +17,7 @@ class StatesManager:
     def __init__(self) -> None:
         """Initialize the states manager for linking old_state_id."""
         self._pending: dict[str, States] = {}
+        self._pending_chain_lengths: dict[str, int] = {}
         self._last_committed_id: dict[str, int] = {}
         self._last_reported: dict[int, float] = {}
         self._oldest_ts: float | None = None
@@ -47,8 +48,8 @@ class StatesManager:
         """
         return self._last_committed_id.pop(entity_id, None)
 
-    def add_pending(self, entity_id: str, state: States) -> None:
-        """Add a pending state.
+    def add_pending(self, entity_id: str, state: States) -> int:
+        """Add a pending state and return its uncommitted chain length.
 
         Pending states are states that are in the session but not yet committed.
 
@@ -56,8 +57,13 @@ class StatesManager:
         recorder thread.
         """
         self._pending[entity_id] = state
+        chain_length = (
+            self._pending_chain_lengths[entity_id] + 1 if state.old_state else 1
+        )
+        self._pending_chain_lengths[entity_id] = chain_length
         if self._oldest_ts is None:
             self._oldest_ts = state.last_updated_ts
+        return chain_length
 
     def update_pending_last_reported(
         self, state_id: int, last_reported_timestamp: float
@@ -78,6 +84,7 @@ class StatesManager:
         for entity_id, db_states in self._pending.items():
             self._last_committed_id[entity_id] = db_states.state_id
         self._pending.clear()
+        self._pending_chain_lengths.clear()
         self._last_reported.clear()
 
     def reset(self) -> None:
@@ -88,6 +95,7 @@ class StatesManager:
         """
         self._last_committed_id.clear()
         self._pending.clear()
+        self._pending_chain_lengths.clear()
         # _oldest_ts is a database aggregate, not session state.
 
     def load_from_db(self, session: Session) -> None:
