@@ -1,11 +1,19 @@
 """Support for restoring entity states on startup."""
 
 from abc import ABC, abstractmethod
+import asyncio
+from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
-from typing import Any, Self, cast, override
+import math
+from typing import Any, NamedTuple, Self, cast, override
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, EntityStateAttribute
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_FINAL_WRITE,
+    EVENT_HOMEASSISTANT_STOP,
+    EntityStateAttribute,
+)
 from homeassistant.core import Event, HomeAssistant, State, callback, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError, UnsupportedStorageVersionError
 from homeassistant.util import dt as dt_util
@@ -15,7 +23,7 @@ from homeassistant.util.json import json_loads
 from . import entity_registry as er, start
 from .entity import Entity
 from .event import async_track_time_interval
-from .json import JSONEncoder
+from .json import JSONEncoder, cached_json_bytes, json_fragment
 from .singleton import singleton
 from .storage import Store
 
@@ -105,11 +113,14 @@ class StoredState:
 
 
 async def async_load(hass: HomeAssistant, *, load_empty: bool = False) -> None:
-    """Load the restore state task."""
+    """Load the restore state and the restore coordinator store."""
     data = async_get(hass)
     if load_empty:
         data.set_load_empty()
-    await data.async_setup()
+    await asyncio.gather(
+        data.async_setup(),
+        _async_get_restore_store_manager(hass).async_load(load_empty=load_empty),
+    )
 
 
 @callback
@@ -496,3 +507,355 @@ class RestoreEntity(Entity):
         Implemented by platform classes.
         """
         return None
+
+
+RESTORE_STORAGE_KEY = "core.restore_state_update_coordinator"
+RESTORE_STORAGE_VERSION = 1
+RESTORE_SCOPE_CONFIG_ENTRIES = "config_entries"
+RESTORE_SCOPE_DOMAINS = "domains"
+
+# How often the last seen time of data owned by a live coordinator is refreshed
+RESTORE_LAST_SEEN_REFRESH = timedelta(days=1)
+
+type RestoreScope = tuple[str, str]
+type _StoreKey = tuple[RestoreScope, str]
+
+
+class _StoredData(NamedTuple):
+    """Data of a coordinator, JSON encoded, with the version it was stored under.
+
+    last_seen is the timestamp a live coordinator last owned the data.
+    """
+
+    version: int
+    data: bytes
+    last_seen: float
+
+
+@dataclass(slots=True)
+class _Registration:
+    """A live coordinator owning a storage key."""
+
+    owner: object
+    version: int
+    data_func: Callable[[], Any]
+    serialize_failed: bool = False
+
+
+def _check_json_types(data: Any) -> None:
+    """Raise TypeError unless data is restored unchanged from JSON.
+
+    Our JSON encoder silently converts many types, e.g. tuples, datetimes,
+    dataclasses and non-string keys, which then restore as a different type.
+    """
+    data_type = type(data)
+    if data is None or data_type in (str, int, bool):
+        return
+    if data_type is float:
+        if not math.isfinite(data):
+            raise TypeError(f"{data!r} is not a finite float")
+        return
+    if data_type is list:
+        for item in data:
+            _check_json_types(item)
+        return
+    if data_type is dict:
+        for key, value in data.items():
+            if type(key) is not str:
+                raise TypeError(f"Key {key!r} is not a str")
+            _check_json_types(value)
+        return
+    raise TypeError(f"{data!r} is not a JSON type")
+
+
+class _RestoreStoreManager:
+    """Manage the single store holding the data of all restore coordinators.
+
+    The store keeps config entry and domain scopes in separate top-level buckets,
+    each mapping a config entry id or domain to a map of storage key to the
+    version and data of a coordinator.
+    """
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize the store manager."""
+        self._hass = hass
+        # Saves are handed a fresh snapshot of immutable JSON fragments
+        self._store: Store[dict[str, dict[str, dict[str, dict[str, Any]]]]] = Store(
+            hass,
+            RESTORE_STORAGE_VERSION,
+            RESTORE_STORAGE_KEY,
+            serialize_in_event_loop=False,
+        )
+        self._data: dict[str, dict[str, dict[str, _StoredData]]] = {
+            RESTORE_SCOPE_CONFIG_ENTRIES: {},
+            RESTORE_SCOPE_DOMAINS: {},
+        }
+        self._registrations: dict[_StoreKey, _Registration] = {}
+        # Coordinators whose data changed since it was last serialized
+        self._dirty: set[_StoreKey] = set()
+        # Whether _data differs from what was last saved
+        self._changed = False
+        # Whether the store exists on disk or a write to it was attempted
+        self._store_written = False
+
+    async def async_load(self, *, load_empty: bool = False) -> None:
+        """Load the store and set up saving it.
+
+        Optionally set the store to load empty and become read-only.
+        """
+        if load_empty:
+            self._store.set_load_empty()
+        try:
+            stored = await self._store.async_load()
+        except UnsupportedStorageVersionError:
+            raise
+        except HomeAssistantError as exc:
+            _LOGGER.error("Error loading restore coordinator data", exc_info=exc)
+            stored = None
+        if stored is not None:
+            self._store_written = True
+            self._data = {
+                bucket: {
+                    scope_id: {
+                        storage_key: _StoredData(
+                            item["version"],
+                            cached_json_bytes(item["data"]),
+                            item["last_seen"],
+                        )
+                        for storage_key, item in scope_data.items()
+                    }
+                    for scope_id, scope_data in scopes.items()
+                }
+                for bucket, scopes in stored.items()
+            }
+
+        cancel_interval = async_track_time_interval(
+            self._hass,
+            self.async_dump,
+            STATE_DUMP_INTERVAL,
+            name="Restore coordinator dump",
+        )
+
+        async def _async_dump_at_final_write(_: Event) -> None:
+            cancel_interval()
+            # Write even if unchanged, to retry a failed write, but never create
+            # the store when no coordinator ever used it
+            if self._store_written:
+                self._changed = True
+            await self.async_dump()
+
+        # Final write rather than stop, so data updated while stopping is saved
+        self._hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_FINAL_WRITE, _async_dump_at_final_write
+        )
+
+    @callback
+    def async_register(
+        self,
+        owner: object,
+        scope: RestoreScope,
+        storage_key: str,
+        version: int,
+        data_func: Callable[[], Any],
+    ) -> None:
+        """Register a coordinator as the owner of a storage key.
+
+        data_func returns the data to store, and is called when saving.
+        Raises ValueError if another live coordinator already uses the same
+        scope and storage_key.
+        """
+        key = (scope, storage_key)
+        if key in self._registrations:
+            raise ValueError(
+                f"Storage key {storage_key!r} is already in use for {scope[1]!r}"
+            )
+        self._registrations[key] = _Registration(owner, version, data_func)
+
+    @callback
+    def async_unregister(
+        self, owner: object, scope: RestoreScope, storage_key: str
+    ) -> None:
+        """Unregister a coordinator's storage key, freeing it for reuse."""
+        if not self._is_owner(owner, scope, storage_key):
+            return
+        key = (scope, storage_key)
+        # A coordinator replacing this one, e.g. on reload, restores the latest data
+        if key in self._dirty:
+            self._dirty.remove(key)
+            self._async_serialize(key)
+        del self._registrations[key]
+
+    @callback
+    def async_get(
+        self, scope: RestoreScope, storage_key: str
+    ) -> tuple[Any, int] | None:
+        """Return the data and version stored for a coordinator, or None."""
+        bucket, scope_id = scope
+        if (stored := self._data[bucket].get(scope_id, {}).get(storage_key)) is None:
+            return None
+        return json_loads(stored.data), stored.version
+
+    @callback
+    def async_schedule_save(
+        self, owner: object, scope: RestoreScope, storage_key: str
+    ) -> None:
+        """Schedule saving the data of a coordinator with the next dump."""
+        if self._is_owner(owner, scope, storage_key):
+            self._dirty.add((scope, storage_key))
+
+    @callback
+    def async_remove_data(
+        self, owner: object, scope: RestoreScope, storage_key: str
+    ) -> None:
+        """Remove the data stored for a coordinator."""
+        if not self._is_owner(owner, scope, storage_key):
+            return
+        self._dirty.discard((scope, storage_key))
+        bucket, scope_id = scope
+        scope_data = self._data[bucket].get(scope_id, {})
+        if storage_key not in scope_data:
+            return
+        del scope_data[storage_key]
+        if not scope_data:
+            del self._data[bucket][scope_id]
+        self._async_schedule_dump()
+
+    @callback
+    def async_clear_config_entry(self, entry_id: str) -> None:
+        """Remove all data stored for a config entry and reject its later saves."""
+        scope = (RESTORE_SCOPE_CONFIG_ENTRIES, entry_id)
+        self._registrations = {
+            key: registration
+            for key, registration in self._registrations.items()
+            if key[0] != scope
+        }
+        self._dirty = {key for key in self._dirty if key[0] != scope}
+        if self._data[RESTORE_SCOPE_CONFIG_ENTRIES].pop(entry_id, None) is None:
+            return
+        self._async_schedule_dump()
+
+    async def async_dump(self, *_: Any) -> None:
+        """Save the data of the coordinators that changed since the last dump.
+
+        Data no live coordinator owned for STATE_EXPIRATION is removed, as nothing
+        else removes it for e.g. a removed YAML integration or a renamed key.
+        """
+        dirty = self._dirty
+        self._dirty = set()
+        for key in dirty:
+            self._async_serialize(key)
+        self._async_expire()
+        if not self._changed:
+            return
+        self._changed = False
+        self._store_written = True
+        _LOGGER.debug("Dumping restore coordinator data")
+        await self._store.async_save(self._data_to_save())
+
+    def _is_owner(self, owner: object, scope: RestoreScope, storage_key: str) -> bool:
+        """Return if the coordinator currently owns the storage key.
+
+        A shut down coordinator, or one whose config entry was removed after a
+        failed unload, no longer owns its key and must not touch the data.
+        """
+        registration = self._registrations.get((scope, storage_key))
+        return registration is not None and registration.owner is owner
+
+    @callback
+    def _async_serialize(self, key: _StoreKey) -> None:
+        """Serialize the data of a coordinator, keeping its last good data on error."""
+        registration = self._registrations[key]
+        (bucket, scope_id), storage_key = key
+        try:
+            data = registration.data_func()
+            _check_json_types(data)
+            encoded = cached_json_bytes(data)
+        except Exception:
+            # Log once until it succeeds, as a broken coordinator fails every dump
+            if not registration.serialize_failed:
+                registration.serialize_failed = True
+                _LOGGER.exception(
+                    "Error serializing restore coordinator data for %s in %s",
+                    storage_key,
+                    scope_id,
+                )
+            return
+        registration.serialize_failed = False
+        scope_data = self._data[bucket].setdefault(scope_id, {})
+        stored = scope_data.get(storage_key)
+        if (
+            stored is None
+            or stored.version != registration.version
+            or stored.data != encoded
+        ):
+            scope_data[storage_key] = _StoredData(
+                registration.version, encoded, dt_util.utcnow().timestamp()
+            )
+            self._changed = True
+
+    @callback
+    def _async_expire(self) -> None:
+        """Refresh the last seen time of owned data and remove expired data."""
+        now = dt_util.utcnow().timestamp()
+        refresh_before = now - RESTORE_LAST_SEEN_REFRESH.total_seconds()
+        expire_before = now - STATE_EXPIRATION.total_seconds()
+        for bucket, scopes in self._data.items():
+            for scope_id, scope_data in list(scopes.items()):
+                for storage_key, stored in list(scope_data.items()):
+                    if ((bucket, scope_id), storage_key) in self._registrations:
+                        if stored.last_seen < refresh_before:
+                            scope_data[storage_key] = stored._replace(last_seen=now)
+                            self._changed = True
+                    elif stored.last_seen < expire_before:
+                        del scope_data[storage_key]
+                        self._changed = True
+                if not scope_data:
+                    del scopes[scope_id]
+
+    @callback
+    def _async_schedule_dump(self) -> None:
+        """Dump soon, so removed data does not outlive a crash."""
+        self._changed = True
+        self._hass.async_create_task_internal(
+            self.async_dump(), "Restore coordinator dump"
+        )
+
+    @callback
+    def _data_to_save(self) -> dict[str, dict[str, dict[str, dict[str, Any]]]]:
+        """Return the data to save."""
+        return {
+            bucket: {
+                scope_id: {
+                    storage_key: {
+                        "version": stored.version,
+                        "data": json_fragment(stored.data),
+                        "last_seen": stored.last_seen,
+                    }
+                    for storage_key, stored in scope_data.items()
+                }
+                for scope_id, scope_data in scopes.items()
+            }
+            for bucket, scopes in self._data.items()
+        }
+
+
+DATA_RESTORE_STORE: HassKey[_RestoreStoreManager] = HassKey(
+    "restore_state_update_coordinator"
+)
+
+
+@callback
+@singleton(DATA_RESTORE_STORE)
+def _async_get_restore_store_manager(hass: HomeAssistant) -> _RestoreStoreManager:
+    """Get the manager of the restore coordinator store."""
+    return _RestoreStoreManager(hass)
+
+
+@callback
+def async_clear_config_entry(hass: HomeAssistant, entry_id: str) -> None:
+    """Remove all restore coordinator data stored for a config entry.
+
+    Called by the config entry manager when an entry is removed, so stored data is
+    cleaned up even for entries that were never set up, e.g. disabled ones.
+    """
+    _async_get_restore_store_manager(hass).async_clear_config_entry(entry_id)
