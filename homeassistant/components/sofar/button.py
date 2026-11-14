@@ -4,7 +4,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import override
 
-from sofar_modbus.modern.device import SofarInverter
+from sofar_modbus import SofarInverter
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import EntityCategory, Platform

@@ -16,7 +16,11 @@ from pysma.sensor import Sensors
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailed,
+    UpdateFailedUnreachable,
+)
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
@@ -83,10 +87,12 @@ class SMADataUpdateCoordinator(DataUpdateCoordinator[SMACoordinatorData]):
         """Update the used SMA sensors."""
         try:
             await self.sma.read(self._sensors)
-        except (
-            SmaReadException,
-            SmaConnectionException,
-        ) as err:
+        except SmaConnectionException as err:
+            raise UpdateFailedUnreachable(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from err
+        except SmaReadException as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",

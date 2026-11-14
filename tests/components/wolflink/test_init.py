@@ -1,6 +1,7 @@
 """Test the Wolf SmartSet Service."""
 
 from datetime import timedelta
+import logging
 from unittest.mock import MagicMock, patch
 
 import attr
@@ -497,23 +498,28 @@ async def test_update_skipped_when_device_offline(
 
 
 @pytest.mark.parametrize(
-    "side_effect",
+    ("online", "side_effect", "level"),
     [
-        RequestError("boom"),
-        FetchFailed("boom"),
-        InvalidAuth,
+        pytest.param(False, None, logging.INFO, id="offline"),
+        pytest.param(True, RequestError("boom"), logging.ERROR, id="request_error"),
+        pytest.param(True, FetchFailed("boom"), logging.ERROR, id="fetch_failed"),
+        pytest.param(True, InvalidAuth, logging.ERROR, id="invalid_auth"),
     ],
 )
 async def test_update_failure_modes(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
     mock_wolflink: MagicMock,
     mock_config_entry: MockConfigEntry,
-    side_effect: Exception,
+    online: bool,
+    side_effect: Exception | type[Exception] | None,
+    level: int,
 ) -> None:
-    """Test recoverable update errors mark entities as unavailable."""
+    """Test update errors mark entities as unavailable and log at the right level."""
     await setup_integration(hass, mock_config_entry)
 
+    mock_wolflink.fetch_system_state_list.return_value = online
     mock_wolflink.fetch_value.side_effect = side_effect
     freezer.tick(timedelta(seconds=120))
     async_fire_time_changed(hass)
@@ -523,6 +529,12 @@ async def test_update_failure_modes(
         hass.states.get("sensor.test_device_energy_parameter").state
         == STATE_UNAVAILABLE
     )
+    assert [
+        record.levelno
+        for record in caplog.records
+        if record.name == "homeassistant.components.wolflink.coordinator"
+        and record.levelno > logging.DEBUG
+    ] == [level]
 
 
 async def test_parameter_read_error_triggers_refetch(

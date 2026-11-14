@@ -10,7 +10,7 @@ import pytest
 from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.litterrobot.coordinator import UPDATE_INTERVAL
-from homeassistant.components.litterrobot.services import SERVICE_SET_SLEEP_MODE
+from homeassistant.components.litterrobot.services import LitterRobotService
 from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
     SERVICE_START,
@@ -42,7 +42,7 @@ async def test_vacuum(
     assert ent_reg_entry.unique_id == VACUUM_UNIQUE_ID
 
     await setup_integration(hass, mock_account, VACUUM_DOMAIN)
-    assert hass.services.has_service(DOMAIN, SERVICE_SET_SLEEP_MODE)
+    assert hass.services.has_service(DOMAIN, LitterRobotService.SET_SLEEP_MODE)
 
     vacuum = hass.states.get(VACUUM_ENTITY_ID)
     assert vacuum
@@ -111,19 +111,19 @@ async def test_activities(
         (VACUUM_DOMAIN, SERVICE_STOP, "set_power_status", None),
         (
             DOMAIN,
-            SERVICE_SET_SLEEP_MODE,
+            LitterRobotService.SET_SLEEP_MODE,
             "set_sleep_mode",
             {"data": {"enabled": True, "start_time": "22:30"}},
         ),
         (
             DOMAIN,
-            SERVICE_SET_SLEEP_MODE,
+            LitterRobotService.SET_SLEEP_MODE,
             "set_sleep_mode",
             {"data": {"enabled": True}},
         ),
         (
             DOMAIN,
-            SERVICE_SET_SLEEP_MODE,
+            LitterRobotService.SET_SLEEP_MODE,
             "set_sleep_mode",
             {"data": {"enabled": False}},
         ),
