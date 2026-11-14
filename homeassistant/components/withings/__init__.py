@@ -41,7 +41,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
@@ -49,6 +49,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.start import async_at_started
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DEFAULT_TITLE, DOMAIN, LOGGER
 from .coordinator import (
@@ -61,8 +62,10 @@ from .coordinator import (
     WithingsSleepDataUpdateCoordinator,
     WithingsWorkoutDataUpdateCoordinator,
 )
+from .services import async_setup_services
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.CALENDAR, Platform.SENSOR]
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 SUBSCRIBE_DELAY = timedelta(seconds=5)
 UNSUBSCRIBE_DELAY = timedelta(seconds=1)
@@ -97,6 +100,12 @@ class WithingsData:
             self.workout_coordinator,
             self.device_coordinator,
         }
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Register Withings actions."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: WithingsConfigEntry) -> None:
