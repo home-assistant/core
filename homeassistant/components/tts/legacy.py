@@ -38,6 +38,7 @@ from .const import (
     ATTR_LANGUAGE,
     ATTR_MESSAGE,
     ATTR_OPTIONS,
+    ATTR_PREGENERATE,
     CONF_CACHE,
     CONF_CACHE_DIR,
     CONF_FIELDS,
@@ -86,6 +87,7 @@ SCHEMA_SERVICE_SAY = probatio.Schema(
     {
         probatio.Required(ATTR_MESSAGE): cv.string,
         probatio.Optional(ATTR_CACHE): cv.boolean,
+        probatio.Optional(ATTR_PREGENERATE): cv.boolean,
         probatio.Required(ATTR_ENTITY_ID): cv.comp_entity_ids,
         probatio.Optional(ATTR_LANGUAGE): cv.string,
         probatio.Optional(ATTR_OPTIONS): dict,
@@ -160,6 +162,7 @@ async def async_setup_legacy(
                         language=service.data.get(ATTR_LANGUAGE),
                         options=service.data.get(ATTR_OPTIONS),
                         cache=service.data.get(ATTR_CACHE),
+                        pregenerate=service.data.get(ATTR_PREGENERATE, False),
                     ),
                     MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.MUSIC,
                     MediaPlayerServiceArgument.ANNOUNCE: True,

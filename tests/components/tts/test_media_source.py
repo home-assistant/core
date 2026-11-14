@@ -1,7 +1,9 @@
 """Tests for TTS media source."""
 
+import asyncio
 from http import HTTPStatus
 from pathlib import Path
+from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
@@ -9,6 +11,7 @@ from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import BrowseError
+from homeassistant.components.tts import TtsAudioType
 from homeassistant.components.tts.media_source import (
     generate_media_source_id,
     parse_media_source_id,
@@ -31,6 +34,34 @@ class MSEntity(MockTTSEntity):
     """Test speech API entity."""
 
     get_tts_audio = MagicMock(return_value=("mp3", b""))
+
+
+class SlowMSEntity(MockTTSEntity):
+    """Test speech API entity that waits before returning audio."""
+
+    def __init__(self, lang: str) -> None:
+        """Initialize entity."""
+        super().__init__(lang)
+        self.started = asyncio.Event()
+        self.release = asyncio.Event()
+
+    async def async_get_tts_audio(
+        self, message: str, language: str, options: dict[str, Any]
+    ) -> TtsAudioType:
+        """Return audio once released."""
+        self.started.set()
+        await self.release.wait()
+        return ("mp3", b"slow audio")
+
+
+class FailingMSEntity(MockTTSEntity):
+    """Test speech API entity that fails to generate audio."""
+
+    async def async_get_tts_audio(
+        self, message: str, language: str, options: dict[str, Any]
+    ) -> TtsAudioType:
+        """Fail to generate audio."""
+        raise RuntimeError("Boom!")
 
 
 class MSProvider(MockTTSProvider):
@@ -339,6 +370,7 @@ async def test_generate_media_source_id_and_parse_media_source_id(
             "options": {"age": 5},
             "use_file_cache": True,
         },
+        "pregenerate": False,
     }
 
     kwargs = {
@@ -357,6 +389,7 @@ async def test_generate_media_source_id_and_parse_media_source_id(
             "options": {"age": [5, 6]},
             "use_file_cache": True,
         },
+        "pregenerate": False,
     }
 
     kwargs = {
@@ -375,4 +408,89 @@ async def test_generate_media_source_id_and_parse_media_source_id(
             "options": {"age": {"k1": [5, 6], "k2": "v2"}},
             "use_file_cache": True,
         },
+        "pregenerate": False,
     }
+
+
+@pytest.mark.parametrize(
+    ("setup", "result_engine"),
+    [
+        ("mock_setup", "test"),
+        ("mock_config_entry_setup", "tts.test"),
+    ],
+    indirect=["setup"],
+)
+async def test_generate_media_source_id_and_parse_pregenerate(
+    hass: HomeAssistant,
+    setup: str,
+    result_engine: str,
+) -> None:
+    """Test pregenerate round trips through the media source ID."""
+    media_source_id = generate_media_source_id(
+        hass, message="hello", language="en_US", pregenerate=True
+    )
+    assert "pregenerate=true" in media_source_id
+    assert parse_media_source_id(media_source_id) == {
+        "message": "hello",
+        "options": {
+            "engine": result_engine,
+            "language": "en_US",
+            "options": None,
+            "use_file_cache": None,
+        },
+        "pregenerate": True,
+    }
+
+
+@pytest.mark.parametrize(
+    ("cache", "expected_files"),
+    [
+        pytest.param("false", 0, id="memory_only"),
+        pytest.param("true", 1, id="file_cache"),
+    ],
+)
+async def test_resolving_pregenerate(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_tts_cache_dir: Path,
+    cache: str,
+    expected_files: int,
+) -> None:
+    """Test resolving waits until the audio has been fully generated."""
+    entity = SlowMSEntity(DEFAULT_LANG)
+    await mock_config_entry_setup(hass, entity)
+
+    media_id = (
+        "media-source://tts/tts.test?message=Hello%20World"
+        f"&cache={cache}&pregenerate=true"
+    )
+    resolve_task = hass.async_create_task(
+        media_source.async_resolve_media(hass, media_id, None)
+    )
+    await entity.started.wait()
+    # The media URL is only handed out once the audio is complete.
+    assert not resolve_task.done()
+
+    entity.release.set()
+    media = await resolve_task
+    assert media.url.startswith("/api/tts_proxy/")
+
+    client = await hass_client()
+    response = await client.get(media.url)
+    assert response.status == HTTPStatus.OK
+    assert await response.read() == b"slow audio"
+
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert len(list(mock_tts_cache_dir.iterdir())) == expected_files
+
+
+async def test_resolving_pregenerate_error(hass: HomeAssistant) -> None:
+    """Test resolving fails when the audio cannot be pregenerated."""
+    await mock_config_entry_setup(hass, FailingMSEntity(DEFAULT_LANG))
+
+    with pytest.raises(media_source.Unresolvable, match="Boom!"):
+        await media_source.async_resolve_media(
+            hass,
+            "media-source://tts/tts.test?message=Hello%20World&pregenerate=true",
+            None,
+        )

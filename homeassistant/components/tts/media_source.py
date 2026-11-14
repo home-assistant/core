@@ -36,6 +36,7 @@ def generate_media_source_id(
     language: str | None = None,
     options: dict | None = None,
     cache: bool | None = None,
+    pregenerate: bool = False,
 ) -> str:
     """Generate a media source ID for text-to-speech."""
     from . import async_resolve_engine  # noqa: PLC0415
@@ -56,6 +57,8 @@ def generate_media_source_id(
     }
     if cache is not None:
         params["cache"] = "true" if cache else "false"
+    if pregenerate:
+        params["pregenerate"] = "true"
     if language is not None:
         params["language"] = language
     params[URL_QUERY_TTS_OPTIONS] = json.dumps(options, separators=(",", ":"))
@@ -80,6 +83,7 @@ class ParsedMediaSourceId(TypedDict):
 
     options: MediaSourceOptions
     message: str
+    pregenerate: bool
 
 
 class ParsedMediaSourceStreamId(TypedDict):
@@ -107,7 +111,7 @@ def parse_media_source_id(
         options = {
             k: v
             for k, v in parsed.query.items()
-            if k not in ("message", "language", "cache")
+            if k not in ("message", "language", "cache", "pregenerate")
         }
     if "message" not in parsed.query:
         raise Unresolvable("No message specified.")
@@ -120,7 +124,11 @@ def parse_media_source_id(
     if "cache" in parsed.query:
         kwargs["use_file_cache"] = parsed.query["cache"] == "true"
 
-    return {"message": parsed.query["message"], "options": kwargs}
+    return {
+        "message": parsed.query["message"],
+        "options": kwargs,
+        "pregenerate": parsed.query.get("pregenerate") == "true",
+    }
 
 
 class TTSMediaSource(MediaSource):
@@ -137,6 +145,7 @@ class TTSMediaSource(MediaSource):
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media to a url."""
         manager = self.hass.data[DATA_TTS_MANAGER]
+        pregenerate = False
         try:
             parsed = parse_media_source_id(item.identifier)
             if "stream" in parsed:
@@ -146,6 +155,7 @@ class TTSMediaSource(MediaSource):
             else:
                 stream = manager.async_create_result_stream(**parsed["options"])
                 stream.async_set_message(parsed["message"])
+                pregenerate = parsed["pregenerate"]
         except Unresolvable:
             raise
         except HomeAssistantError as err:
@@ -153,6 +163,13 @@ class TTSMediaSource(MediaSource):
 
         if stream is None:
             raise Unresolvable("Stream not found")
+
+        if pregenerate:
+            # Media players may give up on slowly streamed long messages.
+            try:
+                await stream.async_wait_for_result()
+            except Exception as err:
+                raise Unresolvable(f"Error generating audio: {err}") from err
 
         return PlayMedia(
             stream.url, stream.content_type, path=stream.async_get_media_path()
