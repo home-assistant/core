@@ -105,6 +105,9 @@ DEVICE_FIXTURES: dict[str, list[tuple[str, str, str]]] = {
             "air-fryer-CS158-AF-detail-cooking.json",
         )
     ],
+    "Dual Air Fryer": [
+        ("post", "/cloud/v2/deviceManaged/bypassV2", "air-fryer-CAF-TF101S-detail.json")
+    ],
 }
 
 
