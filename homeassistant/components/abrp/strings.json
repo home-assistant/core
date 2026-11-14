@@ -41,6 +41,15 @@
       "battery_temperature": {
         "name": "Battery temperature"
       },
+      "battery_temperature_max": {
+        "name": "Battery temperature max"
+      },
+      "battery_temperature_min": {
+        "name": "Battery temperature min"
+      },
+      "cabin_temperature": {
+        "name": "Cabin temperature"
+      },
       "calibrated_ref_cons": {
         "name": "Calibrated ref cons"
       },
@@ -53,6 +62,21 @@
           "not_charging": "Not charging",
           "plugged_in": "Plugged in"
         }
+      },
+      "driving_state": {
+        "name": "Driving state",
+        "state": {
+          "drive": "Drive",
+          "neutral": "Neutral",
+          "park": "Park",
+          "reverse": "Reverse"
+        }
+      },
+      "external_temperature": {
+        "name": "External temperature"
+      },
+      "hvac_power": {
+        "name": "HVAC power"
       },
       "odometer": {
         "name": "Odometer"
