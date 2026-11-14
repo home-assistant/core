@@ -13,6 +13,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailedUnreachable,
 )
+
 from .const import (
     ATTR_PLAYERS_LIST,
     ATTR_RESOURCES_LIST,
