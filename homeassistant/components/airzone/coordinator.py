@@ -1,12 +1,13 @@
 """The Airzone integration."""
 
-from asyncio import timeout
+from asyncio import Lock, timeout
 from datetime import timedelta
 import logging
 from typing import Any, override
 
 from aioairzone.exceptions import AirzoneError
 from aioairzone.localapi import AirzoneLocalApi
+from aioairzone.mqtt import AirzoneMqttUpdate
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -34,6 +35,7 @@ class AirzoneUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     ) -> None:
         """Initialize."""
         self.airzone = airzone
+        self.airzone_lock = Lock()
 
         super().__init__(
             hass,
@@ -46,9 +48,18 @@ class AirzoneUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
-        async with timeout(AIOAIRZONE_DEVICE_TIMEOUT_SEC):
-            try:
-                await self.airzone.update()
-            except AirzoneError as error:
-                raise UpdateFailed(error) from error
+        async with self.airzone_lock:
+            async with timeout(AIOAIRZONE_DEVICE_TIMEOUT_SEC):
+                try:
+                    await self.airzone.update()
+                except AirzoneError as error:
+                    raise UpdateFailed(error) from error
+
             return self.airzone.data()
+
+    async def async_mqtt_update(self, update: AirzoneMqttUpdate) -> None:
+        """Update Airzone data from MQTT."""
+        async with self.airzone_lock:
+            await self.airzone.mqtt_update(update)
+            self.data = self.airzone.data()
+            self.async_update_listeners()
