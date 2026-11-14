@@ -68,8 +68,14 @@
     "hold_until_invalid_mode": {
       "message": "Honeywell cannot set a temporary hold while the system mode is {mode}"
     },
+    "hold_until_invalid_temperature": {
+      "message": "Honeywell temporary hold temperature {temperature} is not valid. Accepted range is {min_temp} to {max_temp}."
+    },
     "hold_until_invalid_time": {
       "message": "Honeywell temporary hold must end on a quarter hour"
+    },
+    "hold_until_temperature_mode": {
+      "message": "Honeywell cannot set a temporary hold temperature while the system mode is {mode}"
     },
     "no_devices_found": {
       "message": "No Honeywell devices found"
@@ -121,7 +127,7 @@
       "description": "Sets a temporary hold that ends at a given time.",
       "fields": {
         "temperature": {
-          "description": "Target temperature during the hold. If omitted, the current target temperature is kept.",
+          "description": "Target temperature during the hold. If omitted, the current target temperature is kept. Cannot be used while the system mode is auto.",
           "name": "Temperature"
         },
         "until": {

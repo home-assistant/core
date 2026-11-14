@@ -5,7 +5,6 @@ from enum import StrEnum
 import probatio
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
-from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, service
 
@@ -21,6 +20,7 @@ class HoneywellService(StrEnum):
 class HoneywellServiceArgument(StrEnum):
     """Store keys for Honeywell service arguments."""
 
+    TEMPERATURE = "temperature"
     UNTIL = "until"
 
 
@@ -34,7 +34,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
         entity_domain=CLIMATE_DOMAIN,
         schema={
             probatio.Required(HoneywellServiceArgument.UNTIL): cv.time,
-            probatio.Optional(ATTR_TEMPERATURE): probatio.Coerce(float),
+            probatio.Optional(HoneywellServiceArgument.TEMPERATURE): probatio.Coerce(
+                float
+            ),
         },
         func="async_set_hold_until",
     )
