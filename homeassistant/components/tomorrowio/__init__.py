@@ -30,6 +30,7 @@ from .const import (
     SUBENTRY_TYPE_LOCATION,
 )
 from .coordinator import TomorrowioConfigEntry, TomorrowioDataUpdateCoordinator
+from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
@@ -38,6 +39,7 @@ PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Tomorrow.io integration."""
     await async_migrate_integration(hass)
+    async_setup_services(hass)
     return True
 
 

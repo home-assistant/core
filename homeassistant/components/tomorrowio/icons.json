@@ -44,5 +44,10 @@
         "default": "mdi:weather-windy"
       }
     }
+  },
+  "services": {
+    "get_minute_forecast": {
+      "service": "mdi:weather-pouring"
+    }
   }
 }
