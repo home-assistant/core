@@ -345,6 +345,7 @@ class Stream:
         self._thread_quit = threading.Event()
         self._outputs: dict[str, StreamOutput] = {}
         self._fast_restart_once = False
+        self._stopping = False
         self._keyframe_converter = KeyFrameConverter(
             hass, stream_settings, dynamic_stream_settings
         )
@@ -442,6 +443,8 @@ class Stream:
                 # previous thread.
                 self._thread.join(timeout=0)
             self._thread_quit.clear()
+            self._fast_restart_once = False
+            self._stopping = False
             self._thread = threading.Thread(
                 name="stream_worker",
                 target=self._run_worker,
@@ -476,7 +479,20 @@ class Stream:
 
         stream_state = StreamState(self.hass, self.outputs, self._diagnostics)
         wait_timeout = 0
-        while not self._thread_quit.wait(timeout=wait_timeout):
+        while True:
+            if self._thread_quit.wait(timeout=wait_timeout):
+                # update_source() while waiting to retry asks for a restart
+                # with the new source, not for the worker to end
+                if not self._fast_restart_once:
+                    break
+                wait_timeout = 0
+                self._fast_restart_once = False
+                self._thread_quit.clear()
+                if self._stopping:
+                    break
+                # Back through wait(0), which catches a stop() that lands
+                # after the check above
+                continue
             start_time = time.time()
             self._set_state(True)
             self._diagnostics.set_value(
@@ -508,6 +524,10 @@ class Stream:
                     wait_timeout = 0
                     self._fast_restart_once = False
                     self._thread_quit.clear()
+                    # _stop() sets _stopping before _thread_quit, so a stop
+                    # is either seen here or makes the next wait() return
+                    if self._stopping:
+                        break
                     continue
                 break
 
@@ -557,6 +577,7 @@ class Stream:
         async with self._start_stop_lock:
             if self._thread is None:
                 return
+            self._stopping = True
             self._thread_quit.set()
             await self.hass.async_add_executor_job(self._thread.join)
             self._thread = None
