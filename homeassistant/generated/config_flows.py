@@ -281,6 +281,7 @@ FLOWS = {
         "frontier_silicon",
         "fuelprices_dk",
         "fujitsu_fglair",
+        "fujitsu_infrared",
         "fully_kiosk",
         "fumis",
         "fyta",
