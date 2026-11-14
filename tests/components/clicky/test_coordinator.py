@@ -1,7 +1,9 @@
 """Tests for the Clicky coordinator."""
 
+import asyncio
 from datetime import timedelta
 import logging
+from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp import ClientResponseError
@@ -151,6 +153,36 @@ async def test_http_error_hides_sitekey(
     assert coordinator.last_exception.__suppress_context__
     assert caplog.records
     assert TEST_SITEKEY not in caplog.text
+
+
+@pytest.mark.asyncio
+async def test_async_update_data_request_timeout(hass: HomeAssistant) -> None:
+    """Test that a hanging request times out and becomes UpdateFailed."""
+
+    async def _hang(**kwargs: Any) -> None:
+        await asyncio.Event().wait()
+
+    client = AsyncMock()
+    client.__aenter__.return_value = client
+    client.__aexit__.return_value = None
+
+    client.visitors_online.side_effect = _hang
+
+    coordinator = ClickyCoordinator(
+        hass=hass,
+        config_entry=Mock(),
+        client=client,
+    )
+
+    with (
+        patch("homeassistant.components.clicky.coordinator.REQUEST_TIMEOUT", 0),
+        pytest.raises(UpdateFailed) as exc_info,
+    ):
+        await coordinator._async_update_data()
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "cannot_connect"
+    assert isinstance(exc_info.value.__cause__, TimeoutError)
 
 
 @pytest.mark.asyncio

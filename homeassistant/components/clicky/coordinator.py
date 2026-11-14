@@ -1,5 +1,6 @@
 """Coordinator to handle Clicky API access."""
 
+import asyncio
 import logging
 from typing import Any, override
 
@@ -11,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, UPDATE_INTERVAL
+from .const import DOMAIN, REQUEST_TIMEOUT, UPDATE_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +44,7 @@ class ClickyCoordinator(DataUpdateCoordinator):
     ) -> dict[str, Any]:
         """Fetch data from API endpoint."""
         try:
-            async with self.client:
+            async with asyncio.timeout(REQUEST_TIMEOUT), self.client:
                 visitors_online = await self.client.visitors_online()
                 time_total = await self.client.time_total()
         except AuthenticationError as error:

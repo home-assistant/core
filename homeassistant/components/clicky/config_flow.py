@@ -1,5 +1,6 @@
 """Config flow for the Clicky Web Analytics integration."""
 
+import asyncio
 from typing import Any, override
 
 from aiohttp import ClientError
@@ -21,7 +22,7 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from .const import CONF_SITE_ID, CONF_SITEKEY, DOMAIN
+from .const import CONF_SITE_ID, CONF_SITEKEY, DOMAIN, REQUEST_TIMEOUT
 
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
@@ -54,7 +55,8 @@ class ClickyConfigFlow(ConfigFlow, domain=DOMAIN):
                 session=async_get_clientsession(self.hass),
             )
             try:
-                await client.visitors_online()
+                async with asyncio.timeout(REQUEST_TIMEOUT):
+                    await client.visitors_online()
             except AuthenticationError:
                 errors["base"] = "invalid_auth"
             except (

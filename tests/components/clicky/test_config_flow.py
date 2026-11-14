@@ -1,5 +1,7 @@
 """Test the Clicky Web Analytics config flow."""
 
+import asyncio
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from aiohttp import ClientError
@@ -91,6 +93,59 @@ async def test_form_errors(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": expected_error}
+    assert len(mock_setup_entry.mock_calls) == 0
+
+    with patch(
+        "homeassistant.components.clicky.config_flow.ClickyClient", autospec=True
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_SITE_ID: TEST_SITE_ID,
+                CONF_SITEKEY: TEST_SITEKEY,
+            },
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == TEST_SITE_ID
+    assert result["result"].unique_id == TEST_SITE_ID
+    assert result["data"] == {
+        CONF_SITE_ID: TEST_SITE_ID,
+        CONF_SITEKEY: TEST_SITEKEY,
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_request_timeout(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test that a hanging request times out and the flow can recover."""
+
+    async def _hang(**kwargs: Any) -> None:
+        await asyncio.Event().wait()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with (
+        patch(
+            "homeassistant.components.clicky.config_flow.ClickyClient", autospec=True
+        ) as mock_lib,
+        patch("homeassistant.components.clicky.config_flow.REQUEST_TIMEOUT", 0),
+    ):
+        mock_lib.return_value.visitors_online.side_effect = _hang
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_SITE_ID: TEST_SITE_ID,
+                CONF_SITEKEY: TEST_SITEKEY,
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
     assert len(mock_setup_entry.mock_calls) == 0
 
     with patch(
