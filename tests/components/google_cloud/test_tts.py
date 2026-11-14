@@ -96,7 +96,11 @@ async def test_stream_tts_audio(
 
     data = await stream_audio(
         hass,
-        {**options, "voice": CHIRP_VOICE, tts.ATTR_PREFERRED_FORMAT: "wav"},
+        {
+            **options,
+            "voice": CHIRP_VOICE,
+            tts.TextToSpeechCommonOption.PREFERRED_FORMAT: "wav",
+        },
         language,
     )
 
@@ -162,7 +166,11 @@ async def test_stream_tts_audio_error(
         HomeAssistantError, match="Error occurred during Google Cloud TTS call"
     ):
         await stream_audio(
-            hass, {"voice": CHIRP_VOICE, tts.ATTR_PREFERRED_FORMAT: "wav"}
+            hass,
+            {
+                "voice": CHIRP_VOICE,
+                tts.TextToSpeechCommonOption.PREFERRED_FORMAT: "wav",
+            },
         )
 
 
@@ -180,7 +188,11 @@ async def test_stream_tts_audio_unauthenticated(
         pytest.raises(HomeAssistantError),
     ):
         await stream_audio(
-            hass, {"voice": CHIRP_VOICE, tts.ATTR_PREFERRED_FORMAT: "wav"}
+            hass,
+            {
+                "voice": CHIRP_VOICE,
+                tts.TextToSpeechCommonOption.PREFERRED_FORMAT: "wav",
+            },
         )
 
     mock_start_reauth.assert_called_once_with(hass)
