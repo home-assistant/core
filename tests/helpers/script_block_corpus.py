@@ -9,8 +9,9 @@ any validator.
 
 from collections.abc import Callable, Iterator
 import copy
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import itertools
+import random
 from typing import Any, Literal
 
 import probatio
@@ -465,3 +466,78 @@ def corpus(
                 )
             )
     return cases
+
+
+@dataclass
+class RandomBlock:
+    """A block built at random, and the platform errors of the items put in it.
+
+    The paths are the ones in the block as written.
+    """
+
+    kind: BlockKind
+    submitted: Any = None
+    platform_errors: list[tuple[Path, type[Exception] | None, str | None]] = field(
+        default_factory=list
+    )
+
+
+def random_block(rng: random.Random, max_depth: int = 3) -> RandomBlock:
+    """Return a block of valid and invalid items, in blocks nested at random.
+
+    Unlike a block of the corpus, it can hold several invalid items.
+    """
+    result = RandomBlock(rng.choice(_KINDS))
+
+    def leaf(kind: BlockKind, path: Path) -> Any:
+        roll = rng.random()
+        if roll < 0.5:
+            return _OK[kind]
+        if roll < 0.8:
+            marker = rng.choice(PLATFORM_ERROR_MARKERS[kind])
+            result.platform_errors.append(
+                ((*path, *marker.path), marker.exception, marker.message)
+            )
+        else:
+            marker = rng.choice(SCHEMA_ERROR_MARKERS[kind])
+        return marker.item
+
+    def item(kind: BlockKind, depth: int, path: Path) -> Any:
+        nested_kinds = _NESTED_KINDS[kind]
+        if depth == 0 or not nested_kinds or rng.random() < 0.4:
+            return leaf(kind, path)
+        nested_kind = rng.choice(nested_kinds)
+        wrapper = rng.choice(_WRAPPERS[kind, nested_kind])
+        built = wrapper.build(
+            block(nested_kind, depth - 1, (*path, *wrapper.path), wrapper.only_list)
+        )
+        if rng.random() < 0.15:
+            # An error of the item itself, next to the ones of its blocks
+            built["bogus"] = 1
+        return built
+
+    def sublist(path: Path) -> Any:
+        path = (*path, "triggers")
+        if rng.random() < 0.3:
+            return {"triggers": leaf("triggers", path)}
+        return {
+            "triggers": [
+                leaf("triggers", (*path, index)) for index in range(rng.randint(0, 3))
+            ]
+        }
+
+    def block(kind: BlockKind, depth: int, path: Path, only_list: bool = False) -> Any:
+        if not only_list and rng.random() < 0.25:
+            if kind == "triggers" and rng.random() < 0.4:
+                return sublist(path)
+            return item(kind, depth, path)
+        return [
+            sublist((*path, index))
+            if kind == "triggers" and rng.random() < 0.35
+            else item(kind, depth, (*path, index))
+            for index in range(rng.randint(0, 3))
+        ]
+
+    # A copy, the items must not be shared
+    result.submitted = copy.deepcopy(block(result.kind, rng.randint(0, max_depth), ()))
+    return result
