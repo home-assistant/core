@@ -1,0 +1,15 @@
+{
+  "domain": "intesis_modbus",
+  "name": "Intesis Modbus",
+  "categories": ["climate.heat_pumps_air_conditioning"],
+  "codeowners": ["@TimoPtr"],
+  "config_flow": true,
+  "connectivity": ["modbus"],
+  "dependencies": ["modbus", "usb"],
+  "documentation": "https://www.home-assistant.io/integrations/intesis_modbus",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": ["intesis_gw_modbus", "modbus_connection"],
+  "quality_scale": "bronze",
+  "requirements": ["intesis-gw-modbus==0.2.0"]
+}
