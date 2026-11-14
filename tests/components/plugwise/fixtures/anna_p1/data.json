@@ -76,8 +76,15 @@
     "name": "OpenTherm",
     "select_dhw_mode": "comfort",
     "sensors": {
+      "burner_operation_time": 11595,
+      "burner_starts": 50341,
+      "dhw_burner_operation_time": 914,
+      "failed_burner_flame_ignitions": 34,
+      "failed_burner_starts": 6,
       "intended_boiler_temperature": 0.0,
       "modulation_level": 0,
+      "fault_flags": 0,
+      "oem_fault_code": 255,
       "water_pressure": 6.0,
       "water_temperature": 35.0
     },

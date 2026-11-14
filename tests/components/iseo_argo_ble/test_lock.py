@@ -14,13 +14,11 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.iseo_argo_ble.const import DOMAIN
 from homeassistant.components.iseo_argo_ble.lock import _POLL_INTERVAL
-from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockState
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockService, LockState
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
-    ATTR_ENTITY_ID,
-    SERVICE_LOCK,
-    SERVICE_UNLOCK,
     STATE_UNAVAILABLE,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -41,8 +39,8 @@ async def _unlock(hass: HomeAssistant) -> None:
     """Call the unlock action on the lock."""
     await hass.services.async_call(
         LOCK_DOMAIN,
-        SERVICE_UNLOCK,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        LockService.UNLOCK,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -292,8 +290,8 @@ async def test_lock_action_is_not_supported(
     with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             LOCK_DOMAIN,
-            SERVICE_LOCK,
-            {ATTR_ENTITY_ID: ENTITY_ID},
+            LockService.LOCK,
+            {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
 

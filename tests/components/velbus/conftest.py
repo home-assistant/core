@@ -15,7 +15,14 @@ from velbusaio.channels import (
     Temperature,
 )
 from velbusaio.module import Module
-from velbusaio.properties import LightValue, SelectedProgram
+from velbusaio.properties import (
+    LightValue,
+    PSUCurrent,
+    PSULoad,
+    PSUPower,
+    PSUVoltage,
+    SelectedProgram,
+)
 
 from homeassistant.components.velbus import VelbusConfigEntry
 from homeassistant.components.velbus.const import DOMAIN
@@ -36,6 +43,10 @@ def mock_controller(
     mock_watercounter: AsyncMock,
     mock_sensornumber: AsyncMock,
     mock_lightsensor: AsyncMock,
+    mock_psu_power: AsyncMock,
+    mock_psu_voltage: AsyncMock,
+    mock_psu_current: AsyncMock,
+    mock_psu_load: AsyncMock,
     mock_dimmer: AsyncMock,
     mock_module_no_subdevices: AsyncMock,
     mock_module_subdevices: AsyncMock,
@@ -63,6 +74,10 @@ def mock_controller(
             mock_temperature,
             mock_sensornumber,
             mock_lightsensor,
+            mock_psu_power,
+            mock_psu_voltage,
+            mock_psu_current,
+            mock_psu_load,
         ]
         cont.get_all_light.return_value = [mock_dimmer]
         cont.get_all_led.return_value = [mock_button]
@@ -155,6 +170,7 @@ def mock_temperature() -> AsyncMock:
     channel.get_climate_preset.return_value = 1
     channel.get_climate_mode.return_value = "day"
     channel.get_cool_mode.return_value = "heat"
+    channel.get_sensor_types.return_value = ["temperature"]
     return channel
 
 
@@ -220,6 +236,7 @@ def mock_buttoncounter() -> AsyncMock:
     channel.get_counter_state.return_value = 100
     type(channel).energy = PropertyMock(return_value=100.0)
     channel.get_counter_unit.return_value = "kWh"
+    channel.get_sensor_types.return_value = ["power", "energy"]
     return channel
 
 
@@ -249,6 +266,7 @@ def mock_gascounter() -> AsyncMock:
     # A gas counter does not expose energy (kWh); energy is only valid for kWh.
     type(channel).energy = PropertyMock(return_value=None)
     channel.get_counter_unit.return_value = "m³/h"
+    channel.get_sensor_types.return_value = ["flow", "gas"]
     return channel
 
 
@@ -277,6 +295,7 @@ def mock_watercounter() -> AsyncMock:
     channel.get_counter_total.return_value = 5678.0
     type(channel).energy = PropertyMock(return_value=None)
     channel.get_counter_unit.return_value = "L/h"
+    channel.get_sensor_types.return_value = ["flow", "water"]
     return channel
 
 
@@ -298,7 +317,85 @@ def mock_sensornumber() -> AsyncMock:
     channel.is_temperature.return_value = False
     channel.get_unit.return_value = "m"
     channel.get_state.return_value = 10
+    channel.get_sensor_types.return_value = ["measurement"]
     return channel
+
+
+def _mock_psu_property(
+    spec: type,
+    *,
+    name: str,
+    property_key: str,
+    sensor_types: list[str],
+    state: float,
+    module_address: int = 77,
+) -> AsyncMock:
+    """Build a PSU module property mock used by sensor platform tests."""
+    channel = AsyncMock(spec=spec)
+    channel.get_categories.return_value = ["sensor"]
+    channel.get_name.return_value = name
+    channel.get_property_key.return_value = property_key
+    channel.get_module_address.return_value = module_address
+    channel.get_channel_number.return_value = 0
+    channel.get_module_type_name.return_value = "VMBPSU"
+    channel.get_module_type.return_value = 11
+    channel.get_full_name.return_value = "Power supply"
+    channel.get_module_sw_version.return_value = "1.0.0"
+    channel.get_module_serial.return_value = "psu123456789"
+    channel.is_sub_device.return_value = False
+    channel.is_counter_channel.return_value = False
+    channel.is_temperature.return_value = False
+    channel.get_state.return_value = state
+    channel.get_sensor_types.return_value = sensor_types
+    return channel
+
+
+@pytest.fixture
+def mock_psu_power() -> AsyncMock:
+    """Mock a PSU power property (non-counter power reading)."""
+    return _mock_psu_property(
+        PSUPower,
+        name="PSUPower",
+        property_key="PSUPower",
+        sensor_types=["power"],
+        state=1200.0,
+    )
+
+
+@pytest.fixture
+def mock_psu_voltage() -> AsyncMock:
+    """Mock a PSU voltage property."""
+    return _mock_psu_property(
+        PSUVoltage,
+        name="PSUVoltage",
+        property_key="PSUVoltage",
+        sensor_types=["voltage"],
+        state=230.0,
+    )
+
+
+@pytest.fixture
+def mock_psu_current() -> AsyncMock:
+    """Mock a PSU current property."""
+    return _mock_psu_property(
+        PSUCurrent,
+        name="PSUCurrent",
+        property_key="PSUCurrent",
+        sensor_types=["current"],
+        state=5.2,
+    )
+
+
+@pytest.fixture
+def mock_psu_load() -> AsyncMock:
+    """Mock a PSU load property."""
+    return _mock_psu_property(
+        PSULoad,
+        name="PSULoad",
+        property_key="PSULoad",
+        sensor_types=["load"],
+        state=42.0,
+    )
 
 
 @pytest.fixture
@@ -321,6 +418,7 @@ def mock_lightsensor() -> AsyncMock:
     channel.is_temperature.return_value = False
     channel.get_unit.return_value = "illuminance"
     channel.get_state.return_value = 250
+    channel.get_sensor_types.return_value = ["measurement"]
     return channel
 
 

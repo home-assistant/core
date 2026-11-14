@@ -40,6 +40,11 @@
         'wifi_connected': True,
         'wifi_uptime': 2137,
       }),
+      'power': dict({
+        'batteries_voltage': 6800,
+        'battery': True,
+        'external': False,
+      }),
       'state': dict({
         'firmware_version': '1.0.0',
         'mqtt_status': True,

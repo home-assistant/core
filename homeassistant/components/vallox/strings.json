@@ -41,6 +41,22 @@
         "name": "Filter change date"
       }
     },
+    "fan": {
+      "ventilation": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "auto": "[%key:common::state::auto%]",
+              "away": "[%key:common::state::not_home%]",
+              "boost": "Boost",
+              "extra": "Extra",
+              "fireplace": "Fireplace / Custom",
+              "home": "[%key:common::state::home%]"
+            }
+          }
+        }
+      }
+    },
     "number": {
       "supply_air_target_away": {
         "name": "Supply air temperature (Away)"
@@ -54,10 +70,24 @@
     },
     "sensor": {
       "cell_state": {
-        "name": "Cell state"
+        "name": "Cell state",
+        "state": {
+          "bypass": "Bypass",
+          "cool_recovery": "Cool recovery",
+          "defrosting": "Defrosting",
+          "heat_recovery": "Heat recovery"
+        }
       },
       "current_profile": {
-        "name": "Current profile"
+        "name": "Current profile",
+        "state": {
+          "auto": "[%key:common::state::auto%]",
+          "away": "[%key:common::state::not_home%]",
+          "boost": "[%key:component::vallox::entity::fan::ventilation::state_attributes::preset_mode::state::boost%]",
+          "extra": "[%key:component::vallox::entity::fan::ventilation::state_attributes::preset_mode::state::extra%]",
+          "fireplace": "[%key:component::vallox::entity::fan::ventilation::state_attributes::preset_mode::state::fireplace%]",
+          "home": "[%key:common::state::home%]"
+        }
       },
       "efficiency": {
         "name": "Efficiency"
@@ -121,9 +151,9 @@
       "options": {
         "auto": "[%key:common::state::auto%]",
         "away": "[%key:common::state::not_home%]",
-        "boost": "Boost",
-        "extra": "Extra",
-        "fireplace": "Fireplace",
+        "boost": "[%key:component::vallox::entity::fan::ventilation::state_attributes::preset_mode::state::boost%]",
+        "extra": "[%key:component::vallox::entity::fan::ventilation::state_attributes::preset_mode::state::extra%]",
+        "fireplace": "[%key:component::vallox::entity::fan::ventilation::state_attributes::preset_mode::state::fireplace%]",
         "home": "[%key:common::state::home%]"
       }
     }

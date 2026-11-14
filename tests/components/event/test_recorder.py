@@ -6,7 +6,7 @@ import pytest
 from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 
 from homeassistant.components import select
-from homeassistant.components.event import ATTR_EVENT_TYPES
+from homeassistant.components.event import EventEntityCapabilityAttribute
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.history import get_significant_states
 from homeassistant.const import ATTR_FRIENDLY_NAME, Platform
@@ -44,5 +44,5 @@ async def test_exclude_attributes(recorder_mock: Recorder, hass: HomeAssistant) 
     for entity_states in states.values():
         for state in entity_states:
             assert state
-            assert ATTR_EVENT_TYPES not in state.attributes
+            assert EventEntityCapabilityAttribute.EVENT_TYPES not in state.attributes
             assert ATTR_FRIENDLY_NAME in state.attributes

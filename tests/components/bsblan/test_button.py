@@ -9,8 +9,8 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.bsblan.const import DOMAIN
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -53,8 +53,8 @@ async def test_button_press_syncs_time(
     # Press the button
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: ENTITY_SYNC_TIME},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_SYNC_TIME},
         blocking=True,
     )
 
@@ -86,8 +86,8 @@ async def test_button_press_no_update_when_same(
     # Press the button
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: ENTITY_SYNC_TIME},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_SYNC_TIME},
         blocking=True,
     )
 
@@ -113,8 +113,8 @@ async def test_button_press_error_handling(
     with pytest.raises(HomeAssistantError) as exc:
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: ENTITY_SYNC_TIME},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: ENTITY_SYNC_TIME},
             blocking=True,
         )
     assert exc.value.translation_domain == DOMAIN
@@ -148,8 +148,8 @@ async def test_button_press_set_time_error(
     with pytest.raises(HomeAssistantError) as exc:
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: ENTITY_SYNC_TIME},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: ENTITY_SYNC_TIME},
             blocking=True,
         )
     assert exc.value.translation_domain == DOMAIN

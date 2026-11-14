@@ -197,7 +197,7 @@ def mock_config_entry() -> MockConfigEntry:
         unique_id=TEST_INSTANCE_ID,
         entry_id=TEST_ENTRY,
         version=5,
-        minor_version=2,
+        minor_version=3,
         subentries_data=[
             ConfigSubentryData(
                 data={},

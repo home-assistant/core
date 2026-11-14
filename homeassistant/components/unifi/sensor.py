@@ -318,7 +318,8 @@ def async_device_wan_latency_discovery_fn(
     obj_id: str,
 ) -> bool:
     """Determine if an device have a latency monitor."""
-    if (device := hub.api.devices[obj_id]) and device.uptime_stats:
+    device = hub.api.devices[obj_id]
+    if device.uptime_stats:
         return _device_wan_latency_monitor(wan, monitor_target, device) is not None
     return False
 
@@ -424,10 +425,9 @@ def async_device_temperatures_discovery_fn(
     temperature_name: str, hub: UnifiHub, obj_id: str
 ) -> bool:
     """Determine if an device have a temperatures."""
-    if (device := hub.api.devices[obj_id]) and device.temperatures:
+    if temperatures := hub.api.devices[obj_id].temperatures:
         return any(
-            temperature_name in temperature["name"]
-            for temperature in device.temperatures
+            temperature_name in temperature["name"] for temperature in temperatures
         )
 
     return False
@@ -998,7 +998,7 @@ def _async_should_add_sensor(
     if not description.allowed_fn(hub, obj_id):
         return False
     supported = description.supported_fn(hub, obj_id)
-    if (description.key, obj_id) in hub.entity_loader.known_objects and (
+    if hub.entity_loader.is_known(description, obj_id) and (
         supported or description.discovery_fn is None
     ):
         return False
@@ -1017,7 +1017,6 @@ def _async_should_add_sensor(
         return False
     if not supported:
         registry.async_remove(entity_id)
-        hub.entity_loader.known_objects.discard((description.key, obj_id))
     return supported
 
 
