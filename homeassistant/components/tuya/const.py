@@ -740,8 +740,10 @@ class DPCode(StrEnum):
     FAN_VERTICAL = "fan_vertical"  # Vertical swing flap angle
     FAR_DETECTION = "far_detection"
     FAULT = "fault"
+    FEED_BLOCK_STATUS = "feed_block_status"
     FEED_REPORT = "feed_report"
     FEED_STATE = "feed_state"
+    FEED_STUCK_STATUS = "feed_stuck_status"
     FEEDIN_POWER_LIMIT_ENABLE = "feedin_power_limit_enable"
     FEELLIKE_TEMP = "feellike_temp"
     FILTER = "filter"
@@ -751,12 +753,14 @@ class DPCode(StrEnum):
     FLOODLIGHT_LIGHTNESS = "floodlight_lightness"
     FLOODLIGHT_SWITCH = "floodlight_switch"
     FLOW_RATE = "flow_rate"
+    FOOD_STORAGE_STATUS = "food_storage_status"
     FORWARD_ENERGY_TOTAL = "forward_energy_total"
     FROST = "frost"  # Frost protection
     GAS_SENSOR_STATE = "gas_sensor_state"
     GAS_SENSOR_STATUS = "gas_sensor_status"
     GAS_SENSOR_VALUE = "gas_sensor_value"
     HEAT_INDEX = "heat_index"
+    HEIGHT = "height"
     HUMIDIFIER = "humidifier"  # Humidification
     HUMIDITY = "humidity"  # Humidity
     HUMIDITY_CURRENT = "humidity_current"  # Current humidity

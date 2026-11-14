@@ -221,10 +221,6 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             redact_debug_log=True,
         )
 
-        if not self.connection:
-            LOGGER.error("Unable to establish a connection with %s", self.host)
-            return
-
         LOGGER.debug(
             "detected services on %s %s",
             self.host,

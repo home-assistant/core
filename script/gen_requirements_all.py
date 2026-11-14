@@ -94,7 +94,7 @@ uuid==1000000000.0.0
 # httpx2 requires httpcore2 and anyio, while httpcore2 requires h11. The
 # version constraints on anyio and h11 are quite loose. Pin them so we can
 # directly link HA versions to these library versions.
-anyio==4.15.1
+anyio==4.16.0
 h11==0.16.0
 
 # Many libraries still depend on httpx/httpcore. Those imports are aliased to
@@ -319,8 +319,11 @@ def gather_recursive_requirements(
     )
     integration.load_manifest()
     reqs = {x for x in integration.requirements if x not in CONSTRAINT_BASE}
-    for dep_domain in integration.dependencies:
-        reqs.update(gather_recursive_requirements(dep_domain, seen))
+    for dep_domain in integration.dependencies + integration.manifest.get(
+        "after_dependencies", []
+    ):
+        if dep_domain not in seen:
+            reqs.update(gather_recursive_requirements(dep_domain, seen))
     return reqs
 
 

@@ -4,11 +4,11 @@ from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING
 
-from modbus_connection import ModbusTimeoutError
 from sofar_modbus.modern.device import (
     BATTERY_PACKS,
     BATTERY_STRING_COMPONENTS,
     PV_STRING_COMPONENTS,
+    InverterSilentError,
     SofarInverter,
 )
 
@@ -179,9 +179,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> Non
         await readings.async_config_entry_first_refresh()
     except ConfigEntryNotReady as err:
         if not (
-            device.connected
-            and isinstance(readings.last_exception, UpdateFailed)
-            and isinstance(readings.last_exception.__cause__, ModbusTimeoutError)
+            isinstance(readings.last_exception, UpdateFailed)
+            and isinstance(readings.last_exception.__cause__, InverterSilentError)
         ):
             raise
         _LOGGER.info(

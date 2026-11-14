@@ -20,7 +20,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailedUnreachable,
+)
 
 from .const import (
     CONNECTED_PLC_DEVICES,
@@ -74,7 +77,7 @@ class DevoloDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
             try:
                 return await super()._async_update_data()
             except DeviceUnavailable as err:
-                raise UpdateFailed(
+                raise UpdateFailedUnreachable(
                     translation_domain=DOMAIN,
                     translation_key="update_failed",
                     translation_placeholders={"error": str(err)},

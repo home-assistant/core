@@ -2425,6 +2425,67 @@
     'state': '31.0',
   })
 # ---
+# name: test_platform_setup_and_discovery[number.mesa_height-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 131.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 66.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('tuya', 'vpfdskpi8pr8cbtfzjs')]>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.mesa_height',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Height',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DISTANCE: 'distance'>,
+    'original_icon': None,
+    'original_name': 'Height',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'height',
+    'unique_id': 'tuya.vpfdskpi8pr8cbtfzjsheight',
+    'unit_of_measurement': 'cm',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.mesa_height-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'distance',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mesa Height',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 131.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 66.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'cm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mesa_height',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '77.0',
+  })
+# ---
 # name: test_platform_setup_and_discovery[number.mirilla_puerta_volume-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
