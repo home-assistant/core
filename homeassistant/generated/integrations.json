@@ -5834,6 +5834,15 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "habitron": {
+      "name": "Habitron",
+      "integration_type": "hub",
+      "categories": [
+        "hubs_protocols.building_automation"
+      ],
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "hanna": {
       "name": "Hanna",
       "integration_type": "hub",
