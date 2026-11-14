@@ -1,8 +1,11 @@
 """Test the base functions of the media player."""
 
 from http import HTTPStatus
+import logging
+from typing import Any
 from unittest.mock import patch
 
+import aiohttp
 from aiohttp import hdrs
 import probatio
 import pytest
@@ -23,6 +26,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
     SearchMedia,
     SearchMediaQuery,
+    entity as media_player_entity,
 )
 from homeassistant.components.media_player.const import (
     DATA_COMPONENT,
@@ -215,14 +219,72 @@ async def test_get_image_http_missing_image(
     assert resp.status == HTTPStatus.NOT_FOUND
 
 
-async def test_get_image_http_log_credentials_redacted(
+_CREDENTIALS_URL = "http://usr51:s3cr3t99@example.com/default.jpg"
+
+
+@pytest.mark.parametrize(
+    ("url", "mock_kwargs", "warning_reason", "debug_detail"),
+    [
+        pytest.param(
+            _CREDENTIALS_URL,
+            {"exc": TimeoutError()},
+            "TimeoutError",
+            "TimeoutError",
+            id="timeout",
+        ),
+        pytest.param(
+            _CREDENTIALS_URL,
+            # InvalidUrlClientError stringifies to the offending URL itself
+            {"exc": aiohttp.InvalidUrlClientError(_CREDENTIALS_URL)},
+            "InvalidUrlClientError",
+            _CREDENTIALS_URL,
+            id="exception_text_contains_url",
+        ),
+        pytest.param(
+            _CREDENTIALS_URL,
+            {"exc": aiohttp.ClientPayloadError("incomplete chunked read")},
+            "ClientPayloadError",
+            "incomplete chunked read",
+            id="client_payload_error",
+        ),
+        pytest.param(
+            _CREDENTIALS_URL,
+            {"exc": aiohttp.ClientConnectionError("connection reset")},
+            "ClientConnectionError",
+            "connection reset",
+            id="client_connection_error",
+        ),
+        pytest.param(
+            _CREDENTIALS_URL,
+            {"status": HTTPStatus.NOT_FOUND},
+            "HTTP 404",
+            "HTTP 404",
+            id="http_status",
+        ),
+        pytest.param(
+            _CREDENTIALS_URL,
+            {
+                "content": b"hello-world",
+                "headers": {"Content-Type": "image/jpeg", "Content-Length": "9999"},
+            },
+            "truncated response, 11 of 9999 bytes",
+            "truncated response, 11 of 9999 bytes",
+            id="truncated_response",
+        ),
+    ],
+)
+async def test_get_image_http_fetch_failure_logging(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     caplog: pytest.LogCaptureFixture,
+    url: str,
+    mock_kwargs: dict[str, Any],
+    warning_reason: str,
+    debug_detail: str,
 ) -> None:
-    """Test credentials are redacted when logging url when fetching image."""
-    url = "http://vi:pass@example.com/default.jpg"
+    """Test a failed fetch logs only the host at warning and the URL at debug."""
+    caplog.set_level(logging.DEBUG)
     with patch(
         "homeassistant.components.demo.media_player.DemoYoutubePlayer.media_image_url",
         url,
@@ -235,18 +297,31 @@ async def test_get_image_http_log_credentials_redacted(
         state = hass.states.get("media_player.bedroom")
         assert "entity_picture_local" not in state.attributes
 
-        aioclient_mock.get(url, exc=TimeoutError())
-
+        aioclient_mock.get(url, **mock_kwargs)
         client = await hass_client_no_auth()
-
         resp = await client.get(state.attributes["entity_picture"])
 
     assert resp.status == HTTPStatus.NOT_FOUND
-    assert f"Error retrieving proxied image from {url}" not in caplog.text
+    warnings = [r.getMessage() for r in caplog.records if r.levelno == logging.WARNING]
     assert (
-        "Error retrieving proxied image from "
-        f"{url.replace('pass', 'xxxxxxxx').replace('vi', 'xxxx')}"
-    ) in caplog.text
+        f"Error retrieving proxied image from example.com: {warning_reason}" in warnings
+    )
+    assert not any("s3cr3t99" in message for message in warnings)
+    debug = [r.getMessage() for r in caplog.records if r.levelno == logging.DEBUG]
+    assert f"Error retrieving proxied image from {url}: {debug_detail}" in debug
+
+
+@pytest.mark.parametrize(
+    ("url", "expected"),
+    [
+        pytest.param("http://vi:pass@example.com/image.jpg", "example.com", id="host"),
+        pytest.param("/local/image.jpg", "<no host>", id="no_host"),
+        pytest.param("http://[invalid", "<invalid URL>", id="invalid_url"),
+    ],
+)
+def test_url_host(url: str, expected: str) -> None:
+    """Test the host logged for a failed fetch, including unparsable URLs."""
+    assert media_player_entity._url_host(url) == expected
 
 
 async def test_get_image_http_truncated_response(

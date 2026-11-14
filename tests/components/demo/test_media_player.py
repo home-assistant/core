@@ -515,7 +515,7 @@ async def test_media_image_proxy(
     fake_picture_data = "test.test"
 
     class MockResponse:
-        """Test response."""
+        """Test response, usable as an async context manager."""
 
         def __init__(self) -> None:
             """Test response init."""
@@ -529,10 +529,18 @@ async def test_media_image_proxy(
         async def release(self):
             """Test response release."""
 
+        async def __aenter__(self):
+            """Enter the response context."""
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            """Release the response on exit."""
+            await self.release()
+
     class MockWebsession:
         """Test websession."""
 
-        async def get(self, url, **kwargs):
+        def get(self, url, **kwargs):
             """Test websession get."""
             return MockResponse()
 

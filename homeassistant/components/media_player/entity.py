@@ -2,7 +2,6 @@
 
 import asyncio
 import collections
-from contextlib import suppress
 import datetime as dt
 import functools as ft
 from functools import lru_cache
@@ -873,28 +872,39 @@ def _image_response_appears_complete(
         return True
 
 
+def _url_host(url: str) -> str:
+    """Return the host of url for logging, leaving out credentials and path."""
+    try:
+        return URL(url).host or "<no host>"
+    except ValueError:
+        return "<invalid URL>"
+
+
 async def async_fetch_image(
     logger: logging.Logger, hass: HomeAssistant, url: str
 ) -> tuple[bytes | None, str | None]:
     """Retrieve an image."""
-    content, content_type = (None, None)
     websession = async_get_clientsession(hass)
-    with suppress(TimeoutError):
-        response = await websession.get(url, timeout=_FETCH_TIMEOUT)
-        if response.status == HTTPStatus.OK:
-            body = await response.read()
-            if _image_response_appears_complete(response, body):
-                content = body
-                if content_type := response.headers.get(CONTENT_TYPE):
-                    content_type = content_type.split(";")[0]
+    try:
+        async with websession.get(url, timeout=_FETCH_TIMEOUT) as response:
+            if response.status != HTTPStatus.OK:
+                reason = f"HTTP {response.status}"
+            else:
+                body = await response.read()
+                if _image_response_appears_complete(response, body):
+                    content_type = response.headers.get(CONTENT_TYPE)
+                    return body, content_type.split(";")[0] if content_type else None
+                reason = (
+                    f"truncated response, {len(body)} of "
+                    f"{response.headers.get(CONTENT_LENGTH)} bytes"
+                )
+            detail = reason
+    except (TimeoutError, aiohttp.ClientError) as err:
+        # The exception text can contain the full URL, so it is only logged at
+        # debug level, next to the URL itself.
+        reason = type(err).__name__
+        detail = str(err) or reason
 
-    if content is None:
-        url_parts = URL(url)
-        if url_parts.user is not None:
-            url_parts = url_parts.with_user("xxxx")
-        if url_parts.password is not None:
-            url_parts = url_parts.with_password("xxxxxxxx")
-        url = str(url_parts)
-        logger.warning("Error retrieving proxied image from %s", url)
-
-    return content, content_type
+    logger.warning("Error retrieving proxied image from %s: %s", _url_host(url), reason)
+    logger.debug("Error retrieving proxied image from %s: %s", url, detail)
+    return None, None
