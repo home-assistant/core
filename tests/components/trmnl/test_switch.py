@@ -144,3 +144,26 @@ async def test_dynamic_new_device(
     await hass.async_block_till_done()
 
     assert hass.states.get("switch.new_trmnl_sleep_mode") is not None
+
+
+async def test_action_uses_current_access_token(
+    hass: HomeAssistant,
+    mock_trmnl_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test an action sends the access token the OAuth session holds now."""
+    await setup_integration(hass, mock_config_entry)
+    mock_trmnl_client.token = "stale"
+    sent_tokens: list[str] = []
+    mock_trmnl_client.update_device.side_effect = lambda *_, **__: sent_tokens.append(
+        mock_trmnl_client.token
+    )
+
+    await hass.services.async_call(
+        "switch",
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.test_trmnl_sleep_mode"},
+        blocking=True,
+    )
+
+    assert sent_tokens == ["access"]

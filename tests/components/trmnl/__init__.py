@@ -4,6 +4,8 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.core import HomeAssistant
 
+ACCOUNT_SUBJECT = "7abd2f69-3f6d-4540-bee8-d9a526d32d6c"
+
 
 async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Set up the TRMNL integration for testing."""
