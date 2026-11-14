@@ -31,6 +31,7 @@ from homeassistant.components import (
     assist_satellite,
     conversation,
     stt,
+    voice_support,
 )
 from homeassistant.components.assist_pipeline import (
     AudioSettings,
@@ -2708,12 +2709,12 @@ async def test_multichannel_audio_unknown_stt_engine(
 
 
 @pytest.mark.parametrize(
-    ("request_wake_word_audio", "feature_flags", "expected_wake_word_audio"),
+    ("wanted", "feature_flags", "expected_wake_word_audio"),
     [
-        pytest.param(True, VoiceAssistantFeature.WAKE_WORD_AUDIO, True, id="requested"),
+        pytest.param(True, VoiceAssistantFeature.WAKE_WORD_AUDIO, True, id="wanted"),
         pytest.param(True, 0, False, id="not_supported"),
         pytest.param(
-            False, VoiceAssistantFeature.WAKE_WORD_AUDIO, False, id="not_requested"
+            False, VoiceAssistantFeature.WAKE_WORD_AUDIO, False, id="not_wanted"
         ),
     ],
 )
@@ -2721,13 +2722,15 @@ async def test_wake_word_audio_subscription(
     hass: HomeAssistant,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
-    request_wake_word_audio: bool,
+    wanted: bool,
     feature_flags: VoiceAssistantFeature,
     expected_wake_word_audio: bool,
 ) -> None:
-    """Test wake word audio is only requested from devices that support it."""
+    """Test the audio is asked for only when the device can send it and something wants it."""
     with patch.object(
-        EsphomeAssistSatellite, "_request_wake_word_audio", request_wake_word_audio
+        EsphomeAssistSatellite,
+        "_wake_word_audio_wanted",
+        property(lambda _self: wanted),
     ):
         mock_device = await mock_esphome_device(
             mock_client=mock_client,
@@ -2740,6 +2743,44 @@ async def test_wake_word_audio_subscription(
         await hass.async_block_till_done()
 
     assert mock_device.voice_assistant_wake_word_audio == expected_wake_word_audio
+
+
+async def test_wake_word_audio_subscribed_again_when_the_answer_moves(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test a device is told again when something starts wanting its audio.
+
+    The device is told once, in the handshake, so without this a person who
+    turns verification on waits for the device to reconnect.
+    """
+    wanted = False
+    with patch.object(
+        EsphomeAssistSatellite,
+        "_wake_word_audio_wanted",
+        property(lambda _self: wanted),
+    ):
+        mock_device = await mock_esphome_device(
+            mock_client=mock_client,
+            device_info={
+                "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+                | VoiceAssistantFeature.API_AUDIO
+                | VoiceAssistantFeature.WAKE_WORD_AUDIO
+            },
+        )
+        await hass.async_block_till_done()
+        assert mock_device.voice_assistant_wake_word_audio is False
+
+        wanted = True
+        voice_support._async_wake_words_changed(hass)
+        await hass.async_block_till_done()
+        assert mock_device.voice_assistant_wake_word_audio is True
+
+        # And nothing happens when it fires but nothing moved
+        voice_support._async_wake_words_changed(hass)
+        await hass.async_block_till_done()
+        assert mock_device.voice_assistant_wake_word_audio is True
 
 
 @pytest.mark.parametrize(
@@ -3271,3 +3312,69 @@ async def test_stream_tts_audio_trailing_metadata(
     stream = _ChunkedMockResultStream(hass, "wav", [wav_with_trailing])
     await satellite._stream_tts_audio(stream)
     mock_client.send_voice_assistant_audio.assert_called_once_with(audio_payload)
+
+
+@pytest.mark.parametrize(
+    ("active_wake_words", "verified_wake_words", "expected"),
+    [
+        pytest.param(["1234"], {"okay nabu"}, True, id="active_wake_word"),
+        pytest.param(["1234"], {"hey jarvis"}, False, id="inactive_wake_word"),
+        pytest.param(
+            ["1234", "5678"],
+            {"okay nabu", "hey jarvis"},
+            True,
+            id="all_active_wake_words_supported",
+        ),
+        pytest.param(
+            ["1234", "5678"],
+            {"okay nabu"},
+            False,
+            id="unsupported_active_wake_word",
+        ),
+        pytest.param([], {"okay nabu"}, False, id="no_active_wake_words"),
+        pytest.param(
+            ["hey_computer"], {"hey_computer"}, True, id="unknown_id_fallback"
+        ),
+    ],
+)
+async def test_wake_word_audio_waits_for_the_satellite_configuration(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    active_wake_words: list[str],
+    verified_wake_words: set[str],
+    expected: bool,
+) -> None:
+    """Test audio is requested only when all configured wake words can be verified."""
+    mock_client.get_voice_assistant_configuration.return_value = (
+        AssistSatelliteConfiguration(
+            available_wake_words=[
+                AssistSatelliteWakeWord(
+                    id="1234", wake_word="okay nabu", trained_languages=["en"]
+                ),
+                AssistSatelliteWakeWord(
+                    id="5678", wake_word="hey jarvis", trained_languages=["en"]
+                ),
+            ],
+            active_wake_words=active_wake_words,
+            max_active_wake_words=2,
+        )
+    )
+
+    with patch.object(
+        voice_support,
+        "async_verifies_wake_word",
+        lambda _hass, wake_word: wake_word in verified_wake_words,
+    ):
+        mock_device = await mock_esphome_device(
+            mock_client=mock_client,
+            device_info={
+                "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+                | VoiceAssistantFeature.API_AUDIO
+                | VoiceAssistantFeature.ANNOUNCE
+                | VoiceAssistantFeature.WAKE_WORD_AUDIO
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert mock_device.voice_assistant_wake_word_audio is expected
