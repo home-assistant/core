@@ -18,8 +18,8 @@
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-          "password": "The password for your Kumo Cloud account.",
-          "username": "The email address for your Kumo Cloud account."
+          "password": "The password for your Mitsubishi Comfort account.",
+          "username": "The email address for your Mitsubishi Comfort account."
         },
         "description": "Sign in with the same Mitsubishi Comfort account to restore cloud access.",
         "title": "Reauthenticate Mitsubishi Comfort"
@@ -30,8 +30,8 @@
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-          "password": "The password for your Kumo Cloud account.",
-          "username": "The email address for your Kumo Cloud account."
+          "password": "The password for your Mitsubishi Comfort account.",
+          "username": "The email address for your Mitsubishi Comfort account."
         },
         "description": "Control devices over your local network using credentials retrieved from your Mitsubishi Comfort account. For cloud control, add the separate Mitsubishi Comfort Cloud integration."
       }

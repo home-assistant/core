@@ -1,5 +1,7 @@
 """Tests for Mitsubishi Comfort Cloud climate entities."""
 
+import asyncio
+from dataclasses import replace
 from unittest.mock import AsyncMock, call
 
 from freezegun.api import FrozenDateTimeFactory
@@ -1112,3 +1114,173 @@ async def test_reject_inapplicable_temperature_before_mode_change(
         )
     mock_cloud_account.send_command.assert_not_awaited()
     assert hass.states.get(ENTITY_ID) == before
+
+
+@pytest.mark.parametrize(
+    ("first_data", "second_service", "second_data", "commands"),
+    [
+        pytest.param(
+            {"target_temp_high": 26, "target_temp_low": 20},
+            "set_temperature",
+            {"target_temp_high": 24, "target_temp_low": 18},
+            [{"spCool": 26}, {"spHeat": 20}, {"spCool": 24}, {"spHeat": 18}],
+            id="two-ranges",
+        ),
+        pytest.param(
+            {"target_temp_high": 26, "target_temp_low": 20},
+            "set_hvac_mode",
+            {"hvac_mode": "heat"},
+            [{"spCool": 26}, {"spHeat": 20}, {"operationMode": "heat"}],
+            id="mode-during-range",
+        ),
+        pytest.param(
+            {"hvac_mode": "heat_cool", "target_temp_high": 26, "target_temp_low": 20},
+            "set_temperature",
+            {"target_temp_high": 24, "target_temp_low": 18},
+            [
+                {"operationMode": "auto"},
+                {"spCool": 26},
+                {"spHeat": 20},
+                {"spCool": 24},
+                {"spHeat": 18},
+            ],
+            id="combined-mode-and-range",
+        ),
+    ],
+)
+async def test_concurrent_actions_are_serialized(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_cloud_account: AsyncMock,
+    first_data: dict[str, str | float],
+    second_service: str,
+    second_data: dict[str, str | float],
+    commands: list[dict[str, str | float]],
+) -> None:
+    """Concurrent actions cannot insert commands inside a temperature action."""
+    mock_cloud_account.get_device_details.return_value["operationMode"] = "auto"
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    started = asyncio.Event()
+    release = asyncio.Event()
+
+    async def block_first_command(serial: str, command: dict[str, str | float]) -> None:
+        started.set()
+        await release.wait()
+
+    mock_cloud_account.send_command.side_effect = block_first_command
+    first = hass.async_create_task(
+        hass.services.async_call(
+            CLIMATE_DOMAIN,
+            "set_temperature",
+            {ATTR_ENTITY_ID: ENTITY_ID, **first_data},
+            blocking=True,
+        )
+    )
+    await started.wait()
+    mock_cloud_account.send_command.side_effect = None
+    second = hass.async_create_task(
+        hass.services.async_call(
+            CLIMATE_DOMAIN,
+            second_service,
+            {ATTR_ENTITY_ID: ENTITY_ID, **second_data},
+            blocking=True,
+        )
+    )
+    release.set()
+    await asyncio.gather(first, second)
+
+    assert mock_cloud_account.send_command.await_args_list == [
+        call(MOCK_SERIAL, command) for command in commands
+    ]
+
+
+async def test_concurrent_actions_on_different_units(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_cloud_account: AsyncMock,
+) -> None:
+    """A slow action on one unit does not block another unit's actions."""
+    devices = mock_cloud_account.discover_cloud_devices.return_value
+    devices["OTHER_SERIAL"] = replace(
+        devices[MOCK_SERIAL], serial="OTHER_SERIAL", label="Bedroom"
+    )
+    mock_cloud_account.get_device_details.return_value["operationMode"] = "auto"
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    started = asyncio.Event()
+    release = asyncio.Event()
+
+    async def block_first_command(serial: str, command: dict[str, str | float]) -> None:
+        started.set()
+        await release.wait()
+
+    mock_cloud_account.send_command.side_effect = block_first_command
+    first = hass.async_create_task(
+        hass.services.async_call(
+            CLIMATE_DOMAIN,
+            "set_temperature",
+            {ATTR_ENTITY_ID: ENTITY_ID, "target_temp_high": 26, "target_temp_low": 20},
+            blocking=True,
+        )
+    )
+    await started.wait()
+    mock_cloud_account.send_command.side_effect = None
+    try:
+        await asyncio.wait_for(
+            hass.services.async_call(
+                CLIMATE_DOMAIN,
+                "set_temperature",
+                {
+                    ATTR_ENTITY_ID: "climate.bedroom",
+                    "target_temp_high": 24,
+                    "target_temp_low": 18,
+                },
+                blocking=True,
+            ),
+            timeout=1,
+        )
+        assert mock_cloud_account.send_command.await_args_list == [
+            call(MOCK_SERIAL, {"spCool": 26}),
+            call("OTHER_SERIAL", {"spCool": 24}),
+            call("OTHER_SERIAL", {"spHeat": 18}),
+        ]
+        assert not first.done()
+    finally:
+        release.set()
+        await first
+
+
+async def test_action_lock_released_after_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_cloud_account: AsyncMock,
+) -> None:
+    """A failed action does not block subsequent actions on the unit."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    mock_cloud_account.send_command.side_effect = DeviceConnectionError("offline")
+    with pytest.raises(
+        HomeAssistantError, match="Error communicating with Living Room"
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            "set_temperature",
+            {ATTR_ENTITY_ID: ENTITY_ID, "temperature": 24},
+            blocking=True,
+        )
+
+    mock_cloud_account.send_command.side_effect = None
+    await asyncio.wait_for(
+        hass.services.async_call(
+            CLIMATE_DOMAIN,
+            "set_temperature",
+            {ATTR_ENTITY_ID: ENTITY_ID, "temperature": 25},
+            blocking=True,
+        ),
+        timeout=1,
+    )
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_TEMPERATURE] == 25

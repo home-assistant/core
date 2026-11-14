@@ -17,8 +17,8 @@
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-          "password": "The password for your Kumo Cloud account.",
-          "username": "The email address for your Kumo Cloud account."
+          "password": "The password for your Mitsubishi Comfort account.",
+          "username": "The email address for your Mitsubishi Comfort account."
         },
         "description": "Sign in with the same Mitsubishi Comfort account to restore cloud access.",
         "title": "Reauthenticate Mitsubishi Comfort Cloud"
@@ -29,8 +29,8 @@
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-          "password": "The password for your Kumo Cloud account.",
-          "username": "The email address for your Kumo Cloud account."
+          "password": "The password for your Mitsubishi Comfort account.",
+          "username": "The email address for your Mitsubishi Comfort account."
         },
         "description": "Control Mitsubishi Comfort indoor units through the cloud. An internet connection is required. Kumo Station devices are not supported."
       }

@@ -1,5 +1,7 @@
 """Climate entity for Mitsubishi Comfort Cloud integration."""
 
+import asyncio
+from collections.abc import Coroutine
 import logging
 from typing import Any, NoReturn, override
 
@@ -113,6 +115,13 @@ class MitsubishiComfortCloudClimate(MitsubishiComfortCloudEntity, ClimateEntity)
         super().__init__(coordinator)
         self._attr_unique_id = self._device.serial
         self._optimistic: dict[str, Any] = {}
+        self._action_lock = asyncio.Lock()
+
+    @override
+    async def async_request_call[_T](self, coro: Coroutine[Any, Any, _T]) -> _T:
+        """Keep each complete service action together for this unit."""
+        async with self._action_lock:
+            return await super().async_request_call(coro)
 
     @callback
     @override
