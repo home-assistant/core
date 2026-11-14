@@ -1,5 +1,6 @@
 """LLM tools for the assist_satellite integration."""
 
+import asyncio
 from typing import Any, override
 
 import probatio
@@ -19,6 +20,10 @@ from homeassistant.helpers.llm import (
 
 from .const import DOMAIN, AssistSatelliteService, AssistSatelliteServiceArgument
 from .intent import async_get_broadcast_entity_ids
+
+# Long enough to report errors that happen before playback starts, such as a
+# busy satellite. The rest of the broadcast runs in the background.
+ANNOUNCE_ERROR_TIMEOUT = 0.1
 
 
 class BroadcastTool(Tool):
@@ -64,21 +69,18 @@ class BroadcastTool(Tool):
             state for entity_id in entity_ids if (state := hass.states.get(entity_id))
         ]
 
-        if area or floor:
-            constraints = intent.MatchTargetsConstraints(
-                area_name=area, floor_name=floor
+        constraints = intent.MatchTargetsConstraints(
+            area_name=area, floor_name=floor, domains={DOMAIN}
+        )
+        if not states:
+            raise intent.MatchFailedError(
+                result=intent.MatchTargetsResult(
+                    False, intent.MatchFailedReason.DOMAIN
+                ),
+                constraints=constraints,
             )
-            # The matcher searches all states when it gets an empty list.
-            if not states:
-                raise intent.MatchFailedError(
-                    result=intent.MatchTargetsResult(
-                        False,
-                        intent.MatchFailedReason.AREA
-                        if area
-                        else intent.MatchFailedReason.FLOOR,
-                    ),
-                    constraints=constraints,
-                )
+
+        if area or floor:
             # Satellites are matched without the assistant, because the user
             # rarely exposes them.
             result = intent.async_match_targets(hass, constraints, states=states)
@@ -86,13 +88,20 @@ class BroadcastTool(Tool):
                 raise intent.MatchFailedError(result=result, constraints=constraints)
             states = result.states
 
-        await hass.services.async_call(
-            DOMAIN,
-            AssistSatelliteService.ANNOUNCE,
-            {AssistSatelliteServiceArgument.MESSAGE: args["message"]},
-            context=llm_context.context,
-            target={ATTR_ENTITY_ID: [state.entity_id for state in states]},
+        announce_task = hass.async_create_task(
+            hass.services.async_call(
+                DOMAIN,
+                AssistSatelliteService.ANNOUNCE,
+                {AssistSatelliteServiceArgument.MESSAGE: args["message"]},
+                blocking=True,
+                context=llm_context.context,
+                target={ATTR_ENTITY_ID: [state.entity_id for state in states]},
+            ),
+            f"{DOMAIN}_broadcast",
         )
+        done, _ = await asyncio.wait({announce_task}, timeout=ANNOUNCE_ERROR_TIMEOUT)
+        if done:
+            announce_task.result()
         return ToolResult(data={"satellites": [state.name for state in states]})
 
 

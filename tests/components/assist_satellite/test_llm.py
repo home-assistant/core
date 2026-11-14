@@ -1,13 +1,16 @@
 """Tests for the assist_satellite LLM tools platform."""
 
+import asyncio
 from typing import Any
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components import llm as llm_component
+from homeassistant.components.assist_satellite.entity import AssistSatelliteState
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
@@ -181,14 +184,18 @@ async def test_broadcast_no_satellite(
     assert len(entity2.announcements) == 0
 
 
+@pytest.mark.parametrize(
+    "target", [{}, {"area": "Kitchen"}], ids=["whole_home", "area"]
+)
 @pytest.mark.usefixtures("mock_tts_engine")
-async def test_broadcast_area_all_satellites_excluded(
+async def test_broadcast_no_eligible_satellite(
     hass: HomeAssistant,
     area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
     entity: MockAssistSatellite,
+    target: dict[str, str],
 ) -> None:
-    """Test a broadcast to an area does not reach excluded satellites."""
+    """Test a broadcast fails when no satellite can play it."""
     kitchen = area_registry.async_create("Kitchen")
     device_registry.async_update_device(entity.device_entry.id, area_id=kitchen.id)
 
@@ -197,8 +204,52 @@ async def test_broadcast_area_all_satellites_excluded(
             "homeassistant.components.assist_satellite.intent.EXCLUDED_DOMAINS",
             new={TEST_DOMAIN},
         ),
-        pytest.raises(intent.MatchFailedError, match="No entities were in the area"),
+        pytest.raises(intent.MatchFailedError, match="No entities matched the domain"),
     ):
-        await _async_broadcast(hass, {"message": "Hello", "area": "Kitchen"}, None)
+        await _async_broadcast(hass, {"message": "Hello", **target}, None)
 
     assert len(entity.announcements) == 0
+
+
+@pytest.mark.usefixtures("mock_tts_engine")
+async def test_broadcast_reports_announce_error(
+    hass: HomeAssistant, entity: MockAssistSatellite, entity2: MockAssistSatellite
+) -> None:
+    """Test an announcement that fails right away returns the error."""
+    with (
+        patch.object(
+            entity2, "async_announce", side_effect=HomeAssistantError("Offline")
+        ),
+        pytest.raises(HomeAssistantError, match="Offline"),
+    ):
+        await _async_broadcast(hass, {"message": "Hello"}, entity.device_entry.id)
+
+
+@pytest.mark.usefixtures("mock_tts_engine")
+async def test_broadcast_does_not_wait_for_playback(
+    hass: HomeAssistant, entity: MockAssistSatellite, entity2: MockAssistSatellite
+) -> None:
+    """Test the tool returns while the announcement still plays."""
+    playback_done = asyncio.Event()
+
+    async def _async_play(*_: Any) -> None:
+        await playback_done.wait()
+
+    with patch.object(entity2, "async_announce", side_effect=_async_play):
+        api = await llm.async_get_api(
+            hass, "assist", _llm_context(entity.device_entry.id)
+        )
+        async with asyncio.timeout(1):
+            result = await api.async_call_tool(
+                llm.ToolInput(tool_name=TOOL_NAME, tool_args={"message": "Hello"})
+            )
+
+        assert result == llm.ToolResult(data={"satellites": ["Test Entity 2"]})
+        assert (state := hass.states.get("assist_satellite.test_entity_2"))
+        assert state.state == AssistSatelliteState.RESPONDING
+
+        playback_done.set()
+        await hass.async_block_till_done()
+
+    assert (state := hass.states.get("assist_satellite.test_entity_2"))
+    assert state.state == AssistSatelliteState.IDLE
