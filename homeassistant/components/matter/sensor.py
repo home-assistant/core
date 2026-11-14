@@ -665,6 +665,16 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
+            key="PowerSourceBatBatQuantity",
+            translation_key="battery_quantity",
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.PowerSource.Attributes.BatQuantity,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
             key="EveEnergySensorWatt",
             device_class=SensorDeviceClass.POWER,
             native_unit_of_measurement=UnitOfPower.WATT,
