@@ -31,11 +31,12 @@ from .const import (
     DATA_UNSUB,
     PLATFORMS,
 )
+from .coordinator import TasmotaConfigEntry, TasmotaLatestReleaseUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_setup_entry(hass: HomeAssistant, entry: TasmotaConfigEntry) -> None:
     """Set up Tasmota from a config entry."""
     hass.data[DATA_UNSUB] = []
 
@@ -63,6 +64,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
     device_registry = dr.async_get(hass)
 
+    entry.runtime_data = TasmotaLatestReleaseUpdateCoordinator(hass, entry)
+
+    # Do a fire-and-forget first background refresh of firmware update availability.
+    # This is of secondary importance for this integration,
+    # and we don't want it to delay the setup even if it happens to take some time.
+    entry.async_create_task(
+        hass, entry.runtime_data.async_refresh(), name="Tasmota latest release refresh"
+    )
+
     async def async_discover_device(config: TasmotaDeviceConfig, mac: str) -> None:
         """Discover and add a Tasmota device."""
         await async_setup_device(
@@ -77,7 +87,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     )
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_unload_entry(hass: HomeAssistant, entry: TasmotaConfigEntry) -> None:
     """Unload a config entry."""
 
     # cleanup platforms

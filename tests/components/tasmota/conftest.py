@@ -1,7 +1,8 @@
 """Test fixtures for Tasmota component."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
+from aiogithubapi import GitHubReleaseModel
 from hatasmota.discovery import get_status_sensor_entities
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -12,6 +13,8 @@ from homeassistant.components.tasmota.const import (
     DOMAIN,
 )
 from homeassistant.core import HomeAssistant
+
+from .test_common import NEWER_VERSION
 
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
@@ -34,6 +37,27 @@ def disable_status_sensor(status_sensor_disabled):
     """Disable Tasmota status sensor."""
     wraps = None if status_sensor_disabled else get_status_sensor_entities
     with patch("hatasmota.discovery.get_status_sensor_entities", wraps=wraps):
+        yield
+
+
+@pytest.fixture(autouse=True)
+def mock_github_api():
+    """Mock the GitHub release API to prevent network requests."""
+    mock_response = AsyncMock(
+        data=GitHubReleaseModel(
+            {
+                "tag_name": f"v{NEWER_VERSION}",
+                "name": f"Tasmota {NEWER_VERSION}",
+                "html_url": f"https://github.com/arendst/Tasmota/releases/tag/v{NEWER_VERSION}",
+                "body": "",
+            }
+        )
+    )
+
+    with patch(
+        "aiogithubapi.namespaces.releases.GitHubReleasesNamespace.latest",
+        new=AsyncMock(return_value=mock_response),
+    ):
         yield
 
 

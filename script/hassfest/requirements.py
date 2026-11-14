@@ -222,6 +222,7 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "simplefin": {"simplefin4py": {"dataclasses-json"}},
     "simplisafe": {"simplisafe-python": {"backoff"}},
     "tailwind": {"gotailwind": {"backoff"}},
+    "tasmota": {"aiogithubapi": {"backoff"}},
     "tibber": {"gql": {"backoff"}},
     "toon": {"toonapi": {"backoff"}},
     "volkszaehler": {"volkszaehler": {"async-timeout"}},
