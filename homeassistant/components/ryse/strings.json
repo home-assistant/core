@@ -1,0 +1,41 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_devices_found": "No RYSE BLE device found in pairing mode. Press the PAIR button and retry."
+    },
+    "error": {
+      "bond_rejected": "The shade rejected the Bluetooth bond. Press and hold the PAIR button, then try again.",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "not_in_pairing_mode": "The device is not in pairing mode. Press and hold the PAIR button, then try again.",
+      "not_local_source": "RYSE pairing requires a local Bluetooth adapter. Devices seen only through a Bluetooth proxy cannot be paired.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "flow_title": "{name}",
+    "step": {
+      "bluetooth_confirm": {
+        "description": "Hold the PAIR button on {name}, then submit to start pairing.",
+        "title": "Pair RYSE device"
+      },
+      "reauth_confirm": {
+        "description": "The Bluetooth bond with {name} was lost. Hold the PAIR button on the shade, then submit.",
+        "title": "Re-pair RYSE device"
+      },
+      "user": {
+        "data": {
+          "address": "[%key:common::config_flow::data::device%]"
+        },
+        "data_description": {
+          "address": "Shade in pairing mode on a local Bluetooth adapter"
+        },
+        "description": "Hold the PAIR button on the shade, then submit to start pairing.",
+        "title": "Pair RYSE device"
+      }
+    }
+  },
+  "exceptions": {
+    "reauth_in_progress": {
+      "message": "Re-pairing is already in progress. Hold PAIR on the shade and finish that flow before sending a command."
+    }
+  }
+}
