@@ -2454,3 +2454,38 @@ async def test_optimistic_effect(
     state = hass.states.get(TEST_LIGHT.entity_id)
     assert state is not None
     assert state.attributes.get("effect") == expected
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_effect_revalidated_on_list_change(
+    hass: HomeAssistant, style: ConfigurationStyle
+) -> None:
+    """Test an unchanged effect becomes valid when the effect list later includes it."""
+    await setup_entity(
+        hass,
+        TEST_LIGHT,
+        style,
+        1,
+        {
+            **SET_EFFECT_ACTION,
+            "effect_list": f"{{{{ state_attr('{TEST_SENSOR_STATE_ENTITY_ID}', 'effect_list') }}}}",
+            "effect": f"{{{{ state_attr('{TEST_SENSOR_STATE_ENTITY_ID}', 'effect') }}}}",
+        },
+        "{{ True }}",
+        ON_OFF_ACTIONS,
+    )
+    await async_trigger(hass, TEST_SENSOR_STATE_ENTITY_ID, "on", {"effect": "Disco"})
+    assert hass.states.get(TEST_LIGHT.entity_id).attributes.get("effect") is None
+
+    await async_trigger(
+        hass,
+        TEST_SENSOR_STATE_ENTITY_ID,
+        "on",
+        {"effect": "Disco", "effect_list": ["Disco", "Police"]},
+    )
+    assert hass.states.get(TEST_LIGHT.entity_id).attributes.get("effect") == "Disco"
+
+    await async_trigger(hass, TEST_SENSOR_STATE_ENTITY_ID, "on", {"effect": "Disco"})
+    assert hass.states.get(TEST_LIGHT.entity_id).attributes.get("effect") is None

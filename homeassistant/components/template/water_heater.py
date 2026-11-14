@@ -267,13 +267,11 @@ class AbstractTemplateWaterHeater(
         self._attr_native_target_temperature = None
         self._attr_is_away_mode_on = None
 
-        self.setup_template(
+        self.setup_list_item_templates(
             CONF_OPERATION_LIST,
             "_attr_operation_list",
             tcv.list_of_strings(self, CONF_OPERATION_LIST),
-            none_on_template_error=False,
-        )
-        self.setup_state_template(
+            CONF_OPERATION_MODE,
             "_attr_current_operation",
             tcv.item_in_list(
                 self,
