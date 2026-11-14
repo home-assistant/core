@@ -30,6 +30,7 @@ from homeassistant.components.unifi.const import (
     CONF_CLIENT_SOURCE,
     CONF_DETECTION_TIME,
     CONF_IGNORE_LOCAL_MAC,
+    CONF_SSID_FILTER,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
     CONF_TRACK_WIRED_CLIENTS,
@@ -734,6 +735,73 @@ async def test_bandwidth_sensors(
     assert hass.states.get("sensor.wireless_client_tx")
     assert hass.states.get("sensor.wired_client_rx")
     assert hass.states.get("sensor.wired_client_tx")
+
+
+@pytest.mark.parametrize(
+    "config_entry_options",
+    [
+        {
+            CONF_ALLOW_BANDWIDTH_SENSORS: True,
+            CONF_ALLOW_UPTIME_SENSORS: True,
+            CONF_CLIENT_SOURCE: [WIRELESS_CLIENT["mac"]],
+            CONF_SSID_FILTER: ["Home"],
+        }
+    ],
+)
+@pytest.mark.parametrize(
+    "client_payload",
+    [[WIRELESS_CLIENT | {"essid": "Guest"}]],
+)
+@pytest.mark.usefixtures("config_entry_setup", "entity_registry_enabled_by_default")
+async def test_ssid_filter_blocks_supported_client_sensors(
+    hass: HomeAssistant,
+) -> None:
+    """The supported-client override does not bypass the SSID filter."""
+    for entity_id in (
+        "sensor.wireless_client_rx",
+        "sensor.wireless_client_tx",
+        "sensor.wireless_client_uptime",
+    ):
+        assert hass.states.get(entity_id) is None
+
+
+@pytest.mark.parametrize(
+    "config_entry_options",
+    [
+        {
+            CONF_ALLOW_BANDWIDTH_SENSORS: True,
+            CONF_ALLOW_UPTIME_SENSORS: True,
+            CONF_SSID_FILTER: ["Home"],
+        }
+    ],
+)
+@pytest.mark.parametrize("client_payload", [[WIRELESS_CLIENT | {"essid": "Guest"}]])
+@pytest.mark.usefixtures("config_entry_setup", "entity_registry_enabled_by_default")
+async def test_client_sensors_discovered_when_ssid_changes_to_allowed(
+    hass: HomeAssistant,
+    mock_websocket_message: WebsocketMessageMock,
+    client_payload: list[dict[str, Any]],
+) -> None:
+    """Client sensors are reconsidered when the client's SSID changes."""
+    for entity_id in (
+        "sensor.wireless_client_rx",
+        "sensor.wireless_client_tx",
+        "sensor.wireless_client_uptime",
+    ):
+        assert hass.states.get(entity_id) is None
+
+    mock_websocket_message(
+        message=MessageKey.CLIENT,
+        data=client_payload[0] | {"essid": "Home"},
+    )
+    await hass.async_block_till_done()
+
+    for entity_id in (
+        "sensor.wireless_client_rx",
+        "sensor.wireless_client_tx",
+        "sensor.wireless_client_uptime",
+    ):
+        assert hass.states.get(entity_id) is not None
 
 
 @pytest.mark.parametrize("client_payload", [[WIRED_CLIENT]])
