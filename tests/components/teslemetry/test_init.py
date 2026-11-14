@@ -12,13 +12,6 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp import ClientConnectionError, ClientError, ClientResponseError
-from aiopowerwall import (
-    PowerwallAuthenticationError,
-    PowerwallConnectionError,
-    PowerwallError,
-    PowerwallProtocolError,
-    PowerwallRateLimitError,
-)
 from bleak.exc import BleakError
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -46,6 +39,13 @@ from tesla_fleet_api.exceptions import (
     TeslaFleetError,
 )
 from tesla_fleet_api.tesla import EnergySiteRouter, VehicleRouter
+from tesla_fleet_api.tesla.powerwall import (
+    PowerwallAuthenticationError,
+    PowerwallConnectionError,
+    PowerwallError,
+    PowerwallProtocolError,
+    PowerwallRateLimitError,
+)
 from tesla_fleet_api.tesla.vehicle.bluetooth import VehicleBluetooth
 from tesla_fleet_api.tesla.vehicle.stream_glue import BleBroadcastStreamGlue
 from tesla_fleet_api.teslemetry import EnergySite, Vehicle
@@ -1386,7 +1386,7 @@ PASSWORD = "abcde"
 ENTRY_ID = "01JTESLEMETRYENTRY00000000"
 GATEWAY_ISSUE_ID = f"gateway_not_found_{ENTRY_ID}_{SITE_ID}"
 
-# aiopowerwall's PowerwallClient parses the PEM at construction time, so tests
+# PowerwallClient parses the PEM at construction time, so tests
 # that build one need a real (if undersized, for speed) RSA key rather than
 # arbitrary bytes.
 _TEST_RSA_KEY_PEM = rsa.generate_private_key(
@@ -1676,7 +1676,10 @@ async def test_energy_site_router_command_routing(
     local = AsyncMock(side_effect=local_error, return_value={"routed": "local"})
     cloud = AsyncMock(return_value={"routed": "cloud"})
     with (
-        patch("aiopowerwall.energysite.PowerwallEnergySite.backup", new=local),
+        patch(
+            "tesla_fleet_api.tesla.powerwall.energysite.PowerwallEnergySite.backup",
+            new=local,
+        ),
         patch(
             "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.backup",
             new=cloud,
@@ -1712,7 +1715,10 @@ async def test_energy_site_router_command_rejected_locally(
     local = AsyncMock(side_effect=PowerwallError("rejected"))
     cloud = AsyncMock(return_value={"routed": "cloud"})
     with (
-        patch("aiopowerwall.energysite.PowerwallEnergySite.backup", new=local),
+        patch(
+            "tesla_fleet_api.tesla.powerwall.energysite.PowerwallEnergySite.backup",
+            new=local,
+        ),
         patch(
             "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.backup",
             new=cloud,
@@ -3617,7 +3623,7 @@ async def test_local_command_survives_site_info_push_before_next_poll(
     assert hass.states.get("number.energy_site_backup_reserve").state == "20.0"
 
     with patch(
-        "aiopowerwall.energysite.PowerwallEnergySite.backup",
+        "tesla_fleet_api.tesla.powerwall.energysite.PowerwallEnergySite.backup",
         return_value=COMMAND_OK,
     ):
         await hass.services.async_call(
@@ -3661,7 +3667,7 @@ async def test_local_command_survives_poll_started_before_it(
     assert mock_powerwall_local_config.call_count == 1
 
     with patch(
-        "aiopowerwall.energysite.PowerwallEnergySite.backup",
+        "tesla_fleet_api.tesla.powerwall.energysite.PowerwallEnergySite.backup",
         return_value=COMMAND_OK,
     ):
         await hass.services.async_call(
@@ -3737,7 +3743,7 @@ async def test_local_command_survives_failed_poll(
     await _tick(hass, freezer, ENERGY_CONFIG_INTERVAL)
 
     with patch(
-        f"aiopowerwall.energysite.PowerwallEnergySite.{command}",
+        f"tesla_fleet_api.tesla.powerwall.energysite.PowerwallEnergySite.{command}",
         return_value=COMMAND_OK,
     ):
         await hass.services.async_call(*service_call, blocking=True)
@@ -3872,7 +3878,7 @@ async def test_local_command_released_by_reporting_poll(
     assert hass.states.get(entity_id).state == baseline
 
     with patch(
-        f"aiopowerwall.energysite.PowerwallEnergySite.{command}",
+        f"tesla_fleet_api.tesla.powerwall.energysite.PowerwallEnergySite.{command}",
         return_value=COMMAND_OK,
     ):
         await hass.services.async_call(*service_call, blocking=True)
@@ -4010,7 +4016,7 @@ async def test_cloud_owned_command_value_held_until_cloud_site_info(
 
     with (
         patch(
-            f"aiopowerwall.energysite.PowerwallEnergySite.{command}",
+            f"tesla_fleet_api.tesla.powerwall.energysite.PowerwallEnergySite.{command}",
             return_value=COMMAND_OK,
         ),
         patch(

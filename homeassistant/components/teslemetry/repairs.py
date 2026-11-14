@@ -3,9 +3,9 @@
 from typing import TYPE_CHECKING, Any
 
 from aiohttp import ClientError
-from aiopowerwall import PowerwallAuthenticationError, PowerwallError
 import probatio
 from tesla_fleet_api.exceptions import PrivateKeyError, TeslaFleetError
+from tesla_fleet_api.tesla.powerwall import PowerwallAuthenticationError, PowerwallError
 
 from homeassistant.components.repairs import (
     ConfirmRepairFlow,
