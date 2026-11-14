@@ -33,6 +33,7 @@ ATTR_INTEGRATION = "platform"
 ATTR_HW_VERSION = "hw_version"
 ATTR_MANUFACTURER = "manufacturer"
 ATTR_MODEL = "model"
+ATTR_SERIAL_NUMBER = "serial_number"
 ATTR_SW_VERSION = "sw_version"
 ATTR_KEY_NAME = "key_name"
 # Current attribute used by homekit_controller

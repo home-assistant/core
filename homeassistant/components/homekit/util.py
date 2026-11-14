@@ -59,6 +59,11 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import (
+    ATTR_HW_VERSION,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_SERIAL_NUMBER,
+    ATTR_SW_VERSION,
     AUDIO_CODEC_COPY,
     AUDIO_CODEC_OPUS,
     BRIDGE_NAME,
@@ -165,6 +170,11 @@ BASIC_INFO_SCHEMA = probatio.Schema(
         probatio.Optional(
             CONF_LOW_BATTERY_THRESHOLD, default=DEFAULT_LOW_BATTERY_THRESHOLD
         ): cv.positive_int,
+        probatio.Optional(ATTR_MANUFACTURER): cv.string,
+        probatio.Optional(ATTR_MODEL): cv.string,
+        probatio.Optional(ATTR_SW_VERSION): cv.string,
+        probatio.Optional(ATTR_HW_VERSION): cv.string,
+        probatio.Optional(ATTR_SERIAL_NUMBER): cv.string,
     }
 )
 

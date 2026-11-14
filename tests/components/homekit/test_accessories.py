@@ -19,6 +19,7 @@ from homeassistant.components.homekit.const import (
     ATTR_INTEGRATION,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
+    ATTR_SERIAL_NUMBER,
     ATTR_SW_VERSION,
     ATTR_VALUE,
     BRIDGE_MODEL,
@@ -226,6 +227,45 @@ async def test_home_accessory(hass: HomeAssistant, hk_driver) -> None:
     acc = HomeAccessory(hass, hk_driver, "test_name", entity_id, 6, None)
     serv = acc.services[0]  # SERV_ACCESSORY_INFO
     assert serv.get_characteristic(CHAR_MODEL).value == "Test Model"
+
+
+@pytest.mark.parametrize(
+    ("config", "device_id", "serial_number"),
+    [
+        pytest.param({}, None, "sensor.accessory", id="entity_id"),
+        pytest.param({}, "abc123", "abc123", id="device_id"),
+        pytest.param(
+            {ATTR_SERIAL_NUMBER: "SN-0001"}, None, "SN-0001", id="config_over_entity"
+        ),
+        pytest.param(
+            {ATTR_SERIAL_NUMBER: "SN-0001"},
+            "abc123",
+            "SN-0001",
+            id="config_over_device",
+        ),
+        pytest.param(
+            {ATTR_SERIAL_NUMBER: "SN-0001" * 10},
+            None,
+            ("SN-0001" * 10)[:64],
+            id="truncated",
+        ),
+    ],
+)
+async def test_accessory_serial_number(
+    hass: HomeAssistant,
+    hk_driver: HomeDriver,
+    config: dict[str, str],
+    device_id: str | None,
+    serial_number: str,
+) -> None:
+    """Test the serial number comes from the config before any identifier."""
+    entity_id = "sensor.accessory"
+    hass.states.async_set(entity_id, "on")
+    acc = HomeAccessory(
+        hass, hk_driver, "Home Accessory", entity_id, 3, config, device_id=device_id
+    )
+    serv = acc.get_service(SERV_ACCESSORY_INFO)
+    assert serv.get_characteristic(CHAR_SERIAL_NUMBER).value == serial_number
 
 
 async def test_accessory_with_missing_basic_service_info(

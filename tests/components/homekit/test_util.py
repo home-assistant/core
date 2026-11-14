@@ -7,6 +7,11 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.homekit.const import (
+    ATTR_HW_VERSION,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_SERIAL_NUMBER,
+    ATTR_SW_VERSION,
     BRIDGE_NAME,
     CONF_AUDIO_CODEC,
     CONF_AUDIO_MAP,
@@ -331,6 +336,22 @@ def test_validate_entity_config() -> None:
             CONF_LOW_BATTERY_THRESHOLD: DEFAULT_LOW_BATTERY_THRESHOLD,
         }
     }
+
+
+@pytest.mark.parametrize(
+    "entity_id", ["demo.test", "fan.test", "media_player.test", "sensor.test"]
+)
+def test_validate_entity_config_accessory_information(entity_id: str) -> None:
+    """Test accessory information is accepted for every domain."""
+    information = {
+        ATTR_MANUFACTURER: "Manufacturer",
+        ATTR_MODEL: "Model",
+        ATTR_SW_VERSION: "1.2.3",
+        ATTR_HW_VERSION: "4.5",
+        ATTR_SERIAL_NUMBER: "SN-0001",
+    }
+    config = vec({entity_id: information})[entity_id]
+    assert {key: config[key] for key in information} == information
 
 
 def test_validate_media_player_features() -> None:
