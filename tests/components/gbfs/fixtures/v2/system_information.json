@@ -1,0 +1,11 @@
+{
+  "last_updated": 1730808000,
+  "ttl": 300,
+  "version": "2.3",
+  "data": {
+    "system_id": "old_bikes",
+    "language": "en",
+    "name": "Old Bikes",
+    "timezone": "Europe/Paris"
+  }
+}

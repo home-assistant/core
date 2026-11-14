@@ -1,0 +1,33 @@
+{
+  "last_updated": "2026-11-05T12:00:00Z",
+  "ttl": 300,
+  "version": "3.0",
+  "data": {
+    "stations": [
+      {
+        "station_id": "m1",
+        "name": [
+          {
+            "text": "Mixed One",
+            "language": "en"
+          }
+        ],
+        "lat": 40.7,
+        "lon": -74.0,
+        "capacity": 100
+      },
+      {
+        "station_id": "m2",
+        "name": [
+          {
+            "text": "Mixed Two",
+            "language": "en"
+          }
+        ],
+        "lat": 40.71,
+        "lon": -74.01,
+        "capacity": 10
+      }
+    ]
+  }
+}

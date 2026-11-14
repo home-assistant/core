@@ -1,0 +1,161 @@
+{
+  "last_updated": "2026-11-05T12:00:00Z",
+  "ttl": 300,
+  "version": "3.0",
+  "data": {
+    "vehicle_types": [
+      {
+        "vehicle_type_id": "bike_human",
+        "form_factor": "bicycle",
+        "propulsion_type": "human",
+        "name": [
+          {
+            "text": "bike_human",
+            "language": "en"
+          }
+        ]
+      },
+      {
+        "vehicle_type_id": "bike_unpowered",
+        "form_factor": "bicycle",
+        "name": [
+          {
+            "text": "bike_unpowered",
+            "language": "en"
+          }
+        ]
+      },
+      {
+        "vehicle_type_id": "bike_assist",
+        "form_factor": "bicycle",
+        "propulsion_type": "electric_assist",
+        "name": [
+          {
+            "text": "bike_assist",
+            "language": "en"
+          }
+        ]
+      },
+      {
+        "vehicle_type_id": "bike_electric",
+        "form_factor": "bicycle",
+        "propulsion_type": "electric",
+        "name": [
+          {
+            "text": "bike_electric",
+            "language": "en"
+          }
+        ]
+      },
+      {
+        "vehicle_type_id": "bike_future",
+        "form_factor": "bicycle",
+        "propulsion_type": "future_propulsion",
+        "name": [
+          {
+            "text": "bike_future",
+            "language": "en"
+          }
+        ]
+      },
+      {
+        "vehicle_type_id": "cargo",
+        "form_factor": "cargo_bicycle",
+        "propulsion_type": "electric_assist",
+        "name": [
+          {
+            "text": "cargo",
+            "language": "en"
+          }
+        ]
+      },
+      {
+        "vehicle_type_id": "scooter_standing",
+        "form_factor": "scooter_standing",
+        "propulsion_type": "electric",
+        "name": [
+          {
+            "text": "scooter_standing",
+            "language": "en"
+          }
+        ]
+      },
+      {
+        "vehicle_type_id": "scooter_seated",
+        "form_factor": "scooter_seated",
+        "propulsion_type": "electric",
+        "name": [
+          {
+            "text": "scooter_seated",
+            "language": "en"
+          }
+        ]
+      },
+      {
+        "vehicle_type_id": "scooter_legacy",
+        "form_factor": "scooter",
+        "propulsion_type": "electric",
+        "name": [
+          {
+            "text": "scooter_legacy",
+            "language": "en"
+          }
+        ]
+      },
+      {
+        "vehicle_type_id": "moped",
+        "form_factor": "moped",
+        "propulsion_type": "electric",
+        "name": [
+          {
+            "text": "moped",
+            "language": "en"
+          }
+        ]
+      },
+      {
+        "vehicle_type_id": "car",
+        "form_factor": "car",
+        "propulsion_type": "combustion",
+        "name": [
+          {
+            "text": "car",
+            "language": "en"
+          }
+        ]
+      },
+      {
+        "vehicle_type_id": "other",
+        "form_factor": "other",
+        "propulsion_type": "human",
+        "name": [
+          {
+            "text": "other",
+            "language": "en"
+          }
+        ]
+      },
+      {
+        "vehicle_type_id": "hoverboard",
+        "form_factor": "hoverboard",
+        "propulsion_type": "electric",
+        "name": [
+          {
+            "text": "hoverboard",
+            "language": "en"
+          }
+        ]
+      },
+      {
+        "vehicle_type_id": "unspecified",
+        "propulsion_type": "human",
+        "name": [
+          {
+            "text": "unspecified",
+            "language": "en"
+          }
+        ]
+      }
+    ]
+  }
+}

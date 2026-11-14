@@ -1,0 +1,99 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "unique_id_mismatch": "This URL belongs to a different GBFS system. Add it as a new system instead."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_feed": "The URL doesn't point to a valid GBFS feed.",
+      "invalid_url": "Enter an http or https URL.",
+      "no_stations": "This system has no stations. Systems with only free-floating vehicles aren't supported yet.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "reconfigure": {
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]"
+        },
+        "data_description": {
+          "url": "[%key:component::gbfs::config::step::user::data_description::url%]"
+        }
+      },
+      "user": {
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]"
+        },
+        "data_description": {
+          "url": "The system's GBFS auto-discovery URL, usually ending in gbfs.json."
+        }
+      }
+    }
+  },
+  "config_subentries": {
+    "station": {
+      "abort": {
+        "already_configured": "This station is already added.",
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "entry_not_loaded": "The system must finish loading before stations can be added."
+      },
+      "entry_type": "Station",
+      "error": {
+        "station_not_found": "The station is no longer in the feed. Pick another one."
+      },
+      "initiate_flow": {
+        "user": "Add station"
+      },
+      "step": {
+        "user": {
+          "data": {
+            "station_id": "Station"
+          },
+          "data_description": {
+            "station_id": "Stations closest to your home are listed first."
+          }
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "cargo_bikes": {
+        "name": "Cargo bikes",
+        "unit_of_measurement": "[%key:component::gbfs::entity::sensor::classic_bikes::unit_of_measurement%]"
+      },
+      "cars": {
+        "name": "Cars",
+        "unit_of_measurement": "cars"
+      },
+      "classic_bikes": {
+        "name": "Classic bikes",
+        "unit_of_measurement": "bikes"
+      },
+      "docks_available": {
+        "name": "Docks available",
+        "unit_of_measurement": "docks"
+      },
+      "e_bikes": {
+        "name": "E-bikes",
+        "unit_of_measurement": "[%key:component::gbfs::entity::sensor::classic_bikes::unit_of_measurement%]"
+      },
+      "mopeds": {
+        "name": "Mopeds",
+        "unit_of_measurement": "mopeds"
+      },
+      "other_vehicles": {
+        "name": "Other vehicles",
+        "unit_of_measurement": "[%key:component::gbfs::entity::sensor::vehicles_available::unit_of_measurement%]"
+      },
+      "scooters": {
+        "name": "Scooters",
+        "unit_of_measurement": "scooters"
+      },
+      "vehicles_available": {
+        "name": "Vehicles available",
+        "unit_of_measurement": "vehicles"
+      }
+    }
+  }
+}
