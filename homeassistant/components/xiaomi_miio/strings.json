@@ -428,9 +428,9 @@
     "switch_set_power_price": {
       "description": "Sets the power price.",
       "fields": {
-        "mode": {
+        "price": {
           "description": "Power price.",
-          "name": "[%key:common::config_flow::data::mode%]"
+          "name": "Price"
         }
       },
       "name": "Switch set power price"
