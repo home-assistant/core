@@ -1118,6 +1118,18 @@ async def test_subscribe_unsubscribe_logbook_stream_included_entities(
 
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
+@pytest.mark.parametrize(
+    "recorder_config",
+    [
+        {
+            CONF_EXCLUDE: {
+                CONF_ENTITIES: ["light.exc"],
+                CONF_DOMAINS: ["switch"],
+                CONF_ENTITY_GLOBS: ["*.excluded", "*.no_matches"],
+            }
+        }
+    ],
+)
 async def test_logbook_stream_excluded_entities_inherits_filters_from_recorder(
     recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
@@ -1136,13 +1148,6 @@ async def test_logbook_stream_excluded_entities_inherits_filters_from_recorder(
             logbook.DOMAIN: {
                 CONF_EXCLUDE: {
                     CONF_ENTITIES: ["light.additional_excluded"],
-                }
-            },
-            recorder.DOMAIN: {
-                CONF_EXCLUDE: {
-                    CONF_ENTITIES: ["light.exc"],
-                    CONF_DOMAINS: ["switch"],
-                    CONF_ENTITY_GLOBS: ["*.excluded", "*.no_matches"],
                 }
             },
         },
