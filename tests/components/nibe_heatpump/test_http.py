@@ -1,5 +1,6 @@
 """Test the Nibe Heat Pump HTTP views."""
 
+from datetime import timedelta
 from http import HTTPStatus
 from typing import Any
 from unittest.mock import patch
@@ -9,6 +10,7 @@ import pytest
 from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.http.auth import async_sign_path
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
@@ -50,6 +52,26 @@ async def test_log_set_download(
     assert resp.status == HTTPStatus.OK
     assert resp.headers["Content-Disposition"] == 'attachment; filename="LOG.SET"'
     assert await resp.read() == snapshot
+
+
+async def test_log_set_signed_path(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    hass_access_token: str,
+) -> None:
+    """Test a LOG.SET link signed for an admin works without an auth header."""
+    entry = await async_add_model(hass, Model.F1155)
+    refresh_token = hass.auth.async_validate_access_token(hass_access_token)
+    assert refresh_token
+    path = async_sign_path(
+        hass,
+        f"/api/nibe_heatpump/{entry.entry_id}/log_set",
+        timedelta(minutes=5),
+        refresh_token_id=refresh_token.id,
+    )
+
+    resp = await (await hass_client_no_auth()).get(path)
+    assert resp.status == HTTPStatus.OK
 
 
 async def test_log_set_requires_admin(
