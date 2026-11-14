@@ -27,6 +27,7 @@ EXCLUDED_FIELDS: Final = frozenset(
         "g_o_switch",
         "b_soc_high",
         "b_soc_low",
+        "d_working_mode",
         # The library only decodes their zero member, so a real code reads None.
         "d_inverter_fault",
         "d_inverter_warning",
