@@ -1,21 +1,95 @@
 """LLM tools for the assist_satellite integration."""
 
+from typing import Any, override
+
+import probatio
+
 from homeassistant.components.llm import LLMTools
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import intent
+from homeassistant.helpers import config_validation as cv, intent
 from homeassistant.helpers.llm import (
     LLM_API_ASSIST,
-    IntentTool,
     LLMContext,
     Tool,
     ToolAnnotations,
+    ToolInput,
+    ToolResult,
 )
 
-from .const import DOMAIN
+from .const import DOMAIN, AssistSatelliteService, AssistSatelliteServiceArgument
+from .intent import async_get_broadcast_entity_ids
 
-# A broadcast announces something every time it is called and takes nothing
-# away, and it only reaches the user's own satellites.
-LLM_ANNOTATIONS = ToolAnnotations(destructive=False, open_world=False)
+
+class BroadcastTool(Tool):
+    """LLM Tool that broadcasts a message on Assist satellites."""
+
+    name = f"{DOMAIN}__broadcast"
+    title = "Broadcast message"
+    description = (
+        "Broadcasts a message through the home on voice assistants. "
+        "Give an area or a floor to broadcast only there."
+    )
+    parameters = probatio.Schema(
+        {
+            probatio.Required("message"): cv.string,
+            probatio.Optional(
+                "area", description="Name of the area to broadcast in"
+            ): cv.string,
+            probatio.Optional(
+                "floor", description="Name of the floor to broadcast on"
+            ): cv.string,
+        }
+    )
+    # A broadcast announces something every time it is called and takes
+    # nothing away, and it only reaches the user's own satellites.
+    annotations = ToolAnnotations(destructive=False, open_world=False)
+    integration = DOMAIN
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Broadcast a message."""
+        args: dict[str, Any] = self.parameters(
+            {
+                key: value
+                for key, value in tool_input.tool_args.items()
+                if not intent.is_blank_slot_value(value)
+            }
+        )
+        area = args.get("area")
+        floor = args.get("floor")
+
+        # A broadcast to the whole home skips the satellite that asked for it.
+        # A broadcast to a named area or floor includes it.
+        entity_ids = async_get_broadcast_entity_ids(
+            hass, None if area or floor else llm_context.device_id
+        )
+        states = [
+            state for entity_id in entity_ids if (state := hass.states.get(entity_id))
+        ]
+
+        if area or floor:
+            # Satellites are matched without the assistant, because the user
+            # rarely exposes them.
+            constraints = intent.MatchTargetsConstraints(
+                area_name=area, floor_name=floor
+            )
+            result = intent.async_match_targets(hass, constraints, states=states)
+            if not result.is_match:
+                raise intent.MatchFailedError(result=result, constraints=constraints)
+            states = result.states
+
+        await hass.services.async_call(
+            DOMAIN,
+            AssistSatelliteService.ANNOUNCE,
+            {AssistSatelliteServiceArgument.MESSAGE: args["message"]},
+            blocking=True,
+            context=llm_context.context,
+            target={ATTR_ENTITY_ID: [state.entity_id for state in states]},
+        )
+        return ToolResult(data={"satellites": [state.name for state in states]})
 
 
 @callback
@@ -25,18 +99,4 @@ def async_get_tools(
     """Return the broadcast LLM tool."""
     if api_id != LLM_API_ASSIST:
         return None
-
-    # assist_satellite registers the broadcast intent when it is set up, and
-    # this platform is only queried once that has happened.
-    tools: list[Tool] = [
-        IntentTool(
-            f"{DOMAIN}__{handler.intent_type}",
-            handler,
-            title="Broadcast message",
-            integration=DOMAIN,
-            annotations=LLM_ANNOTATIONS,
-        )
-        for handler in intent.async_get(hass)
-        if handler.intent_type == intent.INTENT_BROADCAST
-    ]
-    return LLMTools(tools=tools)
+    return LLMTools(tools=[BroadcastTool()])
