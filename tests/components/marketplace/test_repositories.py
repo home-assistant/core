@@ -164,6 +164,27 @@ def test_manifest_leaves_out_values_of_the_wrong_type(key: str, value: Any) -> N
     assert getattr(manifest, key) == getattr(RepositoryManifest(), key)
 
 
+def test_manifest_warning_names_the_repository(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the warning for a value that is left out names the repository."""
+    RepositoryManifest.from_dict({"zip_release": "yes"}, "owner/repository")
+
+    assert (
+        "Ignoring zip_release in hacs.json of owner/repository, 'yes' is not valid"
+        in caplog.text
+    )
+
+
+def test_manifest_warning_without_a_repository(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the warning without a repository keeps the plain message."""
+    RepositoryManifest.from_dict({"zip_release": "yes"})
+
+    assert "Ignoring zip_release in hacs.json, 'yes' is not valid" in caplog.text
+
+
 @pytest.mark.parametrize(
     ("key", "value", "expected"),
     [
