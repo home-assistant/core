@@ -1,0 +1,31 @@
+{
+  "busy": false,
+  "drive": {
+    "cdrom": true,
+    "connected": false,
+    "image": null,
+    "rw": false
+  },
+  "enabled": true,
+  "online": true,
+  "storage": {
+    "downloading": null,
+    "images": {
+      "ubuntu-26.04-live-server-amd64.iso": {
+        "complete": true,
+        "mod_ts": 1786210575.9276292,
+        "removable": true,
+        "size": 2918598656,
+        "writable": false
+      }
+    },
+    "parts": {
+      "": {
+        "free": 21426028544,
+        "size": 24363532288,
+        "writable": true
+      }
+    },
+    "uploading": null
+  }
+}
