@@ -18,12 +18,13 @@ from aiotedee.models import TedeeBridge
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
+from homeassistant.util.hass_dict import HassKey
 
 from .const import CONF_LOCAL_ACCESS_TOKEN, DOMAIN
 
@@ -31,6 +32,8 @@ SCAN_INTERVAL = timedelta(seconds=30)
 GET_LOCKS_INTERVAL_SECONDS = 3600
 # The bridge rejects valid tokens for a while after a restart until its clock is synced
 AUTH_FAILURE_GRACE_PERIOD = timedelta(minutes=10)
+# Kept outside the coordinator, which is recreated on every setup attempt
+AUTH_FAILED_SINCE: HassKey[dict[str, datetime]] = HassKey(f"{DOMAIN}_auth_failed_since")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,7 +66,6 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
         self._locks_last_update: set[int] = set()
         self.new_lock_callbacks: list[Callable[[list[TedeeLock]], None]] = []
         self.tedee_webhook_id: int | None = None
-        self._auth_failed_since: datetime | None = None
 
     @override
     async def _async_setup(self) -> None:
@@ -94,6 +96,7 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
             ", ".join(map(str, self.tedee_client.locks_dict.keys())),
         )
 
+        self.hass.data.get(AUTH_FAILED_SINCE, {}).pop(self.config_entry.entry_id, None)
         self._async_add_remove_locks()
         return self.tedee_client.locks_dict
 
@@ -115,13 +118,10 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
             await update_fn()
         except TedeeLocalAuthException as ex:
             now = dt_util.utcnow()
-            if self._auth_failed_since is None:
-                self._auth_failed_since = now
-            # Fail immediately during setup, so an invalid token is reported right away
-            if (
-                self.data is None
-                or now - self._auth_failed_since > AUTH_FAILURE_GRACE_PERIOD
-            ):
+            auth_failed_since = self.hass.data.setdefault(
+                AUTH_FAILED_SINCE, {}
+            ).setdefault(self.config_entry.entry_id, now)
+            if now - auth_failed_since > AUTH_FAILURE_GRACE_PERIOD:
                 raise ConfigEntryAuthFailed(
                     translation_domain=DOMAIN,
                     translation_key="authentication_failed",
@@ -140,7 +140,6 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
             raise UpdateFailed(
                 translation_domain=DOMAIN, translation_key="api_error"
             ) from ex
-        self._auth_failed_since = None
 
     def webhook_received(self, message: dict[str, Any]) -> None:
         """Handle webhook message."""
@@ -151,7 +150,7 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
         """Register the webhook at the Tedee bridge."""
         self.tedee_webhook_id = await self.tedee_client.register_webhook(webhook_url)
 
-    async def async_unregister_webhook(self) -> None:
+    async def async_unregister_webhook(self, _: Event | None = None) -> None:
         """Unregister the webhook at the Tedee bridge."""
         if self.tedee_webhook_id is not None:
             try:
@@ -159,6 +158,7 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
             except TedeeWebhookException:
                 _LOGGER.exception("Failed to unregister Tedee webhook from bridge")
             else:
+                self.tedee_webhook_id = None
                 _LOGGER.debug("Unregistered Tedee webhook")
 
     def _async_add_remove_locks(self) -> None:

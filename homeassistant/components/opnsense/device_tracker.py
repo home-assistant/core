@@ -78,12 +78,12 @@ class OPNsenseDeviceTrackerEntity(
         connection = (dr.CONNECTION_NETWORK_MAC, mac_address)
         self._attr_device_info = dr.DeviceInfo(connections={connection})
         if hostname := self.hostname:
-            self._attr_device_info["name"] = hostname
+            self._attr_device_info.name = hostname
         elif not dr.async_get(coordinator.hass).async_get_device_by_connection(
             connection, coordinator.config_entry.entry_id
         ):
             # Only name a new device by MAC, an existing device keeps its name
-            self._attr_device_info["name"] = mac_address
+            self._attr_device_info.name = mac_address
 
     @property
     def device_data(self) -> DeviceDetails | None:

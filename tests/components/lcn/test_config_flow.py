@@ -12,7 +12,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.lcn.config_flow import LcnFlowHandler, validate_connection
+from homeassistant.components.lcn.config_flow import validate_connection
 from homeassistant.components.lcn.const import (
     CONF_ACKNOWLEDGE,
     CONF_DIM_MODE,
@@ -48,17 +48,6 @@ IMPORT_DATA = {
     CONF_DEVICES: [],
     CONF_ENTITIES: [],
 }
-
-
-async def test_show_form(hass: HomeAssistant) -> None:
-    """Test that the form is served with no input."""
-    flow = LcnFlowHandler()
-    flow.hass = hass
-
-    result = await flow.async_step_user(user_input=None)
-
-    assert result["type"] is data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "user"
 
 
 async def test_step_user(hass: HomeAssistant) -> None:

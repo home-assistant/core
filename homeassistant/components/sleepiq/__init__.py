@@ -13,7 +13,7 @@ from asyncsleepiq import (
 )
 import probatio
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, PRESSURE, Platform
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
@@ -223,7 +223,7 @@ def _deduplicate_sleepers(gateway: AsyncSleepIQ) -> None:
 
 
 async def _async_migrate_unique_ids(
-    hass: HomeAssistant, entry: ConfigEntry, gateway: AsyncSleepIQ
+    hass: HomeAssistant, entry: SleepIQConfigEntry, gateway: AsyncSleepIQ
 ) -> None:
     """Migrate old unique ids."""
     names_to_ids = {

@@ -40,7 +40,6 @@
             dict({
               'daytimeForecast': dict({
                 'cloudCover': 53,
-                'iceThickness': None,
                 'interval': dict({
                   'endTime': '2025-02-11T03:00:00Z',
                   'startTime': '2025-02-10T15:00:00Z',
@@ -54,7 +53,6 @@
                     'quantity': 0.0,
                     'unit': 'MILLIMETERS',
                   }),
-                  'snowQpf': None,
                 }),
                 'relativeHumidity': 54,
                 'thunderstormProbability': 0,
@@ -126,7 +124,6 @@
               }),
               'nighttimeForecast': dict({
                 'cloudCover': 70,
-                'iceThickness': None,
                 'interval': dict({
                   'endTime': '2025-02-11T15:00:00Z',
                   'startTime': '2025-02-11T03:00:00Z',
@@ -140,7 +137,6 @@
                     'quantity': 0.0,
                     'unit': 'MILLIMETERS',
                   }),
-                  'snowQpf': None,
                 }),
                 'relativeHumidity': 85,
                 'thunderstormProbability': 0,
@@ -174,10 +170,8 @@
               }),
             }),
           ]),
-          'nextPageToken': None,
           'timeZone': dict({
             'id': 'America/Los_Angeles',
-            'version': None,
           }),
         }),
         'hourly_forecast_data': dict({
@@ -194,11 +188,7 @@
               'displayDateTime': dict({
                 'day': 5,
                 'hours': 15,
-                'minutes': None,
                 'month': 2,
-                'nanos': None,
-                'seconds': None,
-                'timeZone': None,
                 'utcOffset': '-28800s',
                 'year': 2025,
               }),
@@ -228,7 +218,6 @@
                   'quantity': 0.0,
                   'unit': 'MILLIMETERS',
                 }),
-                'snowQpf': None,
               }),
               'relativeHumidity': 51,
               'temperature': dict({
@@ -273,10 +262,8 @@
               }),
             }),
           ]),
-          'nextPageToken': None,
           'timeZone': dict({
             'id': 'America/Los_Angeles',
-            'version': None,
           }),
         }),
         'observation_data': dict({
@@ -325,7 +312,6 @@
               'quantity': 0.0,
               'unit': 'MILLIMETERS',
             }),
-            'snowQpf': None,
           }),
           'relativeHumidity': 42,
           'temperature': dict({
@@ -335,7 +321,6 @@
           'thunderstormProbability': 0,
           'timeZone': dict({
             'id': 'America/Los_Angeles',
-            'version': None,
           }),
           'uvIndex': 1,
           'visibility': dict({

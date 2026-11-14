@@ -7,13 +7,16 @@ import logging
 from typing import override
 
 from arcam.fmj.client import AmxDuetResponse, Client, ResponsePacket
-from arcam.fmj.errors import ConnectionFailed
+from arcam.fmj.errors import ConnectionFailed, NotConnectedException
 from arcam.fmj.state import State
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailedUnreachable,
+)
 
 from .const import DOMAIN
 
@@ -76,9 +79,10 @@ class ArcamFmjCoordinator(DataUpdateCoordinator[None]):
         try:
             self.update_in_progress = True
             await self.state.update()
-        except ConnectionFailed as err:
-            raise UpdateFailed(
-                f"Connection failed during update for zone {self.state.zn}"
+        except (ConnectionFailed, NotConnectedException) as err:
+            raise UpdateFailedUnreachable(
+                translation_domain=DOMAIN,
+                translation_key="connection_failed",
             ) from err
         finally:
             self.update_in_progress = False

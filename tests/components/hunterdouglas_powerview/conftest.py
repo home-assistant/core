@@ -19,7 +19,12 @@ from .const import MOCK_MAC
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return a mocked config entry."""
-    return MockConfigEntry(domain=DOMAIN, data={"host": "1.2.3.4"}, unique_id=MOCK_MAC)
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data={"host": "1.2.3.4"},
+        entry_id="01JHUNTERDOUGLASPOWERVIEW0",
+        unique_id=MOCK_MAC,
+    )
 
 
 @pytest.fixture

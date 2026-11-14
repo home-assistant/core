@@ -14,11 +14,12 @@ from homeassistant.components.tts import (
     TtsAudioType,
     Voice,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigSubentry
+from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import GoogleGenerativeAIConfigEntry
 from .const import (
     CONF_CHAT_MODEL,
     CONF_TEMPERATURE,
@@ -47,7 +48,7 @@ VOICES_MAX_PAGES = 10
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: GoogleGenerativeAIConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up TTS entities."""
@@ -256,7 +257,9 @@ class GoogleGenerativeAITextToSpeechEntity(
         )
     ]
 
-    def __init__(self, config_entry: ConfigEntry, subentry: ConfigSubentry) -> None:
+    def __init__(
+        self, config_entry: GoogleGenerativeAIConfigEntry, subentry: ConfigSubentry
+    ) -> None:
         """Initialize the TTS entity."""
         super().__init__(config_entry, subentry, RECOMMENDED_TTS_MODEL)
         self._library_voices: dict[str, list[Voice]] = {}

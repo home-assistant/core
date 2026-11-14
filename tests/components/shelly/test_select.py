@@ -9,18 +9,18 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
-    ATTR_OPTION,
     ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
 from homeassistant.components.shelly.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -105,8 +105,11 @@ async def test_rpc_device_virtual_enum(
     monkeypatch.setitem(mock_rpc_device.status["enum:203"], "value", "option 1")
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "Title 1"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            SelectServiceArgument.OPTION: "Title 1",
+        },
         blocking=True,
     )
     # 'Title 1' corresponds to 'option 1'
@@ -228,10 +231,10 @@ async def test_select_set_exc(
     with pytest.raises(HomeAssistantError, match=error):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: f"{SELECT_DOMAIN}.test_name_enum_203",
-                ATTR_OPTION: "option 2",
+                CommonServiceArgument.ENTITY_ID: f"{SELECT_DOMAIN}.test_name_enum_203",
+                SelectServiceArgument.OPTION: "option 2",
             },
             blocking=True,
         )
@@ -266,10 +269,10 @@ async def test_select_set_reauth_error(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: f"{SELECT_DOMAIN}.test_name_enum_203",
-            ATTR_OPTION: "option 2",
+            CommonServiceArgument.ENTITY_ID: f"{SELECT_DOMAIN}.test_name_enum_203",
+            SelectServiceArgument.OPTION: "option 2",
         },
         blocking=True,
     )
@@ -326,8 +329,11 @@ async def test_rpc_cury_mode_select(
     monkeypatch.setitem(mock_rpc_device.status["cury:0"], "mode", "reception")
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "reception"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            SelectServiceArgument.OPTION: "reception",
+        },
         blocking=True,
     )
 
@@ -366,8 +372,11 @@ async def test_rpc_ledstrip_palette_select(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: LEDSTRIP_ENTITY_ID, ATTR_OPTION: "fire"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: LEDSTRIP_ENTITY_ID,
+            SelectServiceArgument.OPTION: "fire",
+        },
         blocking=True,
     )
     mock_ledstrip_rpc_device.ledstrip_set.assert_called_once_with(
@@ -407,10 +416,10 @@ async def test_rpc_ledstrip_palette_select_availability(
 
 
 @pytest.mark.parametrize(
-    ("component", "update_method", "set_method"),
+    ("component", "set_method"),
     [
-        ("plugs_ui", "update_plugs_ui_config", "plugs_ui_setconfig"),
-        ("powerstrip_ui", "update_powerstrip_ui_config", "powerstrip_ui_setconfig"),
+        ("plugs_ui", "plugs_ui_setconfig"),
+        ("powerstrip_ui", "powerstrip_ui_setconfig"),
     ],
 )
 async def test_rpc_ui_led_mode_select(
@@ -420,7 +429,6 @@ async def test_rpc_ui_led_mode_select(
     snapshot: SnapshotAssertion,
     monkeypatch: pytest.MonkeyPatch,
     component: str,
-    update_method: str,
     set_method: str,
 ) -> None:
     """Test RPC plug/power strip LED mode select."""
@@ -437,8 +445,11 @@ async def test_rpc_ui_led_mode_select(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "switch"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            SelectServiceArgument.OPTION: "switch",
+        },
         blocking=True,
     )
     getattr(mock_rpc_device, set_method).assert_called_once_with(
@@ -446,9 +457,11 @@ async def test_rpc_ui_led_mode_select(
     )
 
     # The device reports the change with an event, the new config is then fetched
-    getattr(mock_rpc_device, update_method).side_effect = lambda: (
-        mock_rpc_device.config[component]["leds"].update(mode="switch")
-    )
+    def _update_component_config(key: str) -> set[str]:
+        mock_rpc_device.config[key]["leds"].update(mode="switch")
+        return {"leds"}
+
+    mock_rpc_device.update_component_config.side_effect = _update_component_config
     inject_rpc_device_event(
         monkeypatch,
         mock_rpc_device,

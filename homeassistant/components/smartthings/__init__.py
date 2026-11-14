@@ -354,7 +354,9 @@ async def async_unload_entry(
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_migrate_entry(
+    hass: HomeAssistant, entry: SmartThingsConfigEntry
+) -> None:
     """Handle config entry migration."""
 
     if entry.version < 3:

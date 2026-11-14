@@ -23,7 +23,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.unit_conversion import TemperatureConverter
@@ -114,6 +114,7 @@ class MitsubishiComfortCloudClimate(MitsubishiComfortCloudEntity, ClimateEntity)
         self._attr_unique_id = self._device.serial
         self._optimistic: dict[str, Any] = {}
 
+    @callback
     @override
     def _handle_coordinator_update(self) -> None:
         """Clear optimistic state when real data arrives from device."""

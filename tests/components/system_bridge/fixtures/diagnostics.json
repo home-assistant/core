@@ -1,0 +1,46 @@
+{
+  "version": "5.24.0",
+  "platform": "linux",
+  "architecture": "amd64",
+  "started_at": 1700000000,
+  "log_level": "WARN",
+  "modules": [
+    {
+      "name": "cpu",
+      "has_data": true,
+      "updated": "2023-11-14T22:13:20Z",
+      "failures": 0,
+      "last_error": null,
+      "last_error_at": null
+    },
+    {
+      "name": "gpus",
+      "has_data": false,
+      "updated": null,
+      "failures": 3,
+      "last_error": "failed to read /dev/dri/card0",
+      "last_error_at": 1700000060
+    }
+  ],
+  "settings": {
+    "autostart": false,
+    "system_tray": true,
+    "hotkeys": 0,
+    "commands": 2,
+    "media_directories": 1,
+    "allowed_secondary_mount_points": 0,
+    "cameras_capture": false,
+    "desktop_window_titles": false,
+    "desktop_hyprland_code": false
+  },
+  "recent_errors": [
+    {
+      "time": 1700000060,
+      "level": "WARN",
+      "message": "Task processing error for module",
+      "error": "failed to read /dev/dri/card0",
+      "module": "gpus",
+      "event": null
+    }
+  ]
+}

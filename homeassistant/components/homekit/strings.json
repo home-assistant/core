@@ -43,7 +43,11 @@
       "cameras": {
         "data": {
           "camera_audio": "Cameras that support audio",
-          "camera_copy": "Cameras that support native H.264 streams"
+          "camera_copy": "Cameras that support native H.264 streams",
+          "camera_mode": "Camera mode"
+        },
+        "data_description": {
+          "camera_mode": "HomeKit Secure Video records when the camera's linked motion sensor detects motion. Requires a home hub and an iCloud+ plan."
         },
         "description": "Check all cameras that support native H.264 streams. If the camera does not output a H.264 stream, the system will transcode the video to H.264 for HomeKit. Transcoding requires a performant CPU and is unlikely to work on single-board computers.",
         "title": "Camera configuration"
@@ -82,6 +86,12 @@
     }
   },
   "selector": {
+    "camera_mode": {
+      "options": {
+        "secure_video": "HomeKit Secure Video (H.264 recording)",
+        "standard": "Standard (live view only)"
+      }
+    },
     "climate_accessory_type": {
       "options": {
         "automatic": "Automatic",
