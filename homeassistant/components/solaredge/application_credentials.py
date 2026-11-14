@@ -26,6 +26,7 @@ from homeassistant.util.hass_dict import HassKey
 
 from .const import (
     DOMAIN,
+    LOGGER,
     OAUTH2_AUTHORIZE,
     OAUTH2_AUTHORIZE_PATH,
     OAUTH2_CALLBACK_PATH,
@@ -54,11 +55,11 @@ DATA_CALLBACK_REGISTERED: HassKey[bool] = HassKey(f"{DOMAIN}_oauth_callback_regi
 def _redirect_uri(hass: HomeAssistant) -> str:
     """Return the provider-specific redirect URI."""
     if hass.config.external_url:
-        return f"{hass.config.external_url}{OAUTH2_CALLBACK_PATH}"
+        return f"{hass.config.external_url.rstrip('/')}{OAUTH2_CALLBACK_PATH}"
     if (req := http.current_request.get()) is not None and (
         ha_host := req.headers.get(config_entry_oauth2_flow.HEADER_FRONTEND_BASE)
     ):
-        return f"{ha_host}{OAUTH2_CALLBACK_PATH}"
+        return f"{ha_host.rstrip('/')}{OAUTH2_CALLBACK_PATH}"
     raise RuntimeError("No external Home Assistant URL available")
 
 
@@ -309,6 +310,20 @@ class SolarEdgeOAuth2Implementation(AuthImplementation):
                     "client_secret": self.client_secret,
                 },
             )
+            if response.status >= HTTPStatus.BAD_REQUEST:
+                error_data: dict[str, Any] = {}
+                try:
+                    parsed = await response.json(content_type=None)
+                    if isinstance(parsed, dict):
+                        error_data = parsed
+                except ClientError, ValueError:
+                    pass
+                LOGGER.debug(
+                    "SolarEdge token exchange failed (%s): %s: %s",
+                    response.status,
+                    error_data.get("error", "unknown error"),
+                    error_data.get("error_description", "no description"),
+                )
             response.raise_for_status()
             result = cast(dict[str, Any], await response.json())
         except ClientError as err:
@@ -343,7 +358,7 @@ async def async_get_auth_implementation(
 async def async_get_description_placeholders(hass: HomeAssistant) -> dict[str, str]:
     """Return application credential description placeholders."""
     redirect_url = (
-        f"{hass.config.external_url}{OAUTH2_CALLBACK_PATH}"
+        f"{hass.config.external_url.rstrip('/')}{OAUTH2_CALLBACK_PATH}"
         if hass.config.external_url
         else f"https://YOUR_DOMAIN:PORT{OAUTH2_CALLBACK_PATH}"
     )

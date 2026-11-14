@@ -1,9 +1,11 @@
 """Tests for the SolarEdge config flow."""
 
 from http import HTTPStatus
-from unittest.mock import AsyncMock, Mock
+import logging
+from unittest.mock import AsyncMock, MagicMock, Mock
 
 from aiohttp import ClientError, ClientResponseError
+import multidict
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
@@ -15,6 +17,9 @@ from homeassistant.components.solaredge.api import (
     SolarEdgeApiError,
     SolarEdgeAuthError,
     SolarEdgeNotFoundError,
+)
+from homeassistant.components.solaredge.application_credentials import (
+    async_get_description_placeholders,
 )
 from homeassistant.components.solaredge.const import (
     API_BASE_URL,
@@ -34,6 +39,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import config_entry_oauth2_flow
 
 from .conftest import SITE_ID, TOKEN
 
@@ -68,6 +74,49 @@ async def _complete_oauth(
     )
     assert response.status == 200
     return await hass.config_entries.flow.async_configure(flow_id)
+
+
+@pytest.fixture
+def current_request_with_trailing_slash(current_request: MagicMock) -> None:
+    """Mock the frontend base URL with a trailing slash."""
+    headers = multidict.CIMultiDict(current_request.get.return_value.headers)
+    headers[config_entry_oauth2_flow.HEADER_FRONTEND_BASE] = "https://example.com/"
+    current_request.get.return_value = current_request.get.return_value.clone(
+        headers=headers
+    )
+
+
+@pytest.mark.usefixtures("current_request_with_trailing_slash")
+async def test_redirect_uri_normalizes_trailing_slash(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    setup_credentials: None,
+) -> None:
+    """Test the provider redirect URI does not contain a double slash."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_SITE_ID: SITE_ID}
+    )
+
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    assert result["url"].startswith(
+        "https://example.com/api/solaredge/oauth/authorize?"
+    )
+
+
+async def test_external_url_placeholder_normalizes_trailing_slash(
+    hass: HomeAssistant,
+) -> None:
+    """Test the documented callback URL does not contain a double slash."""
+    hass.config.external_url = "https://example.com/"
+
+    placeholders = await async_get_description_placeholders(hass)
+
+    assert placeholders["redirect_url"] == (
+        "https://example.com/api/solaredge/oauth/callback"
+    )
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -370,8 +419,10 @@ async def test_invalid_code_does_not_consume_pending_flow(
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     setup_credentials: None,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test a rejected code can be retried without restarting the flow."""
+    caplog.set_level(logging.DEBUG, logger="homeassistant.components.solaredge")
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -382,7 +433,14 @@ async def test_invalid_code_does_not_consume_pending_flow(
     response = await client.get(URL(result["url"]).path_qs, allow_redirects=False)
     assert response.status == 302
     cookie = response.cookies[f"solaredge_oauth_{result['flow_id']}"]
-    aioclient_mock.post(OAUTH2_TOKEN, status=400, json={"error": "invalid_grant"})
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        status=400,
+        json={
+            "error": "invalid_grant",
+            "error_description": "Redirect URI mismatch",
+        },
+    )
 
     response = await client.get(
         f"{OAUTH2_CALLBACK_PATH}?code=invalid&site_id={SITE_ID}",
@@ -390,6 +448,10 @@ async def test_invalid_code_does_not_consume_pending_flow(
     )
     assert response.status == 400
     assert hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert (
+        "SolarEdge token exchange failed (400): invalid_grant: Redirect URI mismatch"
+        in caplog.text
+    )
 
 
 @pytest.mark.usefixtures("current_request_with_host")
