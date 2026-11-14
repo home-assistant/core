@@ -328,8 +328,17 @@ def _async_track_event(
 
     This function is intended for internal use only.
     """
-    if not keys:
-        return async_noop
+    keys_name = keys
+    if isinstance(keys, str):
+        if not keys:
+            return async_noop
+        single_key = keys
+        keys = (keys,)
+    else:
+        keys = tuple(keys)
+        if not keys:
+            return async_noop
+        single_key = None
 
     hass_data = hass.data
     tracker_key = tracker.key
@@ -346,16 +355,17 @@ def _async_track_event(
         event_data = _KeyedEventData(listener, callbacks)
         hass_data[tracker_key] = event_data
 
-    job = HassJob(action, f"track {tracker.event_type} event {keys}", job_type=job_type)
+    job = HassJob(
+        action, f"track {tracker.event_type} event {keys_name}", job_type=job_type
+    )
 
-    if isinstance(keys, str):
+    if single_key is not None:
         # Almost all calls to this function use a single key
         # so we optimize for that case. We don't use setdefault
         # here because this function gets called ~20000 times
         # during startup, and we want to avoid the overhead of
         # creating empty lists and throwing them away.
-        callbacks[keys].append(job)
-        keys = (keys,)
+        callbacks[single_key].append(job)
     else:
         for key in keys:
             callbacks[key].append(job)
