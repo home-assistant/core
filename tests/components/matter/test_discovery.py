@@ -101,3 +101,62 @@ def test_async_discover_entities_filters_by_cluster_revision(
     endpoint = node.endpoints[1]
 
     assert bool(list(async_discover_entities(endpoint, 1))) is expected_discovered
+
+
+@pytest.mark.parametrize(
+    ("device_types", "removed_clusters", "expected"),
+    [
+        pytest.param(
+            (0x0028,),
+            (),
+            {(Platform.MEDIA_PLAYER, "MatterVideoPlayer")},
+            id="basic_video_player",
+        ),
+        pytest.param(
+            (0x0028,),
+            (clusters.MediaPlayback.id,),
+            {(Platform.SWITCH, "MatterPowerToggle")},
+            id="basic_video_player_without_media_playback",
+        ),
+        pytest.param(
+            (0x0023,),
+            (),
+            {(Platform.MEDIA_PLAYER, "MatterVideoPlayer")},
+            id="casting_video_player",
+        ),
+        pytest.param(
+            (0x0023,),
+            (clusters.MediaPlayback.id,),
+            {(Platform.SWITCH, "MatterPowerToggle")},
+            id="casting_video_player_without_media_playback",
+        ),
+        pytest.param(
+            (0x0028, 0x0023),
+            (),
+            {(Platform.MEDIA_PLAYER, "MatterVideoPlayer")},
+            id="both_video_player_device_types",
+        ),
+    ],
+)
+def test_async_discover_entities_video_player_power(
+    device_types: tuple[int, ...],
+    removed_clusters: tuple[int, ...],
+    expected: set[tuple[Platform, str]],
+) -> None:
+    """Test video players only get a Power switch when there is no media player."""
+    node = create_node_from_fixture(
+        "mock_basic_video_player",
+        {"1/29/0": [{"0": device_type, "1": 2} for device_type in device_types]},
+    )
+    for path in [
+        path
+        for path in node.node_data.attributes
+        if int(path.split("/")[1]) in removed_clusters
+    ]:
+        del node.node_data.attributes[path]
+
+    assert {
+        (info.platform, info.entity_description.key)
+        for info in async_discover_entities(node.endpoints[1], 1)
+        if clusters.OnOff.Attributes.OnOff in info.discovery_schema.required_attributes
+    } == expected
