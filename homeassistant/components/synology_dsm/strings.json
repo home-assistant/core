@@ -3,9 +3,9 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_mac_address": "The MAC address is missing from the Zeroconf record",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
-      "unique_id_mismatch": "The provided connection settings belong to a different Synology NAS."
+      "unique_id_mismatch": "The provided connection settings belong to a different Synology NAS.",
+      "wrong_nas": "The NAS at this address is not the one this entry was set up for (different serial number)."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
