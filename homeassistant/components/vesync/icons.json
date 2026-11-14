@@ -29,9 +29,17 @@
         }
       }
     },
+    "light": {
+      "nightlight": {
+        "default": "mdi:lightbulb-night"
+      }
+    },
     "number": {
       "mist_level": {
         "default": "mdi:water-percent"
+      },
+      "warm_mist_level": {
+        "default": "mdi:heat-wave"
       }
     },
     "switch": {
@@ -46,6 +54,12 @@
       },
       "drying_mode_power_off": {
         "default": "mdi:weather-windy"
+      },
+      "light_detection": {
+        "default": "mdi:brightness-auto"
+      },
+      "mute": {
+        "default": "mdi:volume-off"
       }
     }
   },

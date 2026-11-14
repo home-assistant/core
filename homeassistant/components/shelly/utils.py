@@ -370,6 +370,21 @@ def get_shelly_model_name(
     return cast(str, MODEL_NAMES.get(model))
 
 
+def get_shelly_manufacturer(device: BlockDevice | RpcDevice) -> str:
+    """Get Shelly device manufacturer.
+
+    Sleeping devices are not initialized during setup and are all made by Shelly.
+    """
+    if (
+        isinstance(device, RpcDevice)
+        and device.initialized
+        and (manufacturer := device.xmod_info.get("m"))
+    ):
+        return cast(str, manufacturer)
+
+    return "Shelly"
+
+
 def get_rpc_key(value: str) -> tuple[bool, str, str]:
     """Get split device key."""
     parts = value.split(":")

@@ -13,16 +13,7 @@ from pytest_homeassistant.common import (
 )
 
 from homeassistant.components.lifx import DOMAIN
-from homeassistant.components.lifx.const import (
-    ATTR_INFRARED,
-    ATTR_POWER,
-    ATTR_ZONES,
-    SERVICE_EFFECT_COLORSWEEP,
-    SERVICE_EFFECT_FLAME,
-    SERVICE_EFFECT_PULSE,
-    SERVICE_SET_HEV_CYCLE_STATE,
-    SERVICE_SET_STATE,
-)
+from homeassistant.components.lifx.const import LIFXService, LIFXServiceArgument
 from homeassistant.components.lifx.light import LIFXComponentLight
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -592,8 +583,8 @@ async def test_stopping_a_software_effect_can_fail(
 @pytest.mark.parametrize(
     ("is_on", "data", "turn_on_calls", "turn_off_calls"),
     [
-        pytest.param(False, {ATTR_POWER: True}, 1, 0, id="power-on"),
-        pytest.param(True, {ATTR_POWER: False}, 0, 1, id="power-off"),
+        pytest.param(False, {LIFXServiceArgument.POWER: True}, 1, 0, id="power-on"),
+        pytest.param(True, {LIFXServiceArgument.POWER: False}, 0, 1, id="power-off"),
         pytest.param(True, {"brightness": 200}, 1, 0, id="no-power-while-on"),
         pytest.param(False, {"brightness": 200}, 0, 1, id="no-power-while-off"),
         pytest.param(False, {}, 0, 0, id="nothing-to-do-while-off"),
@@ -621,7 +612,7 @@ async def test_set_state_power(
     device.state.front_is_on = is_on
     await async_trigger_update(hass)
 
-    await _call(hass, DOMAIN, SERVICE_SET_STATE, "front", **data)
+    await _call(hass, DOMAIN, LIFXService.SET_STATE, "front", **data)
 
     assert device.turn_front_on.await_count == turn_on_calls
     assert device.turn_front_off.await_count == turn_off_calls
@@ -640,7 +631,11 @@ async def test_set_state_zero_brightness_turns_off(
     )
 
     await _call(
-        hass, DOMAIN, SERVICE_SET_STATE, "front", **{ATTR_POWER: True, "brightness": 0}
+        hass,
+        DOMAIN,
+        LIFXService.SET_STATE,
+        "front",
+        **{LIFXServiceArgument.POWER: True, "brightness": 0},
     )
 
     device.turn_front_on.assert_not_awaited()
@@ -651,7 +646,7 @@ async def test_set_state_zero_brightness_turns_off(
     "data",
     [
         pytest.param({}, id="no-power"),
-        pytest.param({ATTR_POWER: False}, id="power-off"),
+        pytest.param({LIFXServiceArgument.POWER: False}, id="power-off"),
     ],
 )
 async def test_set_state_remembers_a_color_while_off(
@@ -669,7 +664,7 @@ async def test_set_state_remembers_a_color_while_off(
     await _call(
         hass,
         DOMAIN,
-        SERVICE_SET_STATE,
+        LIFXService.SET_STATE,
         "downlight",
         hs_color=(240.0, 100.0),
         **data,
@@ -693,10 +688,10 @@ async def test_set_state_ignores_zones(
     await _call(
         hass,
         DOMAIN,
-        SERVICE_SET_STATE,
+        LIFXService.SET_STATE,
         "back",
         hs_color=(120.0, 100.0),
-        **{ATTR_ZONES: [0, 2]},
+        **{LIFXServiceArgument.ZONES: [0, 2]},
     )
 
     colors, _ = device.turn_back_on.await_args.args
@@ -709,13 +704,13 @@ async def test_set_state_ignores_zones(
         pytest.param(
             create_mock_ceiling_light,
             CEILING_KEYS,
-            SERVICE_EFFECT_FLAME,
+            LIFXService.EFFECT_FLAME,
             id="flame",
         ),
         pytest.param(
             create_mock_mirror_light,
             MIRROR_KEYS,
-            SERVICE_EFFECT_COLORSWEEP,
+            LIFXService.EFFECT_COLORSWEEP,
             id="color-sweep",
         ),
     ],
@@ -731,7 +726,7 @@ async def test_set_state_forwards_a_firmware_effect(
     await _setup_components(hass, entity_registry, factory, keys)
     calls = async_mock_service(hass, DOMAIN, effect)
 
-    await _call(hass, DOMAIN, SERVICE_SET_STATE, keys[0], **{ATTR_EFFECT: effect})
+    await _call(hass, DOMAIN, LIFXService.SET_STATE, keys[0], **{ATTR_EFFECT: effect})
 
     assert [call.data[ATTR_ENTITY_ID] for call in calls] == [MAIN_ENTITY_ID]
 
@@ -740,18 +735,26 @@ async def test_set_state_forwards_a_firmware_effect(
     ("service", "data", "translation_key"),
     [
         pytest.param(
-            SERVICE_SET_STATE,
-            {ATTR_EFFECT: SERVICE_EFFECT_PULSE},
+            LIFXService.SET_STATE,
+            {ATTR_EFFECT: LIFXService.EFFECT_PULSE},
             "component_software_effect",
             id="software-effect",
         ),
         pytest.param(
-            SERVICE_SET_STATE, {ATTR_INFRARED: 10}, "no_infrared", id="infrared"
+            LIFXService.SET_STATE,
+            {LIFXServiceArgument.INFRARED: 10},
+            "no_infrared",
+            id="infrared",
         ),
         pytest.param(
-            SERVICE_SET_HEV_CYCLE_STATE, {ATTR_POWER: True}, "no_hev", id="hev"
+            LIFXService.SET_HEV_CYCLE_STATE,
+            {LIFXServiceArgument.POWER: True},
+            "no_hev",
+            id="hev",
         ),
-        pytest.param(SERVICE_EFFECT_PULSE, {}, "no_lifx_target", id="effect-action"),
+        pytest.param(
+            LIFXService.EFFECT_PULSE, {}, "no_lifx_target", id="effect-action"
+        ),
     ],
 )
 async def test_lifx_actions_refused_by_components(

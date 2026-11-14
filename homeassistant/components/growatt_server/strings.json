@@ -593,9 +593,6 @@
     "ac_schedule_device_not_configured": {
       "message": "Device {serial_number} does not support AC charge and discharge actions. These actions require an SPH device with token authentication or a Mix device with username and password authentication."
     },
-    "api_error": {
-      "message": "Growatt API error: {error}"
-    },
     "api_error_with_code": {
       "message": "API error: {error} (Code: {code})"
     },

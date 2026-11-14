@@ -341,6 +341,9 @@ class UnifiOptionsFlowHandler(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the UniFi Network options."""
+        if self.config_entry.state is not ConfigEntryState.LOADED:
+            return self.async_abort(reason="integration_not_setup")
+
         self.hub = self.config_entry.runtime_data
         self.options[CONF_BLOCK_CLIENT] = self.hub.config.option_block_clients
 

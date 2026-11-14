@@ -7,12 +7,10 @@ from aioswitcher.device import DeviceState
 import pytest
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.components.switcher_kis.const import (
-    CONF_AUTO_OFF,
-    CONF_TIMER_MINUTES,
-    DOMAIN,
-    SERVICE_SET_AUTO_OFF_NAME,
-    SERVICE_TURN_ON_WITH_TIMER_NAME,
+from homeassistant.components.switcher_kis.const import DOMAIN
+from homeassistant.components.switcher_kis.services import (
+    SwitcherService,
+    SwitcherServiceArgument,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -56,10 +54,10 @@ async def test_turn_on_with_timer_service(
     ) as mock_control_device:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_TURN_ON_WITH_TIMER_NAME,
+            SwitcherService.TURN_ON_WITH_TIMER,
             {
                 ATTR_ENTITY_ID: entity_id,
-                CONF_TIMER_MINUTES: DUMMY_TIMER_MINUTES_SET,
+                SwitcherServiceArgument.TIMER_MINUTES: DUMMY_TIMER_MINUTES_SET,
             },
             blocking=True,
         )
@@ -96,10 +94,10 @@ async def test_turn_on_with_timer_service_token_needed(
     ) as mock_control_device:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_TURN_ON_WITH_TIMER_NAME,
+            SwitcherService.TURN_ON_WITH_TIMER,
             {
                 ATTR_ENTITY_ID: entity_id,
-                CONF_TIMER_MINUTES: DUMMY_TIMER_MINUTES_SET,
+                SwitcherServiceArgument.TIMER_MINUTES: DUMMY_TIMER_MINUTES_SET,
             },
             blocking=True,
         )
@@ -126,8 +124,11 @@ async def test_set_auto_off_service(hass: HomeAssistant, mock_bridge, mock_api) 
     ) as mock_set_auto_shutdown:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_AUTO_OFF_NAME,
-            {ATTR_ENTITY_ID: entity_id, CONF_AUTO_OFF: DUMMY_AUTO_OFF_SET},
+            SwitcherService.SET_AUTO_OFF,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                SwitcherServiceArgument.AUTO_OFF: DUMMY_AUTO_OFF_SET,
+            },
             blocking=True,
         )
 
@@ -153,8 +154,11 @@ async def test_set_auto_off_service_token_needed(
     ) as mock_set_auto_shutdown:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_AUTO_OFF_NAME,
-            {ATTR_ENTITY_ID: entity_id, CONF_AUTO_OFF: DUMMY_AUTO_OFF_SET},
+            SwitcherService.SET_AUTO_OFF,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                SwitcherServiceArgument.AUTO_OFF: DUMMY_AUTO_OFF_SET,
+            },
             blocking=True,
         )
 
@@ -180,8 +184,11 @@ async def test_set_auto_off_service_fail(
         with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 DOMAIN,
-                SERVICE_SET_AUTO_OFF_NAME,
-                {ATTR_ENTITY_ID: entity_id, CONF_AUTO_OFF: DUMMY_AUTO_OFF_SET},
+                SwitcherService.SET_AUTO_OFF,
+                {
+                    ATTR_ENTITY_ID: entity_id,
+                    SwitcherServiceArgument.AUTO_OFF: DUMMY_AUTO_OFF_SET,
+                },
                 blocking=True,
             )
 
@@ -214,8 +221,11 @@ async def test_set_auto_off_service_fail_token_needed(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_AUTO_OFF_NAME,
-            {ATTR_ENTITY_ID: entity_id, CONF_AUTO_OFF: DUMMY_AUTO_OFF_SET},
+            SwitcherService.SET_AUTO_OFF,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                SwitcherServiceArgument.AUTO_OFF: DUMMY_AUTO_OFF_SET,
+            },
             blocking=True,
         )
 
@@ -241,10 +251,10 @@ async def test_plug_unsupported_services(
     with pytest.raises(ServiceNotSupported):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_TURN_ON_WITH_TIMER_NAME,
+            SwitcherService.TURN_ON_WITH_TIMER,
             {
                 ATTR_ENTITY_ID: entity_id,
-                CONF_TIMER_MINUTES: DUMMY_TIMER_MINUTES_SET,
+                SwitcherServiceArgument.TIMER_MINUTES: DUMMY_TIMER_MINUTES_SET,
             },
             blocking=True,
         )
@@ -255,8 +265,11 @@ async def test_plug_unsupported_services(
     with pytest.raises(ServiceNotSupported):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_AUTO_OFF_NAME,
-            {ATTR_ENTITY_ID: entity_id, CONF_AUTO_OFF: DUMMY_AUTO_OFF_SET},
+            SwitcherService.SET_AUTO_OFF,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                SwitcherServiceArgument.AUTO_OFF: DUMMY_AUTO_OFF_SET,
+            },
             blocking=True,
         )
 

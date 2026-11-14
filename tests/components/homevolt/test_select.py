@@ -21,14 +21,14 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.homevolt.const import SCAN_INTERVAL
 from homeassistant.components.select import (
-    ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -70,8 +70,11 @@ async def test_select_option(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_OPTION: "idle"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+            SelectServiceArgument.OPTION: "idle",
+        },
         blocking=True,
     )
 
@@ -174,8 +177,11 @@ async def test_select_option_error(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_OPTION: "solar_charge"},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+                SelectServiceArgument.OPTION: "solar_charge",
+            },
             blocking=True,
         )
 

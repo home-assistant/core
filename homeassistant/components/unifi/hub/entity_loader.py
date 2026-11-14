@@ -17,7 +17,7 @@ from aiounifi.models.api import ApiItem
 from aiounifi.models.client import Client
 
 from homeassistant.const import Platform
-from homeassistant.core import async_noop, callback
+from homeassistant.core import Event, async_noop, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -87,7 +87,24 @@ class UnifiEntityLoader:
         ] = []
 
         self.known_objects: set[tuple[str, str]] = set()
-        """Tuples of entity description key and object ID of loaded entities."""
+        """Tuples of entity description key and object ID that have an entity.
+
+        An object stays known while its entity is loaded, or while the
+        entity is not added because it is disabled, see known_but_disabled.
+        """
+        self.known_but_disabled: dict[str, tuple[str, str]] = {}
+        """Known objects whose entity is not added because it is disabled.
+
+        Keyed by entity ID, as a disabled entity only reports its removal
+        through the entity registry.
+        """
+        hub.config.entry.async_on_unload(
+            hub.hass.bus.async_listen(
+                er.EVENT_ENTITY_REGISTRY_UPDATED,
+                self._async_disabled_entity_updated,
+                event_filter=self._async_disabled_entity_filter,
+            )
+        )
 
     async def async_load_sites(self) -> None:
         """Load the sites of the console."""
@@ -320,24 +337,42 @@ class UnifiEntityLoader:
     ) -> bool:
         """Validate if entity is allowed and supported before creating it."""
         return bool(
-            (description.key, obj_id) not in self.known_objects
+            not self.is_known(description, obj_id)
             and description.allowed_fn(self.hub, obj_id)
             and description.supported_fn(self.hub, obj_id)
         )
 
     @callback
-    def async_forget_objects(self, mac: str) -> None:
-        """Forget the objects of a removed device registry entry.
+    def is_known(self, description: UnifiEntityDescription, obj_id: str) -> bool:
+        """Return if the object has an entity, loaded or disabled."""
+        return (description.key, obj_id) in self.known_objects
 
-        Entities that are disabled never register their removal, so their
-        objects would stay known and not be recreated with the entry.
-        """
-        self.known_objects.difference_update(
-            {
-                (key, obj_id)
-                for key, obj_id in self.known_objects
-                if obj_id.partition("_")[0] == mac
-            }
+    @callback
+    def _async_disabled_entity_filter(
+        self, event_data: er.EventEntityRegistryUpdatedData
+    ) -> bool:
+        """Pass the removal or renaming of a disabled entity."""
+        if event_data["action"] == "remove":
+            return event_data["entity_id"] in self.known_but_disabled
+        return (
+            event_data["action"] == "update"
+            and "old_entity_id" in event_data
+            and event_data["old_entity_id"] in self.known_but_disabled
+        )
+
+    @callback
+    def _async_disabled_entity_updated(
+        self, event: Event[er.EventEntityRegistryUpdatedData]
+    ) -> None:
+        """Forget the object of a removed disabled entity, or follow its new ID."""
+        data = event.data
+        if data["action"] == "remove":
+            self.known_objects.discard(self.known_but_disabled.pop(data["entity_id"]))
+            return
+        if TYPE_CHECKING:
+            assert data["action"] == "update"
+        self.known_but_disabled[data["entity_id"]] = self.known_but_disabled.pop(
+            data["old_entity_id"]
         )
 
     @callback

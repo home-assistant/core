@@ -294,7 +294,7 @@ def _async_validate_usage_stat(
 
     if (
         state_class == sensor.SensorStateClass.MEASUREMENT
-        and sensor.ATTR_LAST_RESET not in state.attributes
+        and sensor.SensorEntityStateAttribute.LAST_RESET not in state.attributes
     ):
         issues.add_issue(
             hass, "entity_state_class_measurement_no_last_reset", entity_id
@@ -428,7 +428,7 @@ def _async_validate_cost_stat(
 
     if (
         state_class == sensor.SensorStateClass.MEASUREMENT
-        and sensor.ATTR_LAST_RESET not in state.attributes
+        and sensor.SensorEntityStateAttribute.LAST_RESET not in state.attributes
     ):
         issues.add_issue(hass, "entity_state_class_measurement_no_last_reset", stat_id)
 

@@ -15,6 +15,7 @@ from homeassistant.components.cover import (
     CoverState,
 )
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
     SERVICE_SET_COVER_POSITION,
@@ -38,6 +39,7 @@ async def test_cover_available(
     assert state
     assert state.state == CoverState.OPEN
     assert state.attributes[ATTR_CURRENT_POSITION] == 60
+    assert ATTR_DEVICE_CLASS not in state.attributes
 
     mock_desk_api.connect = AsyncMock()
     mock_desk_api.is_connected = False

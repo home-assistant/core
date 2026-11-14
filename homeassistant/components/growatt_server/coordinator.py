@@ -563,8 +563,11 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except growattServer.GrowattV1ApiError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="api_error",
-                translation_placeholders={"error": str(err)},
+                translation_key="api_error_with_code",
+                translation_placeholders={
+                    "error": err.error_msg or str(err),
+                    "code": str(err.error_code),
+                },
             ) from err
 
         # Update coordinator's cached data without making an
@@ -795,8 +798,11 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             except growattServer.GrowattV1ApiError as err:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
-                    translation_key="api_error",
-                    translation_placeholders={"error": str(err)},
+                    translation_key="api_error_with_code",
+                    translation_placeholders={
+                        "error": err.error_msg or str(err),
+                        "code": str(err.error_code),
+                    },
                 ) from err
         else:
             # Classic (username/password) auth — same underlying mixSet endpoint,
@@ -870,8 +876,11 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             except growattServer.GrowattV1ApiError as err:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
-                    translation_key="api_error",
-                    translation_placeholders={"error": str(err)},
+                    translation_key="api_error_with_code",
+                    translation_placeholders={
+                        "error": err.error_msg or str(err),
+                        "code": str(err.error_code),
+                    },
                 ) from err
         else:
             # Same mixSet endpoint as charge; discharge has no mains-enable param.
