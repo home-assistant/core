@@ -9,8 +9,10 @@ from fivem import FiveM, FiveMServerOfflineError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailedUnreachable
-
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailedUnreachable,
+)
 from .const import (
     ATTR_PLAYERS_LIST,
     ATTR_RESOURCES_LIST,
