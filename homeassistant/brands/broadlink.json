@@ -1,0 +1,5 @@
+{
+  "domain": "broadlink",
+  "name": "Broadlink",
+  "integrations": ["broadlink", "broadlink_magic_home"]
+}

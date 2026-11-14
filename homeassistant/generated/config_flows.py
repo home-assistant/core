@@ -124,6 +124,7 @@ FLOWS = {
         "braviatv",
         "bring",
         "broadlink",
+        "broadlink_magic_home",
         "brother",
         "brottsplatskartan",
         "brunt",

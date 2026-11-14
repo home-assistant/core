@@ -1836,18 +1836,35 @@
     },
     "broadlink": {
       "name": "Broadlink",
-      "integration_type": "device",
-      "categories": [
-        "buttons_remotes",
-        "plugs_switches"
-      ],
-      "connectivity": [
-        "infrared",
-        "network",
-        "rf"
-      ],
-      "config_flow": true,
-      "iot_class": "local_polling"
+      "integrations": {
+        "broadlink": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "categories": [
+            "buttons_remotes",
+            "plugs_switches"
+          ],
+          "connectivity": [
+            "infrared",
+            "network",
+            "rf"
+          ],
+          "name": "Broadlink"
+        },
+        "broadlink_magic_home": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "categories": [
+            "hubs_protocols"
+          ],
+          "connectivity": [
+            "network"
+          ],
+          "name": "Broadlink Magic Home"
+        }
+      }
     },
     "brother": {
       "name": "Brother Printer",

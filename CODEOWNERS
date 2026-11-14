@@ -283,6 +283,8 @@ AGENTS.md @home-assistant/core
 /tests/components/bring/ @miaucl @tr4nt0r
 /homeassistant/components/broadlink/ @danielhiversen @felipediel @L-I-Am @DAB-LABS
 /tests/components/broadlink/ @danielhiversen @felipediel @L-I-Am @DAB-LABS
+/homeassistant/components/broadlink_magic_home/ @1045925514
+/tests/components/broadlink_magic_home/ @1045925514
 /homeassistant/components/brother/ @bieniu
 /tests/components/brother/ @bieniu
 /homeassistant/components/brottsplatskartan/ @gjohansson-ST
