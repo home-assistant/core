@@ -156,10 +156,7 @@ async def test_write_failure(
 ) -> None:
     """Test a failed write raises and leaves the state untouched."""
     await setup_integration(hass, mock_config_entry)
-    if isinstance(side_effect, Exception):
-        mock_set_light.side_effect = side_effect
-    else:
-        mock_set_light.return_value = side_effect
+    mock_set_light.side_effect = [side_effect]
 
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
