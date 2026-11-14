@@ -330,6 +330,16 @@
           "very_low": "600 RPM"
         }
       },
+      "suction_power": {
+        "name": "Suction power",
+        "state": {
+          "balanced": "[%key:component::roborock::entity::vacuum::roborock::state_attributes::fan_speed::state::balanced%]",
+          "max": "[%key:component::roborock::entity::vacuum::roborock::state_attributes::fan_speed::state::max%]",
+          "max_plus": "[%key:component::roborock::entity::vacuum::roborock::state_attributes::fan_speed::state::max_plus%]",
+          "quiet": "[%key:component::roborock::entity::vacuum::roborock::state_attributes::fan_speed::state::quiet%]",
+          "turbo": "[%key:component::roborock::entity::vacuum::roborock::state_attributes::fan_speed::state::turbo%]"
+        }
+      },
       "temperature": {
         "name": "Water temperature",
         "state": {
