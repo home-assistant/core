@@ -1,0 +1,81 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_country": "MeteoAlarm has no warnings feed for this country."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "country": "[%key:common::config_flow::data::country%]",
+          "language": "[%key:common::config_flow::data::language%]",
+          "province": "Region"
+        },
+        "data_description": {
+          "country": "The country whose MeteoAlarm feed to use.",
+          "language": "Language code for the warning texts, such as `en` or `de`. Warnings not available in this language are shown in the first language the feed has.",
+          "province": "The region's name as MeteoAlarm shows it, or its EMMA_ID code. You can find both on meteoalarm.org."
+        },
+        "description": "Get weather warnings for a region from MeteoAlarm."
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "description": "Configuring MeteoAlarm using YAML is being removed, but your configuration for {province} ({country}) could not be imported because MeteoAlarm could not be reached.\n\nCheck your internet connection and restart Home Assistant to try again, or remove the `meteoalarm` binary sensor from your configuration.yaml and add the integration in the UI.",
+      "title": "The MeteoAlarm YAML configuration import failed"
+    },
+    "deprecated_yaml_import_issue_invalid_country": {
+      "description": "Configuring MeteoAlarm using YAML is being removed, but your configuration for {province} ({country}) could not be imported because MeteoAlarm has no feed for that country.\n\nCorrect the country in your YAML configuration and restart Home Assistant, or remove the `meteoalarm` binary sensor from your configuration.yaml and add the integration in the UI.",
+      "title": "[%key:component::meteoalarm::issues::deprecated_yaml_import_issue_cannot_connect::title%]"
+    }
+  },
+  "selector": {
+    "country": {
+      "options": {
+        "andorra": "Andorra",
+        "austria": "Austria",
+        "belgium": "Belgium",
+        "bosnia-herzegovina": "Bosnia and Herzegovina",
+        "bulgaria": "Bulgaria",
+        "croatia": "Croatia",
+        "cyprus": "Cyprus",
+        "czechia": "Czechia",
+        "denmark": "Denmark",
+        "estonia": "Estonia",
+        "finland": "Finland",
+        "france": "France",
+        "germany": "Germany",
+        "greece": "Greece",
+        "hungary": "Hungary",
+        "iceland": "Iceland",
+        "ireland": "Ireland",
+        "israel": "Israel",
+        "italy": "Italy",
+        "latvia": "Latvia",
+        "lithuania": "Lithuania",
+        "luxembourg": "Luxembourg",
+        "malta": "Malta",
+        "moldova": "Moldova",
+        "montenegro": "Montenegro",
+        "netherlands": "Netherlands",
+        "norway": "Norway",
+        "poland": "Poland",
+        "portugal": "Portugal",
+        "republic-of-north-macedonia": "North Macedonia",
+        "romania": "Romania",
+        "serbia": "Serbia",
+        "slovakia": "Slovakia",
+        "slovenia": "Slovenia",
+        "spain": "Spain",
+        "sweden": "Sweden",
+        "switzerland": "Switzerland",
+        "ukraine": "Ukraine",
+        "united-kingdom": "United Kingdom"
+      }
+    }
+  }
+}
