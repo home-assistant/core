@@ -12,6 +12,8 @@ from aiofarmad import (
     FarmadAuthorizationError,
     FarmadCommunicationError,
     FarmadError,
+    FarmadMissingPriceError,
+    FarmadPriceLookupError,
 )
 import probatio
 
@@ -228,6 +230,20 @@ async def _async_place_order(
             basket_id = await data.client.async_submit_basket(
                 apb, draft_id, products=products, comment=comment
             )
+        except FarmadPriceLookupError:
+            await _async_clear_draft(data, apb)
+            raise
+        except FarmadMissingPriceError as err:
+            _LOGGER.debug("Ordering at pharmacy %s failed: %s", apb, err)
+            await _async_clear_draft(data, apb)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="price_unavailable",
+                translation_placeholders={
+                    "apb": apb,
+                    "product": products[0].product_cnk,
+                },
+            ) from err
         except FarmadCommunicationError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
