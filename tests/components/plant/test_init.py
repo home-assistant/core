@@ -1,6 +1,6 @@
 """Unit tests for platform/plant.py."""
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 
@@ -19,6 +19,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.entity_component import DATA_INSTANCES
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 GOOD_DATA = {
     "moisture": 50,
@@ -254,7 +255,7 @@ def test_daily_history_one_day(hass: HomeAssistant) -> None:
 def test_daily_history_multiple_days(hass: HomeAssistant) -> None:
     """Test storing data for different days."""
     dh = DailyHistory(3)
-    today = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
+    today = dt_util.now()
     today_minus_1 = today - timedelta(days=1)
     today_minus_2 = today_minus_1 - timedelta(days=1)
     today_minus_3 = today_minus_2 - timedelta(days=1)
