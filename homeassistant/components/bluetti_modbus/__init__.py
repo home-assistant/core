@@ -1,5 +1,6 @@
 """Support for BLUETTI power stations over Modbus."""
 
+from bluetti_modbus_lib import Balco260
 from modbus_connection import ModbusTcpParams
 
 from homeassistant.components.modbus import async_get_unit
@@ -8,7 +9,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
-from .const import CONF_UNIT_ID, DOMAIN
+from .const import (
+    CONF_UNIT_ID,
+    DOMAIN,
+    SCAN_INTERVAL,
+    SETTINGS_FIELDS,
+    SETTINGS_SCAN_INTERVAL,
+)
 from .coordinator import (
     BluettiModbusConfigEntry,
     BluettiModbusDataUpdateCoordinator,
@@ -17,7 +24,7 @@ from .coordinator import (
 from .device import restricted_device
 from .entity import bluetti_modbus_device_info
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.NUMBER, Platform.SENSOR]
 
 
 async def async_setup_entry(
@@ -37,8 +44,22 @@ async def async_setup_entry(
         ) from err
 
     device = restricted_device(unit)
-    coordinator = BluettiModbusDataUpdateCoordinator(hass, entry, device)
+    coordinator = BluettiModbusDataUpdateCoordinator(
+        hass, entry, device, name="readings", update_interval=SCAN_INTERVAL
+    )
     await coordinator.async_config_entry_first_refresh()
+    settings_device = Balco260(unit)
+    # With the serial number, so settings only come from this entry's device.
+    settings_device.restrict_fields(SETTINGS_FIELDS | {"d_serial"})
+    settings = BluettiModbusDataUpdateCoordinator(
+        hass,
+        entry,
+        settings_device,
+        name="settings",
+        update_interval=SETTINGS_SCAN_INTERVAL,
+    )
+    # Settings that can't be read leave only the numbers unavailable.
+    await settings.async_refresh()
 
     # Firmware versions come from the first refresh's own values - device
     # identity, so they go on DeviceInfo rather than becoming sensors.
@@ -52,6 +73,7 @@ async def async_setup_entry(
     serial = str(values["d_serial"])
     entry.runtime_data = BluettiModbusRuntimeData(
         coordinator=coordinator,
+        settings=settings,
         device_info=bluetti_modbus_device_info(
             serial, sw_version, host=entry.data[CONF_HOST]
         ),

@@ -21,6 +21,25 @@ SERIAL_ADDRESSES = frozenset(
 )
 
 
+async def _async_raw_registers(device: Balco260) -> dict[str, Any]:
+    """Read the device's registers, leaving out every serial number."""
+    try:
+        raw = await device.async_read_raw(notify=False)
+    except ModbusError as err:
+        return {"raw": None, "raw_error": str(err)}
+    return {
+        "raw": {
+            space: {
+                address: value
+                for address, value in registers.items()
+                if address not in SERIAL_ADDRESSES
+            }
+            for space, registers in raw.items()
+        },
+        "raw_error": None,
+    }
+
+
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: BluettiModbusConfigEntry
 ) -> dict[str, Any]:
@@ -31,29 +50,15 @@ async def async_get_config_entry_diagnostics(
     serial number lives in is left out of them.
     """
     coordinator = entry.runtime_data.coordinator
-    device = coordinator.device
-
-    raw: dict[str, dict[int, int | bool]] | None = None
-    raw_error: str | None = None
-    try:
-        raw = await device.async_read_raw(notify=False)
-    except ModbusError as err:
-        raw_error = str(err)
-
+    settings = entry.runtime_data.settings
     return {
         "last_update_success": coordinator.last_update_success,
         "values": async_redact_data(coordinator.data, TO_REDACT),
-        "raw": (
-            {
-                space: {
-                    address: value
-                    for address, value in registers.items()
-                    if address not in SERIAL_ADDRESSES
-                }
-                for space, registers in raw.items()
-            }
-            if raw is not None
-            else None
-        ),
-        "raw_error": raw_error,
+        **await _async_raw_registers(coordinator.device),
+        "settings": {
+            "last_update_success": settings.last_update_success,
+            # None when the settings could not be read at setup.
+            "values": async_redact_data(settings.data, TO_REDACT),
+            **await _async_raw_registers(settings.device),
+        },
     }

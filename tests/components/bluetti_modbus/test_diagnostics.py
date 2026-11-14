@@ -19,6 +19,7 @@ from . import setup_integration
 SERIAL_ADDRESSES = [
     base + offset for base in (50206, 51206, 53007) for offset in range(4)
 ]
+DISCHARGE_LIMIT_ADDRESS = 57016
 
 
 async def test_diagnostics(
@@ -52,15 +53,11 @@ async def test_diagnostics_leave_out_serial_registers(
             hass, hass_client, mock_config_entry
         )
 
+    kept = ["50205", "50210", "51205", "51210", "53006", "53011"]
     assert diag["values"]["d_serial"] == "**REDACTED**"
-    assert sorted(diag["raw"]["holding"]) == [
-        "50205",
-        "50210",
-        "51205",
-        "51210",
-        "53006",
-        "53011",
-    ]
+    assert sorted(diag["raw"]["holding"]) == kept
+    assert diag["settings"]["values"]["d_serial"] == "**REDACTED**"
+    assert sorted(diag["settings"]["raw"]["holding"]) == kept
 
 
 async def test_diagnostics_when_device_does_not_answer(
@@ -78,3 +75,28 @@ async def test_diagnostics_when_device_does_not_answer(
     assert diag["raw"] is None
     assert diag["raw_error"] == "timed out"
     assert diag["values"]["d_serial"] == "**REDACTED**"
+    assert diag["settings"]["raw"] is None
+    assert diag["settings"]["raw_error"] == "timed out"
+    assert diag["settings"]["values"]["d_serial"] == "**REDACTED**"
+
+
+async def test_diagnostics_when_settings_could_not_be_read(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """Test diagnostics show why the numbers are unavailable."""
+    mock_modbus_unit.fail_read(DISCHARGE_LIMIT_ADDRESS, ModbusTimeoutError("timed out"))
+    await setup_integration(hass, mock_config_entry)
+
+    diag = await get_diagnostics_for_config_entry(hass, hass_client, mock_config_entry)
+
+    assert diag["last_update_success"] is True
+    assert diag["raw"] is not None
+    assert diag["settings"] == {
+        "last_update_success": False,
+        "values": None,
+        "raw": None,
+        "raw_error": "timed out",
+    }
