@@ -840,6 +840,9 @@
       "liquid_depth_max": {
         "name": "Height from sensor to liquid level"
       },
+      "liquid_depth_max_me201wz": {
+        "name": "Maximum liquid depth"
+      },
       "load_level_indicator_timeout": {
         "name": "Load level indicator timeout"
       },
