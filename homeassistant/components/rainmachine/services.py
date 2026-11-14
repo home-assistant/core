@@ -183,7 +183,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
                     await func(call, data.controller)
                 except RainMachineError as err:
                     raise HomeAssistantError(
-                        f"Error while executing {func.__name__}: {err}"
+                        translation_domain=DOMAIN,
+                        translation_key="action_failed",
+                        translation_placeholders={"action": call.service},
                     ) from err
 
                 if update_programs_and_zones:
@@ -290,8 +292,6 @@ def async_setup_services(hass: HomeAssistant) -> None:
             async_unrestrict_watering,
         ),
     ):
-        if hass.services.has_service(DOMAIN, service_name):
-            continue
         hass.services.async_register(
             DOMAIN,
             service_name,

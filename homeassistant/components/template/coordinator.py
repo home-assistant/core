@@ -214,9 +214,9 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator[TriggerData]):
         if TYPE_CHECKING:
             # This method is only called if there's a script
             assert self._script is not None
+
         if script_result := await self._script.async_run(run_variables, script_context):
-            run_variables = script_result.variables
-        self._execute_update(run_variables, context)
+            self._execute_update(script_result.variables, context)
 
     async def _handle_triggered(
         self, run_variables: TemplateVarsType, context: Context | None = None

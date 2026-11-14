@@ -3,22 +3,35 @@
 from asyncio import CancelledError
 from unittest.mock import AsyncMock, Mock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from pizone import (
     ControllerCommandError,
     ControllerEndpoint,
+    DeviceReconfigurationError,
     EndpointVerifyError,
     UnpairedBridgeError,
     VerifyFailure,
 )
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.izone.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST
+from homeassistant.components.izone.coordinator import UPDATE_INTERVAL
+from homeassistant.config_entries import (
+    SOURCE_IGNORE,
+    SOURCE_INTEGRATION_DISCOVERY,
+    ConfigEntryDisabler,
+    ConfigEntryState,
+)
+from homeassistant.const import CONF_EXCLUDE, CONF_HOST, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.setup import async_setup_component
 
-from .conftest import async_load_yaml_exclude, create_mock_controller
+from .conftest import create_mock_controller, create_mock_zone
+
+EXCLUDE_ISSUE_ID = "yaml_exclude_unused"
 
 
 async def test_setup_and_unload(
@@ -45,6 +58,81 @@ async def test_setup_and_unload(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
     mock_controller.close.assert_awaited()
     mock_discovery_service.close.assert_awaited()
+
+
+@pytest.mark.usefixtures("mock_create_discovery", "mock_controller")
+async def test_setup_removes_stale_zone_devices(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Zone devices the controller no longer reports are removed on setup."""
+    mock_config_entry.add_to_hass(hass)
+    controller_device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "000000001")},
+    )
+    live_zone_device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "000000001", 0)},  # type: ignore[arg-type]
+        via_device_id=controller_device.id,
+    )
+    stale_zone_device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "000000001", 5)},  # type: ignore[arg-type]
+        via_device_id=controller_device.id,
+    )
+
+    with patch.object(
+        device_registry,
+        "async_remove_device",
+        wraps=device_registry.async_remove_device,
+    ) as remove_device:
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    remove_device.assert_called_once_with(stale_zone_device.id)
+    assert device_registry.async_get(stale_zone_device.id) is None
+    assert device_registry.async_get(controller_device.id) is not None
+    assert device_registry.async_get(live_zone_device.id) is not None
+
+
+@pytest.mark.usefixtures("mock_create_discovery")
+async def test_reconfigured_system_reloads_entry(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_discovery_service: Mock,
+    mock_controller: Mock,
+    mock_zones: list[Mock],
+) -> None:
+    """A poll that finds the system reprogrammed reloads with the new zones."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get("climate.bedroom") is None
+
+    mock_controller.refresh_all.side_effect = DeviceReconfigurationError(
+        {"NoOfZones": (1, 2)}
+    )
+    reprogrammed = create_mock_controller(zones_total=2)
+    reprogrammed.zones = [*mock_zones, create_mock_zone(index=1, name="Bedroom")]
+    mock_discovery_service.create_controller.return_value = reprogrammed
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    mock_controller.close.assert_awaited()
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    for entity_id in ("climate.izone_controller_000000001", "climate.bedroom"):
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state != STATE_UNAVAILABLE
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "000000001", 1),  # type: ignore[arg-type]
+        mock_config_entry.entry_id,
+    )
 
 
 async def test_migrate_heals_legacy_domain_unique_id(
@@ -105,21 +193,117 @@ async def test_migrate_heals_legacy_domain_unique_id_keeps_custom_title(
     assert entry.title == "Living Room AC"
 
 
-async def test_migrate_legacy_domain_unique_id_filters_yaml_excluded(
-    hass: HomeAssistant,
-    mock_create_discovery: AsyncMock,
-    mock_discovery_service: Mock,
-    mock_controller: Mock,
-) -> None:
-    """YAML exclude narrows multiple discoveries to one eligible controller."""
-    await async_load_yaml_exclude(hass, "000000002")
-    entry = MockConfigEntry(
+async def _async_setup_yaml(hass: HomeAssistant, config: ConfigType) -> None:
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
+
+
+def _discovery_flow_uids(hass: HomeAssistant) -> set[str]:
+    return {
+        flow["context"]["unique_id"]
+        for flow in hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+        if flow["context"]["source"] == SOURCE_INTEGRATION_DISCOVERY
+    }
+
+
+def _legacy_entry() -> MockConfigEntry:
+    return MockConfigEntry(
         domain=DOMAIN,
         unique_id=DOMAIN,
         title="iZone Aircon",
         data={},
         version=2,
     )
+
+
+@pytest.mark.usefixtures("mock_create_discovery")
+@pytest.mark.parametrize(
+    ("config", "issue_expected"),
+    [
+        pytest.param({DOMAIN: {CONF_EXCLUDE: ["000000002"]}}, True, id="exclude"),
+        pytest.param({DOMAIN: {CONF_EXCLUDE: []}}, False, id="empty_exclude"),
+        pytest.param({DOMAIN: {}}, False, id="no_exclude"),
+        pytest.param({}, False, id="no_yaml"),
+    ],
+)
+async def test_yaml_exclude_raises_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    config: ConfigType,
+    issue_expected: bool,
+) -> None:
+    """A non-empty YAML exclude raises a repair saying it has no effect."""
+    await _async_setup_yaml(hass, config)
+
+    assert (
+        issue_registry.async_get_issue(DOMAIN, EXCLUDE_ISSUE_ID) is not None
+    ) is issue_expected
+
+
+@pytest.mark.usefixtures("mock_create_discovery")
+async def test_setup_removes_ignored_legacy_entry(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """An ignored legacy entry is removed and does not hold back the repair."""
+    ignored = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=DOMAIN,
+        source=SOURCE_IGNORE,
+        data={},
+        version=2,
+    )
+    ignored.add_to_hass(hass)
+    kept = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="000000009",
+        source=SOURCE_IGNORE,
+        data={},
+    )
+    kept.add_to_hass(hass)
+
+    await _async_setup_yaml(hass, {DOMAIN: {CONF_EXCLUDE: ["000000002"]}})
+
+    assert hass.config_entries.async_get_entry(ignored.entry_id) is None
+    assert hass.config_entries.async_get_entry(kept.entry_id) is kept
+    assert issue_registry.async_get_issue(DOMAIN, EXCLUDE_ISSUE_ID)
+
+
+@pytest.mark.usefixtures("mock_create_discovery")
+async def test_disabled_legacy_entry_holds_exclude_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """A disabled legacy entry has not migrated yet, so the repair waits."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=DOMAIN,
+        data={},
+        version=2,
+        disabled_by=ConfigEntryDisabler.USER,
+    ).add_to_hass(hass)
+
+    await _async_setup_yaml(hass, {DOMAIN: {CONF_EXCLUDE: ["000000002"]}})
+
+    assert issue_registry.async_get_issue(DOMAIN, EXCLUDE_ISSUE_ID) is None
+
+
+@pytest.mark.usefixtures("mock_create_discovery", "mock_controller")
+@pytest.mark.parametrize(
+    "exclude",
+    [
+        pytest.param(["000000002"], id="list"),
+        pytest.param("000000002", id="scalar"),
+    ],
+)
+async def test_migrate_legacy_domain_unique_id_filters_yaml_excluded(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_discovery_service: Mock,
+    exclude: str | list[str],
+) -> None:
+    """YAML exclude picks the controller and shelves the rest, then raises the repair."""
+    entry = _legacy_entry()
     entry.add_to_hass(hass)
     mock_discovery_service.discover_all = AsyncMock(
         return_value=[
@@ -128,12 +312,86 @@ async def test_migrate_legacy_domain_unique_id_filters_yaml_excluded(
         ]
     )
 
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    await _async_setup_yaml(hass, {DOMAIN: {CONF_EXCLUDE: exclude}})
 
     assert entry.state is ConfigEntryState.LOADED
     assert entry.unique_id == "000000001"
     assert entry.data[CONF_HOST] == "192.0.2.1"
+    assert _discovery_flow_uids(hass) == {"000000002"}
+    assert issue_registry.async_get_issue(DOMAIN, EXCLUDE_ISSUE_ID)
+
+
+@pytest.mark.usefixtures("mock_create_discovery")
+async def test_migrate_legacy_domain_unique_id_only_excluded_retries(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_discovery_service: Mock,
+) -> None:
+    """An excluded controller is never the legacy entry's controller, so it retries."""
+    entry = _legacy_entry()
+    entry.add_to_hass(hass)
+    mock_discovery_service.discover_all = AsyncMock(
+        return_value=[ControllerEndpoint(uid="000000002", host="192.0.2.2")]
+    )
+
+    await _async_setup_yaml(hass, {DOMAIN: {CONF_EXCLUDE: ["000000002"]}})
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.unique_id == DOMAIN
+    assert _discovery_flow_uids(hass) == {"000000002"}
+    assert issue_registry.async_get_issue(DOMAIN, EXCLUDE_ISSUE_ID) is None
+
+
+@pytest.mark.usefixtures("mock_create_discovery")
+async def test_migrate_legacy_domain_unique_id_multiple_after_exclude_fails(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_discovery_service: Mock,
+) -> None:
+    """Several controllers left after exclude fail migration and hold the repair."""
+    entry = _legacy_entry()
+    entry.add_to_hass(hass)
+    mock_discovery_service.discover_all = AsyncMock(
+        return_value=[
+            ControllerEndpoint(uid="000000001", host="192.0.2.1"),
+            ControllerEndpoint(uid="000000002", host="192.0.2.2"),
+            ControllerEndpoint(uid="000000003", host="192.0.2.3"),
+        ]
+    )
+
+    await _async_setup_yaml(hass, {DOMAIN: {CONF_EXCLUDE: ["000000002"]}})
+
+    assert entry.state is ConfigEntryState.MIGRATION_ERROR
+    assert entry.unique_id == DOMAIN
+    assert issue_registry.async_get_issue(DOMAIN, EXCLUDE_ISSUE_ID) is None
+
+
+@pytest.mark.usefixtures("mock_create_discovery", "mock_controller")
+async def test_migrate_legacy_domain_unique_id_retry_defers_exclude_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_discovery_service: Mock,
+) -> None:
+    """The repair waits until a retried legacy migration succeeds."""
+    entry = _legacy_entry()
+    entry.add_to_hass(hass)
+    mock_discovery_service.discover_all = AsyncMock(return_value=[])
+
+    await _async_setup_yaml(hass, {DOMAIN: {CONF_EXCLUDE: ["000000002"]}})
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert issue_registry.async_get_issue(DOMAIN, EXCLUDE_ISSUE_ID) is None
+
+    mock_discovery_service.discover_all.return_value = [
+        ControllerEndpoint(uid="000000001", host="192.0.2.1"),
+        ControllerEndpoint(uid="000000002", host="192.0.2.2"),
+    ]
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.unique_id == "000000001"
+    assert issue_registry.async_get_issue(DOMAIN, EXCLUDE_ISSUE_ID)
 
 
 async def test_migrate_legacy_domain_unique_id_filters_already_configured(
@@ -500,6 +758,11 @@ async def test_setup_discovery_bind_failure_retries(
         pytest.param(ConnectionError("gone"), True, id="connection-error"),
         pytest.param(ControllerCommandError("rejected"), True, id="command-rejected"),
         pytest.param(None, False, id="system-offline"),
+        pytest.param(
+            DeviceReconfigurationError({"NoOfZones": (1, 2)}),
+            True,
+            id="system-reconfigured",
+        ),
     ],
 )
 async def test_setup_first_refresh_failure_closes_controller(
@@ -512,15 +775,20 @@ async def test_setup_first_refresh_failure_closes_controller(
 ) -> None:
     """A failed first refresh closes the controller and retries setup.
 
-    This includes a reachable bridge whose iZone system is offline.
+    This includes a reachable bridge whose iZone system is offline, and a system
+    reprogrammed mid-setup, which must leave the retry backoff to setup.
     """
     mock_config_entry.add_to_hass(hass)
     mock_controller.refresh_all = AsyncMock(side_effect=side_effect)
     mock_controller.connected = connected
 
-    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    with patch.object(
+        hass.config_entries, "async_schedule_reload"
+    ) as mock_schedule_reload:
+        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
     mock_controller.close.assert_awaited()
+    mock_schedule_reload.assert_not_called()
 
 
 async def test_setup_platform_failure_closes_controller(
