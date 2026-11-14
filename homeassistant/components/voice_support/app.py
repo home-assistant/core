@@ -1,4 +1,4 @@
-"""The Voice app, as a Home Assistant app managed by the Supervisor."""
+"""The Voice Support app, as a Home Assistant app managed by the Supervisor."""
 
 import logging
 
@@ -8,8 +8,8 @@ from homeassistant.helpers.singleton import singleton
 
 from .const import DOMAIN
 
-APP_NAME = "Voice"
-APP_SLUG = "core_voice"
+APP_NAME = "Voice Support"
+APP_SLUG = "core_voice_support"
 
 DATA_APP_MANAGER = f"{DOMAIN}_app_manager"
 

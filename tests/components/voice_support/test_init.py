@@ -454,7 +454,7 @@ async def test_remove_entry_app_error(
     await hass.async_block_till_done()
 
     assert uninstall_addon.call_count == 0
-    assert "Failed to stop the Voice app: busy" in caplog.text
+    assert "Failed to stop the Voice Support app: busy" in caplog.text
     assert not hass.config_entries.async_entries(DOMAIN)
 
 
