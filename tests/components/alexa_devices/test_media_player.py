@@ -42,6 +42,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import assert_device_removed_and_readded, setup_integration
@@ -596,6 +597,51 @@ async def test_service_play_media(
         "Abbey Road",
         MediaType.MUSIC,
     )
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "volume_calls"),
+    [
+        pytest.param(
+            ValueError("music is not available as a music provider"),
+            1,
+            id="rejected_input",
+        ),
+        pytest.param(CannotConnect, 0, id="cannot_connect"),
+    ],
+)
+async def test_service_play_media_failure_availability(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    side_effect: Exception | type[Exception],
+    volume_calls: int,
+) -> None:
+    """Only a connection failure stops later actions from reaching the API."""
+    await _setup_media_player_platform(hass, mock_config_entry)
+
+    mock_amazon_devices_client.call_alexa_music.side_effect = side_effect
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                "media_content_id": "Abbey Road",
+                "media_content_type": MediaType.MUSIC,
+            },
+            blocking=True,
+        )
+
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_VOLUME_SET,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_LEVEL: 0.75},
+        blocking=True,
+    )
+
+    assert mock_amazon_devices_client.set_device_volume.await_count == volume_calls
 
 
 @pytest.mark.parametrize(

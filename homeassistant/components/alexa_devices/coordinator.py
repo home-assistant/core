@@ -70,9 +70,17 @@ async def alexa_api_call(
             translation_key="cannot_connect_with_error",
             translation_placeholders={"error": repr(err)},
         ) from err
-    except (CannotRetrieveData, ValueError) as err:
+    except CannotRetrieveData as err:
         if coordinator:
             coordinator.last_update_success = False
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="cannot_retrieve_data_with_error",
+            translation_placeholders={"error": repr(err)},
+        ) from err
+    except ValueError as err:
+        # Also raised for input the API rejects before sending a request,
+        # which says nothing about whether the service can be reached.
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="cannot_retrieve_data_with_error",
