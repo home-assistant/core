@@ -121,3 +121,95 @@ async def test_reset_filter_raises_error(
 
     method_mock.assert_called_once()
     update_mock.assert_not_called()
+
+
+FRYER = "CS158-AF Air Fryer Cooking"
+FRYER_CLASS = "pyvesync.devices.vesynckitchen.VeSyncAirFryer158"
+
+
+async def test_fryer_button_state(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test the air fryer buttons are created."""
+
+    mock_devices_response(aioclient_mock, FRYER)
+
+    with patch("homeassistant.components.vesync.PLATFORMS", [Platform.BUTTON]):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "method"),
+    [
+        ("button.cs158_af_air_fryer_cooking_stop_cooking", "end"),
+        ("button.cs158_af_air_fryer_cooking_pause_cooking", "stop"),
+        ("button.cs158_af_air_fryer_cooking_resume_cooking", "resume"),
+    ],
+)
+async def test_fryer_button_press(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+    entity_id: str,
+    method: str,
+) -> None:
+    """Test pressing an air fryer button sends the command and refreshes."""
+
+    mock_devices_response(aioclient_mock, FRYER)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with (
+        patch(f"{FRYER_CLASS}.{method}", return_value=True) as method_mock,
+        patch(UPDATE_ALL_DEVICES) as update_mock,
+    ):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+        freezer.tick(timedelta(seconds=REQUEST_REFRESH_DEFAULT_COOLDOWN))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    method_mock.assert_called_once_with(1)
+    update_mock.assert_called_once()
+
+
+async def test_fryer_button_press_fails(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test a rejected air fryer command raises HomeAssistantError."""
+
+    mock_devices_response(aioclient_mock, FRYER)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with (
+        patch(f"{FRYER_CLASS}.end", return_value=False),
+        pytest.raises(HomeAssistantError, match="Invalid response from the VeSync API"),
+    ):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            ButtonService.PRESS,
+            {
+                CommonServiceArgument.ENTITY_ID: (
+                    "button.cs158_af_air_fryer_cooking_stop_cooking"
+                )
+            },
+            blocking=True,
+        )

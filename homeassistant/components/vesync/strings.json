@@ -46,8 +46,26 @@
       }
     },
     "button": {
+      "pause_cooking": {
+        "name": "Pause cooking"
+      },
+      "pause_cooking_basket": {
+        "name": "Basket {basket} pause cooking"
+      },
       "reset_filter": {
         "name": "Reset filter"
+      },
+      "resume_cooking": {
+        "name": "Resume cooking"
+      },
+      "resume_cooking_basket": {
+        "name": "Basket {basket} resume cooking"
+      },
+      "stop_cooking": {
+        "name": "Stop cooking"
+      },
+      "stop_cooking_basket": {
+        "name": "Basket {basket} stop cooking"
       }
     },
     "fan": {

@@ -49,3 +49,153 @@
     'state': 'unknown',
   })
 # ---
+# name: test_fryer_button_state[button.cs158_af_air_fryer_cooking_pause_cooking-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('vesync', 'CS158Cooking')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.cs158_af_air_fryer_cooking_pause_cooking',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Pause cooking',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Pause cooking',
+    'platform': 'vesync',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'pause_cooking',
+    'unique_id': 'CS158Cooking-pause_cooking',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_fryer_button_state[button.cs158_af_air_fryer_cooking_pause_cooking-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CS158-AF Air Fryer Cooking Pause cooking',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.cs158_af_air_fryer_cooking_pause_cooking',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_fryer_button_state[button.cs158_af_air_fryer_cooking_resume_cooking-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('vesync', 'CS158Cooking')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.cs158_af_air_fryer_cooking_resume_cooking',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Resume cooking',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Resume cooking',
+    'platform': 'vesync',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'resume_cooking',
+    'unique_id': 'CS158Cooking-resume_cooking',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_fryer_button_state[button.cs158_af_air_fryer_cooking_resume_cooking-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CS158-AF Air Fryer Cooking Resume cooking',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.cs158_af_air_fryer_cooking_resume_cooking',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_fryer_button_state[button.cs158_af_air_fryer_cooking_stop_cooking-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('vesync', 'CS158Cooking')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.cs158_af_air_fryer_cooking_stop_cooking',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Stop cooking',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Stop cooking',
+    'platform': 'vesync',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'stop_cooking',
+    'unique_id': 'CS158Cooking-stop_cooking',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_fryer_button_state[button.cs158_af_air_fryer_cooking_stop_cooking-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CS158-AF Air Fryer Cooking Stop cooking',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.cs158_af_air_fryer_cooking_stop_cooking',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
