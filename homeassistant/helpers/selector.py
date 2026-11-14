@@ -685,6 +685,30 @@ class ColorRGBSelector(Selector[ColorRGBSelectorConfig]):
         return value
 
 
+class ColorRGBWSelectorConfig(BaseSelectorConfig):
+    """Class to represent a color RGBW selector config."""
+
+
+@SELECTORS.register("color_rgbw")
+class ColorRGBWSelector(Selector[ColorRGBWSelectorConfig]):
+    """Selector of an RGBW color value."""
+
+    selector_type = "color_rgbw"
+
+    CONFIG_SCHEMA = make_selector_config_schema()
+
+    def __init__(self, config: ColorRGBWSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> list[int]:
+        """Validate the passed selection."""
+        value: list[int] = probatio.All(list, probatio.ExactSequence((cv.byte,) * 4))(
+            data
+        )
+        return value
+
+
 class ColorTempSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent a color temp selector config."""
 
