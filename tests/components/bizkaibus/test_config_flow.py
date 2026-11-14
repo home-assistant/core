@@ -1022,6 +1022,75 @@ async def test_reconfigure_step_with_factory_connection_error(
     assert result["reason"] == "reconfigure_successful"
 
 
+@pytest.mark.parametrize(
+    ("api_method", "api_response"),
+    [
+        pytest.param(
+            "get_lines_on_stop",
+            [SimpleNamespace(id="A", route="Route A")],
+            id="lines",
+        ),
+        pytest.param(
+            "get_timetable",
+            SimpleNamespace(id="stop_9999", name="Central Station"),
+            id="timetable",
+        ),
+    ],
+)
+async def test_reconfigure_step_with_helper_connection_error(
+    hass: HomeAssistant,
+    api_method: str,
+    api_response: list[SimpleNamespace] | SimpleNamespace,
+) -> None:
+    """Test reconfiguration recovers from a helper connection error."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_STOP_ID: "0252"},
+        unique_id="0252",
+    )
+    config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
+        ) as mock_api_class,
+        patch(
+            "homeassistant.config_entries.ConfigEntries.async_reload", return_value=True
+        ),
+    ):
+        mock_api = _mock_api(
+            mock_api_class,
+            lines=[SimpleNamespace(id="A", route="Route A")],
+            timetable=SimpleNamespace(id="stop_9999", name="Central Station"),
+        )
+        setattr(
+            mock_api,
+            api_method,
+            AsyncMock(side_effect=[BizkaibusConnectionError(), api_response]),
+        )
+
+        result = await config_entry.start_reconfigure_flow(hass)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_STOP_ID: "9999"}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "cannot_connect"}
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_STOP_ID: "9999"}
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "lines"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_LINE_IDS: ["A"]}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+
 async def test_reconfigure_step_with_stop_not_found(hass: HomeAssistant) -> None:
     """Test reconfiguration aborts when the API cannot find the stop."""
     config_entry = MockConfigEntry(
