@@ -9,6 +9,9 @@
       "accept_terms_failed": "Failed to accept the updated terms of service",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "no_security_key": "No security key is connected to Home Assistant. Plug it into a USB port on the Home Assistant machine and try again.",
+      "security_key_failed": "Apple did not accept the security key. Submit again to retry.",
+      "security_key_timeout": "The security key was not touched in time. Submit again and touch it when it blinks.",
       "send_verification_code": "Failed to send verification code",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "validate_verification_code": "Failed to verify your verification code, try again"
@@ -28,6 +31,16 @@
         },
         "description": "Your previously entered password for {username} is no longer working. Update your password to keep using the iCloud integration.",
         "title": "iCloud authentication expired for {name}"
+      },
+      "security_key": {
+        "data": {
+          "security_key": "Security key"
+        },
+        "data_description": {
+          "security_key": "The security key to sign in with."
+        },
+        "description": "Apple requires a security key ({key_names}) to finish signing in. The key must be plugged into the Home Assistant machine.\n\nSelect Submit, then touch the key when it blinks. You have {timeout} seconds.",
+        "title": "Apple Account security key"
       },
       "trusted_device": {
         "data": {
