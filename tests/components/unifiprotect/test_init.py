@@ -42,7 +42,11 @@ from homeassistant.components.unifiprotect.data import ProtectData
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_API_KEY, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.setup import async_setup_component
 
@@ -309,31 +313,92 @@ async def test_setup_cloud_account(
     hass: HomeAssistant,
     ufp: MockUFPFixture,
     cloud_account: CloudAccount,
-    hass_ws_client: WebSocketGenerator,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test setup of unifiprotect entry with cloud account."""
+    """Test a cloud account raises a repair issue per config entry."""
 
     bootstrap = ufp.api.bootstrap
     user = bootstrap.users[bootstrap.auth_user_id]
     user.cloud_account = cloud_account
     bootstrap.users[bootstrap.auth_user_id] = user
     ufp.api.get_bootstrap.return_value = bootstrap
-    ws_client = await hass_ws_client(hass)
+    other_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=ufp.entry.data,
+        version=2,
+        unique_id="A1E00C826925",
+    )
+    other_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(ufp.entry.entry_id)
     await hass.async_block_till_done()
     assert ufp.entry.state is ConfigEntryState.LOADED
+    assert other_entry.state is ConfigEntryState.LOADED
 
-    await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
-    msg = await ws_client.receive_json()
+    for entry in (ufp.entry, other_entry):
+        issue = issue_registry.async_get_issue(DOMAIN, f"cloud_user_{entry.entry_id}")
+        assert issue is not None
+        assert issue.config_entry_id == entry.entry_id
+        assert issue.data == {"entry_id": entry.entry_id}
 
-    assert msg["success"]
-    assert len(msg["result"]["issues"]) > 0
-    issue = None
-    for i in msg["result"]["issues"]:
-        if i["issue_id"] == "cloud_user":
-            issue = i
-    assert issue is not None
+    await hass.config_entries.async_remove(other_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, f"cloud_user_{ufp.entry.entry_id}")
+    assert not issue_registry.async_get_issue(
+        DOMAIN, f"cloud_user_{other_entry.entry_id}"
+    )
+
+
+async def test_setup_cloud_account_resolved(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    cloud_account: CloudAccount,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the cloud account issue is deleted once a local user is used."""
+
+    bootstrap = ufp.api.bootstrap
+    user = bootstrap.users[bootstrap.auth_user_id]
+    user.cloud_account = cloud_account
+    await hass.config_entries.async_setup(ufp.entry.entry_id)
+    await hass.async_block_till_done()
+    issue_id = f"cloud_user_{ufp.entry.entry_id}"
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+
+    user.cloud_account = None
+    await hass.config_entries.async_reload(ufp.entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert ufp.entry.state is ConfigEntryState.LOADED
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
+
+
+async def test_setup_public_only_deletes_cloud_user_issue(
+    hass: HomeAssistant,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test switching an entry to API-key-only deletes its cloud account issue."""
+    entry = ufp_public_only.entry
+    issue_id = f"cloud_user_{entry.entry_id}"
+    # Raised while the entry still signed in with the cloud account
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        config_entry_id=entry.entry_id,
+        is_fixable=True,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="cloud_user",
+        data={"entry_id": entry.entry_id},
+    )
+
+    await setup_public_only()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
 
 
 async def test_setup_failed_update(hass: HomeAssistant, ufp: MockUFPFixture) -> None:

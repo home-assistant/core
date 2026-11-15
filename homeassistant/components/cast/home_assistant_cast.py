@@ -20,11 +20,13 @@ async def async_setup_ha_cast(hass: core.HomeAssistant, entry: CastConfigEntry) 
 
     if user is None:
         user = await hass.auth.async_create_system_user(
-            CAST_USER_NAME, group_ids=[auth.const.GROUP_ID_ADMIN]
+            CAST_USER_NAME, group_ids=[auth.const.GROUP_ID_USER]
         )
         hass.config_entries.async_update_entry(
             entry, data={**entry.data, "user_id": user.id}
         )
+    elif user.is_admin:
+        await hass.auth.async_update_user(user, group_ids=[auth.const.GROUP_ID_USER])
 
     if user.refresh_tokens:
         refresh_token: auth.models.RefreshToken = list(user.refresh_tokens.values())[0]

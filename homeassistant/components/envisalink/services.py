@@ -1,5 +1,7 @@
 """Services for the Envisalink integration."""
 
+from enum import StrEnum
+
 import probatio
 
 from homeassistant.components.alarm_control_panel import (
@@ -10,22 +12,32 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_register_platform_entity_service
 from homeassistant.helpers.typing import VolDictType
 
-from .const import (
-    ATTR_CUSTOM_FUNCTION,
-    ATTR_PARTITION,
-    DATA_EVL,
-    DOMAIN,
-    SERVICE_CUSTOM_FUNCTION,
-)
+from .const import DATA_EVL, DOMAIN
 
-SERVICE_ALARM_KEYPRESS = "alarm_keypress"
-ATTR_KEYPRESS = "keypress"
-ALARM_KEYPRESS_SCHEMA: VolDictType = {probatio.Required(ATTR_KEYPRESS): cv.string}
+
+class EnvisalinkService(StrEnum):
+    """Store keys for Envisalink services."""
+
+    ALARM_KEYPRESS = "alarm_keypress"
+    INVOKE_CUSTOM_FUNCTION = "invoke_custom_function"
+
+
+class EnvisalinkServiceArgument(StrEnum):
+    """Store keys for Envisalink service arguments."""
+
+    KEYPRESS = "keypress"
+    PARTITION = "partition"
+    PGM = "pgm"
+
+
+ALARM_KEYPRESS_SCHEMA: VolDictType = {
+    probatio.Required(EnvisalinkServiceArgument.KEYPRESS): cv.string
+}
 
 SERVICE_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_CUSTOM_FUNCTION): cv.string,
-        probatio.Required(ATTR_PARTITION): cv.string,
+        probatio.Required(EnvisalinkServiceArgument.PGM): cv.string,
+        probatio.Required(EnvisalinkServiceArgument.PARTITION): cv.string,
     }
 )
 
@@ -33,8 +45,8 @@ SERVICE_SCHEMA = probatio.Schema(
 async def _handle_custom_function(call: ServiceCall) -> None:
     """Handle custom/PGM service."""
     data = call.hass.data[DATA_EVL]
-    custom_function = call.data.get(ATTR_CUSTOM_FUNCTION)
-    partition = call.data.get(ATTR_PARTITION)
+    custom_function = call.data.get(EnvisalinkServiceArgument.PGM)
+    partition = call.data.get(EnvisalinkServiceArgument.PARTITION)
     data.controller.command_output(data.code, partition, custom_function)
 
 
@@ -42,12 +54,15 @@ async def _handle_custom_function(call: ServiceCall) -> None:
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the services for the Envisalink integration."""
     hass.services.async_register(
-        DOMAIN, SERVICE_CUSTOM_FUNCTION, _handle_custom_function, schema=SERVICE_SCHEMA
+        DOMAIN,
+        EnvisalinkService.INVOKE_CUSTOM_FUNCTION,
+        _handle_custom_function,
+        schema=SERVICE_SCHEMA,
     )
     async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_ALARM_KEYPRESS,
+        EnvisalinkService.ALARM_KEYPRESS,
         entity_domain=ALARM_CONTROL_PANEL_DOMAIN,
         schema=ALARM_KEYPRESS_SCHEMA,
         func="async_alarm_keypress",

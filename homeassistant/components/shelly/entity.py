@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable, Coroutine, Mapping
 from dataclasses import dataclass
-from functools import wraps
+from functools import partial, wraps
 from typing import Any, Concatenate, cast, override
 
 from aioshelly.block_device import Block
@@ -162,6 +162,18 @@ def async_setup_entry_rpc(
         async_restore_rpc_attribute_entities(
             hass, config_entry, async_add_entities, coordinator, sensors, sensor_class
         )
+        # Restoring only covers the registry, add entities that are new since then
+        coordinator.async_on_initialized(
+            partial(
+                async_setup_rpc_attribute_entities,
+                hass,
+                config_entry,
+                async_add_entities,
+                sensors,
+                sensor_class,
+                skip_registered=True,
+            )
+        )
 
 
 @callback
@@ -171,6 +183,8 @@ def async_setup_rpc_attribute_entities(
     async_add_entities: AddEntitiesCallback,
     sensors: Mapping[str, RpcEntityDescription],
     sensor_class: Callable,
+    *,
+    skip_registered: bool = False,
 ) -> None:
     """Set up entities for RPC attributes."""
     coordinator = config_entry.runtime_data.rpc
@@ -230,6 +244,16 @@ def async_setup_rpc_attribute_entities(
                         coordinator, key, sensor_id, description
                     )
                 )
+
+    if skip_registered:
+        ent_reg = er.async_get(hass)
+        domain = sensor_class.__module__.split(".")[-1]
+        entities = [
+            entity
+            for entity in entities
+            if ent_reg.async_get_entity_id(domain, DOMAIN, entity.unique_id) is None
+        ]
+
     if not entities:
         return
 

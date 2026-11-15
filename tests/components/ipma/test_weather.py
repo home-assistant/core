@@ -12,13 +12,9 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.ipma.const import DOMAIN, MIN_TIME_BETWEEN_UPDATES
 from homeassistant.components.weather import (
-    ATTR_WEATHER_HUMIDITY,
-    ATTR_WEATHER_PRESSURE,
-    ATTR_WEATHER_TEMPERATURE,
-    ATTR_WEATHER_WIND_BEARING,
-    ATTR_WEATHER_WIND_SPEED,
     DOMAIN as WEATHER_DOMAIN,
-    SERVICE_GET_FORECASTS,
+    WeatherEntityStateAttribute,
+    WeatherService,
 )
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
@@ -67,11 +63,11 @@ async def test_setup_config_flow(hass: HomeAssistant) -> None:
     assert state.state == "rainy"
 
     data = state.attributes
-    assert data.get(ATTR_WEATHER_TEMPERATURE) == 18.0
-    assert data.get(ATTR_WEATHER_HUMIDITY) == 71
-    assert data.get(ATTR_WEATHER_PRESSURE) == 1000.0
-    assert data.get(ATTR_WEATHER_WIND_SPEED) == 3.94
-    assert data.get(ATTR_WEATHER_WIND_BEARING) == "NW"
+    assert data.get(WeatherEntityStateAttribute.TEMPERATURE) == 18.0
+    assert data.get(WeatherEntityStateAttribute.HUMIDITY) == 71
+    assert data.get(WeatherEntityStateAttribute.PRESSURE) == 1000.0
+    assert data.get(WeatherEntityStateAttribute.WIND_SPEED) == 3.94
+    assert data.get(WeatherEntityStateAttribute.WIND_BEARING) == "NW"
     assert state.attributes.get("friendly_name") == "HomeTown"
 
 
@@ -90,17 +86,17 @@ async def test_failed_get_observation_forecast(hass: HomeAssistant) -> None:
     assert state.state == STATE_UNKNOWN
 
     data = state.attributes
-    assert data.get(ATTR_WEATHER_TEMPERATURE) is None
-    assert data.get(ATTR_WEATHER_HUMIDITY) is None
-    assert data.get(ATTR_WEATHER_PRESSURE) is None
-    assert data.get(ATTR_WEATHER_WIND_SPEED) is None
-    assert data.get(ATTR_WEATHER_WIND_BEARING) is None
+    assert data.get(WeatherEntityStateAttribute.TEMPERATURE) is None
+    assert data.get(WeatherEntityStateAttribute.HUMIDITY) is None
+    assert data.get(WeatherEntityStateAttribute.PRESSURE) is None
+    assert data.get(WeatherEntityStateAttribute.WIND_SPEED) is None
+    assert data.get(WeatherEntityStateAttribute.WIND_BEARING) is None
     assert state.attributes.get("friendly_name") == "HomeTown"
 
 
 @pytest.mark.parametrize(
     ("service"),
-    [SERVICE_GET_FORECASTS],
+    [WeatherService.GET_FORECASTS],
 )
 async def test_forecast_service(
     hass: HomeAssistant,

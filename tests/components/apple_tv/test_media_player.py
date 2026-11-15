@@ -1,10 +1,11 @@
 """Tests for the Apple TV media player."""
 
+import asyncio
 from contextlib import ExitStack
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
-from pyatv.const import FeatureName, FeatureState, Protocol
+from pyatv.const import DeviceState, FeatureName, FeatureState, PowerState, Protocol
 from pyatv.exceptions import (
     BlockedStateError,
     ConnectionLostError,
@@ -14,7 +15,7 @@ from pyatv.exceptions import (
     PlaybackError,
     ProtocolError,
 )
-from pyatv.interface import OutputDevice
+from pyatv.interface import OutputDevice, Playing
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.typing import WebSocketGenerator
@@ -34,21 +35,28 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.components.media_source import PlayMedia
+from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_ADDRESS,
     CONF_NAME,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
+    SERVICE_TURN_OFF,
     SERVICE_VOLUME_SET,
+    STATE_OFF,
+    STATE_PLAYING,
+    STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.event import async_track_state_change_event
 
 from .common import create_conf, mrp_service
 
 ENTITY_ID = "media_player.living_room_living_room"
+REMOTE_ENTITY_ID = "remote.living_room_living_room"
 _MUSIC_URL = "http://example.local:8123/api/tts_proxy/abc.mp3"
 _VIDEO_URL = "http://example.local:8123/video.mp4"
 HOMEPOD_ENTITY_ID = "media_player.bedroom_bedroom"
@@ -812,3 +820,94 @@ async def test_group_members_after_shutdown_disconnect(
     assert hass.states.get(HOMEPOD_ENTITY_ID).attributes[ATTR_GROUP_MEMBERS] == [
         HOMEPOD_ENTITY_ID
     ]
+
+
+@pytest.mark.parametrize(
+    ("callback_name", "callback_args"),
+    [
+        pytest.param(
+            "connection_lost",
+            (ConnectionError("Control connection lost"),),
+            id="connection-lost",
+        ),
+        pytest.param("connection_closed", (), id="connection-closed"),
+    ],
+)
+async def test_disconnect_does_not_report_power_off(
+    hass: HomeAssistant,
+    mock_atv: AsyncMock,
+    callback_name: str,
+    callback_args: tuple[Exception, ...],
+) -> None:
+    """A transport failure is unknown until playback status returns."""
+    playing = Playing(device_state=DeviceState.Playing)
+    mock_atv.push_updater.listener.playstatus_update(mock_atv.push_updater, playing)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == STATE_PLAYING
+
+    observed_states: list[str] = []
+    reconnect_ready = asyncio.Event()
+
+    @callback
+    def record_state(event: Event[EventStateChangedData]) -> None:
+        observed_states.append(event.data["new_state"].state)
+
+    async def reconnect(*args: object, **kwargs: object) -> AsyncMock:
+        await reconnect_ready.wait()
+        return mock_atv
+
+    remove_listener = async_track_state_change_event(hass, ENTITY_ID, record_state)
+    scan_result = create_conf("127.0.0.1", "Living Room", mrp_service())
+    with (
+        patch("homeassistant.components.apple_tv.scan", return_value=[scan_result]),
+        patch("homeassistant.components.apple_tv.connect", side_effect=reconnect),
+    ):
+        getattr(mock_atv.listener, callback_name)(*callback_args)
+        await hass.async_block_till_done()
+
+        assert hass.states.get(ENTITY_ID).state == STATE_UNKNOWN
+
+        reconnect_ready.set()
+        await hass.async_block_till_done(wait_background_tasks=True)
+        mock_atv.push_updater.listener.playstatus_update(mock_atv.push_updater, playing)
+        await hass.async_block_till_done()
+
+    remove_listener()
+    assert hass.states.get(ENTITY_ID).state == STATE_PLAYING
+    assert STATE_OFF not in observed_states
+
+
+async def test_remote_turn_off_reports_off(
+    hass: HomeAssistant, mock_atv: AsyncMock
+) -> None:
+    """Closing the connection after turning the remote off reports off."""
+    await hass.services.async_call(
+        REMOTE_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: REMOTE_ENTITY_ID},
+        blocking=True,
+    )
+    mock_atv.listener.connection_closed()
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
+
+
+@pytest.mark.parametrize(
+    "device_state",
+    [
+        pytest.param(DeviceState.Idle, id="idle"),
+        pytest.param(DeviceState.Paused, id="paused"),
+    ],
+)
+async def test_connected_power_off_remains_immediate(
+    hass: HomeAssistant, mock_atv: AsyncMock, device_state: DeviceState
+) -> None:
+    """A connected device's genuine power-off still takes effect immediately."""
+    mock_atv.power.power_state = PowerState.Off
+    mock_atv.push_updater.listener.playstatus_update(
+        mock_atv.push_updater, Playing(device_state=device_state)
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF

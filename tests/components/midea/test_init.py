@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_PROTOCOL,
     CONF_TOKEN,
     CONF_TYPE,
+    EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -53,6 +54,25 @@ async def test_unload_entry(hass: HomeAssistant, config_entry: MockConfigEntry) 
     assert config_entry.state is ConfigEntryState.LOADED
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     assert config_entry.state is ConfigEntryState.NOT_LOADED
+    assert ("close",) in device.calls
+
+
+async def test_close_on_homeassistant_stop(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test the device is closed when Home Assistant stops."""
+    config_entry.add_to_hass(hass)
+    device = DummyDevice(DeviceType.AC)
+    with patch(
+        "homeassistant.components.midea.device_selector",
+        return_value=device,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+    assert ("close",) not in device.calls
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
     assert ("close",) in device.calls
 
 

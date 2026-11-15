@@ -8,7 +8,6 @@ import evohomeasync2 as evo
 from evohomeasync2.const import (
     SZ_CAN_BE_TEMPORARY,
     SZ_DURATION,
-    SZ_MODE,
     SZ_PERIOD,
     SZ_SETPOINT_STATUS,
     SZ_SYSTEM_MODE,
@@ -368,7 +367,7 @@ class EvoController(EvoClimateEntity):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="mode_not_supported",
-                translation_placeholders={SZ_MODE: mode},
+                translation_placeholders={"mode": mode},
             )
 
         timing_mode: str | None = None
@@ -385,13 +384,13 @@ class EvoController(EvoClimateEntity):
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="mode_cant_be_temporary",
-                    translation_placeholders={SZ_MODE: mode},
+                    translation_placeholders={"mode": mode},
                 )
             if mode_info.get(SZ_TIMING_MODE) != timing_mode:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key=f"mode_cant_have_{timing_mode}",
-                    translation_placeholders={SZ_MODE: mode},
+                    translation_placeholders={"mode": mode},
                 )
 
         await self._set_tcs_mode(mode_info[SZ_SYSTEM_MODE], until=until)

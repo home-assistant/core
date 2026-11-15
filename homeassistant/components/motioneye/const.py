@@ -84,9 +84,6 @@ EVENT_MEDIA_CONTENT_ID: Final = "media_content_id"
 
 MOTIONEYE_MANUFACTURER: Final = "motionEye"
 
-SERVICE_SET_TEXT_OVERLAY: Final = "set_text_overlay"
-SERVICE_ACTION: Final = "action"
-SERVICE_SNAPSHOT: Final = "snapshot"
 
 SIGNAL_CAMERA_ADD: Final = f"{DOMAIN}_camera_add_signal.{{}}"
 SIGNAL_CAMERA_REMOVE: Final = f"{DOMAIN}_camera_remove_signal.{{}}"

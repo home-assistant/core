@@ -479,6 +479,138 @@
     'state': 'on',
   })
 # ---
+# name: test_switch_state[Air Purifier Sprout][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          'sprout-purifier',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'LAP-B851S-WUS',
+      'model_id': None,
+      'name': 'Air Purifier Sprout',
+      'name_by_user': None,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_switch_state[Air Purifier Sprout][entities]
+  list([
+    EntityRegistryEntrySnapshot({
+      'aliases': list([
+        None,
+      ]),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
+      'device_class': None,
+      'device_id': <DeviceEntry identifiers=[('vesync', 'sprout-purifier')]>,
+      'disabled_by': None,
+      'domain': 'switch',
+      'entity_category': <EntityCategory.CONFIG: 'config'>,
+      'entity_id': 'switch.air_purifier_sprout_display',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Display',
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Display',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'display',
+      'unique_id': 'sprout-purifier-display',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': list([
+        None,
+      ]),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
+      'device_class': None,
+      'device_id': <DeviceEntry identifiers=[('vesync', 'sprout-purifier')]>,
+      'disabled_by': None,
+      'domain': 'switch',
+      'entity_category': <EntityCategory.CONFIG: 'config'>,
+      'entity_id': 'switch.air_purifier_sprout_child_lock',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Child lock',
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Child lock',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'child_lock',
+      'unique_id': 'sprout-purifier-child_lock',
+      'unit_of_measurement': None,
+    }),
+  ])
+# ---
+# name: test_switch_state[Air Purifier Sprout][switch.air_purifier_sprout_child_lock]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier Sprout Child lock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.air_purifier_sprout_child_lock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch_state[Air Purifier Sprout][switch.air_purifier_sprout_display]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier Sprout Display',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.air_purifier_sprout_display',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_switch_state[Air Purifier Vital 200S][devices]
   list([
     DeviceRegistryEntrySnapshot({
@@ -583,6 +715,41 @@
       'unique_id': 'vital200s-purifier-child_lock',
       'unit_of_measurement': None,
     }),
+    EntityRegistryEntrySnapshot({
+      'aliases': list([
+        None,
+      ]),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
+      'device_class': None,
+      'device_id': <DeviceEntry identifiers=[('vesync', 'vital200s-purifier')]>,
+      'disabled_by': None,
+      'domain': 'switch',
+      'entity_category': <EntityCategory.CONFIG: 'config'>,
+      'entity_id': 'switch.air_purifier_vital_200s_light_detection',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Light detection',
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Light detection',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'light_detection',
+      'unique_id': 'vital200s-purifier-light_detection',
+      'unit_of_measurement': None,
+    }),
   ])
 # ---
 # name: test_switch_state[Air Purifier Vital 200S][switch.air_purifier_vital_200s_child_lock]
@@ -609,6 +776,19 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
+  })
+# ---
+# name: test_switch_state[Air Purifier Vital 200S][switch.air_purifier_vital_200s_light_detection]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier Vital 200S Light detection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.air_purifier_vital_200s_light_detection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
   })
 # ---
 # name: test_switch_state[CS158-AF Air Fryer Cooking][devices]
@@ -1533,6 +1713,41 @@
       'unique_id': 'smarttowerfan-display',
       'unit_of_measurement': None,
     }),
+    EntityRegistryEntrySnapshot({
+      'aliases': list([
+        None,
+      ]),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
+      'device_class': None,
+      'device_id': <DeviceEntry identifiers=[('vesync', 'smarttowerfan')]>,
+      'disabled_by': None,
+      'domain': 'switch',
+      'entity_category': <EntityCategory.CONFIG: 'config'>,
+      'entity_id': 'switch.smarttowerfan_mute',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Mute',
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Mute',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'mute',
+      'unique_id': 'smarttowerfan-mute',
+      'unit_of_measurement': None,
+    }),
   ])
 # ---
 # name: test_switch_state[SmartTowerFan][switch.smarttowerfan_display]
@@ -1546,6 +1761,19 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
+  })
+# ---
+# name: test_switch_state[SmartTowerFan][switch.smarttowerfan_mute]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SmartTowerFan Mute',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.smarttowerfan_mute',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
   })
 # ---
 # name: test_switch_state[Temperature Light][devices]

@@ -26,6 +26,7 @@ from homeassistant.components.water_heater import (
     STATE_HEAT_PUMP,
     STATE_HIGH_DEMAND,
     STATE_PERFORMANCE,
+    WaterHeaterCapabilityAttribute,
 )
 from homeassistant.components.water_heater.condition import CONDITIONS
 from homeassistant.const import (
@@ -57,6 +58,9 @@ async def target_water_heaters(hass: HomeAssistant) -> dict[str, list[str]]:
     return await target_entities(hass, "water_heater")
 
 
+_WATER_HEATER_UNIT_ATTRIBUTES = {
+    WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS
+}
 _TEMPERATURE_THRESHOLD = {
     "threshold": {
         "type": "above",
@@ -237,6 +241,7 @@ async def test_water_heater_state_condition_behavior_all(
             "eco",
             ATTR_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            unit_attributes=_WATER_HEATER_UNIT_ATTRIBUTES,
             attribute_required=True,
         ),
     ],
@@ -276,6 +281,7 @@ async def test_water_heater_numerical_condition_behavior_any(
             "eco",
             ATTR_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            unit_attributes=_WATER_HEATER_UNIT_ATTRIBUTES,
             attribute_required=True,
         ),
     ],
@@ -315,12 +321,31 @@ async def test_water_heater_numerical_condition_unit_conversion(
         hass,
         condition="water_heater.is_target_temperature",
         entity_id="water_heater.test",
-        pass_states=[{"state": "eco", "attributes": {ATTR_TEMPERATURE: 55}}],
+        pass_states=[
+            {
+                "state": "eco",
+                "attributes": {ATTR_TEMPERATURE: 55, **_WATER_HEATER_UNIT_ATTRIBUTES},
+            },
+            {
+                "state": "eco",
+                "attributes": {
+                    ATTR_TEMPERATURE: 130,
+                    WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
+                },
+            },
+        ],
         fail_states=[
             {
                 "state": "eco",
-                "attributes": {ATTR_TEMPERATURE: 40},
-            }
+                "attributes": {ATTR_TEMPERATURE: 40, **_WATER_HEATER_UNIT_ATTRIBUTES},
+            },
+            {
+                "state": "eco",
+                "attributes": {
+                    ATTR_TEMPERATURE: 104,
+                    WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
+                },
+            },
         ],
         numerical_condition_options=[
             {

@@ -181,6 +181,7 @@ class KNXTestKit:
             mock = Mock()
             mock.start = AsyncMock(side_effect=patch_xknx_start)
             mock.stop = AsyncMock()
+            mock.stop_reconnect = AsyncMock()
             mock.gateway_info = AsyncMock()
             return mock
 

@@ -72,9 +72,7 @@ rules:
       (1) The number, switch and date entities let ValloxApiException through,
       for example when the unit is unreachable, instead of raising
       HomeAssistantError.
-      (2) The fan raises a plain ValueError when the profile does not support
-      setting the fan speed, which should be a ServiceValidationError.
-      (3) The custom actions raise a plain ValueError unless exactly one entry
+      (2) The custom actions raise a plain ValueError unless exactly one entry
       is loaded, which is covered by action-setup.
   config-entry-unloading: done
   docs-configuration-parameters:
@@ -85,11 +83,7 @@ rules:
     comment: >-
       The page does not describe the Host field. Add a configuration_basic
       block that says it takes the unit's IP address and where to find it.
-  entity-unavailable:
-    status: todo
-    comment: >-
-      The binary sensor compares its value with == 1, so it reports off instead
-      of unknown when the value is missing from the data.
+  entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
   parallel-updates:
@@ -105,10 +99,7 @@ rules:
   test-coverage:
     status: todo
     comment: >-
-      Missing for 100%:
-      (1) sensor.py lines 60 and 67 cannot be reached with data from a real
-      unit and need an integration cleanup.
-      (2) services.py line 55 goes away with action-setup.
+      Missing for 100%: services.py line 55, which goes away with action-setup.
 
   # Gold
   devices:
@@ -169,10 +160,7 @@ rules:
   entity-device-class:
     status: todo
     comment: >-
-      (1) The current profile and cell state sensors report hard-coded English
-      strings. They should use the enum device class with translated states.
-      Note: Will be a breaking change.
-      (2) The post-heater binary sensor has no device class; running fits.
+      The post-heater binary sensor has no device class; running fits.
   entity-disabled-by-default: done
   entity-translations: done
   exception-translations:

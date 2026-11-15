@@ -19,20 +19,13 @@ import probatio
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.lametric.const import (
-    CONF_CYCLES,
-    CONF_DATA,
-    CONF_ICON_TYPE,
-    CONF_MESSAGE,
-    CONF_PRIORITY,
-    CONF_SOUND,
-    CONF_SOUND_URL,
-    DOMAIN,
-    SERVICE_CHART,
-    SERVICE_MESSAGE,
+from homeassistant.components.lametric.const import DOMAIN
+from homeassistant.components.lametric.services import (
+    LaMetricService,
+    LaMetricServiceArgument,
 )
 from homeassistant.components.media_source import PlayMedia
-from homeassistant.const import CONF_DEVICE_ID, CONF_ICON, CONF_REPEAT
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -54,10 +47,10 @@ async def test_service_chart(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_CHART,
+        LaMetricService.CHART,
         {
-            CONF_DEVICE_ID: entry.device_id,
-            CONF_DATA: [1, 2, 3, 4, 5, 4, 3, 2, 1],
+            CommonServiceArgument.DEVICE_ID: entry.device_id,
+            LaMetricServiceArgument.DATA: [1, 2, 3, 4, 5, 4, 3, 2, 1],
         },
         blocking=True,
     )
@@ -80,14 +73,14 @@ async def test_service_chart(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_CHART,
+        LaMetricService.CHART,
         {
-            CONF_DATA: [1, 2, 3, 4, 5, 4, 3, 2, 1],
-            CONF_DEVICE_ID: entry.device_id,
-            CONF_CYCLES: 3,
-            CONF_ICON_TYPE: "info",
-            CONF_PRIORITY: "critical",
-            CONF_SOUND: "cat",
+            LaMetricServiceArgument.DATA: [1, 2, 3, 4, 5, 4, 3, 2, 1],
+            CommonServiceArgument.DEVICE_ID: entry.device_id,
+            LaMetricServiceArgument.CYCLES: 3,
+            LaMetricServiceArgument.ICON_TYPE: "info",
+            LaMetricServiceArgument.PRIORITY: "critical",
+            LaMetricServiceArgument.SOUND: "cat",
         },
         blocking=True,
     )
@@ -118,10 +111,10 @@ async def test_service_chart(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_CHART,
+            LaMetricService.CHART,
             {
-                CONF_DEVICE_ID: entry.device_id,
-                CONF_DATA: [1, 2, 3, 4, 5],
+                CommonServiceArgument.DEVICE_ID: entry.device_id,
+                LaMetricServiceArgument.DATA: [1, 2, 3, 4, 5],
             },
             blocking=True,
         )
@@ -142,10 +135,10 @@ async def test_service_message(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_MESSAGE,
+        LaMetricService.MESSAGE,
         {
-            CONF_DEVICE_ID: entry.device_id,
-            CONF_MESSAGE: "Hi!",
+            CommonServiceArgument.DEVICE_ID: entry.device_id,
+            LaMetricServiceArgument.MESSAGE: "Hi!",
         },
         blocking=True,
     )
@@ -169,15 +162,15 @@ async def test_service_message(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_MESSAGE,
+        LaMetricService.MESSAGE,
         {
-            CONF_DEVICE_ID: entry.device_id,
-            CONF_MESSAGE: "Meow!",
-            CONF_CYCLES: 3,
-            CONF_ICON_TYPE: "info",
-            CONF_PRIORITY: "critical",
-            CONF_SOUND: "cat",
-            CONF_ICON: "6916",
+            CommonServiceArgument.DEVICE_ID: entry.device_id,
+            LaMetricServiceArgument.MESSAGE: "Meow!",
+            LaMetricServiceArgument.CYCLES: 3,
+            LaMetricServiceArgument.ICON_TYPE: "info",
+            LaMetricServiceArgument.PRIORITY: "critical",
+            LaMetricServiceArgument.SOUND: "cat",
+            LaMetricServiceArgument.ICON: "6916",
         },
         blocking=True,
     )
@@ -209,10 +202,10 @@ async def test_service_message(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_MESSAGE,
+            LaMetricService.MESSAGE,
             {
-                CONF_DEVICE_ID: entry.device_id,
-                CONF_MESSAGE: "Epic failure!",
+                CommonServiceArgument.DEVICE_ID: entry.device_id,
+                LaMetricServiceArgument.MESSAGE: "Epic failure!",
             },
             blocking=True,
         )
@@ -223,8 +216,14 @@ async def test_service_message(
 @pytest.mark.parametrize(
     ("service", "payload"),
     [
-        pytest.param(SERVICE_MESSAGE, {CONF_MESSAGE: "Meow!"}, id="message"),
-        pytest.param(SERVICE_CHART, {CONF_DATA: [1, 2, 3]}, id="chart"),
+        pytest.param(
+            LaMetricService.MESSAGE,
+            {LaMetricServiceArgument.MESSAGE: "Meow!"},
+            id="message",
+        ),
+        pytest.param(
+            LaMetricService.CHART, {LaMetricServiceArgument.DATA: [1, 2, 3]}, id="chart"
+        ),
     ],
 )
 @pytest.mark.parametrize("repeat", [0, 1, 5])
@@ -246,10 +245,10 @@ async def test_service_sound_repeat(
         DOMAIN,
         service,
         {
-            CONF_DEVICE_ID: entry.device_id,
-            CONF_SOUND: "cat",
+            CommonServiceArgument.DEVICE_ID: entry.device_id,
+            LaMetricServiceArgument.SOUND: "cat",
             **payload,
-            CONF_REPEAT: repeat,
+            LaMetricServiceArgument.REPEAT: repeat,
         },
         blocking=True,
     )
@@ -263,8 +262,14 @@ async def test_service_sound_repeat(
 @pytest.mark.parametrize(
     ("service", "payload"),
     [
-        pytest.param(SERVICE_MESSAGE, {CONF_MESSAGE: "Meow!"}, id="message"),
-        pytest.param(SERVICE_CHART, {CONF_DATA: [1, 2, 3]}, id="chart"),
+        pytest.param(
+            LaMetricService.MESSAGE,
+            {LaMetricServiceArgument.MESSAGE: "Meow!"},
+            id="message",
+        ),
+        pytest.param(
+            LaMetricService.CHART, {LaMetricServiceArgument.DATA: [1, 2, 3]}, id="chart"
+        ),
     ],
 )
 async def test_service_sound_repeat_negative(
@@ -285,10 +290,10 @@ async def test_service_sound_repeat_negative(
             DOMAIN,
             service,
             {
-                CONF_DEVICE_ID: entry.device_id,
-                CONF_SOUND: "cat",
+                CommonServiceArgument.DEVICE_ID: entry.device_id,
+                LaMetricServiceArgument.SOUND: "cat",
                 **payload,
-                CONF_REPEAT: -1,
+                LaMetricServiceArgument.REPEAT: -1,
             },
             blocking=True,
         )
@@ -314,8 +319,12 @@ async def test_service_message_without_audio(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_MESSAGE,
-        {CONF_DEVICE_ID: device.id, CONF_MESSAGE: "Meow!", CONF_SOUND: "cat"},
+        LaMetricService.MESSAGE,
+        {
+            CommonServiceArgument.DEVICE_ID: device.id,
+            LaMetricServiceArgument.MESSAGE: "Meow!",
+            LaMetricServiceArgument.SOUND: "cat",
+        },
         blocking=True,
     )
 
@@ -327,12 +336,15 @@ async def test_service_message_without_audio(
     ("data", "expected"),
     [
         (
-            {CONF_SOUND_URL: "https://example.com/doorbell.mp3"},
+            {LaMetricServiceArgument.SOUND_URL: "https://example.com/doorbell.mp3"},
             SoundURL(url="https://example.com/doorbell.mp3"),
         ),
         # A built-in sound given as well plays when the URL cannot be fetched.
         (
-            {CONF_SOUND_URL: "https://example.com/doorbell.mp3", CONF_SOUND: "cat"},
+            {
+                LaMetricServiceArgument.SOUND_URL: "https://example.com/doorbell.mp3",
+                LaMetricServiceArgument.SOUND: "cat",
+            },
             SoundURL(
                 url="https://example.com/doorbell.mp3",
                 fallback=Sound(sound=NotificationSound.CAT),
@@ -342,9 +354,9 @@ async def test_service_message_without_audio(
         # count applies to the fallback only.
         (
             {
-                CONF_SOUND_URL: "https://example.com/doorbell.mp3",
-                CONF_SOUND: "cat",
-                CONF_REPEAT: 3,
+                LaMetricServiceArgument.SOUND_URL: "https://example.com/doorbell.mp3",
+                LaMetricServiceArgument.SOUND: "cat",
+                LaMetricServiceArgument.REPEAT: 3,
             },
             SoundURL(
                 url="https://example.com/doorbell.mp3",
@@ -367,8 +379,12 @@ async def test_service_message_sound_url(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_MESSAGE,
-        {CONF_DEVICE_ID: entry.device_id, CONF_MESSAGE: "Ding dong!", **data},
+        LaMetricService.MESSAGE,
+        {
+            CommonServiceArgument.DEVICE_ID: entry.device_id,
+            LaMetricServiceArgument.MESSAGE: "Ding dong!",
+            **data,
+        },
         blocking=True,
     )
 
@@ -399,11 +415,11 @@ async def test_service_message_invalid_sound_url(
     with pytest.raises(ServiceValidationError, match="Invalid sound URL"):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_MESSAGE,
+            LaMetricService.MESSAGE,
             {
-                CONF_DEVICE_ID: entry.device_id,
-                CONF_MESSAGE: "Ding dong!",
-                CONF_SOUND_URL: sound_url,
+                CommonServiceArgument.DEVICE_ID: entry.device_id,
+                LaMetricServiceArgument.MESSAGE: "Ding dong!",
+                LaMetricServiceArgument.SOUND_URL: sound_url,
             },
             blocking=True,
         )
@@ -431,11 +447,11 @@ async def test_service_message_sound_from_media(
     ) as resolve_media:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_MESSAGE,
+            LaMetricService.MESSAGE,
             {
-                CONF_DEVICE_ID: entry.device_id,
-                CONF_MESSAGE: "Ding dong!",
-                CONF_SOUND_URL: {
+                CommonServiceArgument.DEVICE_ID: entry.device_id,
+                LaMetricServiceArgument.MESSAGE: "Ding dong!",
+                LaMetricServiceArgument.SOUND_URL: {
                     "media_content_id": "media-source://media_source/local/doorbell.mp3",
                     "media_content_type": "audio/mpeg",
                 },
