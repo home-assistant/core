@@ -77,6 +77,7 @@ class UnmappedEnumValueFlow(RepairsFlow):
     ) -> RepairsFlowResult:
         """Handle the first step of a fix flow."""
         return self.async_show_menu(
+            step_id="init",
             menu_options=["confirm", "ignore"],
             description_placeholders=self.description_placeholders,
         )
