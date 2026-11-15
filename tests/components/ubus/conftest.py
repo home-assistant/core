@@ -67,17 +67,14 @@ def mock_ubus() -> Generator[MagicMock]:
             return "session-id"
 
         instance.connect.side_effect = _connect
-        # This mega turbo advanced Wi-Fi router has two WLAN interfaces!
         instance.get_hostapd.return_value = {
             "hostapd.wlan0": {},
             "hostapd.wlan1": {},
         }
 
-        # Listing of wireless clients across interfaces.
-        # Peculiar quirk: a roaming client is briefly seen on both interfaces
-        # with conflicting authorization, and each interface reports a
-        # different client table, but the same client appears on both,
-        # whereby it is authorized in one but not in the other.
+        # Some clients appear only in one WLAN interface.  Others (particularly
+        # clients that roam between WLAN interfaces) can appear on more than one.
+        # Authorization can be different among interface views of the same client.
         def _hostapd_clients(interface: str):
             if interface == "hostapd.wlan0":
                 return {
