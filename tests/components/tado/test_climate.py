@@ -1,7 +1,6 @@
 """The climate tests for the tado platform."""
 
 from collections.abc import Generator
-import dataclasses
 from unittest.mock import patch
 
 from PyTado.interface.api.my_tado import TadoZone
@@ -20,6 +19,11 @@ from homeassistant.components.tado import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+
+AIRCON_WITH_SWING = "climate.air_conditioning_with_swing_air_conditioning_with_swing"
+AIRCON_WITH_FANLEVEL = (
+    "climate.air_conditioning_with_fanlevel_air_conditioning_with_fanlevel"
+)
 
 
 @pytest.fixture(autouse=True)
@@ -142,60 +146,51 @@ async def test_aircon_set_hvac_mode(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "zone_id", "hvac_mode", "expected_temperature"),
+    ("zone_states_overrides", "entity_id", "hvac_mode", "expected_temperature"),
     [
         pytest.param(
-            "climate.air_conditioning_with_swing_air_conditioning_with_swing",
-            5,
+            {"5": "smartac3.off_cold_room.json"},
+            AIRCON_WITH_SWING,
             HVACMode.COOL,
             18.0,
             id="cool",
         ),
         pytest.param(
-            "climate.air_conditioning_with_swing_air_conditioning_with_swing",
-            5,
+            {"5": "smartac3.off_cold_room.json"},
+            AIRCON_WITH_SWING,
             HVACMode.HEAT,
             16.0,
             id="heat",
         ),
         pytest.param(
-            "climate.air_conditioning_with_fanlevel_air_conditioning_with_fanlevel",
-            6,
+            {"6": "smartac3.off_cold_room.json"},
+            AIRCON_WITH_FANLEVEL,
             HVACMode.DRY,
             16.0,
             id="dry",
         ),
+        pytest.param(
+            {"5": "smartac3.off_no_temperature.json"},
+            AIRCON_WITH_SWING,
+            HVACMode.COOL,
+            None,
+            id="no_room_temperature",
+        ),
     ],
 )
 @pytest.mark.usefixtures("init_integration")
-async def test_aircon_turn_on_from_off_in_cold_room(
+async def test_aircon_turn_on_from_off(
     hass: HomeAssistant,
     entity_id: str,
-    zone_id: int,
     hvac_mode: HVACMode,
-    expected_temperature: float,
+    expected_temperature: float | None,
 ) -> None:
     """Test the room temperature is clamped to the mode limits when turning on."""
-    coordinator = hass.config_entries.async_entries(DOMAIN)[0].runtime_data
-    zone_off = dataclasses.replace(
-        coordinator.data["zone"][zone_id],
-        current_hvac_mode="OFF",
-        power="OFF",
-        current_temp=15.0,
-        target_temp=None,
-    )
-    coordinator.data["zone"][zone_id] = zone_off
-    coordinator.async_update_listeners()
+    assert hass.states.get(entity_id).state == HVACMode.OFF
 
-    with (
-        patch(
-            "homeassistant.components.tado.PyTado.interface.api.Tado.set_zone_overlay"
-        ) as mock_set_state,
-        patch(
-            "homeassistant.components.tado.PyTado.interface.api.Tado.get_zone_state",
-            return_value=zone_off,
-        ),
-    ):
+    with patch(
+        "homeassistant.components.tado.PyTado.interface.api.Tado.set_zone_overlay"
+    ) as mock_set_state:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,
