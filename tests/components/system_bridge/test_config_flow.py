@@ -11,6 +11,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from systembridgeconnector.exceptions import (
     AuthenticationException,
+    BadRequestException,
     ConnectionClosedException,
     ConnectionErrorException,
 )
@@ -26,6 +27,9 @@ from homeassistant.data_entry_flow import FlowResultType
 from . import (
     FIXTURE_AUTH_INPUT,
     FIXTURE_DATA_RESPONSE,
+    FIXTURE_KEY,
+    FIXTURE_NEW_KEY,
+    FIXTURE_PAIRING_CODE,
     FIXTURE_USER_INPUT,
     FIXTURE_UUID,
     FIXTURE_ZEROCONF,
@@ -116,6 +120,79 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     assert result2["data"] == FIXTURE_USER_INPUT
     assert result2["result"].unique_id == FIXTURE_UUID
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    "entered",
+    [
+        pytest.param(FIXTURE_PAIRING_CODE, id="code"),
+        pytest.param(
+            f"http://test-bridge.local:9170/?ip=127.0.0.1&pair={FIXTURE_PAIRING_CODE}",
+            id="link",
+        ),
+    ],
+)
+async def test_user_flow_pairing_code(hass: HomeAssistant, entered: str) -> None:
+    """Test a pairing code, or its link, is traded for a key that's kept."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with (
+        _patch_success(),
+        patch(
+            "homeassistant.components.system_bridge.config_flow.HTTPClient.pair",
+            return_value=FIXTURE_KEY,
+        ) as mock_pair,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {**FIXTURE_USER_INPUT, CONF_TOKEN: entered}
+        )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == FIXTURE_USER_INPUT
+    assert result["result"].unique_id == FIXTURE_UUID
+    code, client = mock_pair.call_args.args
+    assert code == FIXTURE_PAIRING_CODE
+    assert client.kind == "home-assistant"
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        pytest.param(AuthenticationException, "invalid_pairing_code", id="used"),
+        pytest.param(BadRequestException, "invalid_pairing_code", id="mistyped"),
+        pytest.param(ConnectionErrorException, "cannot_connect", id="unreachable"),
+        pytest.param(TimeoutError, "cannot_connect", id="timeout"),
+    ],
+)
+async def test_user_flow_pairing_failed(
+    hass: HomeAssistant, side_effect: type[Exception], error: str
+) -> None:
+    """Test pairing that fails says why, and can be tried again."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.system_bridge.config_flow.HTTPClient.pair",
+        side_effect=side_effect,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {**FIXTURE_USER_INPUT, CONF_TOKEN: FIXTURE_PAIRING_CODE}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+
+    with _patch_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_USER_INPUT
+        )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
@@ -411,7 +488,7 @@ async def test_reauth_unique_id_mismatch(hass: HomeAssistant) -> None:
 
     with _patch_success():
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_TOKEN: "another-token"}
+            result["flow_id"], {CONF_TOKEN: FIXTURE_NEW_KEY}
         )
 
     assert result["type"] is FlowResultType.ABORT
@@ -644,13 +721,13 @@ async def test_reauth_flow_reloads_once(
 
     with patch.object(hass.config_entries, "async_reload") as mock_reload:
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_TOKEN: "new-token"}
+            result["flow_id"], {CONF_TOKEN: FIXTURE_NEW_KEY}
         )
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
-    assert init_integration.data[CONF_TOKEN] == "new-token"
+    assert init_integration.data[CONF_TOKEN] == FIXTURE_NEW_KEY
     mock_reload.assert_called_once_with(init_integration.entry_id)
 
 
