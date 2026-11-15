@@ -211,7 +211,7 @@ async def async_migrate_entry(
 
 async def _create_api_and_login(
     hass: HomeAssistant, username: str, password: str, url: str
-) -> tuple[growattServer.GrowattApi, dict]:
+) -> tuple[GrowattApi, dict]:
     """Create API instance and perform login.
 
     Returns both the API instance (with authenticated session) and the login
@@ -228,9 +228,7 @@ async def _create_api_and_login(
     return api, login_response
 
 
-def _login_classic_api(
-    api: growattServer.GrowattApi, username: str, password: str
-) -> dict:
+def _login_classic_api(api: GrowattApi, username: str, password: str) -> dict:
     """Log in to Classic API and return user info."""
     try:
         login_response = api.login(username, password)
@@ -328,7 +326,7 @@ async def async_setup_entry(
 
     # Determine API version and get devices
     # Note: auth_type field is guaranteed to exist after migration
-    api: growattServer.GrowattApi
+    api: GrowattApi
     if config.get(CONF_AUTH_TYPE) == AUTH_API_TOKEN:
         # V1 API (token-based, no login needed)
         token = config[CONF_TOKEN]
