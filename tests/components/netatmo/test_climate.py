@@ -1322,7 +1322,7 @@ async def test_webhook_set_point(
 
 
 async def _setup_with_room_in_home_mode(
-    hass: HomeAssistant, config_entry: MockConfigEntry, home_therm_mode: str
+    hass: HomeAssistant, config_entry: MockConfigEntry, home_therm_mode: str | None
 ) -> None:
     """Set up climate with the livingroom in "home" mode and the given home mode."""
 
@@ -1369,12 +1369,14 @@ async def _poll(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
         pytest.param("away", PRESET_AWAY, id="away"),
         pytest.param("hg", PRESET_FROST_GUARD, id="frost_guard"),
         pytest.param("schedule", PRESET_SCHEDULE, id="schedule"),
+        pytest.param(None, PRESET_SCHEDULE, id="missing"),
+        pytest.param("unexpected", PRESET_SCHEDULE, id="unexpected"),
     ],
 )
 async def test_thermostat_preset_follows_home_therm_mode(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    home_therm_mode: str,
+    home_therm_mode: str | None,
     expected_preset: str,
 ) -> None:
     """Test the preset follows the home mode while the room reports "home"."""
