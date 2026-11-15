@@ -215,6 +215,7 @@ async def async_setup_entry(
             key: cv.time_period_dict(value)
             for key, value in options.get(state, {}).items()
         }
+    code = options.get(CONF_CODE) or None
     code_template = (
         Template(template, hass)
         if (template := options.get(CONF_CODE_TEMPLATE))
@@ -226,10 +227,10 @@ async def async_setup_entry(
                 hass,
                 config_entry.title,
                 config_entry.entry_id,
-                options.get(CONF_CODE) or None,
+                code,
                 code_template,
                 options[CONF_CODE_ARM_REQUIRED]
-                and bool(options.get(CONF_CODE) or code_template),
+                and (code is not None or code_template is not None),
                 options[CONF_DISARM_AFTER_TRIGGER],
                 _state_validator(config),
             )

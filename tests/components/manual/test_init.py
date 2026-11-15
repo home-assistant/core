@@ -72,6 +72,27 @@ async def test_setup_and_unload(
     assert hass.states.get(ENTITY_ID).state == "unavailable"
 
 
+async def test_arm_without_code(hass: HomeAssistant) -> None:
+    """Test an entry without a code can be armed without a code."""
+    options = {key: value for key, value in OPTIONS.items() if key != "code"}
+    entry = MockConfigEntry(domain=DOMAIN, options=options, title="My alarm")
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes["code_format"] is None
+    assert state.attributes["code_arm_required"] is False
+
+    await hass.services.async_call(
+        ALARM_DOMAIN,
+        SERVICE_ALARM_ARM_AWAY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    assert hass.states.get(ENTITY_ID).state == AlarmControlPanelState.ARMING
+
+
 async def test_code_template_and_state_overrides(hass: HomeAssistant) -> None:
     """Test the code template and per-state timing overrides are used."""
     options = {key: value for key, value in OPTIONS.items() if key != "code"}
