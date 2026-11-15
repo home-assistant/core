@@ -149,12 +149,16 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
             sources = sorted(sources, key=lambda d: d.get(sort_by, ""))
         for item in sources:
             title = item.get("title")
+            label = item.get("label")
             uri = item.get("uri")
             if not title or not uri:
                 continue
             self.source_map[uri] = {**item, "type": source_type}
-            if add_to_list and title not in self.source_list:
-                self.source_list.append(title)
+            if add_to_list:
+                if title not in self.source_list:
+                    self.source_list.append(title)
+                if label and label.lower() != title.lower():
+                    self.source_list.append(label)
 
     @override
     async def _async_update_data(self) -> None:
@@ -307,6 +311,8 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
                         return await self.async_source_start(uri, source_type)
                 else:
                     title: str = item["title"]
+                    if (label := item.get("label")) and query == label:
+                        return await self.async_source_start(uri, source_type)
                     if query.lower() == title.lower():
                         return await self.async_source_start(uri, source_type)
                     if query.lower() in title.lower():

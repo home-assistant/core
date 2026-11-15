@@ -12,7 +12,7 @@ from homeassistant.components.openweathermap.const import (
     OWM_MODE_FREE_FORECAST,
     OWM_MODE_V30,
 )
-from homeassistant.components.openweathermap.services import SERVICE_GET_MINUTE_FORECAST
+from homeassistant.components.openweathermap.services import OpenWeatherMapService
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
@@ -36,7 +36,7 @@ async def test_get_minute_forecast(
     await setup_platform(hass, mock_config_entry, [Platform.WEATHER])
     result = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_MINUTE_FORECAST,
+        OpenWeatherMapService.GET_MINUTE_FORECAST,
         {"entity_id": ENTITY_ID},
         blocking=True,
         return_response=True,
@@ -64,7 +64,7 @@ async def test_get_minute_forecast_unavailable(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_MINUTE_FORECAST,
+            OpenWeatherMapService.GET_MINUTE_FORECAST,
             {"entity_id": ENTITY_ID},
             blocking=True,
             return_response=True,

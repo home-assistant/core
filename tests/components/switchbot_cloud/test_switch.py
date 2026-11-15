@@ -10,16 +10,14 @@ from switchbot_api.exceptions import (
     SwitchBotError,
 )
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.components.switchbot_cloud import SwitchBotAPI
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
+    CommonServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -51,13 +49,19 @@ async def test_relay_switch(
 
     with patch.object(SwitchBotAPI, "send_command"):
         await hass.services.async_call(
-            SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+            SWITCH_DOMAIN,
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
+            blocking=True,
         )
     assert hass.states.get(entity_id).state == STATE_ON
 
     with patch.object(SwitchBotAPI, "send_command"):
         await hass.services.async_call(
-            SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+            SWITCH_DOMAIN,
+            SwitchService.TURN_OFF,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
+            blocking=True,
         )
     assert hass.states.get(entity_id).state == STATE_OFF
 
@@ -100,13 +104,19 @@ async def test_switchmode_bot(
 
     with patch.object(SwitchBotAPI, "send_command"):
         await hass.services.async_call(
-            SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+            SWITCH_DOMAIN,
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
+            blocking=True,
         )
     assert hass.states.get(entity_id).state == STATE_ON
 
     with patch.object(SwitchBotAPI, "send_command"):
         await hass.services.async_call(
-            SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+            SWITCH_DOMAIN,
+            SwitchService.TURN_OFF,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
+            blocking=True,
         )
     assert hass.states.get(entity_id).state == STATE_OFF
 
@@ -169,7 +179,10 @@ async def test_switch_relay_2pm_turn_on(
 
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
-            SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+            SWITCH_DOMAIN,
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
+            blocking=True,
         )
     mock_send_command.assert_called_once()
 
@@ -198,7 +211,10 @@ async def test_switch_relay_2pm_turn_off(
 
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
-            SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+            SWITCH_DOMAIN,
+            SwitchService.TURN_OFF,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
+            blocking=True,
         )
     mock_send_command.assert_called_once()
 
@@ -262,8 +278,8 @@ async def test_switch_api_error_is_translated(
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.relay_switch_1"},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: "switch.relay_switch_1"},
             blocking=True,
         )
     assert exc_info.value.translation_key == translation_key

@@ -20,8 +20,12 @@ from homeassistant.components.enphase_envoy.select import (
     REVERSE_STORAGE_MODE_MAP,
     STORAGE_MODE_MAP,
 )
-from homeassistant.components.select import ATTR_OPTION, DOMAIN as SELECT_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_SELECT_OPTION
+from homeassistant.components.select import (
+    DOMAIN as SELECT_DOMAIN,
+    SelectService,
+    SelectServiceArgument,
+)
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -143,10 +147,10 @@ async def test_select_relay_actions(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: test_entity,
-            ATTR_OPTION: action,
+            CommonServiceArgument.ENTITY_ID: test_entity,
+            SelectServiceArgument.OPTION: action,
         },
         blocking=True,
     )
@@ -181,10 +185,10 @@ async def test_select_relay_modes(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: test_entity,
-            ATTR_OPTION: relay_mode,
+            CommonServiceArgument.ENTITY_ID: test_entity,
+            SelectServiceArgument.OPTION: relay_mode,
         },
         blocking=True,
     )
@@ -224,10 +228,10 @@ async def test_update_dry_contact_actions_with_error(
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: test_entity,
-                ATTR_OPTION: action,
+                CommonServiceArgument.ENTITY_ID: test_entity,
+                SelectServiceArgument.OPTION: action,
             },
             blocking=True,
         )
@@ -263,10 +267,10 @@ async def test_select_storage_modes(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: test_entity,
-            ATTR_OPTION: mode,
+            CommonServiceArgument.ENTITY_ID: test_entity,
+            SelectServiceArgument.OPTION: mode,
         },
         blocking=True,
     )
@@ -302,10 +306,10 @@ async def test_set_storage_modes_with_error(
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: test_entity,
-                ATTR_OPTION: mode,
+                CommonServiceArgument.ENTITY_ID: test_entity,
+                SelectServiceArgument.OPTION: mode,
             },
             blocking=True,
         )

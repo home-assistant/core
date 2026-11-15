@@ -5,23 +5,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.transmission.const import (
-    ATTR_DELETE_DATA,
-    ATTR_DOWNLOAD_PATH,
-    ATTR_LABELS,
-    ATTR_TORRENT,
-    ATTR_TORRENT_FILTER,
-    ATTR_TORRENTS,
-    CONF_ENTRY_ID,
-    DOMAIN,
-    SERVICE_ADD_TORRENT,
-    SERVICE_GET_TORRENTS,
-    SERVICE_REMOVE_TORRENT,
-    SERVICE_START_TORRENT,
-    SERVICE_STOP_TORRENT,
+from homeassistant.components.transmission.const import DOMAIN
+from homeassistant.components.transmission.services import (
+    TORRENTS,
+    TransmissionService,
+    TransmissionServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
@@ -39,10 +29,10 @@ async def test_service_config_entry_not_loaded_state(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ADD_TORRENT,
+            TransmissionService.ADD_TORRENT,
             {
-                CONF_ENTRY_ID: mock_config_entry.entry_id,
-                ATTR_TORRENT: "magnet:?xt=urn:btih:test",
+                TransmissionServiceArgument.ENTRY_ID: mock_config_entry.entry_id,
+                TransmissionServiceArgument.TORRENT: "magnet:?xt=urn:btih:test",
             },
             blocking=True,
         )
@@ -62,10 +52,10 @@ async def test_service_integration_not_found(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ADD_TORRENT,
+            TransmissionService.ADD_TORRENT,
             {
-                CONF_ENTRY_ID: "non_existent_entry_id",
-                ATTR_TORRENT: "magnet:?xt=urn:btih:test",
+                TransmissionServiceArgument.ENTRY_ID: "non_existent_entry_id",
+                TransmissionServiceArgument.TORRENT: "magnet:?xt=urn:btih:test",
             },
             blocking=True,
         )
@@ -76,7 +66,10 @@ async def test_service_integration_not_found(
     ("payload", "expected_torrent", "kwargs"),
     [
         (
-            {ATTR_TORRENT: "magnet:?xt=urn:btih:test", ATTR_LABELS: "Notify"},
+            {
+                TransmissionServiceArgument.TORRENT: "magnet:?xt=urn:btih:test",
+                TransmissionServiceArgument.LABELS: "Notify",
+            },
             "magnet:?xt=urn:btih:test",
             {
                 "labels": ["Notify"],
@@ -85,9 +78,9 @@ async def test_service_integration_not_found(
         ),
         (
             {
-                ATTR_TORRENT: "magnet:?xt=urn:btih:test",
-                ATTR_LABELS: "Movies,Notify",
-                ATTR_DOWNLOAD_PATH: "/custom/path",
+                TransmissionServiceArgument.TORRENT: "magnet:?xt=urn:btih:test",
+                TransmissionServiceArgument.LABELS: "Movies,Notify",
+                TransmissionServiceArgument.DOWNLOAD_PATH: "/custom/path",
             },
             "magnet:?xt=urn:btih:test",
             {
@@ -96,7 +89,7 @@ async def test_service_integration_not_found(
             },
         ),
         (
-            {ATTR_TORRENT: "http://example.com/test.torrent"},
+            {TransmissionServiceArgument.TORRENT: "http://example.com/test.torrent"},
             "http://example.com/test.torrent",
             {
                 "labels": None,
@@ -104,7 +97,7 @@ async def test_service_integration_not_found(
             },
         ),
         (
-            {ATTR_TORRENT: "ftp://example.com/test.torrent"},
+            {TransmissionServiceArgument.TORRENT: "ftp://example.com/test.torrent"},
             "ftp://example.com/test.torrent",
             {
                 "labels": None,
@@ -112,7 +105,7 @@ async def test_service_integration_not_found(
             },
         ),
         (
-            {ATTR_TORRENT: "/config/test.torrent"},
+            {TransmissionServiceArgument.TORRENT: "/config/test.torrent"},
             "/config/test.torrent",
             {
                 "labels": None,
@@ -137,12 +130,14 @@ async def test_add_torrent_service_success(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    full_service_data = {CONF_ENTRY_ID: mock_config_entry.entry_id} | payload
+    full_service_data = {
+        TransmissionServiceArgument.ENTRY_ID: mock_config_entry.entry_id
+    } | payload
 
     with patch.object(hass.config, "is_allowed_path", return_value=True):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ADD_TORRENT,
+            TransmissionService.ADD_TORRENT,
             full_service_data,
             blocking=True,
         )
@@ -163,10 +158,10 @@ async def test_add_torrent_service_invalid_path(
     with pytest.raises(ServiceValidationError, match="Could not add torrent"):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ADD_TORRENT,
+            TransmissionService.ADD_TORRENT,
             {
-                CONF_ENTRY_ID: mock_config_entry.entry_id,
-                ATTR_TORRENT: "/etc/bad.torrent",
+                TransmissionServiceArgument.ENTRY_ID: mock_config_entry.entry_id,
+                TransmissionServiceArgument.TORRENT: "/etc/bad.torrent",
             },
             blocking=True,
         )
@@ -186,10 +181,10 @@ async def test_start_torrent_service_success(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_START_TORRENT,
+        TransmissionService.START_TORRENT,
         {
-            CONF_ENTRY_ID: mock_config_entry.entry_id,
-            CONF_ID: 123,
+            TransmissionServiceArgument.ENTRY_ID: mock_config_entry.entry_id,
+            TransmissionServiceArgument.ID: 123,
         },
         blocking=True,
     )
@@ -211,10 +206,10 @@ async def test_stop_torrent_service_success(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_STOP_TORRENT,
+        TransmissionService.STOP_TORRENT,
         {
-            CONF_ENTRY_ID: mock_config_entry.entry_id,
-            CONF_ID: 456,
+            TransmissionServiceArgument.ENTRY_ID: mock_config_entry.entry_id,
+            TransmissionServiceArgument.ID: 456,
         },
         blocking=True,
     )
@@ -236,10 +231,10 @@ async def test_remove_torrent_service_success(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_REMOVE_TORRENT,
+        TransmissionService.REMOVE_TORRENT,
         {
-            CONF_ENTRY_ID: mock_config_entry.entry_id,
-            CONF_ID: 789,
+            TransmissionServiceArgument.ENTRY_ID: mock_config_entry.entry_id,
+            TransmissionServiceArgument.ID: 789,
         },
         blocking=True,
     )
@@ -261,11 +256,11 @@ async def test_remove_torrent_service_with_delete_data(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_REMOVE_TORRENT,
+        TransmissionService.REMOVE_TORRENT,
         {
-            CONF_ENTRY_ID: mock_config_entry.entry_id,
-            CONF_ID: 789,
-            ATTR_DELETE_DATA: True,
+            TransmissionServiceArgument.ENTRY_ID: mock_config_entry.entry_id,
+            TransmissionServiceArgument.ID: 789,
+            TransmissionServiceArgument.DELETE_DATA: True,
         },
         blocking=True,
     )
@@ -311,18 +306,18 @@ async def test_get_torrents_service(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_TORRENTS,
+        TransmissionService.GET_TORRENTS,
         {
-            CONF_ENTRY_ID: mock_config_entry.entry_id,
-            ATTR_TORRENT_FILTER: filter_mode,
+            TransmissionServiceArgument.ENTRY_ID: mock_config_entry.entry_id,
+            TransmissionServiceArgument.TORRENT_FILTER: filter_mode,
         },
         blocking=True,
         return_response=True,
     )
 
     assert response is not None
-    assert ATTR_TORRENTS in response
-    torrents = response[ATTR_TORRENTS]
+    assert TORRENTS in response
+    torrents = response[TORRENTS]
     assert isinstance(torrents, dict)
 
     assert len(torrents) == len(expected_statuses)

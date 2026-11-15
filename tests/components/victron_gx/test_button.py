@@ -10,8 +10,8 @@ from syrupy.assertion import SnapshotAssertion
 from victron_mqtt import GenericOnOff, Hub as VictronVenusHub, WritableMetric
 from victron_mqtt.testing import finalize_injection, inject_message
 
-from homeassistant.components.button import SERVICE_PRESS
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.components.button import ButtonService
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -61,8 +61,8 @@ async def test_button_press(
     with patch.object(WritableMetric, "set") as set_mock:
         await hass.services.async_call(
             "button",
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: button_entity.entity_id},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: button_entity.entity_id},
             blocking=True,
         )
 
