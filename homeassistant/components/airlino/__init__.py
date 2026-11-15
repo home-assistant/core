@@ -11,7 +11,7 @@ from .coordinator import AirlinoConfigEntry, AirlinoDataUpdateCoordinator
 _PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: AirlinoConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AirlinoConfigEntry) -> None:
     """Set up AirLino from a config entry."""
     api = AirlinoApi(
         host=entry.data[CONF_HOST],
@@ -26,9 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirlinoConfigEntry) -> b
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: AirlinoConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AirlinoConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, _PLATFORMS)

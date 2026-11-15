@@ -5,12 +5,11 @@ from unittest.mock import MagicMock
 from airlino_api import AirlinoApiConnectionError, AirlinoApiError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.airlino.const import UPDATE_INTERVAL
 from homeassistant.const import STATE_PLAYING, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 ENTITY_ID = "media_player.living_room"
 

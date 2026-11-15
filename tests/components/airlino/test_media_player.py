@@ -13,6 +13,8 @@ from airlino_api import (
     AirlinoApiError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
@@ -50,9 +52,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
 from .conftest import MAC
-
-from tests.common import MockConfigEntry, snapshot_platform
-from tests.typing import WebSocketGenerator
 
 ENTITY_ID = "media_player.living_room"
 
@@ -313,10 +312,12 @@ async def test_play_pause_skipped_in_requested_state(
 
 
 @pytest.mark.parametrize(
-    "exception",
+    ("exception", "translation_key"),
     [
-        pytest.param(AirlinoApiConnectionError("offline"), id="connection_error"),
-        pytest.param(AirlinoApiError("failed"), id="api_error"),
+        pytest.param(
+            AirlinoApiConnectionError("offline"), "cannot_connect", id="offline"
+        ),
+        pytest.param(AirlinoApiError("failed"), "api_error", id="api_error"),
     ],
 )
 async def test_service_error(
@@ -324,6 +325,7 @@ async def test_service_error(
     mock_config_entry: MockConfigEntry,
     mock_airlino_api: MagicMock,
     exception: Exception,
+    translation_key: str,
 ) -> None:
     """Test API failures are raised as translated errors."""
     await setup_integration(hass, mock_config_entry)
@@ -337,7 +339,7 @@ async def test_service_error(
             blocking=True,
         )
 
-    assert exc_info.value.translation_key == "command_failed"
+    assert exc_info.value.translation_key == translation_key
 
 
 async def test_play_media_url(

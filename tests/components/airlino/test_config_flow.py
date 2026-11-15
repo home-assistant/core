@@ -6,6 +6,7 @@ from unittest.mock import MagicMock
 
 from airlino_api import DEFAULT_PORT, AirlinoApiConnectionError, AirlinoApiError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.airlino.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
@@ -15,8 +16,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .conftest import HOST, MAC
-
-from tests.common import MockConfigEntry
 
 DISCOVERED_HOST = "192.0.2.42"
 
@@ -83,6 +82,7 @@ async def test_user_flow_custom_port(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == MAC
     assert result["data"][CONF_PORT] == 9000
     assert mock_airlino_api_class.call_args.kwargs["port"] == 9000
 
@@ -145,6 +145,7 @@ async def test_user_flow_falls_back_to_older_api_version(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == MAC
     assert result["data"][CONF_API_VERSION] == "v20"
     assert _api_versions(mock_airlino_api_class) == ["v22", "v21", "v20"]
 
@@ -190,6 +191,7 @@ async def test_user_flow_errors(
         result["flow_id"], {CONF_HOST: HOST}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == MAC
 
 
 @pytest.mark.usefixtures("mock_airlino_api")
@@ -275,6 +277,7 @@ async def test_zeroconf_flow_probes_api_version_without_txt_record(
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == MAC
     assert result["data"][CONF_PORT] == DEFAULT_PORT
     assert result["data"][CONF_API_VERSION] == "v21"
     assert _api_versions(mock_airlino_api_class) == ["v22", "v21"]

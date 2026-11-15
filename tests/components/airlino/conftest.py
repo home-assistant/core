@@ -5,11 +5,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from airlino_api import DEFAULT_PORT, PLAYER_STATE_PLAYING
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.airlino.const import DOMAIN
 from homeassistant.const import CONF_API_VERSION, CONF_HOST, CONF_PORT
-
-from tests.common import MockConfigEntry
 
 MAC = "00:23:b1:a4:35:9e"
 HOST = "192.0.2.1"

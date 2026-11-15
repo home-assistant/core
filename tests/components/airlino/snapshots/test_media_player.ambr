@@ -3,7 +3,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -42,9 +42,9 @@
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('airlino', '00:23:b1:a4:35:9e')]>,
     'disabled_by': None,
     'domain': 'media_player',
     'entity_category': None,

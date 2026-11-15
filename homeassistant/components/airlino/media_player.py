@@ -3,7 +3,7 @@
 from collections.abc import Awaitable, Callable
 from datetime import datetime
 import logging
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 from urllib.parse import urlsplit
 
 from airlino_api import (
@@ -87,7 +87,8 @@ class AirlinoMediaPlayer(
     ) -> None:
         """Initialize the media player."""
         super().__init__(coordinator)
-        assert entry.unique_id is not None
+        if TYPE_CHECKING:
+            assert entry.unique_id is not None
         self._attr_unique_id = entry.unique_id
         device = coordinator.device_info
         self._attr_device_info = DeviceInfo(
@@ -175,11 +176,13 @@ class AirlinoMediaPlayer(
         """Call an API action, raise on failure and return the response."""
         try:
             return await action(*args)
-        except (AirlinoApiConnectionError, AirlinoApiError) as err:
+        except AirlinoApiConnectionError as err:
             raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="command_failed",
-                translation_placeholders={"err": str(err)},
+                translation_domain=DOMAIN, translation_key="cannot_connect"
+            ) from err
+        except AirlinoApiError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="api_error"
             ) from err
 
     @override

@@ -1,5 +1,6 @@
 """DataUpdateCoordinator for AirLino."""
 
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any, override
 
@@ -47,28 +48,27 @@ class AirlinoDataUpdateCoordinator(TimestampDataUpdateCoordinator[AirlinoData]):
         )
         self.api = api
 
+    async def _async_request[T](self, request: Callable[[], Awaitable[T]]) -> T:
+        """Run an API request and raise UpdateFailed on errors."""
+        try:
+            return await request()
+        except AirlinoApiConnectionError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN, translation_key="cannot_connect"
+            ) from err
+        except AirlinoApiError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN, translation_key="api_error"
+            ) from err
+
     @override
     async def _async_setup(self) -> None:
         """Fetch the static device information."""
-        try:
-            self.device_info = await self.api.async_get_device_info()
-        except (AirlinoApiConnectionError, AirlinoApiError) as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="update_failed",
-                translation_placeholders={"err": str(err)},
-            ) from err
+        self.device_info = await self._async_request(self.api.async_get_device_info)
 
     @override
     async def _async_update_data(self) -> AirlinoData:
         """Fetch the playback status and volume."""
-        try:
-            player = await self.api.async_get_player_status()
-            volume = await self.api.async_get_master_volume()
-        except (AirlinoApiConnectionError, AirlinoApiError) as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="update_failed",
-                translation_placeholders={"err": str(err)},
-            ) from err
+        player = await self._async_request(self.api.async_get_player_status)
+        volume = await self._async_request(self.api.async_get_master_volume)
         return AirlinoData(player=player, volume=volume)
