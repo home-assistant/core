@@ -54,6 +54,7 @@ from .models import (
     HostAttributes,
     HostInfo,
     Interface,
+    LinkInfo,
 )
 
 FRITZ_DATA_KEY: HassKey[FritzData] = HassKey(DOMAIN)
@@ -765,6 +766,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                         dev_info.connected_to = intf["device"]
                         dev_info.connection_type = intf["type"]
                         dev_info.ssid = intf.get("ssid")
+                        dev_info.link_info = LinkInfo.from_node_link(link)
 
                 if self.manage_device_info(dev_info, dev_mac, consider_home):
                     new_device = True
