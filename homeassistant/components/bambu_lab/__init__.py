@@ -14,7 +14,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import CONF_ACCESS_CODE, CONF_SERIAL_NUMBER, DOMAIN
 
-_PLATFORMS: list[Platform] = [Platform.SENSOR]
+_PLATFORMS: list[Platform] = [Platform.LIGHT, Platform.SENSOR]
 
 type BambuLabConfigEntry = ConfigEntry[BambuLabClient]
 
