@@ -2,10 +2,9 @@
 
 from http import HTTPStatus
 import logging
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import aiohttp
-from evohomeasync2 import exceptions as evo_exc
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -44,7 +43,7 @@ LOG_FAIL_CREDENTIALS = (
     "homeassistant.components.evohome",
     logging.ERROR,
     "Failed to fetch initial data: "
-    "Authenticator response is invalid: {'error': 'invalid_grant'}",
+    'Authenticator response is invalid: 400 Bad Request, response={"error": "invalid_grant"}',
 )
 LOG_FAIL_GATEWAY = (
     "homeassistant.components.evohome",
@@ -91,9 +90,22 @@ LOG_SETUP_FAILED = (
 EXC_BAD_CONNECTION = aiohttp.ClientConnectionError(
     "Connection error",
 )
-EXC_BAD_CREDENTIALS = evo_exc.AuthenticationFailedError(
-    "Authenticator response is invalid: {'error': 'invalid_grant'}",
-    status=HTTPStatus.BAD_REQUEST,
+
+
+def _mock_response(status: HTTPStatus, body: dict) -> Mock:
+    """Return a mock of a response from the vendor's server (JSON, a HTTP error)."""
+    rsp = Mock(spec=aiohttp.ClientResponse, status=status, headers={})
+    rsp.content_type = "application/json"
+    rsp.json = AsyncMock(return_value=body)
+    rsp.raise_for_status.side_effect = aiohttp.ClientResponseError(
+        Mock(), (), status=status, message=status.phrase
+    )
+    return rsp
+
+
+# the vendor's response to a bad username/password is not an exception
+RSP_BAD_CREDENTIALS = Mock(
+    return_value=_mock_response(HTTPStatus.BAD_REQUEST, {"error": "invalid_grant"})
 )
 EXC_TOO_MANY_REQUESTS = aiohttp.ClientResponseError(
     Mock(),
@@ -105,9 +117,9 @@ EXC_BAD_GATEWAY = aiohttp.ClientResponseError(
     Mock(), (), status=HTTPStatus.BAD_GATEWAY, message=HTTPStatus.BAD_GATEWAY.phrase
 )
 
-AUTHENTICATION_TESTS: dict[Exception, list] = {
+AUTHENTICATION_TESTS: dict[Exception | Mock, list] = {
     EXC_BAD_CONNECTION: [LOG_HINT_OTH_AUTH, LOG_FAIL_CONNECTION, LOG_SETUP_FAILED],
-    EXC_BAD_CREDENTIALS: [LOG_HINT_USR_AUTH, LOG_FAIL_CREDENTIALS, LOG_SETUP_FAILED],
+    RSP_BAD_CREDENTIALS: [LOG_HINT_USR_AUTH, LOG_FAIL_CREDENTIALS, LOG_SETUP_FAILED],
     EXC_BAD_GATEWAY: [LOG_HINT_OTH_AUTH, LOG_FAIL_GATEWAY, LOG_SETUP_FAILED],
     EXC_TOO_MANY_REQUESTS: [LOG_HINT_429_AUTH, LOG_FAIL_TOO_MANY, LOG_SETUP_FAILED],
 }
@@ -123,7 +135,7 @@ CLIENT_REQUEST_TESTS: dict[Exception, list] = {
 async def test_authentication_failure_v2(
     hass: HomeAssistant,
     config: dict[str, str],
-    exception: Exception,
+    exception: Exception | Mock,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test failure to setup an evohome-compatible system.
