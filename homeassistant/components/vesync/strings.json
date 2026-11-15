@@ -38,6 +38,9 @@
   },
   "entity": {
     "binary_sensor": {
+      "sync_chambers": {
+        "name": "Sync baskets"
+      },
       "water_lacks": {
         "name": "Low water"
       },
@@ -46,8 +49,26 @@
       }
     },
     "button": {
+      "pause_cooking": {
+        "name": "Pause cooking"
+      },
+      "pause_cooking_basket": {
+        "name": "Basket {basket} pause cooking"
+      },
       "reset_filter": {
         "name": "Reset filter"
+      },
+      "resume_cooking": {
+        "name": "Resume cooking"
+      },
+      "resume_cooking_basket": {
+        "name": "Basket {basket} resume cooking"
+      },
+      "stop_cooking": {
+        "name": "Stop cooking"
+      },
+      "stop_cooking_basket": {
+        "name": "Basket {basket} stop cooking"
       }
     },
     "fan": {
@@ -75,6 +96,11 @@
             }
           }
         }
+      }
+    },
+    "light": {
+      "nightlight": {
+        "name": "Night light"
       }
     },
     "number": {
@@ -194,6 +220,12 @@
       },
       "drying_mode_power_off": {
         "name": "Enable drying mode while power is off"
+      },
+      "light_detection": {
+        "name": "Light detection"
+      },
+      "mute": {
+        "name": "Mute"
       }
     }
   },
@@ -203,6 +235,9 @@
     },
     "invalid_auth": {
       "message": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "nightlight_command_failed": {
+      "message": "Failed to control the night light"
     },
     "server_error": {
       "message": "Server error occurred while connecting to VeSync"

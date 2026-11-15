@@ -20,14 +20,14 @@ from reolink_aio.exceptions import (
 )
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
 from homeassistant.components.reolink.const import DOMAIN
 from homeassistant.components.reolink.util import get_device_uid_and_ch
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
@@ -120,8 +120,11 @@ async def test_try_function(
     with pytest.raises(expected.__class__) as err:
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 50},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: entity_id,
+                NumberServiceArgument.VALUE: 50,
+            },
             blocking=True,
         )
 

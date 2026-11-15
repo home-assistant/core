@@ -81,6 +81,15 @@ CHANNEL_PLAYING_INFO = {
 
 SOURCE_LIST = ["HDMI 1", "HDMI 2", "AV/Component"]
 
+# The TV leaves "label" empty when unset, omits it on some models, and allows a
+# label that only differs from the generic name in case.
+LABELLED_INPUTS = [
+    {"uri": "extInput:hdmi?port=1", "title": "HDMI 1"},
+    {"uri": "extInput:hdmi?port=2", "title": "HDMI 2", "label": "Game console"},
+    {"uri": "extInput:hdmi?port=3", "title": "HDMI 3", "label": ""},
+    {"uri": "extInput:hdmi?port=4", "title": "HDMI 4", "label": "hdmi 4"},
+]
+
 BASE_ATTRIBUTES = {
     ATTR_ASSUMED_STATE: True,
     ATTR_DEVICE_CLASS: MediaPlayerDeviceClass.TV,
@@ -380,6 +389,65 @@ async def test_source_list_skips_incomplete_items(
     state = hass.states.get(ENTITY_ID)
     assert state
     assert state.attributes[ATTR_INPUT_SOURCE_LIST] == ["HDMI 1"]
+
+
+async def test_source_list_adds_label(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_braviatv_client: AsyncMock,
+) -> None:
+    """Test the name set on the TV is listed next to the generic one."""
+    mock_braviatv_client.get_external_status.return_value = LABELLED_INPUTS
+    mock_braviatv_client.get_app_list.return_value = []
+    mock_braviatv_client.get_content_list_all.return_value = []
+    mock_braviatv_client.get_playing_info.return_value = {
+        "uri": "extInput:hdmi?port=2",
+        "title": "HDMI 2",
+        "source": "extInput:hdmi",
+    }
+
+    await init_integration(hass, mock_config_entry)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.attributes[ATTR_INPUT_SOURCE_LIST] == [
+        "HDMI 1",
+        "HDMI 2",
+        "Game console",
+        "HDMI 3",
+        "HDMI 4",
+    ]
+    assert state.attributes[ATTR_INPUT_SOURCE] == "HDMI 2"
+
+
+@pytest.mark.parametrize(
+    ("source", "expected_uri"),
+    [
+        ("Game console", "extInput:hdmi?port=2"),
+        ("HDMI 2", "extInput:hdmi?port=2"),
+        ("HDMI 4", "extInput:hdmi?port=4"),
+        ("hdmi 4", "extInput:hdmi?port=4"),
+    ],
+)
+async def test_select_source_by_label(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_braviatv_client: AsyncMock,
+    source: str,
+    expected_uri: str,
+) -> None:
+    """Test selecting an input by the name set on the TV or by its generic name."""
+    mock_braviatv_client.get_external_status.return_value = LABELLED_INPUTS
+    await init_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_SELECT_SOURCE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: source},
+        blocking=True,
+    )
+
+    mock_braviatv_client.set_play_content.assert_called_once_with(expected_uri)
 
 
 @pytest.mark.parametrize(

@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import AsyncGenerator, MutableMapping
+from contextlib import suppress
 from dataclasses import dataclass, field
 from datetime import datetime
 import hashlib
@@ -14,7 +15,7 @@ from pathlib import Path
 import re
 import secrets
 import struct
-from time import monotonic
+from time import monotonic, time, time_ns
 from typing import Any, Final, Protocol
 
 from aiohttp import web
@@ -1043,6 +1044,7 @@ class SpeechManager:
         self.cache_dir = cache_dir
         self.memory_cache_maxage = memory_cache_maxage
         self.file_cache: dict[str, str] = {}
+        self._files_pending_removal: set[str] = set()
         self.mem_cache: dict[str, TTSCache] = {}
         self.token_to_stream: dict[str, ResultStream] = {}
         self.converted_override_cache: dict[
@@ -1069,8 +1071,12 @@ class SpeechManager:
         """Init config folder and load file cache."""
         self.file_cache.update(await self.hass.async_add_executor_job(self._init_cache))
 
-    async def async_clear_cache(self) -> None:
-        """Read file cache and delete files."""
+    async def async_clear_cache(self, days: int | None = None) -> None:
+        """Delete cached files, or only those not used for the given days."""
+        if days is not None:
+            await self._async_clear_unused_cache(days)
+            return
+
         self.mem_cache.clear()
 
         def remove_files(files: list[str]) -> None:
@@ -1086,6 +1092,66 @@ class SpeechManager:
         )
         self.file_cache.clear()
         await task
+
+    async def _async_clear_unused_cache(self, days: int) -> None:
+        """Delete cached files that were not used for the given days."""
+        cutoff = time() - days * 86400
+
+        def find_unused_files(files: dict[str, str]) -> list[str]:
+            """Return the keys of files that were not used since the cutoff."""
+            unused = []
+            for cache_key, filename in files.items():
+                try:
+                    if (
+                        os.stat(os.path.join(self.cache_dir, filename)).st_atime
+                        >= cutoff
+                    ):
+                        continue
+                except FileNotFoundError:
+                    pass
+                except OSError as err:
+                    _LOGGER.warning("Can't check cache file '%s': %s", filename, err)
+                    continue
+                unused.append(cache_key)
+            return unused
+
+        def remove_files(files: dict[str, str]) -> dict[str, str]:
+            """Remove files from filesystem and return the ones that failed."""
+            failed = {}
+            for cache_key, filename in files.items():
+                try:
+                    os.remove(os.path.join(self.cache_dir, filename))
+                except FileNotFoundError:
+                    pass
+                except OSError as err:
+                    _LOGGER.warning("Can't remove cache file '%s': %s", filename, err)
+                    failed[cache_key] = filename
+            return failed
+
+        # Messages in the memory cache are in use
+        unused = await self.hass.async_add_executor_job(
+            find_unused_files,
+            {
+                cache_key: filename
+                for cache_key, filename in self.file_cache.items()
+                if cache_key not in self.mem_cache
+            },
+        )
+        # Unindex before removing, so a request started meanwhile regenerates
+        # the audio instead of reading a removed file
+        files = {
+            cache_key: filename
+            for cache_key in unused
+            if cache_key not in self.mem_cache
+            and (filename := self.file_cache.pop(cache_key, None))
+        }
+        self._files_pending_removal.update(files.values())
+        try:
+            failed = await self.hass.async_add_executor_job(remove_files, files)
+        finally:
+            self._files_pending_removal.difference_update(files.values())
+        for cache_key, filename in failed.items():
+            self.file_cache.setdefault(cache_key, filename)
 
     @callback
     def async_get_cache_file_path(self, cache_key: str) -> Path | None:
@@ -1330,6 +1396,10 @@ class SpeechManager:
         # Is speech already in memory
         if cache := self.mem_cache.get(cache_key):
             _LOGGER.debug("Found audio in cache for %s", message[0:32])
+            if filename := self.file_cache.get(cache_key):
+                self.hass.async_add_executor_job(
+                    _mark_file_used, os.path.join(self.cache_dir, filename)
+                )
             return cache
 
         store_to_disk = use_file_cache
@@ -1448,6 +1518,10 @@ class SpeechManager:
             raise HomeAssistantError(
                 f"TTS filename '{filename}' from {engine_instance.name} is invalid!"
             )
+
+        # Writing now could race the removal of the old file with this name
+        if filename in self._files_pending_removal:
+            return
 
         if cache.extension == "mp3":
             name = (
@@ -1629,12 +1703,14 @@ class SpeechManager:
         def load_speech() -> bytes:
             """Load a speech from filesystem."""
             with open(voice_file, "rb") as speech:
-                return speech.read()
+                data = speech.read()
+                _mark_file_used(speech.fileno())
+                return data
 
         try:
             data = await self.hass.async_add_executor_job(load_speech)
         except OSError as err:
-            del self.file_cache[cache_key]
+            self.file_cache.pop(cache_key, None)
             raise os_read_error(err, voice_file) from err
 
         yield data
@@ -1679,6 +1755,12 @@ class SpeechManager:
             _LOGGER.error("ID3 tag error: %s", err)
 
         return data_bytes.getvalue()
+
+
+def _mark_file_used(file: int | str) -> None:
+    """Set the access time of a cache file, independent of the mount's atime setting."""
+    with suppress(OSError):
+        os.utime(file, ns=(time_ns(), os.stat(file).st_mtime_ns))
 
 
 def _init_tts_cache_dir(hass: HomeAssistant, cache_dir: str) -> str:

@@ -2,7 +2,6 @@
 
 from copy import deepcopy
 from datetime import timedelta
-import logging
 from unittest.mock import DEFAULT as DEFAULT_MOCK, AsyncMock, Mock, call, patch
 
 from async_upnp_client.exceptions import (
@@ -909,7 +908,6 @@ async def test_turn_off_ws_os_error(
     hass: HomeAssistant, remote_websocket: Mock, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test for turn_off with OSError."""
-    caplog.set_level(logging.DEBUG)
     await setup_samsungtv_entry(hass, MOCK_CONFIGWS)
     remote_websocket.close = Mock(side_effect=OSError("BOOM"))
     await hass.services.async_call(
@@ -925,7 +923,6 @@ async def test_turn_off_encryptedws_os_error(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test for turn_off with OSError."""
-    caplog.set_level(logging.DEBUG)
     await setup_samsungtv_entry(hass, ENTRYDATA_ENCRYPTED_WEBSOCKET)
     remote_encrypted_websocket.close = Mock(side_effect=OSError("BOOM"))
     await hass.services.async_call(

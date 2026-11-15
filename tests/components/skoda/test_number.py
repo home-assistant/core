@@ -16,13 +16,13 @@ from skoda_public_api.models.vehicle import VehicleResponse
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
 from homeassistant.components.skoda.const import DOMAIN
 from homeassistant.components.skoda.coordinator import UPDATE_INTERVAL
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -114,8 +114,11 @@ async def test_set_charge_limit(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: CHARGE_LIMIT_ENTITY_ID, ATTR_VALUE: 60},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: CHARGE_LIMIT_ENTITY_ID,
+            NumberServiceArgument.VALUE: 60,
+        },
         blocking=True,
     )
 
@@ -135,8 +138,11 @@ async def test_set_charge_limit_off_step(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: CHARGE_LIMIT_ENTITY_ID, ATTR_VALUE: 55},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: CHARGE_LIMIT_ENTITY_ID,
+                NumberServiceArgument.VALUE: 55,
+            },
             blocking=True,
         )
 
@@ -156,8 +162,11 @@ async def test_set_charge_limit_error(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: CHARGE_LIMIT_ENTITY_ID, ATTR_VALUE: 60},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: CHARGE_LIMIT_ENTITY_ID,
+                NumberServiceArgument.VALUE: 60,
+            },
             blocking=True,
         )
 

@@ -13,13 +13,8 @@ from pytest_homeassistant.common import (
 )
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    Platform,
-)
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -51,7 +46,7 @@ async def test_setting_value(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
+        SwitchService.TURN_ON,
         target={ATTR_ENTITY_ID: "switch.airgradient_post_data_to_airgradient"},
         blocking=True,
     )
@@ -60,7 +55,7 @@ async def test_setting_value(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
+        SwitchService.TURN_OFF,
         target={ATTR_ENTITY_ID: "switch.airgradient_post_data_to_airgradient"},
         blocking=True,
     )
@@ -107,7 +102,7 @@ async def test_v1_switch_writes(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
+        SwitchService.TURN_OFF,
         target={ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
@@ -178,7 +173,7 @@ async def test_exception_handling(
     with pytest.raises(HomeAssistantError, match=error_message):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
+            SwitchService.TURN_ON,
             target={ATTR_ENTITY_ID: "switch.airgradient_post_data_to_airgradient"},
             blocking=True,
         )
