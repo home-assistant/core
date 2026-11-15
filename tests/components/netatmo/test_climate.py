@@ -4,9 +4,10 @@ from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from probatio.error import MultipleInvalid
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -1318,3 +1319,141 @@ async def test_webhook_set_point(
     await simulate_webhook(hass, webhook_id, response)
 
     assert hass.states.get(climate_entity_entrada).state == "heat"
+
+
+async def _setup_with_room_in_home_mode(
+    hass: HomeAssistant, config_entry: MockConfigEntry, home_therm_mode: str
+) -> None:
+    """Set up climate with the livingroom in "home" mode and the given home mode."""
+
+    def set_modes(payload: dict[str, Any]) -> None:
+        """Set the home mode in homesdata and the room mode in homestatus."""
+        body = payload.get("body", {})
+        for home in body.get("homes", []):
+            home["therm_mode"] = home_therm_mode
+        for room in body.get("home", {}).get("rooms", []):
+            room["therm_setpoint_mode"] = "home"
+
+    async def fake_post(*args: Any, **kwargs: Any):
+        """Return backend data with the modified modes."""
+        kwargs["msg_callback"] = set_modes
+        return await fake_post_request(hass, *args, **kwargs)
+
+    with (
+        selected_platforms([Platform.CLIMATE]),
+        patch(
+            "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        ) as mock_auth,
+    ):
+        mock_auth.return_value.async_post_request.side_effect = fake_post
+        mock_auth.return_value.async_post_api_request.side_effect = fake_post
+        mock_auth.return_value.async_get_image.side_effect = fake_get_image
+        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
+
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+
+async def _poll(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+    """Run enough polling cycles for the home status to be refreshed."""
+    for _ in range(11):
+        freezer.tick(timedelta(seconds=30))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+
+@pytest.mark.parametrize(
+    ("home_therm_mode", "expected_preset"),
+    [
+        pytest.param("away", PRESET_AWAY, id="away"),
+        pytest.param("hg", PRESET_FROST_GUARD, id="frost_guard"),
+        pytest.param("schedule", PRESET_SCHEDULE, id="schedule"),
+    ],
+)
+async def test_thermostat_preset_follows_home_therm_mode(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    home_therm_mode: str,
+    expected_preset: str,
+) -> None:
+    """Test the preset follows the home mode while the room reports "home"."""
+    await _setup_with_room_in_home_mode(hass, config_entry, home_therm_mode)
+
+    state = hass.states.get("climate.livingroom_livingroom")
+    assert state.state == HVACMode.AUTO
+    assert state.attributes[ATTR_PRESET_MODE] == expected_preset
+
+
+async def test_thermostat_away_preset_survives_polling(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test away set from Home Assistant is not reverted by the next poll."""
+    climate_entity_livingroom = "climate.livingroom_livingroom"
+    await _setup_with_room_in_home_mode(hass, config_entry, "schedule")
+    assert (
+        hass.states.get(climate_entity_livingroom).attributes[ATTR_PRESET_MODE]
+        == PRESET_SCHEDULE
+    )
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: climate_entity_livingroom, ATTR_PRESET_MODE: PRESET_AWAY},
+        blocking=True,
+    )
+    await _poll(hass, freezer)
+
+    assert (
+        hass.states.get(climate_entity_livingroom).attributes[ATTR_PRESET_MODE]
+        == PRESET_AWAY
+    )
+
+
+async def test_thermostat_webhook_therm_mode_survives_polling(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a home mode received by webhook is not reverted by the next poll."""
+    climate_entity_livingroom = "climate.livingroom_livingroom"
+    await _setup_with_room_in_home_mode(hass, config_entry, "schedule")
+    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
+
+    await simulate_webhook(
+        hass,
+        webhook_id,
+        {
+            "event_type": "therm_mode",
+            "home": {"id": "91763b24c43d3e344f424e8b", "therm_mode": "away"},
+            "mode": "away",
+            "previous_mode": "schedule",
+            "push_type": "home_event_changed",
+        },
+    )
+    await _poll(hass, freezer)
+
+    assert (
+        hass.states.get(climate_entity_livingroom).attributes[ATTR_PRESET_MODE]
+        == PRESET_AWAY
+    )
+
+    await simulate_webhook(
+        hass,
+        webhook_id,
+        {
+            "event_type": "therm_mode",
+            "home": {"id": "91763b24c43d3e344f424e8b", "therm_mode": "schedule"},
+            "mode": "schedule",
+            "previous_mode": "away",
+            "push_type": "home_event_changed",
+        },
+    )
+    await _poll(hass, freezer)
+
+    assert (
+        hass.states.get(climate_entity_livingroom).attributes[ATTR_PRESET_MODE]
+        == PRESET_SCHEDULE
+    )

@@ -228,6 +228,8 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
             return
 
         if data["event_type"] == EVENT_TYPE_THERM_MODE:
+            # Keep the home mode current until the next topology refresh.
+            self.home.therm_mode = home[EVENT_TYPE_THERM_MODE]
             self._attr_preset_mode = NETATMO_MAP_PRESET[home[EVENT_TYPE_THERM_MODE]]
             self._attr_hvac_mode = HVAC_MAP_NETATMO[self._attr_preset_mode]
             if self._attr_preset_mode == PRESET_FROST_GUARD:
@@ -332,7 +334,10 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
         elif preset_mode in (PRESET_BOOST, STATE_NETATMO_MAX):
             await self.device.async_therm_set(PRESET_MAP_NETATMO[preset_mode])
         elif preset_mode in THERM_MODES:
-            await self.device.home.async_set_thermmode(PRESET_MAP_NETATMO[preset_mode])
+            mode = PRESET_MAP_NETATMO[preset_mode]
+            if await self.device.home.async_set_thermmode(mode):
+                # Keep the home mode current until the next topology refresh.
+                self.device.home.therm_mode = mode
         else:
             _LOGGER.error("Preset mode '%s' not available", preset_mode)
 
@@ -388,9 +393,17 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
         # Homes in cooling mode report cooling_setpoint_* instead of therm_setpoint_*
         self._attr_native_target_temperature = self.device.setpoint_temperature
 
-        self._attr_preset_mode = NETATMO_MAP_PRESET.get(
-            self.device.setpoint_mode, PRESET_SCHEDULE
-        )
+        setpoint_mode = self.device.setpoint_mode
+
+        # Rooms keep reporting "home" while the whole home is in away or frost
+        # guard mode; that mode is only available on the home.
+        if (
+            setpoint_mode == STATE_NETATMO_HOME
+            or setpoint_mode not in NETATMO_MAP_PRESET
+        ) and self.home.therm_mode in (STATE_NETATMO_AWAY, STATE_NETATMO_HG):
+            setpoint_mode = self.home.therm_mode
+
+        self._attr_preset_mode = NETATMO_MAP_PRESET.get(setpoint_mode, PRESET_SCHEDULE)
         self._attr_hvac_mode = HVAC_MAP_NETATMO[self._attr_preset_mode]
         self._away = self._attr_hvac_mode == HVAC_MAP_NETATMO[STATE_NETATMO_AWAY]
 
