@@ -29,6 +29,7 @@ from . import (
     FIXTURE_DATA_RESPONSE,
     FIXTURE_KEY,
     FIXTURE_NEW_KEY,
+    FIXTURE_OLD_TOKEN,
     FIXTURE_PAIRING_CODE,
     FIXTURE_USER_INPUT,
     FIXTURE_UUID,
@@ -475,6 +476,41 @@ async def test_user_flow_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_user_flow_already_configured_updates_key(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test pairing an entry again keeps the new key, as the old one is replaced."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with (
+        _patch_success(),
+        patch(
+            "homeassistant.components.system_bridge.config_flow.HTTPClient.pair",
+            return_value=FIXTURE_NEW_KEY,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "127.0.0.1",
+                CONF_PORT: "9171",
+                CONF_TOKEN: FIXTURE_PAIRING_CODE,
+            },
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data == {
+        CONF_HOST: "127.0.0.1",
+        CONF_PORT: "9171",
+        CONF_TOKEN: FIXTURE_NEW_KEY,
+    }
 
 
 async def test_reauth_unique_id_mismatch(hass: HomeAssistant) -> None:
@@ -1028,6 +1064,34 @@ async def test_reconfigure_flow(
         CONF_PORT: "9171",
         CONF_TOKEN: FIXTURE_USER_INPUT[CONF_TOKEN],
     }
+
+
+async def test_reconfigure_flow_old_token(hass: HomeAssistant) -> None:
+    """Test reconfigure signs in with an old token as it is, without pairing."""
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=FIXTURE_UUID,
+        data={**FIXTURE_USER_INPUT, CONF_TOKEN: FIXTURE_OLD_TOKEN},
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    with (
+        _patch_success(),
+        patch(
+            "homeassistant.components.system_bridge.config_flow.HTTPClient.pair"
+        ) as mock_pair,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "192.168.1.20", CONF_PORT: "9171"}
+        )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    mock_pair.assert_not_called()
+    assert mock_config_entry.data[CONF_TOKEN] == FIXTURE_OLD_TOKEN
 
 
 @pytest.mark.parametrize(

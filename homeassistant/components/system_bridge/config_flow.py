@@ -93,11 +93,15 @@ async def _async_pair(hass: HomeAssistant, data: dict[str, Any], code: str) -> s
 async def _validate_input(
     hass: HomeAssistant,
     data: dict[str, Any],
+    *,
+    pair: bool = True,
 ) -> dict[str, str]:
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-    The token field takes a key, or a pairing code that is traded for one.
+    The token field takes a key, or a pairing code that is traded for one. With
+    pair off, the stored key or old token is used as it is, and setup swaps an
+    old token later.
     """
     session = async_get_clientsession(hass)
     version = Version(data[CONF_HOST], data[CONF_PORT], "", session=session)
@@ -115,7 +119,7 @@ async def _validate_input(
         raise UnsupportedVersion
 
     key = data[CONF_TOKEN].strip()
-    if not is_client_key(key):
+    if pair and not is_client_key(key):
         key = await _async_pair(hass, data, _pairing_code(key))
 
     websocket_client = WebSocketClient(
@@ -168,11 +172,13 @@ async def _validate_input(
 async def _async_get_info(
     hass: HomeAssistant,
     user_input: dict[str, Any],
+    *,
+    pair: bool = True,
 ) -> tuple[dict[str, str], dict[str, str] | None]:
     errors = {}
 
     try:
-        info = await _validate_input(hass, user_input)
+        info = await _validate_input(hass, user_input, pair=pair)
     except CannotConnect:
         errors["base"] = "cannot_connect"
     except InvalidAuth:
@@ -220,7 +226,15 @@ class SystemBridgeConfigFlow(
         if not errors and info is not None:
             # Check if already configured
             await self.async_set_unique_id(info["uuid"], raise_on_progress=False)
-            self._abort_if_unique_id_configured(updates={CONF_HOST: info["hostname"]})
+            # Pairing again replaces the key System Bridge holds for this
+            # client, so the existing entry needs the new one
+            self._abort_if_unique_id_configured(
+                updates={
+                    CONF_HOST: info["hostname"],
+                    CONF_PORT: user_input[CONF_PORT],
+                    CONF_TOKEN: info[CONF_TOKEN],
+                }
+            )
 
             return self.async_create_entry(
                 title=info["hostname"],
@@ -253,7 +267,11 @@ class SystemBridgeConfigFlow(
                     )
 
                 self._abort_if_unique_id_configured(
-                    updates={CONF_HOST: info["hostname"]}
+                    updates={
+                        CONF_HOST: info["hostname"],
+                        CONF_PORT: user_input[CONF_PORT],
+                        CONF_TOKEN: info[CONF_TOKEN],
+                    }
                 )
 
                 return self.async_create_entry(title=info["hostname"], data=user_input)
@@ -310,8 +328,10 @@ class SystemBridgeConfigFlow(
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            # The stored token may still be the old one, which setup swaps
+            # once it connects, so it's never a pairing code here
             errors, info = await _async_get_info(
-                self.hass, {**reconfigure_entry.data, **user_input}
+                self.hass, {**reconfigure_entry.data, **user_input}, pair=False
             )
             if not errors and info is not None:
                 await self.async_set_unique_id(info["uuid"])
