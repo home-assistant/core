@@ -4,10 +4,11 @@ import asyncio
 from http import HTTPStatus
 from pathlib import Path
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, call
 
 from botocore.exceptions import ClientError, EndpointConnectionError
 import pytest
+from pytest_homeassistant.common import async_load_json_object_fixture
 from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components import tts
@@ -139,6 +140,48 @@ async def test_say(
     assert await _say(hass, hass_client, service_calls, service_data) == HTTPStatus.OK
     mock_polly_client.synthesize_speech.assert_awaited_once_with(
         Text=MESSAGE, **expected_call
+    )
+
+
+async def test_voices_paginated(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    service_calls: list[ServiceCall],
+    mock_polly_client: AsyncMock,
+) -> None:
+    """Test voices from every page of the voice list can be used."""
+    voices = (
+        await async_load_json_object_fixture(hass, "describe_voices.json", DOMAIN)
+    )["Voices"]
+    second_page_voice = voices.pop()
+    assert second_page_voice["Id"] == "Brian"
+    mock_polly_client.describe_voices.side_effect = [
+        {"Voices": voices, "NextToken": "page-2"},
+        {"Voices": [second_page_voice]},
+    ]
+    assert await async_setup_component(hass, tts.DOMAIN, {tts.DOMAIN: CONFIG})
+    await hass.async_block_till_done()
+
+    assert mock_polly_client.describe_voices.await_args_list == [
+        call(),
+        call(NextToken="page-2"),
+    ]
+    assert (
+        await _say(
+            hass,
+            hass_client,
+            service_calls,
+            {tts.ATTR_LANGUAGE: "en-GB", tts.ATTR_OPTIONS: {"voice": "Brian"}},
+        )
+        == HTTPStatus.OK
+    )
+    mock_polly_client.synthesize_speech.assert_awaited_once_with(
+        Text=MESSAGE,
+        VoiceId="Brian",
+        Engine="standard",
+        OutputFormat="mp3",
+        SampleRate="22050",
+        TextType="text",
     )
 
 
