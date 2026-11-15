@@ -1484,6 +1484,44 @@ async def test_thermostat_webhook_therm_mode_refreshes_home_mode(
     )
 
 
+async def test_thermostat_webhook_schedule_ends_away_immediately(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a schedule therm_mode webhook is not overridden by the stale home mode."""
+    home_mode = await _setup_with_room_in_home_mode(hass, config_entry, "away")
+    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
+    assert (
+        hass.states.get(CLIMATE_ENTITY_LIVINGROOM).attributes[ATTR_PRESET_MODE]
+        == PRESET_AWAY
+    )
+
+    # Back to the schedule outside Home Assistant, e.g. in the Netatmo app.
+    home_mode.mode = "schedule"
+    await simulate_webhook(
+        hass,
+        webhook_id,
+        {
+            "event_type": "therm_mode",
+            "home": {"id": "91763b24c43d3e344f424e8b", "therm_mode": "schedule"},
+            "mode": "schedule",
+            "previous_mode": "away",
+            "push_type": "home_event_changed",
+        },
+    )
+    assert (
+        hass.states.get(CLIMATE_ENTITY_LIVINGROOM).attributes[ATTR_PRESET_MODE]
+        == PRESET_SCHEDULE
+    )
+
+    await _tick(hass, freezer)
+    assert (
+        hass.states.get(CLIMATE_ENTITY_LIVINGROOM).attributes[ATTR_PRESET_MODE]
+        == PRESET_SCHEDULE
+    )
+
+
 async def test_thermostat_timed_preset_refreshes_after_end(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,

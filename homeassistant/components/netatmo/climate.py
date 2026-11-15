@@ -239,7 +239,8 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
             elif self._attr_preset_mode == PRESET_AWAY:
                 self._attr_native_target_temperature = self._away_temperature
             elif self._attr_preset_mode in [PRESET_SCHEDULE, PRESET_HOME]:
-                self.async_update_callback()
+                # The cached home mode is stale until the refresh below.
+                self.async_update_callback(home[EVENT_TYPE_THERM_MODE])
                 self._async_refresh_home_therm_mode()
                 return
             self.async_write_ha_state()
@@ -413,8 +414,8 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
 
     @callback
     @override
-    def async_update_callback(self) -> None:
-        """Update the entity's state."""
+    def async_update_callback(self, home_therm_mode: str | None = None) -> None:
+        """Update the entity's state, optionally with a home mode just reported."""
         if not self.device.reachable:
             if self._connected:
                 self._connected = False
@@ -437,7 +438,7 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
             setpoint_mode == STATE_NETATMO_HOME
             or setpoint_mode not in NETATMO_MAP_PRESET
         ):
-            setpoint_mode = self.home.therm_mode
+            setpoint_mode = home_therm_mode or self.home.therm_mode
 
         self._attr_preset_mode = NETATMO_MAP_PRESET.get(setpoint_mode, PRESET_SCHEDULE)
         self._attr_hvac_mode = HVAC_MAP_NETATMO[self._attr_preset_mode]
