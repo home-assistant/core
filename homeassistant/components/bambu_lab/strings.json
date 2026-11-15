@@ -7,7 +7,8 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "serial_number_mismatch": "The printer at this address has a different serial number. Check the host and the serial number.",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "untrusted_certificate": "The device at this address did not identify itself as a Bambu Lab printer. Check the host."
     },
     "step": {
       "user": {
@@ -45,13 +46,12 @@
         "name": "Print status",
         "state": {
           "failed": "Failed",
-          "finish": "Finished",
+          "finished": "Finished",
           "idle": "[%key:common::state::idle%]",
-          "init": "Initializing",
-          "offline": "Offline",
-          "pause": "[%key:common::state::paused%]",
-          "prepare": "Preparing",
-          "running": "Printing",
+          "initializing": "Initializing",
+          "paused": "[%key:common::state::paused%]",
+          "preparing": "Preparing",
+          "printing": "Printing",
           "slicing": "Slicing"
         }
       },
@@ -69,6 +69,9 @@
     },
     "invalid_auth": {
       "message": "The printer rejected the access code."
+    },
+    "wrong_device": {
+      "message": "The device at {host} is not the printer that was set up."
     }
   }
 }

@@ -5,6 +5,7 @@ from typing import Any, override
 
 from aiobambulab import (
     BambuLabAuthenticationError,
+    BambuLabCertificateError,
     BambuLabClient,
     BambuLabConnectionError,
     BambuLabSerialMismatchError,
@@ -51,14 +52,14 @@ class BambuLabConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_SERIAL_NUMBER],
                 user_input[CONF_ACCESS_CODE],
             )
-            await self.async_set_unique_id(client.serial)
-            self._abort_if_unique_id_configured()
             try:
                 await client.connect()
             except BambuLabAuthenticationError:
                 errors["base"] = "invalid_auth"
             except BambuLabSerialMismatchError:
                 errors["base"] = "serial_number_mismatch"
+            except BambuLabCertificateError:
+                errors["base"] = "untrusted_certificate"
             except BambuLabConnectionError:
                 errors["base"] = "cannot_connect"
             except Exception:
@@ -66,6 +67,8 @@ class BambuLabConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 await client.disconnect()
+                await self.async_set_unique_id(client.serial)
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=client.info.model_name or client.serial,
                     data={

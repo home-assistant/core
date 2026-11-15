@@ -26,7 +26,7 @@
     'object_id_base': 'Bed temperature',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 1,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
@@ -54,7 +54,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '59.7',
+    'state': '60',
   })
 # ---
 # name: test_sensors[sensor.x1_carbon_chamber_temperature-entry]
@@ -84,7 +84,7 @@
     'object_id_base': 'Chamber temperature',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 1,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
@@ -112,7 +112,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '38.0',
+    'state': '38',
   })
 # ---
 # name: test_sensors[sensor.x1_carbon_current_layer-entry]
@@ -192,7 +192,7 @@
     'object_id_base': 'Nozzle temperature',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 1,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
@@ -220,7 +220,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '219.9',
+    'state': '220',
   })
 # ---
 # name: test_sensors[sensor.x1_carbon_print_progress-entry]
@@ -283,14 +283,13 @@
     'capabilities': dict({
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'idle',
-        'init',
+        'initializing',
         'slicing',
-        'prepare',
-        'running',
-        'pause',
-        'finish',
+        'preparing',
+        'printing',
+        'paused',
+        'finished',
         'failed',
-        'offline',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -330,14 +329,13 @@
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'X1 Carbon Print status',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'idle',
-        'init',
+        'initializing',
         'slicing',
-        'prepare',
-        'running',
-        'pause',
-        'finish',
+        'preparing',
+        'printing',
+        'paused',
+        'finished',
         'failed',
-        'offline',
       ]),
     }),
     'context': <ANY>,
@@ -345,7 +343,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'running',
+    'state': 'printing',
   })
 # ---
 # name: test_sensors[sensor.x1_carbon_remaining_time-entry]

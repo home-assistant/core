@@ -2,6 +2,7 @@
 
 from aiobambulab import (
     BambuLabAuthenticationError,
+    BambuLabCertificateError,
     BambuLabClient,
     BambuLabConnectionError,
 )
@@ -32,6 +33,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: BambuLabConfigEntry) -> 
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="invalid_auth",
+        ) from err
+    except BambuLabCertificateError as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="wrong_device",
+            translation_placeholders={"host": entry.data[CONF_HOST]},
         ) from err
     except BambuLabConnectionError as err:
         raise ConfigEntryNotReady(

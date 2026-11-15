@@ -59,8 +59,12 @@ rules:
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: todo
-  dynamic-devices: todo
-  entity-category: done
+  dynamic-devices:
+    status: exempt
+    comment: A config entry is one printer.
+  entity-category:
+    status: exempt
+    comment: All entities are primary entities of the printer.
   entity-device-class: done
   entity-disabled-by-default: todo
   entity-translations: done
@@ -68,7 +72,9 @@ rules:
   icon-translations: done
   reconfiguration-flow: todo
   repair-issues: todo
-  stale-devices: todo
+  stale-devices:
+    status: exempt
+    comment: A config entry is one printer.
 
   # Platinum
   async-dependency: done

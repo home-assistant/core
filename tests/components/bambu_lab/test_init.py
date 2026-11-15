@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 from aiobambulab import (
     BambuLabAuthenticationError,
+    BambuLabCertificateError,
     BambuLabConnectionError,
     BambuLabSerialMismatchError,
 )
@@ -18,11 +19,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
-from .const import SERIAL_NUMBER
+from .const import ACCESS_CODE, HOST, SERIAL_NUMBER
 
 
 async def test_load_unload_entry(
     hass: HomeAssistant,
+    mock_bambu_lab_client_class: MagicMock,
     mock_bambu_lab_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -30,6 +32,9 @@ async def test_load_unload_entry(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
+    mock_bambu_lab_client_class.assert_called_once_with(
+        HOST, SERIAL_NUMBER, ACCESS_CODE
+    )
     mock_bambu_lab_client.connect.assert_awaited_once()
     mock_bambu_lab_client.disconnect.assert_not_called()
 
@@ -57,6 +62,11 @@ async def test_load_unload_entry(
             BambuLabSerialMismatchError,
             ConfigEntryState.SETUP_RETRY,
             id="serial_number_mismatch",
+        ),
+        pytest.param(
+            BambuLabCertificateError,
+            ConfigEntryState.SETUP_RETRY,
+            id="untrusted_certificate",
         ),
     ],
 )

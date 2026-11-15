@@ -14,6 +14,8 @@ from homeassistant.helpers import entity_registry as er
 
 from . import push_update, setup_integration
 
+PRINT_STATUS = "sensor.x1_carbon_print_status"
+
 
 @pytest.mark.usefixtures("mock_bambu_lab_client")
 async def test_sensors(
@@ -52,19 +54,16 @@ async def test_update(
     """Test the sensors follow what the printer pushes."""
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get("sensor.x1_carbon_print_status").state == "running"
-    assert hass.states.get("sensor.x1_carbon_print_progress").state == "42"
-
     mock_bambu_lab_client.state = replace(
         mock_bambu_lab_client.state,
-        print_state=PrintState.PAUSE,
+        print_state=PrintState.PAUSED,
         progress=43,
         remaining_minutes=None,
     )
     push_update(mock_bambu_lab_client)
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.x1_carbon_print_status").state == "pause"
+    assert hass.states.get(PRINT_STATUS).state == "paused"
     assert hass.states.get("sensor.x1_carbon_print_progress").state == "43"
     assert hass.states.get("sensor.x1_carbon_remaining_time").state == STATE_UNKNOWN
 
@@ -81,10 +80,10 @@ async def test_unavailable(
     push_update(mock_bambu_lab_client)
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.x1_carbon_print_status").state == STATE_UNAVAILABLE
+    assert hass.states.get(PRINT_STATUS).state == STATE_UNAVAILABLE
 
     mock_bambu_lab_client.available = True
     push_update(mock_bambu_lab_client)
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.x1_carbon_print_status").state == "running"
+    assert hass.states.get(PRINT_STATUS).state == "printing"

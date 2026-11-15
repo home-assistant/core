@@ -68,6 +68,7 @@ SENSORS: tuple[BambuLabSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
         value_fn=lambda state: state.nozzle_temperature,
     ),
     BambuLabSensorEntityDescription(
@@ -76,6 +77,7 @@ SENSORS: tuple[BambuLabSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
         value_fn=lambda state: state.bed_temperature,
     ),
 )
@@ -87,6 +89,7 @@ CHAMBER_TEMPERATURE_SENSOR = BambuLabSensorEntityDescription(
     device_class=SensorDeviceClass.TEMPERATURE,
     native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     state_class=SensorStateClass.MEASUREMENT,
+    suggested_display_precision=0,
     value_fn=lambda state: state.chamber_temperature,
 )
 

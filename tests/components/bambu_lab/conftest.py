@@ -48,8 +48,8 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_bambu_lab_client() -> Generator[MagicMock]:
-    """Return a mocked client of a printer that is printing."""
+def mock_bambu_lab_client_class() -> Generator[MagicMock]:
+    """Return the mocked client class, to check how a client is created."""
     with (
         patch(
             "homeassistant.components.bambu_lab.BambuLabClient", autospec=True
@@ -59,30 +59,36 @@ def mock_bambu_lab_client() -> Generator[MagicMock]:
             new=client_mock,
         ),
     ):
-        client = client_mock.return_value
-        client.serial = SERIAL_NUMBER
-        client.available = True
-        client.info = PrinterInfo(
-            serial=SERIAL_NUMBER,
-            model=PrinterModel.X1C,
-            model_name="X1 Carbon",
-            firmware_version="01.08.02.00",
-            hardware_version="AP05",
-        )
-        client.state = PrinterState(
-            print_state=PrintState.RUNNING,
-            job_name="Benchy",
-            progress=42,
-            remaining_minutes=73,
-            current_layer=96,
-            total_layers=240,
-            nozzle_temperature=219.9,
-            nozzle_target_temperature=220.0,
-            bed_temperature=59.7,
-            bed_target_temperature=60.0,
-            chamber_temperature=38.0,
-            speed_profile=SpeedProfile.STANDARD,
-            chamber_light_on=True,
-            wifi_signal=-58,
-        )
-        yield client
+        yield client_mock
+
+
+@pytest.fixture
+def mock_bambu_lab_client(mock_bambu_lab_client_class: MagicMock) -> MagicMock:
+    """Return a mocked client of a printer that is printing."""
+    client = mock_bambu_lab_client_class.return_value
+    client.serial = SERIAL_NUMBER
+    client.available = True
+    client.info = PrinterInfo(
+        serial=SERIAL_NUMBER,
+        model=PrinterModel.X1C,
+        model_name="X1 Carbon",
+        firmware_version="01.08.02.00",
+        hardware_version="AP05",
+    )
+    client.state = PrinterState(
+        print_state=PrintState.PRINTING,
+        job_name="Benchy",
+        progress=42,
+        remaining_minutes=73,
+        current_layer=96,
+        total_layers=240,
+        nozzle_temperature=220,
+        nozzle_target_temperature=220,
+        bed_temperature=60,
+        bed_target_temperature=60,
+        chamber_temperature=38,
+        speed_profile=SpeedProfile.STANDARD,
+        chamber_light_on=True,
+        wifi_signal=-58,
+    )
+    return client
