@@ -4,6 +4,7 @@ from collections.abc import Callable, Coroutine
 from unittest.mock import AsyncMock, call, patch, sentinel
 
 import pytest
+from pytest_homeassistant.common import mock_restore_cache
 from zha.application.platforms.light.const import FLASH_EFFECTS
 from zigpy.device import ZigbeeDevice
 from zigpy.profiles import zha
@@ -24,7 +25,8 @@ from homeassistant.components.zha.helpers import (
     get_zha_gateway_proxy,
 )
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers import entity_registry as er
 
 from .common import (
     async_shift_time,
@@ -553,6 +555,51 @@ async def async_test_flash_from_hass(
         expect_reply=True,
         manufacturer=None,
     )
+
+
+@pytest.mark.parametrize(
+    "restored_color_mode",
+    [
+        # A mode written by another integration (e.g. Zigbee2MQTT)
+        "hs",
+        # Not a ColorMode at all
+        "not_a_color_mode",
+    ],
+)
+async def test_light_restore_unknown_color_mode(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
+    restored_color_mode: str,
+) -> None:
+    """A restored color_mode ZHA cannot map must not break entity setup."""
+    entity_id = "light.fakemanufacturer_fakemodel"
+    mock_restore_cache(
+        hass,
+        [
+            State(
+                entity_id,
+                STATE_ON,
+                {"color_mode": restored_color_mode},
+            )
+        ],
+    )
+
+    await setup_zha()
+    gateway = get_zha_gateway(hass)
+
+    zigpy_device = zigpy_device_mock(LIGHT_COLOR)
+    gateway.get_or_create_device(zigpy_device)
+    await gateway.async_device_initialized(zigpy_device)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+
+    # The entity can still be removed afterwards
+    entity_registry.async_remove(entity_id)
+    await hass.async_block_till_done()
 
 
 @patch(
