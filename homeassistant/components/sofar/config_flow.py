@@ -6,7 +6,7 @@ from typing import Any, override
 
 from modbus_connection import ModbusError
 import probatio
-from sofar_modbus.modern.device import InverterSilentError, SofarInverter
+from sofar_modbus import InverterSilentError, SofarInverter
 
 from homeassistant.components.modbus import async_get_temporary_unit
 from homeassistant.config_entries import ConfigEntryState, ConfigFlow, ConfigFlowResult

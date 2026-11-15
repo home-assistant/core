@@ -7,12 +7,12 @@ import logging
 from typing import override
 
 from modbus_connection import ModbusConnectionError, ModbusError, ModbusTimeoutError
-from sofar_modbus.model import UpdateReport
-from sofar_modbus.modern.device import (
+from sofar_modbus import (
     BATTERY_PACKS,
     READING_COMPONENTS,
     BatteryTowerSilentError,
     SofarInverter,
+    UpdateReport,
 )
 
 from homeassistant.config_entries import ConfigEntry

@@ -2437,7 +2437,7 @@
       'device_id': <DeviceEntry identifiers=[('vesync', 'outlet')]>,
       'disabled_by': None,
       'domain': 'sensor',
-      'entity_category': None,
+      'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
       'entity_id': 'sensor.outlet_current_voltage',
       'has_entity_name': True,
       'hidden_by': None,

@@ -80,7 +80,7 @@ urllib3>=2.0
 uv==0.13.7
 webrtc-models==0.3.0
 yarl==1.25.1
-zeroconf==0.153.0
+zeroconf==0.154.0
 
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238
