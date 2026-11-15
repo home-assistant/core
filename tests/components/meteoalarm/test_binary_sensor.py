@@ -4,14 +4,14 @@ from typing import Any
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
-from meteoalarmapi import ServerError, WrongCountry
+from meteoalarmapi import ServerError, UnexpectedError, WrongCountry
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.meteoalarm.binary_sensor import SCAN_INTERVAL
 from homeassistant.components.meteoalarm.const import CONF_PROVINCE, DOMAIN
+from homeassistant.components.meteoalarm.coordinator import SCAN_INTERVAL
 from homeassistant.const import (
     CONF_COUNTRY,
     CONF_LANGUAGE,
@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_PLATFORM,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
@@ -157,6 +158,66 @@ async def test_alert_withdrawn(
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_OFF
     assert "event" not in state.attributes
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [ServerError("500"), WrongCountry("no feed"), UnexpectedError("timeout")],
+)
+async def test_keeps_alert_until_expiry_when_update_fails(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_meteoalert: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    exception: Exception,
+) -> None:
+    """Test a current alert is kept until it expires when MeteoAlarm can't be reached."""
+    await _setup(hass, mock_config_entry)
+
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
+
+    mock_meteoalert.return_value.get_alert.side_effect = exception
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_ON
+    assert state.attributes["event"] == ALERT["event"]
+
+    # The alert expires at 18:00 while MeteoAlarm still can't be reached.
+    freezer.move_to("2026-01-01T18:00:01+00:00")
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+
+
+async def test_unavailable_without_alert_when_update_fails(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_meteoalert: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the sensor becomes unavailable without a current alert when MeteoAlarm can't be reached."""
+    mock_meteoalert.return_value.get_alert.return_value = {}
+    await _setup(hass, mock_config_entry)
+
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
+
+    mock_meteoalert.return_value.get_alert.side_effect = ServerError("500")
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+
+    mock_meteoalert.return_value.get_alert.side_effect = None
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
 
 
 async def test_yaml_import(
