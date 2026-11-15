@@ -822,8 +822,11 @@ async def test_dimmer_brightness_range_set_value(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 42.4},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            NumberServiceArgument.VALUE: 42.4,
+        },
         blocking=True,
     )
     device.set_brightness_range.assert_called_once_with(**{kwarg: 42})
