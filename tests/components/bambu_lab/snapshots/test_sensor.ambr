@@ -223,6 +223,57 @@
     'state': '220',
   })
 # ---
+# name: test_sensors[sensor.x1_carbon_print_finish-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('bambu_lab', '01P00A000000001')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.x1_carbon_print_finish',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Print finish',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Print finish',
+    'platform': 'bambu_lab',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'print_finish',
+    'unique_id': '01P00A000000001_print_finish',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.x1_carbon_print_finish-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'X1 Carbon Print finish',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.x1_carbon_print_finish',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2026-11-15T13:13:00+00:00',
+  })
+# ---
 # name: test_sensors[sensor.x1_carbon_print_progress-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -344,61 +395,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'printing',
-  })
-# ---
-# name: test_sensors[sensor.x1_carbon_remaining_time-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('bambu_lab', '01P00A000000001')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.x1_carbon_remaining_time',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Remaining time',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
-    'original_icon': None,
-    'original_name': 'Remaining time',
-    'platform': 'bambu_lab',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'remaining_time',
-    'unique_id': '01P00A000000001_remaining_time',
-    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
-  })
-# ---
-# name: test_sensors[sensor.x1_carbon_remaining_time-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'X1 Carbon Remaining time',
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.x1_carbon_remaining_time',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '73',
   })
 # ---
 # name: test_sensors[sensor.x1_carbon_total_layers-entry]

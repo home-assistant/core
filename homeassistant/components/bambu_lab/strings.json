@@ -39,6 +39,9 @@
       "nozzle_temperature": {
         "name": "Nozzle temperature"
       },
+      "print_finish": {
+        "name": "Print finish"
+      },
       "print_progress": {
         "name": "Print progress"
       },
@@ -54,9 +57,6 @@
           "printing": "Printing",
           "slicing": "Slicing"
         }
-      },
-      "remaining_time": {
-        "name": "Remaining time"
       },
       "total_layers": {
         "name": "Total layers"
