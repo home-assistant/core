@@ -1353,3 +1353,83 @@ async def test_general_diagnostics_sensors_disabled_by_default(
         entry = entity_registry.async_get(entity_id)
         assert entry, f"Expected {entity_id} to be registered"
         assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_commodity_price"])
+async def test_commodity_price_sensor(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test Commodity Price sensor."""
+
+    entity_id = "sensor.mock_commodity_price"
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "0.25"
+
+    # Currency metadata
+    assert state.attributes["currency"] == "EUR"
+
+    # Tariff unit
+    assert state.attributes["tariff_unit"] == "kWh"
+
+    # Update CurrentPrice
+    set_node_attribute(
+        matter_node,
+        1,
+        149,
+        2,
+        {
+            0: 1731661200,
+            1: 1731664800,
+            2: 32,
+            4: "Heures pleines",
+            5: [],
+        },
+    )
+
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "0.32"
+    assert state.attributes["price_description"] == "Heures pleines"
+    assert state.attributes["period_start"] == 1731661200
+    assert state.attributes["period_end"] == 1731664800
+
+    # Open-ended period: periodEnd is None
+    set_node_attribute(
+        matter_node,
+        1,
+        149,
+        2,
+        {
+            0: 1731661200,
+            1: None,
+            2: 25,
+            4: "Tarif courant",
+            5: [],
+        },
+    )
+
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "0.25"
+    assert state.attributes["period_end"] is None
+
+    # Null CurrentPrice
+    set_node_attribute(matter_node, 1, 149, 2, None)
+
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_UNKNOWN
+
+    assert state.attributes["price_description"] is None
+    assert state.attributes["period_start"] is None
+    assert state.attributes["period_end"] is None

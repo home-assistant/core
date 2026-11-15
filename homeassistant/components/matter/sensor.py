@@ -350,6 +350,110 @@ class MatterSensor(MatterEntity, SensorEntity):
         self._attr_native_value = value
 
 
+class MatterCommodityPriceSensor(MatterSensor):
+    """Representation of a Matter Commodity Price sensor."""
+
+    @override
+    @property
+    def native_value(self) -> float | None:
+        """Return the current commodity price."""
+        current_price = self.get_matter_attribute_value(
+            clusters.CommodityPrice.Attributes.CurrentPrice
+        )
+
+        if current_price in (None, NullValue):
+            return None
+
+        raw_price = current_price.price
+        if not isinstance(raw_price, (int, float)):
+            return None
+
+        currency = self.get_matter_attribute_value(
+            clusters.CommodityPrice.Attributes.Currency
+        )
+
+        if currency in (None, NullValue):
+            return None
+
+        raw_decimal_points = currency.decimalPoints
+        if not isinstance(raw_decimal_points, int):
+            return None
+
+        price: float = float(raw_price)
+        divisor: float = float(10**raw_decimal_points)
+        result: float = price / divisor
+        return result
+
+    @property
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return additional commodity price attributes."""
+        currency = self.get_matter_attribute_value(
+            clusters.CommodityPrice.Attributes.Currency
+        )
+        tariff_unit = self.get_matter_attribute_value(
+            clusters.CommodityPrice.Attributes.TariffUnit
+        )
+        current_price = self.get_matter_attribute_value(
+            clusters.CommodityPrice.Attributes.CurrentPrice
+        )
+
+        currency_map = {
+            978: "EUR",
+            840: "USD",
+            826: "GBP",
+            124: "CAD",
+            36: "AUD",
+            392: "JPY",
+            756: "CHF",
+        }
+
+        tariff_unit_map = {
+            clusters.Globals.Enums.TariffUnitEnum.kKWh: "kWh",
+            clusters.Globals.Enums.TariffUnitEnum.kKVAh: "kVAh",
+            clusters.Globals.Enums.TariffUnitEnum.kUnknownEnumValue: "unknown",
+        }
+
+        currency_code = currency.currency if currency not in (None, NullValue) else None
+        if not isinstance(currency_code, int):
+            currency_value = None
+        else:
+            currency_value = currency_map.get(currency_code, str(currency_code))
+
+        tariff_value = (
+            tariff_unit_map.get(tariff_unit, "unknown")
+            if tariff_unit not in (None, NullValue)
+            else None
+        )
+
+        price_description = (
+            current_price.description
+            if current_price not in (None, NullValue)
+            and isinstance(current_price.description, str)
+            else None
+        )
+
+        raw_period_start = (
+            current_price.periodStart
+            if current_price not in (None, NullValue)
+            else None
+        )
+        period_start = raw_period_start if isinstance(raw_period_start, int) else None
+
+        raw_period_end = (
+            current_price.periodEnd if current_price not in (None, NullValue) else None
+        )
+        period_end = raw_period_end if isinstance(raw_period_end, int) else None
+
+        return {
+            "currency": currency_value,
+            "tariff_unit": tariff_value,
+            "price_description": price_description,
+            "period_start": period_start,
+            "period_end": period_end,
+        }
+
+
 class MatterConcentrationSensor(MatterSensor):
     """Representation of a Matter concentration measurement sensor."""
 
@@ -1901,5 +2005,20 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.GeneralDiagnostics.Attributes.BootReason,),
+    ),
+    # CommodityPrice cluster sensors
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="CommodityPriceCurrentPrice",
+            translation_key="commodity_price",
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterCommodityPriceSensor,
+        required_attributes=(
+            clusters.CommodityPrice.Attributes.CurrentPrice,
+            clusters.CommodityPrice.Attributes.Currency,
+            clusters.CommodityPrice.Attributes.TariffUnit,
+        ),
     ),
 ]
