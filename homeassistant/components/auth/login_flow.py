@@ -179,16 +179,19 @@ class WellKnownProtectedResourceView(HomeAssistantView):
         except NoURLAvailableError:
             return self.json_message("No URL available", HTTPStatus.NOT_FOUND)
 
-        resource = url_prefix
-        if resource_path is not None:
-            raw_suffix = request.rel_url.raw_path.removeprefix(self.url)
-            if not await hass.http.async_path_requires_auth(request, raw_suffix):
-                return self.json_message("Resource not found", HTTPStatus.NOT_FOUND)
-            resource = f"{url_prefix}{raw_suffix}"
+        raw_suffix = (
+            request.rel_url.raw_path.removeprefix(self.url)
+            if resource_path is not None
+            else ""
+        )
+        if raw_suffix and not await hass.http.async_path_requires_auth(
+            request, raw_suffix
+        ):
+            return self.json_message("Resource not found", HTTPStatus.NOT_FOUND)
 
         return self.json(
             {
-                "resource": resource,
+                "resource": f"{url_prefix}{raw_suffix}",
                 "authorization_servers": [url_prefix],
                 "resource_documentation": (
                     "https://contributors.home-assistant.io/core/internals/auth-api/"

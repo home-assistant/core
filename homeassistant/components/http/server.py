@@ -19,13 +19,9 @@ from aiohttp.abc import AbstractStreamWriter
 from aiohttp.http_parser import RawRequestMessage
 from aiohttp.streams import StreamReader
 from aiohttp.typedefs import JSONDecoder, StrOrURL
-from aiohttp.web_exceptions import (
-    HTTPMethodNotAllowed,
-    HTTPMovedPermanently,
-    HTTPRedirection,
-)
+from aiohttp.web_exceptions import HTTPMovedPermanently, HTTPRedirection
 from aiohttp.web_protocol import RequestHandler
-from aiohttp.web_urldispatcher import AbstractResource, MatchInfoError
+from aiohttp.web_urldispatcher import AbstractResource
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -408,17 +404,11 @@ class HomeAssistantHTTP:
     ) -> bool:
         """Return whether raw_path resolves to a registered view requiring auth."""
         probe_request = request.clone(rel_url=URL.build(path=raw_path, encoded=True))
-        match_info = await self.app.router.resolve(probe_request)
-        if isinstance(match_info, MatchInfoError) and isinstance(
-            match_info.http_exception, HTTPMethodNotAllowed
-        ):
-            if methods := match_info.http_exception.allowed_methods - {"OPTIONS"}:
-                probe_request = probe_request.clone(method=next(iter(methods)))
-                match_info = await self.app.router.resolve(probe_request)
-        return (
-            not isinstance(match_info, MatchInfoError)
-            and match_info.route.resource in self._requires_auth_resources
-        )
+        for resource in self._requires_auth_resources:
+            _, allowed_methods = await resource.resolve(probe_request)
+            if allowed_methods:
+                return True
+        return False
 
     def register_redirect(
         self,
