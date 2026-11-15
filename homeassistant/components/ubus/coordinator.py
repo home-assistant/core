@@ -1,12 +1,17 @@
 """DataUpdateCoordinator for the OpenWrt (ubus) integration."""
 
+import asyncio
 from datetime import datetime, timedelta
 import logging
-from typing import override
+from typing import NamedTuple, override
 
 from openwrt.ubus import Ubus
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.device_tracker.const import (
+    CONF_CONSIDER_HOME,
+    DEFAULT_CONSIDER_HOME,
+)
+from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -14,56 +19,81 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_DHCP_SOFTWARE, DEFAULT_SSL, DEFAULT_VERIFY_SSL, DOMAIN
+from .const import (
+    CONF_DHCP_SOFTWARE,
+    DEFAULT_SSL,
+    DEFAULT_VERIFY_SSL,
+    DOMAIN,
+    SIGNAL_CLIENTS_UPDATED,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 UPDATE_INTERVAL = timedelta(seconds=30)
 LEASE_REREAD_INTERVAL = timedelta(minutes=10)
+# A router that responds slower than this holds up no tick: its requests time
+# out, and the tick period is anchored to the tick start.
+REQUEST_TIMEOUT = UPDATE_INTERVAL - timedelta(seconds=2)
 
-type UbusConfigEntry = ConfigEntry[UbusDataUpdateCoordinator]
+type UbusConfigEntry = ConfigEntry["UbusDataUpdateCoordinator"]
 
 
-class UbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
-    """Fetch the authorized wireless clients from an OpenWrt router over ubus."""
+class InvalidCredentialsError(UpdateFailed):
+    """The router rejected the configured credentials."""
 
-    config_entry: UbusConfigEntry
 
-    def __init__(self, hass: HomeAssistant, config_entry: UbusConfigEntry) -> None:
-        """Initialize the coordinator from a config entry."""
-        self.host: str = config_entry.data[CONF_HOST]
-        self.dhcp_software: str = config_entry.data[CONF_DHCP_SOFTWARE]
-        scheme = "https" if config_entry.data.get(CONF_SSL, DEFAULT_SSL) else "http"
+class ClientStamp(NamedTuple):
+    """The most recent sighting of a client by one router."""
+
+    last_seen: datetime
+    hostname: str | None
+    seq: int
+
+
+# The merged presence: MAC -> subentry id -> stamp.
+type ClientPresence = dict[str, dict[str, ClientStamp]]
+
+
+def subentry_signature(subentry: ConfigSubentry) -> tuple:
+    """Return a signature of a router subentry, as the coordinator polls it."""
+    return (
+        tuple(sorted(subentry.data.items())),
+        subentry.title,
+        subentry.unique_id,
+    )
+
+
+class _UbusHost:
+    """The ubus session and lease state of one router."""
+
+    def __init__(self, subentry: ConfigSubentry) -> None:
+        """Initialize the host state from the subentry's router data."""
+        data = subentry.data
+        self.subentry_id: str = subentry.subentry_id
+        self.host: str = data[CONF_HOST]
+        self.dhcp_software: str = data[CONF_DHCP_SOFTWARE]
+        scheme = "https" if data.get(CONF_SSL, DEFAULT_SSL) else "http"
         self.ubus = Ubus(
             f"{scheme}://{self.host}/ubus",
-            config_entry.data[CONF_USERNAME],
-            config_entry.data[CONF_PASSWORD],
-            verify=config_entry.data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
+            data[CONF_USERNAME],
+            data[CONF_PASSWORD],
+            verify=data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
+            timeout=REQUEST_TIMEOUT.total_seconds(),
         )
-        self._hostapd: list[str] = []
-        self._leasefile: str | None = None
-        self._mac2name: dict[str, str] | None = None
-        self._unnamed: set[str] = set()
-        self._last_lease_read = datetime.min.replace(tzinfo=dt_util.UTC)
+        self.hostapd: list[str] = []
+        self.leasefile: str | None = None
+        self.mac2name: dict[str, str] | None = None
+        self.unnamed: set[str] = set()
+        self.last_lease_read: datetime = datetime.min.replace(tzinfo=dt_util.UTC)
+        self.signature = subentry_signature(subentry)
 
-        super().__init__(
-            hass,
-            _LOGGER,
-            config_entry=config_entry,
-            name=f"{DOMAIN} - {self.host}",
-            update_interval=UPDATE_INTERVAL,
-        )
-
-    @override
-    async def _async_update_data(self) -> dict[str, str | None]:
-        """Return the currently connected devices keyed by MAC address."""
-        return await self.hass.async_add_executor_job(self._update)
-
-    def _update(self) -> dict[str, str | None]:
+    def poll(self) -> dict[str, str | None]:
         """Query the router, re-authenticating once if the session expired."""
         if self.ubus.session_id is None:
             self._login()
@@ -86,11 +116,14 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
             # fails, because it subscripts a None response.
             raise UpdateFailed(f"Error connecting to ubus at {self.host}") from err
         if session_id is None:
-            raise UpdateFailed(f"Invalid credentials for ubus at {self.host}")
+            raise InvalidCredentialsError(
+                f"Invalid credentials for ubus at {self.host}"
+            )
 
     def _read_clients(self) -> dict[str, str | None]:
         """Return authorized clients mapped to their DHCP hostname.
 
+        MAC addresses are lowercase, the one form every consumer keys on.
         PermissionError is left to propagate so the caller can re-authenticate.
         """
         clients = self._fetch_hostapd_clients()
@@ -100,32 +133,32 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
         authorized = sorted(
             {client["mac"] for client in clients if client["authorized"]}
         )
-        known = self._mac2name or {}
+        known = self.mac2name or {}
         unnamed = {mac.upper() for mac in authorized} - known.keys()
         now = dt_util.utcnow()
         # Reread the leases for a new client without a hostname, and only
         # periodically for clients which never get one (e.g. static IPs).
         if (
-            self._mac2name is None
-            or unnamed - self._unnamed
-            or (unnamed and now - self._last_lease_read >= LEASE_REREAD_INTERVAL)
+            self.mac2name is None
+            or unnamed - self.unnamed
+            or (unnamed and now - self.last_lease_read >= LEASE_REREAD_INTERVAL)
         ):
-            self._last_lease_read = now
+            self.last_lease_read = now
             if (mac2name := self._generate_mac2name()) is not None:
                 # Merge, as an empty or partial read must not forget names.
-                self._mac2name = {**known, **mac2name}
-                self._unnamed = unnamed - mac2name.keys()
-        return {mac: self._name_for(mac) for mac in authorized}
+                self.mac2name = {**known, **mac2name}
+                self.unnamed = unnamed - mac2name.keys()
+        return {mac.lower(): self._name_for(mac) for mac in authorized}
 
     def _fetch_hostapd_clients(self) -> list[dict]:
         """Return the raw hostapd client table from all interfaces."""
         try:
-            if not self._hostapd:
+            if not self.hostapd:
                 if not (hostapd := self.ubus.get_hostapd()):
                     raise UpdateFailed(f"No hostapd data from ubus at {self.host}")
-                self._hostapd = list(hostapd)
+                self.hostapd = list(hostapd)
             clients: list[dict] = []
-            for interface in self._hostapd:
+            for interface in self.hostapd:
                 if result := self.ubus.get_hostapd_clients(interface):
                     # Keep per-interface records, even when a client appears
                     # to be "duplicate", as authorization can differ between
@@ -139,9 +172,9 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
 
     def _name_for(self, mac: str) -> str | None:
         """Return the DHCP hostname for a MAC address, if known."""
-        if self._mac2name is None:
+        if self.mac2name is None:
             return None
-        return self._mac2name.get(mac.upper())
+        return self.mac2name.get(mac.upper())
 
     def _generate_mac2name(self) -> dict[str, str] | None:
         """Build the MAC-to-hostname map for the configured DHCP software."""
@@ -154,11 +187,11 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
     def _dnsmasq_mac2name(self) -> dict[str, str] | None:
         """Read the dnsmasq lease file. Returns None to retry if unavailable."""
         try:
-            if self._leasefile is None:
+            if self.leasefile is None:
                 if not (result := self.ubus.get_uci_config("dhcp", "dnsmasq")):
                     return None
-                self._leasefile = next(iter(result["values"].values()))["leasefile"]
-            result = self.ubus.file_read(self._leasefile)
+                self.leasefile = next(iter(result["values"].values()))["leasefile"]
+            result = self.ubus.file_read(self.leasefile)
         except ConnectionError as err:
             raise UpdateFailed(
                 f"Error reading leases from ubus at {self.host}"
@@ -196,3 +229,330 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
                 if hostname := lease["hostname"]:
                     mac2name[mac.upper()] = hostname
         return mac2name
+
+
+class UbusDataUpdateCoordinator(DataUpdateCoordinator[ClientPresence]):
+    """Fetch the authorized wireless clients of every router over ubus.
+
+    Every tick polls all routers in parallel, each with its own ubus session
+    and lease state. The per-tick results are merged into one presence map,
+    so a client roaming between routers, or between the bands of one router,
+    keeps one fresh stamp.
+    """
+
+    config_entry: UbusConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: UbusConfigEntry,
+    ) -> None:
+        """Initialize the coordinator on the hub entry.
+
+        The entry-level "disable polling" preference acts on every router,
+        as they are all polled by this one coordinator.
+        """
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            update_interval=UPDATE_INTERVAL,
+        )
+        # The routers polled on the last tick, keyed by subentry id.
+        self.hosts: dict[str, _UbusHost] = {}
+        # The success of each router's last poll; a router never polled is
+        # healthy by default.
+        self.host_health: dict[str, bool] = {}
+        # The client view of each router as of its last successful poll; a
+        # router which failed its last poll sees nothing.
+        self.latest_views: dict[str, dict[str, str | None]] = {}
+        # The subentries as the routers were last polled; an update listener
+        # compares this to detect a change, as subentry updates mutate the
+        # subentries in place. None until the first poll built the hosts.
+        self._polled_signature: tuple | None = None
+        self._tick_results: dict[str, BaseException | dict[str, str | None]] = {}
+        self._tick_start: float | None = None
+        self._last_signature: tuple | None = None
+        self._seq = 0
+
+    def _subentries_signature(self) -> tuple:
+        """Return a signature of the entry's subentries, as polled."""
+        return tuple(
+            (
+                subentry_id,
+                subentry_signature(subentry),
+            )
+            for subentry_id, subentry in sorted(self.config_entry.subentries.items())
+        )
+
+    def subentries_changed(self) -> bool:
+        """Return whether the entry's subentries changed since the last poll."""
+        return self._subentries_signature() != self._polled_signature
+
+    @override
+    async def _async_update_data(self) -> ClientPresence:
+        """Poll every router in parallel and merge their client views."""
+        hosts = self._reconcile_hosts()
+        if not hosts:
+            # No routers configured yet; nothing to fetch.
+            return {}
+        results = await asyncio.gather(
+            *(
+                asyncio.wait_for(
+                    self.hass.async_add_executor_job(host.poll),
+                    timeout=REQUEST_TIMEOUT.total_seconds(),
+                )
+                for host in hosts.values()
+            ),
+            return_exceptions=True,
+        )
+        # A router removed while the tick was in flight must not resurrect
+        # its clients in the merged presence.
+        active = self.config_entry.subentries
+        self._tick_results = {
+            host.subentry_id: result
+            for host, result in zip(hosts.values(), results, strict=True)
+            if host.subentry_id in active
+        }
+        old: ClientPresence = self.data_or_none or {}
+        # Stamps of a host which no longer exists are dropped; every other
+        # stamp is kept, as a client stays reported while its most recent
+        # stamp is within consider_home, even when its router no longer
+        # sees it (a successful tick only restamps the clients it reports).
+        active_ids = set(self._tick_results)
+        presence: ClientPresence = {}
+        for mac, per_host in old.items():
+            for subentry_id, stamp in per_host.items():
+                if subentry_id in active_ids:
+                    presence.setdefault(mac, {})[subentry_id] = stamp
+        now = dt_util.utcnow()
+        failed: set[str] = set()
+        for subentry_id, result in self._tick_results.items():
+            if isinstance(result, BaseException):
+                failed.add(subentry_id)
+                # A failed poll sees nothing new.
+                self.latest_views.pop(subentry_id, None)
+                continue
+            self.latest_views[subentry_id] = result
+            for mac, hostname in result.items():
+                self._seq += 1
+                presence.setdefault(mac, {})[subentry_id] = ClientStamp(
+                    now, hostname, self._seq
+                )
+        if failed and len(failed) == len(self._tick_results):
+            # Every router failed; the entry reports the failure.
+            errors = [
+                result
+                for result in self._tick_results.values()
+                if isinstance(result, BaseException)
+            ]
+            if len(errors) == 1:
+                # A single router: report its own failure.
+                raise errors[0]
+            raise UpdateFailed(
+                "All routers failed to respond: "
+                + ", ".join(self.hosts[subentry_id].host for subentry_id in failed)
+            )
+        return presence
+
+    def _reconcile_hosts(self) -> dict[str, _UbusHost]:
+        """Align the polled routers with the entry's subentries."""
+        if not self.subentries_changed():
+            return self.hosts
+        subentries = self.config_entry.subentries
+        # Drop the state of routers that are gone, releasing their
+        # credential issues.
+        for subentry_id in (
+            set(self.hosts) | set(self.host_health) | set(self.latest_views)
+        ):
+            if subentry_id not in subentries:
+                self.hosts.pop(subentry_id, None)
+                self.host_health.pop(subentry_id, None)
+                self.latest_views.pop(subentry_id, None)
+                ir.async_delete_issue(
+                    self.hass, DOMAIN, f"invalid_credentials_{subentry_id}"
+                )
+        # Rebuild routers whose data changed, so their session and lease
+        # state start clean with the new configuration.
+        for subentry_id, subentry in subentries.items():
+            host = self.hosts.get(subentry_id)
+            if host is None or subentry_signature(subentry) != host.signature:
+                self.hosts[subentry_id] = _UbusHost(subentry)
+        self._polled_signature = self._subentries_signature()
+        return self.hosts
+
+    @override
+    async def _async_refresh(
+        self,
+        log_failures: bool = True,
+        raise_on_auth_failed: bool = False,
+        scheduled: bool = False,
+        raise_on_entry_error: bool = False,
+    ) -> None:
+        """Anchor the next tick to this tick's start.
+
+        The base schedules the next refresh after the refresh completes,
+        which would stretch the tick period with slow or timed-out routers.
+        """
+        self._tick_start = self.hass.loop.time()
+        try:
+            await super()._async_refresh(
+                log_failures=log_failures,
+                raise_on_auth_failed=raise_on_auth_failed,
+                scheduled=scheduled,
+                raise_on_entry_error=raise_on_entry_error,
+            )
+        finally:
+            self._tick_start = None
+
+    @callback
+    @override
+    def _schedule_refresh(self) -> None:
+        """Schedule the next tick, phase-locked to the current tick's start."""
+        if self._update_interval_seconds is None:
+            return
+        interval = self._update_interval_seconds
+        if self._tick_start is not None:
+            # Anchor the next tick to this tick's start, so a slow tick does
+            # not delay the next one; a tick which overran the interval (a
+            # router that outran even the timeout) fires the next tick right
+            # away.
+            self._update_interval_seconds = max(
+                interval - (self.hass.loop.time() - self._tick_start), 0
+            )
+        try:
+            super()._schedule_refresh()
+        finally:
+            self._update_interval_seconds = interval
+
+    @callback
+    @override
+    def _async_refresh_finished(self) -> None:
+        """Record host health, manage credential issues, signal changes."""
+        for subentry_id, result in self._tick_results.items():
+            if isinstance(result, BaseException):
+                self.host_health[subentry_id] = False
+                if isinstance(result, InvalidCredentialsError):
+                    self._async_create_credentials_issue(subentry_id)
+            else:
+                self.host_health[subentry_id] = True
+                self._async_delete_credentials_issue(subentry_id)
+        self._tick_results = {}
+        subentries = self.config_entry.subentries
+        for subentry_id in list(self.host_health):
+            if subentry_id not in subentries:
+                del self.host_health[subentry_id]
+        self.async_signal_clients_updated()
+
+    @callback
+    def _async_create_credentials_issue(self, subentry_id: str) -> None:
+        """Keep a repair issue open while the credentials keep failing.
+
+        There is no subentry reauth, so persistent invalid credentials are
+        surfaced as a repair right away instead of prompting for them.
+        """
+        if (host := self.hosts.get(subentry_id)) is None:
+            return
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            f"invalid_credentials_{subentry_id}",
+            config_entry_id=self.config_entry.entry_id,
+            config_subentry_id=subentry_id,
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.ERROR,
+            translation_key="persistent_invalid_credentials",
+            translation_placeholders={"host": host.host},
+        )
+
+    @callback
+    def _async_delete_credentials_issue(self, subentry_id: str) -> None:
+        """Close the credential repair when the router answers again."""
+        ir.async_delete_issue(self.hass, DOMAIN, f"invalid_credentials_{subentry_id}")
+
+    @callback
+    def async_signal_clients_updated(self) -> None:
+        """Signal the trackers when the presence, health or options changed."""
+        signature = self._signature()
+        if signature != self._last_signature:
+            self._last_signature = signature
+            async_dispatcher_send(self.hass, SIGNAL_CLIENTS_UPDATED)
+
+    def _signature(self) -> tuple:
+        """Return a signature of the current presence and health."""
+        data = self.data_or_none or {}
+        home: list[tuple[str, str | None, str | None, bool]] = []
+        for mac in data:
+            if (latest := self.latest_stamp(mac)) is None:
+                home.append((mac, None, None, False))
+            else:
+                subentry_id, stamp = latest
+                home.append((mac, subentry_id, stamp.hostname, True))
+        return (
+            tuple(sorted(home)),
+            tuple(sorted(self.host_health.items())),
+            self._consider_home(),
+        )
+
+    def _consider_home(self) -> timedelta:
+        """Return the configured keep-home window, defaulting to the standard one."""
+        seconds = self.config_entry.options.get(CONF_CONSIDER_HOME)
+        if seconds is None:
+            return DEFAULT_CONSIDER_HOME
+        return timedelta(seconds=seconds)
+
+    def latest_stamp(self, mac: str) -> tuple[str, ClientStamp] | None:
+        """Return the reporting subentry id and most recent healthy stamp.
+
+        Only stamps from healthy routers count, so a client is present while
+        its most recent healthy stamp is within consider_home.
+        """
+        data = self.data_or_none
+        if not data:
+            return None
+        stamps = data.get(mac.lower())
+        if not stamps:
+            return None
+        subentry_id = max(
+            (sid for sid in stamps if self.host_health.get(sid, True)),
+            key=lambda sid: stamps[sid].seq,
+            default=None,
+        )
+        if subentry_id is None:
+            return None
+        stamp = stamps[subentry_id]
+        if dt_util.utcnow() - stamp.last_seen > self._consider_home():
+            return None
+        return subentry_id, stamp
+
+    def has_reportable_stamp(self, mac: str) -> bool:
+        """Return whether the client's state is grounded on a reachable router.
+
+        The client is reported while its freshest stamp is from a healthy
+        router, or while a healthy router has seen it within consider_home.
+        A fresher stamp on a router which no longer updates is unverifiable,
+        so once no healthy router has seen the client recently, it is
+        unavailable rather than not home.
+        """
+        data = self.data_or_none
+        if not data:
+            return False
+        stamps = data.get(mac.lower())
+        if not stamps:
+            return False
+        latest = max(stamps, key=lambda sid: stamps[sid].seq)
+        return self.host_health.get(latest, True) or self.latest_stamp(mac) is not None
+
+    def known_hostname(self, mac: str) -> str | None:
+        """Return the most recent non-empty hostname stamped for a client."""
+        data = self.data_or_none
+        if not data:
+            return None
+        stamps = [
+            stamp for stamp in data.get(mac.lower(), {}).values() if stamp.hostname
+        ]
+        if not stamps:
+            return None
+        return max(stamps, key=lambda stamp: stamp.seq).hostname

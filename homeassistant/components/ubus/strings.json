@@ -1,7 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "The OpenWrt (ubus) integration is already configured. Routers are added to the existing entry as subentries."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -21,11 +21,78 @@
           "dhcp_software": "The DHCP server running on the router, used to resolve device hostnames.",
           "ssl": "Whether to connect to the router using SSL.",
           "verify_ssl": "Whether to verify the router's SSL certificate."
+        },
+        "title": "Add OpenWrt router"
+      }
+    }
+  },
+  "config_subentries": {
+    "router": {
+      "abort": {
+        "already_configured": "This router is already configured."
+      },
+      "entry_type": "Router",
+      "error": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+      },
+      "initiate_flow": {
+        "reconfigure": "Change router",
+        "user": "Add router"
+      },
+      "step": {
+        "reconfigure": {
+          "data": {
+            "dhcp_software": "DHCP software",
+            "host": "[%key:common::config_flow::data::host%]",
+            "password": "[%key:common::config_flow::data::password%]",
+            "ssl": "[%key:common::config_flow::data::ssl%]",
+            "username": "[%key:common::config_flow::data::username%]",
+            "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+          },
+          "data_description": {
+            "dhcp_software": "The DHCP server running on the router, used to resolve device hostnames.",
+            "ssl": "Whether to connect to the router using SSL.",
+            "verify_ssl": "Whether to verify the router's SSL certificate."
+          },
+          "title": "Change router"
+        },
+        "user": {
+          "data": {
+            "dhcp_software": "DHCP software",
+            "host": "[%key:common::config_flow::data::host%]",
+            "password": "[%key:common::config_flow::data::password%]",
+            "ssl": "[%key:common::config_flow::data::ssl%]",
+            "username": "[%key:common::config_flow::data::username%]",
+            "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+          },
+          "data_description": {
+            "dhcp_software": "The DHCP server running on the router, used to resolve device hostnames.",
+            "ssl": "Whether to connect to the router using SSL.",
+            "verify_ssl": "Whether to verify the router's SSL certificate."
+          },
+          "title": "Add router"
         }
       }
     }
   },
   "issues": {
+    "migration_disabled_entry": {
+      "description": "The disabled OpenWrt (ubus) entry for `{host}` was migrated to the main entry. Subentries cannot be disabled; delete the `{host}` subentry to restore the previous off state.",
+      "title": "Disabled router {host} was migrated"
+    },
+    "migration_failed": {
+      "description": "The OpenWrt (ubus) entry for `{host}` could not be migrated to the main entry. Delete and re-add the entry to complete the migration; its client trackers are recovered automatically.",
+      "title": "Failed to migrate router {host}"
+    },
+    "migration_host_collision": {
+      "description": "The OpenWrt (ubus) entry for `{host}` was removed because a router with the same host is already configured on the main entry.",
+      "title": "Duplicate router {host} was removed"
+    },
+    "persistent_invalid_credentials": {
+      "description": "The username and password for `{host}` are no longer valid, so the router cannot be queried. Use \"Change router\" on the `{host}` subentry to update the credentials.",
+      "title": "Invalid credentials for {host}"
+    },
     "yaml_import_cannot_connect": {
       "description": "The YAML configuration for OpenWrt (ubus) at `{host}` could not be imported because the connection failed.\n\nPlease check that `{host}` is reachable, update your `configuration.yaml` if needed, and restart Home Assistant.",
       "title": "YAML import failed: cannot connect"
@@ -33,6 +100,19 @@
     "yaml_import_invalid_auth": {
       "description": "The YAML configuration for OpenWrt (ubus) at `{host}` could not be imported because the credentials were rejected.\n\nPlease check the username and password in your `configuration.yaml`, then restart Home Assistant.",
       "title": "YAML import failed: invalid authentication"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "consider_home": "Keep clients home for (seconds)"
+        },
+        "data_description": {
+          "consider_home": "How long a client stays marked as home after the last router saw it."
+        },
+        "title": "OpenWrt (ubus) options"
+      }
     }
   },
   "selector": {
