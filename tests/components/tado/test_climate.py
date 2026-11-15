@@ -1,6 +1,7 @@
 """The climate tests for the tado platform."""
 
 from collections.abc import Generator
+import dataclasses
 from unittest.mock import patch
 
 from PyTado.interface.api.my_tado import TadoZone
@@ -138,3 +139,69 @@ async def test_aircon_set_hvac_mode(
 
     mock_set_state.assert_called_once()
     snapshot.assert_match(mock_set_state.call_args)
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "zone_id", "hvac_mode", "expected_temperature"),
+    [
+        pytest.param(
+            "climate.air_conditioning_with_swing_air_conditioning_with_swing",
+            5,
+            HVACMode.COOL,
+            18.0,
+            id="cool",
+        ),
+        pytest.param(
+            "climate.air_conditioning_with_swing_air_conditioning_with_swing",
+            5,
+            HVACMode.HEAT,
+            16.0,
+            id="heat",
+        ),
+        pytest.param(
+            "climate.air_conditioning_with_fanlevel_air_conditioning_with_fanlevel",
+            6,
+            HVACMode.DRY,
+            16.0,
+            id="dry",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_aircon_turn_on_from_off_in_cold_room(
+    hass: HomeAssistant,
+    entity_id: str,
+    zone_id: int,
+    hvac_mode: HVACMode,
+    expected_temperature: float,
+) -> None:
+    """Test the room temperature is clamped to the mode limits when turning on."""
+    coordinator = hass.config_entries.async_entries(DOMAIN)[0].runtime_data
+    zone_off = dataclasses.replace(
+        coordinator.data["zone"][zone_id],
+        current_hvac_mode="OFF",
+        power="OFF",
+        current_temp=15.0,
+        target_temp=None,
+    )
+    coordinator.data["zone"][zone_id] = zone_off
+    coordinator.async_update_listeners()
+
+    with (
+        patch(
+            "homeassistant.components.tado.PyTado.interface.api.Tado.set_zone_overlay"
+        ) as mock_set_state,
+        patch(
+            "homeassistant.components.tado.PyTado.interface.api.Tado.get_zone_state",
+            return_value=zone_off,
+        ),
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: hvac_mode},
+            blocking=True,
+        )
+
+    mock_set_state.assert_called_once()
+    assert mock_set_state.call_args.args[2] == expected_temperature
