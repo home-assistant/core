@@ -144,6 +144,8 @@ class SpotifyMediaPlayer(SpotifyEntity, MediaPlayerEntity):
             return MediaPlayerEntityFeature(0)
         if not self.currently_playing or self.currently_playing.device.is_restricted:
             return MediaPlayerEntityFeature.SELECT_SOURCE
+        if not self.currently_playing.device.supports_volume:
+            return SUPPORT_SPOTIFY & ~MediaPlayerEntityFeature.VOLUME_SET
         return SUPPORT_SPOTIFY
 
     @property
