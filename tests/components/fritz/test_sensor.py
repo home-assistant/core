@@ -3,7 +3,7 @@
 from copy import deepcopy
 from datetime import UTC, datetime
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from fritzconnection.core.exceptions import FritzConnectionException
@@ -25,11 +25,13 @@ from homeassistant.components.fritz.const import (
     SCAN_INTERVAL,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
+from homeassistant.const import CONF_HOST, STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
+from .conftest import FritzConnectionMock
 from .const import (
+    ATTR_NEW_SERIAL_NUMBER,
     MOCK_FB_SERVICES,
     MOCK_HOST_ATTRIBUTES_DATA,
     MOCK_HOST_PHONE,
@@ -64,6 +66,30 @@ def _add_wlan_device(fh_class_mock: type[FritzHosts]) -> dict[str, Any]:
 def wlan_device_link(fh_class_mock: type[FritzHosts]) -> dict[str, Any]:
     """Fixture that adds a WLAN connected device to the mocked hosts."""
     return _add_wlan_device(fh_class_mock)
+
+
+async def _async_setup_two_boxes(
+    hass: HomeAssistant, fc_class_mock: MagicMock
+) -> tuple[MockConfigEntry, MockConfigEntry]:
+    """Set up two FRITZ!Box entries that report the same mesh topology."""
+    first_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    first_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(first_entry.entry_id)
+    await hass.async_block_till_done()
+
+    second_box_services = deepcopy(MOCK_FB_SERVICES)
+    second_box_services["DeviceInfo1"]["GetInfo"][ATTR_NEW_SERIAL_NUMBER] = (
+        "1CED6F123499"
+    )
+    fc_class_mock.return_value = FritzConnectionMock(second_box_services)
+    second_entry = MockConfigEntry(
+        domain=DOMAIN, data={**MOCK_USER_DATA, CONF_HOST: "second_host"}
+    )
+    second_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(second_entry.entry_id)
+    await hass.async_block_till_done()
+
+    return first_entry, second_entry
 
 
 @pytest.mark.freeze_time(datetime(2024, 9, 1, 20, tzinfo=UTC))
@@ -542,3 +568,61 @@ async def test_link_sensors_device_forgotten_and_back(
 
     for entity_id in PHONE_LINK_SENSORS:
         assert entity_registry.async_is_registered(entity_id)
+
+
+@pytest.mark.usefixtures(
+    "entity_registry_enabled_by_default",
+    "fh_class_mock",
+    "fs_class_mock",
+    "wlan_device_link",
+)
+async def test_link_sensors_multiple_boxes(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    fc_class_mock: MagicMock,
+) -> None:
+    """Test only the first FRITZ!Box provides the link sensors of a shared device."""
+    with patch("homeassistant.components.fritz.PLATFORMS", [Platform.SENSOR]):
+        first_entry, _ = await _async_setup_two_boxes(hass, fc_class_mock)
+
+        # The second box checks again on every scan
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "does not generate unique IDs" not in caplog.text
+    for entity_id in PHONE_LINK_SENSORS:
+        assert (entity_entry := entity_registry.async_get(entity_id))
+        assert entity_entry.config_entry_id == first_entry.entry_id
+
+
+@pytest.mark.usefixtures(
+    "entity_registry_enabled_by_default",
+    "fh_class_mock",
+    "fs_class_mock",
+    "wlan_device_link",
+)
+async def test_link_sensors_taken_over_after_unload(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    fc_class_mock: MagicMock,
+) -> None:
+    """Test another FRITZ!Box provides the link sensors once the first is unloaded."""
+    with patch("homeassistant.components.fritz.PLATFORMS", [Platform.SENSOR]):
+        first_entry, second_entry = await _async_setup_two_boxes(hass, fc_class_mock)
+
+        assert await hass.config_entries.async_unload(first_entry.entry_id)
+        await hass.async_block_till_done()
+
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    for entity_id in PHONE_LINK_SENSORS:
+        assert (entity_entry := entity_registry.async_get(entity_id))
+        assert entity_entry.config_entry_id == second_entry.entry_id
+    assert (state := hass.states.get("sensor.phone_signal_strength"))
+    assert state.state == "-38"
