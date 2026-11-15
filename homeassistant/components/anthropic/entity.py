@@ -955,10 +955,12 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                 translation_domain=DOMAIN, translation_key="system_message_not_found"
             )
 
-        # Without an LLM API the system prompt is rendered again on every turn
+        # Without an LLM API the prompt changes every turn and breaks old thinking
         messages, container_id = _convert_content(
             chat_log.content[1:],
-            0 if chat_log.llm_api else chat_log.llm_input_provided_index - 1,
+            thinking_start=0
+            if chat_log.llm_api
+            else chat_log.llm_input_provided_index - 1,
         )
 
         model = options[CONF_CHAT_MODEL]
