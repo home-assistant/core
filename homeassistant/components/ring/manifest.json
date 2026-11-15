@@ -29,6 +29,10 @@
     {
       "hostname": "ring*",
       "macaddress": "341513*"
+    },
+    {
+      "hostname": "ring*",
+      "macaddress": "649A63*"
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/ring",
