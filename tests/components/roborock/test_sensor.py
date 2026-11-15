@@ -43,25 +43,37 @@ async def test_sensors(
     await snapshot_platform(hass, entity_registry, snapshot, setup_entry.entry_id)
 
 
-@pytest.mark.parametrize("room_index", [None, 0, 1])
+@pytest.mark.parametrize(
+    ("current_room", "expected_state"),
+    [
+        pytest.param(None, STATE_UNKNOWN, id="unknown"),
+        pytest.param(
+            Q10Room(id=9, raw_name="rr_bedroom", pixel_value=36, pixel_count=100),
+            "Bedroom",
+            id="bedroom",
+        ),
+        pytest.param(
+            Q10Room(id=10, raw_name="rr_living_room", pixel_value=40, pixel_count=200),
+            "Living Room",
+            id="living_room",
+        ),
+    ],
+)
 async def test_q10_current_room(
     hass: HomeAssistant,
     mock_roborock_entry: MockConfigEntry,
     fake_q10_vacuum: FakeDevice,
-    room_index: int | None,
+    current_room: Q10Room | None,
+    expected_state: str,
 ) -> None:
     """Expose the room reported by the library, including unknown locations."""
-    map_trait = fake_q10_vacuum.b01_q10_properties.map
-    if room_index is not None:
-        map_trait.current_room = map_trait.rooms[room_index]
+    fake_q10_vacuum.b01_q10_properties.map.current_room = current_room
 
     await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.roborock_q10_s5_current_room")
-    assert state.state == (
-        map_trait.rooms[room_index].name if room_index is not None else STATE_UNKNOWN
-    )
+    assert state.state == expected_state
     assert state.attributes["options"] == ["Bedroom", "Living Room"]
 
 
