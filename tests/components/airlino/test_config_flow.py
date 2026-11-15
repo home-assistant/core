@@ -1,6 +1,5 @@
 """Test the airlino config flow."""
 
-from collections.abc import AsyncGenerator
 from ipaddress import IPv4Address
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -15,15 +14,12 @@ import pytest
 
 from homeassistant.components.airlino.config_flow import (
     CannotConnect,
-    CannotIdentify,
     UnsupportedApiVersion,
-    _get_mac,
-    _txt_str,
     validate_input,
 )
 from homeassistant.components.airlino.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -59,7 +55,6 @@ def _discovery_info(
     [
         (UnsupportedApiVersion, "unsupported_api_version"),
         (CannotConnect, "cannot_connect"),
-        (CannotIdentify, "cannot_connect"),
         (RuntimeError, "unknown"),
     ],
 )
@@ -99,9 +94,8 @@ async def test_user_flow_recovers_from_errors(
     assert result["title"] == "Living Room"
     assert result["data"] == {
         CONF_HOST: HOST,
-        "port": DEFAULT_PORT,
+        CONF_PORT: DEFAULT_PORT,
         "api_version": "v22",
-        "setup_verified": False,
     }
 
 
@@ -121,14 +115,13 @@ async def test_user_flow_uses_custom_port(
             DOMAIN, context={"source": SOURCE_USER}
         )
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_HOST: HOST, "port": 9000}
+            result["flow_id"], {CONF_HOST: HOST, CONF_PORT: 9000}
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == MAC
-    assert result["data"]["port"] == 9000
+    assert result["data"][CONF_PORT] == 9000
     assert result["data"]["api_version"] == "v21"
-    assert result["data"]["setup_verified"] is False
 
 
 async def test_user_flow_aborts_if_device_is_configured(hass: HomeAssistant) -> None:
@@ -191,41 +184,11 @@ async def test_user_flow_aborts_duplicate_in_progress_flow(
     assert validate.await_count == 1
 
 
-@pytest.fixture
-async def mock_setup_entry() -> AsyncGenerator[AsyncMock]:
-    """Mock entry setup to prevent post-flow network requests."""
-    with patch(
-        "homeassistant.components.airlino.async_setup_entry",
-        new_callable=AsyncMock,
-        return_value=True,
-    ) as mock_setup_entry:
-        yield mock_setup_entry
-
-
-@pytest.mark.parametrize(
-    ("discovery", "reason"),
-    [
-        (_discovery_info(properties={"model": "Other"}), "not_airlino"),
-    ],
-)
-async def test_zeroconf_flow_aborts_invalid_discovery(
-    hass: HomeAssistant, discovery: ZeroconfServiceInfo, reason: str
-) -> None:
-    """Verify unsupported models are rejected during discovery."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == reason
-
-
 @pytest.mark.parametrize(
     ("exception", "reason"),
     [
         (UnsupportedApiVersion, "unsupported_api_version"),
         (CannotConnect, "cannot_connect"),
-        (CannotIdentify, "cannot_connect"),
         (RuntimeError, "unknown"),
     ],
 )
@@ -280,9 +243,8 @@ async def test_zeroconf_flow_confirms_and_creates_entry(
     assert result["result"].unique_id == MAC
     assert result["title"] == "Living Room"
     assert result["data"][CONF_HOST] == HOST
-    assert result["data"]["port"] == DEFAULT_PORT
+    assert result["data"][CONF_PORT] == DEFAULT_PORT
     assert result["data"]["api_version"] == "v22"
-    assert result["data"]["setup_verified"] is False
 
 
 async def test_zeroconf_flow_uses_fallback_api_version_when_txt_omits_api(
@@ -302,7 +264,7 @@ async def test_zeroconf_flow_uses_fallback_api_version_when_txt_omits_api(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == MAC
     assert validate.call_args.kwargs["api_version"] is None
-    assert result["data"]["port"] == DEFAULT_PORT
+    assert result["data"][CONF_PORT] == DEFAULT_PORT
     assert result["data"]["api_version"] == "v20"
 
 
@@ -323,56 +285,6 @@ async def test_zeroconf_flow_aborts_if_device_is_configured(
     assert result["reason"] == "already_configured"
 
 
-@pytest.mark.parametrize(
-    ("network_info", "expected"),
-    [
-        (
-            {
-                "eth": {"mac": "00:23:b1:a4:35:9e"},
-                "wlan": {"mac": "00:23:b1:66:ab:94"},
-            },
-            "00:23:b1:a4:35:9e",
-        ),
-        (
-            {
-                "wlan": {
-                    "mac": "00:23:b1:66:ab:94",
-                    "mode": "station",
-                    "ssid": "AirLino-WLAN",
-                    "inet": [{"family": "inet", "ip": "192.0.2.20"}],
-                }
-            },
-            "00:23:b1:66:ab:94",
-        ),
-        ({"eth": {}, "wlan": {}}, None),
-        ({}, None),
-    ],
-)
-def test_get_mac(network_info: dict[str, Any], expected: str | None) -> None:
-    """Verify Ethernet MAC is preferred over WLAN MAC."""
-    assert _get_mac(network_info) == expected
-
-
-@pytest.mark.parametrize(
-    ("properties", "key", "expected"),
-    [
-        ({}, "missing", None),
-        ({"key": b"value"}, "key", "value"),
-        ({"key": bytearray(b"value")}, "key", "value"),
-        ({"key": [b"value", b"ignored"]}, "key", "value"),
-        ({"key": [bytearray(b"value")]}, "key", "value"),
-        ({"key": b"\xff"}, "key", "�"),
-        ({"key": []}, "key", None),
-        ({"key": ["value"]}, "key", "value"),
-        ({"key": [None]}, "key", None),
-        ({"key": 123}, "key", "123"),
-    ],
-)
-def test_txt_str(properties: dict[str, Any], key: str, expected: str | None) -> None:
-    """Verify zeroconf TXT values are normalized to strings."""
-    assert _txt_str(properties, key) == expected
-
-
 async def test_validate_input_normalizes_mac_address(hass: HomeAssistant) -> None:
     """Normalize a MAC from the API before returning it as unique ID."""
     api = MagicMock()
@@ -389,7 +301,7 @@ async def test_validate_input_normalizes_mac_address(hass: HomeAssistant) -> Non
             return_value=api,
         ),
     ):
-        result = await validate_input(hass, {CONF_HOST: HOST})
+        result = await validate_input(hass, {CONF_HOST: HOST, CONF_PORT: DEFAULT_PORT})
 
     assert result["mac"] == "00:23:b1:a4:35:9e"
 
@@ -428,7 +340,7 @@ async def test_validate_input_uses_latest_version_and_ethernet_mac(
             return_value=api,
         ) as api_class,
     ):
-        result = await validate_input(hass, {CONF_HOST: HOST, "port": 8989})
+        result = await validate_input(hass, {CONF_HOST: HOST, CONF_PORT: DEFAULT_PORT})
 
     assert result == {
         "title": "Living Room",
@@ -467,7 +379,7 @@ async def test_validate_input_falls_back_to_older_api_version(
             side_effect=apis,
         ) as api_class,
     ):
-        result = await validate_input(hass, {CONF_HOST: HOST})
+        result = await validate_input(hass, {CONF_HOST: HOST, CONF_PORT: DEFAULT_PORT})
 
     assert result["api_version"] == "v20"
     assert result["title"] == "Living Room"
@@ -495,7 +407,7 @@ async def test_validate_input_raises_unsupported_when_no_version_works(
         ) as api_class,
         pytest.raises(UnsupportedApiVersion),
     ):
-        await validate_input(hass, {CONF_HOST: HOST})
+        await validate_input(hass, {CONF_HOST: HOST, CONF_PORT: DEFAULT_PORT})
 
     assert [call.kwargs["api_version"] for call in api_class.call_args_list] == [
         "v22",
@@ -525,28 +437,13 @@ async def test_validate_input_continues_after_api_error_without_status(
             side_effect=[failed_api, working_api],
         ) as api_class,
     ):
-        result = await validate_input(hass, {CONF_HOST: HOST})
+        result = await validate_input(hass, {CONF_HOST: HOST, CONF_PORT: DEFAULT_PORT})
 
     assert result["api_version"] == "v21"
     assert [call.kwargs["api_version"] for call in api_class.call_args_list] == [
         "v22",
         "v21",
     ]
-
-
-async def test_validate_input_rejects_invalid_supported_version_range(
-    hass: HomeAssistant,
-) -> None:
-    """Verify invalid supported API version bounds are rejected."""
-    with (
-        patch("homeassistant.components.airlino.config_flow.async_get_clientsession"),
-        patch(
-            "homeassistant.components.airlino.config_flow.api_version_number",
-            return_value=None,
-        ),
-        pytest.raises(UnsupportedApiVersion),
-    ):
-        await validate_input(hass, {CONF_HOST: HOST})
 
 
 @pytest.mark.parametrize(
@@ -570,7 +467,9 @@ async def test_validate_input_maps_connection_errors(
         ),
         pytest.raises(CannotConnect),
     ):
-        await validate_input(hass, {CONF_HOST: HOST}, api_version="v22")
+        await validate_input(
+            hass, {CONF_HOST: HOST, CONF_PORT: DEFAULT_PORT}, api_version="v22"
+        )
 
 
 async def test_validate_input_uses_default_port_and_announced_version(
@@ -597,7 +496,7 @@ async def test_validate_input_uses_default_port_and_announced_version(
         ) as api_class,
     ):
         result = await validate_input(
-            hass, {CONF_HOST: HOST, "port": DEFAULT_PORT}, api_version="v22"
+            hass, {CONF_HOST: HOST, CONF_PORT: DEFAULT_PORT}, api_version="v22"
         )
 
     assert result["api_version"] == "v22"
@@ -622,51 +521,17 @@ async def test_validate_input_maps_explicit_404_to_unsupported(
         ),
         pytest.raises(UnsupportedApiVersion),
     ):
-        await validate_input(hass, {CONF_HOST: HOST}, api_version="v22")
+        await validate_input(
+            hass, {CONF_HOST: HOST, CONF_PORT: DEFAULT_PORT}, api_version="v22"
+        )
 
 
-async def test_validate_input_handles_missing_mac(hass: HomeAssistant) -> None:
-    """Verify validation rejects devices without a network MAC address."""
-    api = MagicMock()
-    api.async_get_device_info = AsyncMock(return_value={})
-    api.async_get_network_info = AsyncMock(return_value={})
-    with (
-        patch("homeassistant.components.airlino.config_flow.async_get_clientsession"),
-        patch(
-            "homeassistant.components.airlino.config_flow.AirlinoApi",
-            return_value=api,
-        ),
-        pytest.raises(CannotIdentify),
-    ):
-        await validate_input(hass, {CONF_HOST: HOST}, api_version="v22")
-
-
-async def test_validate_input_handles_missing_mac_during_version_fallback(
-    hass: HomeAssistant,
-) -> None:
-    """Verify a successful response without a MAC is not treated as unsupported."""
-    api = MagicMock()
-    api.async_get_device_info = AsyncMock(return_value={})
-    api.async_get_network_info = AsyncMock(return_value={})
-    with (
-        patch("homeassistant.components.airlino.config_flow.async_get_clientsession"),
-        patch(
-            "homeassistant.components.airlino.config_flow.AirlinoApi",
-            return_value=api,
-        ) as api_class,
-        pytest.raises(CannotIdentify),
-    ):
-        await validate_input(hass, {CONF_HOST: HOST})
-
-    api_class.assert_called_once()
-
-
+@pytest.mark.parametrize("api_version", ["v18", "invalid"])
 async def test_validate_input_rejects_unsupported_version(
-    hass: HomeAssistant,
+    hass: HomeAssistant, api_version: str
 ) -> None:
     """Verify explicitly supplied unsupported API versions are rejected."""
-    with (
-        patch("homeassistant.components.airlino.config_flow.async_get_clientsession"),
-        pytest.raises(UnsupportedApiVersion),
-    ):
-        await validate_input(hass, {CONF_HOST: HOST}, api_version="v18")
+    with pytest.raises(UnsupportedApiVersion):
+        await validate_input(
+            hass, {CONF_HOST: HOST, CONF_PORT: DEFAULT_PORT}, api_version=api_version
+        )

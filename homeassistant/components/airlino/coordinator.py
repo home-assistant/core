@@ -1,21 +1,35 @@
 """DataUpdateCoordinator for AirLino."""
 
+from dataclasses import dataclass
 from typing import Any, override
 
-from airlino_api import AirlinoApi, AirlinoApiConnectionError
+from airlino_api import AirlinoApi, AirlinoApiConnectionError, AirlinoApiError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util import dt as dt_util
+from homeassistant.helpers.update_coordinator import (
+    TimestampDataUpdateCoordinator,
+    UpdateFailed,
+)
 
-from .const import CONF_SETUP_VERIFIED, DOMAIN, LOGGER, UPDATE_INTERVAL
+from .const import DOMAIN, LOGGER, UPDATE_INTERVAL
 
 type AirlinoConfigEntry = ConfigEntry[AirlinoDataUpdateCoordinator]
 
 
-class AirlinoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+@dataclass
+class AirlinoData:
+    """Data polled from an AirLino device."""
+
+    player: dict[str, Any]
+    volume: int
+
+
+class AirlinoDataUpdateCoordinator(TimestampDataUpdateCoordinator[AirlinoData]):
     """Coordinate AirLino updates."""
+
+    config_entry: AirlinoConfigEntry
+    device_info: dict[str, Any]
 
     def __init__(
         self,
@@ -32,56 +46,29 @@ class AirlinoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=UPDATE_INTERVAL,
         )
         self.api = api
-        self._setup_verified = entry.data.get(CONF_SETUP_VERIFIED, False)
-        # Device info (model, devicename, firmware) only changes on reboot or
-        # a firmware update, so it is fetched once and refreshed whenever the
-        # device comes back from being unreachable.
-        self._device_info: dict[str, Any] | None = None
-        self._refetch_device_info = False
 
     @override
-    async def _async_update_data(self) -> dict[str, Any]:
-        """Fetch data from AirLino devices."""
-        previous = self.data if isinstance(self.data, dict) else None
-        was_online = bool(previous and previous.get("online"))
+    async def _async_setup(self) -> None:
+        """Fetch the static device information."""
         try:
-            if self._device_info is None or self._refetch_device_info:
-                self._device_info = await self.api.async_get_device_info()
-                self._refetch_device_info = False
-            player_status = await self.api.async_get_player_status()
-            volume = await self.api.async_get_master_volume()
-        except AirlinoApiConnectionError as err:
-            if not self._setup_verified:
-                raise UpdateFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="update_failed",
-                    translation_placeholders={"err": str(err)},
-                ) from err
-            # An unreachable device is expected after its setup has been
-            # verified (e.g. in standby): report it as offline data.
-            if was_online:
-                LOGGER.info("AirLino is unreachable, assuming it is off")
-            LOGGER.debug("AirLino is unreachable, assuming it is off: %s", err)
-            self._refetch_device_info = True
-            # Keep the last known device info so the device name is still
-            # shown while unavailable.
-            return {"online": False, "device": self._device_info}
-        except Exception as err:
+            self.device_info = await self.api.async_get_device_info()
+        except (AirlinoApiConnectionError, AirlinoApiError) as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
                 translation_placeholders={"err": str(err)},
             ) from err
-        self._setup_verified = True
-        if previous is not None and not was_online:
-            LOGGER.info("AirLino is available again")
-        return {
-            "online": True,
-            "updated_at": dt_util.utcnow(),
-            "device": self._device_info,
-            "player": player_status,
-            # Playback errors (e.g. unsupported https streams) are reported
-            # by the device asynchronously in the player status.
-            "error": player_status.get("error"),
-            "volume": volume,
-        }
+
+    @override
+    async def _async_update_data(self) -> AirlinoData:
+        """Fetch the playback status and volume."""
+        try:
+            player = await self.api.async_get_player_status()
+            volume = await self.api.async_get_master_volume()
+        except (AirlinoApiConnectionError, AirlinoApiError) as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={"err": str(err)},
+            ) from err
+        return AirlinoData(player=player, volume=volume)

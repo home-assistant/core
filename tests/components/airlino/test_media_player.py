@@ -13,16 +13,16 @@ from airlino_api import (
 )
 import pytest
 
-from homeassistant.components.airlino.const import CONF_SETUP_VERIFIED, DOMAIN
-from homeassistant.components.airlino.coordinator import AirlinoDataUpdateCoordinator
-from homeassistant.components.airlino.media_player import (
-    AirlinoMediaPlayer,
-    async_setup_entry as async_setup_media_player_entry,
+from homeassistant.components.airlino.const import DOMAIN
+from homeassistant.components.airlino.coordinator import (
+    AirlinoData,
+    AirlinoDataUpdateCoordinator,
 )
+from homeassistant.components.airlino.media_player import AirlinoMediaPlayer
 from homeassistant.components.media_player import MediaPlayerState, MediaType
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
@@ -47,7 +47,6 @@ def make_player(hass: HomeAssistant) -> PlayerFactory:
         entry = MockConfigEntry(
             domain=DOMAIN,
             title="Living room",
-            data={"host": "192.0.2.1"},
             unique_id="00:11:22:33:44:55",
         )
         api = MagicMock()
@@ -67,13 +66,14 @@ def make_player(hass: HomeAssistant) -> PlayerFactory:
         coordinator.hass = hass
         coordinator.config_entry = entry
         coordinator.api = api
-        coordinator.data = {
-            "online": True,
+        data = {
             "device": {"devicename": "Living room", "model": "AirLino"},
             "player": {"state": "stopped", "status": {}},
             "volume": 50,
             **(data or {}),
         }
+        coordinator.device_info = data["device"]
+        coordinator.data = AirlinoData(player=data["player"], volume=data["volume"])
         coordinator.async_request_refresh = AsyncMock()
         entry.runtime_data = coordinator
         player = AirlinoMediaPlayer(coordinator, entry)
@@ -85,62 +85,26 @@ def make_player(hass: HomeAssistant) -> PlayerFactory:
 
 
 async def test_setup_entry_adds_media_player(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_airlino_api: MagicMock,
 ) -> None:
-    """Forward entry setup to the media-player platform."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="Living room",
-        data={"host": "192.0.2.1", CONF_SETUP_VERIFIED: True},
-        unique_id="00:11:22:33:44:55",
-    )
-    entry.add_to_hass(hass)
-    mock_api = MagicMock()
-    mock_api.async_get_device_info = AsyncMock(
-        return_value={"devicename": "Living room", "model": "AirLino"}
-    )
-    mock_api.async_get_player_status = AsyncMock(return_value={"state": "stopped"})
-    mock_api.async_get_master_volume = AsyncMock(return_value=50)
-    platform_setup = AsyncMock(wraps=async_setup_media_player_entry)
+    """Register the media player and its device on entry setup."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    with (
-        patch("homeassistant.components.airlino.AirlinoApi", return_value=mock_api),
-        patch(
-            "homeassistant.components.airlino.async_get_clientsession",
-            return_value=MagicMock(),
-        ),
-        patch(
-            "homeassistant.components.airlino.media_player.async_setup_entry",
-            new=platform_setup,
-        ),
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-
-    platform_setup.assert_awaited_once()
-    assert (
-        entity_registry.async_get_entity_id("media_player", DOMAIN, entry.unique_id)
-        is not None
-    )
-
-
-async def test_availability_requires_online_and_coordinator_available(
-    make_player: PlayerFactory,
-) -> None:
-    """Require both the device and coordinator to report availability."""
-    player, _, coordinator, _ = make_player({"online": False})
-    coordinator.last_update_success = True
-    assert player.available is False
-
-    coordinator.data["online"] = True
-    coordinator.last_update_success = False
-    assert player.available is False
-
-
-async def test_missing_volume_returns_none(make_player: PlayerFactory) -> None:
-    """Return no volume when the coordinator has not reported it."""
-    player, _, _, _ = make_player({"volume": None})
-
-    assert player.volume_level is None
+    entity_entry = entity_registry.async_get("media_player.living_room")
+    assert entity_entry is not None
+    assert entity_entry.unique_id == mock_config_entry.unique_id
+    device = device_registry.async_get(entity_entry.device_id)
+    assert device is not None
+    assert device.name == "Living room"
+    assert device.manufacturer == "LinTech GmbH"
+    assert device.model == "AirLino"
+    assert device.sw_version == "6.4.1"
 
 
 async def test_state_volume_and_metadata(make_player: PlayerFactory) -> None:
@@ -244,18 +208,15 @@ async def test_device_info_uses_entry_title_when_name_missing(
     assert device_info["model"] == "AirLino"
 
 
-async def test_media_position_updated_at_only_accepts_datetime(
+async def test_media_position_updated_at_uses_last_update_time(
     make_player: PlayerFactory,
 ) -> None:
-    """Expose the update timestamp only when it is a datetime."""
+    """Expose the time of the last successful update as position timestamp."""
     player, _, coordinator, _ = make_player()
     timestamp = dt_util.utcnow()
-    coordinator.data["updated_at"] = timestamp
+    coordinator.last_update_success_time = timestamp
 
     assert player.media_position_updated_at == timestamp
-
-    coordinator.data["updated_at"] = "invalid"
-    assert player.media_position_updated_at is None
 
 
 async def test_play_media_resolves_media_source_and_normalizes_url(
@@ -397,7 +358,7 @@ async def test_play_and_pause_are_noops_when_already_in_requested_state(
     api.async_play.assert_not_awaited()
     coordinator.async_request_refresh.assert_not_awaited()
 
-    player.coordinator.data["player"]["state"] = PLAYER_STATE_PAUSED
+    player.coordinator.data.player["state"] = PLAYER_STATE_PAUSED
     await player.async_media_pause()
     api.async_playpause.assert_not_awaited()
     coordinator.async_request_refresh.assert_not_awaited()

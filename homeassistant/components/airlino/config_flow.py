@@ -10,57 +10,52 @@ from airlino_api import (
     AirlinoApiConnectionError,
     AirlinoApiError,
 )
-from probatio import Optional, Port, Schema
+from awesomeversion import AwesomeVersion
+import probatio
 
-from homeassistant import config_entries
-from homeassistant.config_entries import ConfigFlowResult
-from homeassistant.const import CONF_HOST
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_API_VERSION, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import (
-    CONF_SETUP_VERIFIED,
-    DOMAIN,
-    MIN_API_VERSION,
-    VALID_MODELS,
-    api_version_number,
-    is_supported_api_version,
-)
+from .const import DOMAIN, MIN_API_VERSION
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        "host": str,
-        Optional("port", default=DEFAULT_PORT): Port(),
+        probatio.Required(CONF_HOST): str,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
     }
 )
+
+
+def _is_supported_api_version(api_version: str) -> bool:
+    """Return whether the API version is supported by the integration."""
+    version = AwesomeVersion(api_version)
+    return version.valid and version >= MIN_API_VERSION
 
 
 async def validate_input(
     hass: HomeAssistant, data: dict, api_version: str | None = None
 ) -> dict:
     """Validate the user input allows us to connect."""
-    session = async_get_clientsession(hass)
     if api_version is None:
-        latest_version = api_version_number(DEFAULT_API_VERSION)
-        minimum_version = api_version_number(MIN_API_VERSION)
-        if latest_version is None or minimum_version is None:
-            raise UnsupportedApiVersion
-        versions = [
-            f"v{version}" for version in range(latest_version, minimum_version - 1, -1)
-        ]
-    else:
+        latest = int(DEFAULT_API_VERSION.removeprefix("v"))
+        minimum = int(MIN_API_VERSION.removeprefix("v"))
+        versions = [f"v{version}" for version in range(latest, minimum - 1, -1)]
+    elif _is_supported_api_version(api_version):
         versions = [api_version]
+    else:
+        raise UnsupportedApiVersion
 
+    session = async_get_clientsession(hass)
     for version in versions:
-        if not is_supported_api_version(version):
-            raise UnsupportedApiVersion
         api = AirlinoApi(
             host=data[CONF_HOST],
-            port=data.get("port", DEFAULT_PORT),
+            port=data[CONF_PORT],
             api_version=version,
             session=session,
         )
@@ -76,46 +71,18 @@ async def validate_input(
         except AirlinoApiConnectionError as err:
             raise CannotConnect from err
 
-        mac = _get_mac(network_info)
-        if not mac:
-            raise CannotIdentify
-
+        # Only the interface of the active connection is reported.
+        interface = network_info.get("eth") or network_info["wlan"]
         return {
             "title": device_info.get("devicename", "AirLino"),
-            "mac": format_mac(mac),
-            "api_version": version,
+            "mac": format_mac(interface["mac"]),
+            CONF_API_VERSION: version,
         }
 
     raise UnsupportedApiVersion
 
 
-def _get_mac(network_info: dict) -> str | None:
-    """Extract a MAC address from the network info (eth preferred, then wlan)."""
-    for iface in ("eth", "wlan"):
-        interface = network_info.get(iface)
-        if interface and interface.get("mac"):
-            return interface["mac"]
-    return None
-
-
-def _txt_str(properties: dict, key: str) -> str | None:
-    """Return a TXT record value as string."""
-    value = properties.get(key)
-    if value is None:
-        return None
-    if isinstance(value, (bytes, bytearray)):
-        return bytes(value).decode("utf-8", "replace")
-    if isinstance(value, list):
-        if not value:
-            return None
-        first = value[0]
-        if isinstance(first, (bytes, bytearray)):
-            return bytes(first).decode("utf-8", "replace")
-        return str(first) if first is not None else None
-    return str(value)
-
-
-class AirlinoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class AirlinoConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for AirLino."""
 
     VERSION = 1
@@ -135,7 +102,7 @@ class AirlinoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 info = await validate_input(self.hass, user_input)
             except UnsupportedApiVersion:
                 errors["base"] = "unsupported_api_version"
-            except CannotConnect, CannotIdentify:
+            except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
@@ -147,9 +114,8 @@ class AirlinoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     title=info["title"],
                     data={
                         CONF_HOST: user_input[CONF_HOST],
-                        "port": user_input.get("port", DEFAULT_PORT),
-                        "api_version": info["api_version"],
-                        CONF_SETUP_VERIFIED: False,
+                        CONF_PORT: user_input[CONF_PORT],
+                        CONF_API_VERSION: info[CONF_API_VERSION],
                     },
                 )
 
@@ -164,17 +130,9 @@ class AirlinoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery of an AirLino device."""
-        model = _txt_str(discovery_info.properties, "model")
-        if model not in VALID_MODELS:
-            _LOGGER.debug(
-                "Ignoring discovered device at %s: unsupported model %r",
-                discovery_info.host,
-                model,
-            )
-            return self.async_abort(reason="not_airlino")
         self._host = discovery_info.host
         self._port = discovery_info.port or DEFAULT_PORT
-        announced_api_version = _txt_str(discovery_info.properties, "api")
+        announced_api_version = discovery_info.properties.get("api")
         self._api_version = announced_api_version or DEFAULT_API_VERSION
         _LOGGER.debug(
             "AirLino discovered via zeroconf: host=%s port=%s api_version=%s",
@@ -186,7 +144,7 @@ class AirlinoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             info = await validate_input(
                 self.hass,
-                {CONF_HOST: self._host, "port": self._port},
+                {CONF_HOST: self._host, CONF_PORT: self._port},
                 api_version=announced_api_version,
             )
         except UnsupportedApiVersion:
@@ -197,7 +155,7 @@ class AirlinoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._api_version,
             )
             return self.async_abort(reason="unsupported_api_version")
-        except (CannotConnect, CannotIdentify) as err:
+        except CannotConnect as err:
             _LOGGER.debug(
                 "Could not connect to or identify discovered AirLino at %s:%s: %r",
                 self._host,
@@ -210,13 +168,13 @@ class AirlinoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception during discovery")
             return self.async_abort(reason="unknown")
 
-        self._api_version = info["api_version"]
+        self._api_version = info[CONF_API_VERSION]
         await self.async_set_unique_id(info["mac"])
         self._abort_if_unique_id_configured(
             updates={
                 CONF_HOST: self._host,
-                "port": self._port,
-                "api_version": self._api_version,
+                CONF_PORT: self._port,
+                CONF_API_VERSION: self._api_version,
             }
         )
 
@@ -232,9 +190,8 @@ class AirlinoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 title=self.context["title_placeholders"]["name"],
                 data={
                     CONF_HOST: self._host,
-                    "port": self._port,
-                    "api_version": self._api_version,
-                    CONF_SETUP_VERIFIED: False,
+                    CONF_PORT: self._port,
+                    CONF_API_VERSION: self._api_version,
                 },
             )
 
@@ -250,7 +207,3 @@ class UnsupportedApiVersion(Exception):
 
 class CannotConnect(Exception):
     """Raised when the device cannot be reached."""
-
-
-class CannotIdentify(Exception):
-    """Raised when the device could not be identified."""

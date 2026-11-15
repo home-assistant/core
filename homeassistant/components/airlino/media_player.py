@@ -65,6 +65,7 @@ class AirlinoMediaPlayer(
     """Representation of an AirLino media player."""
 
     _attr_has_entity_name = True
+    _attr_name = None
     _attr_supported_features = (
         MediaPlayerEntityFeature.PLAY
         | MediaPlayerEntityFeature.PAUSE
@@ -86,27 +87,10 @@ class AirlinoMediaPlayer(
         super().__init__(coordinator)
         assert entry.unique_id is not None
         self._attr_unique_id = entry.unique_id
-        self._device_name = entry.title
-        self._attr_name = None
-
-    @override
-    @property
-    def available(self) -> bool:
-        """Return if the device is available.
-
-        The device cannot be turned on remotely, so when it is unreachable (e.g. in standby) it is shown as unavailable.
-        """
-        return super().available and self.coordinator.data.get("online", False)
-
-    @override
-    @property
-    def device_info(self) -> DeviceInfo | None:
-        """Return device info for the device registry."""
-        assert self._attr_unique_id is not None
-        device = self.coordinator.data.get("device") or {}
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._attr_unique_id)},
-            name=device.get("devicename") or self._device_name,
+        device = coordinator.device_info
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, entry.unique_id)},
+            name=device.get("devicename") or entry.title,
             manufacturer="LinTech GmbH",
             model=device.get("model"),
             sw_version=device.get("firmware"),
@@ -116,33 +100,27 @@ class AirlinoMediaPlayer(
     @property
     def state(self) -> MediaPlayerState | None:
         """Return the current playback state."""
-        player = self.coordinator.data.get("player", {})
+        player = self.coordinator.data.player
         return STATE_MAP.get(player.get("state"))
 
     @override
     @property
     def volume_level(self) -> float | None:
         """Return the volume level (0.0 - 1.0)."""
-        volume = self.coordinator.data.get("volume")
-        if volume is None:
-            return None
-        return volume / VOLUME_MAX
+        return self.coordinator.data.volume / VOLUME_MAX
 
     @override
     @property
     def media_content_type(self) -> MediaType | None:
         """Content type of current playing media."""
-        status = self.coordinator.data.get("player", {}).get("status") or {}
-        source = status.get("source")
-        if not isinstance(source, str):
-            return None
-        return SOURCE_TO_MEDIA_TYPE.get(source)
+        status = self.coordinator.data.player.get("status") or {}
+        return SOURCE_TO_MEDIA_TYPE.get(status.get("source", ""))
 
     @override
     @property
     def media_title(self) -> str | None:
         """Return the title of the current media."""
-        status = self.coordinator.data.get("player", {}).get("status") or {}
+        status = self.coordinator.data.player.get("status") or {}
         station = status.get("station") or {}
         meta = station.get("meta") or {}
         if meta.get("now_playing"):
@@ -162,7 +140,7 @@ class AirlinoMediaPlayer(
     @property
     def media_image_url(self) -> str | None:
         """Return the image URL of the current media."""
-        status = self.coordinator.data.get("player", {}).get("status") or {}
+        status = self.coordinator.data.player.get("status") or {}
         station = status.get("station") or {}
         track = status.get("track") or {}
         return station.get("image") or track.get("image")
@@ -171,7 +149,7 @@ class AirlinoMediaPlayer(
     @property
     def media_duration(self) -> int | None:
         """Return the duration of the current track in seconds."""
-        status = self.coordinator.data.get("player", {}).get("status") or {}
+        status = self.coordinator.data.player.get("status") or {}
         track = status.get("track") or {}
         return track.get("totaltime")
 
@@ -179,17 +157,14 @@ class AirlinoMediaPlayer(
     @property
     def media_position(self) -> int | None:
         """Return the elapsed playback time in seconds."""
-        status = self.coordinator.data.get("player", {}).get("status") or {}
+        status = self.coordinator.data.player.get("status") or {}
         return status.get("elapsedtime")
 
     @override
     @property
     def media_position_updated_at(self) -> datetime | None:
         """When the media position was last updated."""
-        updated_at = self.coordinator.data.get("updated_at")
-        if isinstance(updated_at, datetime):
-            return updated_at
-        return None
+        return self.coordinator.last_update_success_time
 
     async def _async_call(
         self, action: Callable[..., Awaitable[Any]], *args: Any
@@ -211,7 +186,6 @@ class AirlinoMediaPlayer(
         media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Browse Home Assistant media sources."""
-        del media_content_type
         return await media_source.async_browse_media(
             self.hass,
             media_content_id,
