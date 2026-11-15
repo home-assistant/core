@@ -4,14 +4,15 @@ from typing import Final
 
 from habluetooth import BluetoothServiceInfoBleak
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import (
+    inject_bluetooth_service_info_bleak,
+)
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from .conftest import mock_config, mock_devinfo_min, mock_exception, mock_update_min
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import inject_bluetooth_service_info_bleak
 
 
 @pytest.mark.usefixtures("enable_bluetooth", "patch_default_bleak_client")

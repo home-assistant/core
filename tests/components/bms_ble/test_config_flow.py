@@ -1,12 +1,19 @@
 """Test the BLE Battery Management System integration config flow."""
 
+# pylint: disable=no-name-in-module
+
 from typing import Final
 
 from aiobmsble.test_data import bms_advertisements
 from bleak.backends.scanner import AdvertisementData
 from home_assistant_bluetooth import BluetoothServiceInfoBleak
+from probatio import Schema
 import pytest
-from voluptuous import Schema
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import (
+    generate_ble_device,
+    inject_bluetooth_service_info_bleak,
+)
 
 from homeassistant.components.bms_ble.const import (
     BINARY_SENSORS,
@@ -27,12 +34,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import mock_config, mock_devinfo_min, mock_update_full, mock_update_min
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import (
-    generate_ble_device,
-    inject_bluetooth_service_info_bleak,
-)
 
 
 @pytest.fixture(
@@ -125,6 +126,7 @@ async def test_bluetooth_discovery(
 async def test_device_setup(
     monkeypatch: pytest.MonkeyPatch,
     bt_discovery: BluetoothServiceInfoBleak,
+    entity_registry: er.EntityRegistry,
     hass: HomeAssistant,
     sensor_set: str,
     sensor_count: tuple[int, int, int],
@@ -163,7 +165,7 @@ async def test_device_setup(
     assert result_detail is not None
     assert result_detail.unique_id == "cc:cc:cc:cc:cc:cc"
 
-    entities: er.EntityRegistryItems = er.async_get(hass).entities
+    entities: er.EntityRegistryItems = entity_registry.entities
     # check number of sensors minus the ones disabled by default
     assert len(hass.states.async_all(["binary_sensor"])) == sensor_count[0]
     assert len(hass.states.async_all(["sensor"])) == sensor_count[1]
@@ -204,7 +206,10 @@ async def test_already_configured(hass: HomeAssistant) -> None:
     result: ConfigFlowResult = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             CONF_ADDRESS: "cc:cc:cc:cc:cc:cc",
             "type": "aiobmsble.bms.dummy_bms",
         },

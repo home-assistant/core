@@ -2,12 +2,18 @@
 
 from collections.abc import Awaitable, Callable
 import contextlib
+from datetime import timedelta
 from typing import Final
 
 from aiobmsble import BMSSample
 from bleak.exc import BleakError
+from freezegun.api import FrozenDateTimeFactory
 from habluetooth import BluetoothServiceInfoBleak
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.components.bluetooth import (
+    inject_bluetooth_service_info_bleak,
+)
 
 from homeassistant.components.bms_ble.const import (
     ATTR_CURRENT,
@@ -16,6 +22,7 @@ from homeassistant.components.bms_ble.const import (
     ATTR_CYCLES,
     ATTR_POWER,
     ATTR_PROBLEM,
+    UPDATE_INTERVAL,
 )
 from homeassistant.components.bms_ble.coordinator import BTBmsCoordinator
 from homeassistant.const import ATTR_BATTERY_CHARGING, ATTR_VOLTAGE
@@ -24,7 +31,19 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .conftest import MockBMS, mock_config
 
-from tests.components.bluetooth import inject_bluetooth_service_info_bleak
+
+def _schedule_updates(coordinator: BTBmsCoordinator) -> None:
+    """Start periodic coordinator updates."""
+    coordinator.async_add_listener(lambda: None)
+
+
+async def _async_fire_update(
+    freezer: FrozenDateTimeFactory, hass: HomeAssistant
+) -> None:
+    """Advance time until the next coordinator update is due."""
+    freezer.tick(timedelta(seconds=UPDATE_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
 
 @pytest.mark.usefixtures("enable_bluetooth", "patch_default_bleak_client")
@@ -32,6 +51,7 @@ async def test_update(
     monkeypatch: pytest.MonkeyPatch,
     bool_fixture: bool,
     bt_discovery: BluetoothServiceInfoBleak,
+    freezer: FrozenDateTimeFactory,
     hass: HomeAssistant,
 ) -> None:
     """Test setting up creates the sensors."""
@@ -52,10 +72,12 @@ async def test_update(
     coordinator = BTBmsCoordinator(
         hass, bt_discovery.device, MockBMS(), mock_config(bms="update")
     )
+    _schedule_updates(coordinator)
 
     inject_bluetooth_service_info_bleak(hass, bt_discovery)
+    assert coordinator.rssi == (-61 if advertisement_avail else None)
 
-    await coordinator.async_refresh()
+    await _async_fire_update(freezer, hass)
     result: BMSSample = coordinator.data
     assert coordinator.last_update_success
 
@@ -69,16 +91,16 @@ async def test_update(
         ATTR_PROBLEM: False,
         ATTR_BATTERY_CHARGING: True,
     }
-    assert coordinator.rssi == (-61 if advertisement_avail else None)
     assert coordinator.link_quality == 50
 
     # second update (modify rssi, and check link quality again)
     bt_discovery.rssi = -85
     inject_bluetooth_service_info_bleak(hass, bt_discovery)
-    await coordinator.async_refresh()
+    assert coordinator.rssi == (-85 if advertisement_avail else None)
+
+    await _async_fire_update(freezer, hass)
     result = coordinator.data
 
-    assert coordinator.rssi == (-85 if advertisement_avail else None)
     assert coordinator.link_quality == 66
 
     await coordinator.async_shutdown()
@@ -86,24 +108,27 @@ async def test_update(
 
 @pytest.mark.usefixtures("enable_bluetooth", "patch_default_bleak_client")
 async def test_nodata(
-    bt_discovery: BluetoothServiceInfoBleak, hass: HomeAssistant
+    bt_discovery: BluetoothServiceInfoBleak,
+    freezer: FrozenDateTimeFactory,
+    hass: HomeAssistant,
 ) -> None:
     """Test if coordinator raises exception in case no data, e.g. invalid CRC, is returned."""
 
     coordinator = BTBmsCoordinator(
         hass, bt_discovery.device, MockBMS(ret_value={}), mock_config(bms="nodata")
     )
+    _schedule_updates(coordinator)
 
     inject_bluetooth_service_info_bleak(hass, bt_discovery)
+    assert coordinator.rssi == -61
 
-    await coordinator.async_refresh()
+    await _async_fire_update(freezer, hass)
     result: BMSSample = coordinator.data
     assert not coordinator.last_update_success
 
     await coordinator.async_shutdown()
 
     assert result is None
-    assert coordinator.rssi == -61
     assert coordinator.link_quality == 0
 
 
@@ -113,6 +138,7 @@ async def test_nodata(
 )
 async def test_update_exception(
     bt_discovery: BluetoothServiceInfoBleak,
+    freezer: FrozenDateTimeFactory,
     mock_coordinator_exception: Exception,
     hass: HomeAssistant,
 ) -> None:
@@ -124,16 +150,19 @@ async def test_update_exception(
         MockBMS(mock_coordinator_exception),
         mock_config(bms="update_exception"),
     )
+    _schedule_updates(coordinator)
 
-    await coordinator.async_refresh()
+    await _async_fire_update(freezer, hass)
     assert not coordinator.last_update_success
     assert isinstance(coordinator.last_exception, UpdateFailed)
+    await coordinator.async_shutdown()
 
 
 @pytest.mark.usefixtures("enable_bluetooth", "patch_default_bleak_client")
 async def test_stale_recovery(
     monkeypatch: pytest.MonkeyPatch,
     bt_discovery: BluetoothServiceInfoBleak,
+    freezer: FrozenDateTimeFactory,
     hass: HomeAssistant,
 ) -> None:
     """Test if coordinator triggers reconnect after 10 consecutive update fails and LQ < 10%."""
@@ -159,11 +188,12 @@ async def test_stale_recovery(
         bms_nodata,
         mock_config(bms="stale_recovery"),
     )
+    _schedule_updates(coordinator)
 
     # run 8 times failed update from beginning (1 failed is init value!)
     for _ in range(8):
         with contextlib.suppress(UpdateFailed):
-            await coordinator.async_refresh()
+            await _async_fire_update(freezer, hass)
         assert not coordinator.last_update_success
     assert coordinator.link_quality == 0
     assert not flags["disconnect_called"]  # should trigger tenth time, so not now
@@ -173,7 +203,7 @@ async def test_stale_recovery(
     monkeypatch.setattr(
         coordinator, "_device", bms_data
     )  # overwrite 'Final' annotation to control the BMS output.
-    await coordinator.async_refresh()
+    await _async_fire_update(freezer, hass)
     assert coordinator.last_update_success
     assert coordinator.link_quality == 10
     assert not flags["disconnect_called"]
@@ -184,14 +214,15 @@ async def test_stale_recovery(
     )  # overwrite 'Final' annotation to control the BMS output.
     for _ in range(10):
         with contextlib.suppress(UpdateFailed):
-            await coordinator.async_refresh()
+            await _async_fire_update(freezer, hass)
         assert not coordinator.last_update_success
         assert not flags["disconnect_called"]
     assert coordinator.link_quality == 5
 
     # since 10 consecutive updates failed and link quality is below 10%, reconnect shall trigger
-    await coordinator.async_refresh()
+    await _async_fire_update(freezer, hass)
     assert not coordinator.last_update_success
     assert coordinator.link_quality == 4
     assert flags["disconnect_called"]
     assert flags["reset"] is True, "Reset flag should be set on stale recovery"
+    await coordinator.async_shutdown()

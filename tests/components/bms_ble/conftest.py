@@ -16,11 +16,13 @@ from bleak.exc import BleakError
 from bleak.uuids import normalize_uuid_str
 from home_assistant_bluetooth import SOURCE_LOCAL, BluetoothServiceInfoBleak
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import (
+    generate_advertisement_data,
+    generate_ble_device,
+)
 
 from homeassistant.components.bms_ble.const import DOMAIN
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
 
@@ -216,7 +218,7 @@ class MockBleakClient(BleakClient):
         )  # call with address to avoid backend resolving
         self._connected: bool = False
         self._notify_callback: (
-            Callable[[BleakGATTCharacteristic, bytearray], None | Awaitable[None]]
+            Callable[[BleakGATTCharacteristic, bytearray], Awaitable[None] | None]
             | None
         ) = None
         self._disconnect_callback: Callable[[BleakClient], None] | None = (
@@ -250,7 +252,7 @@ class MockBleakClient(BleakClient):
         self,
         char_specifier: BleakGATTCharacteristic | int | str | UUID,
         callback: Callable[
-            [BleakGATTCharacteristic, bytearray], None | Awaitable[None]
+            [BleakGATTCharacteristic, bytearray], Awaitable[None] | None
         ],
         **kwargs,
     ) -> None:

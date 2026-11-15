@@ -6,6 +6,10 @@ from typing import Final
 from aiobmsble import BMSSample
 from habluetooth import BluetoothServiceInfoBleak
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.components.bluetooth import (
+    inject_bluetooth_service_info_bleak,
+)
 
 from homeassistant.components.bms_ble.const import (
     ATTR_BALANCE_CUR,
@@ -28,9 +32,6 @@ from homeassistant.helpers.entity_component import async_update_entity
 import homeassistant.util.dt as dt_util
 
 from .conftest import mock_config, mock_devinfo_min
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.bluetooth import inject_bluetooth_service_info_bleak
 
 DEV_NAME: Final[str] = "sensor.config_test_dummy_bms"
 

@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Any, Final, override
 
 from aiobmsble.utils import bms_identify
-import voluptuous as vol
+import probatio
 
 from homeassistant import config_entries
 from homeassistant.components.bluetooth import (
@@ -12,7 +12,7 @@ from homeassistant.components.bluetooth import (
     async_discovered_service_info,
 )
 from homeassistant.config_entries import ConfigFlowResult
-from homeassistant.const import CONF_ADDRESS, CONF_ID, CONF_MODEL, CONF_NAME
+from homeassistant.const import CONF_ADDRESS
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import (
     SelectOptionDict,
@@ -83,9 +83,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             discovery_info.name, discovery_info, bms_module
         )
         self.context["title_placeholders"] = {
-            CONF_NAME: self._disc_dev.name,
-            CONF_ID: address[-9:],  # remove OUI
-            CONF_MODEL: self._disc_dev.model(),
+            "name": self._disc_dev.name,
+            "id": address[-9:],  # remove OUI
+            "model": self._disc_dev.model(),
         }
         return await self.async_step_bluetooth_confirm()
 
@@ -158,9 +158,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_ADDRESS): SelectSelector(
+                    probatio.Required(CONF_ADDRESS): SelectSelector(
                         SelectSelectorConfig(options=devices),
                     )
                 }
