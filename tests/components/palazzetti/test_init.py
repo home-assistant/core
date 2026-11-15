@@ -10,6 +10,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.palazzetti.const import SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -62,8 +63,34 @@ async def test_setup_entry_failure(
     mock_palazzetti_client: AsyncMock,
     exception: type[Exception],
 ) -> None:
-    """Test setup entry failure when coordinator _async_setup fails."""
+    """Test setup entry failure when coordinator raises an exception."""
     mock_palazzetti_client.connect.side_effect = exception
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_entry_connect_false(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_palazzetti_client: AsyncMock,
+) -> None:
+    """Test setup entry failure when connect returns False."""
+    mock_palazzetti_client.connect.return_value = False
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_entry_update_false(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_palazzetti_client: AsyncMock,
+) -> None:
+    """Test setup entry failure when update_state returns False."""
+    mock_palazzetti_client.update_state.return_value = False
 
     await setup_integration(hass, mock_config_entry)
 
@@ -84,14 +111,31 @@ async def test_update_failure(
     freezer: FrozenDateTimeFactory,
     exception: type[Exception],
 ) -> None:
-    """Test coordinator update failure."""
+    """Test coordinator update failure on exception."""
     await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     mock_palazzetti_client.update_state.side_effect = exception
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-    coordinator = mock_config_entry.runtime_data
-    assert not coordinator.last_update_success
+    assert hass.states.get("climate.stove").state == STATE_UNAVAILABLE
+
+
+async def test_update_state_false(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_palazzetti_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test coordinator update failure when update_state returns False."""
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    mock_palazzetti_client.update_state.return_value = False
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get("climate.stove").state == STATE_UNAVAILABLE
