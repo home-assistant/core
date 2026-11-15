@@ -1,7 +1,7 @@
 """Tests for the EPH Controls Ember climate platform."""
 
 from datetime import timedelta
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pyephember2.pyephember2 import EphEmberError, ZoneMode
@@ -26,6 +26,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
@@ -203,3 +204,61 @@ async def test_yaml_import_keeps_existing_entities(
     entity = entity_registry.async_get("climate.my_radiators")
     assert entity.config_entry_id == entry.entry_id
     assert hass.states.get("climate.my_radiators").state == HVACMode.HEAT
+
+
+@pytest.mark.usefixtures("mock_ember")
+async def test_yaml_import_already_in_progress(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test a second YAML entry for an account being imported isn't an error."""
+    with patch.object(
+        hass.config_entries.flow,
+        "async_init",
+        return_value={"type": FlowResultType.ABORT, "reason": "already_in_progress"},
+    ):
+        assert await async_setup_component(hass, CLIMATE_DOMAIN, YAML_CONFIG)
+        await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
+    assert not [
+        issue
+        for (domain, _), issue in issue_registry.issues.items()
+        if domain == DOMAIN
+    ]
+
+
+@pytest.mark.parametrize("failing_first", [True, False])
+async def test_yaml_import_one_account_fails(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_ember: MagicMock,
+    failing_first: bool,
+) -> None:
+    """Test users aren't told to remove YAML that still needs to be imported."""
+    good = {"platform": DOMAIN, "username": MOCK_USERNAME, "password": MOCK_PASSWORD}
+    bad = {"platform": DOMAIN, "username": "other@example.com", "password": "wrong"}
+
+    def login(username: str, password: str) -> MagicMock:
+        if username == bad["username"]:
+            raise RuntimeError("Unable to login.")
+        return mock_ember
+
+    with patch(
+        "homeassistant.components.ephember.config_flow.EphEmber", side_effect=login
+    ):
+        assert await async_setup_component(
+            hass,
+            CLIMATE_DOMAIN,
+            {CLIMATE_DOMAIN: [bad, good] if failing_first else [good, bad]},
+        )
+        await hass.async_block_till_done()
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert issue_registry.async_get_issue(
+        DOMAIN, "deprecated_yaml_import_issue_invalid_auth"
+    )
+    assert not issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )

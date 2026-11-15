@@ -32,7 +32,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -47,6 +47,10 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 INTEGRATION_TITLE = "EPH Controls"
+
+# Import aborts that leave an account's YAML needed to retry the import
+IMPORT_FAILURES = ("cannot_connect", "invalid_auth", "unknown")
+DEPRECATED_YAML_ISSUE = f"deprecated_yaml_{DOMAIN}"
 
 # Return cached results if last scan was less then this time ago
 SCAN_INTERVAL = timedelta(seconds=120)
@@ -94,10 +98,13 @@ async def async_setup_platform(
         },
     )
 
+    issue_registry = ir.async_get(hass)
     if (
         result["type"] is FlowResultType.ABORT
-        and (reason := result["reason"]) != "already_configured"
+        and (reason := result["reason"]) in IMPORT_FAILURES
     ):
+        # This account's YAML is still needed, so don't ask to remove it
+        ir.async_delete_issue(hass, HOMEASSISTANT_DOMAIN, DEPRECATED_YAML_ISSUE)
         async_create_issue(
             hass,
             DOMAIN,
@@ -114,10 +121,20 @@ async def async_setup_platform(
         )
         return
 
+    # Imported, already configured or being imported. With several accounts
+    # in YAML, wait until none of them failed to import.
+    if any(
+        issue_registry.async_get_issue(
+            DOMAIN, f"deprecated_yaml_import_issue_{failure}"
+        )
+        for failure in IMPORT_FAILURES
+    ):
+        return
+
     async_create_issue(
         hass,
         HOMEASSISTANT_DOMAIN,
-        f"deprecated_yaml_{DOMAIN}",
+        DEPRECATED_YAML_ISSUE,
         breaks_in_ha_version="2027.7.0",
         is_fixable=False,
         issue_domain=DOMAIN,
