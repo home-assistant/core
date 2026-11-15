@@ -31,7 +31,9 @@ rules:
   entity-unique-id:
     status: todo
     comment: The config entry device tracker entities have unique IDs, but the legacy YAML device tracker, sensor and switch platforms do not. This will be addressed in a future PR.
-  has-entity-name: done
+  has-entity-name:
+    status: todo
+    comment: The config entry device trackers use entity names, but the YAML switch platform does not. This will be addressed when that platform is migrated.
   runtime-data: done
   test-before-configure: done
   test-before-setup:
@@ -81,8 +83,8 @@ rules:
   reconfiguration-flow: done
   repair-issues: done
   stale-devices:
-    status: done
-    comment: A device is removed when its last tracker goes away.
+    status: todo
+    comment: Devices absent from a table are retained. Support for removing individual stale devices manually has not yet been implemented.
 
   # Platinum
   async-dependency: todo

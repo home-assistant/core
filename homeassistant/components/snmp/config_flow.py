@@ -139,7 +139,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     try:
         target = await async_create_transport_target(host, port, DEFAULT_TIMEOUT)
     except PySnmpError as err:
-        _LOGGER.warning("SNMP target creation failed: %s", err)
+        _LOGGER.debug("SNMP target creation failed: %s", err)
         raise CannotConnect from err
 
     try:

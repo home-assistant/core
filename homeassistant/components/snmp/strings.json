@@ -93,7 +93,7 @@
       },
       "step": {
         "confirm": {
-          "description": "The new table does not hold {count} of the tracked devices. Their entities are removed when you continue, and a device which is only away comes back as a disabled entity when it reappears in the table.",
+          "description": "The new table does not hold {count} of the tracked devices. Their entities are removed when you continue. If a device reappears in the table, its entity is recreated with its previous enabled or disabled setting.",
           "title": "Change the tracked table"
         },
         "reconfigure": {
@@ -119,7 +119,7 @@
   },
   "issues": {
     "deprecated_yaml_device_tracker": {
-      "description": "The {integration_title} device tracker configured through YAML is deprecated and will be removed in Home Assistant Core 2027.5. To move it to the user interface:\n\n1. Remove the `snmp` device tracker from your `configuration.yaml`.\n2. Remove the devices tracked by SNMP from `known_devices.yaml`. They have `track: true`; match them on their `mac` field, because their keys are device IDs.\n3. Restart Home Assistant.\n4. Add the SNMP integration and enter the Base OID of the table which lists the connected devices. The device trackers it creates are disabled until you enable them.",
+      "description": "The {integration_title} device tracker configured through YAML is deprecated and will be removed in Home Assistant Core 2027.5. To move it to the user interface:\n\n1. Remove the `snmp` device tracker from your `configuration.yaml`.\n2. Remove the devices tracked by SNMP from `known_devices.yaml`. They have `track: true`; match them on their `mac` field, because their keys are device IDs.\n3. Restart Home Assistant.\n4. Add the SNMP integration and enter the Base OID of the table which lists the connected devices. The device trackers it creates are disabled until you enable them.\n5. The new device trackers get different entity IDs. Rename them to the IDs your automations, scripts and dashboards already use, or update those to the new IDs.",
       "title": "The {integration_title} device tracker YAML configuration is being removed"
     }
   },
