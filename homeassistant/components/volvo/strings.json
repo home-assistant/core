@@ -375,6 +375,22 @@
       "message": "Unable to update data."
     }
   },
+  "issues": {
+    "volvoid_migration": {
+      "fix_flow": {
+        "error": {
+          "no_new_credential": "No new Volvo application credentials found. Add the credentials of your new Volvo API application, with a client ID starting with `vid-dc-`, first."
+        },
+        "step": {
+          "confirm": {
+            "description": "Volvo is migrating to a new Volvo ID system. Your current Volvo API application stops working after 31 January 2027.\n\n1. On the [Volvo developer portal]({volvo_dev_portal}), create a new API application and select all scopes. Its client ID starts with `vid-dc-`.\n2. In Home Assistant, go to **Settings** > **Devices & services** > **Application credentials** and add the client ID and secret of the new application for Volvo.\n3. Select **Submit** to start re-authentication. Choose the new credentials, sign in, and check **Remember me** (if possible).\n4. Enter the VCC API key of the new application.\n5. Delete the old application on the Volvo developer portal and the old application credentials in Home Assistant.",
+            "title": "Migrate {name} to the new Volvo ID"
+          }
+        }
+      },
+      "title": "Volvo ID migration required for {name}"
+    }
+  },
   "selector": {
     "service_param_image": {
       "options": {

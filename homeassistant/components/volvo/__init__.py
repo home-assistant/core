@@ -3,18 +3,21 @@
 import asyncio
 
 from volvocarsapi.api import VolvoCarsApi
+from volvocarsapi.auth import VOLVOID_MIGRATION_URL, is_legacy_client
 from volvocarsapi.models import VolvoApiException, VolvoAuthException, VolvoCarsVehicle
 
 from homeassistant.const import CONF_API_KEY
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryError,
     ConfigEntryNotReady,
 )
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
+    AbstractOAuth2Implementation,
+    LocalOAuth2Implementation,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
@@ -83,10 +86,17 @@ async def async_unload_entry(hass: HomeAssistant, entry: VolvoConfigEntry) -> No
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
+async def async_remove_entry(hass: HomeAssistant, entry: VolvoConfigEntry) -> None:
+    """Remove a config entry."""
+    ir.async_delete_issue(hass, DOMAIN, _volvoid_migration_issue_id(entry))
+
+
 async def _async_auth_and_create_api(
     hass: HomeAssistant, entry: VolvoConfigEntry
 ) -> VolvoCarsApi:
     implementation = await async_get_config_entry_implementation(hass, entry)
+    _async_check_volvoid_migration(hass, entry, implementation)
+
     oauth_session = OAuth2Session(hass, entry, implementation)
     web_session = async_get_clientsession(hass)
     auth = VolvoAuth(web_session, oauth_session)
@@ -140,3 +150,34 @@ async def _async_load_supported_commands(api: VolvoCarsApi) -> list[str]:
         ) from ex
 
     return [c.command for c in commands if c is not None]
+
+
+def _volvoid_migration_issue_id(entry: VolvoConfigEntry) -> str:
+    return f"volvoid_migration_{entry.entry_id}"
+
+
+@callback
+def _async_check_volvoid_migration(
+    hass: HomeAssistant,
+    entry: VolvoConfigEntry,
+    implementation: AbstractOAuth2Implementation,
+) -> None:
+    issue_id = _volvoid_migration_issue_id(entry)
+
+    if isinstance(implementation, LocalOAuth2Implementation) and is_legacy_client(
+        implementation.client_id
+    ):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            issue_id,
+            is_fixable=True,
+            is_persistent=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="volvoid_migration",
+            translation_placeholders={"name": entry.title},
+            learn_more_url=VOLVOID_MIGRATION_URL,
+            data={"entry_id": entry.entry_id},
+        )
+    else:
+        ir.async_delete_issue(hass, DOMAIN, issue_id)

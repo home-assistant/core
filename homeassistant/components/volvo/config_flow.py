@@ -30,7 +30,7 @@ from homeassistant.helpers.selector import (
 )
 
 from .api import ConfigFlowVolvoAuth
-from .const import CONF_VIN, DOMAIN, MANUFACTURER
+from .const import CONF_VIN, DOMAIN, MANUFACTURER, VOLVO_DEV_PORTAL_URL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -171,9 +171,7 @@ class VolvoOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
             step_id="api_key",
             data_schema=schema,
             errors=errors,
-            description_placeholders={
-                "volvo_dev_portal": "https://developer.volvocars.com/account/#your-api-applications"
-            },
+            description_placeholders={"volvo_dev_portal": VOLVO_DEV_PORTAL_URL},
         )
 
     async def async_step_vin(
