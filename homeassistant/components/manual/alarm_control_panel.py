@@ -228,7 +228,8 @@ async def async_setup_entry(
                 config_entry.entry_id,
                 options.get(CONF_CODE) or None,
                 code_template,
-                options[CONF_CODE_ARM_REQUIRED],
+                options[CONF_CODE_ARM_REQUIRED]
+                and bool(options.get(CONF_CODE) or code_template),
                 options[CONF_DISARM_AFTER_TRIGGER],
                 _state_validator(config),
             )
