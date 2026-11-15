@@ -36,3 +36,22 @@ async def test_pir_sensors_are_polled(
     assert device._requested_state is True
     assert hass.states.get("sensor.mystrom_device_temperature").state == "21.5"
     assert hass.states.get("sensor.mystrom_device_illuminance").state == "42.0"
+
+
+async def test_bulb_power_sensor(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a bulb reports the power it draws."""
+    await init_integration(hass, config_entry, 102)
+
+    assert hass.states.get("sensor.mystrom_device_power").state == "0.45"
+
+    config_entry.runtime_data.device._state["power"] = 5.1
+
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.mystrom_device_power").state == "5.1"
