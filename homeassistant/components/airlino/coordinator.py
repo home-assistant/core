@@ -11,6 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import (
     TimestampDataUpdateCoordinator,
     UpdateFailed,
+    UpdateFailedUnreachable,
 )
 
 from .const import DOMAIN, LOGGER, UPDATE_INTERVAL
@@ -53,7 +54,7 @@ class AirlinoDataUpdateCoordinator(TimestampDataUpdateCoordinator[AirlinoData]):
         try:
             return await request()
         except AirlinoApiConnectionError as err:
-            raise UpdateFailed(
+            raise UpdateFailedUnreachable(
                 translation_domain=DOMAIN, translation_key="cannot_connect"
             ) from err
         except AirlinoApiError as err:
