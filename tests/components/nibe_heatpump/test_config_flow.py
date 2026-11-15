@@ -1,5 +1,7 @@
 """Test the Nibe Heat Pump config flow."""
 
+from http import HTTPStatus
+import re
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -12,11 +14,13 @@ from nibe.exceptions import (
 )
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant import config_entries
 from homeassistant.components.nibe_heatpump import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.setup import async_setup_component
 
 from . import async_add_entry
 
@@ -353,6 +357,27 @@ async def test_options_flow_log_set(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.options.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_options_flow_log_set_link(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
+    """Test the link from an options flow opened by an admin downloads the LOG.SET."""
+    entry = await async_add_entry(hass, MOCK_ENTRY_NIBEGW_DATA)
+    assert await async_setup_component(hass, "config", {})
+
+    resp = await (await hass_client()).post(
+        "/api/config/config_entries/options/flow", json={"handler": entry.entry_id}
+    )
+    assert resp.status == HTTPStatus.OK
+    link = (await resp.json())["description_placeholders"]["link"]
+    url = re.fullmatch(r'<a href="([^"]+)" target="_blank">LOG.SET</a>', link)
+    assert url
+
+    resp = await (await hass_client_no_auth()).get(url[1])
+    assert resp.status == HTTPStatus.OK
 
 
 async def test_options_flow_log_set_unavailable(hass: HomeAssistant) -> None:
