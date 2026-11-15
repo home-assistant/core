@@ -53,6 +53,7 @@ FIXTURES = [
     "haojai_switch",
     "heiman_co_sensor",
     "heiman_motion_sensor_m1",
+    "heiman_motion_sensor_m1_m",
     "heiman_smoke_detector",
     "ikea_air_quality_monitor",
     "ikea_bilresa_dual_button",
