@@ -9,6 +9,6 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["aiovitesy"],
-  "quality_scale": "bronze",
+  "quality_scale": "platinum",
   "requirements": ["aiovitesy==1.4.8"]
 }

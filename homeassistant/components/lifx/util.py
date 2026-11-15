@@ -2,7 +2,7 @@
 
 from ipaddress import ip_address
 import re
-from socket import gethostbyname
+from socket import SOCK_DGRAM
 from typing import TYPE_CHECKING, Any, TypedDict
 
 from lifx import HSBK, Colors, LifxError
@@ -44,8 +44,18 @@ async def async_resolve_host(hass: HomeAssistant, host: str) -> str:
     try:
         ip_address(host)
     except ValueError:
-        return await hass.async_add_executor_job(gethostbyname, host)
-    return host
+        pass
+    else:
+        return host
+    results = await hass.loop.getaddrinfo(host, None, type=SOCK_DGRAM)
+    sockaddr = results[0][4]
+    address = sockaddr[0]
+    if TYPE_CHECKING:
+        assert isinstance(address, str)
+    # The library rejects a link-local address without its interface
+    if len(sockaddr) == 4 and sockaddr[3]:
+        return f"{address}%{sockaddr[3]}"
+    return address
 
 
 @callback

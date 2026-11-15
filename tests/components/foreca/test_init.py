@@ -91,6 +91,17 @@ async def test_documented_forecast_length(
     assert mock_foreca_client.forecast_daily.await_args.kwargs["periods"] == 14
 
 
+async def test_daily_forecast_asks_for_the_ensemble(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_foreca_client: MagicMock,
+) -> None:
+    """Test the daily forecast request asks for the ensemble percentiles."""
+    await init_integration(hass, mock_config_entry)
+
+    assert mock_foreca_client.forecast_daily.await_args.kwargs["ensemble"] is True
+
+
 @pytest.mark.usefixtures("mock_foreca_client")
 async def test_added_location_gets_an_entity(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry

@@ -921,6 +921,7 @@ FLOWS = {
         "vizio",
         "vlc_telnet",
         "vodafone_station",
+        "voice_support",
         "voip",
         "volkszaehler",
         "volumio",

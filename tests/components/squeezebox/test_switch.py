@@ -13,13 +13,8 @@ from pytest_homeassistant.common import (
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.squeezebox.const import DOMAIN, PLAYER_UPDATE_INTERVAL
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import (
-    CONF_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    Platform,
-)
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
 
@@ -120,8 +115,8 @@ async def test_turn_on(
     )
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {CONF_ENTITY_ID: entity_id},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
     mock_alarms_player.async_update_alarm.assert_called_once_with(
@@ -140,8 +135,8 @@ async def test_turn_off(
     )
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {CONF_ENTITY_ID: entity_id},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
     mock_alarms_player.async_update_alarm.assert_called_once_with(
@@ -181,8 +176,8 @@ async def test_alarms_enabled_turn_on(
     )
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {CONF_ENTITY_ID: entity_id},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
     mock_alarms_player.async_set_alarms_enabled.assert_called_once_with(True)
@@ -199,8 +194,8 @@ async def test_alarms_enabled_turn_off(
     )
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {CONF_ENTITY_ID: entity_id},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
     mock_alarms_player.async_set_alarms_enabled.assert_called_once_with(False)

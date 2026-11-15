@@ -1,6 +1,5 @@
 """Tests for the Electra Smart climate entity."""
 
-import logging
 from unittest.mock import AsyncMock, Mock
 
 from electrasmart.api import ElectraApiError
@@ -273,7 +272,6 @@ async def test_unavailable_device_warns_once_and_recovers(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """An offline AC is unavailable, and the warning is logged once per outage."""
-    caplog.set_level(logging.DEBUG)
     warning = (
         "Electra AC climate.living_room (a8032ab12345) is not available,"
         " check its status in the Electra Smart mobile app"

@@ -78,7 +78,7 @@ class ForecaUpdateCoordinator(DataUpdateCoordinator[ForecaWeatherData]):
                 self.location, periods=HOURLY_PERIODS, dataset="full"
             )
             daily = await self.client.forecast_daily(
-                self.location, periods=DAILY_PERIODS, dataset="full"
+                self.location, periods=DAILY_PERIODS, dataset="full", ensemble=True
             )
         except (ForecaAuthError, ForecaProductUnavailableError) as err:
             raise ConfigEntryAuthFailed(

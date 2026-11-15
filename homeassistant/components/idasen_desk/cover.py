@@ -6,7 +6,6 @@ from bleak.exc import BleakError
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
 )
@@ -31,7 +30,6 @@ async def async_setup_entry(
 class IdasenDeskCover(IdasenDeskEntity, CoverEntity):
     """Representation of Idasen Desk device."""
 
-    _attr_device_class = CoverDeviceClass.DAMPER
     _attr_supported_features = (
         CoverEntityFeature.OPEN
         | CoverEntityFeature.CLOSE
