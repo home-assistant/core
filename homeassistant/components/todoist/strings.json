@@ -18,8 +18,20 @@
     }
   },
   "exceptions": {
+    "location_reminder_connection_error": {
+      "message": "Task \"{task}\" was created, but the followup request to add its location reminder could not reach Todoist, so the reminder may not have been added"
+    },
+    "location_reminder_rejected": {
+      "message": "Task \"{task}\" was created, but Todoist rejected the followup request to add its location reminder with HTTP status {status}"
+    },
+    "plan_check_failed": {
+      "message": "Could not check whether your Todoist plan includes reminders, so the task was not created"
+    },
     "project_invalid": {
       "message": "Invalid project name \"{project}\""
+    },
+    "reminders_premium_only": {
+      "message": "Reminders need a Todoist Pro or Business plan, so the task was not created"
     },
     "section_invalid": {
       "message": "Project \"{project}\" has no section \"{section}\""

@@ -7,12 +7,14 @@ import logging
 from typing import Any
 import uuid
 
+from aiohttp import ClientError
+from httpx import HTTPError, HTTPStatusError  # noqa: TID251  # SDK 4.0.1 uses httpx
 import probatio
 
 from homeassistant.components.zone import ATTR_RADIUS, DOMAIN as ZONE_DOMAIN
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import dt as dt_util
@@ -209,6 +211,32 @@ def _get_reminder_location(call: ServiceCall) -> dict[str, Any] | None:
     }
 
 
+async def _async_check_reminders_allowed(
+    hass: HomeAssistant, coordinator: TodoistCoordinator
+) -> None:
+    """Raise if the user's Todoist plan doesn't allow reminders."""
+    # The SDK doesn't expose plan limits, so read them from the Sync API.
+    try:
+        response = await async_get_clientsession(hass).post(
+            SYNC_URL,
+            headers={"Authorization": f"Bearer {coordinator.token}"},
+            json={"sync_token": "*", "resource_types": ["user_plan_limits"]},
+        )
+        response.raise_for_status()
+        plan_limits = await response.json()
+    except (ClientError, TimeoutError) as err:
+        _LOGGER.debug("Could not read the Todoist plan limits: %r", err)
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="plan_check_failed",
+        ) from err
+    if not plan_limits["user_plan_limits"]["current"]["reminders"]:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="reminders_premium_only",
+        )
+
+
 def _async_get_coordinator(hass: HomeAssistant) -> TodoistCoordinator:
     """Return a coordinator to service the request.
 
@@ -311,12 +339,13 @@ async def handle_new_task(call: ServiceCall) -> None:
     # Resolve reminders first so an invalid one doesn't leave a task behind.
     reminder_due = _get_reminder_due(call)
     reminder_location = _get_reminder_location(call)
+    if reminder_location:
+        await _async_check_reminders_allowed(call.hass, coordinator)
 
     api_task = await coordinator.api.add_task(content, **data)
     await coordinator.async_refresh()
 
-    # The REST API doesn't support reminders, so we use the Sync API directly
-    # to maintain functional parity with the component.
+    # Date reminders use the Sync API directly.
     # https://developer.todoist.com/api/v1/#tag/Sync/Reminders/Add-a-reminder
     if reminder_due:
         reminder_data = {
@@ -342,7 +371,36 @@ async def handle_new_task(call: ServiceCall) -> None:
         )
 
     if reminder_location:
-        await coordinator.api.add_location_reminder(api_task.id, **reminder_location)
+        try:
+            await coordinator.api.add_location_reminder(
+                api_task.id, **reminder_location
+            )
+        except HTTPStatusError as err:
+            _LOGGER.debug(
+                'Todoist rejected the location reminder for task "%s" with HTTP %s: %s',
+                content,
+                err.response.status_code,
+                err.response.text,
+            )
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="location_reminder_rejected",
+                translation_placeholders={
+                    "task": content,
+                    "status": str(err.response.status_code),
+                },
+            ) from err
+        except HTTPError as err:
+            _LOGGER.debug(
+                'Could not reach Todoist to add the location reminder for task "%s": %r',
+                content,
+                err,
+            )
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="location_reminder_connection_error",
+                translation_placeholders={"task": content},
+            ) from err
 
     _LOGGER.debug("Created Todoist task: %s", call.data[TodoistServiceArgument.CONTENT])
 
