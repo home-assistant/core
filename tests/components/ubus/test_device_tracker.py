@@ -74,11 +74,21 @@ async def test_only_authorized_clients_are_tracked(
 @pytest.mark.parametrize(
     ("yaml_ssl", "expected"),
     [
-        pytest.param({}, {CONF_SSL: False, CONF_VERIFY_SSL: False}, id="defaults"),
+        pytest.param({}, {CONF_SSL: False, CONF_VERIFY_SSL: True}, id="defaults"),
+        pytest.param(
+            {CONF_SSL: True},
+            {CONF_SSL: True, CONF_VERIFY_SSL: True},
+            id="ssl_verified_by_default",
+        ),
+        pytest.param(
+            {CONF_SSL: True, CONF_VERIFY_SSL: False},
+            {CONF_SSL: True, CONF_VERIFY_SSL: False},
+            id="ssl_unverified",
+        ),
         pytest.param(
             {CONF_SSL: True, CONF_VERIFY_SSL: True},
             {CONF_SSL: True, CONF_VERIFY_SSL: True},
-            id="ssl_options",
+            id="ssl_verified",
         ),
     ],
 )

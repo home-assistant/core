@@ -89,7 +89,7 @@ async def test_ubus_client_defaults_without_ssl_options(
     mock_ubus: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test an entry without the SSL options falls back to unverified HTTP."""
+    """Test an entry without the SSL options defaults to HTTP and verification."""
     data = {**MOCK_CONFIG}
     del data[CONF_SSL]
     del data[CONF_VERIFY_SSL]
@@ -99,7 +99,7 @@ async def test_ubus_client_defaults_without_ssl_options(
     await hass.async_block_till_done()
 
     mock_ubus.assert_called_once_with(
-        f"http://{MOCK_HOST}/ubus", "root", "password", verify=False
+        f"http://{MOCK_HOST}/ubus", "root", "password", verify=True
     )
 
 

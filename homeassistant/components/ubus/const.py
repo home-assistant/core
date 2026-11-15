@@ -7,4 +7,4 @@ DEFAULT_DHCP_SOFTWARE = "dnsmasq"
 DHCP_SOFTWARES = ["dnsmasq", "odhcpd", "none"]
 
 DEFAULT_SSL = False
-DEFAULT_VERIFY_SSL = False
+DEFAULT_VERIFY_SSL = True

@@ -24,7 +24,7 @@ USER_INPUT = {
     CONF_USERNAME: "root",
     CONF_PASSWORD: "password",
     CONF_SSL: False,
-    CONF_VERIFY_SSL: False,
+    CONF_VERIFY_SSL: True,
 }
 
 

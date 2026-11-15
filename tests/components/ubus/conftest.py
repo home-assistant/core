@@ -26,7 +26,7 @@ MOCK_CONFIG = {
     CONF_USERNAME: "root",
     CONF_PASSWORD: "password",
     CONF_SSL: False,
-    CONF_VERIFY_SSL: False,
+    CONF_VERIFY_SSL: True,
     CONF_DHCP_SOFTWARE: DEFAULT_DHCP_SOFTWARE,
 }
 
