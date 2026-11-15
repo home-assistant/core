@@ -1,6 +1,6 @@
 """Tests for the Amazon Polly integration setup."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 from botocore.exceptions import ClientError, EndpointConnectionError
 import pytest
@@ -73,6 +73,7 @@ async def test_client_closed_on_shutdown(
 async def test_setup_errors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
     mock_polly_client: AsyncMock,
     side_effect: Exception,
     state: ConfigEntryState,
@@ -87,4 +88,4 @@ async def test_setup_errors(
 
     assert mock_config_entry.state is state
     assert any(mock_config_entry.async_get_active_flows(hass, {"reauth"})) is reauth
-    mock_polly_client.__aexit__.assert_awaited_once()
+    mock_session.return_value.create_client.return_value.__aexit__.assert_awaited_once()
