@@ -1,0 +1,60 @@
+"""Fixtures for Axle Energy."""
+
+from collections.abc import Iterator
+from datetime import UTC, datetime
+from unittest.mock import AsyncMock, patch
+
+from aioaxlevpp import AxleStatus, GridEvent
+import pytest
+from pytest_homeassistant.common import MockConfigEntry
+
+from homeassistant.const import CONF_API_KEY
+
+
+@pytest.fixture
+def mock_setup_entry() -> Iterator[AsyncMock]:
+    """Skip integration setup during config flow tests."""
+    with patch(
+        "homeassistant.components.axle_energy.async_setup_entry", return_value=None
+    ) as mock_setup:
+        yield mock_setup
+
+
+@pytest.fixture
+def mock_event() -> GridEvent:
+    """A synthetic future export event."""
+    return GridEvent(
+        start=datetime(2026, 9, 11, 17, tzinfo=UTC),
+        end=datetime(2026, 9, 11, 18, tzinfo=UTC),
+        direction="export",
+        updated_at=datetime(2026, 9, 11, 8, tzinfo=UTC),
+    )
+
+
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """One Axle household."""
+    return MockConfigEntry(
+        domain="axle_energy",
+        title="Axle Energy",
+        entry_id="test-entry",
+        data={CONF_API_KEY: "test-token"},
+    )
+
+
+@pytest.fixture(autouse=True)
+def mock_client(mock_event: GridEvent) -> Iterator[AsyncMock]:
+    """Mock the external dependency at the integration boundary."""
+    with (
+        patch(
+            "homeassistant.components.axle_energy.AxleClient", autospec=True
+        ) as client,
+        patch(
+            "homeassistant.components.axle_energy.config_flow.AxleClient", new=client
+        ),
+    ):
+        client.return_value.get_event.return_value = mock_event
+        client.return_value.get_status.return_value = AxleStatus(
+            mock_event, opted_out=False
+        )
+        yield client.return_value

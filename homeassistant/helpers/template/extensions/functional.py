@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any
 
 import jinja2
 from jinja2 import pass_context
+from typing_extensions import Sentinel as sentinel
 
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import ServiceResponse
@@ -17,7 +18,7 @@ from .base import BaseTemplateExtension, TemplateFunction
 if TYPE_CHECKING:
     from homeassistant.helpers.template import TemplateEnvironment
 
-_SENTINEL = object()
+_SENTINEL = sentinel("_SENTINEL")
 
 
 class FunctionalExtension(BaseTemplateExtension):
@@ -162,12 +163,12 @@ class FunctionalExtension(BaseTemplateExtension):
         if not value:
             return []
 
-        is_single_list = False
         response_items: list = []
         input_service_response = deepcopy(value)
         for entity_id, entity_response in input_service_response.items():  # pylint: disable=too-many-nested-blocks
             if not isinstance(entity_response, dict):
                 raise TypeError("Response is not a dictionary")
+            is_single_list = False
             for value_key, type_response in entity_response.items():
                 if len(entity_response) == 1 and isinstance(type_response, list):
                     is_single_list = True

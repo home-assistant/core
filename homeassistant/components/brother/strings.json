@@ -83,26 +83,73 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "door_open": {
+        "name": "Door open"
+      },
+      "input_tray_empty": {
+        "name": "Input tray empty"
+      },
+      "input_tray_missing": {
+        "name": "Input tray missing"
+      },
+      "jammed": {
+        "name": "Paper jam"
+      },
+      "low_ink": {
+        "name": "Low ink"
+      },
+      "low_paper": {
+        "name": "Low paper"
+      },
+      "low_toner": {
+        "name": "Low toner"
+      },
+      "no_ink": {
+        "name": "No ink"
+      },
+      "no_paper": {
+        "name": "No paper"
+      },
+      "no_toner": {
+        "name": "No toner"
+      },
+      "output_full": {
+        "name": "Output tray full"
+      },
+      "output_near_full": {
+        "name": "Output tray almost full"
+      },
+      "output_tray_missing": {
+        "name": "Output tray missing"
+      },
+      "overdue_prevent_maint": {
+        "name": "Preventive maintenance overdue"
+      },
+      "service_requested": {
+        "name": "Service requested"
+      }
+    },
     "sensor": {
       "belt_unit_remaining_life": {
-        "name": "Belt unit remaining lifetime"
+        "name": "Belt unit life"
       },
       "black_drum_page_counter": {
-        "name": "Black drum page counter",
+        "name": "Black drum pages",
         "unit_of_measurement": "[%key:component::brother::entity::sensor::page_counter::unit_of_measurement%]"
       },
       "black_drum_remaining_life": {
-        "name": "Black drum remaining lifetime"
+        "name": "Black drum life"
       },
       "black_drum_remaining_pages": {
-        "name": "Black drum remaining pages",
+        "name": "Black drum pages left",
         "unit_of_measurement": "[%key:component::brother::entity::sensor::page_counter::unit_of_measurement%]"
       },
       "black_ink_remaining": {
-        "name": "Black ink remaining"
+        "name": "Black ink"
       },
       "black_toner_remaining": {
-        "name": "Black toner remaining"
+        "name": "Black toner"
       },
       "bw_pages": {
         "name": "B/W pages",
@@ -113,89 +160,109 @@
         "unit_of_measurement": "[%key:component::brother::entity::sensor::page_counter::unit_of_measurement%]"
       },
       "cyan_drum_page_counter": {
-        "name": "Cyan drum page counter",
+        "name": "Cyan drum pages",
         "unit_of_measurement": "[%key:component::brother::entity::sensor::page_counter::unit_of_measurement%]"
       },
       "cyan_drum_remaining_life": {
-        "name": "Cyan drum remaining lifetime"
+        "name": "Cyan drum life"
       },
       "cyan_drum_remaining_pages": {
-        "name": "Cyan drum remaining pages",
+        "name": "Cyan drum pages left",
         "unit_of_measurement": "[%key:component::brother::entity::sensor::page_counter::unit_of_measurement%]"
       },
       "cyan_ink_remaining": {
-        "name": "Cyan ink remaining"
+        "name": "Cyan ink"
       },
       "cyan_toner_remaining": {
-        "name": "Cyan toner remaining"
+        "name": "Cyan toner"
+      },
+      "device_status": {
+        "name": "Health",
+        "state": {
+          "down": "Down",
+          "running": "Running",
+          "testing": "Testing",
+          "warning": "Warning"
+        }
       },
       "drum_page_counter": {
-        "name": "Drum page counter",
+        "name": "Drum pages",
         "unit_of_measurement": "[%key:component::brother::entity::sensor::page_counter::unit_of_measurement%]"
       },
       "drum_remaining_life": {
-        "name": "Drum remaining lifetime"
+        "name": "Drum life"
       },
       "drum_remaining_pages": {
-        "name": "Drum remaining pages",
+        "name": "Drum pages left",
         "unit_of_measurement": "[%key:component::brother::entity::sensor::page_counter::unit_of_measurement%]"
       },
       "duplex_unit_page_counter": {
-        "name": "Duplex unit page counter",
+        "name": "Duplex pages",
         "unit_of_measurement": "[%key:component::brother::entity::sensor::page_counter::unit_of_measurement%]"
       },
       "fuser_remaining_life": {
-        "name": "Fuser remaining lifetime"
+        "name": "Fuser life"
+      },
+      "ink_capture_box_remaining_life": {
+        "name": "Ink capture box life"
       },
       "laser_remaining_life": {
-        "name": "Laser remaining lifetime"
+        "name": "Laser life"
       },
       "magenta_drum_page_counter": {
-        "name": "Magenta drum page counter",
+        "name": "Magenta drum pages",
         "unit_of_measurement": "[%key:component::brother::entity::sensor::page_counter::unit_of_measurement%]"
       },
       "magenta_drum_remaining_life": {
-        "name": "Magenta drum remaining lifetime"
+        "name": "Magenta drum life"
       },
       "magenta_drum_remaining_pages": {
-        "name": "Magenta drum remaining pages",
+        "name": "Magenta drum pages left",
         "unit_of_measurement": "[%key:component::brother::entity::sensor::page_counter::unit_of_measurement%]"
       },
       "magenta_ink_remaining": {
-        "name": "Magenta ink remaining"
+        "name": "Magenta ink"
       },
       "magenta_toner_remaining": {
-        "name": "Magenta toner remaining"
+        "name": "Magenta toner"
       },
       "page_counter": {
-        "name": "Page counter",
+        "name": "Total pages",
         "unit_of_measurement": "pages"
       },
       "pf_kit_1_remaining_life": {
-        "name": "PF Kit 1 remaining lifetime"
+        "name": "PF Kit 1 life"
       },
       "pf_kit_mp_remaining_life": {
-        "name": "PF Kit MP remaining lifetime"
+        "name": "PF Kit MP life"
+      },
+      "printer_status": {
+        "state": {
+          "idle": "Idle",
+          "other": "Other",
+          "printing": "Printing",
+          "warmup": "Warming up"
+        }
       },
       "status": {
-        "name": "Status"
+        "name": "Message"
       },
       "yellow_drum_page_counter": {
-        "name": "Yellow drum page counter",
+        "name": "Yellow drum pages",
         "unit_of_measurement": "[%key:component::brother::entity::sensor::page_counter::unit_of_measurement%]"
       },
       "yellow_drum_remaining_life": {
-        "name": "Yellow drum remaining lifetime"
+        "name": "Yellow drum life"
       },
       "yellow_drum_remaining_pages": {
-        "name": "Yellow drum remaining pages",
+        "name": "Yellow drum pages left",
         "unit_of_measurement": "[%key:component::brother::entity::sensor::page_counter::unit_of_measurement%]"
       },
       "yellow_ink_remaining": {
-        "name": "Yellow ink remaining"
+        "name": "Yellow ink"
       },
       "yellow_toner_remaining": {
-        "name": "Yellow toner remaining"
+        "name": "Yellow toner"
       }
     }
   },
@@ -213,8 +280,8 @@
   "selector": {
     "printer_type": {
       "options": {
-        "ink": "ink",
-        "laser": "laser"
+        "ink": "Ink",
+        "laser": "Laser"
       }
     }
   }

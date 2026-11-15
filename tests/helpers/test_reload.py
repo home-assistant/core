@@ -5,6 +5,13 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockModule,
+    MockPlatform,
+    get_fixture_path,
+    mock_integration,
+    mock_platform,
+)
 
 from homeassistant import config
 from homeassistant.const import SERVICE_RELOAD
@@ -19,14 +26,6 @@ from homeassistant.helpers.reload import (
     async_setup_reload_service,
 )
 from homeassistant.loader import async_get_integration
-
-from tests.common import (
-    MockModule,
-    MockPlatform,
-    get_fixture_path,
-    mock_integration,
-    mock_platform,
-)
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = "test_domain"

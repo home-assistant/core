@@ -1,4 +1,4 @@
-"""Base entity for the WattWächter Plus integration."""
+"""Base entity for the WattWächter integration."""
 
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -8,7 +8,7 @@ from .coordinator import WattwaechterCoordinator
 
 
 class WattwaechterEntity(CoordinatorEntity[WattwaechterCoordinator]):
-    """Base entity for WattWächter Plus devices."""
+    """Base entity for WattWächter devices."""
 
     _attr_has_entity_name = True
 
@@ -19,11 +19,13 @@ class WattwaechterEntity(CoordinatorEntity[WattwaechterCoordinator]):
         # DHCP changes); fall back to the host/IP when system info is missing.
         system = coordinator.data.system
         mdns_name = system.get_value("wifi", "mdns_name") if system else None
+        model, model_id = coordinator.device_model(system)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.device_id)},
             connections={(CONNECTION_NETWORK_MAC, coordinator.mac)},
             manufacturer=MANUFACTURER,
-            model=coordinator.model,
+            model=model,
+            model_id=model_id,
             sw_version=coordinator.fw_version,
             configuration_url=f"http://{mdns_name or coordinator.host}",
         )

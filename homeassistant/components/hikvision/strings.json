@@ -1,8 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -84,6 +83,9 @@
       "scene_change_detection": {
         "name": "Scene change detection"
       },
+      "temperature_alarm": {
+        "name": "Temperature alarm"
+      },
       "unattended_baggage": {
         "name": "Unattended baggage"
       },
@@ -98,6 +100,7 @@
           "event_type": {
             "state": {
               "human": "Human",
+              "others": "Other",
               "pet": "Pet",
               "triggered": "Triggered",
               "vehicle": "Vehicle"
@@ -111,6 +114,7 @@
           "event_type": {
             "state": {
               "human": "[%key:component::hikvision::entity::event::field_detection::state_attributes::event_type::state::human%]",
+              "others": "[%key:component::hikvision::entity::event::field_detection::state_attributes::event_type::state::others%]",
               "pet": "[%key:component::hikvision::entity::event::field_detection::state_attributes::event_type::state::pet%]",
               "triggered": "[%key:component::hikvision::entity::event::field_detection::state_attributes::event_type::state::triggered%]",
               "vehicle": "[%key:component::hikvision::entity::event::field_detection::state_attributes::event_type::state::vehicle%]"
@@ -119,11 +123,11 @@
         }
       },
       "motion": {
-        "name": "[%key:component::event::entity_component::motion::name%]",
         "state_attributes": {
           "event_type": {
             "state": {
               "human": "[%key:component::hikvision::entity::event::field_detection::state_attributes::event_type::state::human%]",
+              "others": "[%key:component::hikvision::entity::event::field_detection::state_attributes::event_type::state::others%]",
               "pet": "[%key:component::hikvision::entity::event::field_detection::state_attributes::event_type::state::pet%]",
               "triggered": "[%key:component::hikvision::entity::event::field_detection::state_attributes::event_type::state::triggered%]",
               "vehicle": "[%key:component::hikvision::entity::event::field_detection::state_attributes::event_type::state::vehicle%]"
@@ -131,12 +135,6 @@
           }
         }
       }
-    }
-  },
-  "issues": {
-    "deprecated_yaml_import_issue": {
-      "description": "Configuring {integration_title} using YAML is deprecated and the import failed. Please remove the `{domain}` entry from your `configuration.yaml` file and set up the integration manually.",
-      "title": "YAML import failed"
     }
   }
 }

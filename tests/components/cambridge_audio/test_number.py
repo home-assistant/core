@@ -3,20 +3,19 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -44,8 +43,8 @@ async def test_setting_value(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        service_data={ATTR_VALUE: 13},
+        NumberService.SET_VALUE,
+        service_data={NumberServiceArgument.VALUE: 13},
         target={
             ATTR_ENTITY_ID: "number.cambridge_audio_cxnv2_room_correction_intensity"
         },
@@ -67,8 +66,8 @@ async def test_setting_volume_limit(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        service_data={ATTR_VALUE: 50},
+        NumberService.SET_VALUE,
+        service_data={NumberServiceArgument.VALUE: 50},
         target={ATTR_ENTITY_ID: "number.cambridge_audio_cxnv2_volume_limit"},
         blocking=True,
     )
@@ -92,8 +91,8 @@ async def test_setting_volume_limit_unavailable_when_pre_amp_mode_off(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        service_data={ATTR_VALUE: 50},
+        NumberService.SET_VALUE,
+        service_data={NumberServiceArgument.VALUE: 50},
         target={ATTR_ENTITY_ID: "number.cambridge_audio_cxnv2_volume_limit"},
         blocking=True,
     )

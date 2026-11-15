@@ -5,14 +5,17 @@ import logging
 from typing import override
 
 from aiolichess import AioLichess
-from aiolichess.exceptions import AioLichessError
+from aiolichess.exceptions import AioLichessError, AuthError
 from aiolichess.models import LichessStatistics
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,5 +45,9 @@ class LichessCoordinator(DataUpdateCoordinator[LichessStatistics]):
             return await self.client.get_statistics(
                 token=self.config_entry.data[CONF_API_TOKEN]
             )
+        except AuthError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN, translation_key="invalid_auth"
+            ) from err
         except AioLichessError as err:
             raise UpdateFailed("Error in communicating with Lichess") from err

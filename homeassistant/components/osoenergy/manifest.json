@@ -1,8 +1,10 @@
 {
   "domain": "osoenergy",
   "name": "OSO Energy",
+  "categories": ["climate.water_heaters"],
   "codeowners": ["@osohotwateriot"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/osoenergy",
   "integration_type": "hub",
   "iot_class": "cloud_polling",

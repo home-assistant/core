@@ -8,7 +8,6 @@ from typing import Any, override
 from forecast_solar.models import Estimate
 
 from homeassistant.components.sensor import (
-    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -21,9 +20,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import ForecastSolarConfigEntry
 from .const import DOMAIN
-from .coordinator import ForecastSolarDataUpdateCoordinator
+from .coordinator import ForecastSolarConfigEntry, ForecastSolarDataUpdateCoordinator
 
 PARALLEL_UPDATES = 0
 
@@ -168,7 +166,6 @@ class ForecastSolarSensorEntity(
         """Initialize Forecast.Solar sensor."""
         super().__init__(coordinator=coordinator)
         self.entity_description = entity_description
-        self.entity_id = f"{SENSOR_DOMAIN}.{entity_description.key}"
         self._attr_unique_id = f"{entry_id}_{entity_description.key}"
 
         self._attr_device_info = DeviceInfo(

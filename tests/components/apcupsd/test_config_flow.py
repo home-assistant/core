@@ -4,6 +4,7 @@ import asyncio
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.apcupsd.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -13,13 +14,12 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import CONF_DATA, MOCK_MINIMAL_STATUS, MOCK_STATUS
 
-from tests.common import MockConfigEntry
-
 
 @pytest.mark.parametrize(
     "exception",
     [OSError(), asyncio.IncompleteReadError(partial=b"", expected=100), TimeoutError()],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_config_flow_cannot_connect(
     hass: HomeAssistant,
     exception: Exception,
@@ -41,6 +41,14 @@ async def test_config_flow_cannot_connect(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "cannot_connect"
+
+    mock_request_status.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=CONF_DATA,
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -88,6 +96,7 @@ async def test_config_flow_duplicate_host_port(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == another_host
+    assert result["result"].unique_id == MOCK_STATUS["SERIALNO"] + "ZZZ"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -135,6 +144,7 @@ async def test_config_flow_duplicate_serial_number(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == another_host
+    assert result["result"].unique_id == MOCK_STATUS["SERIALNO"] + "ZZZ"
 
 
 async def test_flow_works(
@@ -162,21 +172,22 @@ async def test_flow_works(
 
 
 @pytest.mark.parametrize(
-    ("mock_request_status", "expected_title"),
+    ("mock_request_status", "expected_title", "expected_unique_id"),
     [
-        (MOCK_MINIMAL_STATUS | {"UPSNAME": "Friendly Name"}, "Friendly Name"),
-        (MOCK_MINIMAL_STATUS | {"MODEL": "MODEL X"}, "MODEL X"),
-        (MOCK_MINIMAL_STATUS | {"SERIALNO": "ZZZZ"}, "ZZZZ"),
+        (MOCK_MINIMAL_STATUS | {"UPSNAME": "Friendly Name"}, "Friendly Name", None),
+        (MOCK_MINIMAL_STATUS | {"MODEL": "MODEL X"}, "MODEL X", None),
+        (MOCK_MINIMAL_STATUS | {"SERIALNO": "ZZZZ"}, "ZZZZ", "ZZZZ"),
         # Some models report "Blank" as the serial number,
         # which we should treat it as not reported.
-        (MOCK_MINIMAL_STATUS | {"SERIALNO": "Blank"}, "APC UPS"),
-        (MOCK_MINIMAL_STATUS | {}, "APC UPS"),
+        (MOCK_MINIMAL_STATUS | {"SERIALNO": "Blank"}, "APC UPS", None),
+        (MOCK_MINIMAL_STATUS | {}, "APC UPS", None),
     ],
     indirect=["mock_request_status"],
 )
 async def test_flow_minimal_status(
     hass: HomeAssistant,
     expected_title: str,
+    expected_unique_id: str | None,
     mock_setup_entry: AsyncMock,
     mock_request_status: AsyncMock,
 ) -> None:
@@ -202,6 +213,7 @@ async def test_flow_minimal_status(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == CONF_DATA
     assert result["title"] == expected_title
+    assert result["result"].unique_id == expected_unique_id
     mock_setup_entry.assert_called_once()
 
 

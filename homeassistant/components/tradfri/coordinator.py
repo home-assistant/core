@@ -1,15 +1,14 @@
 """Tradfri DataUpdateCoordinator."""
 
-from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import timedelta
-from typing import Any, override
+from typing import cast, override
 
 from pytradfri import Gateway
-from pytradfri.api.aiocoap_api import APIFactory
-from pytradfri.command import Command
+from pytradfri.api.aiocoap_api import APIFactory, APIRequestProtocol
 from pytradfri.device import Device
 from pytradfri.error import RequestError
+from pytradfri.resource import ApiResource
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -28,7 +27,7 @@ class TradfriData:
 
     factory: APIFactory
     gateway: Gateway
-    api: Callable[[Command | list[Command]], Any]
+    api: APIRequestProtocol
     coordinator_list: list[TradfriDeviceDataUpdateCoordinator] = field(
         default_factory=list
     )
@@ -43,7 +42,7 @@ class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator[Device]):
         self,
         hass: HomeAssistant,
         config_entry: TradfriConfigEntry,
-        api: Callable[[Command | list[Command]], Any],
+        api: APIRequestProtocol,
         device: Device,
     ) -> None:
         """Initialize device coordinator."""
@@ -67,9 +66,9 @@ class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator[Device]):
             await self.async_request_refresh()
 
     @callback
-    def _observe_update(self, device: Device) -> None:
+    def _observe_update(self, device: ApiResource) -> None:
         """Update the coordinator for a device when a change is detected."""
-        self.async_set_updated_data(data=device)
+        self.async_set_updated_data(data=cast(Device, device))
 
     @callback
     def _exception_callback(self, exc: Exception) -> None:

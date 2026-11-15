@@ -1,8 +1,10 @@
 {
   "domain": "screenlogic",
   "name": "Pentair ScreenLogic",
+  "categories": ["water.pools_spas"],
   "codeowners": ["@dieselrabbit", "@bdraco"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dhcp": [
     {
       "registered_devices": true

@@ -67,7 +67,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: AlarmDecoderConfigEntry
-) -> bool:
+) -> None:
     """Set up AlarmDecoder config flow."""
     undo_listener = entry.add_update_listener(_update_listener)
 
@@ -151,26 +151,19 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: AlarmDecoderConfigEntry
-) -> bool:
+) -> None:
     """Unload a AlarmDecoder entry."""
     data = entry.runtime_data
     data.restart = False
 
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    if not unload_ok:
-        return False
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
     data.remove_update_listener()
     data.remove_stop_listener()
     await hass.async_add_executor_job(data.client.close)
-
-    return True
 
 
 async def _update_listener(hass: HomeAssistant, entry: AlarmDecoderConfigEntry) -> None:

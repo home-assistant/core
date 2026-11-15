@@ -39,7 +39,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_HOST): cv.string,
-        probatio.Optional(CONF_PORT, default=80): cv.port,
+        probatio.Optional(CONF_PORT, default=80): probatio.Port(),
         probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )

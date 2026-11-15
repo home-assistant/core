@@ -16,12 +16,11 @@ from psutil._ntuples import (
     sswap,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.systemmonitor.const import DOMAIN
 from homeassistant.components.systemmonitor.coordinator import VirtualMemory
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 MOCK_PRESSURE_INFO = {
     "cpu": {"some": {"avg10": 1.1, "avg60": 2.2, "avg300": 3.3, "total": 12345}},
@@ -92,7 +91,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setup entry."""
     with patch(
         "homeassistant.components.systemmonitor.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 

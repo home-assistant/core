@@ -1,10 +1,10 @@
 """Tests for Ecovacs select entities."""
 
 from deebot_client.command import Command
-from deebot_client.commands.json import SetWaterInfo
+from deebot_client.commands.json import SetEfficiencyMode, SetWaterInfo
 from deebot_client.commands.json.auto_empty import SetAutoEmpty
 from deebot_client.event_bus import EventBus
-from deebot_client.events import auto_empty
+from deebot_client.events import EfficiencyMode, EfficiencyModeEvent, auto_empty
 from deebot_client.events.map import CachedMapInfoEvent, MajorMapEvent, Map
 from deebot_client.events.water_info import WaterAmount, WaterAmountEvent
 from deebot_client.events.work_mode import WorkMode, WorkModeEvent
@@ -58,6 +58,7 @@ async def notify_events(hass: HomeAssistant, event_bus: EventBus):
     )
     event_bus.notify(MajorMapEvent("2", [], requested=False))
     event_bus.notify(auto_empty.AutoEmptyEvent(True, auto_empty.Frequency.AUTO))
+    event_bus.notify(EfficiencyModeEvent(EfficiencyMode.STANDARD_MODE))
     await block_till_done(hass, event_bus)
 
 
@@ -85,6 +86,7 @@ async def notify_events(hass: HomeAssistant, event_bus: EventBus):
             [
                 "select.x8_pro_omni_work_mode",
                 "select.x8_pro_omni_auto_empty_frequency",
+                "select.x8_pro_omni_efficiency_mode",
                 "select.x8_pro_omni_active_map",
             ],
         ),
@@ -142,6 +144,13 @@ async def test_selects(
             "auto",
             "smart",
             SetAutoEmpty(None, auto_empty.Frequency.SMART),
+        ),
+        (
+            "n0vyif",
+            "select.x8_pro_omni_efficiency_mode",
+            "standard_mode",
+            "energy_efficient_mode",
+            SetEfficiencyMode(EfficiencyMode.ENERGY_EFFICIENT_MODE),
         ),
     ],
 )

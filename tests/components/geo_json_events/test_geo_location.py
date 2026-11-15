@@ -4,34 +4,33 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from freezegun import freeze_time
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.geo_json_events.const import (
     ATTR_EXTERNAL_ID,
     DEFAULT_UPDATE_INTERVAL,
+    SIGNAL_DELETE_ENTITY,
+    SIGNAL_UPDATE_ENTITY,
 )
 from homeassistant.components.geo_location import (
-    ATTR_SOURCE,
     DOMAIN as GEO_LOCATION_DOMAIN,
+    GeolocationEntityStateAttribute,
 )
 from homeassistant.const import (
-    ATTR_FRIENDLY_NAME,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     ATTR_NAME,
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_RADIUS,
     CONF_SCAN_INTERVAL,
     CONF_URL,
+    EntityStateAttribute,
     UnitOfLength,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.dispatcher import DATA_DISPATCHER
 from homeassistant.util import dt as dt_util
 
 from . import _generate_mock_feed_entry
 from .conftest import URL
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 CONFIG_LEGACY = {
     GEO_LOCATION_DOMAIN: [
@@ -86,11 +85,11 @@ async def test_entity_lifecycle(
         assert state.name == "Properties 1"
         assert state.attributes == {
             ATTR_EXTERNAL_ID: "1234",
-            ATTR_LATITUDE: -31.0,
-            ATTR_LONGITUDE: 150.0,
-            ATTR_FRIENDLY_NAME: "Properties 1",
-            ATTR_UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
-            ATTR_SOURCE: "geo_json_events",
+            EntityStateAttribute.LATITUDE: -31.0,
+            EntityStateAttribute.LONGITUDE: 150.0,
+            EntityStateAttribute.FRIENDLY_NAME: "Properties 1",
+            EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
+            GeolocationEntityStateAttribute.SOURCE: "geo_json_events",
         }
         assert round(abs(float(state.state) - 15.5), 7) == 0
 
@@ -99,11 +98,11 @@ async def test_entity_lifecycle(
         assert state.name == "271310188"
         assert state.attributes == {
             ATTR_EXTERNAL_ID: "2345",
-            ATTR_LATITUDE: -31.1,
-            ATTR_LONGITUDE: 150.1,
-            ATTR_FRIENDLY_NAME: "271310188",
-            ATTR_UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
-            ATTR_SOURCE: "geo_json_events",
+            EntityStateAttribute.LATITUDE: -31.1,
+            EntityStateAttribute.LONGITUDE: 150.1,
+            EntityStateAttribute.FRIENDLY_NAME: "271310188",
+            EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
+            GeolocationEntityStateAttribute.SOURCE: "geo_json_events",
         }
         assert round(abs(float(state.state) - 20.5), 7) == 0
 
@@ -112,11 +111,11 @@ async def test_entity_lifecycle(
         assert state.name == "Title 3"
         assert state.attributes == {
             ATTR_EXTERNAL_ID: "3456",
-            ATTR_LATITUDE: -31.2,
-            ATTR_LONGITUDE: 150.2,
-            ATTR_FRIENDLY_NAME: "Title 3",
-            ATTR_UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
-            ATTR_SOURCE: "geo_json_events",
+            EntityStateAttribute.LATITUDE: -31.2,
+            EntityStateAttribute.LONGITUDE: 150.2,
+            EntityStateAttribute.FRIENDLY_NAME: "Title 3",
+            EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
+            GeolocationEntityStateAttribute.SOURCE: "geo_json_events",
         }
         assert round(abs(float(state.state) - 25.5), 7) == 0
 
@@ -145,3 +144,23 @@ async def test_entity_lifecycle(
         await hass.async_block_till_done()
 
         assert len(hass.states.async_entity_ids(GEO_LOCATION_DOMAIN)) == 0
+
+
+async def test_signals_disconnected_on_unload(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test entity signal listeners are disconnected when the entry unloads."""
+    config_entry.add_to_hass(hass)
+    mock_entry = _generate_mock_feed_entry("1234", "Title 1", 15.5, (-31.0, 150.0))
+    with patch("aio_geojson_client.feed.GeoJsonFeed.update") as mock_feed_update:
+        mock_feed_update.return_value = "OK", [mock_entry]
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    signals = (SIGNAL_DELETE_ENTITY.format("1234"), SIGNAL_UPDATE_ENTITY.format("1234"))
+    assert all(signal in hass.data[DATA_DISPATCHER] for signal in signals)
+
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert not any(signal in hass.data[DATA_DISPATCHER] for signal in signals)

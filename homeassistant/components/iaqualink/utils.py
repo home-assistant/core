@@ -1,16 +1,19 @@
 """Utility functions for Aqualink devices."""
 
 from collections.abc import Awaitable
+from typing import TYPE_CHECKING
 
-import httpx
+import httpx2
 from iaqualink.exception import (
     AqualinkServiceException,
     AqualinkServiceUnauthorizedException,
 )
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+
+if TYPE_CHECKING:
+    from . import AqualinkConfigEntry
 
 
 def error_detail(err: Exception) -> str:
@@ -22,7 +25,7 @@ def error_detail(err: Exception) -> str:
 
 async def await_or_reraise(
     hass: HomeAssistant,
-    config_entry: ConfigEntry | None,
+    config_entry: AqualinkConfigEntry | None,
     awaitable: Awaitable,
 ) -> None:
     """Execute API call while catching service exceptions."""
@@ -38,7 +41,7 @@ async def await_or_reraise(
         raise HomeAssistantError(
             f"Aqualink error: {error_detail(timeout_exception)}"
         ) from timeout_exception
-    except (AqualinkServiceException, httpx.HTTPError) as svc_exception:
+    except (AqualinkServiceException, httpx2.HTTPError) as svc_exception:
         raise HomeAssistantError(
             f"Aqualink error: {error_detail(svc_exception)}"
         ) from svc_exception

@@ -3,6 +3,7 @@
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
@@ -16,8 +17,6 @@ from homeassistant.components.cover import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
 from homeassistant.setup import async_setup_component
-
-from tests.common import async_mock_service
 
 
 @pytest.mark.parametrize(
@@ -81,6 +80,32 @@ async def test_close_cover_intent(hass: HomeAssistant, slots: dict[str, Any]) ->
     assert call.domain == DOMAIN
     assert call.service == SERVICE_CLOSE_COVER
     assert call.data == {"entity_id": f"{DOMAIN}.garage_door"}
+
+
+@pytest.mark.parametrize(
+    ("intent_type", "initial_state"),
+    [
+        (cover_intent.INTENT_OPEN_COVER, "off"),
+        (cover_intent.INTENT_CLOSE_COVER, "on"),
+    ],
+)
+async def test_cover_intent_does_not_match_other_domains(
+    hass: HomeAssistant, intent_type: str, initial_state: str
+) -> None:
+    """Test HassOpenCover/HassCloseCover do not match an entity of another domain."""
+    await cover_intent.async_setup_intents(hass)
+
+    hass.states.async_set("light.garage_door", initial_state)
+
+    with pytest.raises(intent.MatchFailedError) as err:
+        await intent.async_handle(
+            hass,
+            "test",
+            intent_type,
+            {"name": {"value": "garage door"}},
+        )
+
+    assert err.value.result.no_match_reason == intent.MatchFailedReason.DOMAIN
 
 
 @pytest.mark.parametrize(

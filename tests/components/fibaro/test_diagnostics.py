@@ -2,20 +2,19 @@
 
 from unittest.mock import Mock
 
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.diagnostics import (
+    get_diagnostics_for_config_entry,
+    get_diagnostics_for_device,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.fibaro import DOMAIN
+from homeassistant.components.fibaro.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import TEST_SERIALNUMBER, init_integration
-
-from tests.common import MockConfigEntry
-from tests.components.diagnostics import (
-    get_diagnostics_for_config_entry,
-    get_diagnostics_for_device,
-)
-from tests.typing import ClientSessionGenerator
 
 
 async def test_config_entry_diagnostics(
@@ -59,7 +58,7 @@ async def test_device_diagnostics(
     mock_fibaro_client.read_devices.return_value = [mock_light]
     # Act
     await init_integration(hass, mock_config_entry)
-    entry = entity_registry.async_get("light.room_1_test_light_3")
+    entry = entity_registry.async_get("light.test_light_room_1_test_light")
     device = device_registry.async_get(entry.device_id)
     # Assert
     assert device

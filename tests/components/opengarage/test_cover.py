@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
@@ -16,8 +17,6 @@ from homeassistant.components.cover import (
 from homeassistant.const import ATTR_ENTITY_ID, STATE_CLOSED, STATE_OPEN
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def _simulate_door_state(

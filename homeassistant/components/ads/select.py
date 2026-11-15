@@ -25,7 +25,9 @@ PLATFORM_SCHEMA = SELECT_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_ADS_VAR): cv.string,
         probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        probatio.Required(CONF_OPTIONS): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Required(CONF_OPTIONS): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
     }
 )
 

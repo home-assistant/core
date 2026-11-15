@@ -2,15 +2,20 @@
 
 from unittest.mock import MagicMock, patch
 
-from synology_dsm.exceptions import SynologyDSMLoginInvalidException
+import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from synology_dsm.exceptions import (
+    SynologyDSMLogin2SAForcedException,
+    SynologyDSMLoginInvalidException,
+)
 
 from homeassistant.components.synology_dsm.const import (
     CONF_BACKUP_PATH,
     CONF_BACKUP_SHARE,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
-    SERVICES,
 )
+from homeassistant.components.synology_dsm.services import SynologyDSMService
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
@@ -25,8 +30,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from .consts import HOST, MACS, PASSWORD, PORT, USE_SSL, USERNAME
-
-from tests.common import MockConfigEntry
 
 
 async def test_services_registered(hass: HomeAssistant, mock_dsm: MagicMock) -> None:
@@ -51,15 +54,22 @@ async def test_services_registered(hass: HomeAssistant, mock_dsm: MagicMock) -> 
         )
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
-        for service in SERVICES:
+        for service in SynologyDSMService:
             assert hass.services.has_service(DOMAIN, service)
 
 
-async def test_reauth_triggered(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        pytest.param(SynologyDSMLoginInvalidException(USERNAME), id="invalid_auth"),
+        pytest.param(SynologyDSMLogin2SAForcedException(USERNAME), id="otp_enforced"),
+    ],
+)
+async def test_reauth_triggered(hass: HomeAssistant, side_effect: Exception) -> None:
     """Test if reauthentication flow is triggered."""
     with patch(
         "homeassistant.components.synology_dsm.SynoApi.async_setup",
-        side_effect=SynologyDSMLoginInvalidException(USERNAME),
+        side_effect=side_effect,
     ):
         entry = MockConfigEntry(
             domain=DOMAIN,

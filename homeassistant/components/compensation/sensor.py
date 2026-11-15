@@ -11,9 +11,11 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityCapabilityAttribute,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ATTRIBUTE,
     CONF_DEVICE_CLASS,
+    CONF_ENTITY_ID,
     CONF_MAXIMUM,
     CONF_MINIMUM,
     CONF_NAME,
@@ -31,7 +33,10 @@ from homeassistant.core import (
     State,
     callback,
 )
+from homeassistant.helpers.device import async_entity_id_to_device
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
     async_create_platform_config_not_supported_issue,
 )
@@ -87,6 +92,33 @@ async def async_setup_platform(
     )
 
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the Compensation sensor entry."""
+    compensation = entry.entry_id
+    conf: dict[str, Any] = hass.data[DATA_COMPENSATION][compensation]
+
+    source: str = conf[CONF_ENTITY_ID]
+    attribute: str | None = conf.get(CONF_ATTRIBUTE)
+    name = entry.title
+
+    async_add_entities(
+        [
+            CompensationSensor(
+                entry.entry_id,
+                name,
+                source,
+                attribute,
+                conf,
+                device=async_entity_id_to_device(hass, source),
+            )
+        ]
+    )
+
+
 class CompensationSensor(SensorEntity):
     """Representation of a Compensation sensor."""
 
@@ -99,9 +131,11 @@ class CompensationSensor(SensorEntity):
         source: str,
         attribute: str | None,
         config: dict[str, Any],
+        device: AnyDeviceEntry | None = None,
     ) -> None:
         """Initialize the Compensation sensor."""
 
+        self.device_entry = device
         self._attr_name = name
         self._source_entity_id = source
         self._source_attribute = attribute
@@ -130,6 +164,8 @@ class CompensationSensor(SensorEntity):
                 self._async_compensation_sensor_state_listener,
             )
         )
+        if (state := self.hass.states.get(self._source_entity_id)) is not None:
+            self._update_from_source_state(state)
 
     @property
     @override
@@ -154,17 +190,18 @@ class CompensationSensor(SensorEntity):
                 "While updating compensation %s, the new_state is None", self.name
             )
             self._attr_native_value = None
-            self.async_write_ha_state()
-            return
+        else:
+            self._update_from_source_state(new_state)
+        self.async_write_ha_state()
 
+    def _update_from_source_state(self, new_state: State) -> None:
+        """Update the compensated value from the source state."""
         if new_state.state == STATE_UNKNOWN:
             self._attr_native_value = None
-            self.async_write_ha_state()
             return
 
         if new_state.state == STATE_UNAVAILABLE:
             self._attr_available = False
-            self.async_write_ha_state()
             return
 
         self._attr_available = True
@@ -210,5 +247,3 @@ class CompensationSensor(SensorEntity):
                 )
             else:
                 _LOGGER.warning("%s state is not numerical", self._source_entity_id)
-
-        self.async_write_ha_state()

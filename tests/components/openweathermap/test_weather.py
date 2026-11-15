@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.openweathermap.const import (
@@ -11,15 +12,13 @@ from homeassistant.components.openweathermap.const import (
     OWM_MODE_FREE_FORECAST,
     OWM_MODE_V30,
 )
-from homeassistant.components.openweathermap.weather import SERVICE_GET_MINUTE_FORECAST
+from homeassistant.components.openweathermap.services import OpenWeatherMapService
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_platform
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 ENTITY_ID = "weather.openweathermap"
 
@@ -37,7 +36,7 @@ async def test_get_minute_forecast(
     await setup_platform(hass, mock_config_entry, [Platform.WEATHER])
     result = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_MINUTE_FORECAST,
+        OpenWeatherMapService.GET_MINUTE_FORECAST,
         {"entity_id": ENTITY_ID},
         blocking=True,
         return_response=True,
@@ -65,7 +64,7 @@ async def test_get_minute_forecast_unavailable(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_MINUTE_FORECAST,
+            OpenWeatherMapService.GET_MINUTE_FORECAST,
             {"entity_id": ENTITY_ID},
             blocking=True,
             return_response=True,

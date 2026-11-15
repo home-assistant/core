@@ -17,12 +17,12 @@ from .util import async_get_client_with_credentials
 AUTH_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_USERNAME): str,
-        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
     }
 )
 REAUTH_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
     }
 )
 
@@ -82,9 +82,7 @@ class NotionFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="reauth_confirm",
                 data_schema=REAUTH_SCHEMA,
-                description_placeholders={
-                    CONF_USERNAME: reauth_entry.data[CONF_USERNAME]
-                },
+                description_placeholders={"username": reauth_entry.data[CONF_USERNAME]},
             )
 
         credentials_validation_result = await async_validate_credentials(
@@ -96,9 +94,7 @@ class NotionFlowHandler(ConfigFlow, domain=DOMAIN):
                 step_id="reauth_confirm",
                 data_schema=REAUTH_SCHEMA,
                 errors=credentials_validation_result.errors,
-                description_placeholders={
-                    CONF_USERNAME: reauth_entry.data[CONF_USERNAME]
-                },
+                description_placeholders={"username": reauth_entry.data[CONF_USERNAME]},
             )
 
         return self.async_update_reload_and_abort(

@@ -6,6 +6,12 @@ from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 from wled import (
     Device as WLEDDevice,
@@ -16,24 +22,16 @@ from wled import (
     WLEDError,
 )
 
-from homeassistant.components.select import ATTR_OPTION, DOMAIN as SELECT_DOMAIN
-from homeassistant.components.wled.const import DOMAIN, SCAN_INTERVAL
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_SELECT_OPTION,
-    STATE_UNAVAILABLE,
-    Platform,
+from homeassistant.components.select import (
+    DOMAIN as SELECT_DOMAIN,
+    SelectService,
+    SelectServiceArgument,
 )
+from homeassistant.components.wled.const import DOMAIN, SCAN_INTERVAL
+from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_json_object_fixture,
-    snapshot_platform,
-)
 
 pytestmark = pytest.mark.usefixtures("init_integration")
 
@@ -104,8 +102,11 @@ async def test_color_palette_state(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: option},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            SelectServiceArgument.OPTION: option,
+        },
         blocking=True,
     )
     assert method_mock.call_count == 1
@@ -116,8 +117,11 @@ async def test_color_palette_state(
     with pytest.raises(HomeAssistantError, match="Invalid response from WLED API"):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: option},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: entity_id,
+                SelectServiceArgument.OPTION: option,
+            },
             blocking=True,
         )
 
@@ -131,8 +135,11 @@ async def test_color_palette_state(
     with pytest.raises(HomeAssistantError, match="Error communicating with WLED API"):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: state.entity_id, ATTR_OPTION: option},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: state.entity_id,
+                SelectServiceArgument.OPTION: option,
+            },
             blocking=True,
         )
 

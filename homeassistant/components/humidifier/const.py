@@ -1,7 +1,19 @@
 """Provides the constants needed for component."""
 
 from enum import IntFlag, StrEnum
-from typing import Final
+from typing import TYPE_CHECKING, Final
+
+import probatio
+
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_component import EntityComponent
+
+    from .entity import HumidifierEntity
+
+DOMAIN: Final = "humidifier"
+DATA_COMPONENT: HassKey[EntityComponent[HumidifierEntity]] = HassKey(DOMAIN)
 
 MODE_NORMAL = "normal"
 MODE_ECO = "eco"
@@ -34,7 +46,6 @@ ATTR_TARGET_HUMIDITY_STEP = "target_humidity_step"
 DEFAULT_MIN_HUMIDITY = 0
 DEFAULT_MAX_HUMIDITY = 100
 
-DOMAIN: Final = "humidifier"
 
 SERVICE_SET_MODE = "set_mode"
 SERVICE_SET_HUMIDITY = "set_humidity"
@@ -62,3 +73,32 @@ class HumidifierEntityFeature(IntFlag):
     """Supported features of the humidifier entity."""
 
     MODES = 1
+
+
+class HumidifierDeviceClass(StrEnum):
+    """Device class for humidifiers."""
+
+    HUMIDIFIER = "humidifier"
+    DEHUMIDIFIER = "dehumidifier"
+
+
+DEVICE_CLASSES_SCHEMA = probatio.All(
+    probatio.Lower, probatio.Coerce(HumidifierDeviceClass)
+)
+
+
+class HumidifierService(StrEnum):
+    """Store keys for humidifier services."""
+
+    SET_HUMIDITY = "set_humidity"
+    SET_MODE = "set_mode"
+    TOGGLE = "toggle"
+    TURN_OFF = "turn_off"
+    TURN_ON = "turn_on"
+
+
+class HumidifierServiceArgument(StrEnum):
+    """Store keys for humidifier service arguments."""
+
+    HUMIDITY = "humidity"
+    MODE = "mode"

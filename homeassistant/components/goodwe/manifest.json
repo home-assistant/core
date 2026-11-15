@@ -1,8 +1,10 @@
 {
   "domain": "goodwe",
   "name": "GoodWe Inverter",
+  "categories": ["energy.solar_batteries"],
   "codeowners": ["@mletenay", "@starkillerOG"],
   "config_flow": true,
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/goodwe",
   "integration_type": "device",
   "iot_class": "local_polling",

@@ -4,7 +4,7 @@ from typing import override
 
 from goalzero import Yeti
 
-from homeassistant.const import ATTR_MODEL, CONF_NAME
+from homeassistant.const import CONF_NAME
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
@@ -38,7 +38,7 @@ class GoalZeroEntity(CoordinatorEntity[GoalZeroDataUpdateCoordinator]):
             connections={(dr.CONNECTION_NETWORK_MAC, self._api.sysdata["macAddress"])},
             identifiers={(DOMAIN, self.coordinator.config_entry.entry_id)},
             manufacturer=MANUFACTURER,
-            model=self._api.sysdata[ATTR_MODEL],
+            model=self._api.sysdata["model"],
             name=self.coordinator.config_entry.data[CONF_NAME].capitalize(),
             sw_version=self._api.data["firmwareVersion"],
         )

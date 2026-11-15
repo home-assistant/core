@@ -4,16 +4,15 @@ from unittest.mock import MagicMock
 
 from fumis import FumisConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.fumis.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 pytestmark = pytest.mark.parametrize(
     "init_integration", [Platform.BUTTON], indirect=True
@@ -39,8 +38,8 @@ async def test_sync_clock(
     """Test pressing the sync clock button."""
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.clou_duo_sync_clock"},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: "button.clou_duo_sync_clock"},
         blocking=True,
     )
 
@@ -58,8 +57,8 @@ async def test_sync_clock_error_handling(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.clou_duo_sync_clock"},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: "button.clou_duo_sync_clock"},
             blocking=True,
         )
 

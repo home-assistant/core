@@ -20,20 +20,19 @@ from pydrawise.schema import (
     Zone,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.hydrawise.const import DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.hydrawise.async_setup_entry", return_value=True
+        "homeassistant.components.hydrawise.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -102,6 +101,7 @@ def controller() -> Controller:
         ),
         last_contact_time=datetime.fromtimestamp(1693292420),
         online=True,
+        software_version="2.05",
         sensors=[],
     )
 

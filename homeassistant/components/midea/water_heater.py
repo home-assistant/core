@@ -127,7 +127,7 @@ class MideaWaterHeater(MideaEntity, WaterHeaterEntity):
             | WaterHeaterEntityFeature.ON_OFF
         )
         self._attr_precision = float(PRECISION_WHOLE)
-        self._attr_temperature_unit = UnitOfTemperature.CELSIUS
+        self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
     @property
     @override
@@ -143,18 +143,18 @@ class MideaWaterHeater(MideaEntity, WaterHeaterEntity):
 
     @property
     @override
-    def current_temperature(self) -> float:
+    def native_current_temperature(self) -> float:
         """Midea Water Heater current temperature."""
         return cast("float", self._device.get_attribute("current_temperature"))
 
     @property
     @override
-    def target_temperature(self) -> float:
+    def native_target_temperature(self) -> float:
         """Midea Water Heater target temperature."""
         return cast("float", self._device.get_attribute("target_temperature"))
 
     @override
-    def set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Midea Water Heater set temperature."""
         if ATTR_TEMPERATURE not in kwargs:
             return  # pragma: no cover
@@ -163,13 +163,13 @@ class MideaWaterHeater(MideaEntity, WaterHeaterEntity):
             self._device.set_attribute("target_temperature", temperature)
 
     @override
-    def turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Midea Water Heater turn on."""
         with midea_api_call():
             self._device.set_attribute(attr="power", value=True)
 
     @override
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Midea Water Heater turn off."""
         with midea_api_call():
             self._device.set_attribute(attr="power", value=False)
@@ -236,7 +236,7 @@ class MideaC3WaterHeater(MideaWaterHeater):
 
     @property
     @override
-    def current_temperature(self) -> float:
+    def native_current_temperature(self) -> float:
         """Midea C3 Water Heater current temperature."""
         return cast(
             "float",
@@ -245,12 +245,12 @@ class MideaC3WaterHeater(MideaWaterHeater):
 
     @property
     @override
-    def target_temperature(self) -> float:
+    def native_target_temperature(self) -> float:
         """Midea C3 Water Heater target temperature."""
         return cast("float", self._device.get_attribute(C3Attributes.dhw_target_temp))
 
     @override
-    def set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Midea C3 Water Heater set temperature."""
         if ATTR_TEMPERATURE not in kwargs:
             return  # pragma: no cover
@@ -271,13 +271,13 @@ class MideaC3WaterHeater(MideaWaterHeater):
         return cast("float", self._device.get_attribute(C3Attributes.dhw_temp_max))
 
     @override
-    def turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Midea C3 Water Heater turn on."""
         with midea_api_call():
             self._device.set_attribute(attr=C3Attributes.dhw_power, value=True)
 
     @override
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Midea C3 Water Heater turn off."""
         with midea_api_call():
             self._device.set_attribute(attr=C3Attributes.dhw_power, value=False)
@@ -340,18 +340,18 @@ class MideaE6WaterHeater(MideaWaterHeater):
 
     @property
     @override
-    def current_temperature(self) -> float:
+    def native_current_temperature(self) -> float:
         """Midea E6 Water Heater current temperature."""
         return cast("float", self._device.get_attribute(self._current_temperature_attr))
 
     @property
     @override
-    def target_temperature(self) -> float:
+    def native_target_temperature(self) -> float:
         """Midea E6 Water Heater target temperature."""
         return cast("float", self._device.get_attribute(self._target_temperature_attr))
 
     @override
-    def set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Midea E6 Water Heater set temperature."""
         if ATTR_TEMPERATURE not in kwargs:
             return  # pragma: no cover
@@ -380,13 +380,13 @@ class MideaE6WaterHeater(MideaWaterHeater):
         return max_temperature[self.entity_description.zone]
 
     @override
-    def turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Midea E6 Water Heater turn on."""
         with midea_api_call():
             self._device.set_attribute(attr=self._power_attr, value=True)
 
     @override
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Midea E6 Water Heater turn off."""
         with midea_api_call():
             self._device.set_attribute(attr=self._power_attr, value=False)
@@ -398,13 +398,13 @@ class MideaE6WaterHeater(MideaWaterHeater):
         return self._device.get_attribute(E6Attributes.heating_modes) == "out"
 
     @override
-    def turn_away_mode_on(self) -> None:
+    async def async_turn_away_mode_on(self) -> None:
         """Midea Water Heater turn away mode on."""
         with midea_api_call():
             self._device.set_attribute(attr=E6Attributes.heating_modes, value="out")
 
     @override
-    def turn_away_mode_off(self) -> None:
+    async def async_turn_away_mode_off(self) -> None:
         """Midea Water Heater turn away mode off."""
         with midea_api_call():
             self._device.set_attribute(

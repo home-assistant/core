@@ -17,7 +17,7 @@ from .const import DOMAIN, LOGGER
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_USERNAME): str,
-        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
     }
 )
 
@@ -87,9 +87,11 @@ class FreshrFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=probatio.Schema({probatio.Required(CONF_PASSWORD): str}),
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_PASSWORD)): str}
+            ),
             description_placeholders={
-                CONF_USERNAME: reconfigure_entry.data[CONF_USERNAME]
+                "username": reconfigure_entry.data[CONF_USERNAME]
             },
             errors=errors,
         )
@@ -121,7 +123,9 @@ class FreshrFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=probatio.Schema({probatio.Required(CONF_PASSWORD): str}),
-            description_placeholders={CONF_USERNAME: reauth_entry.data[CONF_USERNAME]},
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_PASSWORD)): str}
+            ),
+            description_placeholders={"username": reauth_entry.data[CONF_USERNAME]},
             errors=errors,
         )

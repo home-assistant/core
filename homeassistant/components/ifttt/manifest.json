@@ -1,8 +1,10 @@
 {
   "domain": "ifttt",
   "name": "IFTTT",
+  "categories": ["diy_makers.web_data_connectors", "other_ecosystems"],
   "codeowners": [],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["webhook"],
   "documentation": "https://www.home-assistant.io/integrations/ifttt",
   "iot_class": "cloud_push",

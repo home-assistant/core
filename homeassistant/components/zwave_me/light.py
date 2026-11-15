@@ -33,14 +33,22 @@ async def async_setup_entry(
         """Add a new device."""
         async_add_entities([ZWaveMeRGB(config_entry.runtime_data, new_device)])
 
-    async_dispatcher_connect(
-        hass, f"ZWAVE_ME_NEW_{ZWaveMePlatform.RGB_LIGHT.upper()}", add_new_device
+    config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, f"ZWAVE_ME_NEW_{ZWaveMePlatform.RGB_LIGHT.upper()}", add_new_device
+        )
     )
-    async_dispatcher_connect(
-        hass, f"ZWAVE_ME_NEW_{ZWaveMePlatform.RGBW_LIGHT.upper()}", add_new_device
+    config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, f"ZWAVE_ME_NEW_{ZWaveMePlatform.RGBW_LIGHT.upper()}", add_new_device
+        )
     )
-    async_dispatcher_connect(
-        hass, f"ZWAVE_ME_NEW_{ZWaveMePlatform.BRIGHTNESS_LIGHT.upper()}", add_new_device
+    config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            f"ZWAVE_ME_NEW_{ZWaveMePlatform.BRIGHTNESS_LIGHT.upper()}",
+            add_new_device,
+        )
     )
 
 

@@ -17,9 +17,6 @@ from aioesphomeapi import (
 )
 
 from homeassistant.components.climate import (
-    ATTR_HVAC_MODE,
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
     FAN_AUTO,
     FAN_DIFFUSE,
     FAN_FOCUS,
@@ -43,15 +40,11 @@ from homeassistant.components.climate import (
     SWING_VERTICAL,
     ClimateEntity,
     ClimateEntityFeature,
+    ClimateServiceArgument,
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    PRECISION_HALVES,
-    PRECISION_TENTHS,
-    PRECISION_WHOLE,
-)
+from homeassistant.const import PRECISION_HALVES, PRECISION_TENTHS, PRECISION_WHOLE
 from homeassistant.core import callback
 from homeassistant.exceptions import ServiceValidationError
 
@@ -90,6 +83,7 @@ _CLIMATE_ACTIONS: EsphomeEnumMapper[ClimateAction, HVACAction] = EsphomeEnumMapp
         ClimateAction.IDLE: HVACAction.IDLE,
         ClimateAction.DRYING: HVACAction.DRYING,
         ClimateAction.FAN: HVACAction.FAN,
+        ClimateAction.DEFROSTING: HVACAction.DEFROSTING,
     }
 )
 _FAN_MODES: EsphomeEnumMapper[ClimateFanMode, str] = EsphomeEnumMapper(
@@ -143,7 +137,7 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
         self._feature_flags = ClimateFeature(
             static_info.supported_feature_flags_compat(self._api_version)
         )
-        self._attr_temperature_unit = get_temperature_unit(static_info)
+        self._attr_native_temperature_unit = get_temperature_unit(static_info)
         self._attr_precision = self._get_precision()
         self._attr_hvac_modes = [
             _CLIMATE_MODES.from_esphome(mode) for mode in static_info.supported_modes
@@ -248,7 +242,7 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
     @property
     @esphome_float_state_property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         if not self._feature_flags & ClimateFeature.SUPPORTS_CURRENT_TEMPERATURE:
             return None
@@ -270,7 +264,7 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
     @property
     @esphome_float_state_property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if not (
             self._feature_flags
@@ -283,7 +277,7 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
             return self._state.target_temperature
         # Two point capable devices report both set points but only act on one
         # of them in heat and cool mode, so expose that one here and leave the
-        # range to target_temperature_low/target_temperature_high
+        # range to native_target_temperature_low/native_target_temperature_high
         if self.hvac_mode == HVACMode.HEAT:
             return self._state.target_temperature_low
         if self.hvac_mode == HVACMode.COOL:
@@ -293,14 +287,14 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
     @property
     @esphome_float_state_property
     @override
-    def target_temperature_low(self) -> float | None:
+    def native_target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
         return self._state.target_temperature_low
 
     @property
     @esphome_float_state_property
     @override
-    def target_temperature_high(self) -> float | None:
+    def native_target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
         return self._state.target_temperature_high
 
@@ -316,22 +310,28 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature (and operation mode if set)."""
         data: dict[str, Any] = {"key": self._key}
-        if ATTR_HVAC_MODE in kwargs:
+        if ClimateServiceArgument.HVAC_MODE in kwargs:
             data["mode"] = _CLIMATE_MODES.from_hass(
-                cast(HVACMode, kwargs[ATTR_HVAC_MODE])
+                cast(HVACMode, kwargs[ClimateServiceArgument.HVAC_MODE])
             )
-        if ATTR_TEMPERATURE in kwargs:
+        if ClimateServiceArgument.TEMPERATURE in kwargs:
             if not self._feature_flags & (
                 ClimateFeature.REQUIRES_TWO_POINT_TARGET_TEMPERATURE
                 | ClimateFeature.SUPPORTS_TWO_POINT_TARGET_TEMPERATURE
             ):
-                data["target_temperature"] = kwargs[ATTR_TEMPERATURE]
+                data["target_temperature"] = kwargs[ClimateServiceArgument.TEMPERATURE]
             else:
-                hvac_mode = kwargs.get(ATTR_HVAC_MODE) or self.hvac_mode
+                hvac_mode = (
+                    kwargs.get(ClimateServiceArgument.HVAC_MODE) or self.hvac_mode
+                )
                 if hvac_mode == HVACMode.HEAT:
-                    data["target_temperature_low"] = kwargs[ATTR_TEMPERATURE]
+                    data["target_temperature_low"] = kwargs[
+                        ClimateServiceArgument.TEMPERATURE
+                    ]
                 elif hvac_mode == HVACMode.COOL:
-                    data["target_temperature_high"] = kwargs[ATTR_TEMPERATURE]
+                    data["target_temperature_high"] = kwargs[
+                        ClimateServiceArgument.TEMPERATURE
+                    ]
                 else:
                     raise ServiceValidationError(
                         translation_domain=DOMAIN,
@@ -345,10 +345,14 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
                             ),
                         },
                     )
-        if ATTR_TARGET_TEMP_LOW in kwargs:
-            data["target_temperature_low"] = kwargs[ATTR_TARGET_TEMP_LOW]
-        if ATTR_TARGET_TEMP_HIGH in kwargs:
-            data["target_temperature_high"] = kwargs[ATTR_TARGET_TEMP_HIGH]
+        if ClimateServiceArgument.TARGET_TEMP_LOW in kwargs:
+            data["target_temperature_low"] = kwargs[
+                ClimateServiceArgument.TARGET_TEMP_LOW
+            ]
+        if ClimateServiceArgument.TARGET_TEMP_HIGH in kwargs:
+            data["target_temperature_high"] = kwargs[
+                ClimateServiceArgument.TARGET_TEMP_HIGH
+            ]
         self._client.climate_command(**data, device_id=self._static_info.device_id)
 
     @convert_api_error_ha_error

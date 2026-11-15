@@ -1,0 +1,106 @@
+"""Execute hassfest plugins and report validation results."""
+
+from collections.abc import Sequence
+from operator import attrgetter
+from time import monotonic
+from types import ModuleType
+
+from .model import Config, Integration
+
+
+def run(config: Config, plugins: Sequence[ModuleType]) -> int:
+    """Validate integrations and generate files using the supplied plugins."""
+    if config.specific_integrations:
+        integrations = {}
+
+        for int_path in config.specific_integrations:
+            integration = Integration(int_path, config)
+            integration.load_manifest()
+            integrations[integration.domain] = integration
+
+    else:
+        integrations = Integration.load_dir(config.core_integrations_path, config)
+
+    for plugin in plugins:
+        plugin_name = plugin.__name__.rsplit(".", maxsplit=1)[-1]
+        try:
+            start = monotonic()
+            print(f"Validating {plugin_name}...", end="", flush=True)
+            if (
+                plugin_name == "requirements"
+                and config.requirements
+                and not config.specific_integrations
+            ):
+                print()
+            plugin.validate(integrations, config)
+            print(f" done in {monotonic() - start:.2f}s")
+        except RuntimeError as err:
+            print()
+            print()
+            print("Error!")
+            print(err)
+            return 1
+
+    # When we generate, all errors that are fixable will be ignored,
+    # as generating them will be fixed.
+    if config.action == "generate":
+        general_errors = [err for err in config.errors if not err.fixable]
+        invalid_itg = [
+            itg
+            for itg in integrations.values()
+            if any(not error.fixable for error in itg.errors)
+        ]
+    else:
+        # action == validate
+        general_errors = config.errors
+        invalid_itg = [itg for itg in integrations.values() if itg.errors]
+
+    warnings_itg = [itg for itg in integrations.values() if itg.warnings]
+
+    print()
+    print("Integrations:", len(integrations))
+    print("Invalid integrations:", len(invalid_itg))
+    print()
+
+    if not invalid_itg and not general_errors:
+        print_integrations_status(config, warnings_itg, show_fixable_errors=False)
+
+        if config.action == "generate":
+            for plugin in plugins:
+                if hasattr(plugin, "generate"):
+                    plugin.generate(integrations, config)
+        return 0
+
+    if config.action == "generate":
+        print("Found errors. Generating files canceled.")
+        print()
+
+    if general_errors:
+        print("General errors:")
+        for error in general_errors:
+            print("*", error)
+        print()
+
+    invalid_itg.extend(itg for itg in warnings_itg if itg not in invalid_itg)
+
+    print_integrations_status(config, invalid_itg, show_fixable_errors=False)
+
+    return 1
+
+
+def print_integrations_status(
+    config: Config,
+    integrations: list[Integration],
+    *,
+    show_fixable_errors: bool = True,
+) -> None:
+    """Print integration status."""
+    for integration in sorted(integrations, key=attrgetter("domain")):
+        extra = f" - {integration.path}" if config.specific_integrations else ""
+        print(f"Integration {integration.domain}{extra}:")
+        for error in integration.errors:
+            if show_fixable_errors or not error.fixable:
+                print("*", "[ERROR]", error)
+        for warning in integration.warnings:
+            print("*", "[WARNING]", warning)
+        print()

@@ -5,6 +5,11 @@ from unittest.mock import AsyncMock, patch
 
 from bring_api import BringItemOperation, BringItemsResponse, BringRequestException
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_load_fixture,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.bring.const import DOMAIN
@@ -20,8 +25,6 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, async_load_fixture, snapshot_platform
 
 
 @pytest.fixture(autouse=True)

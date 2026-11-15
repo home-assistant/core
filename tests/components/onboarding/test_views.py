@@ -10,10 +10,21 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from aiohasupervisor import SupervisorBadRequestError
 import pytest
+from pytest_homeassistant.common import (
+    CLIENT_ID,
+    CLIENT_REDIRECT_URI,
+    MockModule,
+    MockUser,
+    mock_integration,
+    mock_platform,
+    register_auth_provider,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant import bootstrap
-from homeassistant.components import hassio, onboarding
+from homeassistant.components import hassio, onboarding, person
 from homeassistant.components.http import KEY_HASS
+from homeassistant.components.http.const import MAX_UNAUTHENTICATED_BODY_SIZE
 from homeassistant.components.onboarding import DOMAIN, const, views
 from homeassistant.const import EVENT_COMPONENT_LOADED
 from homeassistant.core import Event, HomeAssistant, callback
@@ -27,17 +38,6 @@ from homeassistant.setup import (
 )
 
 from . import mock_storage
-
-from tests.common import (
-    CLIENT_ID,
-    CLIENT_REDIRECT_URI,
-    MockModule,
-    MockUser,
-    mock_integration,
-    mock_platform,
-    register_auth_provider,
-)
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -99,14 +99,14 @@ def mock_default_integrations():
     with (
         patch("homeassistant.components.rpi_power.config_flow.new_under_voltage"),
         patch("homeassistant.components.rpi_power.new_under_voltage"),
-        patch("homeassistant.components.met.async_setup_entry", return_value=True),
+        patch("homeassistant.components.met.async_setup_entry", return_value=None),
         patch(
             "homeassistant.components.radio_browser.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch(
             "homeassistant.components.shopping_list.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         yield
@@ -204,7 +204,7 @@ async def test_onboarding_user(
     assert user is not None
     assert len(user.credentials) == 1
     assert user.credentials[0].data["username"] == "test-user"
-    assert len(hass.data["person"][1].async_items()) == 1
+    assert len(hass.data[person.DATA_PERSON].storage_collection.async_items()) == 1
 
     # Validate refresh token 1
     resp = await client.post(
@@ -228,6 +228,32 @@ async def test_onboarding_user(
         "Kitchen",
         "Living Room",
     ]
+
+
+@pytest.mark.parametrize(
+    "url", ["/api/onboarding/users", "/api/onboarding/integration/wait"]
+)
+async def test_onboarding_body_too_large(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_client_no_auth: ClientSessionGenerator,
+    url: str,
+) -> None:
+    """Test unauthenticated onboarding views reject large bodies."""
+    mock_storage(hass_storage, {"done": []})
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    client = await hass_client_no_auth()
+
+    resp = await client.post(
+        url,
+        data=b"a" * (MAX_UNAUTHENTICATED_BODY_SIZE + 1),
+        headers={"Content-Type": "application/json"},
+    )
+
+    assert resp.status == HTTPStatus.REQUEST_ENTITY_TOO_LARGE
 
 
 async def test_onboarding_user_invalid_name(
@@ -254,6 +280,57 @@ async def test_onboarding_user_invalid_name(
     )
 
     assert resp.status == 400
+
+
+@pytest.mark.parametrize(
+    ("username", "expected_code"),
+    [
+        pytest.param("Test-User", "username_not_normalized", id="uppercase"),
+        pytest.param("test-user ", "username_not_normalized", id="whitespace"),
+        pytest.param("existing-user", "username_already_exists", id="duplicate"),
+    ],
+)
+async def test_onboarding_user_invalid_username(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_client_no_auth: ClientSessionGenerator,
+    username: str,
+    expected_code: str,
+) -> None:
+    """Test a rejected username does not leave an orphaned user behind."""
+    mock_storage(hass_storage, {"done": []})
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    provider = views._async_get_hass_provider(hass)
+    await provider.async_initialize()
+    await provider.async_add_auth("existing-user", "test-pass")
+
+    cur_users = len(await hass.auth.async_get_users())
+    client = await hass_client_no_auth()
+
+    resp = await client.post(
+        "/api/onboarding/users",
+        json={
+            "client_id": CLIENT_ID,
+            "name": "Test Name",
+            "username": username,
+            "password": "test-pass",
+            "language": "en",
+        },
+    )
+
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    body = await resp.json()
+    assert body["code"] == expected_code
+    # The rejected username is echoed back so the frontend can explain the failure
+    assert username in body["message"]
+
+    # The step stays open so onboarding can be retried with another username,
+    # and no user may be left behind from the rejected attempt.
+    assert const.STEP_USER not in hass_storage[const.DOMAIN]["data"]["done"]
+    assert len(await hass.auth.async_get_users()) == cur_users
 
 
 async def test_onboarding_user_race(

@@ -9,7 +9,7 @@ from .coordinator import PureEnergieConfigEntry, PureEnergieDataUpdateCoordinato
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: PureEnergieConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: PureEnergieConfigEntry) -> None:
     """Set up Pure Energie from a config entry."""
 
     coordinator = PureEnergieDataUpdateCoordinator(hass, entry)
@@ -22,11 +22,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: PureEnergieConfigEntry) 
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: PureEnergieConfigEntry
-) -> bool:
+) -> None:
     """Unload Pure Energie config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

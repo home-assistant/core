@@ -32,6 +32,7 @@ class OpenRouterConversationEntity(OpenRouterEntity, conversation.ConversationEn
     """OpenRouter conversation agent."""
 
     _attr_name = None
+    _attr_supports_streaming = True
 
     def __init__(self, entry: OpenRouterConfigEntry, subentry: ConfigSubentry) -> None:
         """Initialize the agent."""

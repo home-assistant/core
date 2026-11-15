@@ -1,9 +1,12 @@
 """Tests for gree component."""
 
 from datetime import timedelta
+from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
+from greeclimate.network import Response
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN, HVACMode
 from homeassistant.components.gree.const import UPDATE_INTERVAL
@@ -11,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from .common import async_setup_gree, build_device_mock
-
-from tests.common import async_fire_time_changed
 
 ENTITY_ID_1 = f"{CLIMATE_DOMAIN}.fake_device_1"
 ENTITY_ID_2 = f"{CLIMATE_DOMAIN}.fake_device_2"
@@ -72,7 +73,7 @@ async def test_discovery_after_setup(
 
 
 async def test_coordinator_updates(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, discovery, device
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, device: MagicMock
 ) -> None:
     """Test gree devices update their state."""
     await async_setup_gree(hass)
@@ -80,12 +81,11 @@ async def test_coordinator_updates(
 
     assert len(hass.states.async_all(CLIMATE_DOMAIN)) == 1
 
-    callback = device().add_handler.call_args_list[0][0][1]
-
-    async def fake_update_state(*args) -> None:
+    async def fake_update_state() -> None:
         """Fake update state."""
         device().power = True
-        callback()
+        device().raw_properties["Pow"] = 1
+        device().callbacks[Response.DATA]({"Pow": 1})
 
     device().update_state.side_effect = fake_update_state
 
@@ -95,4 +95,4 @@ async def test_coordinator_updates(
 
     state = hass.states.get(ENTITY_ID_1)
     assert state is not None
-    assert state.state != HVACMode.OFF
+    assert state.state == HVACMode.AUTO

@@ -26,6 +26,7 @@ from homeassistant.core import (
     EventStateChangedData,
     HomeAssistant,
     State,
+    async_noop,
     callback,
     is_callback,
     valid_entity_id,
@@ -474,7 +475,7 @@ async def ws_stream(
             _async_send_empty_response(connection, msg_id, start_time, end_time)
             return
 
-        connection.subscriptions[msg_id] = callback(lambda: None)
+        connection.subscriptions[msg_id] = async_noop
         connection.send_result(msg_id)
         await _async_send_historical_states(
             hass,

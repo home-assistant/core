@@ -1,14 +1,19 @@
 """Test DoorBird image entities."""
 
+from unittest.mock import patch
+
+import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator
+
+from homeassistant.components.doorbird.const import CONF_EVENTS
+from homeassistant.components.doorbird.image import DoorBirdLastEventImage
 from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import mock_webhook_call
+from . import mock_not_found_exception, mock_webhook_call
 from .conftest import DoorbirdMockerType
-
-from tests.typing import ClientSessionGenerator
 
 # A body whose first 4 bytes are a recognized JPEG magic number, so
 # infer_image_type accepts it. The trailing bytes are arbitrary padding.
@@ -102,3 +107,84 @@ async def test_image_rejects_non_image_body(
         f"/api/{IMAGE_DOMAIN}_proxy/image.mydoorbird_last_ring?token={access_token}"
     )
     assert resp.status == 500
+
+
+@pytest.mark.parametrize(
+    ("events", "event", "refreshed"),
+    [
+        pytest.param(
+            ["doorbell", "motion"],
+            "mydoorbird_doorbell",
+            {"image.mydoorbird_last_ring"},
+            id="doorbell",
+        ),
+        pytest.param(
+            ["doorbell", "motion"],
+            "mydoorbird_motion",
+            {"image.mydoorbird_last_motion"},
+            id="motion",
+        ),
+        pytest.param(["front_door"], "mydoorbird_front_door", set(), id="renamed"),
+    ],
+)
+async def test_image_updates_on_event_without_schedule_api(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    doorbird_mocker: DoorbirdMockerType,
+    events: list[str],
+    event: str,
+    refreshed: set[str],
+) -> None:
+    """Test models without the schedule API refresh images by event name."""
+    doorbird_entry = await doorbird_mocker(
+        options={CONF_EVENTS: events},
+        schedule_side_effect=mock_not_found_exception(),
+    )
+    client = await hass_client()
+
+    await mock_webhook_call(doorbird_entry.entry, client, event)
+    await hass.async_block_till_done()
+
+    assert {
+        entity_id
+        for entity_id in hass.states.async_entity_ids(IMAGE_DOMAIN)
+        if hass.states.get(entity_id).state != STATE_UNKNOWN
+    } == refreshed
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "event"),
+    [
+        pytest.param("image.mydoorbird_last_ring", "mydoorbird_doorbell", id="ring"),
+        pytest.param("image.mydoorbird_last_motion", "mydoorbird_motion", id="motion"),
+    ],
+)
+async def test_image_entity_id_change(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    doorbird_mocker: DoorbirdMockerType,
+    entity_registry: er.EntityRegistry,
+    entity_id: str,
+    event: str,
+) -> None:
+    """Test an image entity is renamed in place and still handles events."""
+    doorbird_entry = await doorbird_mocker()
+    client = await hass_client()
+
+    with patch.object(
+        DoorBirdLastEventImage,
+        "async_added_to_hass",
+        autospec=True,
+        side_effect=DoorBirdLastEventImage.async_added_to_hass,
+    ) as mock_added_to_hass:
+        entity_registry.async_update_entity(entity_id, new_entity_id="image.renamed")
+        await hass.async_block_till_done()
+
+    mock_added_to_hass.assert_not_called()
+    assert hass.states.get(entity_id) is None
+    assert hass.states.get("image.renamed").state == STATE_UNKNOWN
+
+    await mock_webhook_call(doorbird_entry.entry, client, event)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("image.renamed").state != STATE_UNKNOWN

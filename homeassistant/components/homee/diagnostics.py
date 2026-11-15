@@ -13,7 +13,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import AnyDeviceEntry
 
-from . import DOMAIN, HomeeConfigEntry
+from . import HomeeConfigEntry
+from .const import DOMAIN
 
 TO_REDACT = [
     CONF_ADDRESS,

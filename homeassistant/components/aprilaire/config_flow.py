@@ -8,7 +8,6 @@ from pyaprilaire.const import Attribute
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import DOMAIN
@@ -17,7 +16,7 @@ from .coordinator import AprilaireCoordinator
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_HOST): str,
-        probatio.Required(CONF_PORT, default=7000): cv.port,
+        probatio.Required(CONF_PORT, default=7000): probatio.Port(),
     }
 )
 

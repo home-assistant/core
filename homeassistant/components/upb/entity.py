@@ -52,6 +52,9 @@ class UpbEntity(Entity):
     async def async_added_to_hass(self) -> None:
         """Register callback for UPB changes and update entity state."""
         self._element.add_callback(self._element_callback)
+        self.async_on_remove(
+            lambda: self._element.remove_callback(self._element_callback)
+        )
         self._element_callback(self._element, {})
 
 

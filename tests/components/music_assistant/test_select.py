@@ -9,11 +9,11 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.music_assistant.const import DOMAIN
 from homeassistant.components.music_assistant.select import PLAYER_OPTIONS_SELECT
 from homeassistant.components.select import (
-    ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -56,10 +56,10 @@ async def test_select_action(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_OPTION: option_sub_translation_key,
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            SelectServiceArgument.OPTION: option_sub_translation_key,
         },
         blocking=True,
     )
@@ -76,10 +76,10 @@ async def test_select_action(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: entity_id,
-                ATTR_OPTION: "non_existing_key",
+                CommonServiceArgument.ENTITY_ID: entity_id,
+                SelectServiceArgument.OPTION: "non_existing_key",
             },
             blocking=True,
         )

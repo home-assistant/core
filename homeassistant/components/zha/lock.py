@@ -3,18 +3,12 @@
 import functools
 from typing import Any, override
 
-import probatio
-
 from homeassistant.components.lock import LockEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, State, callback
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    async_get_current_platform,
-)
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import ZHAEntity
 from .helpers import (
@@ -23,11 +17,6 @@ from .helpers import (
     convert_zha_error_to_ha_error,
     get_zha_data,
 )
-
-SERVICE_SET_LOCK_USER_CODE = "set_lock_user_code"
-SERVICE_ENABLE_LOCK_USER_CODE = "enable_lock_user_code"
-SERVICE_DISABLE_LOCK_USER_CODE = "disable_lock_user_code"
-SERVICE_CLEAR_LOCK_USER_CODE = "clear_lock_user_code"
 
 
 async def async_setup_entry(
@@ -47,41 +36,6 @@ async def async_setup_entry(
         ),
     )
     config_entry.async_on_unload(unsub)
-
-    platform = async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_SET_LOCK_USER_CODE,
-        {
-            probatio.Required("code_slot"): probatio.Coerce(int),
-            probatio.Required("user_code"): cv.string,
-        },
-        "async_set_lock_user_code",
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_ENABLE_LOCK_USER_CODE,
-        {
-            probatio.Required("code_slot"): probatio.Coerce(int),
-        },
-        "async_enable_lock_user_code",
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_DISABLE_LOCK_USER_CODE,
-        {
-            probatio.Required("code_slot"): probatio.Coerce(int),
-        },
-        "async_disable_lock_user_code",
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_CLEAR_LOCK_USER_CODE,
-        {
-            probatio.Required("code_slot"): probatio.Coerce(int),
-        },
-        "async_clear_lock_user_code",
-    )
 
 
 class ZhaDoorLock(ZHAEntity, LockEntity):

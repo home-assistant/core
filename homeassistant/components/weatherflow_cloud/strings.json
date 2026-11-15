@@ -29,9 +29,6 @@
       "air_density": {
         "name": "Air density"
       },
-      "air_temperature": {
-        "name": "Temperature"
-      },
       "barometric_pressure": {
         "name": "Pressure barometric"
       },
@@ -43,9 +40,6 @@
       },
       "heat_index": {
         "name": "Heat index"
-      },
-      "illuminance": {
-        "name": "Illuminance"
       },
       "lightning_strike_count": {
         "name": "Lightning count"
@@ -114,9 +108,6 @@
       "wind_chill": {
         "name": "Wind chill"
       },
-      "wind_direction": {
-        "name": "Wind direction"
-      },
       "wind_gust": {
         "name": "Wind gust"
       },
@@ -125,9 +116,6 @@
       },
       "wind_sample_interval": {
         "name": "Wind sample interval"
-      },
-      "wind_speed": {
-        "name": "Wind speed"
       }
     }
   }

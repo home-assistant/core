@@ -1,8 +1,13 @@
 {
   "domain": "fritz",
   "name": "FRITZ!Box Tools",
+  "categories": [
+    "computers_network.routers_network",
+    "presence_location.network_presence"
+  ],
   "codeowners": ["@AaronDavidSchneider", "@chemelli74", "@mib1185"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/fritz",
   "integration_type": "hub",

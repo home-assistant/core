@@ -5,18 +5,21 @@ from datetime import timedelta
 import logging
 from typing import Any, override
 
-import aiohttp
 from nrgkick_api import (
     NRGkickAPI,
     NRGkickAPIDisabledError,
     NRGkickAuthenticationError,
     NRGkickConnectionError,
+    NRGkickHTTPError,
     NRGkickInvalidResponseError,
+    NRGkickTimeoutError,
+    NRGkickUnreachableError,
 )
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
@@ -69,26 +72,53 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator[NRGkickData]):
                 translation_key="authentication_error",
             ) from error
         except NRGkickAPIDisabledError as error:
+            # Only the user can enable the API again in the NRGkick app.
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                self._json_api_disabled_issue_id,
+                config_entry_id=self.config_entry.entry_id,
+                is_fixable=False,
+                is_persistent=False,
+                severity=ir.IssueSeverity.ERROR,
+                translation_key="json_api_disabled",
+                translation_placeholders={"device_name": self.config_entry.title},
+            )
             raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="json_api_disabled",
+            ) from error
+        except NRGkickTimeoutError as error:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="timeout",
+            ) from error
+        except NRGkickUnreachableError as error:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="unreachable",
+            ) from error
+        except NRGkickHTTPError as error:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="http_error",
+                translation_placeholders={"status": str(error.status)},
             ) from error
         except NRGkickConnectionError as error:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="communication_error",
-                translation_placeholders={"error": str(error)},
             ) from error
         except NRGkickInvalidResponseError as error:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_response",
             ) from error
-        except (TimeoutError, aiohttp.ClientError, OSError) as error:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="communication_error",
-                translation_placeholders={"error": str(error)},
-            ) from error
 
+        ir.async_delete_issue(self.hass, DOMAIN, self._json_api_disabled_issue_id)
         return NRGkickData(info=info, control=control, values=values)
+
+    @property
+    def _json_api_disabled_issue_id(self) -> str:
+        """Return the ID of the repair issue for a disabled JSON API."""
+        return f"json_api_disabled_{self.config_entry.entry_id}"

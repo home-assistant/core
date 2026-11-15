@@ -3,8 +3,7 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "unique_id_mismatch": "The identifier does not match the previous identifier",
-      "unknown": "[%key:common::config_flow::error::unknown%]",
-      "unsupported_version": "Your version of System Bridge is not supported. Please upgrade to the latest version."
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -17,7 +16,21 @@
         "data": {
           "token": "[%key:common::config_flow::data::api_token%]"
         },
+        "data_description": {
+          "token": "[%key:component::system_bridge::config::step::user::data_description::token%]"
+        },
         "description": "Please enter the token set in your configuration for {name}."
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the computer running System Bridge.",
+          "port": "The port System Bridge listens on. The default is 9170."
+        },
+        "description": "Update the connection details for System Bridge."
       },
       "user": {
         "data": {
@@ -25,30 +38,151 @@
           "port": "[%key:common::config_flow::data::port%]",
           "token": "Token"
         },
+        "data_description": {
+          "host": "The hostname or IP address of the computer running System Bridge.",
+          "port": "The port System Bridge listens on. The default is 9170.",
+          "token": "The token from the System Bridge settings."
+        },
         "description": "Please enter your connection details."
       }
     }
   },
   "entity": {
     "binary_sensor": {
+      "ac_connected": {
+        "name": "AC power"
+      },
       "camera_in_use": {
         "name": "Camera in use"
+      },
+      "locked": {
+        "name": "Session lock"
       },
       "pending_reboot": {
         "name": "Pending reboot"
       }
     },
+    "button": {
+      "power_hibernate": {
+        "name": "Hibernate"
+      },
+      "power_lock": {
+        "name": "Lock"
+      },
+      "power_logout": {
+        "name": "Log out"
+      },
+      "power_shutdown": {
+        "name": "Shut down"
+      },
+      "power_sleep": {
+        "name": "Sleep"
+      }
+    },
+    "event": {
+      "notification": {
+        "name": "Notification",
+        "state_attributes": {
+          "action": {
+            "name": "Action"
+          },
+          "buttons": {
+            "name": "Buttons"
+          },
+          "event_type": {
+            "state": {
+              "clicked": "Clicked",
+              "closed": "Closed",
+              "sent": "Sent"
+            }
+          },
+          "message": {
+            "name": "Message"
+          },
+          "notification_id": {
+            "name": "Notification ID"
+          },
+          "reason": {
+            "name": "Reason",
+            "state": {
+              "closed": "Closed",
+              "dismissed": "Dismissed",
+              "expired": "Expired"
+            }
+          },
+          "title": {
+            "name": "Title"
+          }
+        }
+      }
+    },
     "media_player": {
+      "audio": {
+        "name": "Audio"
+      },
+      "audio_output": {
+        "name": "{name} output"
+      },
       "media": {
         "name": "Media"
+      }
+    },
+    "number": {
+      "audio_input_volume": {
+        "name": "{name} input volume"
+      },
+      "display_brightness": {
+        "name": "Display {display_id} brightness"
+      }
+    },
+    "select": {
+      "audio_input": {
+        "name": "Audio input"
+      },
+      "power_profile": {
+        "name": "Power profile",
+        "state": {
+          "balanced": "Balanced",
+          "performance": "Performance",
+          "power-saver": "Power saver"
+        }
       }
     },
     "sensor": {
       "amount_memory_used": {
         "name": "Amount of memory used"
       },
+      "battery_info": {
+        "name": "{battery} battery"
+      },
+      "battery_info_state": {
+        "name": "{battery} battery state",
+        "state": {
+          "charging": "[%key:common::state::charging%]",
+          "discharging": "[%key:common::state::discharging%]",
+          "empty": "[%key:common::state::empty%]",
+          "full": "[%key:common::state::full%]",
+          "not_charging": "[%key:component::system_bridge::entity::sensor::battery_state::state::not_charging%]"
+        }
+      },
+      "battery_power": {
+        "name": "Battery power"
+      },
+      "battery_state": {
+        "name": "Battery state",
+        "state": {
+          "charging": "[%key:common::state::charging%]",
+          "discharging": "[%key:common::state::discharging%]",
+          "empty": "[%key:common::state::empty%]",
+          "full": "[%key:common::state::full%]",
+          "not_charging": "Not charging"
+        }
+      },
       "battery_time_remaining": {
         "name": "Battery time remaining"
+      },
+      "battery_voltage": {
+        "name": "Battery voltage"
       },
       "boot_time": {
         "name": "Boot time"
@@ -68,6 +202,18 @@
       "cpu_voltage": {
         "name": "CPU voltage"
       },
+      "disk_device_read_rate": {
+        "name": "{disk} read rate"
+      },
+      "disk_device_write_rate": {
+        "name": "{disk} write rate"
+      },
+      "disk_read_rate": {
+        "name": "Disk read rate"
+      },
+      "disk_write_rate": {
+        "name": "Disk write rate"
+      },
       "display_refresh_rate": {
         "name": "Display {display_id} refresh rate"
       },
@@ -83,8 +229,17 @@
       "gpu_core_clock_speed": {
         "name": "{gpu_name} clock speed"
       },
+      "gpu_decoder_usage_percentage": {
+        "name": "{gpu_name} decoder usage"
+      },
+      "gpu_encoder_usage_percentage": {
+        "name": "{gpu_name} encoder usage"
+      },
       "gpu_fan_speed": {
         "name": "{gpu_name} fan speed"
+      },
+      "gpu_fan_speed_percentage": {
+        "name": "{gpu_name} fan speed percentage"
       },
       "gpu_memory_clock_speed": {
         "name": "{gpu_name} memory clock speed"
@@ -92,11 +247,20 @@
       "gpu_memory_free": {
         "name": "{gpu_name} memory free"
       },
+      "gpu_memory_total": {
+        "name": "{gpu_name} memory total"
+      },
       "gpu_memory_used": {
         "name": "{gpu_name} memory used"
       },
       "gpu_memory_used_percentage": {
-        "name": "{gpu_name} memory used %"
+        "name": "{gpu_name} memory usage"
+      },
+      "gpu_performance_state": {
+        "name": "{gpu_name} performance state"
+      },
+      "gpu_power_limit": {
+        "name": "{gpu_name} power limit"
       },
       "gpu_power_usage": {
         "name": "{gpu_name} power usage"
@@ -107,11 +271,23 @@
       "gpu_usage_percentage": {
         "name": "{gpu_name} usage %"
       },
+      "idle_time": {
+        "name": "Idle time"
+      },
       "kernel": {
         "name": "Kernel"
       },
       "load": {
         "name": "Load"
+      },
+      "load_average": {
+        "name": "Load average (1 min)"
+      },
+      "load_average_15": {
+        "name": "Load average (15 min)"
+      },
+      "load_average_5": {
+        "name": "Load average (5 min)"
       },
       "memory_free": {
         "name": "Memory free"
@@ -120,7 +296,28 @@
         "name": "Memory used"
       },
       "memory_used_percentage": {
-        "name": "Memory used %"
+        "name": "Memory usage"
+      },
+      "network_download_rate": {
+        "name": "Network download rate"
+      },
+      "network_interface_download_rate": {
+        "name": "{interface} download rate"
+      },
+      "network_interface_link_rate": {
+        "name": "{interface} link rate"
+      },
+      "network_interface_signal_strength": {
+        "name": "{interface} signal strength"
+      },
+      "network_interface_ssid": {
+        "name": "{interface} SSID"
+      },
+      "network_interface_upload_rate": {
+        "name": "{interface} upload rate"
+      },
+      "network_upload_rate": {
+        "name": "Network upload rate"
       },
       "os": {
         "name": "Operating system"
@@ -137,23 +334,79 @@
       "space_used": {
         "name": "{partition} space used"
       },
+      "swap_used": {
+        "name": "Swap used"
+      },
+      "swap_used_percentage": {
+        "name": "Swap usage"
+      },
       "version": {
         "name": "Version"
       },
       "version_latest": {
         "name": "Latest version"
       }
+    },
+    "switch": {
+      "audio_input_mute": {
+        "name": "{name} input mute"
+      },
+      "display_power": {
+        "name": "Display {display_id} power"
+      },
+      "keep_awake": {
+        "name": "Keep awake"
+      }
     }
   },
   "exceptions": {
+    "action_failed": {
+      "message": "Failed to run {action}: {error}"
+    },
+    "audio_control_failed": {
+      "message": "Failed to control audio device {name}: {error}"
+    },
+    "audio_device_not_found": {
+      "message": "No audio device named {name}"
+    },
     "authentication_failed": {
       "message": "Authentication failed for {title} ({host})"
+    },
+    "command_exit_code": {
+      "message": "{name} exited with code {exit_code}"
+    },
+    "command_failed": {
+      "message": "Failed to run {name}: {error}"
+    },
+    "command_timeout": {
+      "message": "{name} didn't finish in time"
     },
     "connection_failed": {
       "message": "A connection error occurred for {title} ({host})"
     },
+    "connection_lost": {
+      "message": "Connection lost while registering for {title}"
+    },
+    "display_control_failed": {
+      "message": "Failed to control display {display_id}: {error}"
+    },
+    "entry_not_loaded": {
+      "message": "System Bridge entry {entry_id} isn't loaded"
+    },
+    "media_control_failed": {
+      "message": "Failed to control the media player: {error}"
+    },
+    "media_player_not_found": {
+      "message": "No media player named {name}"
+    },
     "no_data_received": {
       "message": "No data received from {host}"
+    },
+    "notification_failed": {
+      "message": "Failed to send the notification: {error}"
+    },
+    "power_command_failed": {
+      "message": "Failed to send the power command: {error}"
     },
     "process_not_found": {
       "message": "Could not find process with ID {id}."
@@ -161,20 +414,50 @@
     "send_message_failed": {
       "message": "Failed to send message to {title} ({host}) due to a connection error"
     },
+    "system_control_failed": {
+      "message": "System Bridge couldn't make the change: {error}"
+    },
     "timeout": {
       "message": "A timeout occurred for {title} ({host})"
     },
     "unsupported_version": {
       "message": "You are not running a supported version of System Bridge for {title} ({host}). Please upgrade to the latest version"
+    },
+    "waiting_for_sleep": {
+      "message": "Waiting for {title} to sleep or shut down"
     }
   },
   "issues": {
+    "deprecated_notify_action": {
+      "description": "The action `{action}` is deprecated and will be removed in a future release.\n\nUpdate your automations and scripts to use the notify entity with the `{new_action_1}` or `{new_action_2}` action instead.\n\n## Example automation using `{new_action_1}` action:\n\n{example_yaml_1}\n\n## Example automation using `{new_action_2}` action:\n\n{example_yaml_2}",
+      "title": "Detected use of deprecated action {action}"
+    },
     "unsupported_version": {
       "description": "Your version of System Bridge for host {host} is not supported.\n\nPlease upgrade to the latest version.",
       "title": "System Bridge upgrade required"
     }
   },
   "selector": {
+    "buttons": {
+      "fields": {
+        "id": {
+          "description": "Reported when the button is pressed. Can't be \"default\", which is reported when the notification itself is clicked.",
+          "name": "ID"
+        },
+        "label": {
+          "description": "Text shown on the button.",
+          "name": "Label"
+        }
+      }
+    },
+    "icon": {
+      "options": {
+        "dialog-error": "Error",
+        "dialog-information": "Information",
+        "dialog-question": "Question",
+        "dialog-warning": "Warning"
+      }
+    },
     "key": {
       "options": {
         "alt": "Alt",
@@ -247,6 +530,13 @@
         "restart": "[%key:common::action::restart%]",
         "shutdown": "Shutdown",
         "sleep": "Sleep"
+      }
+    },
+    "urgency": {
+      "options": {
+        "critical": "Critical",
+        "low": "Low",
+        "normal": "Normal"
       }
     }
   },
@@ -334,6 +624,48 @@
         }
       },
       "name": "Send keyboard keypress"
+    },
+    "send_message": {
+      "description": "Sends a notification to the computer, with options the standard notify action doesn't have. Only administrators can use it.",
+      "fields": {
+        "buttons": {
+          "description": "Up to 3 buttons to show on the notification. Pressing one reports its ID. Linux and Windows only.",
+          "name": "Buttons"
+        },
+        "duration": {
+          "description": "How long the notification shows for.",
+          "name": "Duration"
+        },
+        "icon": {
+          "description": "Icon to show with the notification: an image path on the computer, or on Linux an icon name from the icon theme. Standard icon names: {icon_naming_url}.",
+          "name": "Icon"
+        },
+        "message": {
+          "description": "The message body of the notification.",
+          "name": "Message"
+        },
+        "path": {
+          "description": "File or folder on the computer to open when the notification is clicked. Can't be used with URL.",
+          "name": "[%key:common::config_flow::data::path%]"
+        },
+        "sound": {
+          "description": "Path to a sound file on the computer to play with the notification. Linux only.",
+          "name": "Sound"
+        },
+        "title": {
+          "description": "Title of the notification.",
+          "name": "Title"
+        },
+        "urgency": {
+          "description": "How urgent the notification is. Critical notifications stay until they're dismissed. Linux only.",
+          "name": "Urgency"
+        },
+        "url": {
+          "description": "URL to open on the computer when the notification is clicked. Can't be used with path.",
+          "name": "[%key:common::config_flow::data::url%]"
+        }
+      },
+      "name": "Send message"
     },
     "send_text": {
       "description": "Sends text for the server to type.",

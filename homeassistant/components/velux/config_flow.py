@@ -19,7 +19,7 @@ from .const import DOMAIN, LOGGER, PYVLX_FROM_CONFIG_FLOW
 USER_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_HOST): cv.string,
-        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): cv.string,
     }
 )
 
@@ -121,7 +121,7 @@ class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_PASSWORD): cv.string,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): cv.string,
                 }
             ),
             errors=errors,
@@ -189,7 +189,7 @@ class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
         self.discovery_data[CONF_HOST] = discovery_info.host
         self.discovery_data[CONF_NAME] = sanitize_hostname(discovery_info.name)
 
-        self.context["title_placeholders"] = {CONF_NAME: self.discovery_data[CONF_NAME]}
+        self.context["title_placeholders"] = {"name": self.discovery_data[CONF_NAME]}
         await self.async_set_unique_id(self.discovery_data[CONF_NAME])
         self._abort_if_unique_id_configured(
             updates={CONF_HOST: self.discovery_data[CONF_HOST]}
@@ -222,7 +222,7 @@ class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="discovery_confirm",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_PASSWORD): cv.string,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): cv.string,
                 }
             ),
             errors=errors,

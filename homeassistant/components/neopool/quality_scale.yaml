@@ -1,17 +1,17 @@
 rules:
   # Bronze
   action-setup:
-    status: exempt
-    comment: The integration does not register any service actions.
+    status: done
+    comment: >-
+      Services are registered in async_setup via async_setup_services and
+      resolve their target config entry inside each handler.
   appropriate-polling: done
   brands: done
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
-  docs-actions:
-    status: exempt
-    comment: The integration does not register any service actions.
+  docs-actions: done
   docs-conditions:
     status: exempt
     comment: The integration does not provide any conditions.
@@ -34,9 +34,7 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: exempt
-    comment: The integration does not register any service actions.
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done

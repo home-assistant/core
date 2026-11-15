@@ -9,18 +9,17 @@ from aioamazondevices.exceptions import (
     CannotRetrieveData,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.alexa_devices.const import DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SERVICE_TURN_ON
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, Platform
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
+from homeassistant.const import STATE_OFF, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
 from .const import TEST_DEVICE_1_SN
-
-from tests.common import MockConfigEntry
 
 ENTITY_ID = "switch.echo_test_do_not_disturb"
 
@@ -75,8 +74,8 @@ async def test_alexa_api_call_exceptions(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: ENTITY_ID},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
 

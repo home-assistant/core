@@ -1,5 +1,6 @@
 """Test the Nibe Heat Pump number entities."""
 
+from datetime import date
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -10,11 +11,11 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -66,6 +67,29 @@ async def test_update(
 
 
 @pytest.mark.parametrize(
+    ("address", "entity_id"),
+    [
+        (48044, "number.holiday_start_date_48044"),
+        (48045, "number.holiday_end_date_48045"),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_date_coils_not_created(
+    hass: HomeAssistant,
+    address: int,
+    entity_id: str,
+    coils: dict[int, Any],
+) -> None:
+    """Test writable date coils do not become number entities."""
+    coils[address] = date(2025, 6, 28)
+
+    await async_add_model(hass, Model.F1255)
+
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id) is None
+
+
+@pytest.mark.parametrize(
     ("model", "address", "entity_id", "value"),
     [
         (Model.S320, 40031, "number.heating_offset_climate_system_1_40031", 10),
@@ -96,8 +120,11 @@ async def test_set_value(
     # Write value
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: value},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            NumberServiceArgument.VALUE: value,
+        },
         blocking=True,
     )
 
@@ -159,8 +186,11 @@ async def test_set_value_fail(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: value},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: entity_id,
+                NumberServiceArgument.VALUE: value,
+            },
             blocking=True,
         )
     assert exc_info.value.translation_domain == "nibe_heatpump"
@@ -193,8 +223,11 @@ async def test_set_value_same(
     # Write value
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: value},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            NumberServiceArgument.VALUE: value,
+        },
         blocking=True,
     )
 

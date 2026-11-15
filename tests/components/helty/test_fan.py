@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 from pyhelty import FanMode, HeltyError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fan import (
@@ -25,8 +26,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 from .conftest import make_data
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 FAN_ENTITY = "fan.vmc_soggiorno"
 

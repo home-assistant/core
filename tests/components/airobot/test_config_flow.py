@@ -8,6 +8,7 @@ from pyairobotrest.exceptions import (
     AirobotError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.airobot.const import DOMAIN
@@ -15,8 +16,6 @@ from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PASSWORD, CONF_USERNAM
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
-
-from tests.common import MockConfigEntry
 
 TEST_USER_INPUT = {
     CONF_HOST: "192.168.1.100",
@@ -152,6 +151,7 @@ async def test_dhcp_discovery(
     assert result["data"][CONF_USERNAME] == "T01A1B2C3"
     assert result["data"][CONF_PASSWORD] == "test-password"
     assert result["data"][CONF_MAC] == "b8d61aabcdef"
+    assert result["result"].unique_id == "T01A1B2C3"
 
 
 @pytest.mark.parametrize(

@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 import requests
 
 from homeassistant.components.alarm_control_panel import (
@@ -24,8 +25,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import async_fire_time_changed
 
 VALID_CONFIG = {
     ALARM_DOMAIN: {

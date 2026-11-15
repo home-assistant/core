@@ -5,14 +5,13 @@ from __future__ import annotations
 from unittest.mock import AsyncMock
 
 from pajgps_api.models.device import Device
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.paj_gps.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_entity_device_info(

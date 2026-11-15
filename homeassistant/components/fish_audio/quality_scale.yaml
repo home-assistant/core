@@ -34,7 +34,7 @@ rules:
     status: exempt
     comment: TTS platform has no state to mark unavailable.
   action-exceptions: done
-  reauthentication-flow: todo
+  reauthentication-flow: done
   parallel-updates: done
   test-coverage: todo
   integration-owner: done

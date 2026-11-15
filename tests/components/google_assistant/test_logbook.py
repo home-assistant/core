@@ -62,10 +62,10 @@ async def test_humanify_command_received(hass: HomeAssistant) -> None:
     assert len(events) == 2
     event1, event2 = events
 
-    assert event1["name"] == "Google Assistant"
+    assert event1["name"] == "Google Home"
     assert event1["domain"] == DOMAIN
     assert event1["message"] == "sent command OnOff (via local)"
 
-    assert event2["name"] == "Google Assistant"
+    assert event2["name"] == "Google Home"
     assert event2["domain"] == DOMAIN
     assert event2["message"] == "sent command OnOff"

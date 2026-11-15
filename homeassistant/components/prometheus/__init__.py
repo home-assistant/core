@@ -53,7 +53,13 @@ from homeassistant.const import (
     UnitOfLength,
     UnitOfTemperature,
 )
-from homeassistant.core import Event, EventStateChangedData, HomeAssistant, State
+from homeassistant.core import (
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    State,
+    callback,
+)
 from homeassistant.helpers import (
     area_registry as ar,
     config_validation as cv,
@@ -135,14 +141,13 @@ CONFIG_SCHEMA = probatio.Schema(
 )
 
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Activate Prometheus component."""
     hass.http.register_view(PrometheusView(config[DOMAIN][CONF_REQUIRES_AUTH]))
 
     conf: dict[str, Any] = config[DOMAIN]
     entity_filter: entityfilter.EntityFilter = conf[CONF_FILTER]
     namespace: str = conf[CONF_PROM_NAMESPACE]
-    climate_units = hass.config.units.temperature_unit
     override_metric: str | None = conf.get(CONF_OVERRIDE_METRIC)
     default_metric: str | None = conf.get(CONF_DEFAULT_METRIC)
     component_config = EntityValues(
@@ -159,7 +164,6 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     metrics = PrometheusMetrics(
         entity_filter,
         namespace,
-        climate_units,
         component_config,
         override_metric,
         default_metric,
@@ -169,17 +173,21 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         floor_registry,
     )
 
-    hass.bus.listen(EVENT_STATE_CHANGED, metrics.handle_state_changed_event)
-    hass.bus.listen(
+    hass.bus.async_listen(EVENT_STATE_CHANGED, metrics.handle_state_changed_event)
+    hass.bus.async_listen(
         EVENT_ENTITY_REGISTRY_UPDATED,
         metrics.handle_entity_registry_updated,
     )
-    hass.bus.listen(
+    hass.bus.async_listen(
         EVENT_DEVICE_REGISTRY_UPDATED,
         metrics.handle_device_registry_updated,
     )
-    hass.bus.listen(EVENT_AREA_REGISTRY_UPDATED, metrics.handle_area_registry_updated)
-    hass.bus.listen(EVENT_FLOOR_REGISTRY_UPDATED, metrics.handle_floor_registry_updated)
+    hass.bus.async_listen(
+        EVENT_AREA_REGISTRY_UPDATED, metrics.handle_area_registry_updated
+    )
+    hass.bus.async_listen(
+        EVENT_FLOOR_REGISTRY_UPDATED, metrics.handle_floor_registry_updated
+    )
 
     for floor in floor_registry.async_list_floors():
         metrics.handle_floor(floor)
@@ -187,7 +195,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     for area in area_registry.async_list_areas():
         metrics.handle_area(area)
 
-    for state in hass.states.all():
+    for state in hass.states.async_all():
         if entity_filter(state.entity_id):
             metrics.handle_state(state)
 
@@ -217,7 +225,6 @@ class PrometheusMetrics:
         self,
         entity_filter: entityfilter.EntityFilter,
         namespace: str,
-        climate_units: UnitOfTemperature,
         component_config: EntityValues,
         override_metric: str | None,
         default_metric: str | None,
@@ -250,7 +257,6 @@ class PrometheusMetrics:
         self._metrics_by_entity_id: dict[str, set[MetricNameWithLabelValues]] = (
             defaultdict(set)
         )
-        self._climate_units = climate_units
 
         self._area_info_metrics: dict[str, MetricNameWithLabelValues] = {}
         self._floor_info_metrics: dict[str, MetricNameWithLabelValues] = {}
@@ -260,6 +266,7 @@ class PrometheusMetrics:
         self.entity_registry = entity_registry
         self.floor_registry = floor_registry
 
+    @callback
     def handle_state_changed_event(self, event: Event[EventStateChangedData]) -> None:
         """Handle new messages from the bus."""
         if (state := event.data.get("new_state")) is None:
@@ -327,6 +334,7 @@ class PrometheusMetrics:
             if hasattr(self, handler) and state.state:
                 getattr(self, handler)(state)
 
+    @callback
     def handle_entity_registry_updated(
         self, event: Event[EventEntityRegistryUpdatedData]
     ) -> None:
@@ -361,6 +369,7 @@ class PrometheusMetrics:
         if metrics_entity_id:
             self._remove_labelsets(metrics_entity_id)
 
+    @callback
     def handle_device_registry_updated(
         self, event: Event[EventDeviceRegistryUpdatedData]
     ) -> None:
@@ -398,6 +407,7 @@ class PrometheusMetrics:
             if area_id is not None:
                 self._add_entity_info(entity_id, area_id)
 
+    @callback
     def handle_area_registry_updated(
         self, event: Event[EventAreaRegistryUpdatedData]
     ) -> None:
@@ -440,6 +450,7 @@ class PrometheusMetrics:
             labels,
         ).set(1.0)
 
+    @callback
     def handle_floor_registry_updated(
         self, event: Event[EventFloorRegistryUpdatedData]
     ) -> None:
@@ -649,15 +660,17 @@ class PrometheusMetrics:
         ).set(value)
 
     def _temperature_metric(
-        self, state: State, attr: str, metric_name: str, metric_description: str
+        self,
+        state: State,
+        attr: str,
+        unit: str,
+        metric_name: str,
+        metric_description: str,
     ) -> None:
         if (temp := state.attributes.get(attr)) is None:
             return
 
-        if self._climate_units == UnitOfTemperature.FAHRENHEIT:
-            temp = TemperatureConverter.convert(
-                temp, UnitOfTemperature.FAHRENHEIT, UnitOfTemperature.CELSIUS
-            )
+        temp = TemperatureConverter.convert(temp, unit, UnitOfTemperature.CELSIUS)
         self._metric(
             metric_name,
             prometheus_client.Gauge,
@@ -845,27 +858,32 @@ class PrometheusMetrics:
         ).set(value)
 
     def _handle_climate(self, state: State) -> None:
+        unit = state.attributes[ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT]
         self._temperature_metric(
             state,
             ClimateEntityStateAttribute.TARGET_TEMPERATURE,
+            unit,
             "climate_target_temperature_celsius",
             "Target temperature in degrees Celsius",
         )
         self._temperature_metric(
             state,
             ClimateEntityStateAttribute.TARGET_TEMP_HIGH,
+            unit,
             "climate_target_temperature_high_celsius",
             "Target high temperature in degrees Celsius",
         )
         self._temperature_metric(
             state,
             ClimateEntityStateAttribute.TARGET_TEMP_LOW,
+            unit,
             "climate_target_temperature_low_celsius",
             "Target low temperature in degrees Celsius",
         )
         self._temperature_metric(
             state,
             ClimateEntityStateAttribute.CURRENT_TEMPERATURE,
+            unit,
             "climate_current_temperature_celsius",
             "Current temperature in degrees Celsius",
         )
@@ -926,40 +944,47 @@ class PrometheusMetrics:
         )
 
     def _handle_water_heater(self, state: State) -> None:
+        unit = state.attributes[WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT]
         # Temperatures
         self._temperature_metric(
             state,
             WaterHeaterStateAttribute.TARGET_TEMPERATURE,
+            unit,
             "water_heater_temperature_celsius",
             "Target temperature in degrees Celsius",
         )
         self._temperature_metric(
             state,
             WaterHeaterStateAttribute.CURRENT_TEMPERATURE,
+            unit,
             "water_heater_current_temperature_celsius",
             "Current temperature in degrees Celsius",
         )
         self._temperature_metric(
             state,
             WaterHeaterStateAttribute.TARGET_TEMP_HIGH,
+            unit,
             "water_heater_target_temperature_high_celsius",
             "Target high temperature in degrees Celsius",
         )
         self._temperature_metric(
             state,
             WaterHeaterStateAttribute.TARGET_TEMP_LOW,
+            unit,
             "water_heater_target_temperature_low_celsius",
             "Target low temperature in degrees Celsius",
         )
         self._temperature_metric(
             state,
             WaterHeaterCapabilityAttribute.MIN_TEMP,
+            unit,
             "water_heater_min_temperature_celsius",
             "Minimum allowed temperature in degrees Celsius",
         )
         self._temperature_metric(
             state,
             WaterHeaterCapabilityAttribute.MAX_TEMP,
+            unit,
             "water_heater_max_temperature_celsius",
             "Maximum allowed temperature in degrees Celsius",
         )

@@ -49,6 +49,11 @@ class SessionManager:
             if session_id in self._sessions:  # close() may have already been called
                 self._sessions.pop(session_id)
 
+    @property
+    def session_count(self) -> int:
+        """Return the number of open sessions."""
+        return len(self._sessions)
+
     def get(self, session_id: str) -> Session | None:
         """Get an existing session."""
         return self._sessions.get(session_id)

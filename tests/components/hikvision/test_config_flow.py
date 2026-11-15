@@ -3,10 +3,11 @@
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 import requests
 
 from homeassistant.components.hikvision.const import DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -25,8 +26,6 @@ from .conftest import (
     TEST_PORT,
     TEST_USERNAME,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -227,154 +226,6 @@ async def test_form_already_configured(
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_import_flow(hass: HomeAssistant, mock_hikcamera: MagicMock) -> None:
-    """Test YAML import flow creates config entry."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={
-            CONF_HOST: TEST_HOST,
-            CONF_PORT: TEST_PORT,
-            CONF_USERNAME: TEST_USERNAME,
-            CONF_PASSWORD: TEST_PASSWORD,
-            CONF_SSL: False,
-        },
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == TEST_DEVICE_NAME
-    assert result["result"].unique_id == TEST_DEVICE_ID
-    assert result["data"] == {
-        CONF_HOST: TEST_HOST,
-        CONF_PORT: TEST_PORT,
-        CONF_USERNAME: TEST_USERNAME,
-        CONF_PASSWORD: TEST_PASSWORD,
-        CONF_SSL: False,
-    }
-
-    # Verify HikCamera was called with the ssl parameter
-    mock_hikcamera.assert_called_once_with(
-        f"http://{TEST_HOST}", TEST_PORT, TEST_USERNAME, TEST_PASSWORD, False
-    )
-
-
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_import_flow_with_defaults(
-    hass: HomeAssistant, mock_hikcamera: MagicMock
-) -> None:
-    """Test YAML import flow uses default values."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={
-            CONF_HOST: TEST_HOST,
-            CONF_USERNAME: TEST_USERNAME,
-            CONF_PASSWORD: TEST_PASSWORD,
-        },
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].unique_id == TEST_DEVICE_ID
-    # Default port (80) and SSL (False) should be used
-    assert result["data"][CONF_PORT] == 80
-    assert result["data"][CONF_SSL] is False
-
-
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_import_flow_cannot_connect(
-    hass: HomeAssistant, mock_hikcamera: MagicMock
-) -> None:
-    """Test YAML import flow aborts on connection error."""
-    mock_hikcamera.side_effect = requests.exceptions.RequestException(
-        "Connection failed"
-    )
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={
-            CONF_HOST: TEST_HOST,
-            CONF_PORT: TEST_PORT,
-            CONF_USERNAME: TEST_USERNAME,
-            CONF_PASSWORD: TEST_PASSWORD,
-            CONF_SSL: False,
-        },
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
-
-
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_import_flow_no_device_id(
-    hass: HomeAssistant, mock_hikcamera: MagicMock
-) -> None:
-    """Test YAML import flow aborts when device_id is None."""
-    mock_hikcamera.return_value.get_id = None
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={
-            CONF_HOST: TEST_HOST,
-            CONF_PORT: TEST_PORT,
-            CONF_USERNAME: TEST_USERNAME,
-            CONF_PASSWORD: TEST_PASSWORD,
-            CONF_SSL: False,
-        },
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
-
-
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_import_flow_unknown_exception(
-    hass: HomeAssistant, mock_hikcamera: MagicMock
-) -> None:
-    """Test YAML import flow aborts on unknown exception."""
-    mock_hikcamera.side_effect = Exception("Unexpected error")
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={
-            CONF_HOST: TEST_HOST,
-            CONF_PORT: TEST_PORT,
-            CONF_USERNAME: TEST_USERNAME,
-            CONF_PASSWORD: TEST_PASSWORD,
-            CONF_SSL: False,
-        },
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "unknown"
-
-
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_import_flow_already_configured(
-    hass: HomeAssistant, mock_hikcamera: MagicMock, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test YAML import flow aborts when device is already configured."""
-    mock_config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={
-            CONF_HOST: TEST_HOST,
-            CONF_PORT: TEST_PORT,
-            CONF_USERNAME: TEST_USERNAME,
-            CONF_PASSWORD: TEST_PASSWORD,
-            CONF_SSL: False,
-        },
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-
-
-@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_with_ssl(hass: HomeAssistant, mock_hikcamera: MagicMock) -> None:
     """Test user flow with ssl enabled passes ssl parameter to HikCamera."""
     result = await hass.config_entries.flow.async_init(
@@ -394,6 +245,7 @@ async def test_form_with_ssl(hass: HomeAssistant, mock_hikcamera: MagicMock) -> 
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_SSL] is True
+    assert result["result"].unique_id == TEST_DEVICE_ID
 
     # Verify HikCamera was called with ssl=True
     mock_hikcamera.assert_called_once_with(

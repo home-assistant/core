@@ -1,6 +1,6 @@
 """Support for GTFS (Google/General Transport Format Schema)."""
 
-import datetime
+import datetime as dt
 import logging
 import os
 import threading
@@ -23,6 +23,8 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util, slugify
 
 _LOGGER = logging.getLogger(__name__)
+
+_SCHEDULE_SETUP_LOCK = threading.Lock()
 
 ATTR_ARRIVAL = "arrival"
 ATTR_BICYCLE = "trip_bikes_allowed_state"
@@ -251,6 +253,10 @@ WHEELCHAIR_ACCESS_OPTIONS = {1: True, 2: False}
 WHEELCHAIR_BOARDING_DEFAULT = STATE_UNKNOWN
 WHEELCHAIR_BOARDING_OPTIONS = {1: True, 2: False}
 
+# SQLite stores pygtfs Intervals as offsets from 1970-01-01, so
+# date(departure_time) is later for times >= 24:00:00.
+INTERVAL_EPOCH_DATE = "1970-01-01"
+
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_ORIGIN): cv.string,
@@ -267,15 +273,17 @@ def get_next_departure(
     schedule: Any,
     start_station_id: Any,
     end_station_id: Any,
-    offset: datetime.timedelta,
+    offset: dt.timedelta,
     include_tomorrow: bool = False,
 ) -> dict:
     """Get the next departure for the given schedule."""
-    now = dt_util.now().replace(tzinfo=None) + offset
+    # Stop times are in the feed's time zone, which GTFS requires all agencies share.
+    time_zone = dt_util.get_time_zone(schedule.agencies_query.first().agency_timezone)
+    now = dt_util.now(time_zone).replace(tzinfo=None) + offset
     now_date = now.strftime(dt_util.DATE_STR_FORMAT)
-    yesterday = now - datetime.timedelta(days=1)
+    yesterday = now - dt.timedelta(days=1)
     yesterday_date = yesterday.strftime(dt_util.DATE_STR_FORMAT)
-    tomorrow = now + datetime.timedelta(days=1)
+    tomorrow = now + dt.timedelta(days=1)
     tomorrow_date = tomorrow.strftime(dt_util.DATE_STR_FORMAT)
 
     # Fetch all departures for yesterday, today and optionally tomorrow,
@@ -340,30 +348,29 @@ def get_next_departure(
                  origin_stop_time.departure_time
         LIMIT :limit
         """  # noqa: S608
-    result = schedule.engine.connect().execute(
-        text(sql_query),
-        {
-            "origin_station_id": start_station_id,
-            "end_station_id": end_station_id,
-            "today": now_date,
-            "limit": limit,
-        },
-    )
+    with schedule.engine.connect() as connection:
+        rows = connection.execute(
+            text(sql_query),
+            {
+                "origin_station_id": start_station_id,
+                "end_station_id": end_station_id,
+                "today": now_date,
+                "limit": limit,
+            },
+        ).all()
 
     # Create lookup timetable for today and possibly tomorrow, taking into
     # account any departures from yesterday scheduled after midnight,
     # as long as all departures are within the calendar date range.
     timetable = {}
-    yesterday_start = today_start = tomorrow_start = None
+    today_start = tomorrow_start = None
     yesterday_last = today_last = ""
 
-    for row_cursor in result:
+    for row_cursor in rows:
         row = row_cursor._asdict()
         if row["yesterday"] == 1 and yesterday_date >= row["start_date"]:
             extras = {"day": "yesterday", "first": None, "last": False}
-            if yesterday_start is None:
-                yesterday_start = row["origin_depart_date"]
-            if yesterday_start != row["origin_depart_date"]:
+            if row["origin_depart_date"] != INTERVAL_EPOCH_DATE:
                 idx = f"{now_date} {row['origin_depart_time']}"
                 timetable[idx] = {**row, **extras}
                 yesterday_last = idx
@@ -373,7 +380,7 @@ def get_next_departure(
             if today_start is None:
                 today_start = row["origin_depart_date"]
                 extras["first"] = True
-            if today_start == row["origin_depart_date"]:
+            if row["origin_depart_date"] == INTERVAL_EPOCH_DATE:
                 idx_prefix = now_date
             else:
                 idx_prefix = tomorrow_date
@@ -390,7 +397,7 @@ def get_next_departure(
             if tomorrow_start is None:
                 tomorrow_start = row["origin_depart_date"]
                 extras["first"] = True
-            if tomorrow_start == row["origin_depart_date"]:
+            if row["origin_depart_date"] == INTERVAL_EPOCH_DATE:
                 idx = f"{tomorrow_date} {row['origin_depart_time']}"
                 timetable[idx] = {**row, **extras}
 
@@ -404,6 +411,7 @@ def get_next_departure(
     for key in sorted(timetable.keys()):
         if (value := dt_util.parse_datetime(key)) is not None and value > now:
             item = timetable[key]
+            item_date = value
             _LOGGER.debug(
                 "Departure found for station %s @ %s -> %s", start_station_id, key, item
             )
@@ -414,26 +422,28 @@ def get_next_departure(
 
     # Format arrival and departure dates and times, accounting for the
     # possibility of times crossing over midnight.
-    origin_arrival = now
+    origin_arrival = item_date
     if item["origin_arrival_time"] > item["origin_depart_time"]:
-        origin_arrival -= datetime.timedelta(days=1)
+        origin_arrival -= dt.timedelta(days=1)
     origin_arrival_time = (
         f"{origin_arrival.strftime(dt_util.DATE_STR_FORMAT)} "
         f"{item['origin_arrival_time']}"
     )
 
-    origin_depart_time = f"{now_date} {item['origin_depart_time']}"
+    origin_depart_time = (
+        f"{item_date.strftime(dt_util.DATE_STR_FORMAT)} {item['origin_depart_time']}"
+    )
 
-    dest_arrival = now
+    dest_arrival = item_date
     if item["dest_arrival_time"] < item["origin_depart_time"]:
-        dest_arrival += datetime.timedelta(days=1)
+        dest_arrival += dt.timedelta(days=1)
     dest_arrival_time = (
         f"{dest_arrival.strftime(dt_util.DATE_STR_FORMAT)} {item['dest_arrival_time']}"
     )
 
     dest_depart = dest_arrival
     if item["dest_depart_time"] < item["dest_arrival_time"]:
-        dest_depart += datetime.timedelta(days=1)
+        dest_depart += dt.timedelta(days=1)
     dest_depart_time = (
         f"{dest_depart.strftime(dt_util.DATE_STR_FORMAT)} {item['dest_depart_time']}"
     )
@@ -488,7 +498,7 @@ def setup_platform(
     origin = config.get(CONF_ORIGIN)
     destination = config.get(CONF_DESTINATION)
     name = config.get(CONF_NAME)
-    offset: datetime.timedelta = config[CONF_OFFSET]
+    offset: dt.timedelta = config[CONF_OFFSET]
     include_tomorrow = config[CONF_TOMORROW]
 
     os.makedirs(gtfs_dir, exist_ok=True)
@@ -501,10 +511,12 @@ def setup_platform(
 
     sqlite_file = f"{gtfs_root}.sqlite?check_same_thread=False"
     joined_path = os.path.join(gtfs_dir, sqlite_file)
-    gtfs = pygtfs.Schedule(joined_path)
+    # Platforms sharing a data file set up in parallel executor jobs.
+    with _SCHEDULE_SETUP_LOCK:
+        gtfs = pygtfs.Schedule(joined_path)
 
-    if not gtfs.feeds:
-        pygtfs.append_feed(gtfs, os.path.join(gtfs_dir, data))
+        if not gtfs.feeds:
+            pygtfs.append_feed(gtfs, os.path.join(gtfs_dir, data))
 
     add_entities(
         [GTFSDepartureSensor(gtfs, name, origin, destination, offset, include_tomorrow)]
@@ -522,7 +534,7 @@ class GTFSDepartureSensor(SensorEntity):
         name: Any | None,
         origin: Any,
         destination: Any,
-        offset: datetime.timedelta,
+        offset: dt.timedelta,
         include_tomorrow: bool,
     ) -> None:
         """Initialize the sensor."""
@@ -536,7 +548,7 @@ class GTFSDepartureSensor(SensorEntity):
         self._available = False
         self._icon = ICON
         self._name = ""
-        self._state: datetime.datetime | None = None
+        self._state: dt.datetime | None = None
         self._attributes: dict[str, Any] = {}
 
         self._agency = None
@@ -557,7 +569,7 @@ class GTFSDepartureSensor(SensorEntity):
 
     @property
     @override
-    def native_value(self) -> datetime.datetime | None:
+    def native_value(self) -> dt.datetime | None:
         """Return the state of the sensor."""
         return self._state
 
@@ -758,7 +770,7 @@ class GTFSDepartureSensor(SensorEntity):
             ]
 
         # Manage Trip metadata
-        key = "trip_id"
+        key = "trip_trip_id"
         if not self._trip and key in self._attributes:
             self.remove_keys("Trip")
         elif self._trip and (
@@ -827,6 +839,7 @@ class GTFSDepartureSensor(SensorEntity):
 
     def remove_keys(self, prefix: str) -> None:
         """Remove attributes whose key starts with prefix."""
+        prefix = slugify(prefix)
         self._attributes = {
             k: v for k, v in self._attributes.items() if not k.startswith(prefix)
         }

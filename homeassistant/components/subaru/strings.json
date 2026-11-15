@@ -18,12 +18,28 @@
         "data": {
           "pin": "[%key:common::config_flow::data::pin%]"
         },
+        "data_description": {
+          "pin": "The 4-digit PIN used for remote commands, shared by all vehicles on your MySubaru account."
+        },
         "description": "Please enter your MySubaru PIN\nNOTE: All vehicles in account must have the same PIN",
         "title": "[%key:component::subaru::config::step::user::title%]"
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "[%key:component::subaru::config::step::user::data_description::password%]"
+        },
+        "description": "The MySubaru password for {username} is no longer valid. Please enter the new password.",
+        "title": "[%key:common::config_flow::title::reauth%]"
       },
       "two_factor": {
         "data": {
           "contact_method": "Please select a contact method:"
+        },
+        "data_description": {
+          "contact_method": "Where Subaru should send your two-factor authentication code."
         },
         "description": "Two-factor authentication required",
         "title": "[%key:component::subaru::config::step::user::title%]"
@@ -31,6 +47,9 @@
       "two_factor_validate": {
         "data": {
           "validation_code": "Validation code"
+        },
+        "data_description": {
+          "validation_code": "The 6-digit code sent to your selected contact method."
         },
         "description": "Please enter validation code received",
         "title": "[%key:component::subaru::config::step::user::title%]"
@@ -40,6 +59,11 @@
           "country": "Select country",
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "country": "The country where your MySubaru account is registered.",
+          "password": "The password for your MySubaru account.",
+          "username": "The email address or username for your MySubaru account."
         },
         "description": "Please enter your MySubaru credentials\nNOTE: Initial setup may take up to 30 seconds",
         "title": "MySubaru Connected Services configuration"
@@ -71,9 +95,6 @@
       },
       "health_istrouble": {
         "name": "Vehicle health"
-      },
-      "is_charging": {
-        "name": "Charging"
       },
       "lock_status_boot": {
         "name": "Lock status tailgate"
@@ -227,11 +248,19 @@
       }
     }
   },
+  "exceptions": {
+    "invalid_credentials": {
+      "message": "Invalid MySubaru account credentials"
+    }
+  },
   "options": {
     "step": {
       "init": {
         "data": {
           "update_enabled": "Enable vehicle polling"
+        },
+        "data_description": {
+          "update_enabled": "Sends a remote command to the vehicle every 2 hours to refresh sensor data. Draws power from the 12V battery."
         },
         "description": "When enabled, vehicle polling will send a remote command to your vehicle every 2 hours to obtain new sensor data. Without vehicle polling, new sensor data is only received when the vehicle automatically pushes data (normally after engine shutdown).",
         "title": "MySubaru Connected Services options"

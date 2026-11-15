@@ -210,11 +210,17 @@
       "block_dailymotion": {
         "name": "Block Dailymotion"
       },
+      "block_data_drop_services": {
+        "name": "Block data-drop services"
+      },
       "block_dating": {
         "name": "Block dating"
       },
       "block_ddns": {
         "name": "Block dynamic DNS hostnames"
+      },
+      "block_decentralized_web_gateways": {
+        "name": "Block decentralized web gateways"
       },
       "block_discord": {
         "name": "Block Discord"
@@ -231,8 +237,14 @@
       "block_facebook": {
         "name": "Block Facebook"
       },
+      "block_fast_flux_networks": {
+        "name": "Block fast-flux networks"
+      },
       "block_fortnite": {
         "name": "Block Fortnite"
+      },
+      "block_free_hosting_domains": {
+        "name": "Block free hosting domains"
       },
       "block_gambling": {
         "name": "Block gambling"
@@ -242,6 +254,9 @@
       },
       "block_hbomax": {
         "name": "Block HBO Max"
+      },
+      "block_high_risk_tlds": {
+        "name": "Block high-risk TLDs"
       },
       "block_hulu": {
         "name": "Block Hulu"
@@ -266,6 +281,9 @@
       },
       "block_netflix": {
         "name": "Block Netflix"
+      },
+      "block_newly_active_domains": {
+        "name": "Block newly active domains"
       },
       "block_nrd": {
         "name": "Block newly registered domains"
@@ -296,6 +314,9 @@
       },
       "block_reddit": {
         "name": "Block Reddit"
+      },
+      "block_residential_hosting": {
+        "name": "Block residential hosting"
       },
       "block_roblox": {
         "name": "Block Roblox"
@@ -330,11 +351,17 @@
       "block_tumblr": {
         "name": "Block Tumblr"
       },
+      "block_tunneling_endpoints": {
+        "name": "Block tunneling endpoints"
+      },
       "block_twitch": {
         "name": "Block Twitch"
       },
       "block_twitter": {
         "name": "Block X (formerly Twitter)"
+      },
+      "block_untrusted_certificates": {
+        "name": "Block untrusted certificates"
       },
       "block_video_streaming": {
         "name": "Block video streaming"
@@ -371,6 +398,12 @@
       },
       "dga_protection": {
         "name": "Domain generation algorithms protection"
+      },
+      "dns_data_exfiltration_protection": {
+        "name": "DNS data exfiltration protection"
+      },
+      "dns_payload_delivery_protection": {
+        "name": "DNS payload delivery protection"
       },
       "dns_rebinding_protection": {
         "name": "DNS rebinding protection"
@@ -410,6 +443,9 @@
     },
     "method_error": {
       "message": "An error occurred while calling the NextDNS API method for {entity}: {error}"
+    },
+    "set_setting_error": {
+      "message": "An error occurred while changing the setting for {entity}"
     },
     "update_error": {
       "message": "An error occurred while retrieving data from the NextDNS API for {entry}: {error}"

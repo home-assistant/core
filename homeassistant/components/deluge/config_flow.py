@@ -59,7 +59,9 @@ class DelugeFlowHandler(ConfigFlow, domain=DOMAIN):
                 probatio.Required(
                     CONF_USERNAME, default=user_input.get(CONF_USERNAME)
                 ): cv.string,
-                probatio.Required(CONF_PASSWORD, default=""): cv.string,
+                probatio.Required(
+                    probatio.Secret(CONF_PASSWORD), default=""
+                ): cv.string,
                 probatio.Optional(
                     CONF_PORT, default=user_input.get(CONF_PORT, DEFAULT_RPC_PORT)
                 ): int,

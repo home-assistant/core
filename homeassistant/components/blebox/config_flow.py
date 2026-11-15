@@ -20,7 +20,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from . import get_maybe_authenticated_session
 from .const import (
     ADDRESS_ALREADY_CONFIGURED,
     CANNOT_CONNECT,
@@ -32,6 +31,7 @@ from .const import (
     UNKNOWN,
     UNSUPPORTED_VERSION,
 )
+from .helpers import get_maybe_authenticated_session
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ STEP_SCHEMA = probatio.Schema(
         probatio.Required(CONF_HOST, default=DEFAULT_HOST): str,
         probatio.Required(CONF_PORT, default=DEFAULT_PORT): int,
         probatio.Inclusive(CONF_USERNAME, "auth"): str,
-        probatio.Inclusive(CONF_PASSWORD, "auth"): str,
+        probatio.Inclusive(probatio.Secret(CONF_PASSWORD), "auth"): str,
     }
 )
 
@@ -323,7 +323,7 @@ class BleBoxConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=probatio.Schema(
                 {
                     probatio.Inclusive(CONF_USERNAME, "auth"): str,
-                    probatio.Inclusive(CONF_PASSWORD, "auth"): str,
+                    probatio.Inclusive(probatio.Secret(CONF_PASSWORD), "auth"): str,
                 }
             ),
             errors=errors,
