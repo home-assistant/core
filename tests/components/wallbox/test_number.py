@@ -3,11 +3,15 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.input_number import ATTR_VALUE, SERVICE_SET_VALUE
-from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
+from homeassistant.components.number import (
+    DOMAIN as NUMBER_DOMAIN,
+    NumberService,
+    NumberServiceArgument,
+)
 from homeassistant.components.wallbox.coordinator import InsufficientRights
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -18,8 +22,6 @@ from .const import (
     MOCK_NUMBER_ENTITY_ID,
     WALLBOX_STATUS_RESPONSE_BIDIR,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_wallbox_number_power_class(
@@ -34,10 +36,10 @@ async def test_wallbox_number_power_class(
 
     await hass.services.async_call(
         "number",
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: MOCK_NUMBER_ENTITY_ID,
-            ATTR_VALUE: 20,
+            CommonServiceArgument.ENTITY_ID: MOCK_NUMBER_ENTITY_ID,
+            NumberServiceArgument.VALUE: 20,
         },
         blocking=True,
     )
@@ -66,10 +68,10 @@ async def test_wallbox_number_energy_class(
 
     await hass.services.async_call(
         "number",
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: MOCK_NUMBER_ENTITY_ENERGY_PRICE_ID,
-            ATTR_VALUE: 1.1,
+            CommonServiceArgument.ENTITY_ID: MOCK_NUMBER_ENTITY_ENERGY_PRICE_ID,
+            NumberServiceArgument.VALUE: 1.1,
         },
         blocking=True,
     )
@@ -84,10 +86,10 @@ async def test_wallbox_number_icp_power_class(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: MOCK_NUMBER_ENTITY_ICP_CURRENT_ID,
-            ATTR_VALUE: 10,
+            CommonServiceArgument.ENTITY_ID: MOCK_NUMBER_ENTITY_ICP_CURRENT_ID,
+            NumberServiceArgument.VALUE: 10,
         },
         blocking=True,
     )
@@ -106,10 +108,10 @@ async def test_wallbox_number_power_class_error_handling(
     ):
         await hass.services.async_call(
             "number",
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: MOCK_NUMBER_ENTITY_ID,
-                ATTR_VALUE: 20,
+                CommonServiceArgument.ENTITY_ID: MOCK_NUMBER_ENTITY_ID,
+                NumberServiceArgument.VALUE: 20,
             },
             blocking=True,
         )
@@ -120,10 +122,10 @@ async def test_wallbox_number_power_class_error_handling(
     ):
         await hass.services.async_call(
             "number",
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: MOCK_NUMBER_ENTITY_ID,
-                ATTR_VALUE: 20,
+                CommonServiceArgument.ENTITY_ID: MOCK_NUMBER_ENTITY_ID,
+                NumberServiceArgument.VALUE: 20,
             },
             blocking=True,
         )
@@ -134,10 +136,10 @@ async def test_wallbox_number_power_class_error_handling(
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: MOCK_NUMBER_ENTITY_ID,
-                ATTR_VALUE: 10,
+                CommonServiceArgument.ENTITY_ID: MOCK_NUMBER_ENTITY_ID,
+                NumberServiceArgument.VALUE: 10,
             },
             blocking=True,
         )
@@ -156,10 +158,10 @@ async def test_wallbox_number_energy_class_error_handling(
     ):
         await hass.services.async_call(
             "number",
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: MOCK_NUMBER_ENTITY_ENERGY_PRICE_ID,
-                ATTR_VALUE: 1.1,
+                CommonServiceArgument.ENTITY_ID: MOCK_NUMBER_ENTITY_ENERGY_PRICE_ID,
+                NumberServiceArgument.VALUE: 1.1,
             },
             blocking=True,
         )
@@ -170,10 +172,10 @@ async def test_wallbox_number_energy_class_error_handling(
     ):
         await hass.services.async_call(
             "number",
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: MOCK_NUMBER_ENTITY_ENERGY_PRICE_ID,
-                ATTR_VALUE: 1.1,
+                CommonServiceArgument.ENTITY_ID: MOCK_NUMBER_ENTITY_ENERGY_PRICE_ID,
+                NumberServiceArgument.VALUE: 1.1,
             },
             blocking=True,
         )
@@ -184,10 +186,10 @@ async def test_wallbox_number_energy_class_error_handling(
     ):
         await hass.services.async_call(
             "number",
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: MOCK_NUMBER_ENTITY_ENERGY_PRICE_ID,
-                ATTR_VALUE: 1.1,
+                CommonServiceArgument.ENTITY_ID: MOCK_NUMBER_ENTITY_ENERGY_PRICE_ID,
+                NumberServiceArgument.VALUE: 1.1,
             },
             blocking=True,
         )
@@ -206,10 +208,10 @@ async def test_wallbox_number_icp_power_class_error_handling(
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: MOCK_NUMBER_ENTITY_ICP_CURRENT_ID,
-                ATTR_VALUE: 10,
+                CommonServiceArgument.ENTITY_ID: MOCK_NUMBER_ENTITY_ICP_CURRENT_ID,
+                NumberServiceArgument.VALUE: 10,
             },
             blocking=True,
         )
@@ -220,10 +222,10 @@ async def test_wallbox_number_icp_power_class_error_handling(
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: MOCK_NUMBER_ENTITY_ICP_CURRENT_ID,
-                ATTR_VALUE: 10,
+                CommonServiceArgument.ENTITY_ID: MOCK_NUMBER_ENTITY_ICP_CURRENT_ID,
+                NumberServiceArgument.VALUE: 10,
             },
             blocking=True,
         )
@@ -234,10 +236,10 @@ async def test_wallbox_number_icp_power_class_error_handling(
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: MOCK_NUMBER_ENTITY_ICP_CURRENT_ID,
-                ATTR_VALUE: 10,
+                CommonServiceArgument.ENTITY_ID: MOCK_NUMBER_ENTITY_ICP_CURRENT_ID,
+                NumberServiceArgument.VALUE: 10,
             },
             blocking=True,
         )

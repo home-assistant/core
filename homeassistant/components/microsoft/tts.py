@@ -1,5 +1,6 @@
 """Support for the Microsoft Cognitive Services text-to-speech service."""
 
+from enum import StrEnum
 import logging
 from typing import Any, override
 
@@ -37,9 +38,17 @@ DEFAULT_PITCH = "default"
 DEFAULT_CONTOUR = ""
 DEFAULT_REGION = "eastus"
 
+
+class MicrosoftTextToSpeechOption(StrEnum):
+    """Store keys for the Microsoft text-to-speech options."""
+
+    GENDER = "gender"
+    TYPE = "type"
+
+
 PLATFORM_SCHEMA = TTS_PLATFORM_SCHEMA.extend(
     {
-        probatio.Required(CONF_API_KEY): cv.string,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string,
         probatio.Optional(CONF_LANG, default=DEFAULT_LANG): probatio.In(
             SUPPORTED_LANGUAGES
         ),
@@ -108,13 +117,16 @@ class MicrosoftProvider(Provider):
     @override
     def supported_options(self) -> list[str]:
         """Return list of supported options like voice, emotion."""
-        return [CONF_GENDER, CONF_TYPE]
+        return [MicrosoftTextToSpeechOption.GENDER, MicrosoftTextToSpeechOption.TYPE]
 
     @property
     @override
     def default_options(self) -> dict[str, Any]:
         """Return a dict include default options."""
-        return {CONF_GENDER: self._gender, CONF_TYPE: self._type}
+        return {
+            MicrosoftTextToSpeechOption.GENDER: self._gender,
+            MicrosoftTextToSpeechOption.TYPE: self._type,
+        }
 
     @override
     def get_tts_audio(
@@ -128,8 +140,8 @@ class MicrosoftProvider(Provider):
             trans = pycsspeechtts.TTSTranslator(self._apikey, self._region)
             data = trans.speak(
                 language=language,
-                gender=options[CONF_GENDER],
-                voiceType=options[CONF_TYPE],
+                gender=options[MicrosoftTextToSpeechOption.GENDER],
+                voiceType=options[MicrosoftTextToSpeechOption.TYPE],
                 output=self._output,
                 rate=self._rate,
                 volume=self._volume,

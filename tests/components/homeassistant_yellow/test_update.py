@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 from aiohasupervisor.models import RaspberryPiFirmwareInfo
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.homeassistant_hardware.helpers import (
     async_notify_firmware_info,
@@ -15,8 +16,6 @@ from homeassistant.components.homeassistant_hardware.util import (
 from homeassistant.components.homeassistant_yellow.const import DOMAIN, RADIO_DEVICE
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 UPDATE_ENTITY_ID = "update.home_assistant_yellow_radio_firmware"
 

@@ -1,7 +1,6 @@
 """Define tests for the Vodafone Station coordinator."""
 
 from json import JSONDecodeError
-import logging
 from unittest.mock import AsyncMock, create_autospec, patch
 
 from aiohttp import ClientSession
@@ -9,6 +8,7 @@ from aiovodafone.api import VodafoneStationDevice
 from aiovodafone.exceptions import VodafoneError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.vodafone_station.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
@@ -17,8 +17,6 @@ from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
 from .const import DEVICE_1_HOST, DEVICE_1_MAC, DEVICE_2_HOST, DEVICE_2_MAC
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -32,7 +30,6 @@ async def test_coordinator_device_cleanup(
 ) -> None:
     """Test Device cleanup on coordinator update."""
 
-    caplog.set_level(logging.DEBUG)
     await setup_integration(hass, mock_config_entry)
 
     device = device_registry.async_get_or_create(

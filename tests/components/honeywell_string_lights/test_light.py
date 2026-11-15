@@ -1,5 +1,9 @@
 """Tests for the Honeywell String Lights light platform."""
 
+from pytest_homeassistant.common import MockConfigEntry, mock_restore_cache
+from pytest_homeassistant.components.radio_frequency.common import (
+    MockRadioFrequencyEntity,
+)
 from rf_protocols.codes.honeywell.string_lights import CODES
 
 from homeassistant.components.light import (
@@ -16,9 +20,6 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import Context, HomeAssistant, State
-
-from tests.common import MockConfigEntry, mock_restore_cache
-from tests.components.radio_frequency.common import MockRadioFrequencyEntity
 
 ENTITY_ID = "light.honeywell_string_lights"
 

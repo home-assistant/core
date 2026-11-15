@@ -24,7 +24,6 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONF_SERVICE_CODE, DOMAIN
-from .helper import get_hostname_id
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,8 +69,11 @@ class Plenticore:
             )
             return False
         except (ClientError, TimeoutError) as err:
-            _LOGGER.error("Error connecting to %s", self.host)
-            raise ConfigEntryNotReady from err
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"host": self.host},
+            ) from err
         else:
             _LOGGER.debug("Log-in successfully to %s", self.host)
 
@@ -80,18 +82,16 @@ class Plenticore:
         )
 
         # get some device meta data
-        hostname_id = await get_hostname_id(self._client)
+        hostname = (await self._client.get_version()).hostname
         settings = await self._client.get_setting_values(
-            {
-                "devices:local": [
-                    "Properties:SerialNo",
-                    "Branding:ProductName1",
-                    "Branding:ProductName2",
-                    "Properties:VersionIOC",
-                    "Properties:VersionMC",
-                ],
-                "scb:network": [hostname_id],
-            }
+            "devices:local",
+            [
+                "Properties:SerialNo",
+                "Branding:ProductName1",
+                "Branding:ProductName2",
+                "Properties:VersionIOC",
+                "Properties:VersionMC",
+            ],
         )
 
         device_local = settings["devices:local"]
@@ -103,7 +103,7 @@ class Plenticore:
             identifiers={(DOMAIN, device_local["Properties:SerialNo"])},
             manufacturer="Kostal",
             model=f"{prod1} {prod2}",
-            name=settings["scb:network"][hostname_id],
+            name=hostname,
             sw_version=(
                 f"IOC: {device_local['Properties:VersionIOC']}"
                 f" MC: {device_local['Properties:VersionMC']}"

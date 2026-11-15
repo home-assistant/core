@@ -77,7 +77,6 @@ class SRPEnergyConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._get_reconfigure_entry(),
                     data=user_input,
                 )
-        # pylint: disable-next=home-assistant-config-flow-field-not-translated
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
@@ -94,7 +93,7 @@ class SRPEnergyConfigFlow(ConfigFlow, domain=DOMAIN):
                             CONF_NAME, default=self.hass.config.location_name
                         ): str,
                         probatio.Required(CONF_USERNAME): str,
-                        probatio.Required(CONF_PASSWORD): str,
+                        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                         probatio.Optional(CONF_IS_TOU, default=False): bool,
                     }
                 ),

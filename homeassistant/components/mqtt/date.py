@@ -1,7 +1,7 @@
 """Support for MQTT date platform."""
 
 from collections.abc import Callable
-import datetime
+import datetime as dt
 import logging
 from typing import Any, override
 
@@ -76,7 +76,7 @@ async def async_setup_entry(
 class MqttDateEntity(MqttEntity, DateEntity):
     """Representation of the MQTT date entity."""
 
-    _attr_native_value: datetime.date | None = None
+    _attr_native_value: dt.date | None = None
     _attributes_extra_blocked = MQTT_TIME_ATTRIBUTES_BLOCKED
     _default_name = DEFAULT_NAME
     _entity_id_format = date.ENTITY_ID_FORMAT
@@ -150,7 +150,7 @@ class MqttDateEntity(MqttEntity, DateEntity):
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
 
     @override
-    async def async_set_value(self, value: datetime.date) -> None:
+    async def async_set_value(self, value: dt.date) -> None:
         """Change the date."""
         payload = self._command_template(value.isoformat(), {"value": value})
         await self.async_publish_with_config(self._config[CONF_COMMAND_TOPIC], payload)

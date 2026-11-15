@@ -3,23 +3,22 @@
 from typing import Any
 from unittest.mock import MagicMock, patch
 
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.mikrotik.const import INTERFACE, MIKROTIK_SERVICES, POE
 from homeassistant.components.mikrotik.select import SELECTS, MikrotikSelectEntity
 from homeassistant.components.select import (
-    ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_mikrotik_entry
 from .const import BRIDGE1_INTERFACE, ETHER1_INTERFACE, ETHER1_POE, INTERFACE_DATA
-
-from tests.common import snapshot_platform
 
 
 async def test_select_entities_created(
@@ -69,8 +68,11 @@ async def test_select_option(hass: HomeAssistant, mock_api: MagicMock) -> None:
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "forced_on"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            SelectServiceArgument.OPTION: "forced_on",
+        },
         blocking=True,
     )
 

@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CLOUD_API_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_TOKEN): str,
+        probatio.Required(probatio.Secret(CONF_TOKEN)): str,
     }
 )
 
@@ -28,7 +28,7 @@ LOCAL_API_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_HOST): str,
         probatio.Required(CONF_USERNAME): str,
-        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
     }
 )
 

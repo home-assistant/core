@@ -5,26 +5,25 @@ from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from syrupy.assertion import SnapshotAssertion
-from wled import Device as WLEDDevice, WLEDConnectionError, WLEDError
-
-from homeassistant.components.number import (
-    ATTR_VALUE,
-    DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
-)
-from homeassistant.components.wled.const import DOMAIN, SCAN_INTERVAL
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import (
+from pytest_homeassistant.common import (
     MockConfigEntry,
     async_fire_time_changed,
     async_load_json_object_fixture,
     snapshot_platform,
 )
+from syrupy.assertion import SnapshotAssertion
+from wled import Device as WLEDDevice, WLEDConnectionError, WLEDError
+
+from homeassistant.components.number import (
+    DOMAIN as NUMBER_DOMAIN,
+    NumberService,
+    NumberServiceArgument,
+)
+from homeassistant.components.wled.const import DOMAIN, SCAN_INTERVAL
+from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 pytestmark = pytest.mark.usefixtures("init_integration")
 
@@ -77,8 +76,11 @@ async def test_numbers(
     # Test a regular state change service call
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: value},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            NumberServiceArgument.VALUE: value,
+        },
         blocking=True,
     )
 
@@ -90,8 +92,11 @@ async def test_numbers(
     with pytest.raises(HomeAssistantError, match="Invalid response from WLED API"):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: value},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: entity_id,
+                NumberServiceArgument.VALUE: value,
+            },
             blocking=True,
         )
     assert mock_wled.segment.call_count == 2
@@ -105,8 +110,11 @@ async def test_numbers(
     with pytest.raises(HomeAssistantError, match="Error communicating with WLED API"):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: value},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: entity_id,
+                NumberServiceArgument.VALUE: value,
+            },
             blocking=True,
         )
     assert mock_wled.segment.call_count == 3

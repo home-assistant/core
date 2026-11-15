@@ -11,9 +11,11 @@ from async_upnp_client.aiohttp import AiohttpNotifyServer
 from async_upnp_client.client import UpnpDevice
 from async_upnp_client.profiles.igd import IgdDevice, IgdState
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import ssdp
 from homeassistant.components.upnp.const import (
+    CONFIG_ENTRY_HOST,
     CONFIG_ENTRY_LOCATION,
     CONFIG_ENTRY_MAC_ADDRESS,
     CONFIG_ENTRY_ORIGINAL_UDN,
@@ -32,8 +34,6 @@ from homeassistant.helpers.service_info.ssdp import (
     SsdpServiceInfo,
 )
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry
 
 TEST_UDN = "uuid:device"
 TEST_ST = "urn:schemas-upnp-org:device:InternetGatewayDevice:1"
@@ -77,8 +77,18 @@ def mock_async_create_device():
         yield mock_create
 
 
+@pytest.fixture
+def mock_notify_server() -> AiohttpNotifyServer:
+    """Mock async_upnp_client notify server."""
+    notify_server = create_autospec(AiohttpNotifyServer)
+    notify_server.event_handler = MagicMock()
+    return notify_server
+
+
 @pytest.fixture(autouse=True)
-def mock_igd_device(mock_async_create_device) -> IgdDevice:
+def mock_igd_device(
+    mock_async_create_device, mock_notify_server: AiohttpNotifyServer
+) -> IgdDevice:
     """Mock async_upnp_client device."""
     mock_upnp_device = create_autospec(UpnpDevice, instance=True)
     mock_upnp_device.device_url = TEST_DISCOVERY.ssdp_location
@@ -114,9 +124,6 @@ def mock_igd_device(mock_async_create_device) -> IgdDevice:
     )
 
     mock_igd_device.async_subscribe_services = AsyncMock()
-
-    mock_notify_server = create_autospec(AiohttpNotifyServer)
-    mock_notify_server.event_handler = MagicMock()
 
     with (
         patch(
@@ -289,6 +296,7 @@ async def mock_config_entry(
             CONFIG_ENTRY_ORIGINAL_UDN: TEST_UDN,
             CONFIG_ENTRY_LOCATION: TEST_LOCATION,
             CONFIG_ENTRY_MAC_ADDRESS: TEST_MAC_ADDRESS,
+            CONFIG_ENTRY_HOST: TEST_HOST,
         },
     )
 

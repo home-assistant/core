@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, call
 from pysmartthings import Attribute, Capability, Command, Status
 from pysmartthings.models import HealthStatus
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -60,8 +61,6 @@ from . import (
     trigger_health_update,
     trigger_update,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_all_entities(

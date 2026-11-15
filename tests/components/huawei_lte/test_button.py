@@ -3,20 +3,22 @@
 from unittest.mock import MagicMock, patch
 
 from huawei_lte_api.enums.device import ControlModeEnum
+from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.huawei_lte.const import (
     BUTTON_KEY_CLEAR_TRAFFIC_STATISTICS,
     BUTTON_KEY_RESTART,
     DOMAIN,
-    SERVICE_SUSPEND_INTEGRATION,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CONF_URL
+from homeassistant.components.huawei_lte.services import (
+    HuaweiLteService,
+    HuaweiLteServiceArgument,
+)
+from homeassistant.const import CONF_URL, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 
 from . import magic_client
-
-from tests.common import MockConfigEntry
 
 MOCK_CONF_URL = "http://huawei-lte.example.com"
 
@@ -33,8 +35,10 @@ async def test_clear_traffic_statistics(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: f"button.test_router_{BUTTON_KEY_CLEAR_TRAFFIC_STATISTICS}"},
+        ButtonService.PRESS,
+        {
+            CommonServiceArgument.ENTITY_ID: f"button.test_router_{BUTTON_KEY_CLEAR_TRAFFIC_STATISTICS}"
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -43,8 +47,8 @@ async def test_clear_traffic_statistics(hass: HomeAssistant) -> None:
     client.monitoring.set_clear_traffic.reset_mock()
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SUSPEND_INTEGRATION,
-        {CONF_URL: MOCK_CONF_URL},
+        HuaweiLteService.SUSPEND_INTEGRATION,
+        {HuaweiLteServiceArgument.URL: MOCK_CONF_URL},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -65,8 +69,8 @@ async def test_restart(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: f"button.test_router_{BUTTON_KEY_RESTART}"},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: f"button.test_router_{BUTTON_KEY_RESTART}"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -75,8 +79,8 @@ async def test_restart(hass: HomeAssistant) -> None:
     client.device.set_control.reset_mock()
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SUSPEND_INTEGRATION,
-        {CONF_URL: MOCK_CONF_URL},
+        HuaweiLteService.SUSPEND_INTEGRATION,
+        {HuaweiLteServiceArgument.URL: MOCK_CONF_URL},
         blocking=True,
     )
     await hass.async_block_till_done()

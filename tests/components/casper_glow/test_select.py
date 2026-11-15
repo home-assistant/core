@@ -5,24 +5,24 @@ from unittest.mock import MagicMock, patch
 
 from pycasperglow import CasperGlowError, GlowState
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    mock_restore_cache,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.casper_glow.const import (
     DIMMING_TIME_OPTIONS,
     SORTED_BRIGHTNESS_LEVELS,
 )
-from homeassistant.components.select import (
-    DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
-)
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
+from homeassistant.components.select import DOMAIN as SELECT_DOMAIN, SelectService
+from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, mock_restore_cache, snapshot_platform
 
 ENTITY_ID = "select.jar_dimming_time"
 
@@ -69,8 +69,8 @@ async def test_select_option(
     """Test selecting a dimming time option."""
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: ENTITY_ID, "option": DIMMING_TIME_OPTIONS[1]},
+        SelectService.SELECT_OPTION,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_ID, "option": DIMMING_TIME_OPTIONS[1]},
         blocking=True,
     )
 
@@ -104,8 +104,11 @@ async def test_select_option_error(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: ENTITY_ID, "option": DIMMING_TIME_OPTIONS[1]},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+                "option": DIMMING_TIME_OPTIONS[1],
+            },
             blocking=True,
         )
 
@@ -128,8 +131,11 @@ async def test_select_state_update_via_callback_after_command_failure(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: ENTITY_ID, "option": DIMMING_TIME_OPTIONS[1]},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+                "option": DIMMING_TIME_OPTIONS[1],
+            },
             blocking=True,
         )
 

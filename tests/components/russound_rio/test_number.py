@@ -3,21 +3,20 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 from .const import NAME_ZONE_1
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -58,10 +57,10 @@ async def test_setting_number_value(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: f"{NUMBER_DOMAIN}.{NAME_ZONE_1}_{entity_suffix}",
-            ATTR_VALUE: value,
+            CommonServiceArgument.ENTITY_ID: f"{NUMBER_DOMAIN}.{NAME_ZONE_1}_{entity_suffix}",
+            NumberServiceArgument.VALUE: value,
         },
         blocking=True,
     )

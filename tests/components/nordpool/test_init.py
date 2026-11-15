@@ -12,6 +12,8 @@ from pynordpool import (
     NordPoolResponseError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_fixture
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.nordpool.const import CONF_AREAS, DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
@@ -21,9 +23,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import ENTRY_CONFIG
-
-from tests.common import MockConfigEntry, async_load_fixture
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.mark.freeze_time("2025-10-01T10:00:00+00:00")
@@ -40,9 +39,12 @@ async def test_unload_entry(hass: HomeAssistant, get_client: NordPoolClient) -> 
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.state is ConfigEntryState.LOADED
+    coordinator = entry.runtime_data
+    assert coordinator.listener_unsub is not None
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.NOT_LOADED
+    assert coordinator.listener_unsub is None
 
 
 @pytest.mark.parametrize(

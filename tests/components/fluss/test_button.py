@@ -5,18 +5,21 @@ from unittest.mock import AsyncMock
 from fluss_api import FlussApiClient, FlussApiClientError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.fluss.const import UPDATE_INTERVAL
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 async def test_buttons(
@@ -42,8 +45,8 @@ async def test_button_press(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.device_1"},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: "button.device_1"},
         blocking=True,
     )
 
@@ -128,7 +131,7 @@ async def test_button_press_error(
     with pytest.raises(HomeAssistantError, match="Failed to trigger device: API Boom"):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.device_1"},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: "button.device_1"},
             blocking=True,
         )

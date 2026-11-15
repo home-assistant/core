@@ -6,8 +6,8 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import UptimeRobotDataUpdateCoordinator
 from .const import ATTR_TARGET, ATTRIBUTION, DOMAIN
+from .coordinator import UptimeRobotDataUpdateCoordinator
 
 
 class UptimeRobotEntity(CoordinatorEntity[UptimeRobotDataUpdateCoordinator]):

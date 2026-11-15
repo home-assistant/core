@@ -6,17 +6,16 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import load_fixture
 from pytradfri.command import Command
-from pytradfri.const import ATTR_FIRMWARE_VERSION, ATTR_GATEWAY_ID
+from pytradfri.const import ATTR_ID, ROOT_AIR_PURIFIER
 from pytradfri.device import Device
 from pytradfri.gateway import Gateway
 
 from homeassistant.components.tradfri.const import DOMAIN
 
-from . import GATEWAY_ID, TRADFRI_PATH
+from . import TRADFRI_PATH
 from .common import CommandStore
-
-from tests.common import load_fixture
 
 
 @pytest.fixture
@@ -28,12 +27,12 @@ def mock_entry_setup() -> Generator[AsyncMock]:
 
 
 @pytest.fixture(name="mock_gateway", autouse=True)
-def mock_gateway_fixture(command_store: CommandStore) -> Gateway:
+def mock_gateway_fixture(command_store: CommandStore, gateway_response: str) -> Gateway:
     """Mock a Tradfri gateway."""
     gateway = Gateway()
     command_store.register_response(
         gateway.get_gateway_info(),
-        {ATTR_GATEWAY_ID: GATEWAY_ID, ATTR_FIRMWARE_VERSION: "1.2.1234"},
+        json.loads(gateway_response),
     )
     command_store.register_response(
         gateway.get_devices(),
@@ -90,14 +89,28 @@ def device(
     """Return a device."""
     device_response: dict[str, Any] = json.loads(request.getfixturevalue(request.param))
     device = Device(device_response)
-    command_store.register_device(mock_gateway, device.raw)
+    command_store.register_device(mock_gateway, device_response)
     return device
+
+
+@pytest.fixture(scope="package")
+def gateway_response() -> str:
+    """Return a gateway response."""
+    return load_fixture("gateway.json", DOMAIN)
 
 
 @pytest.fixture(scope="package")
 def air_purifier() -> str:
     """Return an air purifier response."""
     return load_fixture("air_purifier.json", DOMAIN)
+
+
+@pytest.fixture(scope="package")
+def air_purifier_without_values(air_purifier: str) -> str:
+    """Return an air purifier response whose control reports no values."""
+    response = json.loads(air_purifier)
+    response[ROOT_AIR_PURIFIER] = [{ATTR_ID: 0}]
+    return json.dumps(response)
 
 
 @pytest.fixture(scope="package")

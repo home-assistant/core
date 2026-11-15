@@ -321,5 +321,5 @@ def _patch_config_flow_hole(mocked_hole):
 def _patch_setup_hole():
     """Patch async_setup_entry for the integration."""
     return patch(
-        "homeassistant.components.pi_hole.async_setup_entry", return_value=True
+        "homeassistant.components.pi_hole.async_setup_entry", return_value=None
     )

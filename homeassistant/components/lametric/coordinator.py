@@ -42,5 +42,7 @@ class LaMetricDataUpdateCoordinator(DataUpdateCoordinator[Device]):
             raise ConfigEntryAuthFailed from err
         except LaMetricError as ex:
             raise UpdateFailed(
-                "Could not fetch device information from LaMetric device"
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={"error": str(ex)},
             ) from ex

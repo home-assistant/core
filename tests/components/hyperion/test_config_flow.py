@@ -7,9 +7,9 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from hyperion import const
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.hyperion.const import (
-    CONF_AUTH_ID,
     CONF_CREATE_TOKEN,
     CONF_EFFECT_HIDE_LIST,
     CONF_EFFECT_SHOW_LIST,
@@ -43,8 +43,6 @@ from . import (
     add_test_config_entry,
     create_mock_client,
 )
-
-from tests.common import MockConfigEntry
 
 TEST_IP_ADDRESS = "192.168.0.1"
 TEST_HOST_PORT: dict[str, Any] = {
@@ -149,7 +147,7 @@ async def _configure_flow(
 
     with patch(
         "homeassistant.components.hyperion.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=user_input
@@ -194,6 +192,7 @@ async def test_user_client_errors(hass: HomeAssistant) -> None:
     ):
         result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
         assert result["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"]["base"] == "cannot_connect"
 
     # Fail the auth check call.
@@ -258,6 +257,7 @@ async def test_user_noauth_flow_success(hass: HomeAssistant) -> None:
     assert result["data"] == {
         **TEST_HOST_PORT,
     }
+    assert result["result"].unique_id == TEST_SYSINFO_ID
 
 
 async def test_user_auth_required(hass: HomeAssistant) -> None:
@@ -312,6 +312,7 @@ async def test_auth_static_token_success(hass: HomeAssistant) -> None:
         **TEST_HOST_PORT,
         CONF_TOKEN: TEST_TOKEN,
     }
+    assert result["result"].unique_id == TEST_SYSINFO_ID
 
 
 async def test_auth_static_token_login_connect_fail(hass: HomeAssistant) -> None:
@@ -357,6 +358,18 @@ async def test_auth_static_token_login_fail(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "invalid_access_token"
 
+    client.async_login = AsyncMock(
+        return_value={"command": "authorize-login", "success": True, "tan": 0}
+    )
+    with patch(
+        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
+    ):
+        result = await _configure_flow(
+            hass, result, user_input={CONF_CREATE_TOKEN: False, CONF_TOKEN: TEST_TOKEN}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_auth_create_token_approval_declined(hass: HomeAssistant) -> None:
     """Verify correct behaviour when a token request is declined."""
@@ -390,7 +403,7 @@ async def test_auth_create_token_approval_declined(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "create_token"
         assert result["description_placeholders"] == {
-            CONF_AUTH_ID: TEST_AUTH_ID,
+            "auth_id": TEST_AUTH_ID,
         }
 
         result = await _configure_flow(hass, result)
@@ -504,7 +517,7 @@ async def test_auth_create_token_when_issued_token_fails(
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "create_token"
         assert result["description_placeholders"] == {
-            CONF_AUTH_ID: TEST_AUTH_ID,
+            "auth_id": TEST_AUTH_ID,
         }
 
         result = await _configure_flow(hass, result)
@@ -552,7 +565,7 @@ async def test_auth_create_token_success(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "create_token"
         assert result["description_placeholders"] == {
-            CONF_AUTH_ID: TEST_AUTH_ID,
+            "auth_id": TEST_AUTH_ID,
         }
 
         result = await _configure_flow(hass, result)
@@ -568,6 +581,7 @@ async def test_auth_create_token_success(hass: HomeAssistant) -> None:
             **TEST_HOST_PORT,
             CONF_TOKEN: TEST_TOKEN,
         }
+        assert result["result"].unique_id == TEST_SYSINFO_ID
 
 
 async def test_auth_create_token_success_but_login_fail(
@@ -638,6 +652,7 @@ async def test_ssdp_success(hass: HomeAssistant) -> None:
         CONF_HOST: TEST_HOST,
         CONF_PORT: TEST_PORT,
     }
+    assert result["result"].unique_id == TEST_SYSINFO_ID
 
 
 async def test_ssdp_cannot_connect(hass: HomeAssistant) -> None:
@@ -691,6 +706,7 @@ async def test_ssdp_failure_bad_port_json(hass: HomeAssistant) -> None:
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"][CONF_PORT] == const.DEFAULT_PORT_JSON
+        assert result["result"].unique_id == TEST_SYSINFO_ID
 
 
 async def test_ssdp_failure_bad_port_ui(hass: HomeAssistant) -> None:
@@ -728,7 +744,7 @@ async def test_ssdp_failure_bad_port_ui(hass: HomeAssistant) -> None:
 
         # Verify a working URL is used despite the bad port number
         assert result["description_placeholders"] == {
-            CONF_AUTH_ID: TEST_AUTH_ID,
+            "auth_id": TEST_AUTH_ID,
         }
 
 
@@ -857,7 +873,7 @@ async def test_reauth_success(hass: HomeAssistant) -> None:
             "homeassistant.components.hyperion.client.HyperionClient",
             return_value=client,
         ),
-        patch("homeassistant.components.hyperion.async_setup_entry", return_value=True),
+        patch("homeassistant.components.hyperion.async_setup_entry", return_value=None),
     ):
         result = await config_entry.start_reauth_flow(hass)
         assert result["type"] is FlowResultType.FORM

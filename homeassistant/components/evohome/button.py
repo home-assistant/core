@@ -73,14 +73,6 @@ class EvoSystemResetButton(EvoResetButtonBase):
 
     _evo_device: evo.ControlSystem
 
-    def __init__(
-        self,
-        coordinator: EvoDataUpdateCoordinator,
-        evo_device: evo.ControlSystem,
-    ) -> None:
-        """Initialize the system reset button."""
-        super().__init__(coordinator, evo_device)
-
     @property
     @override
     def name(self) -> str:

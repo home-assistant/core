@@ -11,6 +11,7 @@ from fumis import (
     FumisStoveOfflineError,
 )
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -28,8 +29,6 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import async_fire_time_changed
 
 pytestmark = pytest.mark.usefixtures("init_integration")
 

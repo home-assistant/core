@@ -24,7 +24,7 @@ TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
         probatio.Required(CONF_PLATFORM): "persistent_notification",
         probatio.Optional(CONF_NOTIFICATION_ID): str,
         probatio.Optional(CONF_UPDATE_TYPE): probatio.All(
-            cv.ensure_list, [probatio.Coerce(UpdateType)]
+            probatio.EnsureList(), [probatio.Coerce(UpdateType)]
         ),
     }
 )

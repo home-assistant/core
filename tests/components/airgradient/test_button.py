@@ -6,17 +6,20 @@ from unittest.mock import AsyncMock, patch
 from airgradient import AirGradientConnectionError, AirGradientError, ApiVersion
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import async_load_config_fixture, load_config_fixture, setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 async def test_all_entities(
@@ -43,9 +46,9 @@ async def test_pressing_button(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
+        ButtonService.PRESS,
         {
-            ATTR_ENTITY_ID: "button.airgradient_calibrate_co2_sensor",
+            CommonServiceArgument.ENTITY_ID: "button.airgradient_calibrate_co2_sensor",
         },
         blocking=True,
     )
@@ -53,9 +56,9 @@ async def test_pressing_button(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
+        ButtonService.PRESS,
         {
-            ATTR_ENTITY_ID: "button.airgradient_test_led_bar",
+            CommonServiceArgument.ENTITY_ID: "button.airgradient_test_led_bar",
         },
         blocking=True,
     )
@@ -149,9 +152,9 @@ async def test_exception_handling(
     with pytest.raises(HomeAssistantError, match=error_message):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
+            ButtonService.PRESS,
             {
-                ATTR_ENTITY_ID: "button.airgradient_calibrate_co2_sensor",
+                CommonServiceArgument.ENTITY_ID: "button.airgradient_calibrate_co2_sensor",
             },
             blocking=True,
         )

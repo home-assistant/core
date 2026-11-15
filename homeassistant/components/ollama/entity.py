@@ -3,8 +3,10 @@
 from collections.abc import AsyncGenerator, AsyncIterator, Callable
 import json
 import logging
+from pathlib import Path
 from typing import Any
 
+import httpx2
 import ollama
 import probatio
 
@@ -43,7 +45,9 @@ def _format_tool(
     tool_spec = {
         "name": tool.name,
         "parameters": probatio.to_openapi(
-            tool.parameters, custom_serializer=custom_serializer
+            tool.parameters,
+            custom_serializer=custom_serializer,
+            openapi_version="3.1.0",
         ),
     }
     if tool.description:
@@ -94,7 +98,12 @@ def _convert_content(
     if isinstance(chat_content, conversation.ToolResultContent):
         return ollama.Message(
             role=MessageRole.TOOL.value,
-            content=json_dumps(chat_content.tool_result),
+            content=json_dumps(
+                {
+                    "data": chat_content.result.data,
+                    "error": chat_content.result.error,
+                }
+            ),
         )
     if isinstance(chat_content, conversation.AssistantContent):
         return ollama.Message(
@@ -132,6 +141,17 @@ def _convert_content(
             content=chat_content.content,
         )
     raise TypeError(f"Unexpected content type: {type(chat_content)}")
+
+
+def _read_images(messages: list[ollama.Message]) -> None:
+    """Replace image paths with their bytes.
+
+    The ollama client would otherwise read the files on the event loop.
+    """
+    for message in messages:
+        for image in message.images or ():
+            if isinstance(image.value, Path):
+                image.value = image.value.read_bytes()
 
 
 async def _transform_stream(
@@ -223,6 +243,10 @@ class OllamaBaseLLMEntity(Entity):
         )
         max_messages = int(settings.get(CONF_MAX_HISTORY, DEFAULT_MAX_HISTORY))
         self._trim_history(message_history, max_messages)
+        if any(message.images for message in message_history.messages):
+            await self.hass.async_add_executor_job(
+                _read_images, message_history.messages
+            )
 
         output_format: dict[str, Any] | None = None
         if structure:
@@ -233,6 +257,7 @@ class OllamaBaseLLMEntity(Entity):
                     if chat_log.llm_api
                     else llm.selector_serializer
                 ),
+                openapi_version="3.1.0",
             )
 
         # Get response
@@ -264,20 +289,25 @@ class OllamaBaseLLMEntity(Entity):
                     think=settings.get(CONF_THINK),
                     format=output_format,
                 )
-            except (ollama.RequestError, ollama.ResponseError) as err:
+                # The streamed request only runs while the response is consumed
+                message_history.messages.extend(
+                    [
+                        _convert_content(content)
+                        async for content in chat_log.async_add_delta_content_stream(
+                            self.entity_id, _transform_stream(response_generator)
+                        )
+                    ]
+                )
+            except (
+                ollama.RequestError,
+                ollama.ResponseError,
+                httpx2.HTTPError,
+            ) as err:
+                # pylint: disable-next=home-assistant-log-and-raise
                 _LOGGER.error("Unexpected error talking to Ollama server: %s", err)
                 raise HomeAssistantError(
                     f"Sorry, I had a problem talking to the Ollama server: {err}"
                 ) from err
-
-            message_history.messages.extend(
-                [
-                    _convert_content(content)
-                    async for content in chat_log.async_add_delta_content_stream(
-                        self.entity_id, _transform_stream(response_generator)
-                    )
-                ]
-            )
 
             if not chat_log.unresponded_tool_results:
                 break

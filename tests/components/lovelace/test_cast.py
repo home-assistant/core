@@ -5,6 +5,7 @@ from time import time
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components.lovelace import DOMAIN, cast as lovelace_cast
 from homeassistant.components.media_player import MediaClass
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
-
-from tests.common import async_mock_service
 
 
 @pytest.fixture(autouse=True)

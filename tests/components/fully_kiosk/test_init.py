@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from fullykiosk import FullyKioskError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 
 from homeassistant.components.fully_kiosk.const import DOMAIN
 from homeassistant.components.fully_kiosk.entity import valid_global_mac_address
@@ -17,8 +18,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 async def test_load_unload_config_entry(

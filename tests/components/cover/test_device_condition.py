@@ -1,6 +1,12 @@
 """The tests for Cover device conditions."""
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_get_device_automation_capabilities,
+    async_get_device_automations,
+    setup_test_component_platform,
+)
 from pytest_unordered import unordered
 
 from homeassistant.components import automation
@@ -13,13 +19,6 @@ from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
 
 from .common import MockCover
-
-from tests.common import (
-    MockConfigEntry,
-    async_get_device_automation_capabilities,
-    async_get_device_automations,
-    setup_test_component_platform,
-)
 
 
 @pytest.mark.parametrize(

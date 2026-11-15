@@ -49,6 +49,10 @@ def _make_integration(tmp_path: Path, icons: dict | None = None) -> Path:
             id="valid_icon_constant",
         ),
         pytest.param(
+            'icon = "mdi:matter"',
+            id="frontend_logo",
+        ),
+        pytest.param(
             'device_class = "temperature"',
             id="non_mdi_string",
         ),
@@ -156,6 +160,7 @@ def test_icons_json_valid(
             },
             "services": {
                 "my_service": {"service": "mdi:cog"},
+                "my_other_service": {"service": "mdi:esphome"},
             },
         },
     )

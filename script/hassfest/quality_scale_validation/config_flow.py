@@ -1,9 +1,9 @@
 """Enforce that the integration implements config flow.
 
-https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/config-flow/
+https://contributors.home-assistant.io/core/quality-scale/config-flow/
 """
 
-from script.hassfest.model import Config, Integration
+from hassfest.model import Config, Integration
 
 
 def validate(

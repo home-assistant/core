@@ -1,0 +1,5 @@
+# 'other_domain' keeps the root mapping's line different from the 'test_domain'
+# key's line, so an asserted line number says which of the two find_annotation
+# could answer with actually answered.
+other_domain: {}
+test_domain: {}

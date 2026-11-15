@@ -52,7 +52,7 @@ class LastOrderData:
     delivery_time_start: str | None = None
 
 
-class PicnicUpdateCoordinator(DataUpdateCoordinator):
+class PicnicUpdateCoordinator(DataUpdateCoordinator[dict]):
     """The coordinator to fetch data from the Picnic API at a set interval."""
 
     config_entry: PicnicConfigEntry

@@ -2,20 +2,19 @@
 
 from unittest.mock import MagicMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.time import (
-    ATTR_TIME,
     DOMAIN as TIME_DOMAIN,
-    SERVICE_SET_VALUE,
+    TimeService,
+    TimeServiceArgument,
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def test_time(
@@ -42,9 +41,9 @@ async def test_set_time(
 
     await hass.services.async_call(
         TIME_DOMAIN,
-        SERVICE_SET_VALUE,
+        TimeService.SET_VALUE,
         service_data={
-            ATTR_TIME: "00:00:00",
+            TimeServiceArgument.TIME: "00:00:00",
         },
         target={
             ATTR_ENTITY_ID: "time.ohme_home_pro_target_time",

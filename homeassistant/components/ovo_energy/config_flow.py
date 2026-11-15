@@ -13,11 +13,13 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_ACCOUNT, DOMAIN
 
-REAUTH_SCHEMA = probatio.Schema({probatio.Required(CONF_PASSWORD): str})
+REAUTH_SCHEMA = probatio.Schema(
+    {probatio.Required(probatio.Secret(CONF_PASSWORD)): str}
+)
 USER_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_USERNAME): str,
-        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
         probatio.Optional(CONF_ACCOUNT): str,
     }
 )
@@ -86,7 +88,7 @@ class OVOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if self.username:
             # If we have a username, use it as flow title
-            self.context["title_placeholders"] = {CONF_USERNAME: self.username}
+            self.context["title_placeholders"] = {"username": self.username}
 
         return await self.async_step_reauth_confirm()
 

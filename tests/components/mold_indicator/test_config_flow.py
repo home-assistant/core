@@ -3,6 +3,8 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries
@@ -18,9 +20,6 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_NAME, CONF_UNIT_OF_MEASUREMENT, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 
 async def test_form_sensor(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:

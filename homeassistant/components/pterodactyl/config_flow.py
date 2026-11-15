@@ -24,13 +24,13 @@ DEFAULT_URL = "http://localhost:8080"
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_URL, default=DEFAULT_URL): str,
-        probatio.Required(CONF_API_KEY): str,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): str,
     }
 )
 
 STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_API_KEY): str,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): str,
     }
 )
 

@@ -28,6 +28,7 @@ from homeassistant.util import slugify
 from .const import (
     API_VERSION,
     APP_DESC,
+    CONNECTION_IP_SENSORS_KEYS,
     CONNECTION_SENSORS_KEYS,
     DOMAIN,
     HOME_COMPATIBLE_CATEGORIES,
@@ -54,6 +55,17 @@ def is_json(json_str: str) -> bool:
     return True
 
 
+def _get_token_file(hass: HomeAssistant, host: str) -> Path:
+    """Return the path of the stored application token file for a host."""
+    freebox_path = Store(hass, STORAGE_VERSION, STORAGE_KEY).path
+    return Path(f"{freebox_path}/{slugify(host)}.conf")
+
+
+def _unlink_if_exists(path: Path) -> None:
+    """Remove a file if it exists."""
+    path.unlink(missing_ok=True)
+
+
 async def get_api(hass: HomeAssistant, host: str) -> Freepybox:
     """Get the Freebox API."""
     freebox_path = Store(hass, STORAGE_VERSION, STORAGE_KEY).path
@@ -61,9 +73,51 @@ async def get_api(hass: HomeAssistant, host: str) -> Freepybox:
     if not os.path.exists(freebox_path):
         await hass.async_add_executor_job(os.makedirs, freebox_path)
 
-    token_file = Path(f"{freebox_path}/{slugify(host)}.conf")
+    token_file = _get_token_file(hass, host)
 
     return Freepybox(APP_DESC, token_file, API_VERSION)
+
+
+def is_invalid_token_error(error: Exception) -> bool:
+    """Return whether an authorization error reports a rejected app token."""
+    return bool(
+        (matcher := re.search(r"\(APIResponse: (.+)\)$", str(error)))
+        and is_json(json_str := matcher.group(1))
+        and json.loads(json_str).get("error_code") == "invalid_token"
+    )
+
+
+def is_home_unsupported_error(error: HttpRequestError) -> bool:
+    """Return whether the Freebox Home API reports an unavailable endpoint."""
+    match = re.search(r"\(APIResponse: (.+)\)$", str(error))
+    if not match:
+        return False
+
+    try:
+        response = json.loads(match.group(1))
+    except ValueError, TypeError:
+        return False
+
+    return (
+        isinstance(response, dict)
+        and response.get("error_code") == "invalid_request"
+        and re.search(r"\b404\b", str(response.get("msg", ""))) is not None
+    )
+
+
+async def async_forget_registration(hass: HomeAssistant, host: str) -> None:
+    """Remove a stored application token for a host, if any.
+
+    The Freebox can reject an application token that Home Assistant still
+    considers valid, for example after the router was replaced, factory
+    reset, or the application authorization was revoked from the Freebox
+    OS settings. When that happens, Home Assistant keeps retrying with the
+    same rejected token forever. Removing the stored token forces a fresh
+    pairing (and a new "please confirm on your Freebox" prompt) on the
+    next attempt.
+    """
+    token_file = _get_token_file(hass, host)
+    await hass.async_add_executor_job(_unlink_if_exists, token_file)
 
 
 async def get_hosts_list_if_supported(
@@ -130,7 +184,7 @@ class FreeboxRouter:
         self.sensors_temperature_names: dict[str, str] = {}
         self.sensors_fan: dict[str, int] = {}
         self.sensors_fan_names: dict[str, str] = {}
-        self.sensors_connection: dict[str, float] = {}
+        self.sensors_connection: dict[str, float | str | None] = {}
         self.call_list: list[dict[str, Any]] = []
         self.home_granted = True
         self.home_devices: dict[str, Any] = {}
@@ -204,6 +258,8 @@ class FreeboxRouter:
         connection_datas: dict[str, Any] = await self._api.connection.get_status()
         for sensor_key in CONNECTION_SENSORS_KEYS:
             self.sensors_connection[sensor_key] = connection_datas[sensor_key]
+        for sensor_key in CONNECTION_IP_SENSORS_KEYS:
+            self.sensors_connection[sensor_key] = connection_datas.get(sensor_key)
 
         self._attrs = {
             "IPv4": connection_datas.get("ipv4"),
@@ -262,9 +318,12 @@ class FreeboxRouter:
 
         try:
             home_nodes: list[Any] = await self.home.get_home_nodes() or []
-        except HttpRequestError:
+        except HttpRequestError as err:
             self.home_granted = False
-            _LOGGER.warning("Home access is not granted")
+            if is_home_unsupported_error(err):
+                _LOGGER.debug("Freebox Home API endpoint is unavailable: %s", err)
+            else:
+                _LOGGER.warning("Freebox Home API request failed: %s", err)
             return
 
         new_device = False

@@ -1,16 +1,21 @@
 """Test the APSystem number module."""
 
-import datetime
+import datetime as dt
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
@@ -18,9 +23,7 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
-
-SCAN_INTERVAL = datetime.timedelta(seconds=30)
+SCAN_INTERVAL = dt.timedelta(seconds=30)
 
 
 async def test_number(
@@ -34,8 +37,8 @@ async def test_number(
     entity_id = "number.mock_title_max_output"
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        service_data={ATTR_VALUE: 50.1},
+        NumberService.SET_VALUE,
+        service_data={NumberServiceArgument.VALUE: 50.1},
         target={ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
@@ -49,8 +52,8 @@ async def test_number(
     mock_apsystems.get_max_power.side_effect = TimeoutError()
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        service_data={ATTR_VALUE: 50.1},
+        NumberService.SET_VALUE,
+        service_data={NumberServiceArgument.VALUE: 50.1},
         target={ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )

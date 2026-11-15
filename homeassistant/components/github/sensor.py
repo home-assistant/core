@@ -87,6 +87,16 @@ SENSOR_DESCRIPTIONS: tuple[GitHubSensorEntityDescription, ...] = (
         value_fn=lambda data: data["merged_pull_request"]["total"],
     ),
     GitHubSensorEntityDescription(
+        key="latest_release_downloads",
+        translation_key="latest_release_downloads",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        avabl_fn=lambda data: data["release"] and data["release"]["assets"]["nodes"],
+        value_fn=lambda data: sum(
+            asset["download_count"] for asset in data["release"]["assets"]["nodes"]
+        ),
+    ),
+    GitHubSensorEntityDescription(
         key="latest_commit",
         translation_key="latest_commit",
         value_fn=lambda data: data["default_branch_ref"]["commit"]["message"][:255],

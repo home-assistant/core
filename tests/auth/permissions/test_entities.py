@@ -2,6 +2,11 @@
 
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    RegistryEntryWithDefaults,
+    mock_device_registry,
+    mock_registry,
+)
 
 from homeassistant.auth.permissions.entities import (
     ENTITY_POLICY_SCHEMA,
@@ -10,8 +15,6 @@ from homeassistant.auth.permissions.entities import (
 from homeassistant.auth.permissions.models import PermissionLookup
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import ChildDeviceEntry, DeviceEntry
-
-from tests.common import RegistryEntryWithDefaults, mock_device_registry, mock_registry
 
 
 def test_entities_none() -> None:

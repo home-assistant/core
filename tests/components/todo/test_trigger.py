@@ -3,6 +3,13 @@
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import (
+    MockPlatform,
+    async_mock_service,
+    mock_device_registry,
+    mock_platform,
+)
+from pytest_homeassistant.components.common import assert_trigger_options_supported
 
 from homeassistant.components import automation
 from homeassistant.components.todo import (
@@ -36,14 +43,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.setup import async_setup_component
 
 from . import TEST_DOMAIN, MockTodoListEntity, create_mock_platform
-
-from tests.common import (
-    MockPlatform,
-    async_mock_service,
-    mock_device_registry,
-    mock_platform,
-)
-from tests.components.common import assert_trigger_options_supported
 
 TODO_ENTITY_ID1 = "todo.list_one"
 TODO_ENTITY_ID2 = "todo.list_two"
@@ -119,12 +118,14 @@ def target_todo_lists(
         area_id=area_list_one.id,
         labels={label_both.label_id, label_list_one.label_id},
         device_id=device_list_one.id,
+        name="List one",
     )
     entity_registry.async_update_entity(
         TODO_ENTITY_ID2,
         area_id=area_list_two.id,
         labels={label_both.label_id, label_list_two.label_id},
         device_id=device_list_two.id,
+        name="List two",
     )
 
 

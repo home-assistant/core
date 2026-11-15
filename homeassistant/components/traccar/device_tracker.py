@@ -16,11 +16,12 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from . import DOMAIN, TRACKER_UPDATE, TraccarConfigEntry
+from . import TRACKER_UPDATE, TraccarConfigEntry
 from .const import (
     ATTR_ALTITUDE,
     ATTR_BEARING,
     ATTR_SPEED,
+    DOMAIN,
     EVENT_ALARM,
     EVENT_ALL_EVENTS,
     EVENT_COMMAND_RESULT,

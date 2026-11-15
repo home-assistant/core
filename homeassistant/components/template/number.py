@@ -21,6 +21,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_STATE,
     CONF_UNIT_OF_MEASUREMENT,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
@@ -30,8 +31,9 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import TriggerUpdateCoordinator, validators as tcv
-from .const import CONF_MAX, CONF_MIN, CONF_STEP, DOMAIN
+from . import validators as tcv
+from .const import CONF_MAX, CONF_MIN, CONF_STEP, DEFAULT_NAMES, DOMAIN
+from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .helpers import (
     async_setup_template_entry,
@@ -48,7 +50,7 @@ from .trigger_entity import TriggerEntity
 
 CONF_SET_VALUE = "set_value"
 
-DEFAULT_NAME = "Template Number"
+DEFAULT_NAME = DEFAULT_NAMES[Platform.NUMBER]
 DEFAULT_OPTIMISTIC = False
 
 SCRIPT_FIELDS = (CONF_SET_VALUE,)

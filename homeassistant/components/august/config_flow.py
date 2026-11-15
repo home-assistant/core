@@ -6,7 +6,11 @@ from typing import Any, override
 
 import jwt
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
+    ConfigFlowResult,
+)
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .const import DOMAIN
@@ -32,6 +36,12 @@ class AugustConfigFlow(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
+        return await self.async_step_user()
+
+    async def async_step_reconfigure(
+        self, user_input: Mapping[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """User initiated reconfiguration."""
         return await self.async_step_user()
 
     def _async_decode_jwt(self, encoded: str) -> dict[str, Any]:
@@ -84,5 +94,10 @@ class AugustConfigFlow(
             return await self._async_handle_reauth(data, decoded, user_id)
 
         await self.async_set_unique_id(user_id)
+        if self.source == SOURCE_RECONFIGURE:
+            self._abort_if_unique_id_mismatch()
+            return self.async_update_reload_and_abort(
+                self._get_reconfigure_entry(), data=data
+            )
         self._abort_if_unique_id_configured()
         return await super().async_oauth_create_entry(data)

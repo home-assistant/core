@@ -1,15 +1,18 @@
 """Tests for the number platform."""
 
+import pytest
 from pywizlight import PilotParser
+from pywizlight.exceptions import WizLightConnectionError
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
 from homeassistant.components.wiz.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import (
@@ -51,13 +54,34 @@ async def test_speed_operation(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 30},
+        NumberService.SET_VALUE,
+        {CommonServiceArgument.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 30},
         blocking=True,
     )
     bulb.set_speed.assert_called_with(30)
     await async_push_update(hass, bulb, {"mac": FAKE_MAC, "speed": 30})
     assert hass.states.get(entity_id).state == "30.0"
+
+
+async def test_speed_operation_fails(hass: HomeAssistant) -> None:
+    """Test changing a speed raises HomeAssistantError when the bulb does not answer."""
+    bulb, _ = await async_setup_integration(hass, bulb_type=FAKE_DUAL_HEAD_RGBWW_BULB)
+    await async_push_update(hass, bulb, {"mac": FAKE_MAC, "speed": 50})
+    entity_id = "number.mock_title_effect_speed"
+
+    bulb.set_speed.side_effect = WizLightConnectionError("Network is unreachable")
+    with pytest.raises(
+        HomeAssistantError, match="Error while communicating with the WiZ device"
+    ):
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: entity_id,
+                NumberServiceArgument.VALUE: 30,
+            },
+            blocking=True,
+        )
 
 
 async def test_ratio_operation(
@@ -77,8 +101,8 @@ async def test_ratio_operation(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 30},
+        NumberService.SET_VALUE,
+        {CommonServiceArgument.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 30},
         blocking=True,
     )
     bulb.set_ratio.assert_called_with(30)
@@ -110,8 +134,8 @@ async def test_ratio_operation_without_dual_head_feature(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 30},
+        NumberService.SET_VALUE,
+        {CommonServiceArgument.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 30},
         blocking=True,
     )
     bulb.set_ratio.assert_called_with(30)

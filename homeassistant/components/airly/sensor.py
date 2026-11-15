@@ -61,6 +61,15 @@ class AirlySensorEntityDescription(SensorEntityDescription):
     attrs: Callable[[dict[str, Any]], dict[str, Any]] = lambda data: {}
 
 
+def _pollutant_attrs(data: dict[str, Any], pollutant: str) -> dict[str, Any]:
+    """Return limit and percent attributes for a pollutant."""
+    percent = data.get(f"{pollutant}_{SUFFIX_PERCENT}")
+    return {
+        ATTR_LIMIT: data.get(f"{pollutant}_{SUFFIX_LIMIT}"),
+        ATTR_PERCENT: None if percent is None else round(percent),
+    }
+
+
 SENSOR_TYPES: tuple[AirlySensorEntityDescription, ...] = (
     AirlySensorEntityDescription(
         key=ATTR_API_CAQI,
@@ -86,10 +95,7 @@ SENSOR_TYPES: tuple[AirlySensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
-        attrs=lambda data: {
-            ATTR_LIMIT: data[f"{ATTR_API_PM25}_{SUFFIX_LIMIT}"],
-            ATTR_PERCENT: round(data[f"{ATTR_API_PM25}_{SUFFIX_PERCENT}"]),
-        },
+        attrs=lambda data: _pollutant_attrs(data, ATTR_API_PM25),
     ),
     AirlySensorEntityDescription(
         key=ATTR_API_PM10,
@@ -97,10 +103,7 @@ SENSOR_TYPES: tuple[AirlySensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
-        attrs=lambda data: {
-            ATTR_LIMIT: data[f"{ATTR_API_PM10}_{SUFFIX_LIMIT}"],
-            ATTR_PERCENT: round(data[f"{ATTR_API_PM10}_{SUFFIX_PERCENT}"]),
-        },
+        attrs=lambda data: _pollutant_attrs(data, ATTR_API_PM10),
     ),
     AirlySensorEntityDescription(
         key=ATTR_API_HUMIDITY,
@@ -129,10 +132,7 @@ SENSOR_TYPES: tuple[AirlySensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
-        attrs=lambda data: {
-            ATTR_LIMIT: data[f"{ATTR_API_CO}_{SUFFIX_LIMIT}"],
-            ATTR_PERCENT: round(data[f"{ATTR_API_CO}_{SUFFIX_PERCENT}"]),
-        },
+        attrs=lambda data: _pollutant_attrs(data, ATTR_API_CO),
     ),
     AirlySensorEntityDescription(
         key=ATTR_API_NO2,
@@ -140,10 +140,7 @@ SENSOR_TYPES: tuple[AirlySensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
-        attrs=lambda data: {
-            ATTR_LIMIT: data[f"{ATTR_API_NO2}_{SUFFIX_LIMIT}"],
-            ATTR_PERCENT: round(data[f"{ATTR_API_NO2}_{SUFFIX_PERCENT}"]),
-        },
+        attrs=lambda data: _pollutant_attrs(data, ATTR_API_NO2),
     ),
     AirlySensorEntityDescription(
         key=ATTR_API_SO2,
@@ -151,10 +148,7 @@ SENSOR_TYPES: tuple[AirlySensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
-        attrs=lambda data: {
-            ATTR_LIMIT: data[f"{ATTR_API_SO2}_{SUFFIX_LIMIT}"],
-            ATTR_PERCENT: round(data[f"{ATTR_API_SO2}_{SUFFIX_PERCENT}"]),
-        },
+        attrs=lambda data: _pollutant_attrs(data, ATTR_API_SO2),
     ),
     AirlySensorEntityDescription(
         key=ATTR_API_O3,
@@ -162,10 +156,7 @@ SENSOR_TYPES: tuple[AirlySensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
-        attrs=lambda data: {
-            ATTR_LIMIT: data[f"{ATTR_API_O3}_{SUFFIX_LIMIT}"],
-            ATTR_PERCENT: round(data[f"{ATTR_API_O3}_{SUFFIX_PERCENT}"]),
-        },
+        attrs=lambda data: _pollutant_attrs(data, ATTR_API_O3),
     ),
 )
 
@@ -186,7 +177,7 @@ async def async_setup_entry(
             for description in SENSOR_TYPES
             # When we use the nearest method, we are not sure
             # which sensors are available
-            if coordinator.data.get(description.key)
+            if coordinator.data.get(description.key) is not None
         ),
         False,
     )
@@ -227,7 +218,7 @@ class AirlySensor(CoordinatorEntity[AirlyDataUpdateCoordinator], SensorEntity):
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._attr_native_value = self.coordinator.data[self.entity_description.key]
+        self._attr_native_value = self.coordinator.data.get(self.entity_description.key)
         self._attr_extra_state_attributes = self.entity_description.attrs(
             self.coordinator.data
         )

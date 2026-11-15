@@ -38,7 +38,7 @@ PANEL_DIR = "panels"
 CONFIG_SCHEMA = probatio.Schema(
     {
         DOMAIN: probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [
                 probatio.Schema(
                     {

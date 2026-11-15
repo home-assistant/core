@@ -139,6 +139,11 @@
           "man3x3": "MAN3x3"
         }
       }
+    },
+    "switch": {
+      "identify": {
+        "name": "Identify"
+      }
     }
   },
   "exceptions": {
@@ -153,6 +158,9 @@
     },
     "failed_to_set_bypass_supply_temperature_target": {
       "message": "Failed to set bypass supply target temperature."
+    },
+    "failed_to_set_identify": {
+      "message": "Failed to set node identification."
     },
     "failed_to_set_state": {
       "message": "Failed to set ventilation state."

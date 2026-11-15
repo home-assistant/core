@@ -22,7 +22,7 @@ type NikoHomeControlConfigEntry = ConfigEntry[NHCController]
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: NikoHomeControlConfigEntry
-) -> bool:
+) -> None:
     """Set Niko Home Control from a config entry."""
     controller = NHCController(entry.data[CONF_HOST])
     try:
@@ -32,12 +32,11 @@ async def async_setup_entry(
 
     entry.runtime_data = controller
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: NikoHomeControlConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
     LOGGER.debug(
         "Migrating configuration from version %s.%s",
@@ -64,11 +63,10 @@ async def async_migrate_entry(
         config_entry.version,
         config_entry.minor_version,
     )
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: NikoHomeControlConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

@@ -10,3 +10,5 @@ LOGGER = logging.getLogger(__package__)
 SCAN_INTERVAL = timedelta(minutes=1)
 
 CONF_TAILNET: Final = "tailnet"
+CONF_OAUTH_CLIENT_ID: Final = "oauth_client_id"
+CONF_OAUTH_CLIENT_SECRET: Final = "oauth_client_secret"

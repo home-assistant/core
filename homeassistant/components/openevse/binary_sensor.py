@@ -11,14 +11,12 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.const import ATTR_CONNECTIONS, ATTR_SERIAL_NUMBER, EntityCategory
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
-from .coordinator import OpenEVSEConfigEntry, OpenEVSEDataUpdateCoordinator
+from .coordinator import OpenEVSEConfigEntry
+from .entity import OpenEVSEEntity
 
 PARALLEL_UPDATES = 0
 
@@ -68,6 +66,11 @@ BINARY_SENSOR_TYPES: tuple[OpenEVSEBinarySensorDescription, ...] = (
         entity_registry_enabled_default=False,
         value_fn=lambda ev: ev.mqtt_connected,
     ),
+    OpenEVSEBinarySensorDescription(
+        key="station_status",
+        translation_key="station_status",
+        value_fn=lambda ev: ev.status == "active" if ev.status is not None else None,
+    ),
 )
 
 
@@ -85,35 +88,10 @@ async def async_setup_entry(
     )
 
 
-class OpenEVSEBinarySensor(
-    CoordinatorEntity[OpenEVSEDataUpdateCoordinator], BinarySensorEntity
-):
+class OpenEVSEBinarySensor(OpenEVSEEntity, BinarySensorEntity):
     """Implementation of an OpenEVSE binary sensor."""
 
-    _attr_has_entity_name = True
     entity_description: OpenEVSEBinarySensorDescription
-
-    def __init__(
-        self,
-        coordinator: OpenEVSEDataUpdateCoordinator,
-        description: OpenEVSEBinarySensorDescription,
-        identifier: str,
-        unique_id: str | None,
-    ) -> None:
-        """Initialize the binary sensor."""
-        super().__init__(coordinator)
-        self.entity_description = description
-        self._attr_unique_id = f"{identifier}-{description.key}"
-
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, identifier)},
-            manufacturer="OpenEVSE",
-        )
-        if unique_id:
-            self._attr_device_info[ATTR_CONNECTIONS] = {
-                (CONNECTION_NETWORK_MAC, unique_id)
-            }
-            self._attr_device_info[ATTR_SERIAL_NUMBER] = unique_id
 
     @property
     @override

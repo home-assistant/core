@@ -5,6 +5,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyHomee.model_homeegram import HomeeGram
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    load_json_array_fixture,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 from websockets import frames
 from websockets.exceptions import ConnectionClosed
@@ -12,19 +17,16 @@ from websockets.exceptions import ConnectionClosed
 from homeassistant.components.homee.const import DOMAIN
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_ON,
     SwitchDeviceClass,
+    SwitchService,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import build_mock_node, setup_integration
-
-from tests.common import MockConfigEntry, load_json_array_fixture, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -65,8 +67,8 @@ async def test_switch_turn_on(
     assert hass.states.get("switch.test_switch_switch_1").state is not STATE_ON
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.test_switch_switch_1"},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: "switch.test_switch_switch_1"},
         blocking=True,
     )
 
@@ -86,8 +88,8 @@ async def test_switch_turn_off(
     assert hass.states.get("switch.test_switch_watchdog").state is STATE_ON
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.test_switch_watchdog"},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: "switch.test_switch_watchdog"},
         blocking=True,
     )
     mock_homee.set_value.assert_called_once_with(1, 5, 0)
@@ -163,8 +165,8 @@ async def test_send_error(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.test_switch_switch_1"},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: "switch.test_switch_switch_1"},
             blocking=True,
         )
 
@@ -186,8 +188,8 @@ async def test_homeegram_button_press(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.homeegrams_test_hg_2"},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: "switch.homeegrams_test_hg_2"},
         blocking=True,
     )
 
@@ -208,8 +210,8 @@ async def test_homeegram_turn_off_not_supported(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "switch.homeegrams_test_hg_2"},
+            SwitchService.TURN_OFF,
+            {CommonServiceArgument.ENTITY_ID: "switch.homeegrams_test_hg_2"},
             blocking=True,
         )
 

@@ -5,6 +5,11 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 from total_connect_client import ArmingState, ArmType
 from total_connect_client.exceptions import BadResultCodeError, UsercodeInvalid
@@ -13,11 +18,8 @@ from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
     AlarmControlPanelState,
 )
-from homeassistant.components.totalconnect.alarm_control_panel import (
-    SERVICE_ALARM_ARM_AWAY_INSTANT,
-    SERVICE_ALARM_ARM_HOME_INSTANT,
-)
 from homeassistant.components.totalconnect.const import DOMAIN
+from homeassistant.components.totalconnect.services import TotalConnectService
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_ENTITY_ID,
@@ -33,8 +35,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 from .const import CODE
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY_ID = "alarm_control_panel.test"
 ENTITY_ID_2 = "alarm_control_panel.test_partition_2"
@@ -192,8 +192,8 @@ async def test_disarming_invalid_usercode(
 @pytest.mark.parametrize(
     ("service", "arm_type"),
     [
-        (SERVICE_ALARM_ARM_HOME_INSTANT, ArmType.STAY_INSTANT),
-        (SERVICE_ALARM_ARM_AWAY_INSTANT, ArmType.AWAY_INSTANT),
+        (TotalConnectService.ARM_HOME_INSTANT, ArmType.STAY_INSTANT),
+        (TotalConnectService.ARM_AWAY_INSTANT, ArmType.AWAY_INSTANT),
     ],
 )
 async def test_instant_arming(
@@ -282,8 +282,8 @@ async def test_arming_exceptions(
 @pytest.mark.parametrize(
     ("service", "prefix"),
     [
-        (SERVICE_ALARM_ARM_HOME_INSTANT, "arm_home_instant"),
-        (SERVICE_ALARM_ARM_AWAY_INSTANT, "arm_away_instant"),
+        (TotalConnectService.ARM_HOME_INSTANT, "arm_home_instant"),
+        (TotalConnectService.ARM_AWAY_INSTANT, "arm_away_instant"),
     ],
 )
 async def test_instant_arming_exceptions(

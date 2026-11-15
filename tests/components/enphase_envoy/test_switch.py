@@ -4,25 +4,17 @@ from unittest.mock import AsyncMock, patch
 
 from pyenphase.exceptions import EnvoyError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.enphase_envoy.const import Platform
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TOGGLE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
+from homeassistant.const import STATE_OFF, STATE_ON, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.parametrize(
@@ -88,8 +80,8 @@ async def test_switch_grid_operation(
     # test grid status switch operation
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: test_entity},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: test_entity},
         blocking=True,
     )
     mock_envoy.go_off_grid.assert_awaited_once_with()
@@ -97,8 +89,8 @@ async def test_switch_grid_operation(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: test_entity},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: test_entity},
         blocking=True,
     )
     mock_envoy.go_on_grid.assert_awaited_once_with()
@@ -106,8 +98,8 @@ async def test_switch_grid_operation(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TOGGLE,
-        {ATTR_ENTITY_ID: test_entity},
+        SwitchService.TOGGLE,
+        {CommonServiceArgument.ENTITY_ID: test_entity},
         blocking=True,
     )
     mock_envoy.go_off_grid.assert_awaited_once_with()
@@ -137,8 +129,8 @@ async def test_switch_grid_operation_with_error(
         # test grid status switch operation
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: test_entity},
+            SwitchService.TURN_OFF,
+            {CommonServiceArgument.ENTITY_ID: test_entity},
             blocking=True,
         )
 
@@ -148,8 +140,8 @@ async def test_switch_grid_operation_with_error(
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: test_entity},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: test_entity},
             blocking=True,
         )
 
@@ -181,8 +173,8 @@ async def test_switch_charge_from_grid_operation(
     # test grid status switch operation
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: test_entity},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: test_entity},
         blocking=True,
     )
     mock_envoy.disable_charge_from_grid.assert_awaited_once_with()
@@ -190,8 +182,8 @@ async def test_switch_charge_from_grid_operation(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: test_entity},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: test_entity},
         blocking=True,
     )
     mock_envoy.enable_charge_from_grid.assert_awaited_once_with()
@@ -199,8 +191,8 @@ async def test_switch_charge_from_grid_operation(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TOGGLE,
-        {ATTR_ENTITY_ID: test_entity},
+        SwitchService.TOGGLE,
+        {CommonServiceArgument.ENTITY_ID: test_entity},
         blocking=True,
     )
     mock_envoy.disable_charge_from_grid.assert_awaited_once_with()
@@ -237,8 +229,8 @@ async def test_switch_charge_from_grid_operation_with_error(
         # test grid status switch operation
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: test_entity},
+            SwitchService.TURN_OFF,
+            {CommonServiceArgument.ENTITY_ID: test_entity},
             blocking=True,
         )
 
@@ -248,8 +240,8 @@ async def test_switch_charge_from_grid_operation_with_error(
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: test_entity},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: test_entity},
             blocking=True,
         )
 
@@ -290,8 +282,8 @@ async def test_switch_relay_operation(
 
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: test_entity},
+            SwitchService.TURN_OFF,
+            {CommonServiceArgument.ENTITY_ID: test_entity},
             blocking=True,
         )
 
@@ -301,8 +293,8 @@ async def test_switch_relay_operation(
 
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: test_entity},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: test_entity},
             blocking=True,
         )
 
@@ -312,8 +304,8 @@ async def test_switch_relay_operation(
 
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TOGGLE,
-            {ATTR_ENTITY_ID: test_entity},
+            SwitchService.TOGGLE,
+            {CommonServiceArgument.ENTITY_ID: test_entity},
             blocking=True,
         )
 
@@ -354,8 +346,8 @@ async def test_switch_relay_operation_with_error(
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: test_entity},
+            SwitchService.TURN_OFF,
+            {CommonServiceArgument.ENTITY_ID: test_entity},
             blocking=True,
         )
 
@@ -365,7 +357,7 @@ async def test_switch_relay_operation_with_error(
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: test_entity},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: test_entity},
             blocking=True,
         )

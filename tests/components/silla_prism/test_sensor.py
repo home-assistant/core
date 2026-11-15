@@ -4,6 +4,12 @@ from datetime import timedelta
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_mqtt_message,
+    snapshot_platform,
+)
+from pytest_homeassistant.typing import MqttMockHAClient
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_UNKNOWN, Platform
@@ -11,9 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import fire_burst, setup_integration
-
-from tests.common import MockConfigEntry, async_fire_mqtt_message, snapshot_platform
-from tests.typing import MqttMockHAClient
 
 ERROR_ENTITY_ID = "sensor.silla_prism_error"
 ERROR_TOPIC = "prism/1/error"

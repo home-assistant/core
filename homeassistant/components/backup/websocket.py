@@ -6,6 +6,7 @@ import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 
 from .config import Day, ScheduleRecurrence
@@ -16,6 +17,28 @@ from .manager import (
     ManagerStateEvent,
 )
 from .models import BackupNotFound, Folder
+
+
+def _agent_error_translations(
+    agent_errors: dict[str, Exception],
+) -> dict[str, dict[str, Any]]:
+    """Return the translation of each agent error which has one."""
+    return {
+        agent_id: {
+            "translation_domain": err.translation_domain,
+            "translation_key": err.translation_key,
+            # Agents from custom integrations may pass non-string placeholders
+            "translation_placeholders": (
+                {key: str(value) for key, value in placeholders.items()}
+                if (placeholders := err.translation_placeholders)
+                else None
+            ),
+        }
+        for agent_id, err in agent_errors.items()
+        if isinstance(err, HomeAssistantError)
+        and err.translation_domain
+        and err.translation_key
+    }
 
 
 @callback
@@ -57,6 +80,7 @@ async def handle_info(
             "agent_errors": {
                 agent_id: str(err) for agent_id, err in agent_errors.items()
             },
+            "agent_error_translations": _agent_error_translations(agent_errors),
             "backups": list(backups.values()),
             "last_attempted_automatic_backup": (
                 manager.config.data.last_attempted_automatic_backup
@@ -99,6 +123,7 @@ async def handle_details(
             "agent_errors": {
                 agent_id: str(err) for agent_id, err in agent_errors.items()
             },
+            "agent_error_translations": _agent_error_translations(agent_errors),
             "backup": backup,
         },
     )
@@ -124,7 +149,8 @@ async def handle_delete(
         {
             "agent_errors": {
                 agent_id: str(err) for agent_id, err in agent_errors.items()
-            }
+            },
+            "agent_error_translations": _agent_error_translations(agent_errors),
         },
     )
 
@@ -453,5 +479,7 @@ async def handle_subscribe_events(
 
     manager = hass.data[DATA_MANAGER]
     on_event(manager.last_event)
+    for upload_event in manager.last_upload_events.values():
+        on_event(upload_event)
     connection.subscriptions[msg["id"]] = manager.async_subscribe_events(on_event)
     connection.send_result(msg["id"])

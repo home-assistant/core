@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock
 from aioaquacell import ApiException, AuthenticationFailed
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.aquacell.const import (
     CONF_BRAND,
@@ -19,8 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import TEST_CONFIG_ENTRY, TEST_USER_INPUT
-
-from tests.common import MockConfigEntry
 
 
 async def test_config_flow_already_configured(hass: HomeAssistant) -> None:
@@ -75,6 +74,7 @@ async def test_full_flow(
     assert result2["data"][CONF_PASSWORD] == TEST_CONFIG_ENTRY[CONF_PASSWORD]
     assert result2["data"][CONF_REFRESH_TOKEN] == TEST_CONFIG_ENTRY[CONF_REFRESH_TOKEN]
     assert result2["data"][CONF_BRAND] == TEST_CONFIG_ENTRY[CONF_BRAND]
+    assert result2["result"].unique_id == TEST_USER_INPUT[CONF_EMAIL]
     assert len(mock_setup_entry.mock_calls) == 1
 
 

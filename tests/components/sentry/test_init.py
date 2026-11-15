@@ -4,6 +4,7 @@ import logging
 from unittest.mock import Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.sentry import process_before_send
 from homeassistant.components.sentry.const import (
@@ -18,8 +19,6 @@ from homeassistant.components.sentry.const import (
 )
 from homeassistant.const import __version__ as current_version
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_entry(hass: HomeAssistant) -> None:

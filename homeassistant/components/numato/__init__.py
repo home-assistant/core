@@ -112,9 +112,9 @@ DEVICE_SCHEMA = probatio.Schema(
 CONFIG_SCHEMA = probatio.Schema(
     {
         DOMAIN: {
-            CONF_DEVICES: probatio.All(cv.ensure_list, [DEVICE_SCHEMA]),
+            CONF_DEVICES: probatio.All(probatio.EnsureList(), [DEVICE_SCHEMA]),
             probatio.Optional(CONF_DISCOVER, default=DEFAULT_DEV): probatio.All(
-                cv.ensure_list, [cv.string]
+                probatio.EnsureList(), [cv.string]
             ),
         },
     },

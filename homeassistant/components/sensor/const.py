@@ -83,6 +83,11 @@ ATTR_LAST_RESET: Final = "last_reset"
 ATTR_STATE_CLASS: Final = "state_class"
 ATTR_OPTIONS: Final = "options"
 
+UPTIME_DEFAULT_TOLERANCE_SECONDS: Final = 60
+UPTIME_MIN_TOLERANCE_SECONDS: Final = 5
+
+TEMPERATURE_UNITS = {UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT}
+
 
 class SensorEntityCapabilityAttribute(StrEnum):
     """Capability attributes for sensor entities."""
@@ -240,7 +245,7 @@ class SensorDeviceClass(StrEnum):
     electric energy consumption.
     Unit of measurement: `J`, `kJ`, `MJ`, `GJ`, `mWh`,
     `Wh`, `kWh`, `MWh`, `GWh`, `TWh`, `cal`, `kcal`,
-    `Mcal`, `Gcal`
+    `Mcal`, `Gcal`, `thm`
     """
 
     ENERGY_DISTANCE = "energy_distance"
@@ -262,7 +267,7 @@ class SensorDeviceClass(StrEnum):
 
     Unit of measurement: `J`, `kJ`, `MJ`, `GJ`, `mWh`,
     `Wh`, `kWh`, `MWh`, `GWh`, `TWh`, `cal`, `kcal`,
-    `Mcal`, `Gcal`
+    `Mcal`, `Gcal`, `thm`
     """
 
     FREQUENCY = "frequency"

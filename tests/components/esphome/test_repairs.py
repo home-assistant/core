@@ -3,8 +3,22 @@
 import asyncio
 from unittest.mock import AsyncMock
 
-from aioesphomeapi import APIClient, BinarySensorInfo, BinarySensorState, DeviceInfo
+from aioesphomeapi import (
+    APIClient,
+    BinarySensorInfo,
+    BinarySensorState,
+    DeviceInfo,
+    DeviceRelation,
+    SubDeviceInfo,
+)
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.repairs import (
+    get_repairs,
+    process_repair_fix_flow,
+    start_repair_fix_flow,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 
 from homeassistant.components.esphome import repairs
 from homeassistant.components.esphome.const import DOMAIN
@@ -19,14 +33,6 @@ from homeassistant.helpers import (
 )
 
 from .conftest import MockESPHomeDeviceType
-
-from tests.common import MockConfigEntry
-from tests.components.repairs import (
-    get_repairs,
-    process_repair_fix_flow,
-    start_repair_fix_flow,
-)
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 async def test_create_fix_flow_raises_on_unknown_issue_id(hass: HomeAssistant) -> None:
@@ -116,18 +122,33 @@ async def test_device_conflict_migration(
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test migrating existing configuration to new hardware."""
+    child_devices = [
+        SubDeviceInfo(
+            device_id=11111111, name="Child", area_id=0, relation=DeviceRelation.CHILD
+        )
+    ]
     entity_info = [
         BinarySensorInfo(
             object_id="mybinary_sensor",
             key=1,
             name="my binary_sensor",
             is_status_binary_sensor=True,
-        )
+        ),
+        BinarySensorInfo(
+            object_id="child_sensor",
+            key=2,
+            name="child sensor",
+            device_id=11111111,
+        ),
     ]
-    states = [BinarySensorState(key=1, state=None)]
+    states = [
+        BinarySensorState(key=1, state=None),
+        BinarySensorState(key=2, state=True, device_id=11111111),
+    ]
     user_service = []
     device = await mock_esphome_device(
         mock_client=mock_client,
+        device_info={"devices": child_devices},
         entity_info=entity_info,
         user_service=user_service,
         states=states,
@@ -148,6 +169,10 @@ async def test_device_conflict_migration(
     assert entries is not None
     for entry in entries:
         assert entry.unique_id.startswith("11:22:33:44:55:AA/")
+    child_device = device_registry.async_get_child_device_by_identifier(
+        (DOMAIN, "11:22:33:44:55:AA_11111111"), mock_config_entry.entry_id
+    )
+    assert child_device is not None
     disconnect_done = hass.loop.create_future()
 
     async def async_disconnect(*args, **kwargs) -> None:
@@ -156,7 +181,10 @@ async def test_device_conflict_migration(
 
     mock_client.disconnect = async_disconnect
     new_device_info = DeviceInfo(
-        mac_address="11:22:33:44:55:AB", name="test", model="esp32-iso-poe"
+        mac_address="11:22:33:44:55:AB",
+        name="test",
+        model="esp32-iso-poe",
+        devices=child_devices,
     )
     mock_client.device_info = AsyncMock(return_value=new_device_info)
     # Keep the same entity_info when reloading
@@ -225,3 +253,60 @@ async def test_device_conflict_migration(
         )
         is None
     )
+
+    # The child device keeps its id, only its identifier carries the new mac
+    migrated_child_device = device_registry.async_get_child_device_by_identifier(
+        (DOMAIN, "11:22:33:44:55:AB_11111111"), mock_config_entry.entry_id
+    )
+    assert migrated_child_device is not None
+    assert migrated_child_device.id == child_device.id
+    assert (
+        device_registry.async_get_child_device_by_identifier(
+            (DOMAIN, "11:22:33:44:55:AA_11111111"), mock_config_entry.entry_id
+        )
+        is None
+    )
+    child_entity = entity_registry.async_get("binary_sensor.test_child_child_sensor")
+    assert child_entity is not None
+    assert (
+        child_entity.unique_id
+        == "11:22:33:44:55:AB/11111111/binary_sensor/child sensor"
+    )
+    assert child_entity.device_id == child_device.id
+
+
+async def test_device_conflict_issue_deleted_on_entry_removal(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the device conflict issue is linked to and removed with its entry."""
+    disconnect_done = hass.loop.create_future()
+
+    async def async_disconnect(*args, **kwargs) -> None:
+        disconnect_done.set_result(None)
+
+    mock_client.disconnect = async_disconnect
+    device_info = DeviceInfo(
+        mac_address="1122334455ab", name="test", model="esp32-iso-poe"
+    )
+    mock_client.device_info = AsyncMock(return_value=device_info)
+    mock_client.list_entities_services = AsyncMock(return_value=([], []))
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(device_info, [], [])
+    )
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    async with asyncio.timeout(1):
+        await disconnect_done
+    mock_client.disconnect = AsyncMock()
+
+    issue_id = DEVICE_CONFLICT_ISSUE_FORMAT.format(mock_config_entry.entry_id)
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.config_entry_id == mock_config_entry.entry_id
+
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None

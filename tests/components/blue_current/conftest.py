@@ -1,10 +1,9 @@
 """Define test fixtures for Blue Current."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.blue_current.const import DOMAIN
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="config_entry")

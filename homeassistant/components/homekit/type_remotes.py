@@ -7,18 +7,13 @@ from typing import Any, override
 from pyhap.const import CATEGORY_TELEVISION
 
 from homeassistant.components.remote import (
-    ATTR_ACTIVITY,
     DOMAIN as REMOTE_DOMAIN,
     RemoteEntityFeature,
     RemoteEntityStateAttribute,
+    RemoteService,
+    RemoteServiceArgument,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_ON,
-    EntityStateAttribute,
-)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_ON, EntityStateAttribute
 from homeassistant.core import State, callback
 
 from .accessories import TYPES, HomeAccessory
@@ -235,7 +230,7 @@ class ActivityRemote(RemoteInputSelectAccessory):
     def set_on_off(self, value: bool) -> None:
         """Move switch state to value if call came from HomeKit."""
         _LOGGER.debug('%s: Set switch state for "on_off" to %s', self.entity_id, value)
-        service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
+        service = RemoteService.TURN_ON if value else RemoteService.TURN_OFF
         params = {ATTR_ENTITY_ID: self.entity_id}
         self.async_call_service(REMOTE_DOMAIN, service, params)
 
@@ -244,8 +239,11 @@ class ActivityRemote(RemoteInputSelectAccessory):
         """Send input set value if call came from HomeKit."""
         _LOGGER.debug("%s: Set current input to %s", self.entity_id, value)
         source = self._mapped_sources[self.sources[value]]
-        params = {ATTR_ENTITY_ID: self.entity_id, ATTR_ACTIVITY: source}
-        self.async_call_service(REMOTE_DOMAIN, SERVICE_TURN_ON, params)
+        params = {
+            ATTR_ENTITY_ID: self.entity_id,
+            RemoteServiceArgument.ACTIVITY: source,
+        }
+        self.async_call_service(REMOTE_DOMAIN, RemoteService.TURN_ON, params)
 
     @override
     def set_remote_key(self, value: int) -> None:
