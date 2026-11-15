@@ -15,7 +15,7 @@ from pysnmp.hlapi.v3arch.asyncio import (
     UsmUserData,
     bulk_walk_cmd,
     is_end_of_mib,
-    next_cmd,
+    walk_cmd,
 )
 from pysnmp.smi.error import WrongValueError
 
@@ -93,9 +93,9 @@ class SnmpClient:
         """Walk the subtree of baseoid, yielding the values it contains."""
         object_type = ObjectType(ObjectIdentity(baseoid))
         if self.version == "1":
-            # SNMPv1 has no GETBULK, so RFC 2576 lets a manager walk with GETNEXT
-            # instead, returning one row per request.
-            walker = next_cmd(
+            # SNMPv1 has no GETBULK, so walk it with GETNEXT. The walk stops on the
+            # SNMPv1 noSuchName error status, which the bulk walk never reports.
+            walker = walk_cmd(
                 self.engine,
                 self.auth_data,
                 self.target,

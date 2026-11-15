@@ -38,7 +38,7 @@ def patch_walk(side_effect: Any) -> Iterator[Mock]:
     walker = Mock(side_effect=side_effect)
     with (
         patch("homeassistant.components.snmp.client.bulk_walk_cmd", walker),
-        patch("homeassistant.components.snmp.client.next_cmd", walker),
+        patch("homeassistant.components.snmp.client.walk_cmd", walker),
     ):
         yield walker
 
