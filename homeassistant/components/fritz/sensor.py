@@ -30,14 +30,14 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 
-from .const import CONNECTION_TYPE_WLAN, DSL_CONNECTION, LOGGER, MeshRoles
+from .const import CONNECTION_TYPE_WLAN, DSL_CONNECTION, LOGGER
 from .coordinator import FRITZ_DATA_KEY, AvmWrapper, FritzConfigEntry, FritzData
 from .entity import (
     FritzBoxBaseCoordinatorEntity,
     FritzDeviceBase,
     FritzEntityDescription,
 )
-from .helpers import device_filter_out_from_trackers
+from .helpers import _is_tracked
 from .models import ConnectionInfo, FritzDevice, LinkInfo
 
 # Coordinator is used to centralize the data updates
@@ -413,23 +413,26 @@ def _async_link_sensors(
     """Add link sensors for connected devices once their link is known."""
     new_link_sensors: list[FritzBoxLinkSensor] = []
 
-    if avm_wrapper.mesh_role is MeshRoles.NONE:
-        return new_link_sensors
+    known_link_sensors = data_fritz.link_sensors[avm_wrapper.unique_id]
 
     for mac, device in avm_wrapper.devices.items():
-        if device_filter_out_from_trackers(
-            mac, device, data_fritz.link_sensors.values()
+        if device.link_info is None:
+            continue
+        # Link sensor unique IDs don't include the FRITZ!Box, so only one box
+        # may provide them
+        if mac not in known_link_sensors and _is_tracked(
+            mac, data_fritz.link_sensors.values()
         ):
-            LOGGER.debug("Skipping link sensor creation for device %s", device.hostname)
             continue
 
+        known_keys = known_link_sensors.setdefault(mac, set())
         for description in LINK_SENSOR_TYPES:
-            if not description.is_suitable(device):
+            if description.key in known_keys or not description.is_suitable(device):
                 continue
+            known_keys.add(description.key)
             new_link_sensors.append(
                 FritzBoxLinkSensor(avm_wrapper, device, description)
             )
-        data_fritz.link_sensors[avm_wrapper.unique_id].add(mac)
 
     return new_link_sensors
 
@@ -461,13 +464,15 @@ async def async_setup_entry(
     entities_list = await async_all_entities_list(avm_wrapper, entry.title, data_fritz)
     async_add_entities(entities_list)
 
-    async def async_update_avm_device() -> None:
-        """Update the values of the AVM device."""
-        async_add_entities(_async_link_sensors(avm_wrapper, data_fritz))
+    @callback
+    def async_update_avm_device() -> None:
+        """Add link sensors that became available with the latest scan."""
+        if new_link_sensors := _async_link_sensors(avm_wrapper, data_fritz):
+            async_add_entities(new_link_sensors)
 
     entry.async_on_unload(
         async_dispatcher_connect(
-            hass, avm_wrapper.signal_device_new, async_update_avm_device
+            hass, avm_wrapper.signal_device_update, async_update_avm_device
         )
     )
 
