@@ -63,10 +63,14 @@ def _get_token_file(hass: HomeAssistant, host: str) -> Path:
     return Path(f"{freebox_path}/{slugify(host)}.conf")
 
 
-def lan_port_name(port: dict[str, Any]) -> str:
-    """Return the name of a Freebox LAN port."""
+def lan_port_translation(
+    port: dict[str, Any], translation_key: str
+) -> tuple[str, dict[str, str]]:
+    """Return the translation key and placeholders of a LAN port entity."""
     # The port name is not part of the documented API
-    return port.get("name") or f"Port {port['id']}"
+    if name := port.get("name"):
+        return translation_key, {"port": name}
+    return f"{translation_key}_unnamed", {"port": str(port["id"])}
 
 
 def _unlink_if_exists(path: Path) -> None:

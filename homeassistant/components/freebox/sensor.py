@@ -1,7 +1,7 @@
 """Support for Freebox devices (Freebox v6 and Freebox mini 4K)."""
 
 import logging
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -25,7 +25,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .entity import FreeboxHomeEntity
-from .router import FreeboxConfigEntry, FreeboxRouter, lan_port_name
+from .router import FreeboxConfigEntry, FreeboxRouter, lan_port_translation
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -353,9 +353,11 @@ class FreeboxLanPortSensor(FreeboxSensor):
         """Initialize a Freebox LAN port sensor."""
         super().__init__(router, description)
         self._port_id = port_id
-        self._attr_translation_placeholders = {
-            "port": lan_port_name(router.lan_ports[port_id])
-        }
+        if TYPE_CHECKING:
+            assert description.translation_key
+        self._attr_translation_key, self._attr_translation_placeholders = (
+            lan_port_translation(router.lan_ports[port_id], description.translation_key)
+        )
         self._attr_unique_id = f"{router.mac} lan_port {port_id} {description.key}"
 
 

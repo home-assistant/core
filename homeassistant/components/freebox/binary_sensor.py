@@ -15,7 +15,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import FreeboxHomeCategory
 from .entity import FreeboxHomeEntity
-from .router import FreeboxConfigEntry, FreeboxRouter, lan_port_name
+from .router import FreeboxConfigEntry, FreeboxRouter, lan_port_translation
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -204,16 +204,15 @@ class FreeboxLanPortLinkSensor(BinarySensorEntity):
     _attr_has_entity_name = True
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_translation_key = "port_link"
 
     def __init__(self, router: FreeboxRouter, port_id: int) -> None:
         """Initialize a Freebox LAN port link sensor."""
         self._router = router
         self._port_id = port_id
         self._attr_device_info = router.device_info
-        self._attr_translation_placeholders = {
-            "port": lan_port_name(router.lan_ports[port_id])
-        }
+        self._attr_translation_key, self._attr_translation_placeholders = (
+            lan_port_translation(router.lan_ports[port_id], "port_link")
+        )
         self._attr_unique_id = f"{router.mac} lan_port {port_id} link"
 
     @property

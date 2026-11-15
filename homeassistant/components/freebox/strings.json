@@ -33,6 +33,9 @@
       "port_link": {
         "name": "{port} link"
       },
+      "port_link_unnamed": {
+        "name": "Port {port} link"
+      },
       "raid_degraded": {
         "name": "RAID array {id} degraded"
       }
@@ -73,11 +76,20 @@
       "port_link_speed": {
         "name": "{port} link speed"
       },
+      "port_link_speed_unnamed": {
+        "name": "Port {port} link speed"
+      },
       "port_rx_rate": {
         "name": "{port} receive rate"
       },
+      "port_rx_rate_unnamed": {
+        "name": "Port {port} receive rate"
+      },
       "port_tx_rate": {
         "name": "{port} transmit rate"
+      },
+      "port_tx_rate_unnamed": {
+        "name": "Port {port} transmit rate"
       },
       "rate_down": {
         "name": "Download speed"
