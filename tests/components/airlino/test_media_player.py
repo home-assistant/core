@@ -270,7 +270,7 @@ async def test_services(
     """Test media player services call the API and refresh the state."""
     mock_airlino_api.async_get_player_status.return_value = {"state": player_state}
     await setup_integration(hass, mock_config_entry)
-    mock_airlino_api.async_get_player_status.reset_mock()
+    mock_airlino_api.async_get_master_volume.reset_mock()
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
@@ -280,7 +280,8 @@ async def test_services(
     )
 
     getattr(mock_airlino_api, method).assert_awaited_once_with(*args)
-    mock_airlino_api.async_get_player_status.assert_awaited_once()
+    # The volume is only fetched by the coordinator refresh.
+    mock_airlino_api.async_get_master_volume.assert_awaited_once()
 
 
 @pytest.mark.parametrize(
@@ -309,6 +310,46 @@ async def test_play_pause_skipped_in_requested_state(
     )
 
     getattr(mock_airlino_api, method).assert_not_awaited()
+
+
+@pytest.mark.parametrize(
+    ("cached_state", "device_state", "service", "method"),
+    [
+        pytest.param(
+            PLAYER_STATE_PLAYING,
+            PLAYER_STATE_STOPPED,
+            SERVICE_MEDIA_PLAY,
+            "async_play",
+            id="play",
+        ),
+        pytest.param(
+            PLAYER_STATE_PAUSED,
+            PLAYER_STATE_PLAYING,
+            SERVICE_MEDIA_PAUSE,
+            "async_playpause",
+            id="pause",
+        ),
+    ],
+)
+async def test_play_pause_use_current_device_state(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_airlino_api: MagicMock,
+    cached_state: int,
+    device_state: int,
+    service: str,
+    method: str,
+) -> None:
+    """Test play and pause are decided on the device state, not the cached one."""
+    mock_airlino_api.async_get_player_status.return_value = {"state": cached_state}
+    await setup_integration(hass, mock_config_entry)
+    mock_airlino_api.async_get_player_status.return_value = {"state": device_state}
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN, service, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+    )
+
+    getattr(mock_airlino_api, method).assert_awaited_once_with()
 
 
 @pytest.mark.parametrize(
@@ -342,10 +383,19 @@ async def test_service_error(
     assert exc_info.value.translation_key == translation_key
 
 
+@pytest.mark.parametrize(
+    "media_type",
+    [
+        pytest.param(MediaType.URL, id="url"),
+        pytest.param(MediaType.MUSIC, id="music"),
+        pytest.param("audio/mpeg", id="audio_mime_type"),
+    ],
+)
 async def test_play_media_url(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_airlino_api: MagicMock,
+    media_type: str,
 ) -> None:
     """Test playing a stream URL."""
     await setup_integration(hass, mock_config_entry)
@@ -355,7 +405,7 @@ async def test_play_media_url(
         SERVICE_PLAY_MEDIA,
         {
             ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_MEDIA_CONTENT_TYPE: MediaType.URL,
+            ATTR_MEDIA_CONTENT_TYPE: media_type,
             ATTR_MEDIA_CONTENT_ID: "http://example.test/stream.mp3",
         },
         blocking=True,
@@ -404,11 +454,18 @@ async def test_play_media_source(
     ("media_type", "media_id", "error", "translation_key"),
     [
         pytest.param(
-            MediaType.MUSIC,
-            "track-id",
+            MediaType.VIDEO,
+            "http://example.test/video.mp4",
             ServiceValidationError,
             "media_type_unsupported",
             id="unsupported_media_type",
+        ),
+        pytest.param(
+            MediaType.MUSIC,
+            "track-id",
+            ServiceValidationError,
+            "media_url_invalid",
+            id="invalid_url",
         ),
         pytest.param(
             MediaType.URL,

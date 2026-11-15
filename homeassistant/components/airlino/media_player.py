@@ -208,11 +208,23 @@ class AirlinoMediaPlayer(
                 self.hass, media_id, self.entity_id
             )
             media_id = play_item.url
-        elif media_type not in (MediaType.URL, "url"):
+        elif media_type not in (
+            MediaType.URL,
+            MediaType.MUSIC,
+        ) and not media_type.startswith("audio/"):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="media_type_unsupported",
                 translation_placeholders={"media_type": media_type},
+            )
+        elif not media_id.startswith("/") and urlsplit(media_id).scheme not in (
+            "http",
+            "https",
+        ):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="media_url_invalid",
+                translation_placeholders={"media_id": media_id},
             )
 
         media_id = async_process_play_media_url(self.hass, media_id)
@@ -226,10 +238,15 @@ class AirlinoMediaPlayer(
         await self._async_call(self.coordinator.api.async_play_station, media_id)
         await self.coordinator.async_request_refresh()
 
+    async def _async_is_playing(self) -> bool:
+        """Return whether the device is playing, bypassing the cached state."""
+        status = await self._async_call(self.coordinator.api.async_get_player_status)
+        return status.get("state") == PLAYER_STATE_PLAYING
+
     @override
     async def async_media_play(self) -> None:
         """Start playback."""
-        if self.state == MediaPlayerState.PLAYING:
+        if await self._async_is_playing():
             return
         await self._async_call(self.coordinator.api.async_play)
         await self.coordinator.async_request_refresh()
@@ -237,7 +254,8 @@ class AirlinoMediaPlayer(
     @override
     async def async_media_pause(self) -> None:
         """Pause playback when it is currently playing."""
-        if self.state != MediaPlayerState.PLAYING:
+        # The device only offers a toggle, so pausing must not resume playback.
+        if not await self._async_is_playing():
             return
         await self._async_call(self.coordinator.api.async_playpause)
         await self.coordinator.async_request_refresh()
