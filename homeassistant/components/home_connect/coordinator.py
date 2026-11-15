@@ -185,7 +185,6 @@ class HomeConnectRuntimeData:
                             appliance_coordinator
                         )
 
-                    assert appliance_coordinator
                     await appliance_coordinator.event_listener(event_message)
 
             except (HomeConnectApiError, OAuth2TokenRequestReauthError) as error:

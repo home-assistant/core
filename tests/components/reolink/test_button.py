@@ -9,9 +9,12 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.reolink.const import DOMAIN
-from homeassistant.components.reolink.services import ATTR_SPEED, SERVICE_PTZ_MOVE
+from homeassistant.components.reolink.services import (
+    ReolinkService,
+    ReolinkServiceArgument,
+)
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, CommonServiceArgument, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -104,8 +107,8 @@ async def test_ptz_move_service(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_PTZ_MOVE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_SPEED: 5},
+        ReolinkService.PTZ_MOVE,
+        {CommonServiceArgument.ENTITY_ID: entity_id, ReolinkServiceArgument.SPEED: 5},
         blocking=True,
     )
     reolink_host.set_ptz_command.assert_called_with(
@@ -116,8 +119,11 @@ async def test_ptz_move_service(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_PTZ_MOVE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_SPEED: 5},
+            ReolinkService.PTZ_MOVE,
+            {
+                CommonServiceArgument.ENTITY_ID: entity_id,
+                ReolinkServiceArgument.SPEED: 5,
+            },
             blocking=True,
         )
 

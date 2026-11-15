@@ -386,19 +386,33 @@ async def _async_validate_block(
 
 
 async def _async_validate_nested_blocks(
-    hass: HomeAssistant, config: ConfigType, layout: _Layout
+    hass: HomeAssistant,
+    config: ConfigType,
+    layout: _Layout,
+    path: tuple[str | int, ...] = (),
 ) -> None:
-    """Validate the blocks in config in place, following layout."""
+    """Validate the blocks in config in place, following layout.
+
+    The path of config in the action is prepended to validation errors.
+    """
     for key, nested in layout.items():
         if isinstance(nested, _Block):
             if nested.optional and key not in config:
                 continue
-            config[key] = await _async_validate_block(hass, nested.kind, config[key])
+            try:
+                config[key] = await _async_validate_block(
+                    hass, nested.kind, config[key]
+                )
+            except probatio.Invalid as err:
+                err.prepend([*path, key])
+                raise
         elif isinstance(nested, list):
-            for item in config[key]:
-                await _async_validate_nested_blocks(hass, item, nested[0])
+            for index, item in enumerate(config[key]):
+                await _async_validate_nested_blocks(
+                    hass, item, nested[0], (*path, key, index)
+                )
         else:
-            await _async_validate_nested_blocks(hass, config[key], nested)
+            await _async_validate_nested_blocks(hass, config[key], nested, (*path, key))
 
 
 async def async_validate_actions_config(
@@ -407,7 +421,14 @@ async def async_validate_actions_config(
     """Validate a list of actions."""
     # No gather here because async_validate_action_config is unlikely
     # to suspend and the overhead of creating many tasks is not worth it
-    return [await async_validate_action_config(hass, action) for action in actions]
+    validated = []
+    for index, action in enumerate(actions):
+        try:
+            validated.append(await async_validate_action_config(hass, action))
+        except probatio.Invalid as err:
+            err.prepend([index])
+            raise
+    return validated
 
 
 async def async_validate_action_config(
