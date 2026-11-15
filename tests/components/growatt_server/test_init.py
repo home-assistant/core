@@ -717,12 +717,23 @@ async def test_classic_api_setup_retry_reuses_session(
     assert hass.states.get(TLX_OUTPUT_POWER).state == "2100"
 
 
-async def test_classic_api_setup_retry_new_password_logs_in_again(
+@pytest.mark.parametrize(
+    ("changed_data", "expected_password"),
+    [
+        pytest.param({CONF_PASSWORD: "new_password"}, "new_password", id="password"),
+        pytest.param(
+            {CONF_URL: "https://openapi-us.growatt.com/"}, "test_password", id="url"
+        ),
+    ],
+)
+async def test_classic_api_setup_retry_new_credentials_logs_in_again(
     hass: HomeAssistant,
     mock_growatt_classic_api: MagicMock,
     mock_config_entry_classic: MockConfigEntry,
+    changed_data: dict[str, str],
+    expected_password: str,
 ) -> None:
-    """Test a setup retry does not reuse a session made with an old password."""
+    """Test a setup retry does not reuse a session made with old credentials."""
     mock_growatt_classic_api.plant_info.side_effect = (
         requests.exceptions.ConnectionError("Connection reset")
     )
@@ -732,13 +743,13 @@ async def test_classic_api_setup_retry_new_password_logs_in_again(
 
     hass.config_entries.async_update_entry(
         mock_config_entry_classic,
-        data={**mock_config_entry_classic.data, CONF_PASSWORD: "new_password"},
+        data={**mock_config_entry_classic.data, **changed_data},
     )
     await hass.config_entries.async_reload(mock_config_entry_classic.entry_id)
     await hass.async_block_till_done()
 
     assert mock_growatt_classic_api.login.call_count == 2
-    mock_growatt_classic_api.login.assert_called_with("test_user", "new_password")
+    mock_growatt_classic_api.login.assert_called_with("test_user", expected_password)
 
 
 async def test_classic_api_reload_logs_in_again(
