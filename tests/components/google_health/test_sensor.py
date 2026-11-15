@@ -58,31 +58,28 @@ async def test_all_entities(
 async def test_sensor_disabled_by_default(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    config_entry: MockConfigEntry,
     integration_setup: Callable[[], Awaitable[bool]],
 ) -> None:
-    """Test secondary nutrition sensors are disabled by default."""
-    assert await integration_setup()
+    """Test default enabled and disabled states for all sensor entities."""
+    with patch("homeassistant.components.google_health._PLATFORMS", [Platform.SENSOR]):
+        assert await integration_setup()
 
-    for entity_id in (
-        "sensor.google_health_total_fat",
-        "sensor.google_health_total_carbohydrates",
-        "sensor.google_health_protein",
-    ):
-        entry = entity_registry.async_get(entity_id)
-        assert entry is not None
-        assert entry.disabled_by is None
-        assert hass.states.get(entity_id) is not None
-
-    for entity_id in (
-        "sensor.google_health_dietary_fiber",
-        "sensor.google_health_sugar",
-        "sensor.google_health_sodium",
-        "sensor.google_health_calories_from_fat",
-    ):
-        entry = entity_registry.async_get(entity_id)
-        assert entry is not None
-        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
-        assert hass.states.get(entity_id) is None
+    entries = er.async_entries_for_config_entry(entity_registry, config_entry.entry_id)
+    expected_disabled = {
+        "sensor.google_health_dietary_fiber": er.RegistryEntryDisabler.INTEGRATION,
+        "sensor.google_health_sugar": er.RegistryEntryDisabler.INTEGRATION,
+        "sensor.google_health_sodium": er.RegistryEntryDisabler.INTEGRATION,
+        "sensor.google_health_calories_from_fat": er.RegistryEntryDisabler.INTEGRATION,
+    }
+    assert {
+        entry.entity_id: entry.disabled_by
+        for entry in entries
+        if entry.disabled_by is not None
+    } == expected_disabled
+    assert {
+        entry.entity_id for entry in entries if hass.states.get(entry.entity_id) is None
+    } == set(expected_disabled)
 
 
 @pytest.mark.parametrize(
