@@ -102,8 +102,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data={"type": self._disc_dev.type},
             )
 
-        self._set_confirm_only()
-
         return self.async_show_form(
             step_id="bluetooth_confirm",
             description_placeholders=self.context.get("title_placeholders"),
