@@ -537,6 +537,12 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
                 self._state_ts = stored.state_ts
             else:
                 self._state_ts = state.last_updated
+            if state.state in SUPPORTED_ARMING_STATES:
+                self._state_ts = min(
+                    self._state_ts,
+                    dt_util.utcnow()
+                    - self._arming_time(AlarmControlPanelState(state.state)),
+                )
             try:
                 if next_state := state.attributes.get(
                     ManualEntityStateAttribute.NEXT_STATE
