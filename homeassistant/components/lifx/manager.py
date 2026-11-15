@@ -8,6 +8,7 @@ from lifx import (
     HSBK,
     Conductor,
     Device,
+    DeviceGroup,
     Direction,
     EffectColorloop,
     EffectPulse,
@@ -19,7 +20,6 @@ from lifx import (
     MultiZoneEffect,
     MultiZoneLight,
     Theme,
-    ThemeLibrary,
     TileEffectSkyType,
 )
 
@@ -34,6 +34,7 @@ from .util import (
     palette_fraction,
     parse_hsbk_changes,
     replace_hsbk,
+    resolve_renamed_theme,
 )
 
 EFFECT_COLORSWEEP_DEFAULT_SPEED = 0
@@ -119,7 +120,7 @@ class LIFXManager:
     ) -> Theme:
         """Return a predefined theme or build one from a palette."""
         if palette is None:
-            return ThemeLibrary.get(theme_name)
+            return resolve_renamed_theme(theme_name)
         return Theme(cls._build_palette(palette))
 
     @staticmethod
@@ -167,6 +168,17 @@ class LIFXManager:
         )
         await asyncio.gather(
             *(device.set_effect(effect, **kwargs) for device in compatible_devices)
+        )
+
+    async def _start_set_mood(
+        self,
+        devices: list[Light],
+        service: ServiceCall,
+    ) -> None:
+        """Apply a Mood across the targets, as the LIFX app does."""
+        # One group shares the Mood's colours out across its bulbs
+        await DeviceGroup(devices).apply_mood(
+            resolve_renamed_theme(service.data[LIFXServiceArgument.MOOD])
         )
 
     async def _start_effect_colorsweep(
@@ -244,19 +256,28 @@ class LIFXManager:
         service: ServiceCall,
     ) -> None:
         """Start the firmware-based Morph effect."""
-        theme_name = service.data.get(
-            LIFXServiceArgument.THEME, EFFECT_MORPH_DEFAULT_THEME
+        speed = service.data.get(LIFXServiceArgument.SPEED, EFFECT_MORPH_DEFAULT_SPEED)
+        if (palette := service.data.get(LIFXServiceArgument.PALETTE)) is not None:
+            await self._start_matrix_effect(
+                devices,
+                service,
+                FirmwareEffect.MORPH,
+                speed=speed,
+                palette=self._build_palette(palette),
+            )
+            return
+        theme = resolve_renamed_theme(
+            service.data.get(LIFXServiceArgument.THEME, EFFECT_MORPH_DEFAULT_THEME)
         )
-        palette = service.data.get(LIFXServiceArgument.PALETTE)
-        theme = self.build_theme(theme_name, palette)
-        await self._start_matrix_effect(
-            devices,
-            service,
-            FirmwareEffect.MORPH,
-            speed=service.data.get(
-                LIFXServiceArgument.SPEED, EFFECT_MORPH_DEFAULT_SPEED
-            ),
-            palette=theme.colors,
+        matrix_devices = [
+            device for device in devices if isinstance(device, MatrixLight)
+        ]
+        await self._async_power_on(
+            matrix_devices, service.data.get(LIFXServiceArgument.POWER_ON, True)
+        )
+        # The library reports a theme it started Morph with while Morph runs
+        await asyncio.gather(
+            *(device.set_morph_effect(theme, speed=speed) for device in matrix_devices)
         )
 
     async def _start_effect_move(
@@ -272,7 +293,7 @@ class LIFXManager:
         await self._async_power_on(compatible_devices, power_on)
         speed = service.data.get(LIFXServiceArgument.SPEED, EFFECT_MOVE_DEFAULT_SPEED)
         if theme_name := service.data.get(LIFXServiceArgument.THEME):
-            theme = ThemeLibrary.get(theme_name)
+            theme = resolve_renamed_theme(theme_name)
             await asyncio.gather(
                 *(
                     device.apply_theme(theme, power_on=False, duration=round(speed))
@@ -427,6 +448,7 @@ class LIFXManager:
         LIFXService.EFFECT_SKY: _start_effect_sky,
         LIFXService.EFFECT_STOP: _start_effect_stop,
         LIFXService.PAINT_THEME: _start_paint_theme,
+        LIFXService.SET_MOOD: _start_set_mood,
     }
 
     # A firmware effect only runs on the devices that implement it, so a target
@@ -476,6 +498,10 @@ class LIFXManager:
                 await start_effect_func(self, devices, service)
             except LifxError as err:
                 raise device_error(err) from err
+            # The library records a paint without a read, and its refresh waits
+            # for a transition to finish, so show the record before refreshing
+            for coordinator in coordinators:
+                coordinator.async_update_listeners()
             # A firmware effect is written straight to the device, so the state
             # the coordinator holds is stale until it is polled again
             await asyncio.gather(

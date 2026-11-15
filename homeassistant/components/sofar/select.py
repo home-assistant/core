@@ -5,8 +5,7 @@ from dataclasses import dataclass
 from enum import IntEnum
 from typing import override
 
-from sofar_modbus.modern.device import SofarInverter
-from sofar_modbus.modern.enums import ChargerUseMode, EpsControlMode
+from sofar_modbus import ChargerUseMode, EpsControlMode, SofarInverter
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import Platform
