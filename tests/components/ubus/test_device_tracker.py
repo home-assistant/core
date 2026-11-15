@@ -13,7 +13,7 @@ from homeassistant.components.ubus.const import DOMAIN
 from homeassistant.components.ubus.coordinator import LEASE_REREAD_INTERVAL
 from homeassistant.components.ubus.device_tracker import UbusScannerEntity
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, STATE_HOME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     device_registry as dr,
@@ -63,6 +63,25 @@ async def test_only_authorized_clients_are_tracked(
     assert {mac: device.connections for mac, device in devices.items()} == {
         mac: {(dr.CONNECTION_NETWORK_MAC, dr.format_mac(mac))} for mac in expected_names
     }
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_client_present_when_authorized_on_one_interface(
+    hass: HomeAssistant,
+    mock_ubus: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a client appears to be "home" when authorized on at least one interface."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
+    )
+    assert entity_id is not None
+    assert hass.states.get(entity_id).state == STATE_HOME
 
 
 async def test_setup_scanner_imports_yaml(
