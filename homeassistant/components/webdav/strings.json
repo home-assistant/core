@@ -49,6 +49,9 @@
     "create_folder_error": {
       "message": "Failed to create folder on WebDAV server: {message}"
     },
+    "duplicate_destination_path": {
+      "message": "Multiple files would be uploaded to the same destination: {paths}"
+    },
     "filenames_do_not_exist": {
       "message": "The following files do not exist: {filenames}"
     },

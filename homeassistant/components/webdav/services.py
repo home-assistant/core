@@ -1,14 +1,19 @@
 """WebDAV services."""
 
+import asyncio
+from collections import Counter
 from collections.abc import AsyncIterator
 import glob
+import os
 from pathlib import Path, PurePosixPath
+from typing import BinaryIO
 
 from aiohttp import ClientTimeout
+from aiowebdav2.client import Client
 from aiowebdav2.exceptions import UnauthorizedError, WebDavError
 import probatio
 
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID, CONF_FILENAME
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -18,21 +23,18 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, service
-from homeassistant.util.async_ import gather_with_limited_concurrency
+from homeassistant.helpers.os_error import os_read_error
 
-from .const import DOMAIN
+from .const import DOMAIN, WebDavService, WebDavServiceArgument
 from .helpers import WebDavConfigEntry
 
-CONF_DESTINATION_FOLDER = "destination_folder"
-
-UPLOAD_SERVICE = "upload"
 UPLOAD_SERVICE_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
-        probatio.Required(CONF_FILENAME): probatio.All(
+        probatio.Required(CommonServiceArgument.CONFIG_ENTRY_ID): cv.string,
+        probatio.Required(WebDavServiceArgument.FILENAME): probatio.All(
             probatio.EnsureList(), [cv.string]
         ),
-        probatio.Required(CONF_DESTINATION_FOLDER): cv.string,
+        probatio.Required(WebDavServiceArgument.DESTINATION_FOLDER): cv.string,
     }
 )
 
@@ -95,10 +97,8 @@ def _expand_filenames(
     return list(expanded.items())
 
 
-def _resolve_files(
-    hass: HomeAssistant, filenames: list[str]
-) -> list[tuple[Path, str, int]]:
-    """Return the local path, destination-relative path and size of each file."""
+def _resolve_files(hass: HomeAssistant, filenames: list[str]) -> list[tuple[Path, str]]:
+    """Return the local path and destination-relative path of each file."""
     files = _expand_filenames(hass, filenames)
     missing: list[str] = []
     for full_path, _ in files:
@@ -118,10 +118,7 @@ def _resolve_files(
                 "filenames": ", ".join(f"`{f}`" for f in missing)
             },
         )
-    return [
-        (Path(full_path), relative_path, Path(full_path).stat().st_size)
-        for full_path, relative_path in files
-    ]
+    return [(Path(full_path), relative_path) for full_path, relative_path in files]
 
 
 def _remote_path(destination_folder: str, relative_path: str) -> PurePosixPath:
@@ -136,14 +133,69 @@ def _remote_path(destination_folder: str, relative_path: str) -> PurePosixPath:
     return path
 
 
-async def _iter_file(hass: HomeAssistant, path: Path) -> AsyncIterator[bytes]:
-    """Read a local file in chunks without blocking the event loop."""
-    file = await hass.async_add_executor_job(path.open, "rb")
+def _open_file(path: Path) -> tuple[BinaryIO, int]:
+    """Open a local file and return it with the size of the opened file."""
     try:
-        while chunk := await hass.async_add_executor_job(file.read, CHUNK_SIZE):
-            yield chunk
-    finally:
-        await hass.async_add_executor_job(file.close)
+        file = path.open("rb")
+    except OSError as err:
+        raise os_read_error(err, str(path)) from err
+    return file, os.fstat(file.fileno()).st_size
+
+
+async def _iter_file(
+    hass: HomeAssistant, file: BinaryIO, size: int
+) -> AsyncIterator[bytes]:
+    """Read up to size bytes in chunks without blocking the event loop."""
+    remaining = size
+    while remaining and (
+        chunk := await hass.async_add_executor_job(
+            file.read, min(CHUNK_SIZE, remaining)
+        )
+    ):
+        remaining -= len(chunk)
+        yield chunk
+
+
+async def _upload_file(
+    hass: HomeAssistant,
+    client: Client,
+    semaphore: asyncio.Semaphore,
+    local_path: Path,
+    remote: PurePosixPath,
+) -> None:
+    """Upload one local file to the WebDAV server."""
+    async with semaphore:
+        file, size = await hass.async_add_executor_job(_open_file, local_path)
+        try:
+            # The size is taken from the opened file so Content-Length matches the body
+            await client.write(
+                str(remote),
+                _iter_file(hass, file, size),
+                content_length=size,
+                timeout=UPLOAD_TIMEOUT,
+            )
+        finally:
+            await hass.async_add_executor_job(file.close)
+
+
+def _webdav_error(
+    hass: HomeAssistant,
+    config_entry: WebDavConfigEntry,
+    err: WebDavError | TimeoutError,
+    translation_key: str,
+) -> HomeAssistantError:
+    """Return a translated error for a WebDAV server error."""
+    if isinstance(err, UnauthorizedError):
+        config_entry.async_start_reauth(hass)
+        return HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_username_password",
+        )
+    return HomeAssistantError(
+        translation_domain=DOMAIN,
+        translation_key=translation_key,
+        translation_placeholders={"message": str(err)},
+    )
 
 
 @callback
@@ -153,22 +205,33 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async def async_handle_upload(call: ServiceCall) -> ServiceResponse:
         """Upload one or more files to the WebDAV server."""
         config_entry: WebDavConfigEntry = service.async_get_config_entry(
-            hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+            hass, DOMAIN, call.data[CommonServiceArgument.CONFIG_ENTRY_ID]
         )
         client = config_entry.runtime_data
-        destination_folder = call.data[CONF_DESTINATION_FOLDER]
+        destination_folder = call.data[WebDavServiceArgument.DESTINATION_FOLDER]
 
         files = await hass.async_add_executor_job(
-            _resolve_files, hass, call.data[CONF_FILENAME]
+            _resolve_files, hass, call.data[WebDavServiceArgument.FILENAME]
         )
         uploads = [
-            (local_path, _remote_path(destination_folder, relative_path), size)
-            for local_path, relative_path, size in files
+            (local_path, _remote_path(destination_folder, relative_path))
+            for local_path, relative_path in files
         ]
+        remote_counts = Counter(str(remote) for _, remote in uploads)
+        if duplicates := sorted(
+            path for path, count in remote_counts.items() if count > 1
+        ):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="duplicate_destination_path",
+                translation_placeholders={
+                    "paths": ", ".join(f"`{path}`" for path in duplicates)
+                },
+            )
         folders = sorted(
             {
                 str(remote.parent)
-                for _, remote, _ in uploads
+                for _, remote in uploads
                 if remote.parent != PurePosixPath("/")
             }
         )
@@ -176,52 +239,37 @@ def async_setup_services(hass: HomeAssistant) -> None:
         try:
             for folder in folders:
                 await client.mkdir(folder, parents=True, exist_ok=True)
-        except UnauthorizedError as err:
-            config_entry.async_start_reauth(hass)
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="invalid_username_password",
-            ) from err
         except (WebDavError, TimeoutError) as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="create_folder_error",
-                translation_placeholders={"message": str(err)},
-            ) from err
+            raise _webdav_error(hass, config_entry, err, "create_folder_error") from err
 
+        semaphore = asyncio.Semaphore(UPLOAD_CONCURRENCY)
         try:
-            await gather_with_limited_concurrency(
-                UPLOAD_CONCURRENCY,
-                *(
-                    client.write(
-                        str(remote),
-                        _iter_file(hass, local_path),
-                        content_length=size,
-                        timeout=UPLOAD_TIMEOUT,
+            async with asyncio.TaskGroup() as group:
+                for local_path, remote in uploads:
+                    group.create_task(
+                        _upload_file(hass, client, semaphore, local_path, remote)
                     )
-                    for local_path, remote, size in uploads
-                ),
+        except ExceptionGroup as err_group:
+            error = next(
+                (e for e in err_group.exceptions if isinstance(e, UnauthorizedError)),
+                err_group.exceptions[0],
             )
-        except UnauthorizedError as err:
-            config_entry.async_start_reauth(hass)
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="invalid_username_password",
-            ) from err
-        except (WebDavError, TimeoutError) as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="upload_error",
-                translation_placeholders={"message": str(err)},
-            ) from err
+            if isinstance(error, HomeAssistantError):
+                raise error from error.__cause__
+            if isinstance(error, (WebDavError, TimeoutError)):
+                raise _webdav_error(
+                    hass, config_entry, error, "upload_error"
+                ) from error
+            raise
 
         if call.return_response:
-            return {"files": [{"path": str(remote)} for _, remote, _ in uploads]}
+            return {"files": [{"path": str(remote)} for _, remote in uploads]}
         return None
 
-    hass.services.async_register(
+    service.async_register_admin_service(
+        hass,
         DOMAIN,
-        UPLOAD_SERVICE,
+        WebDavService.UPLOAD,
         async_handle_upload,
         schema=UPLOAD_SERVICE_SCHEMA,
         supports_response=SupportsResponse.OPTIONAL,
