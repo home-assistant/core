@@ -1385,8 +1385,14 @@
       "fading_time": {
         "name": "Fading time"
       },
+      "fan_coil_type": {
+        "name": "Fan coil type"
+      },
       "feeding_mode": {
         "name": "Mode"
+      },
+      "heat_cool_option": {
+        "name": "Heat/cool option"
       },
       "heat_transfer_medium": {
         "name": "Heat transfer medium"
@@ -1399,6 +1405,9 @@
       },
       "heating_fuel": {
         "name": "Heating fuel"
+      },
+      "hold_type": {
+        "name": "Hold type"
       },
       "hysteresis_mode": {
         "name": "Hysteresis mode"
@@ -1573,6 +1582,9 @@
       },
       "thermostat_mode": {
         "name": "Thermostat mode"
+      },
+      "time_format": {
+        "name": "Time format"
       },
       "valve_orientation": {
         "name": "Valve orientation"
