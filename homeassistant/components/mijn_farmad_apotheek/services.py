@@ -245,6 +245,7 @@ async def _async_place_order(
                 },
             ) from err
         except FarmadCommunicationError as err:
+            _LOGGER.debug("Ordering at pharmacy %s failed: %s", apb, err)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="order_unconfirmed",
@@ -274,6 +275,7 @@ async def _async_search_medication(call: ServiceCall) -> ServiceResponse:
     except FarmadError as err:
         if isinstance(err, FarmadAuthenticationError):
             entry.async_start_reauth(call.hass)
+        _LOGGER.debug("Searching pharmacy %s failed: %s", apb, err)
         raise _translate_error(err, apb, "search_failed") from err
     return {ATTR_PRODUCTS: [_serialize_product(product) for product in products]}
 
@@ -300,5 +302,6 @@ async def _async_order_medication(call: ServiceCall) -> ServiceResponse:
     except FarmadError as err:
         if isinstance(err, FarmadAuthenticationError):
             entry.async_start_reauth(call.hass)
+        _LOGGER.debug("Ordering at pharmacy %s failed: %s", apb, err)
         raise _translate_error(err, apb, "order_failed") from err
     return {ATTR_BASKET_ID: basket_id, ATTR_DESCRIPTION: description}
