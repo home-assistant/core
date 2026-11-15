@@ -88,7 +88,7 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
         clients = self._fetch_hostapd_clients()
         # Filter list of client MAC addresses by authorization status, then
         # make sure they are unique to preserve the invariant that callers
-        # expects unique MACs.  Sort the set so it is stable.
+        # expect unique MACs.  Sort the set so it is stable.
         authorized = sorted(
             {client["mac"] for client in clients if client["authorized"]}
         )
