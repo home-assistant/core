@@ -177,7 +177,7 @@ async def test_lan_port(
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(ETHERNET_1_RECEIVE_RATE).state == "12.345"
     assert hass.states.get(ETHERNET_1_TRANSMIT_RATE).state == "67.89"
 
@@ -187,7 +187,7 @@ async def test_lan_port(
     router().switch.get_port_stats.return_value = data_switch_get_port_stats_changed
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(ETHERNET_1_RECEIVE_RATE).state == "1.0"
 
 

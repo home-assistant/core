@@ -1,5 +1,6 @@
 """Represent the Freebox router and its devices and sensors."""
 
+import asyncio
 from collections import Counter
 from collections.abc import Callable, Mapping
 from contextlib import suppress
@@ -325,12 +326,23 @@ class FreeboxRouter:
     async def _update_lan_ports_sensors(self) -> None:
         """Update Freebox LAN ports status and traffic."""
         fbx_ports: list[dict[str, Any]] = await self._api.switch.get_status() or []
+        stats_port_ids = [
+            port["id"]
+            for port in fbx_ports
+            if self.lan_ports_stats_listeners[port["id"]]
+        ]
+        stats = dict(
+            zip(
+                stats_port_ids,
+                await asyncio.gather(
+                    *(self._api.switch.get_port_stats(i) for i in stats_port_ids)
+                ),
+                strict=True,
+            )
+        )
         for fbx_port in fbx_ports:
             port_id = fbx_port["id"]
-            stats = None
-            if self.lan_ports_stats_listeners[port_id]:
-                stats = await self._api.switch.get_port_stats(port_id)
-            self.lan_ports[port_id] = {**fbx_port, "stats": stats}
+            self.lan_ports[port_id] = {**fbx_port, "stats": stats.get(port_id)}
 
     async def update_home_devices(self) -> None:
         """Update Home devices (alarm, light, sensor, switch, remote ...)."""
