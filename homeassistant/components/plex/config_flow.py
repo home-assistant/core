@@ -197,7 +197,7 @@ class PlexFlowHandler(ConfigFlow, domain=DOMAIN):
             _LOGGER.error("No servers linked to Plex account")
             errors["base"] = "no_servers"
         except ServerNotFound:
-            _LOGGER.error(
+            _LOGGER.debug(
                 "Plex server not found on Plex account: %s", plex_server.server_choice
             )
             errors["base"] = "server_not_found"
