@@ -8,13 +8,13 @@ import aiohttp
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.evohome.const import DOMAIN
+from homeassistant.components.evohome.const import DOMAIN, EVOHOME_DATA
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from .conftest import mock_post_request, setup_evohome
+from .conftest import mock_make_request, mock_post_request, setup_evohome
 from .const import USERNAME
 
 _MSG_429 = (
@@ -92,7 +92,7 @@ EXC_BAD_CONNECTION = aiohttp.ClientConnectionError(
 )
 
 
-def _mock_response(status: HTTPStatus, body: dict) -> Mock:
+def _mock_response(status: HTTPStatus, body: dict | list) -> Mock:
     """Return a mock of a response from the vendor's server (JSON, a HTTP error)."""
     rsp = Mock(spec=aiohttp.ClientResponse, status=status, headers={})
     rsp.content_type = "application/json"
@@ -103,9 +103,15 @@ def _mock_response(status: HTTPStatus, body: dict) -> Mock:
     return rsp
 
 
-# the vendor's response to a bad username/password is not an exception
+# the vendor's response to a bad username/password is not an exception (v2, then v1)
 RSP_BAD_CREDENTIALS = Mock(
     return_value=_mock_response(HTTPStatus.BAD_REQUEST, {"error": "invalid_grant"})
+)
+RSP_BAD_CREDENTIALS_V1 = Mock(
+    return_value=_mock_response(
+        HTTPStatus.UNAUTHORIZED,
+        [{"code": "EmailOrPasswordIncorrect", "message": "..."}],
+    )
 )
 EXC_TOO_MANY_REQUESTS = aiohttp.ClientResponseError(
     Mock(),
@@ -155,6 +161,31 @@ async def test_authentication_failure_v2(
     assert result is False
 
     assert caplog.record_tuples == AUTHENTICATION_TESTS[exception]
+
+
+async def test_bad_credentials_v1(
+    hass: HomeAssistant,
+    config: dict[str, str],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test high-precision temps are disabled if the v1 API refuses the credentials."""
+
+    with (
+        patch(
+            "evohomeasync2.auth.AbstractTokenManager._post_access_token_request",
+            mock_post_request("default"),
+        ),
+        patch(
+            "_evohome.credentials.CredentialsManagerBase._request",
+            side_effect=RSP_BAD_CREDENTIALS_V1,
+        ),
+        patch("_evohome.auth.AbstractAuth._make_request", mock_make_request("default")),
+    ):
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: config})
+        await hass.async_block_till_done()
+
+    assert hass.data[EVOHOME_DATA].coordinator.client_v1 is None
+    assert "The feature will be disabled until next restart" in caplog.text
 
 
 @pytest.mark.parametrize("exception", CLIENT_REQUEST_TESTS)
