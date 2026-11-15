@@ -196,6 +196,75 @@ async def test_user_flow_pairing_failed(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+async def test_user_flow_pairing_kept_after_failed_connection(
+    hass: HomeAssistant,
+) -> None:
+    """Test a retry reuses the key from a used pairing code."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    user_input = {**FIXTURE_USER_INPUT, CONF_TOKEN: FIXTURE_PAIRING_CODE}
+
+    with patch(
+        "homeassistant.components.system_bridge.config_flow.HTTPClient.pair",
+        return_value=FIXTURE_KEY,
+    ) as mock_pair:
+        with patch(
+            "systembridgeconnector.websocket_client.WebSocketClient.connect",
+            side_effect=ConnectionErrorException,
+        ):
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], user_input
+            )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "cannot_connect"}
+
+        with _patch_success():
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], user_input
+            )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == FIXTURE_USER_INPUT
+    mock_pair.assert_called_once()
+
+
+async def test_reauth_pairing_kept_after_failed_connection(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test a reauth retry reuses the key from a used pairing code."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    with patch(
+        "homeassistant.components.system_bridge.config_flow.HTTPClient.pair",
+        return_value=FIXTURE_NEW_KEY,
+    ) as mock_pair:
+        with patch(
+            "systembridgeconnector.websocket_client.WebSocketClient.connect",
+            side_effect=TimeoutError,
+        ):
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], {CONF_TOKEN: FIXTURE_PAIRING_CODE}
+            )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "cannot_connect"}
+
+        with _patch_success():
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], {CONF_TOKEN: FIXTURE_PAIRING_CODE}
+            )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_TOKEN] == FIXTURE_NEW_KEY
+    mock_pair.assert_called_once()
+
+
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(

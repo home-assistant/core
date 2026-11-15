@@ -94,14 +94,16 @@ async def _validate_input(
     hass: HomeAssistant,
     data: dict[str, Any],
     *,
-    pair: bool = True,
+    paired_keys: dict[str, str] | None = None,
 ) -> dict[str, str]:
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-    The token field takes a key, or a pairing code that is traded for one. With
-    pair off, the stored key or old token is used as it is, and setup swaps an
-    old token later.
+    With paired_keys, the token field takes a key, or a pairing code that is
+    traded for one. Each key is kept against its code, as a code works once and
+    a retry after a failed connection needs the same key. Without paired_keys,
+    the stored key or old token is used as it is, and setup swaps an old token
+    later.
     """
     session = async_get_clientsession(hass)
     version = Version(data[CONF_HOST], data[CONF_PORT], "", session=session)
@@ -109,9 +111,6 @@ async def _validate_input(
         async with asyncio.timeout(DATA_WAIT_TIMEOUT):
             supported = await version.check_supported()
     except (ConnectionErrorException, TimeoutError) as exception:
-        _LOGGER.warning(
-            "Couldn't check the version of %s: %s", data[CONF_HOST], exception
-        )
         raise CannotConnect from exception
     # An older System Bridge turns the connector's sign-in away, so it would
     # otherwise look like a wrong key or pairing code
@@ -119,8 +118,11 @@ async def _validate_input(
         raise UnsupportedVersion
 
     key = data[CONF_TOKEN].strip()
-    if pair and not is_client_key(key):
-        key = await _async_pair(hass, data, _pairing_code(key))
+    if paired_keys is not None and not is_client_key(key):
+        code = _pairing_code(key)
+        if code not in paired_keys:
+            paired_keys[code] = await _async_pair(hass, data, code)
+        key = paired_keys[code]
 
     websocket_client = WebSocketClient(
         data[CONF_HOST],
@@ -173,12 +175,12 @@ async def _async_get_info(
     hass: HomeAssistant,
     user_input: dict[str, Any],
     *,
-    pair: bool = True,
+    paired_keys: dict[str, str] | None = None,
 ) -> tuple[dict[str, str], dict[str, str] | None]:
     errors = {}
 
     try:
-        info = await _validate_input(hass, user_input, pair=pair)
+        info = await _validate_input(hass, user_input, paired_keys=paired_keys)
     except CannotConnect:
         errors["base"] = "cannot_connect"
     except InvalidAuth:
@@ -210,6 +212,7 @@ class SystemBridgeConfigFlow(
     def __init__(self) -> None:
         """Initialize flow."""
         self._input: dict[str, Any] = {}
+        self._paired_keys: dict[str, str] = {}
 
     @override
     async def async_step_user(
@@ -222,7 +225,9 @@ class SystemBridgeConfigFlow(
                 data_schema=STEP_USER_DATA_SCHEMA,
             )
 
-        errors, info = await _async_get_info(self.hass, user_input)
+        errors, info = await _async_get_info(
+            self.hass, user_input, paired_keys=self._paired_keys
+        )
         if not errors and info is not None:
             # Check if already configured
             await self.async_set_unique_id(info["uuid"], raise_on_progress=False)
@@ -255,7 +260,9 @@ class SystemBridgeConfigFlow(
 
         if user_input is not None:
             user_input = {**self._input, **user_input}
-            errors, info = await _async_get_info(self.hass, user_input)
+            errors, info = await _async_get_info(
+                self.hass, user_input, paired_keys=self._paired_keys
+            )
             if not errors and info is not None:
                 user_input[CONF_TOKEN] = info[CONF_TOKEN]
                 await self.async_set_unique_id(info["uuid"])
@@ -331,7 +338,7 @@ class SystemBridgeConfigFlow(
             # The stored token may still be the old one, which setup swaps
             # once it connects, so it's never a pairing code here
             errors, info = await _async_get_info(
-                self.hass, {**reconfigure_entry.data, **user_input}, pair=False
+                self.hass, {**reconfigure_entry.data, **user_input}
             )
             if not errors and info is not None:
                 await self.async_set_unique_id(info["uuid"])
