@@ -384,11 +384,32 @@ async def test_service_error(
 
 
 @pytest.mark.parametrize(
-    "media_type",
+    ("media_type", "media_id", "url"),
     [
-        pytest.param(MediaType.URL, id="url"),
-        pytest.param(MediaType.MUSIC, id="music"),
-        pytest.param("audio/mpeg", id="audio_mime_type"),
+        pytest.param(
+            MediaType.URL,
+            "http://example.test/stream.mp3",
+            "http://example.test/stream.mp3",
+            id="url",
+        ),
+        pytest.param(
+            MediaType.MUSIC,
+            "http://example.test/stream.mp3",
+            "http://example.test/stream.mp3",
+            id="music",
+        ),
+        pytest.param(
+            "audio/mpeg",
+            "http://example.test/stream.mp3",
+            "http://example.test/stream.mp3",
+            id="audio_mime_type",
+        ),
+        pytest.param(
+            MediaType.URL,
+            "/local/stream.mp3",
+            "http://homeassistant.local:8123/local/stream.mp3",
+            id="home_assistant_path",
+        ),
     ],
 )
 async def test_play_media_url(
@@ -396,8 +417,13 @@ async def test_play_media_url(
     mock_config_entry: MockConfigEntry,
     mock_airlino_api: MagicMock,
     media_type: str,
+    media_id: str,
+    url: str,
 ) -> None:
     """Test playing a stream URL."""
+    await async_process_ha_core_config(
+        hass, {"internal_url": "http://homeassistant.local:8123"}
+    )
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
@@ -406,14 +432,12 @@ async def test_play_media_url(
         {
             ATTR_ENTITY_ID: ENTITY_ID,
             ATTR_MEDIA_CONTENT_TYPE: media_type,
-            ATTR_MEDIA_CONTENT_ID: "http://example.test/stream.mp3",
+            ATTR_MEDIA_CONTENT_ID: media_id,
         },
         blocking=True,
     )
 
-    mock_airlino_api.async_play_station.assert_awaited_once_with(
-        "http://example.test/stream.mp3"
-    )
+    mock_airlino_api.async_play_station.assert_awaited_once_with(url)
 
 
 async def test_play_media_source(
@@ -466,6 +490,13 @@ async def test_play_media_source(
             ServiceValidationError,
             "media_url_invalid",
             id="invalid_url",
+        ),
+        pytest.param(
+            MediaType.URL,
+            "http:///stream.mp3",
+            ServiceValidationError,
+            "media_url_invalid",
+            id="url_without_host",
         ),
         pytest.param(
             MediaType.URL,

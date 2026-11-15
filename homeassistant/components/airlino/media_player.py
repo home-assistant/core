@@ -52,6 +52,14 @@ SOURCE_TO_MEDIA_TYPE = {
 }
 
 
+def _is_valid_media_url(media_id: str) -> bool:
+    """Return whether the media ID is an HTTP(S) URL or a Home Assistant path."""
+    if media_id.startswith("/"):
+        return True
+    url = urlsplit(media_id)
+    return url.scheme in ("http", "https") and bool(url.hostname)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AirlinoConfigEntry,
@@ -217,10 +225,7 @@ class AirlinoMediaPlayer(
                 translation_key="media_type_unsupported",
                 translation_placeholders={"media_type": media_type},
             )
-        elif not media_id.startswith("/") and urlsplit(media_id).scheme not in (
-            "http",
-            "https",
-        ):
+        elif not _is_valid_media_url(media_id):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="media_url_invalid",
