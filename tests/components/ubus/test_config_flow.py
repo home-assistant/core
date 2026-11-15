@@ -49,6 +49,7 @@ async def test_user_flow_success(
 @pytest.mark.parametrize(
     ("ssl", "verify_ssl"),
     [
+        pytest.param(False, False, id="http"),
         pytest.param(True, False, id="https"),
         pytest.param(True, True, id="https_verified"),
     ],
@@ -73,6 +74,12 @@ async def test_user_flow_ssl_options(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_SSL] is ssl
     assert result["data"][CONF_VERIFY_SSL] is verify_ssl
+    mock_ubus.assert_called_once_with(
+        f"{'https' if ssl else 'http'}://{MOCK_HOST}/ubus",
+        "root",
+        "password",
+        verify=verify_ssl,
+    )
 
 
 async def test_user_flow_cannot_connect(
@@ -205,6 +212,7 @@ async def test_import_flow_preserves_dhcp_software(
 @pytest.mark.parametrize(
     ("ssl", "verify_ssl"),
     [
+        pytest.param(False, False, id="http"),
         pytest.param(True, False, id="https"),
         pytest.param(True, True, id="https_verified"),
     ],
@@ -226,6 +234,12 @@ async def test_import_flow_preserves_ssl_options(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_SSL] is ssl
     assert result["data"][CONF_VERIFY_SSL] is verify_ssl
+    mock_ubus.assert_called_once_with(
+        f"{'https' if ssl else 'http'}://{MOCK_HOST}/ubus",
+        "root",
+        "password",
+        verify=verify_ssl,
+    )
 
 
 @pytest.mark.parametrize(
