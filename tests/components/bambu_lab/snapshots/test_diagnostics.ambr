@@ -18,6 +18,7 @@
       'accepts_commands': True,
       'bed_target_temperature': 60,
       'bed_temperature': 60,
+      'camera_stream_enabled': None,
       'chamber_light_on': True,
       'chamber_temperature': 38,
       'current_layer': 96,
