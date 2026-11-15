@@ -1,0 +1,51 @@
+# serializer version: 1
+# name: test_entity[tts.amazon_polly_us_east_1_text_to_speech-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('amazon_polly', '01JPOLLYENTRY0000000000000')]>,
+    'disabled_by': None,
+    'domain': 'tts',
+    'entity_category': None,
+    'entity_id': 'tts.amazon_polly_us_east_1_text_to_speech',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Text-to-speech',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Text-to-speech',
+    'platform': 'amazon_polly',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tts',
+    'unique_id': '01JPOLLYENTRY0000000000000',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity[tts.amazon_polly_us_east_1_text_to_speech-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Amazon Polly (us-east-1) Text-to-speech',
+    }),
+    'context': <ANY>,
+    'entity_id': 'tts.amazon_polly_us_east_1_text_to_speech',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
