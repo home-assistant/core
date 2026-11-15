@@ -122,14 +122,14 @@ async def async_setup_platform(
         return
 
     # Imported, already configured or being imported. With several accounts
-    # in YAML, wait until none of them failed to import.
-    if any(
-        issue_registry.async_get_issue(
+    # in YAML, wait until none of them failed to import. Issues restored after
+    # a restart are inactive and don't count.
+    for failure in IMPORT_FAILURES:
+        issue = issue_registry.async_get_issue(
             DOMAIN, f"deprecated_yaml_import_issue_{failure}"
         )
-        for failure in IMPORT_FAILURES
-    ):
-        return
+        if issue is not None and issue.active:
+            return
 
     async_create_issue(
         hass,
