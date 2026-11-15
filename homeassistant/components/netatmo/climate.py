@@ -334,12 +334,17 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
         elif preset_mode in (PRESET_BOOST, STATE_NETATMO_MAX):
             await self.device.async_therm_set(PRESET_MAP_NETATMO[preset_mode])
         elif preset_mode in THERM_MODES:
-            mode = PRESET_MAP_NETATMO[preset_mode]
-            if await self.device.home.async_set_thermmode(mode):
-                # Keep the home mode current until the next topology refresh.
-                self.device.home.therm_mode = mode
+            await self._async_set_home_therm_mode(PRESET_MAP_NETATMO[preset_mode])
         else:
             _LOGGER.error("Preset mode '%s' not available", preset_mode)
+
+    async def _async_set_home_therm_mode(
+        self, mode: str, end_time: int | None = None
+    ) -> None:
+        """Set the home mode."""
+        if await self.home.async_set_thermmode(mode, end_time=end_time):
+            # Keep the home mode current until the next topology refresh.
+            self.home.therm_mode = mode
 
         self.async_write_ha_state()
 
@@ -462,8 +467,8 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
         end_datetime = kwargs[NetatmoServiceArgument.END_DATETIME]
         end_timestamp = int(dt_util.as_timestamp(end_datetime))
 
-        await self.home.async_set_thermmode(
-            mode=PRESET_MAP_NETATMO[preset_mode], end_time=end_timestamp
+        await self._async_set_home_therm_mode(
+            PRESET_MAP_NETATMO[preset_mode], end_time=end_timestamp
         )
         _LOGGER.debug(
             "Setting %s preset to %s with end datetime %s",

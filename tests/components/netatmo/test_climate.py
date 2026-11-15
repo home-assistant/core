@@ -1459,3 +1459,44 @@ async def test_thermostat_webhook_therm_mode_survives_polling(
         hass.states.get(climate_entity_livingroom).attributes[ATTR_PRESET_MODE]
         == PRESET_SCHEDULE
     )
+
+
+async def test_thermostat_timed_preset_survives_polling(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a timed preset change is not reverted by the next poll."""
+    climate_entity_livingroom = "climate.livingroom_livingroom"
+    await _setup_with_room_in_home_mode(hass, config_entry, "schedule")
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: climate_entity_livingroom, ATTR_PRESET_MODE: PRESET_AWAY},
+        blocking=True,
+    )
+    await _poll(hass, freezer)
+    assert (
+        hass.states.get(climate_entity_livingroom).attributes[ATTR_PRESET_MODE]
+        == PRESET_AWAY
+    )
+
+    await hass.services.async_call(
+        DOMAIN,
+        NetatmoService.SET_PRESET_MODE_WITH_END_DATETIME,
+        {
+            ATTR_ENTITY_ID: climate_entity_livingroom,
+            ATTR_PRESET_MODE: PRESET_SCHEDULE,
+            NetatmoServiceArgument.END_DATETIME: (
+                dt_util.now() + timedelta(days=1)
+            ).strftime("%Y-%m-%d %H:%M:%S"),
+        },
+        blocking=True,
+    )
+    await _poll(hass, freezer)
+
+    assert (
+        hass.states.get(climate_entity_livingroom).attributes[ATTR_PRESET_MODE]
+        == PRESET_SCHEDULE
+    )
