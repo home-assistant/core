@@ -22,6 +22,12 @@ DATA_STORAGE_GET_DISKS = load_json_array_fixture("freebox/storage_get_disks.json
 
 DATA_STORAGE_GET_RAIDS = load_json_array_fixture("freebox/storage_get_raids.json")
 
+DATA_SWITCH_GET_STATUS = load_json_array_fixture("freebox/switch_get_status.json")
+
+DATA_SWITCH_GET_PORT_STATS = load_json_object_fixture(
+    "freebox/switch_get_port_stats.json"
+)
+
 # switch
 DATA_WIFI_GET_GLOBAL_CONFIG = load_json_object_fixture(
     "freebox/wifi_get_global_config.json"

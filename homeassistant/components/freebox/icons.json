@@ -25,6 +25,12 @@
       "partition_free_space": {
         "default": "mdi:harddisk"
       },
+      "port_rx_rate": {
+        "default": "mdi:download-network"
+      },
+      "port_tx_rate": {
+        "default": "mdi:upload-network"
+      },
       "rate_down": {
         "default": "mdi:download-network"
       },

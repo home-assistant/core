@@ -25,7 +25,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .entity import FreeboxHomeEntity
-from .router import FreeboxConfigEntry, FreeboxRouter
+from .router import FreeboxConfigEntry, FreeboxRouter, lan_port_name
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -101,6 +101,27 @@ DISK_PARTITION_SENSORS: tuple[SensorEntityDescription, ...] = (
     ),
 )
 
+LAN_PORT_SENSORS: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="rx_bytes_rate",
+        translation_key="port_rx_rate",
+        device_class=SensorDeviceClass.DATA_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
+        suggested_unit_of_measurement=UnitOfDataRate.KILOBYTES_PER_SECOND,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="tx_bytes_rate",
+        translation_key="port_tx_rate",
+        device_class=SensorDeviceClass.DATA_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
+        suggested_unit_of_measurement=UnitOfDataRate.KILOBYTES_PER_SECOND,
+        entity_registry_enabled_default=False,
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -165,6 +186,12 @@ async def async_setup_entry(
         for disk in router.disks.values()
         for partition in disk["partitions"].values()
         for description in DISK_PARTITION_SENSORS
+    )
+
+    entities.extend(
+        FreeboxLanPortRateSensor(router, port_id, description)
+        for port_id in router.lan_ports
+        for description in LAN_PORT_SENSORS
     )
 
     entities.extend(
@@ -300,6 +327,47 @@ class FreeboxDiskSensor(FreeboxSensor):
         if partition.get("total_bytes"):
             value = round(partition["free_bytes"] * 100 / partition["total_bytes"], 2)
         self._attr_native_value = value
+
+
+class FreeboxLanPortSensor(FreeboxSensor):
+    """Representation of a Freebox LAN port sensor."""
+
+    def __init__(
+        self,
+        router: FreeboxRouter,
+        port_id: int,
+        description: SensorEntityDescription,
+    ) -> None:
+        """Initialize a Freebox LAN port sensor."""
+        super().__init__(router, description)
+        self._port_id = port_id
+        self._attr_translation_placeholders = {
+            "port": lan_port_name(router.lan_ports[port_id])
+        }
+        self._attr_unique_id = f"{router.mac} lan_port {port_id} {description.key}"
+
+
+class FreeboxLanPortRateSensor(FreeboxLanPortSensor):
+    """Representation of a Freebox LAN port traffic sensor."""
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Ask the router to fetch the stats of this port."""
+        self._router.lan_ports_stats_listeners[self._port_id] += 1
+        self.async_on_remove(self._release_stats)
+        await super().async_added_to_hass()
+
+    @callback
+    def _release_stats(self) -> None:
+        """Stop fetching the stats of this port."""
+        self._router.lan_ports_stats_listeners[self._port_id] -= 1
+
+    @callback
+    @override
+    def async_update_state(self) -> None:
+        """Update the Freebox LAN port traffic sensor."""
+        stats = self._router.lan_ports[self._port_id]["stats"] or {}
+        self._attr_native_value = stats.get(self.entity_description.key)
 
 
 class FreeboxBatterySensor(FreeboxHomeEntity, SensorEntity):

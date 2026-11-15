@@ -1,5 +1,6 @@
 """Represent the Freebox router and its devices and sensors."""
 
+from collections import Counter
 from collections.abc import Callable, Mapping
 from contextlib import suppress
 from datetime import datetime
@@ -59,6 +60,12 @@ def _get_token_file(hass: HomeAssistant, host: str) -> Path:
     """Return the path of the stored application token file for a host."""
     freebox_path = Store(hass, STORAGE_VERSION, STORAGE_KEY).path
     return Path(f"{freebox_path}/{slugify(host)}.conf")
+
+
+def lan_port_name(port: dict[str, Any]) -> str:
+    """Return the name of a Freebox LAN port."""
+    # The port name is not part of the documented API
+    return port.get("name") or f"Port {port['id']}"
 
 
 def _unlink_if_exists(path: Path) -> None:
@@ -180,6 +187,9 @@ class FreeboxRouter:
         self.disks: dict[int, dict[str, Any]] = {}
         self.supports_raid = True
         self.raids: dict[int, dict[str, Any]] = {}
+        self.lan_ports: dict[int, dict[str, Any]] = {}
+        # Enabled traffic sensors per port, stats are only fetched for these ports
+        self.lan_ports_stats_listeners: Counter[int] = Counter()
         self.sensors_temperature: dict[str, int] = {}
         self.sensors_temperature_names: dict[str, str] = {}
         self.sensors_fan: dict[str, int] = {}
@@ -276,6 +286,7 @@ class FreeboxRouter:
 
         await self._update_disks_sensors()
         await self._update_raids_sensors()
+        await self._update_lan_ports_sensors()
 
         async_dispatcher_send(self.hass, self.signal_sensor_update)
 
@@ -310,6 +321,16 @@ class FreeboxRouter:
 
         for fbx_raid in fbx_raids:
             self.raids[fbx_raid["id"]] = fbx_raid
+
+    async def _update_lan_ports_sensors(self) -> None:
+        """Update Freebox LAN ports status and traffic."""
+        fbx_ports: list[dict[str, Any]] = await self._api.switch.get_status() or []
+        for fbx_port in fbx_ports:
+            port_id = fbx_port["id"]
+            stats = None
+            if self.lan_ports_stats_listeners[port_id]:
+                stats = await self._api.switch.get_port_stats(port_id)
+            self.lan_ports[port_id] = {**fbx_port, "stats": stats}
 
     async def update_home_devices(self) -> None:
         """Update Home devices (alarm, light, sensor, switch, remote ...)."""
