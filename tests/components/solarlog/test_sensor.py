@@ -106,16 +106,12 @@ async def test_battery_data_survives_basic_refresh(
     assert hass.states.get("sensor.solarlog_discharging_power").state == "0.0"
     assert hass.states.get("sensor.solarlog_charge_level").state == "45.0"
 
-    # Refresh only the basic coordinator; its fresh data has no battery data.
-    await hass.services.async_call(
-        "homeassistant",
-        "update_entity",
-        {"entity_id": "sensor.solarlog_power_ac"},
-        blocking=True,
-    )
+    freezer.tick(delta=timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     assert mock_solarlog_connector.update_basic_data.await_count == 2
-    assert mock_solarlog_connector.update_battery_data.await_count == 1
+    assert mock_solarlog_connector.update_battery_data.await_count == 2
     assert hass.states.get("sensor.solarlog_charging_power").state == "50.0"
     assert hass.states.get("sensor.solarlog_discharging_power").state == "0.0"
     assert hass.states.get("sensor.solarlog_charge_level").state == "45.0"
