@@ -13,7 +13,14 @@ from homeassistant.components.ubus.const import DOMAIN
 from homeassistant.components.ubus.coordinator import LEASE_REREAD_INTERVAL
 from homeassistant.components.ubus.device_tracker import UbusScannerEntity
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, STATE_HOME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_SSL,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+    STATE_HOME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     device_registry as dr,
@@ -84,8 +91,32 @@ async def test_client_present_when_authorized_on_one_interface(
     assert hass.states.get(entity_id).state == STATE_HOME
 
 
+@pytest.mark.parametrize(
+    ("yaml_ssl", "expected"),
+    [
+        pytest.param({}, {CONF_SSL: False, CONF_VERIFY_SSL: True}, id="defaults"),
+        pytest.param(
+            {CONF_SSL: True},
+            {CONF_SSL: True, CONF_VERIFY_SSL: True},
+            id="ssl_verified_by_default",
+        ),
+        pytest.param(
+            {CONF_SSL: True, CONF_VERIFY_SSL: False},
+            {CONF_SSL: True, CONF_VERIFY_SSL: False},
+            id="ssl_unverified",
+        ),
+        pytest.param(
+            {CONF_SSL: True, CONF_VERIFY_SSL: True},
+            {CONF_SSL: True, CONF_VERIFY_SSL: True},
+            id="ssl_verified",
+        ),
+    ],
+)
 async def test_setup_scanner_imports_yaml(
-    hass: HomeAssistant, mock_ubus: MagicMock
+    hass: HomeAssistant,
+    mock_ubus: MagicMock,
+    yaml_ssl: dict[str, bool],
+    expected: dict[str, bool],
 ) -> None:
     """Test the legacy YAML platform imports itself into a config entry."""
     assert await async_setup_component(
@@ -98,6 +129,7 @@ async def test_setup_scanner_imports_yaml(
                     CONF_HOST: MOCK_HOST,
                     CONF_USERNAME: "root",
                     CONF_PASSWORD: "password",
+                    **yaml_ssl,
                 }
             ]
         },
@@ -107,7 +139,7 @@ async def test_setup_scanner_imports_yaml(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert entries[0].source == SOURCE_IMPORT
-    assert entries[0].data == MOCK_CONFIG
+    assert entries[0].data == {**MOCK_CONFIG, **expected}
 
 
 async def test_setup_scanner_creates_issue_on_cannot_connect(
