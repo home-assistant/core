@@ -38,6 +38,9 @@
   },
   "entity": {
     "binary_sensor": {
+      "sync_chambers": {
+        "name": "Sync baskets"
+      },
       "water_lacks": {
         "name": "Low water"
       },
