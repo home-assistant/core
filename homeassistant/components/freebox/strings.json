@@ -30,6 +30,9 @@
       "cover": {
         "name": "Cover"
       },
+      "port_link": {
+        "name": "{port} link"
+      },
       "raid_degraded": {
         "name": "RAID array {id} degraded"
       }
@@ -66,6 +69,9 @@
       },
       "partition_free_space": {
         "name": "{partition} free space"
+      },
+      "port_link_speed": {
+        "name": "{port} link speed"
       },
       "port_rx_rate": {
         "name": "{port} receive rate"

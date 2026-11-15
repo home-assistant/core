@@ -122,6 +122,14 @@ LAN_PORT_SENSORS: tuple[SensorEntityDescription, ...] = (
     ),
 )
 
+LAN_PORT_SPEED_SENSOR = SensorEntityDescription(
+    key="speed",
+    translation_key="port_link_speed",
+    device_class=SensorDeviceClass.DATA_RATE,
+    native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
+    entity_category=EntityCategory.DIAGNOSTIC,
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -192,6 +200,10 @@ async def async_setup_entry(
         FreeboxLanPortRateSensor(router, port_id, description)
         for port_id in router.lan_ports
         for description in LAN_PORT_SENSORS
+    )
+    entities.extend(
+        FreeboxLanPortSpeedSensor(router, port_id, LAN_PORT_SPEED_SENSOR)
+        for port_id in router.lan_ports
     )
 
     entities.extend(
@@ -368,6 +380,18 @@ class FreeboxLanPortRateSensor(FreeboxLanPortSensor):
         """Update the Freebox LAN port traffic sensor."""
         stats = self._router.lan_ports[self._port_id]["stats"] or {}
         self._attr_native_value = stats.get(self.entity_description.key)
+
+
+class FreeboxLanPortSpeedSensor(FreeboxLanPortSensor):
+    """Representation of a Freebox LAN port negotiated speed."""
+
+    @callback
+    @override
+    def async_update_state(self) -> None:
+        """Update the Freebox LAN port speed sensor."""
+        port = self._router.lan_ports[self._port_id]
+        # A port that is down still reports a speed
+        self._attr_native_value = int(port["speed"]) if port["link"] == "up" else None
 
 
 class FreeboxBatterySensor(FreeboxHomeEntity, SensorEntity):
