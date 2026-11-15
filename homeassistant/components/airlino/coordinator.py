@@ -1,17 +1,17 @@
 """DataUpdateCoordinator for AirLino."""
 
-from typing import TYPE_CHECKING, Any, override
+from typing import Any, override
 
-from airlino_api import AirlinoApi, AirlinoApiConnectionError, AirlinoApiError
+from airlino_api import AirlinoApi, AirlinoApiConnectionError
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
 from .const import CONF_SETUP_VERIFIED, DOMAIN, LOGGER, UPDATE_INTERVAL
 
-if TYPE_CHECKING:
-    from . import AirlinoConfigEntry
+type AirlinoConfigEntry = ConfigEntry[AirlinoDataUpdateCoordinator]
 
 
 class AirlinoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -64,7 +64,7 @@ class AirlinoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             LOGGER.debug("AirLino is unreachable, assuming it is off: %s", err)
             self._refetch_device_info = True
             # Keep the last known device info so the device name is still
-            # shown (e.g. in the multiroom selection) while unavailable.
+            # shown while unavailable.
             return {"online": False, "device": self._device_info}
         except Exception as err:
             raise UpdateFailed(
@@ -75,17 +75,6 @@ class AirlinoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._setup_verified = True
         if previous is not None and not was_online:
             LOGGER.info("AirLino is available again")
-        sender: dict[str, Any] | None = previous.get("sender") if previous else None
-        receiver: dict[str, Any] | None = previous.get("receiver") if previous else None
-        try:
-            sender = await self.api.async_get_sender_status()
-            receiver = await self.api.async_get_receiver_state()
-        except (AirlinoApiError, AirlinoApiConnectionError) as err:
-            # Songcast is available since firmware/API v18, so an error here
-            # is most likely a transient failure (e.g. the busy device times
-            # out even though the core calls just succeeded). Do not fail the
-            # whole update; the next cycle retries.
-            LOGGER.debug("Songcast status not available on this device: %s", err)
         return {
             "online": True,
             "updated_at": dt_util.utcnow(),
@@ -95,6 +84,4 @@ class AirlinoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # by the device asynchronously in the player status.
             "error": player_status.get("error"),
             "volume": volume,
-            "sender": sender,
-            "receiver": receiver,
         }

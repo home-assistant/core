@@ -5,7 +5,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from airlino_api import AirlinoApiConnectionError
 import pytest
 
-from homeassistant.components.airlino import AirlinoRuntimeData
 from homeassistant.components.airlino.const import CONF_SETUP_VERIFIED, DOMAIN
 from homeassistant.components.airlino.coordinator import AirlinoDataUpdateCoordinator
 from homeassistant.core import HomeAssistant
@@ -22,10 +21,6 @@ def mock_api() -> MagicMock:
     )
     api.async_get_player_status = AsyncMock(return_value={"state": 1})
     api.async_get_master_volume = AsyncMock(return_value=50)
-    api.async_get_sender_status = AsyncMock(
-        return_value={"enabled": False, "uuid": "sender-uuid"}
-    )
-    api.async_get_receiver_state = AsyncMock(return_value={"sender": None})
     api.async_close = AsyncMock()
     return api
 
@@ -54,31 +49,8 @@ async def test_setup_verifies_entry_and_starts_platform(
         assert await hass.config_entries.async_setup(entry.entry_id)
 
     assert entry.data[CONF_SETUP_VERIFIED] is True
-    assert isinstance(entry.runtime_data, AirlinoRuntimeData)
-    assert isinstance(entry.runtime_data.coordinator, AirlinoDataUpdateCoordinator)
-    second_entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="Kitchen",
-        data={"host": "192.0.2.2", CONF_SETUP_VERIFIED: True},
-        unique_id="00:11:22:33:44:66",
-    )
-    second_entry.add_to_hass(hass)
-    with (
-        patch("homeassistant.components.airlino.AirlinoApi", return_value=mock_api),
-        patch(
-            "homeassistant.components.airlino.async_get_clientsession",
-            return_value=MagicMock(),
-        ),
-        patch.object(hass.config_entries, "async_forward_entry_setups", forward_setups),
-    ):
-        assert await hass.config_entries.async_setup(second_entry.entry_id)
-
-    assert (
-        entry.runtime_data.group_mutation_lock
-        is second_entry.runtime_data.group_mutation_lock
-    )
-    assert entry.runtime_data.group_mutation_lock.locked() is False
-    assert forward_setups.await_count == 2
+    assert isinstance(entry.runtime_data, AirlinoDataUpdateCoordinator)
+    assert forward_setups.await_count == 1
 
 
 async def test_verified_entry_loads_unavailable_when_device_is_offline(
@@ -105,7 +77,7 @@ async def test_verified_entry_loads_unavailable_when_device_is_offline(
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
 
-    assert entry.runtime_data.coordinator.data["online"] is False
+    assert entry.runtime_data.data["online"] is False
     forward_setups.assert_awaited_once()
 
 

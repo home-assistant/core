@@ -34,29 +34,14 @@
     "command_failed": {
       "message": "AirLino command failed: {err}"
     },
-    "device_unavailable": {
-      "message": "{entity_id} is not available and cannot be added to the multiroom group."
-    },
-    "entity_not_found": {
-      "message": "{entity_id} is not a known AirLino media player."
-    },
     "https_unsupported": {
       "message": "AirLino cannot play HTTPS streams: the device cannot verify SSL certificates. Use an HTTP stream URL instead."
     },
     "media_type_unsupported": {
       "message": "Media type {media_type} is not supported by AirLino; only URL playback is supported."
     },
-    "member_already_grouped": {
-      "message": "{entity_id} is already part of a multiroom group; remove it from that group before joining another."
-    },
-    "multiroom_receiver_control": {
-      "message": "This AirLino is part of a multiroom group and follows the master. Only volume control is available; ungroup it by modifying the group from the master device to control it directly."
-    },
     "play_failed": {
       "message": "AirLino failed to play the stream: {error}"
-    },
-    "sender_uuid_missing": {
-      "message": "Could not start multiroom: the AirLino did not report a sender UUID."
     },
     "update_failed": {
       "message": "Could not update AirLino: {err}"

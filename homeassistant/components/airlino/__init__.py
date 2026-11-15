@@ -1,42 +1,19 @@
 """The AirLino integration."""
 
-import asyncio
-from dataclasses import dataclass, field
 import logging
 
 from airlino_api import DEFAULT_API_VERSION, DEFAULT_PORT, AirlinoApi
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_SETUP_VERIFIED, DOMAIN, is_supported_api_version
-from .coordinator import AirlinoDataUpdateCoordinator
+from .const import CONF_SETUP_VERIFIED, is_supported_api_version
+from .coordinator import AirlinoConfigEntry, AirlinoDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 _PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER]
-
-
-@dataclass
-class AirlinoRuntimeData:
-    """Runtime data for the AirLino integration."""
-
-    api: AirlinoApi
-    coordinator: AirlinoDataUpdateCoordinator
-    group_mutation_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
-
-
-type AirlinoConfigEntry = ConfigEntry[AirlinoRuntimeData]
-
-
-def _group_mutation_lock(hass: HomeAssistant) -> asyncio.Lock:
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        runtime_data = getattr(entry, "runtime_data", None)
-        if isinstance(runtime_data, AirlinoRuntimeData):
-            return runtime_data.group_mutation_lock
-    return asyncio.Lock()
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AirlinoConfigEntry) -> bool:
@@ -57,13 +34,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirlinoConfigEntry) -> b
     )
 
     coordinator = AirlinoDataUpdateCoordinator(hass, entry, api)
-    entry.runtime_data = AirlinoRuntimeData(
-        api=api,
-        coordinator=coordinator,
-        group_mutation_lock=_group_mutation_lock(hass),
-    )
-
     await coordinator.async_config_entry_first_refresh()
+    entry.runtime_data = coordinator
 
     if not entry.data.get(CONF_SETUP_VERIFIED, False):
         hass.config_entries.async_update_entry(
