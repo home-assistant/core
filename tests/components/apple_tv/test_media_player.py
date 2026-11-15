@@ -791,13 +791,26 @@ async def test_group_members_at_setup(
 @pytest.mark.usefixtures("grouped")
 async def test_member_reconnects(hass: HomeAssistant, mock_homepod: AsyncMock) -> None:
     """A member leaves the group while it is disconnected and is back after a reconnect."""
-    expected = [ENTITY_ID, HOMEPOD_ENTITY_ID]
-    with _homepod_device_patches(mock_homepod):
+    manager = hass.config_entries.async_entry_for_domain_unique_id(
+        DOMAIN, "homepodid"
+    ).runtime_data
+    # The first reconnect attempt does not find the device
+    with patch("homeassistant.components.apple_tv.scan", return_value=[]):
         mock_homepod.listener.connection_closed()
         await hass.async_block_till_done()
 
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_GROUP_MEMBERS] == [ENTITY_ID]
+    assert hass.states.get(HOMEPOD_ENTITY_ID).attributes[ATTR_GROUP_MEMBERS] is None
+
+    with _homepod_device_patches(mock_homepod):
+        await manager.connect_once(raise_missing_credentials=False)
+        await hass.async_block_till_done()
+
+    expected = [ENTITY_ID, HOMEPOD_ENTITY_ID]
     assert hass.states.get(ENTITY_ID).attributes[ATTR_GROUP_MEMBERS] == expected
     assert hass.states.get(HOMEPOD_ENTITY_ID).attributes[ATTR_GROUP_MEMBERS] == expected
+
+    await manager.disconnect()
 
 
 @pytest.mark.usefixtures("grouped")
