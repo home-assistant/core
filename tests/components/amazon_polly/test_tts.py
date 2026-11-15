@@ -4,11 +4,15 @@ import asyncio
 from http import HTTPStatus
 from pathlib import Path
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, call
 
 from botocore.exceptions import ClientError, EndpointConnectionError
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
 from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
@@ -322,6 +326,53 @@ async def test_say(
     assert await _say(hass, hass_client, service_calls, service_data) == HTTPStatus.OK
     mock_polly_client.synthesize_speech.assert_awaited_once_with(
         Text=MESSAGE, **expected_call
+    )
+
+
+async def test_voices_paginated(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    service_calls: list[ServiceCall],
+    mock_polly_client: AsyncMock,
+) -> None:
+    """Test voices from every page of the voice list can be used."""
+    voices = (
+        await async_load_json_object_fixture(hass, "describe_voices.json", DOMAIN)
+    )["Voices"]
+    second_page_voice = voices.pop()
+    assert second_page_voice["Id"] == "Brian"
+    pages = {
+        None: {"Voices": voices, "NextToken": "page-2"},
+        "page-2": {"Voices": [second_page_voice]},
+    }
+    mock_polly_client.describe_voices.side_effect = lambda **kwargs: pages[
+        kwargs.get("NextToken")
+    ]
+    assert await async_setup_component(hass, tts.DOMAIN, {tts.DOMAIN: CONFIG})
+    await hass.async_block_till_done()
+
+    # The import, the imported entry and the legacy provider each load the voices.
+    voice_requests = mock_polly_client.describe_voices.await_args_list
+    assert voice_requests.count(call(NextToken="page-2")) == voice_requests.count(
+        call()
+    )
+    assert call(NextToken="page-2") in voice_requests
+    assert (
+        await _say(
+            hass,
+            hass_client,
+            service_calls,
+            {tts.ATTR_LANGUAGE: "en-GB", tts.ATTR_OPTIONS: {"voice": "Brian"}},
+        )
+        == HTTPStatus.OK
+    )
+    mock_polly_client.synthesize_speech.assert_awaited_once_with(
+        Text=MESSAGE,
+        VoiceId="Brian",
+        Engine="standard",
+        OutputFormat="mp3",
+        SampleRate="22050",
+        TextType="text",
     )
 
 
