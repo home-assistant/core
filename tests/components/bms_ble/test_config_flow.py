@@ -194,25 +194,18 @@ async def test_device_not_supported(
 
 
 @pytest.mark.usefixtures("enable_bluetooth")
-async def test_already_configured(hass: HomeAssistant) -> None:
+async def test_already_configured(
+    bt_discovery: BluetoothServiceInfoBleak, hass: HomeAssistant
+) -> None:
     """Test that same device cannot be added twice."""
 
     cfg: MockConfigEntry = mock_config()
     cfg.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(cfg.entry_id)
-    await hass.async_block_till_done()
-
     result: ConfigFlowResult = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": SOURCE_USER},
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_ADDRESS: "cc:cc:cc:cc:cc:cc",
-            "type": "aiobmsble.bms.dummy_bms",
-        },
+        context={"source": SOURCE_BLUETOOTH},
+        data=bt_discovery,
     )
     assert result.get("type") == FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
