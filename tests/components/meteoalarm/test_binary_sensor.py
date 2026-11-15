@@ -58,6 +58,8 @@ async def test_active_alert(
     await _setup(hass, mock_config_entry)
 
     mock_meteoalert.assert_called_once_with("netherlands", "Test province", "en-GB")
+    # The sensor starts from the alert fetched during setup, without a second fetch.
+    mock_meteoalert.return_value.get_alert.assert_called_once()
     assert hass.states.get(ENTITY_ID) == snapshot
     assert entity_registry.async_get(ENTITY_ID).unique_id == (
         mock_config_entry.entry_id

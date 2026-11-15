@@ -1,6 +1,7 @@
 """Binary sensor for MeteoAlarm.eu."""
 
 from datetime import timedelta
+from typing import Any
 
 import probatio
 
@@ -102,7 +103,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the MeteoAlarm binary sensor from a config entry."""
-    async_add_entities([MeteoAlertBinarySensor(entry)], True)
+    # The sensor starts from the alert fetched during setup.
+    async_add_entities([MeteoAlertBinarySensor(entry)])
 
 
 class MeteoAlertBinarySensor(BinarySensorEntity):
@@ -115,7 +117,7 @@ class MeteoAlertBinarySensor(BinarySensorEntity):
 
     def __init__(self, entry: MeteoAlarmConfigEntry) -> None:
         """Initialize the MeteoAlarm binary sensor."""
-        self._api = entry.runtime_data
+        self._api = entry.runtime_data.api
         self._attr_unique_id = entry.entry_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
@@ -124,13 +126,18 @@ class MeteoAlertBinarySensor(BinarySensorEntity):
             entry_type=DeviceEntryType.SERVICE,
             configuration_url="https://meteoalarm.org",
         )
+        self._set_alert(entry.runtime_data.alert)
 
     def update(self) -> None:
-        """Update device state."""
+        """Fetch the region's most severe alert."""
+        self._set_alert(self._api.get_alert())
+
+    def _set_alert(self, alert: dict[str, Any]) -> None:
+        """Show the alert while it hasn't expired."""
         self._attr_extra_state_attributes = {}
         self._attr_is_on = False
 
-        if alert := self._api.get_alert():
+        if alert:
             # An alert without an expiration time stays active until the feed
             # stops returning it.
             if (expires := alert.get("expires")) is None or (
