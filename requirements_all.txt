@@ -285,7 +285,7 @@ aiofiles==25.1.0
 aioflo==2026.9.4
 
 # homeassistant.components.yi
-aioftp==0.21.3
+aioftp==0.28.3
 
 # homeassistant.components.ghost
 aioghost==0.4.16
