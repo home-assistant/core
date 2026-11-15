@@ -12,7 +12,8 @@ from homeassistant.const import CONF_COUNTRY, CONF_LANGUAGE, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-USER_INPUT = {CONF_COUNTRY: "spain", CONF_PROVINCE: "Mallorca", CONF_LANGUAGE: "en"}
+USER_INPUT = {CONF_COUNTRY: "ES", CONF_PROVINCE: "Mallorca", CONF_LANGUAGE: "en"}
+ENTRY_DATA = {CONF_COUNTRY: "spain", CONF_PROVINCE: "Mallorca", CONF_LANGUAGE: "en"}
 
 
 @pytest.mark.usefixtures("mock_meteoalert")
@@ -31,9 +32,31 @@ async def test_user_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Mallorca"
-    assert result["data"] == USER_INPUT
+    assert result["data"] == ENTRY_DATA
     assert result["result"].unique_id == "spain_mallorca_en"
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("mock_meteoalert")
+async def test_user_flow_default_language(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test the language defaults to Home Assistant's language."""
+    hass.config.language = "de"
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_COUNTRY: "DE", CONF_PROVINCE: "Kreis Wunsiedel"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_COUNTRY: "germany",
+        CONF_PROVINCE: "Kreis Wunsiedel",
+        CONF_LANGUAGE: "de",
+    }
+    assert result["result"].unique_id == "germany_kreis wunsiedel_de"
 
 
 @pytest.mark.parametrize(
@@ -83,7 +106,8 @@ async def test_user_flow_already_configured(
         DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {**mock_config_entry.data, CONF_PROVINCE: "TEST PROVINCE"}
+        result["flow_id"],
+        {CONF_COUNTRY: "NL", CONF_PROVINCE: "TEST PROVINCE", CONF_LANGUAGE: "en-GB"},
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -96,12 +120,12 @@ async def test_import_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
-        data={**USER_INPUT, CONF_COUNTRY: "Spain", CONF_NAME: "meteoalarm"},
+        data={**ENTRY_DATA, CONF_COUNTRY: "Spain", CONF_NAME: "meteoalarm"},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "meteoalarm"
-    assert result["data"] == USER_INPUT
+    assert result["data"] == ENTRY_DATA
     assert result["result"].unique_id == "spain_mallorca_en"
 
 
@@ -124,7 +148,7 @@ async def test_import_flow_errors(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
-        data={**USER_INPUT, CONF_NAME: "meteoalarm"},
+        data={**ENTRY_DATA, CONF_NAME: "meteoalarm"},
     )
 
     assert result["type"] is FlowResultType.ABORT

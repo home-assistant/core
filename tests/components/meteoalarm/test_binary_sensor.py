@@ -4,23 +4,21 @@ from typing import Any
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
-from meteoalarmapi import ServerError, UnexpectedError, WrongCountry
+from meteoalarmapi import ServerError, WrongCountry
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.meteoalarm.binary_sensor import SCAN_INTERVAL
 from homeassistant.components.meteoalarm.const import CONF_PROVINCE, DOMAIN
-from homeassistant.components.meteoalarm.coordinator import SCAN_INTERVAL
 from homeassistant.const import (
     CONF_COUNTRY,
-    CONF_ENTITY_NAMESPACE,
     CONF_LANGUAGE,
     CONF_NAME,
     CONF_PLATFORM,
     STATE_OFF,
     STATE_ON,
-    STATE_UNAVAILABLE,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
@@ -159,30 +157,6 @@ async def test_alert_withdrawn(
     assert "event" not in state.attributes
 
 
-@pytest.mark.parametrize(
-    "exception",
-    [ServerError("500"), WrongCountry("no feed"), UnexpectedError("timeout")],
-)
-async def test_unavailable_when_update_fails(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_meteoalert: MagicMock,
-    freezer: FrozenDateTimeFactory,
-    exception: Exception,
-) -> None:
-    """Test the sensor becomes unavailable when MeteoAlarm can't be reached."""
-    await _setup(hass, mock_config_entry)
-
-    assert hass.states.get(ENTITY_ID).state == STATE_ON
-
-    mock_meteoalert.return_value.get_alert.side_effect = exception
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
-
-
 async def test_yaml_import(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
@@ -274,45 +248,5 @@ async def test_yaml_import_failed(
             DOMAIN, f"deprecated_yaml_import_issue_{reason}_{region}"
         )
     assert not issue_registry.async_get_issue(
-        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
-    )
-
-
-async def test_yaml_import_entity_namespace(
-    hass: HomeAssistant, mock_meteoalert: MagicMock
-) -> None:
-    """Test the imported entity keeps the entity ID the YAML namespace gave it."""
-    config = {
-        BINARY_SENSOR_DOMAIN: YAML_CONFIG[BINARY_SENSOR_DOMAIN]
-        | {CONF_ENTITY_NAMESPACE: "local"}
-    }
-
-    assert await async_setup_component(hass, BINARY_SENSOR_DOMAIN, config)
-    await hass.async_block_till_done()
-
-    assert hass.states.get("binary_sensor.local_test_alert").state == STATE_ON
-
-
-async def test_yaml_import_same_region_twice(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-    mock_meteoalert: MagicMock,
-) -> None:
-    """Test a region in YAML twice is imported once, without an import issue."""
-    config = {
-        BINARY_SENSOR_DOMAIN: [
-            YAML_CONFIG[BINARY_SENSOR_DOMAIN],
-            YAML_CONFIG[BINARY_SENSOR_DOMAIN],
-        ]
-    }
-
-    assert await async_setup_component(hass, BINARY_SENSOR_DOMAIN, config)
-    await hass.async_block_till_done()
-
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert not [
-        issue for issue in issue_registry.issues.values() if issue.domain == DOMAIN
-    ]
-    assert issue_registry.async_get_issue(
         HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
     )

@@ -8,27 +8,12 @@ import probatio
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_COUNTRY, CONF_LANGUAGE, CONF_NAME
 from homeassistant.helpers.selector import (
-    SelectSelector,
-    SelectSelectorConfig,
-    SelectSelectorMode,
+    CountrySelector,
+    CountrySelectorConfig,
+    LanguageSelector,
 )
 
-from .const import CONF_PROVINCE, COUNTRIES, DEFAULT_LANGUAGE, DOMAIN
-
-STEP_USER_DATA_SCHEMA = probatio.Schema(
-    {
-        probatio.Required(CONF_COUNTRY): SelectSelector(
-            SelectSelectorConfig(
-                options=COUNTRIES,
-                mode=SelectSelectorMode.DROPDOWN,
-                translation_key=CONF_COUNTRY,
-                sort=True,
-            )
-        ),
-        probatio.Required(CONF_PROVINCE): str,
-        probatio.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): str,
-    }
-)
+from .const import CONF_PROVINCE, COUNTRIES, DOMAIN
 
 
 def _check_feed(data: dict[str, Any]) -> None:
@@ -64,29 +49,41 @@ class MeteoAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            await self.async_set_unique_id(_unique_id(user_input))
+            # The country selector gives the ISO code; the feed uses a name.
+            data = {
+                CONF_COUNTRY: COUNTRIES[user_input[CONF_COUNTRY]],
+                CONF_PROVINCE: user_input[CONF_PROVINCE],
+                CONF_LANGUAGE: user_input[CONF_LANGUAGE],
+            }
+            await self.async_set_unique_id(_unique_id(data))
             self._abort_if_unique_id_configured()
 
-            if error := await self._async_validate(user_input):
+            if error := await self._async_validate(data):
                 errors["base"] = error
             else:
-                return self.async_create_entry(
-                    title=user_input[CONF_PROVINCE],
-                    data=user_input,
-                )
+                return self.async_create_entry(title=data[CONF_PROVINCE], data=data)
 
+        schema = probatio.Schema(
+            {
+                probatio.Required(CONF_COUNTRY): CountrySelector(
+                    CountrySelectorConfig(countries=list(COUNTRIES))
+                ),
+                probatio.Required(CONF_PROVINCE): str,
+                probatio.Required(
+                    CONF_LANGUAGE, default=self.hass.config.language
+                ): LanguageSelector(),
+            }
+        )
         return self.async_show_form(
             step_id="user",
-            data_schema=self.add_suggested_values_to_schema(
-                STEP_USER_DATA_SCHEMA, user_input
-            ),
+            data_schema=self.add_suggested_values_to_schema(schema, user_input),
             errors=errors,
         )
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import a region from the legacy YAML configuration.
 
-        The entry is titled with the YAML name, so the entity keeps the entity
+        The entry is titled with the YAML name, so the entity gets the entity
         ID it had in YAML (binary_sensor.meteoalarm by default).
         """
         data = {

@@ -1,12 +1,15 @@
 """The MeteoAlarm integration."""
 
-from meteoalarmapi import Meteoalert
+from meteoalarmapi import Meteoalert, ServerError, UnexpectedError, WrongCountry
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_COUNTRY, CONF_LANGUAGE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import CONF_PROVINCE, PLATFORMS
-from .coordinator import MeteoAlarmConfigEntry, MeteoAlarmCoordinator
+
+type MeteoAlarmConfigEntry = ConfigEntry[Meteoalert]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: MeteoAlarmConfigEntry) -> None:
@@ -14,11 +17,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: MeteoAlarmConfigEntry) -
     api = Meteoalert(
         entry.data[CONF_COUNTRY], entry.data[CONF_PROVINCE], entry.data[CONF_LANGUAGE]
     )
-    coordinator = MeteoAlarmCoordinator(hass, entry, api)
+    try:
+        await hass.async_add_executor_job(api.get_alert)
+    except (ServerError, UnexpectedError, WrongCountry) as err:
+        raise ConfigEntryNotReady(f"Error fetching MeteoAlarm data: {err}") from err
 
-    await coordinator.async_config_entry_first_refresh()
-
-    entry.runtime_data = coordinator
+    entry.runtime_data = api
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
