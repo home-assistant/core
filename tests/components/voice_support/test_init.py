@@ -3,22 +3,27 @@
 import asyncio
 from collections.abc import AsyncGenerator
 from typing import Any
-from unittest.mock import ANY, AsyncMock, call, patch
+from unittest.mock import ANY, AsyncMock, Mock, call, patch
 
 from aiohasupervisor import SupervisorError
+from aiohasupervisor.models import AddonState as SupervisorAddonState
 import aiohttp
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
+from homeassistant.components.hassio import AddonState
 from homeassistant.components.labs import async_update_preview_feature
 from homeassistant.components.voice_support import (
     DATA_CLIENT,
     INFO_REFRESH_INTERVAL,
     PREVIEW_FEATURE_NEXT_GENERATION_VOICE,
     AudioRunRequest,
+    async_on_wake_words_changed,
     async_start_run,
+    async_verifies_wake_word,
 )
+from homeassistant.components.voice_support.app import APP_SLUG
 from homeassistant.components.voice_support.client import AppInfo
 from homeassistant.components.voice_support.const import (
     CONF_INTEGRATION_CREATED_APP,
@@ -45,6 +50,75 @@ async def test_setup_entry(
 
     assert setup_integration.state is ConfigEntryState.NOT_LOADED
     assert DATA_CLIENT not in hass.data
+
+
+@pytest.mark.parametrize(
+    ("owned", "state", "expected_starts"),
+    [
+        pytest.param(True, SupervisorAddonState.STOPPED, 1, id="stopped"),
+        pytest.param(True, SupervisorAddonState.STARTED, 0, id="running"),
+        pytest.param(False, SupervisorAddonState.STOPPED, 0, id="external"),
+    ],
+)
+@pytest.mark.usefixtures("supervisor", "addon_installed", "app_info")
+async def test_setup_starts_owned_app(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    addon_info: AsyncMock,
+    start_addon: AsyncMock,
+    owned: bool,
+    state: SupervisorAddonState,
+    expected_starts: int,
+) -> None:
+    """Test a stopped managed app starts before the first connection."""
+    addon_info.return_value.state = state
+
+    async def async_start(slug: str) -> None:
+        assert slug == APP_SLUG
+        assert aioclient_mock.call_count == 0
+        await asyncio.sleep(0)
+        assert aioclient_mock.call_count == 0
+
+    start_addon.side_effect = async_start
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={**mock_config_entry.data, CONF_INTEGRATION_CREATED_APP: owned},
+    )
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert start_addon.await_count == expected_starts
+    assert aioclient_mock.call_count == 1
+
+
+@pytest.mark.parametrize("failed_operation", ["info", "start"])
+@pytest.mark.usefixtures("supervisor", "addon_installed", "app_info")
+async def test_setup_retries_app_start_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    addon_info: AsyncMock,
+    start_addon: AsyncMock,
+    failed_operation: str,
+) -> None:
+    """Test Supervisor failures leave setup retrying without connecting."""
+    operations = {"info": addon_info, "start": start_addon}
+    operations[failed_operation].side_effect = SupervisorError("busy")
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={**mock_config_entry.data, CONF_INTEGRATION_CREATED_APP: True},
+    )
+
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert aioclient_mock.call_count == 0
 
 
 @pytest.mark.parametrize(
@@ -384,6 +458,61 @@ async def test_remove_entry_app_error(
     assert not hass.config_entries.async_entries(DOMAIN)
 
 
+@pytest.mark.usefixtures("labs", "app_info")
+async def test_verifies_wake_word(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test a wake word is verified only with the feature on and an app that has it."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await async_update_preview_feature(
+        hass, DOMAIN, PREVIEW_FEATURE_NEXT_GENERATION_VOICE, True
+    )
+    assert not async_verifies_wake_word(hass, "Okay Nabu")
+
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert async_verifies_wake_word(hass, "Okay Nabu")
+    assert not async_verifies_wake_word(hass, "Hey Jarvis")
+
+    await async_update_preview_feature(
+        hass, DOMAIN, PREVIEW_FEATURE_NEXT_GENERATION_VOICE, False
+    )
+    await hass.async_block_till_done()
+    assert not async_verifies_wake_word(hass, "Okay Nabu")
+
+
+@pytest.mark.usefixtures("labs", "app_info")
+async def test_wake_words_changed(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test listeners hear when the app comes and goes and the feature changes."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    listener = Mock()
+    remove_listener = async_on_wake_words_changed(hass, listener)
+
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert listener.call_count == 1
+
+    await async_update_preview_feature(
+        hass, DOMAIN, PREVIEW_FEATURE_NEXT_GENERATION_VOICE, True
+    )
+    await hass.async_block_till_done()
+    assert listener.call_count == 2
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    assert listener.call_count == 3
+
+    remove_listener()
+    await async_update_preview_feature(
+        hass, DOMAIN, PREVIEW_FEATURE_NEXT_GENERATION_VOICE, False
+    )
+    await hass.async_block_till_done()
+    assert listener.call_count == 3
+
+
 async def _no_audio() -> AsyncGenerator[bytes]:
     return
     yield
@@ -497,11 +626,14 @@ async def test_setup_waits_for_info_before_update(
         ),
         patch("homeassistant.components.voice_support.get_app_manager") as app_manager,
     ):
+        app_manager.return_value.async_get_addon_info = AsyncMock(
+            return_value=Mock(state=AddonState.RUNNING)
+        )
         setup_task = hass.async_create_task(
             hass.config_entries.async_setup(mock_config_entry.entry_id)
         )
         await info_requested.wait()
-        app_manager.assert_not_called()
+        app_manager.return_value.async_schedule_update_addon.assert_not_called()
 
         info.set_result(AppInfo.from_json(INFO))
         assert await setup_task
@@ -509,3 +641,84 @@ async def test_setup_waits_for_info_before_update(
     app_manager.return_value.async_schedule_update_addon.assert_called_once_with(
         catch_error=True
     )
+
+
+@pytest.mark.parametrize(
+    ("wake_words", "expected_calls", "nabu_supported", "jarvis_supported"),
+    [
+        pytest.param(INFO["wake_words"], 0, True, False, id="unchanged"),
+        pytest.param(
+            [*INFO["wake_words"], {"id": "hey_jarvis", "phrase": "hey jarvis"}],
+            1,
+            True,
+            True,
+            id="model_added",
+        ),
+        pytest.param([], 1, False, False, id="model_removed"),
+    ],
+)
+@pytest.mark.usefixtures("setup_integration", "preview_feature_enabled")
+async def test_info_refresh_notifies_verification_changes(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    wake_words: list[dict[str, str]],
+    expected_calls: int,
+    nabu_supported: bool,
+    jarvis_supported: bool,
+) -> None:
+    """Test refreshes notify listeners only when verification support changes."""
+    listener = Mock()
+    async_on_wake_words_changed(hass, listener)
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        INFO_URL, json={**INFO, "version": "1.1.0", "wake_words": wake_words}
+    )
+
+    async_fire_time_changed(hass, dt_util.utcnow() + INFO_REFRESH_INTERVAL)
+    await hass.async_block_till_done()
+
+    assert listener.call_count == expected_calls
+    assert async_verifies_wake_word(hass, "okay nabu") is nabu_supported
+    assert async_verifies_wake_word(hass, "hey jarvis") is jarvis_supported
+
+
+@pytest.mark.parametrize(
+    ("connection_error", "send_error"),
+    [
+        pytest.param(aiohttp.ClientError, None, id="connection_failed"),
+        pytest.param(None, aiohttp.ClientError, id="run_start_failed"),
+    ],
+)
+@pytest.mark.usefixtures("setup_integration", "preview_feature_enabled")
+async def test_run_failure_notifies_verification_loss_and_recovery(
+    hass: HomeAssistant,
+    connection_error: type[Exception] | None,
+    send_error: type[Exception] | None,
+) -> None:
+    """Test listeners see lost verification and its recovery on the next refresh."""
+    supported: list[bool] = []
+    async_on_wake_words_changed(
+        hass, lambda: supported.append(async_verifies_wake_word(hass, "okay nabu"))
+    )
+    websocket = Mock(send_json=AsyncMock(side_effect=send_error), close=AsyncMock())
+    session = Mock(
+        ws_connect=AsyncMock(return_value=websocket, side_effect=connection_error)
+    )
+    request = AudioRunRequest(wake_word_phrase="okay nabu", wake_word_audio_ms=500)
+
+    with patch(
+        "homeassistant.components.voice_support.client.async_get_clientsession",
+        return_value=session,
+    ):
+        assert await async_start_run(hass, request, _no_audio()) is None
+        assert supported == [False]
+        assert await async_start_run(hass, request, _no_audio()) is None
+        assert supported == [False]
+
+    async_fire_time_changed(hass, dt_util.utcnow() + INFO_REFRESH_INTERVAL)
+    await hass.async_block_till_done()
+    assert supported == [False, True]
+
+    async_fire_time_changed(hass, dt_util.utcnow() + 2 * INFO_REFRESH_INTERVAL)
+    await hass.async_block_till_done()
+    assert supported == [False, True]
