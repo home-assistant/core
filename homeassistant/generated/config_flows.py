@@ -836,6 +836,7 @@ FLOWS = {
         "tankerkoenig",
         "tasmota",
         "tautulli",
+        "tcp",
         "technove",
         "tedee",
         "telegram_bot",

@@ -7,24 +7,37 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .common import TCP_PLATFORM_SCHEMA
+from . import TcpConfigEntry
+from .common import TCP_PLATFORM_SCHEMA, async_import_yaml
 from .const import CONF_VALUE_ON
 from .entity import TcpEntity
 
 PLATFORM_SCHEMA: Final = BINARY_SENSOR_PLATFORM_SCHEMA.extend(TCP_PLATFORM_SCHEMA)
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
+    """Import the YAML configuration."""
+    await async_import_yaml(hass, config)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: TcpConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
     """Set up the TCP binary sensor."""
-    add_entities([TcpBinarySensor(hass, config)])
+    async_add_entities([TcpBinarySensor(hass, entry)], update_before_add=True)
 
 
 class TcpBinarySensor(TcpEntity, BinarySensorEntity):
