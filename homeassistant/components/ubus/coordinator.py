@@ -1,8 +1,9 @@
 """DataUpdateCoordinator for the OpenWrt (ubus) integration."""
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from datetime import datetime, timedelta
 import logging
-from typing import override
+from typing import NamedTuple, override
 
 from openwrt.ubus import Ubus
 
@@ -14,11 +15,18 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_DHCP_SOFTWARE, DEFAULT_SSL, DEFAULT_VERIFY_SSL, DOMAIN
+from .const import (
+    CONF_DHCP_SOFTWARE,
+    DEFAULT_SSL,
+    DEFAULT_VERIFY_SSL,
+    DOMAIN,
+    SIGNAL_CLIENTS_UPDATED,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,6 +34,30 @@ UPDATE_INTERVAL = timedelta(seconds=30)
 LEASE_REREAD_INTERVAL = timedelta(minutes=10)
 
 type UbusConfigEntry = ConfigEntry[UbusDataUpdateCoordinator]
+
+
+class ClientReport(NamedTuple):
+    """A client as reported by a router."""
+
+    host: str
+    hostname: str | None
+
+
+class UbusSharedState:
+    """State shared between the ubus config entries.
+
+    ``clients`` maps a MAC address to the router currently reporting the
+    client and its resolved hostname; ``owners`` maps a MAC address to the
+    config entry that owns its device tracker entity.
+    """
+
+    clients: dict[str, ClientReport]
+    owners: dict[str, str]
+
+    def __init__(self) -> None:
+        """Initialize the shared state."""
+        self.clients = {}
+        self.owners = {}
 
 
 class UbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
@@ -61,7 +93,43 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
     @override
     async def _async_update_data(self) -> dict[str, str | None]:
         """Return the currently connected devices keyed by MAC address."""
-        return await self.hass.async_add_executor_job(self._update)
+        clients = await self.hass.async_add_executor_job(self._update)
+        self._async_publish_clients(clients)
+        return clients
+
+    @callback
+    @override
+    def _async_refresh_finished(self) -> None:
+        """Release the clients claimed by a router we can no longer read."""
+        if not self.last_update_success:
+            self.clear_clients()
+
+    @callback
+    def _async_publish_clients(self, clients: dict[str, str | None]) -> None:
+        """Publish which clients this router sees to the shared state.
+
+        Any router may report a client, but only the router which last
+        reported it releases the entry, so a client stays reported while
+        any router still sees it.
+        """
+        shared: UbusSharedState = self.hass.data[DOMAIN]
+        updated = False
+        for mac, report in list(shared.clients.items()):
+            if report.host == self.host and mac not in clients:
+                del shared.clients[mac]
+                updated = True
+        for mac, hostname in clients.items():
+            report = ClientReport(host=self.host, hostname=hostname)
+            if shared.clients.get(mac) != report:
+                shared.clients[mac] = report
+                updated = True
+        if updated:
+            async_dispatcher_send(self.hass, SIGNAL_CLIENTS_UPDATED)
+
+    @callback
+    def clear_clients(self) -> None:
+        """Release every client claimed by this router."""
+        self._async_publish_clients({})
 
     def _update(self) -> dict[str, str | None]:
         """Query the router, re-authenticating once if the session expired."""
