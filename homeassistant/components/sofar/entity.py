@@ -4,7 +4,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, NamedTuple, override
 
-from sofar_modbus.modern.battery_pack import BatteryPack
+from sofar_modbus import BatteryPack
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback

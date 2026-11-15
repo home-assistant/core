@@ -10,6 +10,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.palazzetti.const import SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -56,7 +57,7 @@ async def test_device(
         pytest.param(ValidationError, id="validation_error"),
     ],
 )
-async def test_setup_entry_exception(
+async def test_setup_entry_failure(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_palazzetti_client: AsyncMock,
@@ -103,7 +104,7 @@ async def test_setup_entry_update_false(
         pytest.param(ValidationError, id="validation_error"),
     ],
 )
-async def test_update_exception(
+async def test_update_failure(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_palazzetti_client: AsyncMock,
@@ -117,10 +118,9 @@ async def test_update_exception(
     mock_palazzetti_client.update_state.side_effect = exception
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-    coordinator = mock_config_entry.runtime_data
-    assert not coordinator.last_update_success
+    assert hass.states.get("climate.stove").state == STATE_UNAVAILABLE
 
 
 async def test_update_state_false(
@@ -136,7 +136,6 @@ async def test_update_state_false(
     mock_palazzetti_client.update_state.return_value = False
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-    coordinator = mock_config_entry.runtime_data
-    assert not coordinator.last_update_success
+    assert hass.states.get("climate.stove").state == STATE_UNAVAILABLE
