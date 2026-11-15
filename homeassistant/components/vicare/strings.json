@@ -693,6 +693,9 @@
       "supply_temperature": {
         "name": "Supply temperature"
       },
+      "target_supply_temperature": {
+        "name": "Target supply temperature"
+      },
       "target_temperature": {
         "name": "Target temperature"
       },
