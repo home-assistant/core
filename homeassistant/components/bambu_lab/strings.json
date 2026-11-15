@@ -6,21 +6,48 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "no_printers_found": "No printers were found on your network. Enter the details of your printer.",
       "serial_number_mismatch": "The printer at this address has a different serial number. Check the host and the serial number.",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "untrusted_certificate": "The device at this address did not identify itself as a Bambu Lab printer. Check the host."
     },
+    "progress": {
+      "discover": "Looking for printers on your network."
+    },
     "step": {
-      "user": {
+      "access_code": {
         "data": {
-          "access_code": "Access code",
+          "access_code": "Access code"
+        },
+        "data_description": {
+          "access_code": "The LAN access code of your printer. You can find it on the screen of your printer."
+        },
+        "description": "Enter the access code of {name} ({host})."
+      },
+      "manual": {
+        "data": {
+          "access_code": "[%key:component::bambu_lab::config::step::access_code::data::access_code%]",
           "host": "[%key:common::config_flow::data::host%]",
           "serial_number": "Serial number"
         },
         "data_description": {
-          "access_code": "The LAN access code of your printer. You can find it on the screen of your printer.",
+          "access_code": "[%key:component::bambu_lab::config::step::access_code::data_description::access_code%]",
           "host": "The hostname or IP address of your printer.",
           "serial_number": "The serial number of your printer. You can find it on the screen of your printer."
+        }
+      },
+      "pick_printer": {
+        "data": {
+          "serial_number": "Printer"
+        },
+        "data_description": {
+          "serial_number": "The printer to set up."
+        }
+      },
+      "user": {
+        "menu_options": {
+          "discover": "Search for printers on the network",
+          "manual": "Enter the details of the printer"
         }
       }
     }

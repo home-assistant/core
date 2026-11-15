@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiobambulab import (
+    DiscoveredPrinter,
     PrinterInfo,
     PrinterModel,
     PrinterState,
@@ -45,6 +46,18 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_ACCESS_CODE: ACCESS_CODE,
         },
     )
+
+
+@pytest.fixture
+def mock_discover() -> Generator[AsyncMock]:
+    """Return the mocked search for printers, which finds one printer."""
+    with patch(
+        "homeassistant.components.bambu_lab.config_flow.discover",
+        return_value=[
+            DiscoveredPrinter(serial=SERIAL_NUMBER, host=HOST, name="3DP-01P-001")
+        ],
+    ) as mock_discover:
+        yield mock_discover
 
 
 @pytest.fixture
