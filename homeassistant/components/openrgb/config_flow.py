@@ -7,7 +7,7 @@ from openrgb import OpenRGBClient
 import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
 from .const import CONNECTION_ERRORS, DEFAULT_CLIENT_NAME, DEFAULT_PORT, DOMAIN
@@ -16,9 +16,6 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        # Name field is no longer allowed in config flow schemas
-        # pylint: disable-next=home-assistant-config-flow-name-field
-        probatio.Required(CONF_NAME): str,
         probatio.Required(CONF_HOST): str,
         probatio.Required(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
     }
@@ -96,7 +93,6 @@ class OpenRGBConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            name = user_input[CONF_NAME]
             host = user_input[CONF_HOST]
             port = user_input[CONF_PORT]
 
@@ -115,12 +111,8 @@ class OpenRGBConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
-                    title=name,
-                    data={
-                        CONF_NAME: name,
-                        CONF_HOST: host,
-                        CONF_PORT: port,
-                    },
+                    title=f"OpenRGB ({host})",
+                    data={CONF_HOST: host, CONF_PORT: port},
                 )
 
         return self.async_show_form(
