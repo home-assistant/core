@@ -30,6 +30,8 @@ from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from . import (
     HOST,
     MAC,
+    MANUFACTURER,
+    MODEL,
     NAME,
     PASSWORD,
     PORT,
@@ -267,7 +269,6 @@ async def test_flow_discovery_ignore_existing_and_abort(hass: HomeAssistant) -> 
     await setup_onvif_integration(
         hass,
         config={
-            config_flow.CONF_NAME: DISCOVERY[1]["EPR"],
             config_flow.CONF_HOST: DISCOVERY[1][config_flow.CONF_HOST],
             config_flow.CONF_PORT: DISCOVERY[1][config_flow.CONF_PORT],
             config_flow.CONF_USERNAME: "",
@@ -308,7 +309,6 @@ async def test_flow_discovery_ignore_existing_and_abort(hass: HomeAssistant) -> 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
-                config_flow.CONF_NAME: NAME,
                 config_flow.CONF_HOST: HOST,
                 config_flow.CONF_PORT: PORT,
                 config_flow.CONF_USERNAME: USERNAME,
@@ -358,7 +358,6 @@ async def test_flow_manual_entry(hass: HomeAssistant) -> None:
             result = await hass.config_entries.flow.async_configure(
                 result["flow_id"],
                 user_input={
-                    config_flow.CONF_NAME: NAME,
                     config_flow.CONF_HOST: HOST,
                     config_flow.CONF_PORT: PORT,
                     config_flow.CONF_USERNAME: USERNAME,
@@ -370,9 +369,9 @@ async def test_flow_manual_entry(hass: HomeAssistant) -> None:
             assert len(mock_setup_entry.mock_calls) == 1
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["title"] == f"{NAME} - {MAC}"
+        assert result["title"] == f"{MANUFACTURER} {MODEL} - {MAC}"
         assert result["data"] == {
-            config_flow.CONF_NAME: NAME,
+            config_flow.CONF_NAME: f"{MANUFACTURER} {MODEL}",
             config_flow.CONF_HOST: HOST,
             config_flow.CONF_PORT: PORT,
             config_flow.CONF_USERNAME: USERNAME,
@@ -429,7 +428,6 @@ async def test_flow_manual_entry_multiple_interfaces(hass: HomeAssistant) -> Non
             result = await hass.config_entries.flow.async_configure(
                 result["flow_id"],
                 user_input={
-                    config_flow.CONF_NAME: NAME,
                     config_flow.CONF_HOST: HOST,
                     config_flow.CONF_PORT: PORT,
                     config_flow.CONF_USERNAME: USERNAME,
@@ -472,7 +470,6 @@ async def test_flow_manual_entry_no_profiles(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
-                config_flow.CONF_NAME: NAME,
                 config_flow.CONF_HOST: HOST,
                 config_flow.CONF_PORT: PORT,
                 config_flow.CONF_USERNAME: USERNAME,
@@ -516,7 +513,6 @@ async def test_flow_manual_entry_no_mac(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
-                config_flow.CONF_NAME: NAME,
                 config_flow.CONF_HOST: HOST,
                 config_flow.CONF_PORT: PORT,
                 config_flow.CONF_USERNAME: USERNAME,
@@ -567,7 +563,6 @@ async def test_flow_manual_entry_fails(hass: HomeAssistant) -> None:
             result = await hass.config_entries.flow.async_configure(
                 result["flow_id"],
                 user_input={
-                    config_flow.CONF_NAME: NAME,
                     config_flow.CONF_HOST: HOST,
                     config_flow.CONF_PORT: PORT,
                     config_flow.CONF_USERNAME: USERNAME,
@@ -592,7 +587,6 @@ async def test_flow_manual_entry_fails(hass: HomeAssistant) -> None:
             result = await hass.config_entries.flow.async_configure(
                 result["flow_id"],
                 user_input={
-                    config_flow.CONF_NAME: NAME,
                     config_flow.CONF_HOST: HOST,
                     config_flow.CONF_PORT: PORT,
                     config_flow.CONF_USERNAME: USERNAME,
@@ -617,7 +611,6 @@ async def test_flow_manual_entry_fails(hass: HomeAssistant) -> None:
             result = await hass.config_entries.flow.async_configure(
                 result["flow_id"],
                 user_input={
-                    config_flow.CONF_NAME: NAME,
                     config_flow.CONF_HOST: HOST,
                     config_flow.CONF_PORT: PORT,
                     config_flow.CONF_USERNAME: USERNAME,
@@ -629,9 +622,9 @@ async def test_flow_manual_entry_fails(hass: HomeAssistant) -> None:
             assert len(mock_setup_entry.mock_calls) == 1
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["title"] == f"{NAME} - {MAC}"
+        assert result["title"] == f"{MANUFACTURER} {MODEL} - {MAC}"
         assert result["data"] == {
-            config_flow.CONF_NAME: NAME,
+            config_flow.CONF_NAME: f"{MANUFACTURER} {MODEL}",
             config_flow.CONF_HOST: HOST,
             config_flow.CONF_PORT: PORT,
             config_flow.CONF_USERNAME: USERNAME,
@@ -676,7 +669,6 @@ async def test_flow_manual_entry_wrong_password(hass: HomeAssistant) -> None:
             result = await hass.config_entries.flow.async_configure(
                 result["flow_id"],
                 user_input={
-                    config_flow.CONF_NAME: NAME,
                     config_flow.CONF_HOST: HOST,
                     config_flow.CONF_PORT: PORT,
                     config_flow.CONF_USERNAME: USERNAME,
@@ -699,7 +691,6 @@ async def test_flow_manual_entry_wrong_password(hass: HomeAssistant) -> None:
             result = await hass.config_entries.flow.async_configure(
                 result["flow_id"],
                 user_input={
-                    config_flow.CONF_NAME: NAME,
                     config_flow.CONF_HOST: HOST,
                     config_flow.CONF_PORT: PORT,
                     config_flow.CONF_USERNAME: USERNAME,
@@ -711,9 +702,9 @@ async def test_flow_manual_entry_wrong_password(hass: HomeAssistant) -> None:
             assert len(mock_setup_entry.mock_calls) == 1
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["title"] == f"{NAME} - {MAC}"
+        assert result["title"] == f"{MANUFACTURER} {MODEL} - {MAC}"
         assert result["data"] == {
-            config_flow.CONF_NAME: NAME,
+            config_flow.CONF_NAME: f"{MANUFACTURER} {MODEL}",
             config_flow.CONF_HOST: HOST,
             config_flow.CONF_PORT: PORT,
             config_flow.CONF_USERNAME: USERNAME,
@@ -1019,7 +1010,6 @@ async def test_flow_manual_entry_updates_existing_user_password(
             result = await hass.config_entries.flow.async_configure(
                 result["flow_id"],
                 user_input={
-                    config_flow.CONF_NAME: NAME,
                     config_flow.CONF_HOST: HOST,
                     config_flow.CONF_PORT: PORT,
                     config_flow.CONF_USERNAME: USERNAME,
@@ -1073,7 +1063,6 @@ async def test_flow_manual_entry_wrong_port(hass: HomeAssistant) -> None:
             result = await hass.config_entries.flow.async_configure(
                 result["flow_id"],
                 user_input={
-                    config_flow.CONF_NAME: NAME,
                     config_flow.CONF_HOST: HOST,
                     config_flow.CONF_PORT: PORT,
                     config_flow.CONF_USERNAME: USERNAME,
@@ -1096,7 +1085,6 @@ async def test_flow_manual_entry_wrong_port(hass: HomeAssistant) -> None:
             result = await hass.config_entries.flow.async_configure(
                 result["flow_id"],
                 user_input={
-                    config_flow.CONF_NAME: NAME,
                     config_flow.CONF_HOST: HOST,
                     config_flow.CONF_PORT: PORT,
                     config_flow.CONF_USERNAME: USERNAME,
@@ -1108,9 +1096,9 @@ async def test_flow_manual_entry_wrong_port(hass: HomeAssistant) -> None:
             assert len(mock_setup_entry.mock_calls) == 1
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["title"] == f"{NAME} - {MAC}"
+        assert result["title"] == f"{MANUFACTURER} {MODEL} - {MAC}"
         assert result["data"] == {
-            config_flow.CONF_NAME: NAME,
+            config_flow.CONF_NAME: f"{MANUFACTURER} {MODEL}",
             config_flow.CONF_HOST: HOST,
             config_flow.CONF_PORT: PORT,
             config_flow.CONF_USERNAME: USERNAME,
