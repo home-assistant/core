@@ -1,6 +1,9 @@
 """Tests for the SNMP integration."""
 
+from collections.abc import Iterator
+from contextlib import contextmanager
 from typing import Any
+from unittest.mock import Mock, patch
 
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -22,6 +25,22 @@ ARP_TABLE_MAC_OID = "1.3.6.1.2.1.4.22.1.2"
 
 # Fixed so registry and snapshot expectations do not depend on a generated ULID
 SUBENTRY_ID = "snmp_device_tracker"
+
+
+@contextmanager
+def patch_walk(side_effect: Any) -> Iterator[Mock]:
+    """Patch the walk of every SNMP version.
+
+    SNMPv1 is walked with GETNEXT and the newer versions with GETBULK, so a test
+    which drives the walk has to patch both commands. Both point at the same
+    Mock, so a test can replace the side effect midway.
+    """
+    walker = Mock(side_effect=side_effect)
+    with (
+        patch("homeassistant.components.snmp.client.bulk_walk_cmd", walker),
+        patch("homeassistant.components.snmp.client.next_cmd", walker),
+    ):
+        yield walker
 
 
 def mock_entry(

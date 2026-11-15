@@ -44,7 +44,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.selector import SelectSelector
 
-from . import ARP_TABLE_MAC_OID, mock_entry
+from . import ARP_TABLE_MAC_OID, mock_entry, patch_walk
 
 MAC = "00:11:22:33:44:55"
 
@@ -60,7 +60,7 @@ def mock_walk_empty() -> Iterator[None]:
         return
         yield  # pylint: disable=unreachable
 
-    with patch("homeassistant.components.snmp.client.bulk_walk_cmd", side_effect=_walk):
+    with patch_walk(_walk):
         yield
 
 
@@ -531,10 +531,7 @@ async def test_subentry_flow_walk_failure(
         yield errindication, None, None, []
 
     result = await _async_start_subentry_flow(hass, entry)
-    with patch(
-        "homeassistant.components.snmp.client.bulk_walk_cmd",
-        side_effect=mock_walk,
-    ):
+    with patch_walk(mock_walk):
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"],
             {CONF_BASEOID: "1.3.6.1.2.1.4.22.1.2"},

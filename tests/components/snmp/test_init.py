@@ -30,7 +30,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
-from . import ARP_TABLE_MAC_OID, mock_entry
+from . import ARP_TABLE_MAC_OID, mock_entry, patch_walk
 
 MAC = "00:11:22:33:44:55"
 MAC_BYTES = "001122334455"
@@ -105,10 +105,7 @@ async def test_async_setup_entry_custom_port(
     entry = mock_entry(host="1.2.3.4")
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.snmp.client.bulk_walk_cmd",
-        side_effect=_async_mock_walk,
-    ):
+    with patch_walk(_async_mock_walk):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -123,10 +120,7 @@ async def test_async_setup_entry_custom_port_used(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     with (
-        patch(
-            "homeassistant.components.snmp.client.bulk_walk_cmd",
-            side_effect=_async_mock_walk,
-        ),
+        patch_walk(_async_mock_walk),
         patch(
             "homeassistant.components.snmp.util.UdpTransportTarget.create",
             return_value=Mock(),
@@ -144,10 +138,7 @@ async def test_async_setup_entry_v3_no_keys(hass: HomeAssistant) -> None:
     entry = mock_entry(host="1.2.3.4", version="3", username="test-user", baseoid=None)
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.snmp.client.bulk_walk_cmd",
-        side_effect=_async_mock_walk,
-    ):
+    with patch_walk(_async_mock_walk):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -166,10 +157,7 @@ async def test_async_setup_entry_ipv6_fallback(hass: HomeAssistant) -> None:
             "homeassistant.components.snmp.util.Udp6TransportTarget.create",
             return_value=Mock(),
         ) as mock_create6,
-        patch(
-            "homeassistant.components.snmp.client.bulk_walk_cmd",
-            side_effect=_async_mock_walk,
-        ),
+        patch_walk(_async_mock_walk),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -237,10 +225,7 @@ async def test_walk_error_makes_entry_not_ready(hass: HomeAssistant) -> None:
         raise PySnmpError("Network unreachable")
         yield  # pylint: disable=unreachable
 
-    with patch(
-        "homeassistant.components.snmp.client.bulk_walk_cmd",
-        side_effect=mock_walk_error,
-    ):
+    with patch_walk(mock_walk_error):
         assert not await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -256,10 +241,7 @@ async def test_walk_unknown_context_stops_the_entry(hass: HomeAssistant) -> None
     entry = mock_entry()
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.snmp.client.bulk_walk_cmd",
-        side_effect=mock_walk,
-    ):
+    with patch_walk(mock_walk):
         assert not await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -277,10 +259,7 @@ async def test_walk_errstatus(hass: HomeAssistant) -> None:
     async def mock_walk(*args: Any, **kwargs: Any) -> AsyncIterator[Any]:
         yield None, mock_err_status, 1, [("oid", "val")]
 
-    with patch(
-        "homeassistant.components.snmp.client.bulk_walk_cmd",
-        side_effect=mock_walk,
-    ):
+    with patch_walk(mock_walk):
         assert not await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -389,10 +368,7 @@ async def test_async_setup_entry_unload(
     entry = mock_entry(baseoid=baseoid)
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.snmp.client.bulk_walk_cmd",
-        side_effect=_async_mock_walk,
-    ):
+    with patch_walk(_async_mock_walk):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -411,10 +387,7 @@ async def test_subentry_added_after_setup(
     entry = mock_entry(baseoid=None)
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.snmp.client.bulk_walk_cmd",
-        side_effect=_async_mock_walk_with_mac,
-    ):
+    with patch_walk(_async_mock_walk_with_mac):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         assert not entry.runtime_data.coordinators
@@ -440,10 +413,7 @@ async def test_subentry_removed_after_setup(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
     subentry_id = next(iter(entry.subentries))
 
-    with patch(
-        "homeassistant.components.snmp.client.bulk_walk_cmd",
-        side_effect=_async_mock_walk_with_mac,
-    ):
+    with patch_walk(_async_mock_walk_with_mac):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         assert _async_mac_entity_id(hass, subentry_id) is not None
@@ -461,10 +431,7 @@ async def test_subentry_reconfigure_reloads_coordinator(hass: HomeAssistant) -> 
     entry.add_to_hass(hass)
     subentry_id = next(iter(entry.subentries))
 
-    with patch(
-        "homeassistant.components.snmp.client.bulk_walk_cmd",
-        side_effect=_async_mock_walk_with_mac,
-    ):
+    with patch_walk(_async_mock_walk_with_mac):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         previous_coordinator = entry.runtime_data.coordinators[subentry_id]
@@ -493,19 +460,13 @@ async def test_subentry_reconfigure_reloads_a_failed_entry(
         """Report the SNMPv3 context as unknown."""
         yield errind.ReportPduReceived("1.3.6.1.6.3.12.1.5.0"), None, None, []
 
-    with patch(
-        "homeassistant.components.snmp.client.bulk_walk_cmd",
-        side_effect=mock_walk,
-    ):
+    with patch_walk(mock_walk):
         assert not await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_ERROR
 
-    with patch(
-        "homeassistant.components.snmp.client.bulk_walk_cmd",
-        side_effect=_async_mock_walk_with_mac,
-    ):
+    with patch_walk(_async_mock_walk_with_mac):
         result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"],
@@ -531,10 +492,7 @@ async def test_subentry_reconfigure_keeps_trackers_of_both_tables(
         oid.asTuple.return_value = (*ARP_MAC_OID, 1, 192, 168, 1, 1)
         yield None, None, None, [(oid, OctetString(binascii.unhexlify(MAC_BYTES)))]
 
-    with patch(
-        "homeassistant.components.snmp.client.bulk_walk_cmd",
-        side_effect=mock_walk,
-    ):
+    with patch_walk(mock_walk):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         entity_id = _async_mac_entity_id(hass, subentry_id)
@@ -569,10 +527,7 @@ async def test_subentry_reconfigure_removes_trackers_after_confirming(
         for mac in macs:
             yield None, None, None, [(oid, OctetString(binascii.unhexlify(mac)))]
 
-    with patch(
-        "homeassistant.components.snmp.client.bulk_walk_cmd",
-        side_effect=mock_walk,
-    ):
+    with patch_walk(mock_walk):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         assert _async_mac_entity_id(hass, subentry_id) is not None

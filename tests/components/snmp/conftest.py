@@ -11,7 +11,7 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.core import HomeAssistant
 
-from . import mock_entry
+from . import mock_entry, patch_walk
 
 
 @pytest.fixture
@@ -31,10 +31,7 @@ def mock_walk() -> Iterator[Mock]:
         oid.asTuple.return_value = (1, 3, 6, 1, 2, 1, 4, 22, 1, 2, 1, 192, 168, 1, 1)
         yield None, None, None, [(oid, OctetString(binascii.unhexlify("001122334455")))]
 
-    with patch(
-        "homeassistant.components.snmp.client.bulk_walk_cmd",
-        side_effect=side_effect,
-    ) as mock:
+    with patch_walk(side_effect) as mock:
         yield mock
 
 

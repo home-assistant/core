@@ -15,6 +15,7 @@ from pysnmp.hlapi.v3arch.asyncio import (
     UsmUserData,
     bulk_walk_cmd,
     is_end_of_mib,
+    next_cmd,
 )
 from pysnmp.smi.error import WrongValueError
 
@@ -62,6 +63,7 @@ class SnmpClient:
     auth_data: UsmUserData | CommunityData
     target: UdpTransportTarget | Udp6TransportTarget
     context_data: ContextData
+    version: str
 
     @classmethod
     async def async_create(
@@ -70,9 +72,10 @@ class SnmpClient:
         """Create a client for the device described by the entry data."""
         host = data[CONF_HOST]
         port = data.get(CONF_PORT, DEFAULT_PORT)
+        version = data.get(CONF_VERSION, DEFAULT_VERSION)
 
         try:
-            auth_data = create_auth_data(data, data.get(CONF_VERSION, DEFAULT_VERSION))
+            auth_data = create_auth_data(data, version)
         except WrongValueError as err:
             raise ConfigEntryAuthFailed(
                 f"Invalid authentication credentials or protocols: {err}"
@@ -83,20 +86,34 @@ class SnmpClient:
             auth_data=auth_data,
             target=await async_create_transport_target(host, port, DEFAULT_TIMEOUT),
             context_data=create_context_data(data.get(CONF_CONTEXT_NAME)),
+            version=version,
         )
 
     async def async_walk(self, baseoid: str) -> AsyncGenerator[tuple[Any, Any]]:
         """Walk the subtree of baseoid, yielding the values it contains."""
-        walker = bulk_walk_cmd(
-            self.engine,
-            self.auth_data,
-            self.target,
-            self.context_data,
-            0,
-            MAX_REPETITIONS,
-            ObjectType(ObjectIdentity(baseoid)),
-            lexicographicMode=False,
-        )
+        object_type = ObjectType(ObjectIdentity(baseoid))
+        if self.version == "1":
+            # SNMPv1 has no GETBULK, so RFC 2576 lets a manager walk with GETNEXT
+            # instead, returning one row per request.
+            walker = next_cmd(
+                self.engine,
+                self.auth_data,
+                self.target,
+                self.context_data,
+                object_type,
+                lexicographicMode=False,
+            )
+        else:
+            walker = bulk_walk_cmd(
+                self.engine,
+                self.auth_data,
+                self.target,
+                self.context_data,
+                0,
+                MAX_REPETITIONS,
+                object_type,
+                lexicographicMode=False,
+            )
         async for errindication, errstatus, errindex, res in walker:
             if errindication:
                 message = f"SNMPLIB error: {errindication}"

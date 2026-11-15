@@ -39,7 +39,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.setup import async_setup_component
 
-from . import mock_entry
+from . import mock_entry, patch_walk
 
 MAC = "00:11:22:33:44:55"
 MAC2 = "aa:bb:cc:dd:ee:ff"
@@ -302,10 +302,7 @@ async def test_device_tracker_initial_macs(
     async def mock_walk(*args: Any, **kwargs: Any) -> AsyncIterator[Any]:
         yield None, None, None, []
 
-    with patch(
-        "homeassistant.components.snmp.client.bulk_walk_cmd",
-        side_effect=mock_walk,
-    ):
+    with patch_walk(mock_walk):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -384,10 +381,7 @@ async def test_mac_normalization(
 
     enable_tracker(expected_mac)
 
-    with patch(
-        "homeassistant.components.snmp.client.bulk_walk_cmd",
-        side_effect=mock_walk,
-    ):
+    with patch_walk(mock_walk):
         assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -456,10 +450,7 @@ async def test_ip_extraction(
 
     enable_tracker(MAC)
 
-    with patch(
-        "homeassistant.components.snmp.client.bulk_walk_cmd",
-        side_effect=mock_walk,
-    ):
+    with patch_walk(mock_walk):
         assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -489,10 +480,7 @@ async def test_ip_extraction_oid_too_short(
 
     enable_tracker(MAC)
 
-    with patch(
-        "homeassistant.components.snmp.client.bulk_walk_cmd",
-        side_effect=mock_walk,
-    ):
+    with patch_walk(mock_walk):
         assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -538,10 +526,7 @@ async def test_walk_errindication(
 
     enable_tracker(MAC)
 
-    with patch(
-        "homeassistant.components.snmp.client.bulk_walk_cmd",
-        side_effect=mock_walk,
-    ):
+    with patch_walk(mock_walk):
         assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -590,10 +575,7 @@ async def test_walk_unknown_context_makes_the_entity_unavailable(
 
     enable_tracker(MAC)
 
-    with patch(
-        "homeassistant.components.snmp.client.bulk_walk_cmd",
-        side_effect=mock_walk,
-    ):
+    with patch_walk(mock_walk):
         assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -620,10 +602,7 @@ async def test_invalid_mac_length_ignored(
     async def mock_walk(*args: Any, **kwargs: Any) -> AsyncIterator[Any]:
         yield None, None, None, [(oid, OctetString(b"too_short"))]
 
-    with patch(
-        "homeassistant.components.snmp.client.bulk_walk_cmd",
-        side_effect=mock_walk,
-    ):
+    with patch_walk(mock_walk):
         assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -647,10 +626,7 @@ async def test_mac_processing_exception_ignored(
     async def mock_walk(*args: Any, **kwargs: Any) -> AsyncIterator[Any]:
         yield None, None, None, [(oid, val)]
 
-    with patch(
-        "homeassistant.components.snmp.client.bulk_walk_cmd",
-        side_effect=mock_walk,
-    ):
+    with patch_walk(mock_walk):
         assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -681,10 +657,7 @@ async def test_walk_end_of_mib(
     enable_tracker(MAC)
 
     with (
-        patch(
-            "homeassistant.components.snmp.client.bulk_walk_cmd",
-            side_effect=mock_walk,
-        ),
+        patch_walk(mock_walk),
         patch(
             "homeassistant.components.snmp.client.is_end_of_mib",
             side_effect=cycle((False, True)),
