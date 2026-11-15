@@ -47,6 +47,37 @@ async def test_platform_setup_and_discovery(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.usefixtures("no_quirk")
+@pytest.mark.parametrize("mock_device_code", ["hps_rhgsbacq"])
+@pytest.mark.parametrize(
+    "illuminance", [pytest.param(1670, id="nonzero"), pytest.param(0, id="zero")]
+)
+async def test_hps_illuminance_update(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    notification_helper: TuyaNotificationHelper,
+    illuminance: int,
+) -> None:
+    """Update illuminance without changing the device's reported metadata."""
+    status_range = mock_device.status_range["illuminance_value"]
+    original_values = status_range.values
+    original_report_type = status_range.report_type
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    await notification_helper.async_send_device_update(
+        mock_device, {"illuminance_value": illuminance}
+    )
+
+    state = hass.states.get("sensor.hps_illuminance_sensor_illuminance")
+    assert state is not None
+    assert float(state.state) == illuminance
+    status_range = mock_device.status_range["illuminance_value"]
+    assert status_range.values == original_values
+    assert status_range.report_type == original_report_type
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize("mock_device_code", ["cz_dhto3y4uachr1wll"])
 async def test_meter_channel_child_devices(
