@@ -26,6 +26,17 @@
     }
   },
   "entity": {
+    "button": {
+      "pause_print": {
+        "name": "Pause print"
+      },
+      "resume_print": {
+        "name": "Resume print"
+      },
+      "stop_print": {
+        "name": "Stop print"
+      }
+    },
     "light": {
       "chamber_light": {
         "name": "Chamber light"

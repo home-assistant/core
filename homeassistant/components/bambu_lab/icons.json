@@ -1,5 +1,16 @@
 {
   "entity": {
+    "button": {
+      "pause_print": {
+        "default": "mdi:pause"
+      },
+      "resume_print": {
+        "default": "mdi:play"
+      },
+      "stop_print": {
+        "default": "mdi:stop"
+      }
+    },
     "sensor": {
       "current_layer": {
         "default": "mdi:layers"
