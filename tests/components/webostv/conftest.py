@@ -20,6 +20,15 @@ from .const import (
 
 
 @pytest.fixture
+def mock_send_magic_packet() -> Generator[Mock]:
+    """Mock sending Wake-on-LAN packets."""
+    with patch(
+        "homeassistant.components.webostv.media_player.send_magic_packet", autospec=True
+    ) as mock_send:
+        yield mock_send
+
+
+@pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(

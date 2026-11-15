@@ -5,15 +5,18 @@ from typing import Any
 from aiowebostv import WebOsClient
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST, CONF_UNIQUE_ID
+from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST, CONF_MAC, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
 
+from .const import CONF_MAC_ADDRESSES
 from .coordinator import WebOsTvConfigEntry
 
 TO_REDACT = {
     CONF_CLIENT_SECRET,
     CONF_UNIQUE_ID,
     CONF_HOST,
+    CONF_MAC,
+    CONF_MAC_ADDRESSES,
     "device_id",
     "deviceUUID",
     "icon",
