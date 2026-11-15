@@ -119,17 +119,10 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
             clients: list[dict] = []
             for interface in self._hostapd:
                 if result := self.ubus.get_hostapd_clients(interface):
-                    # Add the client to the client list, remembering the MAC
-                    # address of each client.
-                    #
-                    # We do this rather than (as we used to) merge client data
-                    # into a dictionary keyed by MAC address, because sometimes
-                    # the same client MAC address appears for a few seconds
-                    # across both interfaces (e.g. the client is under the effect
-                    # of band steering and is in the process of changing bands)
-                    # which causes the client to appear in two WLAN interfaces,
-                    # in one WLAN interface as authorized=False, and in another
-                    # WLAN interface as authorized=True.
+                    # Keep per-interface records, even when a client appears
+                    # to be "duplicate", as authorization can differ between
+                    # interfaces for the same client due to band steering or
+                    # other forms of roaming.
                     for mac, client_data in result["clients"].items():
                         clients.append({**client_data, "mac": mac})
         except ConnectionError as err:
