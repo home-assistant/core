@@ -66,6 +66,7 @@ async def test_session_refreshed_after_permission_error(
                 MAC_LAPTOP: {"authorized": True},
             }
         },
+        {"clients": {}},
     ]
 
     mock_config_entry.add_to_hass(hass)
@@ -128,8 +129,10 @@ async def test_remove_config_entry_device(
     assert device_registry.async_get(device_entry.id)
 
     clients = mock_ubus.return_value.get_hostapd_clients
-    connected = clients.return_value
-    clients.return_value = {"clients": {MAC_LAPTOP: {"authorized": True}}}
+    connected = clients.side_effect
+    clients.side_effect = lambda interface: {
+        "clients": {MAC_LAPTOP: {"authorized": True}}
+    }
     freezer.tick(timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -140,7 +143,7 @@ async def test_remove_config_entry_device(
     assert not entity_registry.async_get_entity_id("device_tracker", DOMAIN, MAC_PHONE)
 
     # A removed client is tracked again when it reconnects.
-    clients.return_value = connected
+    clients.side_effect = connected
     freezer.tick(timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)

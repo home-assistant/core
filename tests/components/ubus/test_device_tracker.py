@@ -315,9 +315,13 @@ async def test_lease_reread_throttled_for_clients_without_hostname(
     await hass.async_block_till_done(wait_background_tasks=True)
     assert file_read.call_count == 2
 
-    mock_ubus.return_value.get_hostapd_clients.return_value["clients"][MAC_GUEST][
-        "authorized"
-    ] = True
+    mock_ubus.return_value.get_hostapd_clients.side_effect = lambda interface: {
+        "clients": {
+            MAC_PHONE: {"authorized": True},
+            MAC_LAPTOP: {"authorized": True},
+            MAC_GUEST: {"authorized": True},
+        }
+    }
     freezer.tick(timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -341,9 +345,13 @@ async def test_empty_lease_reread_keeps_known_hostnames(
     # A new client without a hostname triggers a reread, which is empty.
     file_read = mock_ubus.return_value.file_read
     file_read.return_value = {"data": ""}
-    mock_ubus.return_value.get_hostapd_clients.return_value["clients"][MAC_GUEST][
-        "authorized"
-    ] = True
+    mock_ubus.return_value.get_hostapd_clients.side_effect = lambda interface: {
+        "clients": {
+            MAC_PHONE: {"authorized": True},
+            MAC_LAPTOP: {"authorized": True},
+            MAC_GUEST: {"authorized": True},
+        }
+    }
     freezer.tick(timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
