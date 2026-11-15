@@ -54,7 +54,8 @@ async def test_binary_sensors(
         pytest.param(ChargerState.CHARGING, STATE_ON, id="charging"),
         pytest.param(ChargerState.EV_SUSPENDED, STATE_ON, id="ev_suspended"),
         pytest.param(ChargerState.FINISHING, STATE_ON, id="finishing"),
-        pytest.param(ChargerState.FAULT, STATE_ON, id="fault"),
+        # A protection alarm trips with or without a vehicle plugged in.
+        pytest.param(ChargerState.FAULT, STATE_UNKNOWN, id="fault"),
         pytest.param(None, STATE_UNKNOWN, id="unrecognised"),
     ],
 )

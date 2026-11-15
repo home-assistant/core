@@ -8,7 +8,7 @@ import probatio
 from songpal import Device, SongpalException
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_NAME
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_UDN,
@@ -129,8 +129,8 @@ class SongpalConfigFlow(ConfigFlow, domain=DOMAIN):
             assert isinstance(hostname, str)
 
         self.context["title_placeholders"] = {
-            CONF_NAME: friendly_name,
-            CONF_HOST: hostname,
+            "name": friendly_name,
+            "host": hostname,
         }
 
         self.conf = SongpalConfig(friendly_name, hostname, endpoint)

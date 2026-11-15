@@ -12,7 +12,7 @@ from pyhomeworks.pyhomeworks import Homeworks
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -38,6 +38,7 @@ from homeassistant.helpers.selector import TextSelector
 from homeassistant.helpers.typing import VolDictType
 from homeassistant.util import slugify
 
+from . import HomeworksConfigEntry
 from .const import (
     CONF_ADDR,
     CONF_BUTTONS,
@@ -557,7 +558,7 @@ class HomeworksConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow for Lutron Homeworks."""
 
     async def _validate_edit_controller(
-        self, user_input: dict[str, Any], reconfigure_entry: ConfigEntry
+        self, user_input: dict[str, Any], reconfigure_entry: HomeworksConfigEntry
     ) -> dict[str, Any]:
         """Validate controller setup."""
         _validate_credentials(user_input)
@@ -660,6 +661,8 @@ class HomeworksConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     @override
-    def async_get_options_flow(config_entry: ConfigEntry) -> SchemaOptionsFlowHandler:
+    def async_get_options_flow(
+        config_entry: HomeworksConfigEntry,
+    ) -> SchemaOptionsFlowHandler:
         """Options flow handler for Lutron Homeworks."""
         return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)

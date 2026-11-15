@@ -28,12 +28,14 @@ from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    SwitchService,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -179,8 +181,8 @@ async def test_switch_action_error(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "switch.enyaq_coupe_charging"},
+            SwitchService.TURN_OFF,
+            {CommonServiceArgument.ENTITY_ID: "switch.enyaq_coupe_charging"},
             blocking=True,
         )
 

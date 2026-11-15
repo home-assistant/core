@@ -9,10 +9,11 @@ import probatio
 from pybravia import BraviaAuthError, BraviaClient, BraviaError, BraviaNotSupported
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_CLIENT_ID, CONF_HOST, CONF_MAC, CONF_NAME, CONF_PIN
+from homeassistant.const import CONF_CLIENT_ID, CONF_HOST, CONF_MAC, CONF_PIN
 from homeassistant.helpers import instance_id
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_MODEL_NAME,
@@ -232,7 +233,7 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
         host = cast(str, urlparse(discovery_info.ssdp_location).hostname)
 
         await self.async_set_unique_id(discovery_info.upnp[ATTR_UPNP_UDN])
-        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+        self._abort_if_unique_id_configured()
         self._async_abort_entries_match({CONF_HOST: host})
 
         scalarweb_info = discovery_info.upnp["X_ScalarWebAPI_DeviceInfo"]
@@ -247,12 +248,30 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
         friendly_name = discovery_info.upnp[ATTR_UPNP_FRIENDLY_NAME]
 
         self.context["title_placeholders"] = {
-            CONF_NAME: f"{model_name} ({friendly_name})",
-            CONF_HOST: host,
+            "name": f"{model_name} ({friendly_name})",
+            "host": host,
         }
 
         self.device_config[CONF_HOST] = host
         return await self.async_step_confirm()
+
+    @override
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
+        """Update the host of a known device that got a new IP address."""
+        mac = format_mac(discovery_info.macaddress)
+
+        for entry in self._async_current_entries(include_ignore=False):
+            if format_mac(entry.data[CONF_MAC]) == mac:
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data_updates={CONF_HOST: discovery_info.ip},
+                    reason="already_configured",
+                    reload_even_if_entry_is_unchanged=False,
+                )
+
+        return self.async_abort(reason="no_devices_found")
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None

@@ -15,16 +15,12 @@ from pytest_homeassistant.common import (
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.alexa_devices.coordinator import SCAN_INTERVAL
-from homeassistant.components.switch import (
-    DOMAIN as SWITCH_DOMAIN,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-)
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -83,8 +79,8 @@ async def test_switch_dnd(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -94,8 +90,8 @@ async def test_switch_dnd(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -279,8 +275,8 @@ async def test_switch_communication(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -306,8 +302,8 @@ async def test_switch_communication(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
     device_data.communication_settings = {
@@ -345,8 +341,8 @@ async def test_switch_led(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: LED_ENTITY_ID},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: LED_ENTITY_ID},
         blocking=True,
     )
 
@@ -363,8 +359,8 @@ async def test_switch_led(
     mock_amazon_devices_client.call_feature_operation.reset_mock()
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: LED_ENTITY_ID},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: LED_ENTITY_ID},
         blocking=True,
     )
 
@@ -442,8 +438,8 @@ async def test_switch_led_cannot_set_feature(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: LED_ENTITY_ID},
+            SwitchService.TURN_OFF,
+            {CommonServiceArgument.ENTITY_ID: LED_ENTITY_ID},
             blocking=True,
         )
 

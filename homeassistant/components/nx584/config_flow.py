@@ -6,11 +6,11 @@ from typing import Any, override
 import probatio
 import requests
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.helpers.typing import Undefined
 
-from . import create_client
+from . import NX584ConfigEntry, create_client
 from .const import (
     CONF_EXCLUDE_ZONES,
     CONF_ZONE_TYPES,
@@ -34,7 +34,7 @@ class NX584ConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def _async_entry_for_server(self, host: str, port: int) -> ConfigEntry | None:
+    def _async_entry_for_server(self, host: str, port: int) -> NX584ConfigEntry | None:
         """Return the entry of the server, if it is set up."""
         return next(
             (
