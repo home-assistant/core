@@ -64,6 +64,11 @@
         "name": "Stop print"
       }
     },
+    "camera": {
+      "chamber": {
+        "name": "Camera"
+      }
+    },
     "light": {
       "chamber_light": {
         "name": "Chamber light"

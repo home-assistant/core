@@ -16,6 +16,7 @@ from .const import CONF_ACCESS_CODE, CONF_SERIAL_NUMBER, DOMAIN
 
 _PLATFORMS: list[Platform] = [
     Platform.BUTTON,
+    Platform.CAMERA,
     Platform.LIGHT,
     Platform.SELECT,
     Platform.SENSOR,
