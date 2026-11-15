@@ -1717,12 +1717,6 @@
       "config_flow": false,
       "iot_class": "local_push"
     },
-    "bms_ble": {
-      "name": "BLE Battery Management System",
-      "integration_type": "device",
-      "config_flow": true,
-      "iot_class": "local_polling"
-    },    
     "bluetti_modbus": {
       "name": "BLUETTI Modbus",
       "integration_type": "device",
@@ -1731,6 +1725,16 @@
       ],
       "connectivity": [
         "modbus"
+      ],
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
+    "bms_ble": {
+      "name": "BLE Battery Management System",
+      "integration_type": "device",
+      "categories": [
+        "energy.solar_batteries",
+        "energy.meters_monitoring"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
