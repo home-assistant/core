@@ -49,9 +49,12 @@
     "model": "Generic heater/cooler",
     "name": "OpenTherm",
     "sensors": {
+      "dhw_flow": 1.8,
       "dhw_temperature": 46.3,
       "intended_boiler_temperature": 35.0,
       "modulation_level": 52,
+      "fault_flags": 0,
+      "oem_fault_code": 0,
       "outdoor_air_temperature": 3.0,
       "return_temperature": 25.1,
       "water_pressure": 1.57,

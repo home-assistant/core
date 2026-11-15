@@ -2,6 +2,64 @@
 # name: test_entry_diagnostics
   dict({
     'devices': dict({
+      '80:65:99:12:AB:CD': dict({
+        'connected': True,
+        'data': dict({
+          'id': '80:65:99:12:AB:CD',
+        }),
+        'device_id': '80:65:99:12:AB:CD',
+        'device_type': 'NATEDE-R1',
+        'firmware_version': '2.0.0',
+        'maintenance': dict({
+        }),
+        'measurement': dict({
+          'score': 0.82,
+          'timestamp': '2026-09-10T17:20:12+02:00',
+        }),
+        'model': 'NA01AA01',
+        'name': 'Living room Natede',
+        'program_id': '',
+        'programs': dict({
+        }),
+        'readings': dict({
+          'co': dict({
+            'sensor_id': 'TGS5141CO-N0',
+            'sensor_type': 'co',
+            'unit': 'ppm',
+            'value': 1.2,
+          }),
+          'co2': dict({
+            'sensor_id': 'SN02C2-N2',
+            'sensor_type': 'co2',
+            'unit': 'ppm',
+            'value': 612.0,
+          }),
+          'hum': dict({
+            'sensor_id': 'SN01HU-N2',
+            'sensor_type': 'hum',
+            'unit': '%',
+            'value': 45.0,
+          }),
+          'pm25': dict({
+            'sensor_id': 'SY01DS-N2',
+            'sensor_type': 'pm25',
+            'unit': 'μg/m³',
+            'value': None,
+          }),
+          'tmp': dict({
+            'sensor_id': 'TD01TP-N2',
+            'sensor_type': 'tmp',
+            'unit': '°C',
+            'value': 21.25,
+          }),
+          'voc': dict({
+            'sensor_id': 'SN02VD-N2',
+            'sensor_type': 'voc',
+            'unit': 'ppm',
+            'value': 0.8,
+          }),
+        }),
+      }),
       '80:65:99:34:F9:B4': dict({
         'connected': True,
         'data': dict({
@@ -98,6 +156,12 @@
           }),
         }),
         'readings': dict({
+          'tmp': dict({
+            'sensor_id': 'TMP01-SY',
+            'sensor_type': 'tmp',
+            'unit': '°C',
+            'value': 9.59,
+          }),
         }),
       }),
     }),

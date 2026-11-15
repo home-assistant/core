@@ -109,7 +109,6 @@ RULE_URL = (
 
 INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "abode",
-    "accuweather",
     "acmeda",
     "actiontec",
     "adax",
@@ -404,7 +403,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "gpsd",
     "gpslogger",
     "graphite",
-    "gree",
     "greeneye_monitor",
     "group",
     "gtfs",
@@ -489,7 +487,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "kitchen_sink",
     "kiwi",
     "kmtronic",
-    "kodi",
     "konnected",
     "kostal_plenticore",
     "kraken",
@@ -992,7 +989,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
 
 INTEGRATIONS_WITHOUT_SCALE = [
     "abode",
-    "accuweather",
     "acmeda",
     "actiontec",
     "adax",
@@ -1301,7 +1297,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "gpsd",
     "gpslogger",
     "graphite",
-    "gree",
     "greeneye_monitor",
     "group",
     "gtfs",
@@ -1997,6 +1992,7 @@ NO_QUALITY_SCALE = [
     "trace",
     "usage_prediction",
     "vibration",
+    "voice_support",
     "web_rtc",
     "webhook",
     "websocket_api",

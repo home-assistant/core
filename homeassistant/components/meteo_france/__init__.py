@@ -21,10 +21,14 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: MeteoFranceConfigEntry) -> None:
     """Set up a Meteo-France account from a config entry."""
-    if (departments_with_alert := hass.data.get(METEO_FRANCE_DATA)) is None:
-        departments_with_alert = hass.data[METEO_FRANCE_DATA] = set()
+    departments_with_alert = hass.data.setdefault(METEO_FRANCE_DATA, set())
 
     client = MeteoFranceClient()
+
+    async def _async_close_session() -> None:
+        await hass.async_add_executor_job(client.session.close)
+
+    entry.async_on_unload(_async_close_session)
 
     coordinator_forecast = MeteoFranceForecastUpdateCoordinator(hass, entry, client)
     coordinator_rain = None
@@ -102,5 +106,3 @@ async def async_unload_entry(
         )
 
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
-    if not hass.data[METEO_FRANCE_DATA]:
-        hass.data.pop(METEO_FRANCE_DATA)

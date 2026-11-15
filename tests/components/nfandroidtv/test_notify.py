@@ -70,11 +70,20 @@ async def test_notify_platform(
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
+@pytest.mark.parametrize(
+    ("message_to_send", "displayed_message"),
+    [
+        ("Hello", "Hello"),
+        ("Hello\nWorld", "Hello<br>World"),
+    ],
+)
 @pytest.mark.freeze_time("1970-01-01T00:00:00+00:00")
 async def test_send_message(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_notifications_android_tv: AsyncMock,
+    message_to_send: str,
+    displayed_message: str,
 ) -> None:
     """Test sending a message."""
 
@@ -93,7 +102,7 @@ async def test_send_message(
         SERVICE_SEND_MESSAGE,
         {
             ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_MESSAGE: "Hello",
+            ATTR_MESSAGE: message_to_send,
             ATTR_TITLE: "World",
         },
         blocking=True,
@@ -104,7 +113,7 @@ async def test_send_message(
     assert state.state == "1970-01-01T00:00:00+00:00"
 
     mock_notifications_android_tv.send.assert_called_once_with(
-        message="Hello", title="World"
+        message=displayed_message, title="World"
     )
 
 
@@ -177,11 +186,20 @@ async def test_legacy_send_message_invalid_data(
     mock_notifications_android_tv.send.assert_not_called()
 
 
+@pytest.mark.parametrize(
+    ("message_to_send", "displayed_message"),
+    [
+        ("Hello", "Hello"),
+        ("Hello\nWorld", "Hello<br>World"),
+    ],
+)
 @pytest.mark.freeze_time("1970-01-01T00:00:00+00:00")
 async def test_nfandroidtv_send_message(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_notifications_android_tv: AsyncMock,
+    message_to_send: str,
+    displayed_message: str,
 ) -> None:
     """Test sending a message via nfandroidtv.send_message action."""
 
@@ -200,7 +218,7 @@ async def test_nfandroidtv_send_message(
         NFAndroidTVService.SEND_MESSAGE,
         {
             CommonServiceArgument.ENTITY_ID: ENTITY_ID,
-            NFAndroidTVServiceArgument.MESSAGE: "Hello",
+            NFAndroidTVServiceArgument.MESSAGE: message_to_send,
             NFAndroidTVServiceArgument.TITLE: "World",
             NFAndroidTVServiceArgument.POSITION: "center",
             NFAndroidTVServiceArgument.DURATION: {"seconds": 30},
@@ -213,7 +231,7 @@ async def test_nfandroidtv_send_message(
     )
 
     mock_notifications_android_tv.send.assert_called_once_with(
-        message="Hello",
+        message=displayed_message,
         title="World",
         position="center",
         fontsize="large",

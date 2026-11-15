@@ -127,12 +127,18 @@ class VerisureAlarm(
             "ARMED_AWAY", self.coordinator.verisure.arm_away(code)
         )
 
+    @property
+    @override
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return super().available and self.coordinator.data["alarm"] is not None
+
     def _update_alarm_attributes(self) -> None:
         """Update alarm state and changed by from coordinator data."""
-        self._attr_alarm_state = ALARM_STATE_TO_HA.get(
-            self.coordinator.data["alarm"]["statusType"]
-        )
-        self._attr_changed_by = self.coordinator.data["alarm"].get("name")
+        if (alarm := self.coordinator.data["alarm"]) is None:
+            return
+        self._attr_alarm_state = ALARM_STATE_TO_HA.get(alarm["statusType"])
+        self._attr_changed_by = alarm.get("name")
 
     @callback
     @override

@@ -56,6 +56,7 @@ async def test_all_entities(
         ),
         Fixture({"type:boiler"}, "vicare/Vitoligno300C.json"),
         Fixture({"type:virtual;smartRoomControl"}, "vicare/RoomControl.json"),
+        Fixture({"type:waterTreatment"}, "vicare/VitosetAqua.json"),
     ]
     with (
         patch(

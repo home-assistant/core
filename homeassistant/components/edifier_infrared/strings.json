@@ -54,6 +54,9 @@
       "line_1": {
         "name": "Line 1"
       },
+      "line_1_2": {
+        "name": "Line 1 / Line 2"
+      },
       "line_2": {
         "name": "Line 2"
       },
