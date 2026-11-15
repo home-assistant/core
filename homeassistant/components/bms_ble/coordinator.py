@@ -16,11 +16,11 @@ from homeassistant.components.bluetooth import (
     async_last_service_info,
 )
 from homeassistant.components.bluetooth.const import DOMAIN as BLUETOOTH_DOMAIN
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from . import BTBmsConfigEntry
 from .const import DOMAIN, LOGGER, LOW_RSSI, UPDATE_INTERVAL
 
 
@@ -32,7 +32,7 @@ class BTBmsCoordinator(DataUpdateCoordinator[BMSSample]):
         hass: HomeAssistant,
         ble_device: BLEDevice,
         bms_device: BaseBMS,
-        config_entry: ConfigEntry,
+        config_entry: BTBmsConfigEntry,
     ) -> None:
         """Initialize BMS data coordinator."""
         super().__init__(

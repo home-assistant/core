@@ -26,9 +26,6 @@
       "battery_health": {
         "name": "Battery health"
       },
-      "current": {
-        "name": "[%key:component::sensor::entity_component::current::name%]"
-      },
       "cycles": {
         "name": "Cycles"
       },
@@ -43,9 +40,6 @@
       },
       "min_cell_voltage": {
         "name": "Lowest cell voltage"
-      },
-      "rssi": {
-        "name": "[%key:component::sensor::entity_component::signal_strength::name%]"
       },
       "runtime": {
         "name": "Runtime"

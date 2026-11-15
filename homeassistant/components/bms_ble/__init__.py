@@ -17,7 +17,7 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 type BTBmsConfigEntry = ConfigEntry[BTBmsCoordinator]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: BTBmsConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: BTBmsConfigEntry) -> None:
     """Set up BT Battery Management System from a config entry."""
     LOGGER.debug("Setup of %r", entry)
 
@@ -54,10 +54,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: BTBmsConfigEntry) -> boo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: BTBmsConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: BTBmsConfigEntry) -> None:
     """Unload a config entry."""
     unload_ok: Final = await hass.config_entries.async_unload_platforms(
         entry, PLATFORMS
@@ -66,5 +64,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: BTBmsConfigEntry) -> bo
 
     if unload_ok and getattr(entry, "runtime_data", None) is not None:
         await entry.runtime_data.async_shutdown()
-
-    return unload_ok
