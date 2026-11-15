@@ -561,6 +561,89 @@ async def test_temp_change_heater_on_outside_tolerance(hass: HomeAssistant) -> N
     assert call.data["entity_id"] == ENT_SWITCH
 
 
+@pytest.mark.usefixtures("setup_comp_2")
+async def test_no_command_while_heater_has_no_state(hass: HomeAssistant) -> None:
+    """Test that no command is sent while the heater has no state yet.
+
+    A heater that is not available yet (e.g. its integration is still starting)
+    must not be commanded, as it may already be on and be a toggle device.
+    """
+    calls = _log_switch_calls(hass)
+    await common.async_set_temperature(hass, 30)
+    _setup_sensor(hass, 20)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # Once the heater reports that it is already on, there is nothing to do
+    hass.states.async_set(ENT_SWITCH, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+
+@pytest.mark.usefixtures("setup_comp_2")
+async def test_heater_turned_on_once_it_gets_its_state(hass: HomeAssistant) -> None:
+    """Test that control resumes when the heater gets its first state."""
+    calls = _log_switch_calls(hass)
+    await common.async_set_temperature(hass, 30)
+    _setup_sensor(hass, 20)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    hass.states.async_set(ENT_SWITCH, STATE_OFF)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    call = calls[0]
+    assert call.domain == HOMEASSISTANT_DOMAIN
+    assert call.service == SERVICE_TURN_ON
+    assert call.data["entity_id"] == ENT_SWITCH
+
+
+async def test_max_cycle_duration_after_heater_gets_its_state(
+    hass: HomeAssistant,
+) -> None:
+    """Test that the max cycle shut-off is kept when control resumes."""
+    hass.config.temperature_unit = UnitOfTemperature.CELSIUS
+    assert await async_setup_component(
+        hass,
+        CLIMATE_DOMAIN,
+        {
+            "climate": {
+                "platform": "generic_thermostat",
+                "name": "test",
+                "cold_tolerance": 0.3,
+                "hot_tolerance": 0.3,
+                "target_temp": 25,
+                "heater": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "min_cycle_duration": dt.timedelta(minutes=0),
+                "max_cycle_duration": dt.timedelta(minutes=10),
+                "initial_hvac_mode": HVACMode.HEAT,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    calls = _log_switch_calls(hass)
+    _setup_sensor(hass, 20)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # The heater gets its first state, control resumes and turns it on
+    hass.states.async_set(ENT_SWITCH, STATE_OFF)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].service == SERVICE_TURN_ON
+
+    # The max cycle shut-off is still scheduled
+    test_time = dt_util.utcnow()
+    async_fire_time_changed(hass, test_time)
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, test_time + dt.timedelta(minutes=10))
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+    assert calls[1].service == SERVICE_TURN_OFF
+
+
 async def test_external_toggle_resets_min_cycle(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
@@ -662,9 +745,8 @@ async def test_hvac_mode_heat(hass: HomeAssistant) -> None:
     assert call.data["entity_id"] == ENT_SWITCH
 
 
-def _setup_switch(hass: HomeAssistant, is_on: bool) -> list[ServiceCall]:
-    """Set up the test switch."""
-    hass.states.async_set(ENT_SWITCH, STATE_ON if is_on else STATE_OFF)
+def _log_switch_calls(hass: HomeAssistant) -> list[ServiceCall]:
+    """Log the service calls to turn the test switch on or off."""
     calls = []
 
     @callback
@@ -676,6 +758,12 @@ def _setup_switch(hass: HomeAssistant, is_on: bool) -> list[ServiceCall]:
     hass.services.async_register(ha.DOMAIN, SERVICE_TURN_OFF, log_call)
 
     return calls
+
+
+def _setup_switch(hass: HomeAssistant, is_on: bool) -> list[ServiceCall]:
+    """Set up the test switch."""
+    hass.states.async_set(ENT_SWITCH, STATE_ON if is_on else STATE_OFF)
+    return _log_switch_calls(hass)
 
 
 @pytest.fixture
