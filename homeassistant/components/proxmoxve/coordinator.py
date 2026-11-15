@@ -155,7 +155,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                 translation_key="api_error_details",
             ) from err
         except ProxmoxConnectionError as err:
-            raise ConfigEntryError(
+            raise UpdateFailedUnreachable(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
             ) from err

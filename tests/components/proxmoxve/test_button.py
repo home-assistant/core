@@ -184,6 +184,7 @@ async def test_snapshot_button(
     snapname = method_mock.call_args.kwargs["snap_name"]
     assert len(snapname) <= 40
     assert re.fullmatch(r"[A-Za-z][A-Za-z0-9_-]+", snapname)
+    assert method_mock.call_args.kwargs.get("snap_state", False) is False
 
 
 @pytest.mark.parametrize(
@@ -206,10 +207,7 @@ async def test_container_buttons(
     await setup_integration(hass, mock_config_entry)
 
     mock_proxmox_client._node_mock.lxc(vmid)
-    if action == "snapshot":
-        method_mock = mock_proxmox_client._lxc_mocks[vmid].status.snapshot
-    else:
-        method_mock = getattr(mock_proxmox_client._lxc_mocks[vmid].status, action)
+    method_mock = getattr(mock_proxmox_client._lxc_mocks[vmid].status, action)
     pre_calls = len(method_mock.mock_calls)
 
     await hass.services.async_call(

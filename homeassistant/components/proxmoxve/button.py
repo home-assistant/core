@@ -11,7 +11,6 @@ from aioproxmox.exceptions import (
     ProxmoxConnectionError,
     ProxmoxSSLError,
     ProxmoxTimeoutError,
-    ResourceNotFoundError,
 )
 from aioproxmox.model.pve import ContainerResource, QemuResource
 
@@ -177,7 +176,8 @@ VM_BUTTONS: tuple[ProxmoxVMButtonEntityDescription, ...] = (
             coordinator.proxmox.nodes(node)
             .qemu(vmid)
             .status.snapshot(
-                snap_name=f"homeassistant_snapshot_{dt_util.utcnow().strftime('%Y%m%d%H%M%S')}"
+                snap_name=f"homeassistant_snapshot_{dt_util.utcnow().strftime('%Y%m%d%H%M%S')}",
+                snap_state=False,
             )
         ),
         permission=ProxmoxPermission.SNAPSHOT,
@@ -343,7 +343,7 @@ class ProxmoxBaseButton(ButtonEntity):
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
             ) from err
-        except (ProxmoxAPIError, ResourceNotFoundError) as err:
+        except ProxmoxAPIError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="api_error_details",

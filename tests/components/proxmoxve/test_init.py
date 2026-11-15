@@ -100,7 +100,7 @@ from . import setup_integration
         ),
         (
             ProxmoxConnectionError("Connection refused"),
-            ConfigEntryState.SETUP_ERROR,
+            ConfigEntryState.SETUP_RETRY,
             "access.permissions",
         ),
     ],
