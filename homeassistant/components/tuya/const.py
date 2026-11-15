@@ -148,7 +148,7 @@ class DeviceCategory(StrEnum):
     """
     CZ = "cz"
     """Socket
-    
+
     https://developer.tuya.com/en/docs/iot/categorykgczpc?id=Kaiuz08zj1l4y
     """
     DBL = "dbl"
@@ -544,7 +544,7 @@ class DeviceCategory(StrEnum):
     TDQ = "tdq"
     """
     Specialized electrical meters, multi-circuit power monitors, and circuit breaker devices
-    
+
     They are not documented under a single standalone manual titled "TDQ". 
     Instead, they are structured within the platform's standard product definition and data point (DP) libraries.
     """
