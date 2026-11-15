@@ -87,8 +87,8 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
         """
         clients = self._fetch_hostapd_clients()
         # Filter list of client MAC addresses by authorization status, then
-        # make sure they are unique to preserve the assumptions the rest of
-        # this code probably has.  Sort the set so it is stable.
+        # make sure they are unique to preserve the invariant that callers
+        # expects unique MACs.  Sort the set so it is stable.
         authorized = sorted(
             {client["mac"] for client in clients if client["authorized"]}
         )
@@ -131,8 +131,7 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
                     # in one WLAN interface as authorized=False, and in another
                     # WLAN interface as authorized=True.
                     for mac, client_data in result["clients"].items():
-                        client_data["mac"] = mac
-                        clients.append(client_data)
+                        clients.append({**client_data, "mac": mac})
         except ConnectionError as err:
             raise UpdateFailed(f"Error querying ubus at {self.host}") from err
         return clients
