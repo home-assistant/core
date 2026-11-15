@@ -1,537 +1,349 @@
-"""Test the airlino config flow."""
+"""Test the AirLino config flow."""
 
 from ipaddress import IPv4Address
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock
 
-from airlino_api import (
-    DEFAULT_API_VERSION,
-    DEFAULT_PORT,
-    AirlinoApiConnectionError,
-    AirlinoApiError,
-)
+from airlino_api import DEFAULT_PORT, AirlinoApiConnectionError, AirlinoApiError
 import pytest
 
-from homeassistant.components.airlino.config_flow import (
-    CannotConnect,
-    UnsupportedApiVersion,
-    validate_input,
-)
 from homeassistant.components.airlino.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_API_VERSION, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
+from .conftest import HOST, MAC
+
 from tests.common import MockConfigEntry
 
-MAC = "00:11:22:33:44:55"
-HOST = "192.168.178.42"
+DISCOVERED_HOST = "192.0.2.42"
 
 
 def _discovery_info(
-    *,
-    properties: dict[str, Any] | None = None,
-    port: int = DEFAULT_PORT,
-    hostname: str = "AirLinopro-12AB.local.",
-    name: str = "Livingroom._dockset._tcp.local.",
+    properties: dict[str, Any] | None = None, port: int | None = DEFAULT_PORT
 ) -> ZeroconfServiceInfo:
     """Build service information for a discovered AirLino."""
-    address = IPv4Address(HOST)
+    address = IPv4Address(DISCOVERED_HOST)
     return ZeroconfServiceInfo(
         ip_address=address,
         ip_addresses=[address],
         port=port,
-        hostname=hostname,
+        hostname="AirLinopro-12AB.local.",
         type="_dockset._tcp.local.",
-        name=name,
-        properties={"model": "AirLino"} if properties is None else properties,
+        name="Livingroom._dockset._tcp.local.",
+        properties={"api": "v22"} if properties is None else properties,
     )
 
 
-@pytest.mark.parametrize(
-    ("exception", "expected_error"),
-    [
-        (UnsupportedApiVersion, "unsupported_api_version"),
-        (CannotConnect, "cannot_connect"),
-        (RuntimeError, "unknown"),
-    ],
-)
-async def test_user_flow_recovers_from_errors(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    exception: type[Exception],
-    expected_error: str,
+def _api_versions(mock_airlino_api_class: MagicMock) -> list[str]:
+    """Return the API versions the client was created with, in order."""
+    return [
+        call.kwargs["api_version"] for call in mock_airlino_api_class.call_args_list
+    ]
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow(
+    hass: HomeAssistant, mock_airlino_api_class: MagicMock
 ) -> None:
-    """Verify user setup recovers after validation errors."""
-    with patch(
-        "homeassistant.components.airlino.config_flow.validate_input",
-        side_effect=[
-            exception("failure"),
-            {"title": "Living Room", "mac": MAC, "api_version": "v22"},
-        ],
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "user"
-        assert result["data_schema"] is not None
+    """Test the full user flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
 
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_HOST: HOST}
-        )
-        assert result["type"] is FlowResultType.FORM
-        assert result["errors"] == {"base": expected_error}
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_HOST: HOST}
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: HOST}
+    )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Living room"
     assert result["result"].unique_id == MAC
-    assert result["title"] == "Living Room"
     assert result["data"] == {
         CONF_HOST: HOST,
         CONF_PORT: DEFAULT_PORT,
-        "api_version": "v22",
+        CONF_API_VERSION: "v22",
     }
+    assert _api_versions(mock_airlino_api_class) == ["v22"]
 
 
-async def test_user_flow_uses_custom_port(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow_custom_port(
+    hass: HomeAssistant, mock_airlino_api_class: MagicMock
 ) -> None:
-    """Verify user setup retains a configured port."""
-    with patch(
-        "homeassistant.components.airlino.config_flow.validate_input",
-        return_value={
-            "title": "AirLino",
-            "mac": MAC,
-            "api_version": "v21",
-        },
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_HOST: HOST, CONF_PORT: 9000}
-        )
+    """Test the user flow with a non-default port."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: HOST, CONF_PORT: 9000}
+    )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].unique_id == MAC
     assert result["data"][CONF_PORT] == 9000
-    assert result["data"]["api_version"] == "v21"
+    assert mock_airlino_api_class.call_args.kwargs["port"] == 9000
 
 
-async def test_user_flow_aborts_if_device_is_configured(hass: HomeAssistant) -> None:
-    """Verify user setup rejects a previously configured device."""
-    MockConfigEntry(domain=DOMAIN, unique_id=MAC).add_to_hass(hass)
-    with patch(
-        "homeassistant.components.airlino.config_flow.validate_input",
-        return_value={"title": "AirLino", "mac": MAC, "api_version": "v22"},
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_HOST: HOST}
-        )
+@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize(
+    ("network_info", "unique_id"),
+    [
+        pytest.param({"eth": {"mac": "00-23-B1-A4-35-9E"}}, MAC, id="eth"),
+        pytest.param(
+            {"wlan": {"mac": "00:23:b1:66:ab:94", "ssid": "AirLino-WLAN"}},
+            "00:23:b1:66:ab:94",
+            id="wlan",
+        ),
+        pytest.param(
+            {"eth": {}, "wlan": {"mac": "00:23:b1:66:ab:94"}},
+            "00:23:b1:66:ab:94",
+            id="empty_eth",
+        ),
+    ],
+)
+async def test_user_flow_unique_id_from_active_interface(
+    hass: HomeAssistant,
+    mock_airlino_api: MagicMock,
+    network_info: dict[str, Any],
+    unique_id: str,
+) -> None:
+    """Test the unique ID is the normalized MAC of the active interface."""
+    mock_airlino_api.async_get_network_info.return_value = network_info
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: HOST}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == unique_id
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow_falls_back_to_older_api_version(
+    hass: HomeAssistant,
+    mock_airlino_api_class: MagicMock,
+    mock_airlino_api: MagicMock,
+) -> None:
+    """Test older API versions are probed until one responds."""
+    mock_airlino_api.async_get_device_info.side_effect = [
+        AirlinoApiError("missing", status=404),
+        AirlinoApiError("failed"),
+        {"devicename": "Living room"},
+    ]
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: HOST}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_API_VERSION] == "v20"
+    assert _api_versions(mock_airlino_api_class) == ["v22", "v21", "v20"]
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        pytest.param(
+            AirlinoApiConnectionError("offline"), "cannot_connect", id="offline"
+        ),
+        pytest.param(
+            AirlinoApiError("failed", status=500), "cannot_connect", id="http_error"
+        ),
+        pytest.param(
+            AirlinoApiError("missing", status=404),
+            "unsupported_api_version",
+            id="unsupported_api_version",
+        ),
+        pytest.param(RuntimeError("unexpected"), "unknown", id="unknown"),
+    ],
+)
+async def test_user_flow_errors(
+    hass: HomeAssistant,
+    mock_airlino_api: MagicMock,
+    exception: Exception,
+    error: str,
+) -> None:
+    """Test the user flow shows errors and recovers from them."""
+    mock_airlino_api.async_get_device_info.side_effect = exception
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: HOST}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+
+    mock_airlino_api.async_get_device_info.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: HOST}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("mock_airlino_api")
+async def test_user_flow_already_configured(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test the user flow aborts for an already configured device."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: HOST}
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
-async def test_user_flow_aborts_duplicate_in_progress_flow(
+@pytest.mark.usefixtures("mock_airlino_api")
+async def test_user_flow_aborts_while_discovery_in_progress(
     hass: HomeAssistant,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Verify the built-in guard aborts a duplicate flow for the same device."""
-    validate = AsyncMock(
-        return_value={"title": "AirLino", "mac": MAC, "api_version": "v22"}
+    """Test the user flow aborts while the device is being discovered."""
+    await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_discovery_info()
     )
-    with patch(
-        "homeassistant.components.airlino.config_flow.validate_input",
-        validate,
-    ):
-        first_flow = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-        monkeypatch.setattr(
-            hass.config_entries.flow,
-            "async_progress_by_handler",
-            MagicMock(
-                return_value=[
-                    {
-                        "flow_id": first_flow["flow_id"],
-                        "context": {
-                            "unique_id": MAC,
-                            "source": SOURCE_USER,
-                        },
-                    }
-                ]
-            ),
-        )
-        second_flow = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-        second_result = await hass.config_entries.flow.async_configure(
-            second_flow["flow_id"], {CONF_HOST: HOST}
-        )
 
-    assert second_result["type"] is FlowResultType.ABORT
-    assert second_result["reason"] == "already_in_progress"
-    assert validate.await_count == 1
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: HOST}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_in_progress"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_zeroconf_flow(
+    hass: HomeAssistant, mock_airlino_api_class: MagicMock
+) -> None:
+    """Test discovery uses the announced API version."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_discovery_info()
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm"
+    assert result["description_placeholders"] == {"name": "Living room"}
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Living room"
+    assert result["result"].unique_id == MAC
+    assert result["data"] == {
+        CONF_HOST: DISCOVERED_HOST,
+        CONF_PORT: DEFAULT_PORT,
+        CONF_API_VERSION: "v22",
+    }
+    assert _api_versions(mock_airlino_api_class) == ["v22"]
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_zeroconf_flow_probes_api_version_without_txt_record(
+    hass: HomeAssistant,
+    mock_airlino_api_class: MagicMock,
+    mock_airlino_api: MagicMock,
+) -> None:
+    """Test discovery probes the API version when it is not announced."""
+    mock_airlino_api.async_get_device_info.side_effect = [
+        AirlinoApiError("missing", status=404),
+        {"devicename": "Living room"},
+    ]
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=_discovery_info(properties={}, port=None),
+    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_PORT] == DEFAULT_PORT
+    assert result["data"][CONF_API_VERSION] == "v21"
+    assert _api_versions(mock_airlino_api_class) == ["v22", "v21"]
 
 
 @pytest.mark.parametrize(
-    ("exception", "reason"),
+    ("properties", "exception", "reason"),
     [
-        (UnsupportedApiVersion, "unsupported_api_version"),
-        (CannotConnect, "cannot_connect"),
-        (RuntimeError, "unknown"),
+        pytest.param({"api": "v18"}, None, "unsupported_api_version", id="too_old"),
+        pytest.param(
+            {"api": "invalid"}, None, "unsupported_api_version", id="invalid_version"
+        ),
+        pytest.param(
+            {"api": "v22"},
+            AirlinoApiError("missing", status=404),
+            "unsupported_api_version",
+            id="not_found",
+        ),
+        pytest.param(
+            {"api": "v22"},
+            AirlinoApiConnectionError("offline"),
+            "cannot_connect",
+            id="offline",
+        ),
+        pytest.param(
+            {"api": "v22"},
+            AirlinoApiError("failed", status=500),
+            "cannot_connect",
+            id="http_error",
+        ),
+        pytest.param(
+            {"api": "v22"}, RuntimeError("unexpected"), "unknown", id="unknown"
+        ),
     ],
 )
-async def test_zeroconf_flow_aborts_on_validation_errors(
-    hass: HomeAssistant, exception: type[Exception], reason: str
+async def test_zeroconf_flow_aborts(
+    hass: HomeAssistant,
+    mock_airlino_api: MagicMock,
+    properties: dict[str, Any],
+    exception: Exception | None,
+    reason: str,
 ) -> None:
-    """Verify zeroconf setup aborts when validation fails."""
-    with patch(
-        "homeassistant.components.airlino.config_flow.validate_input",
-        side_effect=exception("failure"),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_discovery_info()
-        )
+    """Test discovery aborts for unsupported or unreachable devices."""
+    mock_airlino_api.async_get_device_info.side_effect = exception
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=_discovery_info(properties=properties),
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == reason
 
 
-async def test_zeroconf_flow_confirms_and_creates_entry(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+@pytest.mark.usefixtures("mock_airlino_api")
+async def test_zeroconf_flow_updates_configured_device(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Verify discovered devices can be confirmed and added."""
-    validate = AsyncMock(
-        return_value={"title": "Living Room", "mac": MAC, "api_version": "v22"}
+    """Test discovery updates the connection details of a configured device."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=_discovery_info(port=9000),
     )
-    with patch(
-        "homeassistant.components.airlino.config_flow.validate_input",
-        validate,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_ZEROCONF},
-            data=_discovery_info(
-                properties={
-                    "api": "v22",
-                    "swver": "6.4.1",
-                    "model": "AirLino pro",
-                },
-                port=DEFAULT_PORT,
-                hostname="AirLinopro-12AB.local.",
-                name="Livingroom._dockset._tcp.local.",
-            ),
-        )
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "confirm"
-        assert result["description_placeholders"] == {"name": "Living Room"}
-
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].unique_id == MAC
-    assert result["title"] == "Living Room"
-    assert result["data"][CONF_HOST] == HOST
-    assert result["data"][CONF_PORT] == DEFAULT_PORT
-    assert result["data"]["api_version"] == "v22"
-
-
-async def test_zeroconf_flow_uses_fallback_api_version_when_txt_omits_api(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
-    """Verify discovery persists the API version selected by validation."""
-    discovery = _discovery_info(properties={"model": "AirLino"}, port=0)
-    with patch(
-        "homeassistant.components.airlino.config_flow.validate_input",
-        return_value={"title": "AirLino", "mac": MAC, "api_version": "v20"},
-    ) as validate:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery
-        )
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].unique_id == MAC
-    assert validate.call_args.kwargs["api_version"] is None
-    assert result["data"][CONF_PORT] == DEFAULT_PORT
-    assert result["data"]["api_version"] == "v20"
-
-
-async def test_zeroconf_flow_aborts_if_device_is_configured(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
-    """Verify discovery rejects an already configured device."""
-    MockConfigEntry(domain=DOMAIN, unique_id=MAC).add_to_hass(hass)
-    with patch(
-        "homeassistant.components.airlino.config_flow.validate_input",
-        return_value={"title": "AirLino", "mac": MAC, "api_version": "v22"},
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_discovery_info()
-        )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-
-
-async def test_validate_input_normalizes_mac_address(hass: HomeAssistant) -> None:
-    """Normalize a MAC from the API before returning it as unique ID."""
-    api = MagicMock()
-    api.async_get_device_info = AsyncMock(
-        return_value={"model": "HBM11", "devicename": "Living Room"}
-    )
-    api.async_get_network_info = AsyncMock(
-        return_value={"eth": {"mac": "00-23-B1-A4-35-9E"}}
-    )
-    with (
-        patch("homeassistant.components.airlino.config_flow.async_get_clientsession"),
-        patch(
-            "homeassistant.components.airlino.config_flow.AirlinoApi",
-            return_value=api,
-        ),
-    ):
-        result = await validate_input(hass, {CONF_HOST: HOST, CONF_PORT: DEFAULT_PORT})
-
-    assert result["mac"] == "00:23:b1:a4:35:9e"
-
-
-async def test_validate_input_uses_latest_version_and_ethernet_mac(
-    hass: HomeAssistant,
-) -> None:
-    """Verify validation uses the newest API and prefers Ethernet MAC."""
-    api = MagicMock()
-    api.async_get_device_info = AsyncMock(
-        return_value={
-            "model": "HBM11",
-            "devicename": "Living Room",
-            "firmware": "6.3.3",
-            "hardware": "LTH-6510CC-02DAA9A6",
-        }
-    )
-    api.async_get_network_info = AsyncMock(
-        return_value={
-            "eth": {
-                "mac": "00:23:b1:a4:35:9e",
-                "inet": [{"family": "inet", "ip": "192.0.2.20"}],
-            },
-            "wlan": {
-                "mac": "00:23:b1:66:ab:94",
-                "mode": "station",
-                "ssid": "AirLino-WLAN",
-                "inet": [{"family": "inet", "ip": "192.0.2.21"}],
-            },
-        }
-    )
-    with (
-        patch("homeassistant.components.airlino.config_flow.async_get_clientsession"),
-        patch(
-            "homeassistant.components.airlino.config_flow.AirlinoApi",
-            return_value=api,
-        ) as api_class,
-    ):
-        result = await validate_input(hass, {CONF_HOST: HOST, CONF_PORT: DEFAULT_PORT})
-
-    assert result == {
-        "title": "Living Room",
-        "mac": "00:23:b1:a4:35:9e",
-        "api_version": DEFAULT_API_VERSION,
-    }
-    assert api_class.call_args.kwargs["host"] == HOST
-    assert api_class.call_args.kwargs["port"] == DEFAULT_PORT
-    assert api_class.call_args.kwargs["api_version"] == DEFAULT_API_VERSION
-
-
-async def test_validate_input_falls_back_to_older_api_version(
-    hass: HomeAssistant,
-) -> None:
-    """Verify validation tries supported API versions until one works."""
-    apis = [MagicMock() for _ in range(4)]
-    apis[0].async_get_device_info = AsyncMock(
-        side_effect=AirlinoApiError("missing", status=404)
-    )
-    apis[1].async_get_device_info = AsyncMock(side_effect=AirlinoApiError("failed"))
-    apis[2].async_get_device_info = AsyncMock(
-        return_value={
-            "model": "HBM11",
-            "devicename": "Living Room",
-            "firmware": "6.3.3",
-            "hardware": "LTH-6510CC-02DAA9A6",
-        }
-    )
-    apis[2].async_get_network_info = AsyncMock(
-        return_value={"wlan": {"mac": "00:23:b1:66:ab:94"}}
-    )
-    with (
-        patch("homeassistant.components.airlino.config_flow.async_get_clientsession"),
-        patch(
-            "homeassistant.components.airlino.config_flow.AirlinoApi",
-            side_effect=apis,
-        ) as api_class,
-    ):
-        result = await validate_input(hass, {CONF_HOST: HOST, CONF_PORT: DEFAULT_PORT})
-
-    assert result["api_version"] == "v20"
-    assert result["title"] == "Living Room"
-    assert result["mac"] == "00:23:b1:66:ab:94"
-    assert [call.kwargs["api_version"] for call in api_class.call_args_list] == [
-        "v22",
-        "v21",
-        "v20",
-    ]
-
-
-async def test_validate_input_raises_unsupported_when_no_version_works(
-    hass: HomeAssistant,
-) -> None:
-    """Verify validation rejects devices without a supported API."""
-    api = MagicMock()
-    api.async_get_device_info = AsyncMock(
-        side_effect=AirlinoApiError("missing", status=404)
-    )
-    with (
-        patch("homeassistant.components.airlino.config_flow.async_get_clientsession"),
-        patch(
-            "homeassistant.components.airlino.config_flow.AirlinoApi",
-            return_value=api,
-        ) as api_class,
-        pytest.raises(UnsupportedApiVersion),
-    ):
-        await validate_input(hass, {CONF_HOST: HOST, CONF_PORT: DEFAULT_PORT})
-
-    assert [call.kwargs["api_version"] for call in api_class.call_args_list] == [
-        "v22",
-        "v21",
-        "v20",
-        "v19",
-    ]
-
-
-async def test_validate_input_continues_after_api_error_without_status(
-    hass: HomeAssistant,
-) -> None:
-    """Verify version fallback continues when an API error has no status."""
-    failed_api = MagicMock()
-    failed_api.async_get_device_info = AsyncMock(side_effect=AirlinoApiError("failed"))
-    working_api = MagicMock()
-    working_api.async_get_device_info = AsyncMock(
-        return_value={"devicename": "Living Room"}
-    )
-    working_api.async_get_network_info = AsyncMock(
-        return_value={"eth": {"mac": "00:23:b1:a4:35:9e"}}
-    )
-    with (
-        patch("homeassistant.components.airlino.config_flow.async_get_clientsession"),
-        patch(
-            "homeassistant.components.airlino.config_flow.AirlinoApi",
-            side_effect=[failed_api, working_api],
-        ) as api_class,
-    ):
-        result = await validate_input(hass, {CONF_HOST: HOST, CONF_PORT: DEFAULT_PORT})
-
-    assert result["api_version"] == "v21"
-    assert [call.kwargs["api_version"] for call in api_class.call_args_list] == [
-        "v22",
-        "v21",
-    ]
-
-
-@pytest.mark.parametrize(
-    "error",
-    [
-        AirlinoApiError("failed", status=500),
-        AirlinoApiConnectionError("offline"),
-    ],
-)
-async def test_validate_input_maps_connection_errors(
-    hass: HomeAssistant, error: Exception
-) -> None:
-    """Verify API connection failures become CannotConnect errors."""
-    api = MagicMock()
-    api.async_get_device_info = AsyncMock(side_effect=error)
-    with (
-        patch("homeassistant.components.airlino.config_flow.async_get_clientsession"),
-        patch(
-            "homeassistant.components.airlino.config_flow.AirlinoApi",
-            return_value=api,
-        ),
-        pytest.raises(CannotConnect),
-    ):
-        await validate_input(
-            hass, {CONF_HOST: HOST, CONF_PORT: DEFAULT_PORT}, api_version="v22"
-        )
-
-
-async def test_validate_input_uses_default_port_and_announced_version(
-    hass: HomeAssistant,
-) -> None:
-    """Verify validation uses port 8989 and the announced API version."""
-    api = MagicMock()
-    api.async_get_device_info = AsyncMock(
-        return_value={
-            "model": "HBM11",
-            "devicename": "Living Room",
-            "firmware": "6.3.3",
-            "hardware": "LTH-6510CC-02DAA9A6",
-        }
-    )
-    api.async_get_network_info = AsyncMock(
-        return_value={"eth": {"mac": "00:23:b1:a4:35:9e"}}
-    )
-    with (
-        patch("homeassistant.components.airlino.config_flow.async_get_clientsession"),
-        patch(
-            "homeassistant.components.airlino.config_flow.AirlinoApi",
-            return_value=api,
-        ) as api_class,
-    ):
-        result = await validate_input(
-            hass, {CONF_HOST: HOST, CONF_PORT: DEFAULT_PORT}, api_version="v22"
-        )
-
-    assert result["api_version"] == "v22"
-    assert api_class.call_args.kwargs["host"] == HOST
-    assert api_class.call_args.kwargs["port"] == DEFAULT_PORT
-    assert api_class.call_args.kwargs["api_version"] == "v22"
-
-
-async def test_validate_input_maps_explicit_404_to_unsupported(
-    hass: HomeAssistant,
-) -> None:
-    """Verify explicit API-version 404 errors are rejected as unsupported."""
-    api = MagicMock()
-    api.async_get_device_info = AsyncMock(
-        side_effect=AirlinoApiError("missing", status=404)
-    )
-    with (
-        patch("homeassistant.components.airlino.config_flow.async_get_clientsession"),
-        patch(
-            "homeassistant.components.airlino.config_flow.AirlinoApi",
-            return_value=api,
-        ),
-        pytest.raises(UnsupportedApiVersion),
-    ):
-        await validate_input(
-            hass, {CONF_HOST: HOST, CONF_PORT: DEFAULT_PORT}, api_version="v22"
-        )
-
-
-@pytest.mark.parametrize("api_version", ["v18", "invalid"])
-async def test_validate_input_rejects_unsupported_version(
-    hass: HomeAssistant, api_version: str
-) -> None:
-    """Verify explicitly supplied unsupported API versions are rejected."""
-    with pytest.raises(UnsupportedApiVersion):
-        await validate_input(
-            hass, {CONF_HOST: HOST, CONF_PORT: DEFAULT_PORT}, api_version=api_version
-        )
+    assert mock_config_entry.data[CONF_HOST] == DISCOVERED_HOST
+    assert mock_config_entry.data[CONF_PORT] == 9000

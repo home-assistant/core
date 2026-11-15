@@ -27,7 +27,7 @@ from homeassistant.components.media_player import (
 from homeassistant.components.media_source import is_media_source_id
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -35,6 +35,8 @@ from .const import DOMAIN
 from .coordinator import AirlinoConfigEntry, AirlinoDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 1
 
 STATE_MAP = {
     PLAYER_STATE_STOPPED: MediaPlayerState.IDLE,
@@ -90,6 +92,7 @@ class AirlinoMediaPlayer(
         device = coordinator.device_info
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.unique_id)},
+            connections={(CONNECTION_NETWORK_MAC, entry.unique_id)},
             name=device.get("devicename") or entry.title,
             manufacturer="LinTech GmbH",
             model=device.get("model"),

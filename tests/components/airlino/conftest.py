@@ -3,13 +3,16 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from airlino_api import DEFAULT_PORT, PLAYER_STATE_STOPPED
+from airlino_api import DEFAULT_PORT, PLAYER_STATE_PLAYING
 import pytest
 
 from homeassistant.components.airlino.const import DOMAIN
 from homeassistant.const import CONF_API_VERSION, CONF_HOST, CONF_PORT
 
 from tests.common import MockConfigEntry
+
+MAC = "00:23:b1:a4:35:9e"
+HOST = "192.0.2.1"
 
 
 @pytest.fixture
@@ -27,24 +30,42 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         title="Living room",
-        data={CONF_HOST: "192.0.2.1", CONF_PORT: DEFAULT_PORT, CONF_API_VERSION: "v22"},
-        unique_id="00:11:22:33:44:55",
+        data={CONF_HOST: HOST, CONF_PORT: DEFAULT_PORT, CONF_API_VERSION: "v22"},
+        unique_id=MAC,
     )
 
 
 @pytest.fixture
-def mock_airlino_api() -> Generator[MagicMock]:
-    """Mock the AirLino API client used by the config entry."""
-    with patch("homeassistant.components.airlino.AirlinoApi", autospec=True) as cls:
+def mock_airlino_api_class() -> Generator[MagicMock]:
+    """Mock the AirLino API client class."""
+    with (
+        patch("homeassistant.components.airlino.AirlinoApi", autospec=True) as cls,
+        patch("homeassistant.components.airlino.config_flow.AirlinoApi", new=cls),
+    ):
         api = cls.return_value
         api.async_get_device_info.return_value = {
             "devicename": "Living room",
             "model": "AirLino",
             "firmware": "6.4.1",
         }
+        api.async_get_network_info.return_value = {"eth": {"mac": MAC}}
         api.async_get_player_status.return_value = {
-            "state": PLAYER_STATE_STOPPED,
-            "status": {},
+            "state": PLAYER_STATE_PLAYING,
+            "status": {
+                "source": "tidal",
+                "elapsedtime": 12,
+                "track": {
+                    "meta": {"artist": "Artist", "title": "Song"},
+                    "totaltime": 180,
+                    "image": "http://example.test/cover.jpg",
+                },
+            },
         }
-        api.async_get_master_volume.return_value = 50
-        yield api
+        api.async_get_master_volume.return_value = 64
+        yield cls
+
+
+@pytest.fixture
+def mock_airlino_api(mock_airlino_api_class: MagicMock) -> MagicMock:
+    """Return the mocked AirLino API client."""
+    return mock_airlino_api_class.return_value

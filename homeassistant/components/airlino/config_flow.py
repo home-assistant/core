@@ -1,7 +1,7 @@
 """Config flow for the AirLino integration."""
 
 import logging
-from typing import override
+from typing import Any, TypedDict, override
 
 from airlino_api import (
     DEFAULT_API_VERSION,
@@ -32,6 +32,14 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
 )
 
 
+class DeviceDetails(TypedDict):
+    """Details of a validated AirLino device."""
+
+    title: str
+    mac: str
+    api_version: str
+
+
 def _is_supported_api_version(api_version: str) -> bool:
     """Return whether the API version is supported by the integration."""
     version = AwesomeVersion(api_version)
@@ -39,8 +47,8 @@ def _is_supported_api_version(api_version: str) -> bool:
 
 
 async def validate_input(
-    hass: HomeAssistant, data: dict, api_version: str | None = None
-) -> dict:
+    hass: HomeAssistant, data: dict[str, Any], api_version: str | None = None
+) -> DeviceDetails:
     """Validate the user input allows us to connect."""
     if api_version is None:
         latest = int(DEFAULT_API_VERSION.removeprefix("v"))
@@ -73,11 +81,11 @@ async def validate_input(
 
         # Only the interface of the active connection is reported.
         interface = network_info.get("eth") or network_info["wlan"]
-        return {
-            "title": device_info.get("devicename", "AirLino"),
-            "mac": format_mac(interface["mac"]),
-            CONF_API_VERSION: version,
-        }
+        return DeviceDetails(
+            title=device_info.get("devicename", "AirLino"),
+            mac=format_mac(interface["mac"]),
+            api_version=version,
+        )
 
     raise UnsupportedApiVersion
 
@@ -94,7 +102,9 @@ class AirlinoConfigFlow(ConfigFlow, domain=DOMAIN):
         self._api_version: str = DEFAULT_API_VERSION
 
     @override
-    async def async_step_user(self, user_input: dict | None = None) -> ConfigFlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -115,7 +125,7 @@ class AirlinoConfigFlow(ConfigFlow, domain=DOMAIN):
                     data={
                         CONF_HOST: user_input[CONF_HOST],
                         CONF_PORT: user_input[CONF_PORT],
-                        CONF_API_VERSION: info[CONF_API_VERSION],
+                        CONF_API_VERSION: info["api_version"],
                     },
                 )
 
@@ -168,7 +178,7 @@ class AirlinoConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception during discovery")
             return self.async_abort(reason="unknown")
 
-        self._api_version = info[CONF_API_VERSION]
+        self._api_version = info["api_version"]
         await self.async_set_unique_id(info["mac"])
         self._abort_if_unique_id_configured(
             updates={
@@ -182,7 +192,7 @@ class AirlinoConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self.async_step_confirm()
 
     async def async_step_confirm(
-        self, user_input: dict | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the confirmation step for discovered devices."""
         if user_input is not None:
