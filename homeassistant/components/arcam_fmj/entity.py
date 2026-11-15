@@ -4,7 +4,14 @@ from collections.abc import Callable, Coroutine
 import functools
 from typing import Any, override
 
-from arcam.fmj.errors import ConnectionFailed
+from arcam.fmj.errors import (
+    CommandNotRecognised,
+    ConnectionFailed,
+    NotConnectedException,
+    ResponseException,
+    UnsupportedCommand,
+    UnsupportedZone,
+)
 
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import EntityDescription
@@ -17,15 +24,27 @@ from .coordinator import ArcamFmjCoordinator
 def convert_exception[**_P, _R](
     func: Callable[_P, Coroutine[Any, Any, _R]],
 ) -> Callable[_P, Coroutine[Any, Any, _R]]:
-    """Convert a connection failure into a translated HomeAssistantError."""
+    """Convert library errors into translated HomeAssistantErrors."""
 
     @functools.wraps(func)
     async def _convert_exception(*args: _P.args, **kwargs: _P.kwargs) -> _R:
         try:
             return await func(*args, **kwargs)
-        except ConnectionFailed as exception:
+        except (ConnectionFailed, NotConnectedException, TimeoutError) as exception:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="connection_failed"
+            ) from exception
+        except (
+            UnsupportedCommand,
+            UnsupportedZone,
+            CommandNotRecognised,
+        ) as exception:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="command_not_supported"
+            ) from exception
+        except ResponseException as exception:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="command_rejected"
             ) from exception
 
     return _convert_exception

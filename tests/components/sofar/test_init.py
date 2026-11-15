@@ -218,7 +218,7 @@ async def test_setup_skips_seeding_an_unusable_restored_total(
                 unit_id
             ),
         ),
-        patch("sofar_modbus.model.CorrectedTotal.seed") as mock_seed,
+        patch("sofar_modbus.CorrectedTotal.seed") as mock_seed,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
@@ -845,7 +845,7 @@ async def test_settings_failure_does_not_block_reading_sensors(
             ),
         ),
         patch(
-            "sofar_modbus.modern.device.SofarInverter.async_update_settings",
+            "sofar_modbus.SofarInverter.async_update_settings",
             side_effect=ModbusConnectionError("settings unreachable"),
         ),
     ):

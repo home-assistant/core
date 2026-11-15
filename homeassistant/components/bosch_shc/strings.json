@@ -55,6 +55,12 @@
       "schedule_override_active": {
         "name": "Schedule override active"
       },
+      "siren_acoustic_alarm": {
+        "name": "Acoustic alarm"
+      },
+      "siren_visual_alarm": {
+        "name": "Visual alarm"
+      },
       "summer_mode": {
         "name": "Heating break"
       },
