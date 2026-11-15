@@ -25,17 +25,19 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 
 from .const import CONNECTION_TYPE_WLAN, DSL_CONNECTION, LOGGER
-from .coordinator import AvmWrapper, FritzConfigEntry
+from .coordinator import FRITZ_DATA_KEY, AvmWrapper, FritzConfigEntry, FritzData
 from .entity import (
     FritzBoxBaseCoordinatorEntity,
     FritzDeviceBase,
     FritzEntityDescription,
 )
+from .helpers import device_filter_out_from_trackers
 from .models import ConnectionInfo, FritzDevice, LinkInfo
 
 # Coordinator is used to centralize the data updates
@@ -379,6 +381,70 @@ LINK_SENSOR_TYPES: tuple[FritzLinkSensorEntityDescription, ...] = (
 )
 
 
+async def _async_connection_sensors(
+    avm_wrapper: AvmWrapper, device_friendly_name: str
+) -> list[FritzBoxSensor]:
+    connection_info = await avm_wrapper.async_get_connection_info()
+    return [
+        FritzBoxSensor(avm_wrapper, device_friendly_name, description)
+        for description in CONNECTION_SENSOR_TYPES
+        if description.is_suitable(connection_info)
+    ]
+
+
+async def _async_device_sensors(
+    avm_wrapper: AvmWrapper, device_friendly_name: str
+) -> list[FritzBoxSensor]:
+    def _generate_device_sensors() -> list[FritzBoxSensor]:
+        return [
+            FritzBoxSensor(avm_wrapper, device_friendly_name, description)
+            for description in DEVICE_SENSOR_TYPES
+            if description.is_suitable(avm_wrapper.fritz_status)
+        ]
+
+    return await avm_wrapper.hass.async_add_executor_job(_generate_device_sensors)
+
+
+@callback
+def _async_link_sensors(
+    avm_wrapper: AvmWrapper,
+    data_fritz: FritzData,
+) -> list[FritzBoxLinkSensor]:
+    """Add link sensors for connected devices once their link is known."""
+    new_link_sensors: list[FritzBoxLinkSensor] = []
+
+    for mac, device in avm_wrapper.devices.items():
+        if device_filter_out_from_trackers(
+            mac, device, data_fritz.link_sensors.values()
+        ):
+            LOGGER.debug("Skipping link sensor creation for device %s", device.hostname)
+            continue
+
+        for description in LINK_SENSOR_TYPES:
+            if not description.is_suitable(device):
+                continue
+            new_link_sensors.append(
+                FritzBoxLinkSensor(avm_wrapper, device, description)
+            )
+        data_fritz.link_sensors[avm_wrapper.unique_id].add(mac)
+
+    return new_link_sensors
+
+
+async def async_all_entities_list(
+    avm_wrapper: AvmWrapper,
+    device_friendly_name: str,
+    data_fritz: FritzData,
+) -> list[Entity]:
+    """Get a list of all entities."""
+
+    return [
+        *await _async_connection_sensors(avm_wrapper, device_friendly_name),
+        *await _async_device_sensors(avm_wrapper, device_friendly_name),
+        *_async_link_sensors(avm_wrapper, data_fritz),
+    ]
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: FritzConfigEntry,
@@ -387,55 +453,20 @@ async def async_setup_entry(
     """Set up entry."""
     LOGGER.debug("Setting up FRITZ!Box sensors")
     avm_wrapper = entry.runtime_data
+    data_fritz = hass.data[FRITZ_DATA_KEY]
 
-    connection_info = await avm_wrapper.async_get_connection_info()
-    entities = [
-        FritzBoxSensor(avm_wrapper, entry.title, description)
-        for description in CONNECTION_SENSOR_TYPES
-        if description.is_suitable(connection_info)
-    ]
+    entities_list = await async_all_entities_list(avm_wrapper, entry.title, data_fritz)
+    async_add_entities(entities_list)
 
-    fritz_status = avm_wrapper.fritz_status
-
-    def _generate_device_sensors() -> list[FritzBoxSensor]:
-        return [
-            FritzBoxSensor(avm_wrapper, entry.title, description)
-            for description in DEVICE_SENSOR_TYPES
-            if description.is_suitable(fritz_status)
-        ]
-
-    entities += await hass.async_add_executor_job(_generate_device_sensors)
-
-    async_add_entities(entities)
-
-    known_link_sensors: dict[str, set[str]] = {}
-
-    @callback
-    def _async_add_link_sensors() -> None:
-        """Add link sensors for connected devices once their link is known."""
-        for mac in known_link_sensors.keys() - avm_wrapper.devices.keys():
-            known_link_sensors.pop(mac)
-
-        new_sensors: list[FritzBoxLinkSensor] = []
-        for mac, device in avm_wrapper.devices.items():
-            if device.link_info is None:
-                continue
-            known_keys = known_link_sensors.setdefault(mac, set())
-            for description in LINK_SENSOR_TYPES:
-                if description.key in known_keys or not description.is_suitable(device):
-                    continue
-                known_keys.add(description.key)
-                new_sensors.append(FritzBoxLinkSensor(avm_wrapper, device, description))
-
-        if new_sensors:
-            async_add_entities(new_sensors)
+    async def async_update_avm_device() -> None:
+        """Update the values of the AVM device."""
+        async_add_entities(_async_link_sensors(avm_wrapper, data_fritz))
 
     entry.async_on_unload(
         async_dispatcher_connect(
-            hass, avm_wrapper.signal_device_update, _async_add_link_sensors
+            hass, avm_wrapper.signal_device_new, async_update_avm_device
         )
     )
-    _async_add_link_sensors()
 
 
 class FritzBoxSensor(FritzBoxBaseCoordinatorEntity, SensorEntity):
