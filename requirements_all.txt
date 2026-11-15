@@ -2055,7 +2055,7 @@ py-nextbusnext==2.3.0
 py-nightscout==1.2.2
 
 # homeassistant.components.mta
-py-nymta==0.4.1
+py-nymta==0.4.3
 
 # homeassistant.components.opendisplay
 py-opendisplay==8.1.0
