@@ -228,6 +228,8 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
             return
 
         if data["event_type"] == EVENT_TYPE_THERM_MODE:
+            # Keep the home mode current until the next topology refresh.
+            self.home.therm_mode = home[EVENT_TYPE_THERM_MODE]
             self._attr_preset_mode = NETATMO_MAP_PRESET[home[EVENT_TYPE_THERM_MODE]]
             self._attr_hvac_mode = HVAC_MAP_NETATMO[self._attr_preset_mode]
             if self._attr_preset_mode == PRESET_FROST_GUARD:
@@ -332,7 +334,10 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
         elif preset_mode in (PRESET_BOOST, STATE_NETATMO_MAX):
             await self.device.async_therm_set(PRESET_MAP_NETATMO[preset_mode])
         elif preset_mode in THERM_MODES:
-            await self.device.home.async_set_thermmode(PRESET_MAP_NETATMO[preset_mode])
+            mode = PRESET_MAP_NETATMO[preset_mode]
+            if await self.device.home.async_set_thermmode(mode):
+                # Keep the home mode current until the next topology refresh.
+                self.device.home.therm_mode = mode
         else:
             _LOGGER.error("Preset mode '%s' not available", preset_mode)
 
@@ -388,6 +393,14 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
         self._attr_native_target_temperature = self.device.therm_setpoint_temperature
 
         therm_setpoint_mode = getattr(self.device, "therm_setpoint_mode", None)
+
+        # Rooms keep reporting "home" while the whole home is in away or frost
+        # guard mode; that mode is only available on the home.
+        if therm_setpoint_mode in (
+            None,
+            STATE_NETATMO_HOME,
+        ) and self.home.therm_mode in (STATE_NETATMO_AWAY, STATE_NETATMO_HG):
+            therm_setpoint_mode = self.home.therm_mode
 
         if therm_setpoint_mode is None:
             therm_setpoint_mode = STATE_NETATMO_SCHEDULE
