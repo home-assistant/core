@@ -12,6 +12,7 @@ from systembridgeconnector.exceptions import (
     ConnectionErrorException,
 )
 from systembridgeconnector.models.modules import GetData, Module
+from systembridgeconnector.version import Version
 from systembridgeconnector.websocket_client import WebSocketClient
 
 from homeassistant.config_entries import (
@@ -58,15 +59,23 @@ async def _validate_input(
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
 
+    session = async_get_clientsession(hass)
+    version = Version(
+        data[CONF_HOST], data[CONF_PORT], data[CONF_TOKEN], session=session
+    )
     websocket_client = WebSocketClient(
         data[CONF_HOST],
         data[CONF_PORT],
         data[CONF_TOKEN],
-        session=async_get_clientsession(hass),
+        session=session,
     )
 
     try:
         async with asyncio.timeout(DATA_WAIT_TIMEOUT):
+            # An older System Bridge turns the connector's sign-in away, so
+            # it would otherwise look like a wrong token
+            if not await version.check_supported():
+                raise UnsupportedVersion
             await websocket_client.connect()
             modules_data = await websocket_client.get_data(
                 GetData(modules=[Module.SYSTEM])
@@ -113,6 +122,8 @@ async def _async_get_info(
         errors["base"] = "cannot_connect"
     except InvalidAuth:
         errors["base"] = "invalid_auth"
+    except UnsupportedVersion:
+        errors["base"] = "unsupported_version"
     except Exception:
         _LOGGER.exception("Unexpected exception")
         errors["base"] = "unknown"
@@ -275,3 +286,7 @@ class CannotConnect(HomeAssistantError):
 
 class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""
+
+
+class UnsupportedVersion(HomeAssistantError):
+    """Error to indicate the System Bridge version isn't supported."""

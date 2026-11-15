@@ -35,6 +35,18 @@ from . import (
 )
 
 
+@pytest.fixture(autouse=True)
+def mock_flow_version() -> Generator[MagicMock]:
+    """Report a supported System Bridge version to the config flow."""
+    with patch(
+        "homeassistant.components.system_bridge.config_flow.Version",
+        autospec=True,
+    ) as mock_version:
+        version = mock_version.return_value
+        version.check_supported.return_value = True
+        yield version.check_supported
+
+
 @contextmanager
 def _patch_success() -> Generator[None]:
     """Patch the client to connect and return data."""
@@ -128,6 +140,38 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "cannot_connect"}
 
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_USER_INPUT
+        )
+    await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_form_unsupported_version(
+    hass: HomeAssistant, mock_flow_version: MagicMock
+) -> None:
+    """Test we ask for an update when System Bridge is too old."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    mock_flow_version.return_value = False
+    with patch(
+        "homeassistant.components.system_bridge.config_flow.WebSocketClient.connect"
+    ) as mock_connect:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_USER_INPUT
+        )
+    await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "user"
+    assert result2["errors"] == {"base": "unsupported_version"}
+    mock_connect.assert_not_called()
+
+    mock_flow_version.return_value = True
     with _patch_success():
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"], FIXTURE_USER_INPUT
