@@ -11,6 +11,11 @@
         "default": "mdi:stop"
       }
     },
+    "select": {
+      "print_speed": {
+        "default": "mdi:speedometer"
+      }
+    },
     "sensor": {
       "current_layer": {
         "default": "mdi:layers"
