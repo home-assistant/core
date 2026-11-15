@@ -3280,6 +3280,41 @@ async def test_container_reused(
     assert mock_create_stream.call_args.kwargs["container"] == container_id
 
 
+@pytest.mark.usefixtures("mock_init_component")
+async def test_previous_thinking_dropped_without_llm_api(
+    hass: HomeAssistant,
+    mock_create_stream: AsyncMock,
+    captured_requests: list[MessageCreateParamsStreaming],
+) -> None:
+    """Test that thinking blocks of earlier turns are not sent without an LLM API."""
+    mock_create_stream.return_value = [
+        (
+            *create_thinking_block(0, ["The user greeted me."]),
+            *create_content_block(1, ["Hello, how can I help you today?"]),
+        )
+    ]
+
+    result = await conversation.async_converse(
+        hass, "hello", None, Context(), agent_id="conversation.claude_conversation"
+    )
+
+    mock_create_stream.return_value = [create_content_block(0, ["You are welcome!"])]
+
+    await conversation.async_converse(
+        hass,
+        "Thank you",
+        result.conversation_id,
+        Context(),
+        agent_id="conversation.claude_conversation",
+    )
+
+    assert captured_requests[-1]["messages"] == [
+        {"role": "user", "content": "hello"},
+        {"role": "assistant", "content": "Hello, how can I help you today?"},
+        {"role": "user", "content": "Thank you"},
+    ]
+
+
 def _create_paused_response(
     tool_number: int, container: Container, index: int = 0
 ) -> list[RawMessageStreamEvent]:
