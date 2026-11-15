@@ -1,7 +1,7 @@
 """Support for voltage, power & energy sensors for VeSync outlets."""
 
 from collections.abc import Callable
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 import logging
 from typing import override
 
@@ -168,6 +168,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.state.voltage,
         exists_fn=is_outlet,
     ),
@@ -320,10 +321,7 @@ class VeSyncSensorEntity(VeSyncBaseEntity, SensorEntity):
                 device.state_chamber_2 if chamber == 2 else device.state_chamber_1
             )
             if device.is_dual_chamber:
-                self.entity_description = replace(
-                    description,
-                    translation_key=f"{description.translation_key}_basket",
-                )
+                self._attr_translation_key = f"{description.translation_key}_basket"
                 self._attr_translation_placeholders = {"basket": str(chamber)}
             if chamber == 2:
                 self._attr_unique_id += "-chamber_2"
