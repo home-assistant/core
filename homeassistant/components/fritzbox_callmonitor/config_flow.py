@@ -10,7 +10,6 @@ import probatio
 from requests.exceptions import ConnectionError as RequestsConnectionError
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -18,6 +17,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import callback
 
+from . import FritzBoxCallMonitorConfigEntry
 from .base import FritzBoxPhonebook
 from .const import (
     CONF_PHONEBOOK,
@@ -57,7 +57,7 @@ class FritzBoxCallMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _entry: ConfigEntry
+    _entry: FritzBoxCallMonitorConfigEntry
     _host: str
     _port: int
     _username: str
@@ -130,7 +130,7 @@ class FritzBoxCallMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: FritzBoxCallMonitorConfigEntry,
     ) -> FritzBoxCallMonitorOptionsFlowHandler:
         """Get the options flow for this handler."""
         return FritzBoxCallMonitorOptionsFlowHandler()

@@ -7,7 +7,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.template import DOMAIN
 from homeassistant.components.template.button import DEFAULT_NAME, SCRIPT_FIELDS
 from homeassistant.components.template.const import CONF_PICTURE
@@ -15,13 +15,13 @@ from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
     ATTR_ICON,
     CONF_DEVICE_CLASS,
-    CONF_ENTITY_ID,
     CONF_FRIENDLY_NAME,
     CONF_ICON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    CommonServiceArgument,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -153,8 +153,8 @@ async def test_missing_emtpy_press_action_config(
     freezer.move_to(now)
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {CONF_ENTITY_ID: TEST_BUTTON.entity_id},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: TEST_BUTTON.entity_id},
         blocking=True,
     )
 
@@ -204,8 +204,8 @@ async def test_device_class_option(
     freezer.move_to(now)
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {CONF_ENTITY_ID: TEST_BUTTON.entity_id},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: TEST_BUTTON.entity_id},
         blocking=True,
     )
 
@@ -260,8 +260,8 @@ async def test_options_that_are_templates(
     freezer.move_to(now)
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {CONF_ENTITY_ID: TEST_BUTTON.entity_id},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: TEST_BUTTON.entity_id},
         blocking=True,
     )
 

@@ -9,6 +9,7 @@ from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from aiohomeconnect.const import OAUTH2_TOKEN
 from aiohomeconnect.model import (
+    ApplianceType,
     ArrayOfEvents,
     ArrayOfHomeAppliances,
     ArrayOfPrograms,
@@ -98,7 +99,7 @@ def platforms() -> list[Platform]:
 
 
 @pytest.mark.parametrize("platforms", [("binary_sensor",)])
-@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.WASHER], indirect=True)
 async def test_coordinator_failure_refresh_and_stream(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -218,7 +219,7 @@ async def test_coordinator_failure_refresh_and_stream(
     assert state.state != STATE_UNAVAILABLE
 
 
-@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
 async def test_coordinator_not_fetching_on_disconnected_appliance(
     client: MagicMock,
     config_entry: MockConfigEntry,
@@ -259,7 +260,7 @@ async def test_coordinator_update_failing(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
 @pytest.mark.parametrize(
     ("event_type", "event_key", "event_value", ATTR_ENTITY_ID),
     [
@@ -349,7 +350,7 @@ async def test_event_listener(
     listener.assert_called_once_with(new_entity_id)
 
 
-@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.WASHER], indirect=True)
 async def tests_receive_setting_and_status_for_first_time_at_events(
     hass: HomeAssistant,
     client: MagicMock,
@@ -454,7 +455,7 @@ async def _setup_with_token_refresh_on_connect(
 
 
 @pytest.mark.parametrize("platforms", [("sensor",)])
-@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.WASHER], indirect=True)
 @pytest.mark.parametrize(
     "token_request_failure",
     [
@@ -532,7 +533,7 @@ async def test_event_listener_token_refresh_error(
 
 
 @pytest.mark.parametrize("platforms", [("sensor",)])
-@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.WASHER], indirect=True)
 async def test_event_listener_token_refresh_reauth_error(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -580,10 +581,24 @@ async def test_event_listener_token_refresh_reauth_error(
 
 
 @pytest.mark.parametrize("platforms", [("sensor",)])
-@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.WASHER], indirect=True)
 @pytest.mark.parametrize(
-    "exception",
-    [HomeConnectRequestError(), EventStreamInterruptedError()],
+    ("exception", "log_level", "log_message"),
+    [
+        pytest.param(
+            HomeConnectRequestError(),
+            "DEBUG",
+            "Non-breaking error",
+            id="request_error",
+        ),
+        pytest.param(
+            EventStreamInterruptedError(),
+            "DEBUG",
+            "Non-breaking error",
+            id="stream_interrupted",
+        ),
+        pytest.param(Exception(), "ERROR", "Unexpected error", id="unexpected_error"),
+    ],
 )
 @pytest.mark.parametrize(
     (
@@ -616,7 +631,10 @@ async def test_event_listener_resilience(
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
-    exception: HomeConnectError,
+    caplog: pytest.LogCaptureFixture,
+    exception: Exception,
+    log_level: str,
+    log_message: str,
     entity_id: str,
     initial_state: str,
     status_key: StatusKey,
@@ -627,6 +645,7 @@ async def test_event_listener_resilience(
     after_event_expected_state: str,
 ) -> None:
     """Test that the event listener is resilient to interruptions."""
+    caplog.set_level("DEBUG")
     future = hass.loop.create_future()
 
     async def stream_exception():
@@ -648,6 +667,11 @@ async def test_event_listener_resilience(
 
     future.set_exception(exception)
     await hass.async_block_till_done()
+
+    assert any(
+        record.levelname == log_level and log_message in record.message
+        for record in caplog.records
+    )
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
     await hass.async_block_till_done()
@@ -748,7 +772,7 @@ async def test_devices_updated_on_refresh(
         )
 
 
-@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.WASHER], indirect=True)
 async def test_paired_event(
     hass: HomeAssistant,
     client: MagicMock,
@@ -783,7 +807,7 @@ async def test_paired_event(
         getattr(client, method).assert_awaited_once()
 
 
-@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.WASHER], indirect=True)
 async def test_paired_disconnected_devices_not_fetching(
     hass: HomeAssistant,
     client: MagicMock,
@@ -1006,7 +1030,7 @@ async def test_coordinator_disabling_updates_for_appliance_is_gone_after_entry_r
     assert hass.states.is_state("switch.dishwasher_power", STATE_OFF)
 
 
-@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
 async def test_auth_error_while_updating_appliance(
     hass: HomeAssistant,
     client: MagicMock,
@@ -1040,7 +1064,7 @@ async def test_auth_error_while_updating_appliance(
     assert result["context"]["source"] == "reauth"
 
 
-@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
 @pytest.mark.parametrize(
     ("side_effect", "log_level", "string_in_log"),
     [
@@ -1093,7 +1117,7 @@ async def test_other_errors_while_updating_appliance(
     )
 
 
-@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
 @pytest.mark.parametrize("array_of_programs_param", ["active", "selected"])
 async def test_fetch_base_program_options_when_active_favorite_program(
     client: MagicMock,
@@ -1132,7 +1156,7 @@ async def test_fetch_base_program_options_when_active_favorite_program(
     )
 
 
-@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
 @pytest.mark.parametrize(
     "event_key",
     [
@@ -1254,7 +1278,7 @@ async def test_fetch_base_program_options_when_favorite_program_event(
         ),
     ],
 )
-@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
 async def test_fetch_options_for_selected_program_when_active_program_finishes(
     hass: HomeAssistant,
     client: MagicMock,
@@ -1419,7 +1443,7 @@ async def test_fetch_options_for_selected_program_when_active_program_finishes(
     assert selected_program_option_state.state != STATE_UNAVAILABLE
 
 
-@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
 @pytest.mark.parametrize(
     "event_key",
     [

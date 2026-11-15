@@ -79,8 +79,9 @@ class CriticalRepositoryFixFlow(RepairsFlow):
 class DownloadProfileFixFlow(RepairsFlow):
     """Switch to the download profile the issue suggests."""
 
-    def __init__(self, profile_id: str) -> None:
+    def __init__(self, entry_id: str, profile_id: str) -> None:
         """Initialize the fix flow."""
+        self.entry_id = entry_id
         self.profile = get_profile(profile_id)
 
     async def async_step_init(
@@ -97,11 +98,12 @@ class DownloadProfileFixFlow(RepairsFlow):
         self, user_input: dict[str, str] | None = None
     ) -> RepairsFlowResult:
         """Switch to the profile, the reload puts it to use."""
-        for entry in self.hass.config_entries.async_entries(DOMAIN):
-            self.hass.config_entries.async_update_entry(
-                entry, options={**entry.options, CONF_PROFILE: self.profile.id}
-            )
-            self.hass.config_entries.async_schedule_reload(entry.entry_id)
+        if (entry := self.hass.config_entries.async_get_entry(self.entry_id)) is None:
+            return self.async_abort(reason="entry_removed")
+        self.hass.config_entries.async_update_entry(
+            entry, options={**entry.options, CONF_PROFILE: self.profile.id}
+        )
+        self.hass.config_entries.async_schedule_reload(entry.entry_id)
         return self.async_create_entry(title="", data={})
 
     async def async_step_ignore(
@@ -114,8 +116,11 @@ class DownloadProfileFixFlow(RepairsFlow):
         reached again while the menu was open. It is created again, the
         ignore is only remembered on the issue.
         """
+        # An entry added again can have created an issue with the same ID
+        if self.hass.config_entries.async_get_entry(self.entry_id) is None:
+            return self.async_abort(reason="entry_removed")
         if ir.async_get(self.hass).async_get_issue(DOMAIN, self.issue_id) is None:
-            async_create_profile_suggestion(self.hass, self.profile)
+            async_create_profile_suggestion(self.hass, self.entry_id, self.profile)
         ir.async_ignore_issue(self.hass, DOMAIN, self.issue_id, ignore=True)
         return self.async_abort(reason="issue_ignored")
 
@@ -133,5 +138,5 @@ async def async_create_fix_flow(
     if issue_id.startswith(CRITICAL_ISSUE_PREFIX) and data:
         return CriticalRepositoryFixFlow(str(data["repository"]), str(data["reason"]))
     if issue_id.startswith(PROFILE_ISSUE_PREFIX) and data:
-        return DownloadProfileFixFlow(str(data["profile"]))
+        return DownloadProfileFixFlow(str(data["entry_id"]), str(data["profile"]))
     return None

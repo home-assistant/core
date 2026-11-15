@@ -39,6 +39,7 @@ import growattServer
 from growattServer import GrowattV1ApiErrorCode
 from requests import RequestException
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
@@ -79,10 +80,8 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-# Temporary handoff of authenticated Classic API sessions from async_migrate_entry
-# to async_setup_entry. Avoids a second login() during the same startup, which
-# would hit Growatt's 5-minute per-endpoint rate limit. Popped after first use.
-_CACHED_APIS: dict[str, GrowattClassicSession] = {}
+# Migration hands the logged-in Classic session to async_setup_entry via runtime_data
+type _GrowattMigrationConfigEntry = ConfigEntry[GrowattClassicSession]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -93,7 +92,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 async def async_migrate_entry(
-    hass: HomeAssistant, config_entry: GrowattConfigEntry
+    hass: HomeAssistant, config_entry: _GrowattMigrationConfigEntry
 ) -> None:
     """Migrate old config entries.
 
@@ -208,7 +207,7 @@ async def async_migrate_entry(
                 )
 
                 # Cache the logged-in session for reuse in async_setup_entry()
-                _CACHED_APIS[config_entry.entry_id] = session
+                config_entry.runtime_data = session
 
                 _LOGGER.info(
                     "Migrated config entry to use specific plant_id '%s'",
@@ -365,11 +364,9 @@ async def async_setup_entry(
         # Reuse the session from migration or an earlier setup attempt, so
         # neither costs another login. runtime_data survives setup retries and
         # is dropped when a loaded entry unloads, so a reload logs in again.
-        cached_session = _CACHED_APIS.pop(config_entry.entry_id, None)
-        if cached_session is None and (
-            previous := getattr(config_entry, "runtime_data", None)
-        ):
-            cached_session = previous.total_coordinator.classic_session
+        cached_session = getattr(config_entry, "runtime_data", None)
+        if isinstance(cached_session, GrowattRuntimeData):
+            cached_session = cached_session.total_coordinator.classic_session
         if cached_session is not None and (
             cached_session.api.server_url,
             cached_session.username,

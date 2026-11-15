@@ -2,10 +2,6 @@
 
 from homeassistant.const import Platform
 
-ATTR_IHC_ID = "ihc_id"
-ATTR_VALUE = "value"
-ATTR_CONTROLLER_ID = "controller_id"
-
 AUTO_SETUP_YAML = "ihc_auto_setup.yaml"
 
 CONF_AUTOSETUP = "auto_setup"
@@ -32,8 +28,3 @@ IHC_PLATFORMS = (
     Platform.SENSOR,
     Platform.SWITCH,
 )
-
-SERVICE_SET_RUNTIME_VALUE_BOOL = "set_runtime_value_bool"
-SERVICE_SET_RUNTIME_VALUE_FLOAT = "set_runtime_value_float"
-SERVICE_SET_RUNTIME_VALUE_INT = "set_runtime_value_int"
-SERVICE_PULSE = "pulse"

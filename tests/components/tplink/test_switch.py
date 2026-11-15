@@ -10,21 +10,17 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import tplink
-from homeassistant.components.switch import (
-    DOMAIN as SWITCH_DOMAIN,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-)
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.components.tplink.const import DOMAIN
 from homeassistant.components.tplink.entity import EXCLUDED_FEATURES
 from homeassistant.components.tplink.switch import SWITCH_DESCRIPTIONS
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_HOST,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -81,13 +77,19 @@ async def test_plug(hass: HomeAssistant) -> None:
     assert state.state == STATE_ON
 
     await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        SWITCH_DOMAIN,
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
+        blocking=True,
     )
     feat.set_value.assert_called_once()
     feat.set_value.reset_mock()
 
     await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        SWITCH_DOMAIN,
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
+        blocking=True,
     )
     feat.set_value.assert_called_once()
     feat.set_value.reset_mock()
@@ -132,13 +134,19 @@ async def test_led_switch(hass: HomeAssistant, dev: Device, domain: str) -> None
     assert led_state.name == f"{dev.alias} LED"
 
     await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: led_entity_id}, blocking=True
+        SWITCH_DOMAIN,
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: led_entity_id},
+        blocking=True,
     )
     feat.set_value.assert_called_once_with(False)
     feat.set_value.reset_mock()
 
     await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: led_entity_id}, blocking=True
+        SWITCH_DOMAIN,
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: led_entity_id},
+        blocking=True,
     )
     feat.set_value.assert_called_once_with(True)
     feat.set_value.reset_mock()
@@ -206,14 +214,20 @@ async def test_strip(hass: HomeAssistant) -> None:
     assert state.state == STATE_ON
 
     await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        SWITCH_DOMAIN,
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
+        blocking=True,
     )
     feat = strip.children[0].features["state"]
     feat.set_value.assert_called_once()
     feat.set_value.reset_mock()
 
     await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        SWITCH_DOMAIN,
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
+        blocking=True,
     )
     feat.set_value.assert_called_once()
     feat.set_value.reset_mock()
@@ -223,14 +237,20 @@ async def test_strip(hass: HomeAssistant) -> None:
     assert state.state == STATE_OFF
 
     await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        SWITCH_DOMAIN,
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
+        blocking=True,
     )
     feat = strip.children[1].features["state"]
     feat.set_value.assert_called_once()
     feat.set_value.reset_mock()
 
     await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        SWITCH_DOMAIN,
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
+        blocking=True,
     )
     feat.set_value.assert_called_once()
     feat.set_value.reset_mock()
@@ -350,7 +370,10 @@ async def test_plug_errors_when_turned_on(
 
     with pytest.raises(HomeAssistantError, match=msg):
         await hass.services.async_call(
-            SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+            SWITCH_DOMAIN,
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
+            blocking=True,
         )
     await hass.async_block_till_done()
     assert feat.set_value.call_count == 1

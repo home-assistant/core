@@ -5,12 +5,13 @@ from unittest.mock import AsyncMock, patch
 from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import async_init_integration
+from . import async_init_integration, find_update_callback
+from .const import MOCK_SNOO_DATA
 
 
 async def test_entities(
@@ -29,12 +30,13 @@ async def test_entities(
 async def test_button_starts_snoo(hass: HomeAssistant, bypass_api: AsyncMock) -> None:
     """Test start_snoo button works correctly."""
     await async_init_integration(hass)
+    find_update_callback(bypass_api, "random_num")(MOCK_SNOO_DATA)
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.test_snoo_start"},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: "button.test_snoo_start"},
         blocking=True,
     )
 
-    assert bypass_api.start_snoo.assert_called_once
+    bypass_api.start_snoo.assert_called_once()

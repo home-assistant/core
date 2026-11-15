@@ -30,15 +30,14 @@ from homeassistant.components.update import (
     ATTR_SKIPPED_VERSION,
     ATTR_UPDATE_PERCENTAGE,
     DOMAIN as UPDATE_DOMAIN,
-    SERVICE_INSTALL,
-    SERVICE_SKIP,
+    UpdateService,
 )
-from homeassistant.components.zwave_js.const import DOMAIN, SERVICE_REFRESH_VALUE
+from homeassistant.components.zwave_js.const import DOMAIN, ZWaveJSService
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import CoreState, HomeAssistant, State
@@ -227,9 +226,9 @@ async def test_update_entity_states(
     # Refresh value should not be supported by this entity
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_REFRESH_VALUE,
+        ZWaveJSService.REFRESH_VALUE,
         {
-            ATTR_ENTITY_ID: entity_id,
+            CommonServiceArgument.ENTITY_ID: entity_id,
         },
         blocking=True,
     )
@@ -336,9 +335,9 @@ async def test_update_entity_install_raises(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
+            UpdateService.INSTALL,
             {
-                ATTR_ENTITY_ID: entity_id,
+                CommonServiceArgument.ENTITY_ID: entity_id,
             },
             blocking=True,
         )
@@ -591,9 +590,9 @@ async def test_update_entity_progress(
     install_task = hass.async_create_task(
         hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
+            UpdateService.INSTALL,
             {
-                ATTR_ENTITY_ID: entity_id,
+                CommonServiceArgument.ENTITY_ID: entity_id,
             },
             blocking=True,
         )
@@ -737,9 +736,9 @@ async def test_update_entity_install_failed(
     install_task = hass.async_create_task(
         hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
+            UpdateService.INSTALL,
             {
-                ATTR_ENTITY_ID: entity_id,
+                CommonServiceArgument.ENTITY_ID: entity_id,
             },
             blocking=True,
         )
@@ -819,9 +818,9 @@ async def test_update_entity_reload(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_SKIP,
+        UpdateService.SKIP,
         {
-            ATTR_ENTITY_ID: entity_id,
+            CommonServiceArgument.ENTITY_ID: entity_id,
         },
         blocking=True,
     )
@@ -1093,9 +1092,9 @@ async def test_update_entity_full_restore_data_update_available(
     install_task = hass.async_create_task(
         hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
+            UpdateService.INSTALL,
             {
-                ATTR_ENTITY_ID: entity_id,
+                CommonServiceArgument.ENTITY_ID: entity_id,
             },
             blocking=True,
         )

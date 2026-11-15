@@ -154,6 +154,15 @@ HOST_ENTITY_DESCRIPTIONS = (
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda entity: entity.host.disk_free,
     ),
+    HassioHostSensorEntityDescription(
+        entity_registry_enabled_default=False,
+        key="disk_life_time",
+        translation_key="disk_life_time",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda entity: entity.host.disk_life_time,
+    ),
 )
 
 

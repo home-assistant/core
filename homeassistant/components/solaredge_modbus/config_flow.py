@@ -7,12 +7,7 @@ import probatio
 from solaredged import SolarEdge, SolarEdgeConnectionError, SolarEdgeError
 
 from homeassistant.components.modbus import async_get_temporary_unit
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigEntryState,
-    ConfigFlow,
-    ConfigFlowResult,
-)
+from homeassistant.config_entries import ConfigEntryState, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.data_entry_flow import section
 from homeassistant.exceptions import HomeAssistantError
@@ -37,6 +32,7 @@ from .const import (
     TYPE_SERIAL,
     TYPE_TCP,
 )
+from .coordinator import SolarEdgeModbusConfigEntry
 from .entity import inverter_name
 from .helpers import create_modbus_params
 
@@ -103,7 +99,7 @@ def _flatten(connection_type: str, user_input: dict[str, Any]) -> dict[str, Any]
     return data
 
 
-def _needs_relink(entry: ConfigEntry, data: Mapping[str, Any]) -> bool:
+def _needs_relink(entry: SolarEdgeModbusConfigEntry, data: Mapping[str, Any]) -> bool:
     """Whether probing these settings clashes with the connection in use.
 
     Everything talking to one device shares a single connection, which cannot

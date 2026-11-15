@@ -1,6 +1,8 @@
 """The Logitech Harmony Hub integration."""
 
+from functools import partial
 import logging
+from pathlib import Path
 
 from homeassistant.components.remote import ATTR_ACTIVITY, ATTR_DELAY_SECS
 from homeassistant.const import CONF_HOST, CONF_NAME, EVENT_HOMEASSISTANT_STOP
@@ -12,6 +14,7 @@ from homeassistant.helpers.typing import ConfigType
 from .const import DOMAIN, HARMONY_OPTIONS_UPDATE, PLATFORMS
 from .data import HarmonyConfigEntry, HarmonyData
 from .services import async_setup_services
+from .util import config_file_path
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -105,6 +108,25 @@ async def _update_listener(hass: HomeAssistant, entry: HarmonyConfigEntry) -> No
     )
 
 
+def _move_legacy_config_file(hass: HomeAssistant, unique_id: str | None) -> None:
+    """Move the hub configuration file from the config root into .storage."""
+    old_file = Path(hass.config.path(f"harmony_{unique_id}.conf"))
+    if not old_file.exists():
+        return
+    new_file = Path(config_file_path(hass, unique_id))
+    new_file.parent.mkdir(parents=True, exist_ok=True)
+    old_file.replace(new_file)
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: HarmonyConfigEntry) -> None:
+    """Migrate old entry."""
+    if entry.version == 1 and entry.minor_version < 2:
+        await hass.async_add_executor_job(
+            _move_legacy_config_file, hass, entry.unique_id
+        )
+        hass.config_entries.async_update_entry(entry, minor_version=2)
+
+
 async def async_unload_entry(hass: HomeAssistant, entry: HarmonyConfigEntry) -> None:
     """Unload a config entry."""
     try:
@@ -112,3 +134,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: HarmonyConfigEntry) -> 
     finally:
         # Shutdown a harmony remote for removal
         await entry.runtime_data.shutdown()
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: HarmonyConfigEntry) -> None:
+    """Remove the hub configuration file."""
+    await hass.async_add_executor_job(
+        partial(Path(config_file_path(hass, entry.unique_id)).unlink, missing_ok=True)
+    )
