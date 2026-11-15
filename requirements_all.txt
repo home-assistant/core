@@ -2282,7 +2282,7 @@ pyenvertechevt800==0.2.4
 pyenvisalink==4.9
 
 # homeassistant.components.ephember
-pyephember2==0.4.13
+pyephember2==0.4.14
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
