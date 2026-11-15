@@ -1,8 +1,10 @@
 """Tests for the Freebox sensors."""
 
 from copy import deepcopy
+from typing import Any
 from unittest.mock import Mock, call
 
+from freebox_api.exceptions import HttpRequestError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import async_fire_time_changed, snapshot_platform
@@ -10,7 +12,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.freebox import SCAN_INTERVAL
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -246,3 +248,33 @@ async def test_lan_port_stats_stop_after_removal(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert call(1) not in router().switch.get_port_stats.call_args_list
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_lan_port_stats_failure(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, router: Mock
+) -> None:
+    """Test a failed stats request only affects its own LAN port."""
+
+    async def get_port_stats(port_id: int) -> dict[str, Any]:
+        if port_id == 1:
+            raise HttpRequestError("Request failed")
+        return DATA_SWITCH_GET_PORT_STATS
+
+    router().switch.get_port_stats.side_effect = get_port_stats
+    await setup_platform(hass, SENSOR_DOMAIN)
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get(ETHERNET_1_RECEIVE_RATE).state == STATE_UNAVAILABLE
+    assert (
+        hass.states.get("sensor.freebox_server_r2_ethernet_2_receive_rate").state
+        == "12.345"
+    )
+
+    router().switch.get_port_stats.side_effect = None
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get(ETHERNET_1_RECEIVE_RATE).state == "12.345"

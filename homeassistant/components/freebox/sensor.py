@@ -23,7 +23,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from .const import DOMAIN, LAN_PORT_STATS_FAILED
 from .entity import FreeboxHomeEntity
 from .router import FreeboxConfigEntry, FreeboxRouter, lan_port_translation
 
@@ -380,8 +380,11 @@ class FreeboxLanPortRateSensor(FreeboxLanPortSensor):
     @override
     def async_update_state(self) -> None:
         """Update the Freebox LAN port traffic sensor."""
-        stats = self._router.lan_ports[self._port_id]["stats"] or {}
-        self._attr_native_value = stats.get(self.entity_description.key)
+        stats = self._router.lan_ports[self._port_id]["stats"]
+        self._attr_available = stats != LAN_PORT_STATS_FAILED
+        self._attr_native_value = (
+            stats.get(self.entity_description.key) if isinstance(stats, dict) else None
+        )
 
 
 class FreeboxLanPortSpeedSensor(FreeboxLanPortSensor):

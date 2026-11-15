@@ -13,6 +13,7 @@ import re
 import time
 from typing import Any
 
+from aiohttp import ClientError
 from freebox_api import Freepybox
 from freebox_api.api.call import Call
 from freebox_api.api.home import Home
@@ -34,8 +35,10 @@ from .const import (
     CONNECTION_SENSORS_KEYS,
     DOMAIN,
     HOME_COMPATIBLE_CATEGORIES,
+    LAN_PORT_STATS_FAILED,
     STORAGE_KEY,
     STORAGE_VERSION,
+    LanPortStatsFailed,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -339,7 +342,7 @@ class FreeboxRouter:
             zip(
                 stats_port_ids,
                 await asyncio.gather(
-                    *(self._api.switch.get_port_stats(i) for i in stats_port_ids)
+                    *(self._get_lan_port_stats(i) for i in stats_port_ids)
                 ),
                 strict=True,
             )
@@ -347,6 +350,16 @@ class FreeboxRouter:
         for fbx_port in fbx_ports:
             port_id = fbx_port["id"]
             self.lan_ports[port_id] = {**fbx_port, "stats": stats.get(port_id)}
+
+    async def _get_lan_port_stats(
+        self, port_id: int
+    ) -> dict[str, Any] | LanPortStatsFailed:
+        """Return the stats of a LAN port, or LAN_PORT_STATS_FAILED."""
+        try:
+            return await self._api.switch.get_port_stats(port_id)
+        except (HttpRequestError, ClientError, TimeoutError) as err:
+            _LOGGER.debug("Failed to get the stats of LAN port %s: %r", port_id, err)
+            return LAN_PORT_STATS_FAILED
 
     async def update_home_devices(self) -> None:
         """Update Home devices (alarm, light, sensor, switch, remote ...)."""
