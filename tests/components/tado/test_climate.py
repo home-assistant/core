@@ -9,8 +9,10 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
+    ATTR_FAN_MODE,
     ATTR_HVAC_MODE,
     DOMAIN as CLIMATE_DOMAIN,
+    SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_TEMPERATURE,
     HVACMode,
@@ -62,6 +64,36 @@ async def test_heater_set_temperature(
 
     mock_set_state.assert_called_once()
     snapshot.assert_match(mock_set_state.call_args)
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_aircon_set_fan_mode_keeps_target_temperature(
+    hass: HomeAssistant,
+) -> None:
+    """Test a fan mode change sends the target temperature reported by tado."""
+    coordinator = hass.config_entries.async_entries(DOMAIN)[0].runtime_data
+
+    with (
+        patch(
+            "homeassistant.components.tado.PyTado.interface.api.Tado.set_zone_overlay"
+        ) as mock_set_state,
+        patch(
+            "homeassistant.components.tado.PyTado.interface.api.Tado.get_zone_state",
+            return_value=coordinator.data["zone"][3],
+        ),
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_FAN_MODE,
+            {
+                ATTR_ENTITY_ID: "climate.air_conditioning_air_conditioning",
+                ATTR_FAN_MODE: "high",
+            },
+            blocking=True,
+        )
+
+    mock_set_state.assert_called_once()
+    assert mock_set_state.call_args.args[2] == 17.78
 
 
 @pytest.mark.parametrize(
