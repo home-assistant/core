@@ -162,9 +162,7 @@ async def _write_presets(
         data_version = (report.data_versions or {}).get(cluster_path)
         if current_presets is None or data_version is None:
             raise HomeAssistantError("The device did not report its presets")
-        # write_atomic_attribute ships in matter-python-client after 1.5.5; drop
-        # this ignore once the requirement is bumped past that.
-        result = await matter_client.write_atomic_attribute(  # type: ignore[attr-defined]
+        result = await matter_client.write_atomic_attribute(
             node_id=node.node_id,
             attribute_path=presets_path,
             value=build_next(cast(list[Any], current_presets)),
