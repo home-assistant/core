@@ -74,6 +74,7 @@ class AquosConfigFlow(ConfigFlow, domain=DOMAIN):
             if error := await self._async_validate(user_input):
                 errors["base"] = error
             else:
+                self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
                 return self.async_create_entry(title=DEFAULT_NAME, data=user_input)
 
         return self.async_show_form(
