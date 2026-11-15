@@ -14,6 +14,10 @@ from volvocarsapi.scopes import ALL_SCOPES
 from yarl import URL
 
 from homeassistant import config_entries
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
 from homeassistant.components.cloud import (
     DATA_CLOUD,
     DOMAIN as CLOUD_DOMAIN,
@@ -29,6 +33,7 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from . import async_load_fixture_as_json, configure_mock
 from .const import (
     CLIENT_ID,
+    CLIENT_SECRET,
     DEFAULT_API_KEY,
     DEFAULT_MODEL,
     DEFAULT_VIN,
@@ -251,6 +256,45 @@ async def test_reauth_no_stale_data(
         call = mock_create_volvo_cars_api.call_args_list[0]
         access_token_arg = call.args[1]
         assert old_access_token != access_token_arg
+
+
+@pytest.mark.parametrize("client_id", [LEGACY_CLIENT_ID])
+@pytest.mark.usefixtures("current_request_with_host", "mock_config_flow_api")
+async def test_reauth_flow_new_credential(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
+    """Test reauth with a new credential always asks for the API key."""
+    await async_import_client_credential(
+        hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET), "volvo_new"
+    )
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["step_id"] == "pick_implementation"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"implementation": "volvo_new"}
+    )
+
+    client = await hass_client_no_auth()
+    await client.get(
+        f"/auth/external/callback?code=abcd&state={URL(result['url']).query['state']}"
+    )
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "api_key"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: "new-api-key"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+    assert mock_config_entry.data["auth_implementation"] == "volvo_new"
+    assert mock_config_entry.data[CONF_API_KEY] == "new-api-key"
 
 
 async def test_reconfigure_flow(

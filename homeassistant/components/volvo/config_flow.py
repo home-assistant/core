@@ -128,7 +128,11 @@ class VolvoOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 return await self.async_step_vin()
 
         if user_input is None:
-            if self.source == SOURCE_REAUTH:
+            if self.source == SOURCE_REAUTH and self._is_credential_changed():
+                # Chances are high that when changing Volvo API app, a new API
+                # key is needed as well.
+                user_input = {}
+            elif self.source == SOURCE_REAUTH:
                 user_input = self._config_data
                 api = _create_volvo_cars_api(
                     self.hass,
@@ -242,6 +246,11 @@ class VolvoOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
             title=f"{MANUFACTURER} {vin}",
             data=self._config_data,
         )
+
+    def _is_credential_changed(self) -> bool:
+        new_implementation: str = self._config_data["auth_implementation"]
+        old_implementation: str = self._get_reauth_entry().data["auth_implementation"]
+        return new_implementation != old_implementation
 
     async def _async_load_vehicles(self, api: VolvoCarsApi) -> None:
         self._vehicles = []
