@@ -545,8 +545,9 @@ class DeviceCategory(StrEnum):
     """
     Specialized electrical meters, multi-circuit power monitors, and circuit breaker devices
 
-    They are not documented under a single standalone manual titled "TDQ". 
-    Instead, they are structured within the platform's standard product definition and data point (DP) libraries.
+    They are not documented under a single standalone manual titled "TDQ".
+    Instead, they are structured within the platform's standard product
+    definition and data point (DP) libraries.
     """
     TYD = "tyd"
     """Outdoor flood light (undocumented)"""
