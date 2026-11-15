@@ -10,6 +10,7 @@ from unittest.mock import AsyncMock, MagicMock, call, patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from syrupy.assertion import SnapshotAssertion
 from systembridgeconnector.exceptions import (
     AuthenticationException,
     ConnectionClosedException,
@@ -124,19 +125,11 @@ async def test_setup_without_audio_data(
 
 
 @pytest.mark.parametrize(
-    ("device_info", "expected"),
+    "device_info",
     [
-        pytest.param(
-            FIXTURE_SYSTEM.device_info,
-            ("manufacturer", "model", "version"),
-            id="dmi",
-        ),
-        pytest.param(
-            replace(FIXTURE_SYSTEM.device_info, model=None),
-            ("board_vendor", "board_name", "version"),
-            id="board",
-        ),
-        pytest.param(None, (None, None, None), id="no_dmi"),
+        pytest.param(FIXTURE_SYSTEM.device_info, id="dmi"),
+        pytest.param(replace(FIXTURE_SYSTEM.device_info, model=None), id="board"),
+        pytest.param(None, id="no_dmi"),
     ],
 )
 @pytest.mark.usefixtures("mock_version")
@@ -145,8 +138,8 @@ async def test_device_info(
     mock_config_entry: MockConfigEntry,
     mock_websocket_client: MagicMock,
     device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
     device_info: DeviceInfo | None,
-    expected: tuple[str | None, str | None, str | None],
 ) -> None:
     """Test the device's manufacturer, model and hardware version come from DMI."""
     system = replace(FIXTURE_SYSTEM, device_info=device_info)
@@ -163,8 +156,7 @@ async def test_device_info(
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, FIXTURE_UUID), mock_config_entry.entry_id
     )
-    assert device is not None
-    assert (device.manufacturer, device.model, device.hw_version) == expected
+    assert device == snapshot
 
 
 async def test_migration_minor_1_to_2(hass: HomeAssistant) -> None:
