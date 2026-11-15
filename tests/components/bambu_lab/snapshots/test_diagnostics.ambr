@@ -1,0 +1,35 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'available': True,
+    'config_entry_data': dict({
+      'access_code': '**REDACTED**',
+      'host': '**REDACTED**',
+      'serial_number': '**REDACTED**',
+    }),
+    'info': dict({
+      'firmware_version': '01.08.02.00',
+      'hardware_version': 'AP05',
+      'model': 'X1 Carbon',
+      'model_name': 'X1 Carbon',
+      'serial': '**REDACTED**',
+    }),
+    'state': dict({
+      'accepts_commands': True,
+      'bed_target_temperature': 60,
+      'bed_temperature': 60,
+      'chamber_light_on': True,
+      'chamber_temperature': 38,
+      'current_layer': 96,
+      'job_name': '**REDACTED**',
+      'nozzle_target_temperature': 220,
+      'nozzle_temperature': 220,
+      'print_state': 'printing',
+      'progress': 42,
+      'remaining_minutes': 73,
+      'speed_profile': 'standard',
+      'total_layers': 240,
+      'wifi_signal': -58,
+    }),
+  })
+# ---
