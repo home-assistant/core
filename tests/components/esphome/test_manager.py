@@ -4,6 +4,7 @@ import asyncio
 import base64
 from collections.abc import Generator
 from dataclasses import asdict
+from datetime import timedelta
 import json
 import logging
 import math
@@ -81,9 +82,11 @@ from homeassistant.components.esphome.entry_data import (
 )
 from homeassistant.components.esphome.manager import (
     DEVICE_CONFLICT_ISSUE_FORMAT,
+    STARTUP_SCANNER_WAIT,
     async_replace_device,
 )
 from homeassistant.components.tag import DOMAIN as TAG_DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -106,6 +109,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from .conftest import (
     SUB_DEVICE_RELATIONS,
@@ -5304,12 +5308,10 @@ async def test_bluetooth_proxy_startup_wait_times_out_during_forward(
         forward_started.set()
         await release_forward.wait()
 
-    with (
-        patch("homeassistant.components.esphome.manager.STARTUP_SCANNER_WAIT", 0.05),
-        patch(
-            "homeassistant.components.esphome.assist_satellite.async_setup_entry",
-            _slow_satellite_setup,
-        ),
+    caplog.set_level(logging.DEBUG, "homeassistant.components.esphome.manager")
+    with patch(
+        "homeassistant.components.esphome.assist_satellite.async_setup_entry",
+        _slow_satellite_setup,
     ):
         setup_task = hass.async_create_task(
             hass.config_entries.async_setup(entry.entry_id)
@@ -5320,10 +5322,16 @@ async def test_bluetooth_proxy_startup_wait_times_out_during_forward(
         async with asyncio.timeout(2):
             await forward_started.wait()
 
-        # The scanner wait times out, but setup must not release its lock
-        # while the forward it started is still running
-        await asyncio.sleep(0.1)
-        assert not setup_task.done()
+        # Time out the scanner wait only now, while the forward is running
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + timedelta(seconds=STARTUP_SCANNER_WAIT)
+        )
+        async with asyncio.timeout(2):
+            while "Timed out waiting for Bluetooth scanner" not in caplog.text:
+                await asyncio.sleep(0)
+
+        # Setup must not release its lock while the forward is still running
+        assert entry.state is ConfigEntryState.SETUP_IN_PROGRESS
 
         release_forward.set()
         async with asyncio.timeout(2):
