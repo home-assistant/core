@@ -856,7 +856,15 @@ class StartTimerIntentHandler(intent.IntentHandler):
     slot_schema = {
         probatio.Required(probatio.Any("hours", "minutes", "seconds")): cv.positive_int,
         probatio.Optional("name"): cv.string,
-        probatio.Optional("conversation_command"): cv.string,
+        probatio.Optional(
+            "conversation_command",
+            description=(
+                "Command to run through the conversation agent when the timer"
+                " finishes. When set, timer events are not sent to the timer"
+                " device (e.g. a voice satellite) and the timer is not included"
+                " in timer status queries."
+            ),
+        ): cv.string,
     }
 
     @override
