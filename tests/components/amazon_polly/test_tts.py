@@ -1,5 +1,6 @@
 """Tests for the Amazon Polly text-to-speech platform."""
 
+import asyncio
 from http import HTTPStatus
 from pathlib import Path
 from typing import Any
@@ -11,6 +12,11 @@ from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components import tts
 from homeassistant.components.amazon_polly.const import DOMAIN
+from homeassistant.components.amazon_polly.helpers import (
+    CannotConnect,
+    InvalidAuth,
+    async_connect,
+)
 from homeassistant.components.media_player import ATTR_MEDIA_CONTENT_ID
 from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM, EVENT_HOMEASSISTANT_CLOSE
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -239,3 +245,45 @@ async def test_setup_errors(
     await hass.async_block_till_done()
 
     assert not hass.services.has_service(tts.DOMAIN, "amazon_polly_say")
+
+
+@pytest.mark.parametrize(
+    ("describe_voices_error", "expected_error"),
+    [
+        pytest.param(asyncio.CancelledError(), asyncio.CancelledError, id="cancelled"),
+        pytest.param(KeyError("Id"), KeyError, id="unexpected"),
+        pytest.param(
+            ClientError(
+                {"Error": {"Code": "UnrecognizedClientException", "Message": "Bad"}},
+                "DescribeVoices",
+            ),
+            InvalidAuth,
+            id="invalid_auth",
+        ),
+        pytest.param(
+            EndpointConnectionError(endpoint_url="https://polly.amazonaws.com"),
+            CannotConnect,
+            id="cannot_connect",
+        ),
+    ],
+)
+async def test_connect_closes_client_on_failure(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_polly_client: AsyncMock,
+    describe_voices_error: BaseException,
+    expected_error: type[BaseException],
+) -> None:
+    """Test the client is closed when loading the voices fails or is cancelled."""
+    mock_polly_client.describe_voices.side_effect = describe_voices_error
+    client_context = mock_session.return_value.create_client.return_value
+
+    with pytest.raises(expected_error):
+        await async_connect(
+            hass,
+            region="us-east-1",
+            access_key_id=CONFIG["aws_access_key_id"],
+            secret_access_key=CONFIG["aws_secret_access_key"],
+        )
+
+    client_context.__aexit__.assert_awaited_once()

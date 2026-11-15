@@ -1,6 +1,7 @@
 """Helpers for the Amazon Polly integration."""
 
 from collections import defaultdict
+from contextlib import AsyncExitStack
 from dataclasses import dataclass, field
 from typing import Any, Final
 
@@ -65,30 +66,32 @@ async def async_connect(
     The caller owns the returned client and must close it.
     """
     session = await hass.async_add_executor_job(_create_session, profile)
-    # pylint: disable-next=unnecessary-dunder-call
-    client: AioBaseClient = await session.create_client(
-        "polly",
-        region_name=region,
-        aws_access_key_id=access_key_id,
-        aws_secret_access_key=secret_access_key,
-        config=AioConfig(
-            connect_timeout=AWS_CONF_CONNECT_TIMEOUT,
-            read_timeout=AWS_CONF_READ_TIMEOUT,
-            max_pool_connections=AWS_CONF_MAX_POOL_CONNECTIONS,
-            warm_up_loader_caches=True,
-        ),
-    ).__aenter__()
-    data = AmazonPollyData(client=client)
-    try:
-        await _async_load_voices(data)
-    except ClientError as err:
-        await client.__aexit__(None, None, None)
-        if err.response.get("Error", {}).get("Code") in AUTH_ERROR_CODES:
-            raise InvalidAuth(str(err)) from err
-        raise CannotConnect(str(err)) from err
-    except BotoCoreError as err:
-        await client.__aexit__(None, None, None)
-        raise CannotConnect(str(err)) from err
+    # The stack closes the client if loading the voices fails or is cancelled.
+    async with AsyncExitStack() as stack:
+        client: AioBaseClient = await stack.enter_async_context(
+            session.create_client(
+                "polly",
+                region_name=region,
+                aws_access_key_id=access_key_id,
+                aws_secret_access_key=secret_access_key,
+                config=AioConfig(
+                    connect_timeout=AWS_CONF_CONNECT_TIMEOUT,
+                    read_timeout=AWS_CONF_READ_TIMEOUT,
+                    max_pool_connections=AWS_CONF_MAX_POOL_CONNECTIONS,
+                    warm_up_loader_caches=True,
+                ),
+            )
+        )
+        data = AmazonPollyData(client=client)
+        try:
+            await _async_load_voices(data)
+        except ClientError as err:
+            if err.response.get("Error", {}).get("Code") in AUTH_ERROR_CODES:
+                raise InvalidAuth(str(err)) from err
+            raise CannotConnect(str(err)) from err
+        except BotoCoreError as err:
+            raise CannotConnect(str(err)) from err
+        stack.pop_all()
     return data
 
 
