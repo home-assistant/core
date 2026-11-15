@@ -394,16 +394,12 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
 
         therm_setpoint_mode = getattr(self.device, "therm_setpoint_mode", None)
 
-        # Rooms keep reporting "home" while the whole home is in away or frost
-        # guard mode; that mode is only available on the home.
-        if therm_setpoint_mode in (
-            None,
-            STATE_NETATMO_HOME,
-        ) and self.home.therm_mode in (STATE_NETATMO_AWAY, STATE_NETATMO_HG):
+        # A room in "home" mode follows the home mode (schedule, away or frost
+        # guard), which the API only reports on the home.
+        if therm_setpoint_mode in (None, STATE_NETATMO_HOME):
             therm_setpoint_mode = self.home.therm_mode
-
-        if therm_setpoint_mode is None:
-            therm_setpoint_mode = STATE_NETATMO_SCHEDULE
+            if therm_setpoint_mode not in NETATMO_MAP_PRESET:
+                therm_setpoint_mode = STATE_NETATMO_SCHEDULE
 
         self._attr_preset_mode = NETATMO_MAP_PRESET[therm_setpoint_mode]
         self._attr_hvac_mode = HVAC_MAP_NETATMO[self._attr_preset_mode]
