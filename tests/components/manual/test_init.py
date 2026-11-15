@@ -192,3 +192,64 @@ async def test_configured_timings(
         blocking=True,
     )
     assert hass.states.get(ENTITY_ID).state == AlarmControlPanelState.DISARMED
+
+
+async def test_reload_after_arming_completed(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test a reload after arming completed keeps the alarm armed."""
+    await hass.services.async_call(
+        ALARM_DOMAIN,
+        SERVICE_ALARM_ARM_AWAY,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_CODE: CODE},
+        blocking=True,
+    )
+    freezer.tick(timedelta(seconds=11))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == AlarmControlPanelState.ARMED_AWAY
+
+    assert await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == AlarmControlPanelState.ARMED_AWAY
+
+
+async def test_reload_after_pending_completed(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test a reload after pending ended keeps the original trigger timing."""
+    await hass.services.async_call(
+        ALARM_DOMAIN,
+        SERVICE_ALARM_ARM_AWAY,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_CODE: CODE},
+        blocking=True,
+    )
+    freezer.tick(timedelta(seconds=11))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        ALARM_DOMAIN,
+        SERVICE_ALARM_TRIGGER,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    freezer.tick(timedelta(seconds=6))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == AlarmControlPanelState.TRIGGERED
+
+    assert await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == AlarmControlPanelState.TRIGGERED
+
+    # Trigger time ends 35 seconds after the trigger, 29 seconds from now
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == AlarmControlPanelState.DISARMED

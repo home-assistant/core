@@ -30,7 +30,7 @@ from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
 )
 from homeassistant.helpers.event import async_track_point_in_time
-from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
@@ -236,6 +236,26 @@ async def async_setup_entry(
             )
         ]
     )
+
+
+class ManualAlarmExtraStoredData(ExtraStoredData):
+    """Extra stored data for the manual alarm."""
+
+    def __init__(self, state_ts: dt.datetime) -> None:
+        """Initialize the extra stored data."""
+        self.state_ts = state_ts
+
+    @override
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the extra data."""
+        return {"state_ts": self.state_ts.isoformat()}
+
+    @classmethod
+    def from_dict(cls, restored: dict[str, Any]) -> ManualAlarmExtraStoredData | None:
+        """Initialize the extra stored data from a dict."""
+        if (state_ts := dt_util.parse_datetime(restored.get("state_ts", ""))) is None:
+            return None
+        return cls(state_ts)
 
 
 class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
@@ -493,6 +513,12 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
             ManualEntityStateAttribute.NEXT_STATE: state,
         }
 
+    @property
+    @override
+    def extra_restore_state_data(self) -> ManualAlarmExtraStoredData:
+        """Return the transition start to restore."""
+        return ManualAlarmExtraStoredData(self._state_ts)
+
     @callback
     def async_scheduled_update(self, now: dt.datetime) -> None:
         """Update state at a scheduled point in time."""
@@ -503,7 +529,14 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
         if state := await self.async_get_last_state():
-            self._state_ts = state.last_updated
+            # last_updated is when arming or pending ended, not when the
+            # transition started, so prefer the stored transition start
+            if (extra_data := await self.async_get_last_extra_data()) and (
+                stored := ManualAlarmExtraStoredData.from_dict(extra_data.as_dict())
+            ):
+                self._state_ts = stored.state_ts
+            else:
+                self._state_ts = state.last_updated
             try:
                 if next_state := state.attributes.get(
                     ManualEntityStateAttribute.NEXT_STATE
