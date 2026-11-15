@@ -8,7 +8,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.backup.const import DOMAIN
 from homeassistant.components.backup.event import ATTR_BACKUP_STAGE, ATTR_FAILED_REASON
-from homeassistant.components.event import ATTR_EVENT_TYPE
+from homeassistant.components.event import EventEntityStateAttribute
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -41,7 +41,7 @@ async def test_event_entity_backup_completed(
         await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("event.backup_automatic_backup")
-    assert state.attributes[ATTR_EVENT_TYPE] is None
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] is None
 
     client = await hass_ws_client(hass)
     await hass.async_block_till_done()
@@ -51,13 +51,13 @@ async def test_event_entity_backup_completed(
     assert await client.receive_json()
 
     state = hass.states.get("event.backup_automatic_backup")
-    assert state.attributes[ATTR_EVENT_TYPE] == "in_progress"
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == "in_progress"
     assert state.attributes[ATTR_BACKUP_STAGE] is not None
     assert state.attributes[ATTR_FAILED_REASON] is None
 
     await hass.async_block_till_done(wait_background_tasks=True)
     state = hass.states.get("event.backup_automatic_backup")
-    assert state.attributes[ATTR_EVENT_TYPE] == "completed"
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == "completed"
     assert state.attributes[ATTR_BACKUP_STAGE] is None
     assert state.attributes[ATTR_FAILED_REASON] is None
 
@@ -73,7 +73,7 @@ async def test_event_entity_backup_failed(
         await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("event.backup_automatic_backup")
-    assert state.attributes[ATTR_EVENT_TYPE] is None
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] is None
 
     create_backup.side_effect = Exception("Boom!")
 
@@ -85,6 +85,6 @@ async def test_event_entity_backup_failed(
     assert await client.receive_json()
 
     state = hass.states.get("event.backup_automatic_backup")
-    assert state.attributes[ATTR_EVENT_TYPE] == "failed"
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == "failed"
     assert state.attributes[ATTR_BACKUP_STAGE] is None
     assert state.attributes[ATTR_FAILED_REASON] == "unknown_error"

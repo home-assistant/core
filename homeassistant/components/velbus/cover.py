@@ -5,10 +5,10 @@ from typing import Any, override
 from velbusaio.channels import Blind as VelbusBlind
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
+    CoverServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -118,4 +118,4 @@ class VelbusCover(VelbusEntity, CoverEntity):
     @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        await self._channel.set_position(100 - kwargs[ATTR_POSITION])
+        await self._channel.set_position(100 - kwargs[CoverServiceArgument.POSITION])

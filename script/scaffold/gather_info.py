@@ -5,7 +5,12 @@ import json
 from hassfest.model import IntegrationType
 
 from homeassistant.util import slugify
-from script.hassfest.manifest import SUPPORTED_IOT_CLASSES
+from script.hassfest.icons import integration_category_keys
+from script.hassfest.manifest import (
+    CATEGORIES_DOCUMENTATION_URL,
+    NO_CATEGORIES_INTEGRATION_TYPES,
+    SUPPORTED_IOT_CLASSES,
+)
 
 from .const import COMPONENT_DIR
 from .error import ExitApp
@@ -57,6 +62,7 @@ and has to match the directory name of the integration."""
                 "requirement": "aiodevelop==1.2.3",
                 "oauth2": True,
                 "iot_class": "local_polling",
+                "categories": ["diy_makers"],
             }
         )
     else:
@@ -168,7 +174,75 @@ More info @ https://contributors.home-assistant.io/core/integrations/manifest/#i
             }
         )
 
-    return _gather_info(fields)
+    info = _gather_info(fields)
+
+    if info.get("integration_type") not in (
+        NO_CATEGORIES_INTEGRATION_TYPES | {IntegrationType.VIRTUAL}
+    ):
+        info.update(_gather_categories())
+
+    return info
+
+
+def _split_categories(value: str) -> list[str]:
+    """Split a comma separated list of categories."""
+    return [category.strip() for category in value.split(",") if category.strip()]
+
+
+def _gather_categories() -> dict:
+    """Gather the categories of a new integration from user."""
+    strings = json.loads((COMPONENT_DIR / "homeassistant" / "strings.json").read_text())
+    known_categories = integration_category_keys(strings["integration_category"])
+
+    return _gather_info(
+        {
+            "categories": {
+                "prompt": (
+                    f"""Which categories does your integration belong to?
+
+Separate multiple categories with a comma.
+Valid values are {", ".join(sorted(known_categories))}
+
+More info @ {CATEGORIES_DOCUMENTATION_URL}
+"""
+                ),
+                "validators": [
+                    [
+                        "You need to pick at least one category.",
+                        _split_categories,
+                    ],
+                    [
+                        "You need to pick from the valid values.",
+                        lambda value: known_categories.issuperset(
+                            _split_categories(value)
+                        ),
+                    ],
+                    [
+                        "You need to pick at most three categories.",
+                        lambda value: len(_split_categories(value)) <= 3,
+                    ],
+                    [
+                        "You need to pick each category only once.",
+                        lambda value: (
+                            len(set(_split_categories(value)))
+                            == len(_split_categories(value))
+                        ),
+                    ],
+                    [
+                        "A subcategory implies its category, remove the category.",
+                        lambda value: (
+                            not any(
+                                category.partition(".")[0] in _split_categories(value)
+                                for category in _split_categories(value)
+                                if "." in category
+                            )
+                        ),
+                    ],
+                ],
+                "converter": _split_categories,
+            }
+        }
+    )
 
 
 def _load_existing_integration(domain) -> Info:

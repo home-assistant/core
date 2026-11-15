@@ -1,0 +1,79 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "app_get_discovery_info_failed": "The Voice app is running but has not announced itself to Home Assistant yet.",
+      "app_info_failed": "Failed to get the Voice app info.",
+      "app_install_failed": "Failed to install the Voice app.",
+      "app_start_failed": "Failed to start the Voice app.",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "preview_feature_disabled": "Turn on the Next-generation voice preview feature in Home Assistant Labs first.",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "unsupported_version": "The Voice app speaks a protocol version this Home Assistant does not. Update the app or Home Assistant."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unsupported_version": "[%key:component::voice_support::config::abort::unsupported_version%]"
+    },
+    "flow_title": "{name}",
+    "progress": {
+      "install_app": "Please wait while the Voice app installation finishes. This can take several minutes.",
+      "start_app": "Please wait while the Voice app starts. This may take some seconds."
+    },
+    "step": {
+      "install_app": {
+        "title": "The app installation has started"
+      },
+      "manual": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the Voice app.",
+          "port": "The port the Voice app listens on."
+        },
+        "title": "Connect to the Voice app"
+      },
+      "on_supervisor": {
+        "data": {
+          "use_app": "Use the official Voice app"
+        },
+        "data_description": {
+          "use_app": "Home Assistant installs and starts the app for you if needed."
+        },
+        "description": "Do you want to use the official Voice app?\n\nIf you are already running the Voice app in a custom container, natively etc., then do not select this option.",
+        "title": "Select connection method"
+      },
+      "start_app": {
+        "title": "Starting app"
+      },
+      "zeroconf_confirm": {
+        "description": "Do you want to connect to {name} at {host}?",
+        "title": "Discovered Voice app"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Cannot connect to the Voice app at {url}."
+    },
+    "unsupported_version": {
+      "message": "{name} {version} speaks protocol version {api_version}, but this Home Assistant needs version {supported_api_version}. Update the app or Home Assistant."
+    }
+  },
+  "issues": {
+    "app_setup_failed": {
+      "description": "Home Assistant could not install or start the Voice app, which the next generation voice stack needs. Check the app in the app store, then restart Home Assistant to try again.",
+      "title": "The Voice app could not be set up"
+    }
+  },
+  "preview_features": {
+    "next_generation_voice": {
+      "description": "Enables the next generation voice stack in Home Assistant. On a Home Assistant OS or Supervised system the app is installed for you when this feature is enabled.",
+      "disable_confirmation": "Next-generation voice will be turned off. If Home Assistant installed the Voice app, it will back up and uninstall the app and remove its integration entry.",
+      "enable_confirmation": "This feature is still in development and may change. On a Home Assistant OS or Supervised system the Voice app will be installed when this feature is enabled.",
+      "name": "Next-generation voice"
+    }
+  }
+}

@@ -57,6 +57,11 @@ KNOWN_ERRORS: list[tuple[Exception, type[Exception], str]] = [
         "Error fetching test data",
     ),
     (
+        update_coordinator.UpdateFailedUnreachable(),
+        update_coordinator.UpdateFailedUnreachable,
+        "test is unavailable",
+    ),
+    (
         ConfigEntryNotReady(),
         ConfigEntryNotReady,
         "Error fetching test data",
@@ -311,6 +316,32 @@ async def test_refresh_known_errors(
     assert crd.last_update_success is False
     assert isinstance(crd.last_exception, err_msg[1])
     assert err_msg[2] in caplog.text
+
+
+async def test_refresh_update_failed_unreachable(
+    crd: update_coordinator.DataUpdateCoordinator[int],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test UpdateFailedUnreachable is logged once at info level."""
+    await crd.async_refresh()
+    caplog.clear()
+
+    crd.update_method = AsyncMock(
+        side_effect=update_coordinator.UpdateFailedUnreachable("Device is off")
+    )
+    await crd.async_refresh()
+
+    assert crd.last_update_success is False
+    assert [
+        (r.levelno, r.message) for r in caplog.records if r.levelno >= logging.INFO
+    ] == [(logging.INFO, "test is unavailable: Device is off")]
+
+    # Not logged again while still unavailable
+    caplog.clear()
+    await crd.async_refresh()
+
+    assert crd.last_update_success is False
+    assert "test is unavailable" not in caplog.text
 
 
 async def test_refresh_fail_unknown(

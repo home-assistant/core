@@ -1140,6 +1140,11 @@ ZEROCONF = {
             "domain": "vizio",
         },
     ],
+    "_voice-support._tcp.local.": [
+        {
+            "domain": "voice_support",
+        },
+    ],
     "_waermeleser._tcp.local.": [
         {
             "domain": "energieleser",
