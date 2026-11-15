@@ -40,8 +40,8 @@ class MyStromSensorEntityDescription[_DeviceT](SensorEntityDescription):
     """Class describing mystrom sensor entities."""
 
     value_fn: Callable[[_DeviceT], float | None]
-    # Only needed where nothing else on the device polls; a switch or bulb is
-    # kept fresh by its own entity refreshing the shared device.
+    # Only needed where nothing else on the device polls; a switch is kept
+    # fresh by its own entity refreshing the shared device.
     update_fn: Callable[[_DeviceT], Coroutine[Any, Any, None]] | None = None
 
 
@@ -52,6 +52,7 @@ SENSOR_TYPES_BULB: tuple[MyStromSensorEntityDescription[MyStromBulb], ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
         value_fn=lambda device: device.consumption,
+        update_fn=lambda device: device.get_state(),
     ),
 )
 
