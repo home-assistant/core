@@ -30,7 +30,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 
-from .const import CONNECTION_TYPE_WLAN, DSL_CONNECTION, LOGGER
+from .const import CONNECTION_TYPE_WLAN, DSL_CONNECTION, LOGGER, MeshRoles
 from .coordinator import FRITZ_DATA_KEY, AvmWrapper, FritzConfigEntry, FritzData
 from .entity import (
     FritzBoxBaseCoordinatorEntity,
@@ -412,6 +412,9 @@ def _async_link_sensors(
 ) -> list[FritzBoxLinkSensor]:
     """Add link sensors for connected devices once their link is known."""
     new_link_sensors: list[FritzBoxLinkSensor] = []
+
+    if avm_wrapper.mesh_role is MeshRoles.NONE:
+        return new_link_sensors
 
     for mac, device in avm_wrapper.devices.items():
         if device_filter_out_from_trackers(

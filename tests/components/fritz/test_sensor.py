@@ -18,7 +18,11 @@ from pytest_homeassistant.common import (
 from requests.exceptions import RequestException
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.fritz.const import DOMAIN, SCAN_INTERVAL
+from homeassistant.components.fritz.const import (
+    CONF_OLD_DISCOVERY,
+    DOMAIN,
+    SCAN_INTERVAL,
+)
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
@@ -397,3 +401,42 @@ async def test_link_sensor_signal_strength_not_available(
 
     assert (state := hass.states.get("sensor.phone_signal_strength"))
     assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    ("mesh_support", "options"),
+    [
+        pytest.param(False, {}, id="no_mesh_support"),
+        pytest.param(True, {CONF_OLD_DISCOVERY: True}, id="old_discovery"),
+    ],
+)
+@pytest.mark.usefixtures(
+    "entity_registry_enabled_by_default",
+    "fc_class_mock",
+    "fh_class_mock",
+    "fs_class_mock",
+    "wlan_device_link",
+)
+async def test_link_sensors_old_discovery(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mesh_support: bool,
+    options: dict[str, Any],
+) -> None:
+    """Test link sensors are not created when the old discovery method is used."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA, options=options)
+    entry.add_to_hass(hass)
+
+    with (
+        patch("homeassistant.components.fritz.PLATFORMS", [Platform.SENSOR]),
+        patch.object(FritzStatus, "device_has_mesh_support", mesh_support),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    for entity_id in (
+        *PHONE_LINK_SENSORS,
+        "sensor.printer_max_download_link_rate",
+        "sensor.printer_max_upload_link_rate",
+    ):
+        assert not entity_registry.async_is_registered(entity_id)
