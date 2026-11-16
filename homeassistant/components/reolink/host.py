@@ -122,6 +122,7 @@ class ReolinkHost:
         self.firmware_ch_list: list[int | None] = []
 
         self.hls_playback: ReolinkHlsPlayback | None = None
+        self._hls_playback_lock = asyncio.Lock()
         self.starting: bool = True
         self.privacy_mode: bool | None = None
         self.credential_errors: int = 0
@@ -654,9 +655,10 @@ class ReolinkHost:
         await self._async_stop_long_polling()
         self.unregister_webhook(ONVIF)
         self.unregister_webhook(BC)
-        if self.hls_playback is not None:
-            await self.hls_playback.async_close()
-            self.hls_playback = None
+        async with self._hls_playback_lock:
+            if self.hls_playback is not None:
+                await self.hls_playback.async_close()
+                self.hls_playback = None
         await self.disconnect()
 
     async def async_start_hls_playback(
@@ -667,13 +669,17 @@ class ReolinkHost:
             # playback is only started for hosts of a set up config entry
             assert self._config_entry is not None
         # the host allows only one download at a time, stop the previous playback
-        if self.hls_playback is not None:
-            await self.hls_playback.async_close()
-        self.hls_playback = ReolinkHlsPlayback(
-            self._hass, self._config_entry, self.api, channel, stream, start, end
-        )
-        await self.hls_playback.async_start()
-        return self.hls_playback
+        # lock: the previous download is stopped before the next one is started
+        async with self._hls_playback_lock:
+            if self.hls_playback is not None:
+                await self.hls_playback.async_close()
+                self.hls_playback = None
+            playback = ReolinkHlsPlayback(
+                self._hass, self._config_entry, self.api, channel, stream, start, end
+            )
+            self.hls_playback = playback
+            await playback.async_start()
+            return playback
 
     async def subscribe(self) -> None:
         """Subscribe to motion events and register the webhook as a callback."""
