@@ -205,10 +205,6 @@
     "mirrored_observation": {
       "description": "The Bayesian helper {name} has two complementary observations for `{entity}`. The probability is also updated when an observation does not match, so only one of them is needed. Please remove one of the two observations from the helper.",
       "title": "Redundant mirrored observations in {name}"
-    },
-    "no_prob_given_false": {
-      "description": "In the Bayesian integration `prob_given_false` is now a required configuration variable as there was no mathematical rationale for the previous default value. Please add this to your `configuration.yaml` for `bayesian/{entity}`. These observations will be ignored until you do.",
-      "title": "Manual YAML addition required for Bayesian"
     }
   },
   "options": {

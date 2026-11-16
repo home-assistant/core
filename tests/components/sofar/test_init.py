@@ -2,11 +2,13 @@
 
 from collections.abc import Callable
 from datetime import timedelta
+import logging
 from typing import Any
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 from modbus_connection import (
+    GatewayTargetError,
     ModbusConnectionError,
     ModbusError,
     ModbusExceptionError,
@@ -34,6 +36,7 @@ from homeassistant.components.sofar.const import (
     CONF_BAUDRATE,
     DOMAIN,
     FAULT_LOG,
+    PACKS_SCAN_INTERVAL,
     SCAN_INTERVAL,
     SERVED_COMPONENTS,
     SETTINGS_SCAN_INTERVAL,
@@ -57,8 +60,10 @@ from . import (
     MOCK_SW_VERSION,
     MOCK_TCP_INPUT,
     MOCK_UNRECOGNIZED_SERIAL,
+    ONLINE_GROUPS_REGISTER,
     declare_pv_in_masks,
     deny_meter_energy,
+    seed_battery_tower,
     seed_hybrid_inverter,
     seed_pv_inverter,
     serve_meter_energy,
@@ -213,7 +218,7 @@ async def test_setup_skips_seeding_an_unusable_restored_total(
                 unit_id
             ),
         ),
-        patch("sofar_modbus.model.CorrectedTotal.seed") as mock_seed,
+        patch("sofar_modbus.CorrectedTotal.seed") as mock_seed,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
@@ -840,7 +845,7 @@ async def test_settings_failure_does_not_block_reading_sensors(
             ),
         ),
         patch(
-            "sofar_modbus.modern.device.SofarInverter.async_update_settings",
+            "sofar_modbus.SofarInverter.async_update_settings",
             side_effect=ModbusConnectionError("settings unreachable"),
         ),
     ):
@@ -997,6 +1002,61 @@ async def test_every_component_failing_recovers_on_a_later_poll(
 
     assert hass.states.get(entity_id).state == "2.5"
     assert "is available again" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(ModbusTimeoutError("asleep"), id="asleep"),
+        pytest.param(GatewayTargetError(), id="silent_behind_gateway"),
+        pytest.param(ModbusConnectionError("link lost"), id="link_lost"),
+    ],
+)
+async def test_unreachable_inverter_is_logged_at_info(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    mock_connection: MockModbusConnection,
+    init_integration: MockConfigEntry,
+    error: ModbusError,
+) -> None:
+    """Test an unreachable inverter is logged at info, not as an error."""
+    mock_connection.for_unit(1).fail_requests(error)
+    freezer.tick(timedelta(seconds=SETTINGS_SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (
+        "homeassistant.components.sofar.coordinator",
+        logging.INFO,
+        f"{init_integration.title} is unavailable: The inverter cannot be reached",
+    ) in caplog.record_tuples
+    assert "Error fetching" not in caplog.text
+
+
+async def test_unreachable_adapter_is_logged_at_info(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    mock_connection: MockModbusConnection,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test a timeout opening the link is logged at info."""
+    mock_connection.simulate_connection_lost()
+    with patch.object(
+        MockModbusConnection,
+        "_connect_client",
+        side_effect=ModbusTimeoutError("no adapter"),
+    ):
+        freezer.tick(timedelta(seconds=SCAN_INTERVAL))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (
+        "homeassistant.components.sofar.coordinator",
+        logging.INFO,
+        f"{init_integration.title} is unavailable: The inverter cannot be reached",
+    ) in caplog.record_tuples
 
 
 async def test_component_failure_is_logged_once_until_it_recovers(
@@ -1268,6 +1328,123 @@ async def test_only_absent_battery_strings_can_be_removed(
 
     assert response["success"] is removable
     assert (device_registry.async_get(device.id) is None) is removable
+
+
+async def test_bts_packs_become_devices(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test each pack of a BTS tower gets its own device on the inverter."""
+    connection = MockModbusConnection()
+    seed_hybrid_inverter(connection.for_unit(1))
+    seed_battery_tower(connection.for_unit(1), groups=3)
+    entry = await _setup_hybrid(hass, connection)
+
+    inverter = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_HYBRID_SERIAL), entry.entry_id
+    )
+    assert inverter is not None
+    assert {
+        (device.name, device.serial_number, device.model, device.sw_version)
+        for device in dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+        if device.via_device_id == inverter.id
+        and device.name.startswith("Battery pack")
+    } == {
+        ("Battery pack 1.1", "PACK0", "BTS 5K", "10033"),
+        ("Battery pack 2.1", "PACK1", "BTS 5K", "10033"),
+        ("Battery pack 3.1", "PACK2", "BTS 5K", "10033"),
+    }
+    assert "battery_packs" in entry.data[SERVED_COMPONENTS]
+
+
+async def test_hybrid_without_a_tower_gets_no_packs(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a tower-typed hybrid running another battery gets no packs."""
+    connection = MockModbusConnection()
+    seed_hybrid_inverter(connection.for_unit(1))
+    entry = await _setup_hybrid(hass, connection)
+
+    assert not any(
+        device.name.startswith("Battery pack")
+        for device in dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+    )
+    assert "battery_packs" not in entry.data[SERVED_COMPONENTS]
+
+
+@pytest.mark.usefixtures("mock_get_unit")
+async def test_a_known_tower_survives_a_silent_probe(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_connection: MockModbusConnection,
+) -> None:
+    """Test a tower an earlier setup saw is kept when its probe times out."""
+    unit = mock_connection.for_unit(1)
+    seed_hybrid_inverter(unit)
+    seed_battery_tower(unit, groups=3)
+    unit.fail_read(0x9007, ModbusTimeoutError("tower silent"))
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=MOCK_HYBRID_SERIAL,
+        data={**MOCK_ENTRY_DATA, SERVED_COMPONENTS: ["battery_packs", "grid"]},
+        title=MOCK_HYBRID_MODEL,
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert "battery_packs" in entry.data[SERVED_COMPONENTS]
+    # The silent packs must not read as a readings failure.
+    assert (
+        f"{MOCK_HYBRID_MODEL} battery packs is unavailable: "
+        "The battery tower cannot be reached" in caplog.text
+    )
+
+
+async def test_only_silent_bts_packs_can_be_removed(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test only a silent pack's device can go, and it returns on answering."""
+    assert await async_setup_component(hass, "config", {})
+    connection = MockModbusConnection()
+    unit = connection.for_unit(1)
+    seed_hybrid_inverter(unit)
+    seed_battery_tower(unit, groups=3)
+    entry = await _setup_hybrid(hass, connection)
+    pack = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{MOCK_HYBRID_SERIAL}_battery_pack_0_0"), entry.entry_id
+    )
+    assert pack is not None
+    client = await hass_ws_client(hass)
+
+    assert (await client.remove_device(pack.id))["success"] is False
+
+    # Group 0 drops out of the tower's online bitmap.
+    unit.holding[ONLINE_GROUPS_REGISTER] = 0b110
+    freezer.tick(timedelta(seconds=PACKS_SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (await client.remove_device(pack.id))["success"] is True
+    assert device_registry.async_get(pack.id) is None
+
+    unit.holding[ONLINE_GROUPS_REGISTER] = 0b111
+    freezer.tick(timedelta(seconds=PACKS_SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{MOCK_HYBRID_SERIAL}_battery_pack_0_0"), entry.entry_id
+        )
+        is not None
+    )
 
 
 async def test_an_absent_string_is_removable_while_the_entry_is_unloaded(

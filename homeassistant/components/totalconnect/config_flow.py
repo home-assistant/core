@@ -78,17 +78,18 @@ class TotalConnectConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the user locations and associated usercodes."""
         errors = {}
         if user_input is not None:
-            for location_id in self.usercodes:
-                if self.usercodes[location_id] is None:
-                    valid = await self.hass.async_add_executor_job(
-                        self.client.locations[location_id].set_usercode,
-                        user_input[CONF_USERCODES],
-                    )
-                    if valid:
-                        self.usercodes[location_id] = user_input[CONF_USERCODES]
-                    else:
-                        errors[CONF_LOCATION] = "usercode"
-                    break
+            location_id = next(
+                (lid for lid, code in self.usercodes.items() if code is None), None
+            )
+            if location_id is not None:
+                valid = await self.hass.async_add_executor_job(
+                    self.client.locations[location_id].set_usercode,
+                    user_input[CONF_USERCODES],
+                )
+                if valid:
+                    self.usercodes[location_id] = user_input[CONF_USERCODES]
+                else:
+                    errors[CONF_LOCATION] = "usercode"
 
             complete = True
             for location_id in self.usercodes:

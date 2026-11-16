@@ -217,7 +217,8 @@ class AppleTvMediaPlayer(
         if self.manager.is_connecting:
             return None
         if self.atv is None:
-            return MediaPlayerState.OFF
+            # A lost control connection does not mean the device was powered off.
+            return None if self.manager.is_on else MediaPlayerState.OFF
         if (
             self._is_feature_available(FeatureName.PowerState)
             and self.atv.power.power_state is PowerState.Off

@@ -14,6 +14,8 @@ from pytest_homeassistant.common import (
 )
 from syrupy.assertion import SnapshotAssertion
 from weatherflow4py.models.rest.observation import ObservationStationREST
+from weatherflow4py.models.ws.types import EventType
+from weatherflow4py.models.ws.websocket_response import ObservationTempestWS
 
 from homeassistant.components.weatherflow_cloud.const import DOMAIN
 from homeassistant.components.weatherflow_cloud.coordinator import (
@@ -118,6 +120,32 @@ async def test_rest_sensor_unavailable_with_empty_observation(
     )
 
 
+async def test_rest_sensor_unavailable_when_station_is_missing(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_rest_api: AsyncMock,
+    mock_websocket_api: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test REST sensors are unavailable when the payload no longer has the station."""
+    with patch(
+        "homeassistant.components.weatherflow_cloud.PLATFORMS", [Platform.SENSOR]
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.my_home_station_temperature").state == "10.5"
+
+    mock_rest_api.get_all_data.return_value = {}
+
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("sensor.my_home_station_temperature").state == STATE_UNAVAILABLE
+    )
+
+
 async def test_websocket_sensor_observation(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -159,6 +187,36 @@ async def test_websocket_sensor_observation(
 
     # Test that native_value returns the correct value
     assert sensor.native_value == 22.5
+
+
+async def test_websocket_sensor_available_after_observation(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_rest_api: AsyncMock,
+    mock_websocket_api: AsyncMock,
+) -> None:
+    """Test websocket sensors become available after the first observation."""
+    with patch(
+        "homeassistant.components.weatherflow_cloud.PLATFORMS", [Platform.SENSOR]
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.my_home_station_wind_gust").state == (
+        STATE_UNAVAILABLE
+    )
+
+    observation_callback = next(
+        call.kwargs["callback"]
+        for call in mock_websocket_api.register_callback.call_args_list
+        if call.kwargs["message_type"] == EventType.OBSERVATION
+    )
+    message = MagicMock(spec=ObservationTempestWS)
+    message.device_id = 123456
+    message.wind_gust = 4.2
+    await observation_callback(message)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.my_home_station_wind_gust").state == "15.12"
 
 
 async def test_websocket_sensor_wind(
