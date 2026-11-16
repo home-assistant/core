@@ -154,7 +154,7 @@ def async_subscribe_bootstrap_progress(
     data = _bootstrap_progress(hass)
     data.listeners.append(listener)
     if data.source is not None:
-        listener(data.source())
+        _send_bootstrap_progress(listener, data.source())
     return partial(data.listeners.remove, listener)
 
 
@@ -177,10 +177,17 @@ def _async_dispatch_bootstrap_progress(hass: HomeAssistant) -> None:
     progress = data.source()
     # Listeners can unsubscribe while the progress is sent.
     for listener in data.listeners.copy():
-        try:
-            listener(progress)
-        except Exception:
-            _LOGGER.exception("Error sending bootstrap progress to %s", listener)
+        _send_bootstrap_progress(listener, progress)
+
+
+def _send_bootstrap_progress(
+    listener: Callable[[BootstrapProgress], None], progress: BootstrapProgress
+) -> None:
+    """Send the progress to a listener, logging its errors."""
+    try:
+        listener(progress)
+    except Exception:
+        _LOGGER.exception("Error sending bootstrap progress to %s", listener)
 
 
 @callback

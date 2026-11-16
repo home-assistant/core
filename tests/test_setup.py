@@ -1615,6 +1615,23 @@ async def test_bootstrap_progress_listener_raises(
     assert "Error sending bootstrap progress to" in caplog.text
 
 
+async def test_bootstrap_progress_late_listener_raises(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test a late listener that raises still gets its unsubscribe callback."""
+    setup._async_set_bootstrap_progress_source(
+        hass, Mock(return_value={"phase": "setup"})
+    )
+    listener = Mock(side_effect=ValueError)
+
+    unsubscribe = setup.async_subscribe_bootstrap_progress(hass, listener)
+
+    assert "Error sending bootstrap progress to" in caplog.text
+    unsubscribe()
+    setup._async_dispatch_bootstrap_progress(hass)
+    listener.assert_called_once()
+
+
 async def test_bootstrap_progress_listener_unsubscribes_itself(
     hass: HomeAssistant,
 ) -> None:
