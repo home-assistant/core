@@ -9,8 +9,12 @@ import pytest
 from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.time import DOMAIN as TIME_DOMAIN, SERVICE_SET_VALUE
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TIME, Platform
+from homeassistant.components.time import (
+    DOMAIN as TIME_DOMAIN,
+    TimeService,
+    TimeServiceArgument,
+)
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -34,8 +38,11 @@ async def test_sleep_mode_start_time(
     robot: LitterRobot3 = mock_account.robots[0]
     await hass.services.async_call(
         TIME_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: SLEEP_START_TIME_ENTITY_ID, ATTR_TIME: time(23, 0)},
+        TimeService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: SLEEP_START_TIME_ENTITY_ID,
+            TimeServiceArgument.TIME: time(23, 0),
+        },
         blocking=True,
     )
     robot.set_sleep_mode.assert_awaited_once_with(True, time(23, 0))
@@ -50,8 +57,11 @@ async def test_time_command_exception(
     with pytest.raises(HomeAssistantError, match="Invalid command: oops"):
         await hass.services.async_call(
             TIME_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: SLEEP_START_TIME_ENTITY_ID, ATTR_TIME: time(23, 0)},
+            TimeService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: SLEEP_START_TIME_ENTITY_ID,
+                TimeServiceArgument.TIME: time(23, 0),
+            },
             blocking=True,
         )
 
@@ -115,8 +125,11 @@ async def test_litter_robot_5_sleep_schedule(
     robot = mock_account_with_litterrobot_5.robots[0]
     await hass.services.async_call(
         TIME_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_TIME: time(1, 30)},
+        TimeService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            TimeServiceArgument.TIME: time(1, 30),
+        },
         blocking=True,
     )
     robot.set_sleep_mode.assert_awaited_once_with(*expected_args, **expected_kwargs)
@@ -137,10 +150,10 @@ async def test_litter_robot_5_no_sleep_schedule(
     robot = mock_account.robots[0]
     await hass.services.async_call(
         TIME_DOMAIN,
-        SERVICE_SET_VALUE,
+        TimeService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: "time.test_sunday_sleep_mode_start_time",
-            ATTR_TIME: time(22, 0),
+            CommonServiceArgument.ENTITY_ID: "time.test_sunday_sleep_mode_start_time",
+            TimeServiceArgument.TIME: time(22, 0),
         },
         blocking=True,
     )
@@ -161,10 +174,10 @@ async def test_litter_robot_5_set_time_failed(
     with pytest.raises(HomeAssistantError, match="Unable to update"):
         await hass.services.async_call(
             TIME_DOMAIN,
-            SERVICE_SET_VALUE,
+            TimeService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: "time.test_sunday_sleep_mode_start_time",
-                ATTR_TIME: time(22, 0),
+                CommonServiceArgument.ENTITY_ID: "time.test_sunday_sleep_mode_start_time",
+                TimeServiceArgument.TIME: time(22, 0),
             },
             blocking=True,
         )

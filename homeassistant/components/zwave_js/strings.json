@@ -395,6 +395,9 @@
     "clear_lock_usercode_failed": {
       "message": "Unable to clear lock usercode on lock {entity_id} code_slot {code_slot}: {error}"
     },
+    "controller_firmware_update_in_progress": {
+      "message": "The controller firmware is being updated. Try again after the controller update has finished."
+    },
     "credential_data_invalid_length": {
       "message": "Credential of type {credential_type} must be between {min_length} and {max_length} characters long."
     },

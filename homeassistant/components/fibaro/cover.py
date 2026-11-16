@@ -39,6 +39,17 @@ async def async_setup_entry(
 class PositionableFibaroCover(FibaroEntity, CoverEntity):
     """Representation of a fibaro cover which supports positioning."""
 
+    def __init__(
+        self, fibaro_device: DeviceModel, controller: FibaroController
+    ) -> None:
+        """Initialize the device."""
+        super().__init__(fibaro_device, controller)
+        # HC3 reports value2 for every roller shutter module, also without slats.
+        self._has_tilt = fibaro_device.properties.get("deviceRole") in (
+            None,
+            "VenetianBlinds",
+        )
+
     @staticmethod
     def bound(position: int | None) -> int | None:
         """Normalize the position."""
@@ -56,7 +67,8 @@ class PositionableFibaroCover(FibaroEntity, CoverEntity):
         super().update()
 
         self._attr_current_cover_position = self.bound(self.level)
-        self._attr_current_cover_tilt_position = self.bound(self.level2)
+        if self._has_tilt:
+            self._attr_current_cover_tilt_position = self.bound(self.level2)
 
         # Be aware that opening and closing is only available for some modern
         # devices.
