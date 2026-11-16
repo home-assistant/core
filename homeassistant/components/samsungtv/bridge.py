@@ -646,11 +646,15 @@ class SamsungTVWSBridge(
     @override
     async def async_get_art_mode(self) -> bool | None:
         """Return True if the TV is showing art, None if unknown."""
-        status, token = await self.hass.async_add_executor_job(self._get_art_mode)
-        if token and token != self.token:
-            LOGGER.debug("Art mode connection to %s provided a new token", self.host)
-            self.token = token
-            self._notify_update_config_entry({CONF_TOKEN: token})
+        # Under the remote lock so a remote reconnect cannot save a token meanwhile
+        async with self._remote_lock:
+            status, token = await self.hass.async_add_executor_job(self._get_art_mode)
+            if token and token != self.token:
+                LOGGER.debug(
+                    "Art mode connection to %s provided a new token", self.host
+                )
+                self.token = token
+                self._notify_update_config_entry({CONF_TOKEN: token})
         if status == "on":
             return True
         if status == "off":
