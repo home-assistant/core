@@ -388,6 +388,7 @@ async def test_becomes_unavailable_and_recovers(
         pytest.param(False, "Playing", STATE_PLAYING, id="playing"),
         pytest.param(False, "Buffering", STATE_PLAYING, id="buffering"),
         pytest.param(False, "Stopped", STATE_IDLE, id="stopped"),
+        pytest.param(False, "Waiting", STATE_IDLE, id="waiting"),
         # An external source with no transport controls still counts as playing.
         pytest.param(False, "Unknown", STATE_PLAYING, id="external_source"),
     ],

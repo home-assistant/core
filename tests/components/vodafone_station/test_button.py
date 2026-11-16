@@ -12,9 +12,9 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.vodafone_station.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -50,8 +50,10 @@ async def test_pressing_button(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: f"button.vodafone_station_{TEST_SERIAL_NUMBER}_restart"},
+        ButtonService.PRESS,
+        {
+            CommonServiceArgument.ENTITY_ID: f"button.vodafone_station_{TEST_SERIAL_NUMBER}_restart"
+        },
         blocking=True,
     )
     mock_vodafone_station_router.restart_router.assert_called_once()
@@ -83,8 +85,10 @@ async def test_button_fails(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: f"button.vodafone_station_{TEST_SERIAL_NUMBER}_restart"},
+            ButtonService.PRESS,
+            {
+                CommonServiceArgument.ENTITY_ID: f"button.vodafone_station_{TEST_SERIAL_NUMBER}_restart"
+            },
             blocking=True,
         )
 

@@ -1,5 +1,19 @@
 {
   "entity": {
+    "binary_sensor": {
+      "cloud_registered": {
+        "default": "mdi:cloud-check-variant",
+        "state": {
+          "off": "mdi:cloud-off"
+        }
+      },
+      "cloud_services": {
+        "default": "mdi:cloud",
+        "state": {
+          "off": "mdi:cloud-off"
+        }
+      }
+    },
     "sensor": {
       "black_counterfeit_refills": {
         "default": "mdi:water-alert"

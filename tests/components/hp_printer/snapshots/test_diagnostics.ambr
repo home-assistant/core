@@ -3,6 +3,26 @@
   dict({
     'data': dict({
       'adapters': list([
+        dict({
+          'connectivity_port_type': 'ethernet',
+          'is_connected': False,
+          'name': '**REDACTED**',
+        }),
+        dict({
+          'connectivity_port_type': 'wifiEmbedded',
+          'is_connected': True,
+          'name': '**REDACTED**',
+        }),
+        dict({
+          'connectivity_port_type': 'wifiEmbedded',
+          'is_connected': False,
+          'name': '**REDACTED**',
+        }),
+        dict({
+          'connectivity_port_type': 'usb',
+          'is_connected': False,
+          'name': '**REDACTED**',
+        }),
       ]),
       'consumables': dict({
         'C': dict({
@@ -178,7 +198,11 @@
         'sku_identifier': '9022e',
         'uuid': '**REDACTED**',
       }),
-      'eprint': None,
+      'eprint': dict({
+        'cloud_services_enabled': True,
+        'is_registered': True,
+        'printer_id': None,
+      }),
       'fax_usage': dict({
         'adf_images': 0,
         'flatbed_images': 0,

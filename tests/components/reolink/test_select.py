@@ -14,14 +14,9 @@ from reolink_aio.exceptions import InvalidParameterError, ReolinkError
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.reolink.coordinator import DEVICE_UPDATE_INTERVAL_MIN
-from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
+from homeassistant.components.select import DOMAIN as SELECT_DOMAIN, SelectService
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_SELECT_OPTION,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -64,8 +59,8 @@ async def test_floodlight_mode_select(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: entity_id, "option": "off"},
+        SelectService.SELECT_OPTION,
+        {CommonServiceArgument.ENTITY_ID: entity_id, "option": "off"},
         blocking=True,
     )
     reolink_host.set_whiteled.assert_called_once()
@@ -74,8 +69,8 @@ async def test_floodlight_mode_select(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: entity_id, "option": "off"},
+            SelectService.SELECT_OPTION,
+            {CommonServiceArgument.ENTITY_ID: entity_id, "option": "off"},
             blocking=True,
         )
 
@@ -83,8 +78,8 @@ async def test_floodlight_mode_select(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: entity_id, "option": "off"},
+            SelectService.SELECT_OPTION,
+            {CommonServiceArgument.ENTITY_ID: entity_id, "option": "off"},
             blocking=True,
         )
 
@@ -114,8 +109,8 @@ async def test_play_quick_reply_message(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: entity_id, "option": "test message"},
+        SelectService.SELECT_OPTION,
+        {CommonServiceArgument.ENTITY_ID: entity_id, "option": "test message"},
         blocking=True,
     )
     reolink_host.play_quick_reply.assert_called_once()
@@ -138,8 +133,8 @@ async def test_host_scene_select(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: entity_id, "option": "home"},
+        SelectService.SELECT_OPTION,
+        {CommonServiceArgument.ENTITY_ID: entity_id, "option": "home"},
         blocking=True,
     )
     reolink_host.baichuan.set_scene.assert_called_once()
@@ -148,8 +143,8 @@ async def test_host_scene_select(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: entity_id, "option": "home"},
+            SelectService.SELECT_OPTION,
+            {CommonServiceArgument.ENTITY_ID: entity_id, "option": "home"},
             blocking=True,
         )
 
@@ -157,8 +152,8 @@ async def test_host_scene_select(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: entity_id, "option": "home"},
+            SelectService.SELECT_OPTION,
+            {CommonServiceArgument.ENTITY_ID: entity_id, "option": "home"},
             blocking=True,
         )
 
@@ -196,8 +191,8 @@ async def test_chime_select(
     reolink_chime.set_tone = AsyncMock()
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: entity_id, "option": "off"},
+        SelectService.SELECT_OPTION,
+        {CommonServiceArgument.ENTITY_ID: entity_id, "option": "off"},
         blocking=True,
     )
     reolink_chime.set_tone.assert_called_once()
@@ -206,8 +201,8 @@ async def test_chime_select(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: entity_id, "option": "off"},
+            SelectService.SELECT_OPTION,
+            {CommonServiceArgument.ENTITY_ID: entity_id, "option": "off"},
             blocking=True,
         )
 
@@ -215,8 +210,8 @@ async def test_chime_select(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: entity_id, "option": "off"},
+            SelectService.SELECT_OPTION,
+            {CommonServiceArgument.ENTITY_ID: entity_id, "option": "off"},
             blocking=True,
         )
 

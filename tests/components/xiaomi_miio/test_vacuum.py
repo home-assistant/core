@@ -33,15 +33,7 @@ from homeassistant.components.xiaomi_miio.const import (
     DOMAIN,
     MODELS_VACUUM,
 )
-from homeassistant.components.xiaomi_miio.services import (
-    SERVICE_CLEAN_SEGMENT,
-    SERVICE_CLEAN_ZONE,
-    SERVICE_GOTO,
-    SERVICE_MOVE_REMOTE_CONTROL,
-    SERVICE_MOVE_REMOTE_CONTROL_STEP,
-    SERVICE_START_REMOTE_CONTROL,
-    SERVICE_STOP_REMOTE_CONTROL,
-)
+from homeassistant.components.xiaomi_miio.services import XiaomiMiioService
 from homeassistant.components.xiaomi_miio.vacuum import ATTR_ERROR, ATTR_TIMERS
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -486,13 +478,13 @@ async def test_xiaomi_vacuum_services(
     ("service", "service_data", "device_method", "device_method_call"),
     [
         (
-            SERVICE_START_REMOTE_CONTROL,
+            XiaomiMiioService.VACUUM_REMOTE_CONTROL_START,
             {ATTR_ENTITY_ID: "vacuum.test_vacuum_cleaner_2"},
             "manual_start",
             mock.call(),
         ),
         (
-            SERVICE_MOVE_REMOTE_CONTROL,
+            XiaomiMiioService.VACUUM_REMOTE_CONTROL_MOVE,
             {
                 ATTR_ENTITY_ID: "vacuum.test_vacuum_cleaner_2",
                 "duration": 1000,
@@ -503,7 +495,7 @@ async def test_xiaomi_vacuum_services(
             mock.call(duration=1000, rotation=-40, velocity=-0.1),
         ),
         (
-            SERVICE_STOP_REMOTE_CONTROL,
+            XiaomiMiioService.VACUUM_REMOTE_CONTROL_STOP,
             {
                 ATTR_ENTITY_ID: "vacuum.test_vacuum_cleaner_2",
             },
@@ -511,7 +503,7 @@ async def test_xiaomi_vacuum_services(
             mock.call(),
         ),
         (
-            SERVICE_MOVE_REMOTE_CONTROL_STEP,
+            XiaomiMiioService.VACUUM_REMOTE_CONTROL_MOVE_STEP,
             {
                 ATTR_ENTITY_ID: "vacuum.test_vacuum_cleaner_2",
                 "duration": 2000,
@@ -522,7 +514,7 @@ async def test_xiaomi_vacuum_services(
             mock.call(duration=2000, rotation=120, velocity=0.1),
         ),
         (
-            SERVICE_CLEAN_ZONE,
+            XiaomiMiioService.VACUUM_CLEAN_ZONE,
             {
                 ATTR_ENTITY_ID: "vacuum.test_vacuum_cleaner_2",
                 "zone": [[123, 123, 123, 123]],
@@ -532,7 +524,7 @@ async def test_xiaomi_vacuum_services(
             mock.call([[123, 123, 123, 123, 2]]),
         ),
         (
-            SERVICE_GOTO,
+            XiaomiMiioService.VACUUM_GOTO,
             {
                 ATTR_ENTITY_ID: "vacuum.test_vacuum_cleaner_2",
                 "x_coord": 25500,
@@ -542,7 +534,7 @@ async def test_xiaomi_vacuum_services(
             mock.call(x_coord=25500, y_coord=26500),
         ),
         (
-            SERVICE_CLEAN_SEGMENT,
+            XiaomiMiioService.VACUUM_CLEAN_SEGMENT,
             {
                 ATTR_ENTITY_ID: "vacuum.test_vacuum_cleaner_2",
                 "segments": ["1", "2"],
@@ -551,7 +543,7 @@ async def test_xiaomi_vacuum_services(
             mock.call(segments=[int(i) for i in ("1", "2")]),
         ),
         (
-            SERVICE_CLEAN_SEGMENT,
+            XiaomiMiioService.VACUUM_CLEAN_SEGMENT,
             {
                 ATTR_ENTITY_ID: "vacuum.test_vacuum_cleaner_2",
                 "segments": 1,

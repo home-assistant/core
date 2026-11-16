@@ -14,8 +14,8 @@ from pytest_homeassistant.common import (
 )
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, SERVICE_SET_VALUE
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, NumberService
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -105,8 +105,8 @@ async def test_set_number_value(
     # Set new value
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: "number.pool_device_ph_target", "value": 7.0},
+        NumberService.SET_VALUE,
+        {CommonServiceArgument.ENTITY_ID: "number.pool_device_ph_target", "value": 7.0},
         blocking=True,
     )
 
