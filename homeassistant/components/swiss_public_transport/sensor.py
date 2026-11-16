@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 import logging
 from typing import TYPE_CHECKING, override
 
@@ -28,8 +28,6 @@ from .coordinator import (
 PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
-
-SCAN_INTERVAL = timedelta(seconds=90)
 
 
 @dataclass(kw_only=True, frozen=True)
