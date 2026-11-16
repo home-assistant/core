@@ -1827,6 +1827,16 @@ async def test_validation_fixed_cost(
             id="unavailable",
         ),
         pytest.param(
+            "nan",
+            "EUR",
+            {
+                "type": "entity_state_non_numeric",
+                "affected_entities": {("sensor.standing_charge", "nan")},
+                "translation_placeholders": None,
+            },
+            id="not_a_number",
+        ),
+        pytest.param(
             "0.62",
             "EUR/month",
             {
@@ -1835,6 +1845,16 @@ async def test_validation_fixed_cost(
                 "translation_placeholders": {"currency": "EUR"},
             },
             id="unit_of_another_period",
+        ),
+        pytest.param(
+            "0.62",
+            "kEUR/day",
+            {
+                "type": "entity_unexpected_unit_fixed_cost",
+                "affected_entities": {("sensor.standing_charge", "kEUR/day")},
+                "translation_placeholders": {"currency": "EUR"},
+            },
+            id="unit_ending_with_the_currency",
         ),
         pytest.param(
             "0.62",

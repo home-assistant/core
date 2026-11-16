@@ -3,6 +3,7 @@
 from collections.abc import Mapping, Sequence
 import dataclasses
 import functools
+import math
 
 from homeassistant.components import recorder, sensor
 from homeassistant.const import (
@@ -443,19 +444,36 @@ def _async_validate_cost_stat(
 
 
 @callback
+def _async_validate_fixed_cost_entity(
+    hass: HomeAssistant, entity_id: str, period: str, issues: ValidationIssues
+) -> None:
+    """Validate the entity holding the amount of a fixed cost."""
+    if (state := hass.states.get(entity_id)) is None:
+        issues.add_issue(hass, "entity_not_defined", entity_id)
+        return
+
+    try:
+        amount = float(state.state)
+    except ValueError:
+        amount = math.nan
+    if not math.isfinite(amount):
+        issues.add_issue(hass, "entity_state_non_numeric", entity_id, state.state)
+        return
+
+    currency = hass.config.currency
+    unit = state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
+    # The amount is added as is, so the unit must be the currency itself
+    if unit not in (currency, f"{currency}/{period}"):
+        issues.add_issue(hass, FIXED_COST_UNIT_ERROR, entity_id, unit)
+
+
+@callback
 def _async_validate_fixed_cost(
     hass: HomeAssistant, fixed_cost: data.FixedCostType, issues: ValidationIssues
 ) -> None:
     """Validate the amount entity and the sensor of a fixed cost."""
     if (entity_id := fixed_cost["entity_amount"]) is not None:
-        currency = hass.config.currency
-        _async_validate_price_entity(
-            hass,
-            entity_id,
-            issues,
-            (currency, f"{currency}/{fixed_cost['period']}"),
-            FIXED_COST_UNIT_ERROR,
-        )
+        _async_validate_fixed_cost_entity(hass, entity_id, fixed_cost["period"], issues)
 
     if (
         sensor_entity_id := hass.data[DOMAIN]["fixed_cost_sensors"].get(
