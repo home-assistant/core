@@ -16,7 +16,7 @@ from homeassistant.components.proximity.const import (
     CONF_TRACKED_ENTITIES,
     DOMAIN,
 )
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     CONF_ZONE,
@@ -42,7 +42,8 @@ async def async_setup_single_entry(
     mock_config = MockConfigEntry(
         domain=DOMAIN,
         title="Home",
-        data={
+        version=2,
+        options={
             CONF_ZONE: zone,
             CONF_TRACKED_ENTITIES: tracked_entites,
             CONF_IGNORED_ZONES: ignored_zones,
@@ -78,7 +79,8 @@ async def test_proximities(hass: HomeAssistant, config: dict) -> None:
     mock_config = MockConfigEntry(
         domain=DOMAIN,
         title=title,
-        data=config,
+        version=2,
+        options=config,
     )
     mock_config.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config.entry_id)
@@ -417,7 +419,8 @@ async def test_overlapping_zones_in_zones_reports_arrived(
     home_config = MockConfigEntry(
         domain=DOMAIN,
         title="Home",
-        data={
+        version=2,
+        options={
             CONF_ZONE: "zone.home",
             CONF_TRACKED_ENTITIES: ["device_tracker.test1"],
             CONF_IGNORED_ZONES: [],
@@ -427,7 +430,8 @@ async def test_overlapping_zones_in_zones_reports_arrived(
     backyard_config = MockConfigEntry(
         domain=DOMAIN,
         title="Backyard",
-        data={
+        version=2,
+        options={
             CONF_ZONE: "zone.backyard",
             CONF_TRACKED_ENTITIES: ["device_tracker.test1"],
             CONF_IGNORED_ZONES: [],
@@ -990,18 +994,29 @@ async def test_create_removed_tracked_entity_issue(
 
 
 def _mock_proximity_entry(
-    hass: HomeAssistant, title: str, zone: str, tracked_entities: list[str]
+    hass: HomeAssistant,
+    title: str,
+    zone: str,
+    tracked_entities: list[str],
+    *,
+    version: int = 2,
+    disabled_by: ConfigEntryDisabler | None = None,
 ) -> MockConfigEntry:
     """Add a proximity config entry to hass without setting it up."""
+    settings = {
+        CONF_ZONE: zone,
+        CONF_TRACKED_ENTITIES: tracked_entities,
+        CONF_IGNORED_ZONES: [],
+        CONF_TOLERANCE: 1,
+    }
+    # Version 1 entries store their settings in data
     entry = MockConfigEntry(
         domain=DOMAIN,
         title=title,
-        data={
-            CONF_ZONE: zone,
-            CONF_TRACKED_ENTITIES: tracked_entities,
-            CONF_IGNORED_ZONES: [],
-            CONF_TOLERANCE: 1,
-        },
+        version=version,
+        data=settings if version == 1 else {},
+        options=settings if version > 1 else {},
+        disabled_by=disabled_by,
     )
     entry.add_to_hass(hass)
     return entry
@@ -1089,8 +1104,6 @@ async def test_removed_tracked_entity_issue_deleted_when_untracked(
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    # The options flow changes data only, so it does not trigger a reload
-    assert await hass.config_entries.async_reload(home_entry.entry_id)
     await hass.async_block_till_done()
 
     assert not issue_registry.async_get_issue(DOMAIN, home_issue_id)
@@ -1104,19 +1117,42 @@ async def test_removed_tracked_entity_issue_deleted_when_untracked(
         pytest.param("2025.1.0", HA_VERSION, id="ignored"),
     ],
 )
+@pytest.mark.parametrize(
+    "entry_version",
+    [
+        pytest.param(1, id="settings_in_data"),
+        pytest.param(2, id="settings_in_options"),
+    ],
+)
 async def test_migrate_legacy_removed_tracked_entity_issue(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     issue_registry: ir.IssueRegistry,
     legacy_dismissed_version: str | None,
     expected_dismissed_version: str | None,
+    entry_version: int,
 ) -> None:
     """Test a legacy removed tracked entity issue is migrated per config entry."""
     tracked_entity_id = "device_tracker.test1"
     untracked_entity_id = "device_tracker.test2"
-    home_entry = _mock_proximity_entry(hass, "Home", "zone.home", [tracked_entity_id])
-    work_entry = _mock_proximity_entry(hass, "Work", "zone.work", [tracked_entity_id])
-    other_entry = _mock_proximity_entry(hass, "Other", "zone.home", [])
+    home_entry = _mock_proximity_entry(
+        hass, "Home", "zone.home", [tracked_entity_id], version=entry_version
+    )
+    work_entry = _mock_proximity_entry(
+        hass, "Work", "zone.work", [tracked_entity_id], version=entry_version
+    )
+    other_entry = _mock_proximity_entry(
+        hass, "Other", "zone.home", [], version=entry_version
+    )
+    # Disabled entries are not set up, so they are never migrated
+    disabled_entry = _mock_proximity_entry(
+        hass,
+        "Disabled",
+        "zone.work",
+        [tracked_entity_id],
+        version=1,
+        disabled_by=ConfigEntryDisabler.USER,
+    )
     hass_storage[ir.STORAGE_KEY] = {
         "version": ir.STORAGE_VERSION_MAJOR,
         "minor_version": ir.STORAGE_VERSION_MINOR,
@@ -1173,8 +1209,10 @@ async def test_migrate_legacy_removed_tracked_entity_issue(
             {"entity_id": tracked_entity_id, "name": entry.title},
             expected_dismissed_version,
         )
-        for entry in (home_entry, work_entry)
+        for entry in (home_entry, work_entry, disabled_entry)
     }
+    assert home_entry.state is ConfigEntryState.LOADED
+    assert work_entry.state is ConfigEntryState.LOADED
     assert other_entry.state is ConfigEntryState.LOADED
 
 
@@ -1210,7 +1248,7 @@ async def test_track_renamed_tracked_entity(
 
     entry = hass.config_entries.async_get_entry(mock_config.entry_id)
     assert entry
-    assert entry.data[CONF_TRACKED_ENTITIES] == [f"{t1.entity_id}_renamed"]
+    assert entry.options[CONF_TRACKED_ENTITIES] == [f"{t1.entity_id}_renamed"]
 
 
 async def test_sensor_unique_ids(
@@ -1374,3 +1412,24 @@ async def test_tracked_zone_location_is_changed(hass: HomeAssistant) -> None:
     assert state.state == "1244478"
     state = hass.states.get(f"{entity_base_name}_direction_of_travel")
     assert state.state == STATE_UNKNOWN
+
+
+async def test_migrate_data_to_options(hass: HomeAssistant) -> None:
+    """Test a version 1 entry moves its settings from data to options."""
+    config = {
+        CONF_ZONE: "zone.home",
+        CONF_TRACKED_ENTITIES: ["device_tracker.test1"],
+        CONF_IGNORED_ZONES: ["zone.work"],
+        CONF_TOLERANCE: 1,
+    }
+    mock_config = MockConfigEntry(domain=DOMAIN, title="Home", version=1, data=config)
+    mock_config.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config.state is ConfigEntryState.LOADED
+    assert mock_config.version == 2
+    assert mock_config.data == {}
+    assert mock_config.options == config
+    assert hass.states.get("sensor.home_nearest_device") is not None

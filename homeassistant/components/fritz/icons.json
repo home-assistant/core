@@ -38,16 +38,28 @@
       "link_attenuation_sent": {
         "default": "mdi:upload"
       },
+      "link_download_rate": {
+        "default": "mdi:download"
+      },
       "link_kb_s_received": {
         "default": "mdi:download"
       },
       "link_kb_s_sent": {
         "default": "mdi:upload"
       },
+      "link_max_download_rate": {
+        "default": "mdi:download"
+      },
+      "link_max_upload_rate": {
+        "default": "mdi:upload"
+      },
       "link_noise_margin_received": {
         "default": "mdi:download"
       },
       "link_noise_margin_sent": {
+        "default": "mdi:upload"
+      },
+      "link_upload_rate": {
         "default": "mdi:upload"
       },
       "max_kb_s_received": {

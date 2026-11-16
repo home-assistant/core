@@ -1,6 +1,9 @@
 {
   "entity": {
     "binary_sensor": {
+      "sync_chambers": {
+        "default": "mdi:sync"
+      },
       "water_lacks": {
         "default": "mdi:water-alert"
       },
@@ -9,8 +12,26 @@
       }
     },
     "button": {
+      "pause_cooking": {
+        "default": "mdi:pause"
+      },
+      "pause_cooking_basket": {
+        "default": "mdi:pause"
+      },
       "reset_filter": {
         "default": "mdi:air-filter"
+      },
+      "resume_cooking": {
+        "default": "mdi:play"
+      },
+      "resume_cooking_basket": {
+        "default": "mdi:play"
+      },
+      "stop_cooking": {
+        "default": "mdi:stop"
+      },
+      "stop_cooking_basket": {
+        "default": "mdi:stop"
       }
     },
     "fan": {
@@ -27,6 +48,11 @@
             }
           }
         }
+      }
+    },
+    "light": {
+      "nightlight": {
+        "default": "mdi:lightbulb-night"
       }
     },
     "number": {
@@ -49,6 +75,12 @@
       },
       "drying_mode_power_off": {
         "default": "mdi:weather-windy"
+      },
+      "light_detection": {
+        "default": "mdi:brightness-auto"
+      },
+      "mute": {
+        "default": "mdi:volume-off"
       }
     }
   },

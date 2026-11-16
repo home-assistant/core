@@ -17,11 +17,10 @@ from homeassistant.helpers.update_coordinator import TimestampDataUpdateCoordina
 from homeassistant.util import dt as dt_util
 
 from .const import CONF_PROCESS, PROCESS_ERRORS
-from .util import get_all_pressure_info
+from .util import get_all_pressure_info, read_fan_speed
 
 if TYPE_CHECKING:
     from . import SystemMonitorConfigEntry
-from .util import read_fan_speed
 
 _LOGGER = logging.getLogger(__name__)
 

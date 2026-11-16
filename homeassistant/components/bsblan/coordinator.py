@@ -35,6 +35,7 @@ if TYPE_CHECKING:
 STATE_INCLUDE = [
     "current_temperature",
     "target_temperature",
+    "current_setpoint",
     "hvac_mode",
     "hvac_action",
 ]

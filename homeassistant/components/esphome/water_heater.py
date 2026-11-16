@@ -15,8 +15,9 @@ from aioesphomeapi import (
 from homeassistant.components.water_heater import (
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
+    WaterHeaterServiceArgument,
 )
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS
+from homeassistant.const import PRECISION_TENTHS
 from homeassistant.core import callback
 
 from .entity import (
@@ -111,7 +112,7 @@ class EsphomeWaterHeater(
         """Set new target temperature."""
         self._client.water_heater_command(
             key=self._key,
-            target_temperature=kwargs[ATTR_TEMPERATURE],
+            target_temperature=kwargs[WaterHeaterServiceArgument.TEMPERATURE],
             device_id=self._static_info.device_id,
         )
 

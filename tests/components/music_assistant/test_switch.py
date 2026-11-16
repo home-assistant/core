@@ -8,14 +8,12 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.music_assistant.const import DOMAIN
 from homeassistant.components.music_assistant.switch import PLAYER_OPTIONS_SWITCH
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SERVICE_TOGGLE
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -60,7 +58,10 @@ async def test_switch_action(
 
     # toggle off -> on and verify, that client got called once with correct parameters
     await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        SWITCH_DOMAIN,
+        SwitchService.TOGGLE,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
+        blocking=True,
     )
     assert music_assistant_client.send_command.call_count == 1
     assert music_assistant_client.send_command.call_args == call(
@@ -160,7 +161,8 @@ async def test_name_translation_availability(
     ],
 )
 @pytest.mark.parametrize(
-    ("service", "enabled"), [(SERVICE_TURN_ON, True), (SERVICE_TURN_OFF, False)]
+    ("service", "enabled"),
+    [(SwitchService.TURN_ON, True), (SwitchService.TURN_OFF, False)],
 )
 async def test_queue_switch_action(
     hass: HomeAssistant,
@@ -175,7 +177,10 @@ async def test_queue_switch_action(
     music_assistant_client.server_info.schema_version = 101
     await setup_integration_from_fixtures(hass, music_assistant_client)
     await hass.services.async_call(
-        SWITCH_DOMAIN, service, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        SWITCH_DOMAIN,
+        service,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
+        blocking=True,
     )
     assert music_assistant_client.send_command.call_args == call(
         command, queue_id="00:00:00:00:00:01", **{argument: enabled}, require_schema=101

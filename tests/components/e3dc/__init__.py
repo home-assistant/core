@@ -50,7 +50,7 @@ def seed_identity(
 
 
 def seed_power_station(unit: MockModbusUnit) -> None:
-    """Seed an S10 X with its identity and power flows."""
+    """Seed an S10 X on a firmware that serves every block."""
     seed_identity(unit)
     seed(
         unit,
@@ -71,5 +71,13 @@ def seed_power_station(unit: MockModbusUnit) -> None:
             40088: 0b1,  # Wallbox 0 available
             40105: 1,  # Power meter 0 at the grid connection point
             40109: 2,  # Power meter 1 measures an additional feeder
+            40137: 1,  # SG Ready status
+            40194: 30,  # Active power failsafe timeout, in s
+            40196: 30,  # Reactive power failsafe timeout, in s
+            40201: 0,  # Inverter mode: normal
+            40202: int32_words(9000),  # Battery max charge power, in W
+            40204: int32_words(-9000),  # Battery max discharge power, in W
+            40206: int32_words(9135),  # Battery remaining energy, in Wh
+            40208: int32_words(10500),  # Battery full charge energy, in Wh
         },
     )
