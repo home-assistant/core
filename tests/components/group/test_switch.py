@@ -8,12 +8,7 @@ from pytest_homeassistant.common import get_fixture_path
 
 from homeassistant import config as hass_config
 from homeassistant.components.group import DOMAIN, SERVICE_RELOAD
-from homeassistant.components.switch import (
-    DOMAIN as SWITCH_DOMAIN,
-    SERVICE_TOGGLE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-)
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
@@ -21,6 +16,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    CommonServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -264,8 +260,8 @@ async def test_service_calls(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TOGGLE,
-        {ATTR_ENTITY_ID: "switch.switch_group"},
+        SwitchService.TOGGLE,
+        {CommonServiceArgument.ENTITY_ID: "switch.switch_group"},
         blocking=True,
     )
     assert hass.states.get("switch.ac").state == STATE_OFF
@@ -273,8 +269,8 @@ async def test_service_calls(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.switch_group"},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: "switch.switch_group"},
         blocking=True,
     )
 
@@ -283,8 +279,8 @@ async def test_service_calls(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.switch_group"},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: "switch.switch_group"},
         blocking=True,
     )
 
@@ -453,8 +449,8 @@ async def test_nested_group(hass: HomeAssistant) -> None:
     async with asyncio.timeout(0.5):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TOGGLE,
-            {ATTR_ENTITY_ID: "switch.nested_group"},
+            SwitchService.TOGGLE,
+            {CommonServiceArgument.ENTITY_ID: "switch.nested_group"},
             blocking=True,
         )
     assert hass.states.get("switch.ac").state == STATE_OFF

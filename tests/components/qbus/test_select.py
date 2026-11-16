@@ -14,9 +14,10 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -65,10 +66,10 @@ async def test_select_option_updates_stepper(
     mqtt_mock.reset_mock()
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: _STEPPER_ENTITY_ID,
-            ATTR_OPTION: "the hotstepper",
+            CommonServiceArgument.ENTITY_ID: _STEPPER_ENTITY_ID,
+            SelectServiceArgument.OPTION: "the hotstepper",
         },
         blocking=True,
     )
@@ -100,10 +101,10 @@ async def test_select_with_unknown_option(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: _STEPPER_ENTITY_ID,
-                ATTR_OPTION: "I'm the lyrical gangster",
+                CommonServiceArgument.ENTITY_ID: _STEPPER_ENTITY_ID,
+                SelectServiceArgument.OPTION: "I'm the lyrical gangster",
             },
             blocking=True,
         )

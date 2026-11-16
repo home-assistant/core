@@ -68,6 +68,12 @@
     },
     "command_rejected": {
       "message": "The TV rejected the command: {error}"
+    },
+    "unsupported_key": {
+      "message": "Unsupported Samsung ExLink key: {key}"
+    },
+    "update_failed": {
+      "message": "Could not update the Samsung TV state."
     }
   }
 }

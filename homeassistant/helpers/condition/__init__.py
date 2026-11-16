@@ -606,11 +606,13 @@ async def async_validate_condition_config(
     condition_key: str = config[CONF_CONDITION]
 
     if condition_key in ("and", "not", "or"):
-        conditions = []
-        for sub_cond in config["conditions"]:
-            sub_cond = await async_validate_condition_config(hass, sub_cond)
-            conditions.append(sub_cond)
-        config["conditions"] = conditions
+        try:
+            config["conditions"] = await async_validate_conditions_config(
+                hass, config["conditions"]
+            )
+        except probatio.Invalid as err:
+            err.prepend(["conditions"])
+            raise
         return config
 
     platform_domain, platform = await _async_get_condition_platform(hass, condition_key)
@@ -644,7 +646,14 @@ async def async_validate_conditions_config(
     """Validate config."""
     # No gather here because async_validate_condition_config is unlikely
     # to suspend and the overhead of creating many tasks is not worth it
-    return [await async_validate_condition_config(hass, cond) for cond in conditions]
+    validated: list[ConfigType | Template] = []
+    for index, cond in enumerate(conditions):
+        try:
+            validated.append(await async_validate_condition_config(hass, cond))
+        except probatio.Invalid as err:
+            err.prepend([index])
+            raise
+    return validated
 
 
 async def async_conditions_from_config(

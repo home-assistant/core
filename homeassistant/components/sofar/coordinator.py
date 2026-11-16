@@ -6,15 +6,24 @@ from datetime import timedelta
 import logging
 from typing import override
 
-from modbus_connection import ModbusError
-from sofar_modbus.model import UpdateReport
-from sofar_modbus.modern.device import BATTERY_PACKS, READING_COMPONENTS, SofarInverter
+from modbus_connection import ModbusConnectionError, ModbusError, ModbusTimeoutError
+from sofar_modbus import (
+    BATTERY_PACKS,
+    READING_COMPONENTS,
+    BatteryTowerSilentError,
+    SofarInverter,
+    UpdateReport,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailed,
+    UpdateFailedUnreachable,
+)
 
 from .const import ATTR_MANUFACTURER, DOMAIN
 
@@ -51,24 +60,32 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
     @property
     def device_info(self) -> dr.DeviceInfo:
         """Return device information."""
-        serial = self.device.serial_number
-        identity = self.device.identity
         info = dr.DeviceInfo(
-            identifiers={(DOMAIN, serial)},
+            identifiers={(DOMAIN, self.device.serial_number)},
             manufacturer=ATTR_MANUFACTURER,
             model=self.device.model or None,
-            serial_number=serial,
+            serial_number=self.device.serial_number,
         )
-        if identity.hardware_version:
-            info.hw_version = identity.hardware_version
-        if identity.software_version:
-            info.sw_version = identity.software_version
+        if self.device.identity.hardware_version:
+            info.hw_version = self.device.identity.hardware_version
+        if self.device.identity.software_version:
+            info.sw_version = self.device.identity.software_version
         return info
 
     @override
     async def _async_update_data(self) -> UpdateReport:
         try:
             report = await self._poll()
+        except BatteryTowerSilentError as err:
+            raise UpdateFailedUnreachable(
+                translation_domain=DOMAIN,
+                translation_key="battery_tower_unreachable",
+            ) from err
+        except (ModbusConnectionError, ModbusTimeoutError) as err:
+            raise UpdateFailedUnreachable(
+                translation_domain=DOMAIN,
+                translation_key="inverter_unreachable",
+            ) from err
         except ModbusError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,

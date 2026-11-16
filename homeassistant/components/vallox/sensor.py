@@ -29,6 +29,7 @@ from homeassistant.util import dt as dt_util
 from .const import (
     METRIC_KEY_MODE,
     MODE_ON,
+    PRESET_MODE_TO_VALLOX_PROFILE,
     VALLOX_CELL_STATE_TO_STR,
     VALLOX_PROFILE_TO_PRESET_MODE,
 )
@@ -198,6 +199,8 @@ COMPUTED_SENSOR_ENTITIES: tuple[ValloxComputedSensorEntityDescription, ...] = (
     ValloxComputedSensorEntityDescription(
         key="current_profile",
         translation_key="current_profile",
+        device_class=SensorDeviceClass.ENUM,
+        options=list(PRESET_MODE_TO_VALLOX_PROFILE),
         value_fn=lambda data: VALLOX_PROFILE_TO_PRESET_MODE.get(data.profile),
     ),
     ValloxComputedSensorEntityDescription(
@@ -232,6 +235,8 @@ COMPUTED_SENSOR_ENTITIES: tuple[ValloxComputedSensorEntityDescription, ...] = (
     ValloxComputedSensorEntityDescription(
         key="cell_state",
         translation_key="cell_state",
+        device_class=SensorDeviceClass.ENUM,
+        options=list(VALLOX_CELL_STATE_TO_STR.values()),
         value_fn=_cell_state,
     ),
     ValloxComputedSensorEntityDescription(

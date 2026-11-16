@@ -12,17 +12,10 @@ from homeassistant.components.homematic.const import (
     ATTR_CHANNEL,
     ATTR_INTERFACE,
     ATTR_PARAM,
-    ATTR_PARAMSET,
-    ATTR_PARAMSET_KEY,
     ATTR_VALUE,
-    ATTR_VALUE_TYPE,
     DATA_HOMEMATIC,
-    SERVICE_PUT_PARAMSET,
-    SERVICE_RECONNECT,
-    SERVICE_SET_DEVICE_VALUE,
-    SERVICE_SET_INSTALL_MODE,
-    SERVICE_SET_VARIABLE_VALUE,
-    SERVICE_VIRTUALKEY,
+    HomematicService,
+    HomematicServiceArgument,
 )
 from homeassistant.components.homematic.entity import HMHub
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME
@@ -53,7 +46,7 @@ async def test_set_install_mode_admin_allowed(
     """Test that admin users can call set_install_mode."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_INSTALL_MODE,
+        HomematicService.SET_INSTALL_MODE,
         {ATTR_INTERFACE: "ccu2"},
         blocking=True,
         context=Context(user_id=hass_admin_user.id),
@@ -72,7 +65,7 @@ async def test_set_install_mode_non_admin_rejected(
     with pytest.raises(Unauthorized):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_INSTALL_MODE,
+            HomematicService.SET_INSTALL_MODE,
             {ATTR_INTERFACE: "ccu2"},
             blocking=True,
             context=Context(user_id=hass_read_only_user.id),
@@ -82,7 +75,7 @@ async def test_set_install_mode_non_admin_rejected(
 @pytest.mark.usefixtures("setup_homematic")
 async def test_reconnect(hass: HomeAssistant) -> None:
     """Test the reconnect action."""
-    await hass.services.async_call(DOMAIN, SERVICE_RECONNECT, blocking=True)
+    await hass.services.async_call(DOMAIN, HomematicService.RECONNECT, blocking=True)
     hass.data[DATA_HOMEMATIC].reconnect.assert_called_once_with()
 
 
@@ -91,12 +84,12 @@ async def test_put_paramset(hass: HomeAssistant) -> None:
     """Test the put_paramset action."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_PUT_PARAMSET,
+        HomematicService.PUT_PARAMSET,
         {
             ATTR_INTERFACE: "ccu2",
             ATTR_ADDRESS: "abc123",
-            ATTR_PARAMSET_KEY: "master",
-            ATTR_PARAMSET: {"WEEK_PROGRAM_POINTER": 1},
+            HomematicServiceArgument.PARAMSET_KEY: "master",
+            HomematicServiceArgument.PARAMSET: {"WEEK_PROGRAM_POINTER": 1},
         },
         blocking=True,
     )
@@ -126,7 +119,7 @@ async def test_virtualkey(
     """Test the virtualkey action."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_VIRTUALKEY,
+        HomematicService.VIRTUALKEY,
         {
             ATTR_ADDRESS: "abc123",
             ATTR_CHANNEL: 1,
@@ -153,7 +146,7 @@ async def test_virtualkey_mixed_case_address(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_VIRTUALKEY,
+        HomematicService.VIRTUALKEY,
         {ATTR_ADDRESS: address, ATTR_CHANNEL: 1, ATTR_PARAM: "PRESS_SHORT"},
         blocking=True,
     )
@@ -186,7 +179,7 @@ async def test_virtualkey_invalid_target(
     """Test the virtualkey action logs an error for an invalid target."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_VIRTUALKEY,
+        HomematicService.VIRTUALKEY,
         {ATTR_ADDRESS: address, ATTR_CHANNEL: channel, ATTR_PARAM: param},
         blocking=True,
     )
@@ -219,13 +212,13 @@ async def test_set_device_value(
     """Test the set_device_value action converts the value."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_DEVICE_VALUE,
+        HomematicService.SET_DEVICE_VALUE,
         {
             ATTR_ADDRESS: "abc123",
             ATTR_CHANNEL: 1,
             ATTR_PARAM: "state",
             ATTR_VALUE: value,
-            ATTR_VALUE_TYPE: value_type,
+            HomematicServiceArgument.VALUE_TYPE: value_type,
         },
         blocking=True,
     )
@@ -238,7 +231,7 @@ async def test_set_device_value_unknown_device(
     """Test the set_device_value action logs an error for an unknown device."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_DEVICE_VALUE,
+        HomematicService.SET_DEVICE_VALUE,
         {ATTR_ADDRESS: "unknown", ATTR_CHANNEL: 1, ATTR_PARAM: "state", ATTR_VALUE: 1},
         blocking=True,
     )
@@ -261,7 +254,7 @@ async def test_set_variable_value(
     with patch.object(HMHub, "hm_set_variable") as mock_set_variable:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_VARIABLE_VALUE,
+            HomematicService.SET_VARIABLE_VALUE,
             {ATTR_NAME: "my_variable", ATTR_VALUE: 1, **extra_data},
             blocking=True,
         )
@@ -276,7 +269,7 @@ async def test_set_variable_value_unknown_hub(
     with patch.object(HMHub, "hm_set_variable") as mock_set_variable:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_VARIABLE_VALUE,
+            HomematicService.SET_VARIABLE_VALUE,
             {
                 ATTR_NAME: "my_variable",
                 ATTR_VALUE: 1,
