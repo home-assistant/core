@@ -62,9 +62,9 @@ async def async_setup_entry(
                 and registry_entry.unique_id not in authorized_unique_ids
             ):
                 entity_registry.async_remove(registry_entry.entity_id)
-                known_directives.discard(
-                    registry_entry.unique_id.removeprefix(unique_id_prefix)
-                )
+        # Forget revoked directives even when their entity was already removed
+        # from the registry, so a directive granted again gets a new sensor.
+        known_directives.intersection_update(resources)
 
         new_directives = set(resources) - known_directives
         if not new_directives:

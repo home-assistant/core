@@ -425,6 +425,45 @@ async def test_revoked_directive_removed_and_regrant_rediscovered(
     }
 
 
+async def test_regranted_directive_rediscovered_after_entity_removed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_webhook_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a directive gets a sensor again after removal, revocation and regrant."""
+    resource, schedule = _directive_fixture()
+    hass.config_entries.async_update_entry(
+        mock_config_entry, options={CONF_ENABLE_DIRECTIVES: True}
+    )
+    mock_webhook_client.api_access_token = "device-token"
+    mock_webhook_client.get_directives = AsyncMock(return_value=[resource])
+    mock_webhook_client.get_directive_data = AsyncMock(return_value=schedule)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    [registry_entry] = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+
+    # The user deletes the sensor while the directive is still granted.
+    entity_registry.async_remove(registry_entry.entity_id)
+    await hass.async_block_till_done()
+
+    for granted in ([], [resource]):
+        mock_webhook_client.get_directives.return_value = granted
+        freezer.tick(DIRECTIVE_UPDATE_INTERVAL + dt.timedelta(seconds=5))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    assert {entry.unique_id for entry in entries} == {
+        f"{mock_config_entry.entry_id}_{resource.id}"
+    }
+
+
 async def test_directive_access_granted_after_setup(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
