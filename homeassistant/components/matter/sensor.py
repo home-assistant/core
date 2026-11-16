@@ -1914,4 +1914,17 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterSensor,
         required_attributes=(clusters.GeneralDiagnostics.Attributes.BootReason,),
     ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="MeterIdentificationMeterSerialNumber",
+            translation_key="meter_serial_number",
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.MeterIdentification.Attributes.MeterSerialNumber,
+        ),
+        allow_none_value=True,
+    ),
 ]

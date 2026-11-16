@@ -87,6 +87,7 @@ FIXTURES = [
     "mock_light_sensor",
     "mock_lock",
     "mock_microwave_oven",
+    "mock_meter_identification",
     "mock_mounted_dimmable_load_control_fixture",
     "mock_occupancy_sensor",
     "mock_occupancy_sensor_pir",

@@ -601,6 +601,9 @@
       "hepa_filter_condition": {
         "name": "HEPA filter condition"
       },
+      "meter_serial_number": {
+        "name": "Meter serial number"
+      },
       "nitrogen_dioxide": {
         "name": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]"
       },

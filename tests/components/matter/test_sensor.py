@@ -1353,3 +1353,25 @@ async def test_general_diagnostics_sensors_disabled_by_default(
         entry = entity_registry.async_get(entity_id)
         assert entry, f"Expected {entity_id} to be registered"
         assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+
+@pytest.mark.parametrize(
+    "node_fixture",
+    ["mock_meter_identification"],
+)
+async def test_meter_serial_number(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test meter serial number."""
+    state = hass.states.get("sensor.mock_meter_identification")
+    assert state
+    assert state.state == "TEST_METER_001"
+
+    set_node_attribute(matter_node, 1, 2822, 2, "987654321")
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.mock_meter_identification")
+    assert state
+    assert state.state == "987654321"
