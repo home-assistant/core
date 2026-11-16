@@ -10,7 +10,7 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 import requests
 from syrupy.assertion import SnapshotAssertion
 from tuya_sharing import CustomerDevice, Manager
-from tuya_sharing.exceptions import ApiRequestException
+from tuya_sharing.exceptions import ApiRequestException, TuyaSDKException
 
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
@@ -228,7 +228,33 @@ async def test_action(
     ("side_effect", "expected_message"),
     [
         pytest.param(
+            ApiRequestException(
+                error_code=2008, error_message="command or value not support"
+            ),
+            "The Tuya cloud does not accept this command or value for this device (error 2008)",
+            id="not_accepted",
+        ),
+        pytest.param(
             ApiRequestException(error_code="-9999999", error_message="sign invalid"),
+            "The Tuya cloud rejected the command because the request signature is invalid",
+            id="sign_invalid",
+        ),
+        pytest.param(
+            ApiRequestException(
+                error_code="-9999999", error_message="API_QPS_LIMIT_OR_DEGRADE"
+            ),
+            "The Tuya cloud is limiting requests, try again later",
+            id="rate_limited",
+        ),
+        pytest.param(
+            ApiRequestException(
+                error_code="-9999999", error_message="Remote api run unknown failed"
+            ),
+            "The Tuya cloud rejected the command (error -9999999)",
+            id="rejected_with_reason",
+        ),
+        pytest.param(
+            TuyaSDKException(),
             "The Tuya cloud rejected the command",
             id="rejected",
         ),

@@ -43,6 +43,7 @@ from .coordinator import (
     GoogleHealthDataUpdateCoordinator,
     GoogleHealthDeviceCoordinator,
     GoogleHealthNutritionCoordinator,
+    GoogleHealthNutritionData,
     GoogleHealthSleepCoordinator,
     GoogleHealthSleepData,
 )
@@ -68,6 +69,20 @@ def _sleep_stage_minutes(
             if stage.type == stage_type
         ),
         None,
+    )
+
+
+def _nutrient_grams(data: GoogleHealthNutritionData | None, nutrient: str) -> float:
+    """Return daily intake in grams for a nutrient type."""
+    if not data or not data.nutrition:
+        return 0.0
+    return next(
+        (
+            item.quantity.grams_sum
+            for item in data.nutrition.nutrients
+            if item.nutrient == nutrient
+        ),
+        0.0,
     )
 
 
@@ -313,6 +328,85 @@ NUTRITION_SENSORS: list[
         value_fn=lambda data: (
             data.nutrition.energy.kcal_sum
             if data and data.nutrition and data.nutrition.energy
+            else 0.0
+        ),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthNutritionCoordinator, float](
+        key="total_fat",
+        translation_key="total_fat",
+        native_unit_of_measurement=UnitOfMass.GRAMS,
+        suggested_display_precision=1,
+        device_class=SensorDeviceClass.WEIGHT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda data: (
+            data.nutrition.total_fat.grams_sum
+            if data and data.nutrition and data.nutrition.total_fat
+            else 0.0
+        ),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthNutritionCoordinator, float](
+        key="total_carbohydrate",
+        translation_key="total_carbohydrate",
+        native_unit_of_measurement=UnitOfMass.GRAMS,
+        suggested_display_precision=1,
+        device_class=SensorDeviceClass.WEIGHT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda data: (
+            data.nutrition.total_carbohydrate.grams_sum
+            if data and data.nutrition and data.nutrition.total_carbohydrate
+            else 0.0
+        ),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthNutritionCoordinator, float](
+        key="protein",
+        translation_key="protein",
+        native_unit_of_measurement=UnitOfMass.GRAMS,
+        suggested_display_precision=1,
+        device_class=SensorDeviceClass.WEIGHT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda data: _nutrient_grams(data, "PROTEIN"),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthNutritionCoordinator, float](
+        key="dietary_fiber",
+        translation_key="dietary_fiber",
+        native_unit_of_measurement=UnitOfMass.GRAMS,
+        suggested_display_precision=1,
+        device_class=SensorDeviceClass.WEIGHT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: _nutrient_grams(data, "DIETARY_FIBER"),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthNutritionCoordinator, float](
+        key="sugar",
+        translation_key="sugar",
+        native_unit_of_measurement=UnitOfMass.GRAMS,
+        suggested_display_precision=1,
+        device_class=SensorDeviceClass.WEIGHT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: _nutrient_grams(data, "SUGAR"),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthNutritionCoordinator, float](
+        key="sodium",
+        translation_key="sodium",
+        native_unit_of_measurement=UnitOfMass.GRAMS,
+        suggested_unit_of_measurement=UnitOfMass.MILLIGRAMS,
+        suggested_display_precision=0,
+        device_class=SensorDeviceClass.WEIGHT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: _nutrient_grams(data, "SODIUM"),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthNutritionCoordinator, float](
+        key="calories_from_fat",
+        translation_key="calories_from_fat",
+        native_unit_of_measurement=UnitOfEnergy.KILO_CALORIE,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: (
+            data.nutrition.energy_from_fat.kcal_sum
+            if data and data.nutrition and data.nutrition.energy_from_fat
             else 0.0
         ),
     ),

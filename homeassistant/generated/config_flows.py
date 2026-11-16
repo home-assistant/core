@@ -232,6 +232,7 @@ FLOWS = {
         "enphase_envoy",
         "envertech_evt800",
         "environment_canada",
+        "ephember",
         "epic_games_store",
         "epion",
         "epson",

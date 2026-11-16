@@ -381,6 +381,64 @@
     'state': '1800.0',
   })
 # ---
+# name: test_all_entities[sensor.google_health_calories_from_fat-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('google_health', '01J0BC4QM2YBRP6H5G933CETT7')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.google_health_calories_from_fat',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Calories from fat',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Calories from fat',
+    'platform': 'google_health',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'calories_from_fat',
+    'unique_id': '01J0BC4QM2YBRP6H5G933CETT7_calories_from_fat',
+    'unit_of_measurement': <UnitOfEnergy.KILO_CALORIE: 'kcal'>,
+  })
+# ---
+# name: test_all_entities[sensor.google_health_calories_from_fat-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Google Health Calories from fat',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_CALORIE: 'kcal'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.google_health_calories_from_fat',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '585.0',
+  })
+# ---
 # name: test_all_entities[sensor.google_health_deep_sleep-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -440,6 +498,64 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.5',
+  })
+# ---
+# name: test_all_entities[sensor.google_health_dietary_fiber-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('google_health', '01J0BC4QM2YBRP6H5G933CETT7')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.google_health_dietary_fiber',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Dietary fiber',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.WEIGHT: 'weight'>,
+    'original_icon': None,
+    'original_name': 'Dietary fiber',
+    'platform': 'google_health',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'dietary_fiber',
+    'unique_id': '01J0BC4QM2YBRP6H5G933CETT7_dietary_fiber',
+    'unit_of_measurement': <UnitOfMass.GRAMS: 'g'>,
+  })
+# ---
+# name: test_all_entities[sensor.google_health_dietary_fiber-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'weight',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Google Health Dietary fiber',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfMass.GRAMS: 'g'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.google_health_dietary_fiber',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '28.4',
   })
 # ---
 # name: test_all_entities[sensor.google_health_distance-entry]
@@ -615,6 +731,64 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '4.0',
+  })
+# ---
+# name: test_all_entities[sensor.google_health_protein-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('google_health', '01J0BC4QM2YBRP6H5G933CETT7')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.google_health_protein',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Protein',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.WEIGHT: 'weight'>,
+    'original_icon': None,
+    'original_name': 'Protein',
+    'platform': 'google_health',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'protein',
+    'unique_id': '01J0BC4QM2YBRP6H5G933CETT7_protein',
+    'unit_of_measurement': <UnitOfMass.GRAMS: 'g'>,
+  })
+# ---
+# name: test_all_entities[sensor.google_health_protein-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'weight',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Google Health Protein',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfMass.GRAMS: 'g'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.google_health_protein',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '95.2',
   })
 # ---
 # name: test_all_entities[sensor.google_health_rem_sleep-entry]
@@ -834,6 +1008,67 @@
     'state': '2026-06-29T22:00:00+00:00',
   })
 # ---
+# name: test_all_entities[sensor.google_health_sodium-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('google_health', '01J0BC4QM2YBRP6H5G933CETT7')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.google_health_sodium',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sodium',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfMass.MILLIGRAMS: 'mg'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.WEIGHT: 'weight'>,
+    'original_icon': None,
+    'original_name': 'Sodium',
+    'platform': 'google_health',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sodium',
+    'unique_id': '01J0BC4QM2YBRP6H5G933CETT7_sodium',
+    'unit_of_measurement': <UnitOfMass.MILLIGRAMS: 'mg'>,
+  })
+# ---
+# name: test_all_entities[sensor.google_health_sodium-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'weight',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Google Health Sodium',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfMass.MILLIGRAMS: 'mg'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.google_health_sodium',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1850.0',
+  })
+# ---
 # name: test_all_entities[sensor.google_health_steps-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -886,6 +1121,64 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '10500',
+  })
+# ---
+# name: test_all_entities[sensor.google_health_sugar-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('google_health', '01J0BC4QM2YBRP6H5G933CETT7')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.google_health_sugar',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sugar',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.WEIGHT: 'weight'>,
+    'original_icon': None,
+    'original_name': 'Sugar',
+    'platform': 'google_health',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sugar',
+    'unique_id': '01J0BC4QM2YBRP6H5G933CETT7_sugar',
+    'unit_of_measurement': <UnitOfMass.GRAMS: 'g'>,
+  })
+# ---
+# name: test_all_entities[sensor.google_health_sugar-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'weight',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Google Health Sugar',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfMass.GRAMS: 'g'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.google_health_sugar',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '42.1',
   })
 # ---
 # name: test_all_entities[sensor.google_health_time_after_waking_up-entry]
@@ -1243,6 +1536,122 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2100.2',
+  })
+# ---
+# name: test_all_entities[sensor.google_health_total_carbohydrates-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('google_health', '01J0BC4QM2YBRP6H5G933CETT7')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.google_health_total_carbohydrates',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Total carbohydrates',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.WEIGHT: 'weight'>,
+    'original_icon': None,
+    'original_name': 'Total carbohydrates',
+    'platform': 'google_health',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_carbohydrate',
+    'unique_id': '01J0BC4QM2YBRP6H5G933CETT7_total_carbohydrate',
+    'unit_of_measurement': <UnitOfMass.GRAMS: 'g'>,
+  })
+# ---
+# name: test_all_entities[sensor.google_health_total_carbohydrates-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'weight',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Google Health Total carbohydrates',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfMass.GRAMS: 'g'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.google_health_total_carbohydrates',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '210.5',
+  })
+# ---
+# name: test_all_entities[sensor.google_health_total_fat-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('google_health', '01J0BC4QM2YBRP6H5G933CETT7')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.google_health_total_fat',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Total fat',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.WEIGHT: 'weight'>,
+    'original_icon': None,
+    'original_name': 'Total fat',
+    'platform': 'google_health',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_fat',
+    'unique_id': '01J0BC4QM2YBRP6H5G933CETT7_total_fat',
+    'unit_of_measurement': <UnitOfMass.GRAMS: 'g'>,
+  })
+# ---
+# name: test_all_entities[sensor.google_health_total_fat-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'weight',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Google Health Total fat',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfMass.GRAMS: 'g'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.google_health_total_fat',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '65.0',
   })
 # ---
 # name: test_all_entities[sensor.google_health_water_intake-entry]

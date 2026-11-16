@@ -1688,7 +1688,7 @@ mill-local==0.5.0
 millheater==0.14.1
 
 # homeassistant.components.minio
-minio==7.1.12
+minio==7.2.20
 
 # homeassistant.components.mitsubishi_comfort
 mitsubishi-comfort==0.6.2
@@ -2288,7 +2288,7 @@ pyenvertechevt800==0.2.4
 pyenvisalink==4.9
 
 # homeassistant.components.ephember
-pyephember2==0.4.14
+pyephember2==0.4.15
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
@@ -3422,7 +3422,7 @@ uasiren==0.0.1
 uhooapi==1.2.8
 
 # homeassistant.components.unifiprotect
-uiprotect==25.0.2
+uiprotect==25.0.3
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.6.1

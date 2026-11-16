@@ -17,7 +17,7 @@ from homeassistant.components.number import (
     NumberService,
     NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -39,7 +39,7 @@ async def test_number(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         service_data={NumberServiceArgument.VALUE: 50.1},
-        target={ATTR_ENTITY_ID: entity_id},
+        target={TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     mock_apsystems.set_max_power.assert_called_once_with(50)
@@ -54,7 +54,7 @@ async def test_number(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         service_data={NumberServiceArgument.VALUE: 50.1},
-        target={ATTR_ENTITY_ID: entity_id},
+        target={TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
