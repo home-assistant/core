@@ -580,7 +580,7 @@ class DeviceFlowImplementation(OAuth2TokenEndpointMixin):
         deadline = time.monotonic() + device.expires_in
         interval = device.interval
         while True:
-            await asyncio.sleep(interval)
+            await asyncio.sleep(min(interval, deadline - time.monotonic()))
             if time.monotonic() >= deadline:
                 raise DeviceFlowTimeout
             try:

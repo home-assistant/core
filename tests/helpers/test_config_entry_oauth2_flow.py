@@ -1604,7 +1604,8 @@ async def test_device_flow_deadline(
             _device_authorization(expires_in=10, interval=4)
         )
 
-    assert poll_sleep.delays == [4, 4, 4]
+    # The last sleep is capped to the remaining lifetime of the device code.
+    assert poll_sleep.delays == [4, 4, 2]
     assert aioclient_mock.call_count == 2
 
 
