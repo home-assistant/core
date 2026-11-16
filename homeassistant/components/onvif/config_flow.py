@@ -12,7 +12,7 @@ from wsdiscovery.discovery import ThreadedWSDiscovery as WSDiscovery
 from wsdiscovery.qname import QName
 from wsdiscovery.scope import Scope
 from wsdiscovery.service import Service
-from zeep.exceptions import Fault
+from zeep.exceptions import Fault, TransportError, XMLParseError, XMLSyntaxError
 
 from homeassistant.components.ffmpeg import CONF_EXTRA_ARGUMENTS
 from homeassistant.components.stream import (
@@ -390,10 +390,19 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
             device_mgmt = await device.create_devicemgmt_service()
             device_info = None
             if CONF_NAME not in self.onvif_config:
-                device_info = await device_mgmt.GetDeviceInformation()
-                self.onvif_config[CONF_NAME] = (
-                    f"{device_info.Manufacturer} {device_info.Model}"
-                )
+                try:
+                    device_info = await device_mgmt.GetDeviceInformation()
+                except (XMLParseError, XMLSyntaxError, TransportError) as err:
+                    LOGGER.debug(
+                        "%s: Could not get device information: %s",
+                        self.onvif_config[CONF_HOST],
+                        err,
+                    )
+                    self.onvif_config[CONF_NAME] = self.onvif_config[CONF_HOST]
+                else:
+                    self.onvif_config[CONF_NAME] = (
+                        f"{device_info.Manufacturer} {device_info.Model}"
+                    )
             # Get the MAC address to use as the unique ID for the config flow
             if not self.device_id:
                 try:
