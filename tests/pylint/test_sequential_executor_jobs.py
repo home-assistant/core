@@ -88,6 +88,75 @@ async def async_setup(hass, config):
 """,
             id="separated_by_other_await",
         ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    pending = (await hass.async_add_executor_job(fn) for fn in funcs)
+    await hass.async_add_executor_job(call_b)
+""",
+            id="deferred_generator_body",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    hass.states.async_set("sensor.a", await hass.async_add_executor_job(call_a))
+    await hass.async_add_executor_job(call_b)
+""",
+            id="executor_result_passed_to_async_api",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    await hass.async_add_executor_job(call_a)
+    task = asyncio.create_task(coro())
+    await hass.async_add_executor_job(call_b)
+""",
+            id="separated_by_create_task",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    await hass.async_add_executor_job(call_a)
+    loop = asyncio.get_running_loop()
+    await hass.async_add_executor_job(call_b)
+""",
+            id="separated_by_get_running_loop",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    await hass.async_add_executor_job(call_a)
+    items = [item async for item in stream]
+    await hass.async_add_executor_job(call_b)
+""",
+            id="separated_by_async_comprehension",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    await hass.async_add_executor_job(call_a)
+    items = [x async for x in stream] + await hass.async_add_executor_job(call_b)
+""",
+            id="executor_job_with_async_comprehension",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    await loop.run_in_executor(pool, call_a)
+    pool = another_pool
+    await loop.run_in_executor(pool, call_b)
+""",
+            id="executor_rebound",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    await self._instance.async_add_executor_job(call_a)
+    self._instance = get_instance(hass)
+    await self._instance.async_add_executor_job(call_b)
+""",
+            id="receiver_rebound",
+        ),
     ],
 )
 def test_no_warning(
@@ -194,6 +263,24 @@ async def async_setup(hass, config):
         pass
 """,
             id="inside_try_star",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    await loop.run_in_executor(pool, call_a)
+    other = another_pool
+    await loop.run_in_executor(pool, call_b)
+""",
+            id="unrelated_assignment_with_custom_executor",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    await hass.async_add_executor_job(call_a)
+    values = list(x for x in items)
+    await hass.async_add_executor_job(call_b)
+""",
+            id="separated_by_sync_generator",
         ),
     ],
 )

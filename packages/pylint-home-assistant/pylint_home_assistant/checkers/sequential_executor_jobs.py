@@ -7,6 +7,8 @@ back to the event loop between blocking calls.
 https://contributors.home-assistant.io/core/internals/asyncio/#move-blocking-work-to-the-executor
 """
 
+from collections.abc import Iterator
+
 from astroid import nodes
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
@@ -32,6 +34,19 @@ _TRANSPARENT_STATEMENTS = (
     nodes.Assert,
     nodes.Delete,
     nodes.Pass,
+)
+
+_LOOP_ONLY_FUNCTIONS = frozenset(
+    {
+        "call_at",
+        "call_later",
+        "call_soon",
+        "create_future",
+        "create_task",
+        "ensure_future",
+        "get_event_loop",
+        "get_running_loop",
+    }
 )
 
 _NEW_SCOPE_NODES = (
@@ -82,20 +97,34 @@ def _executor_key(call: nodes.Call) -> str | None:
     return None
 
 
-def _awaits(node: nodes.NodeNG) -> list[nodes.Await]:
-    """Return the awaits in *node* that run in the current scope."""
-    found: list[nodes.Await] = []
+def _eager_nodes(node: nodes.NodeNG) -> Iterator[nodes.NodeNG]:
+    """Yield *node* and its descendants that run when *node* is evaluated."""
     stack = [node]
     while stack:
         current = stack.pop()
-        if isinstance(current, nodes.Await):
-            found.append(current)
+        yield current
+        if isinstance(current, nodes.GeneratorExp):
+            # The body of a generator expression runs only when it is consumed
+            stack.append(current.generators[0].iter)
+            continue
         stack.extend(
             child
             for child in current.get_children()
             if not isinstance(child, _NEW_SCOPE_NODES)
         )
-    return found
+
+
+def _awaits(node: nodes.NodeNG) -> list[nodes.Await]:
+    """Return the awaits in *node* that run when *node* is evaluated."""
+    return [child for child in _eager_nodes(node) if isinstance(child, nodes.Await)]
+
+
+def _has_async_comprehension(node: nodes.NodeNG) -> bool:
+    """Return True if *node* iterates an async comprehension, which awaits."""
+    return any(
+        isinstance(child, nodes.Comprehension) and child.is_async
+        for child in _eager_nodes(node)
+    )
 
 
 def _executor_job_key(node: nodes.NodeNG) -> str | None:
@@ -105,21 +134,32 @@ def _executor_job_key(node: nodes.NodeNG) -> str | None:
     awaits = _awaits(node)
     if len(awaits) != 1 or not isinstance(call := awaits[0].value, nodes.Call):
         return None
+    # The rest of the statement runs in the event loop between this job and
+    # its neighbors, so it must not use loop-only APIs or suspend.
+    if _has_async_comprehension(node) or _calls_loop_only_api(node, exclude=call):
+        return None
     return _executor_key(call)
 
 
-def _calls_async_api(node: nodes.NodeNG) -> bool:
-    """Return True if *node* calls a function named ``async_*``.
+def _calls_loop_only_api(node: nodes.NodeNG, exclude: nodes.Call | None = None) -> bool:
+    """Return True if *node* calls a function that must run in the event loop.
 
-    Such functions must run in the event loop, so they cannot be moved
-    into an executor job together with the surrounding blocking calls.
+    This covers functions named ``async_*`` and the asyncio loop APIs. Such
+    calls cannot be moved into an executor job together with the surrounding
+    blocking calls.
     """
+    # Generator expression bodies are included, as sync code often consumes
+    # them right away.
     for call in node.nodes_of_class(nodes.Call, skip_klass=_NEW_SCOPE_NODES):
+        if call is exclude:
+            continue
         func = call.func
         name = func.attrname if isinstance(func, nodes.Attribute) else None
         if isinstance(func, nodes.Name):
             name = func.name
-        if name is not None and name.startswith("async_"):
+        if name is not None and (
+            name.startswith("async_") or name in _LOOP_ONLY_FUNCTIONS
+        ):
             return True
     return False
 
@@ -129,8 +169,29 @@ def _is_transparent(node: nodes.NodeNG) -> bool:
     return (
         isinstance(node, _TRANSPARENT_STATEMENTS)
         and not _awaits(node)
-        and not _calls_async_api(node)
+        and not _has_async_comprehension(node)
+        and not _calls_loop_only_api(node)
     )
+
+
+def _rebinds_executor(node: nodes.NodeNG, executor: str) -> bool:
+    """Return True if *node* may change which executor *executor* refers to."""
+    if executor == _DEFAULT_EXECUTOR:
+        return False
+    expression = executor.removeprefix("import:")
+    for target in node.nodes_of_class(
+        (nodes.AssignName, nodes.DelName, nodes.AssignAttr, nodes.DelAttr),
+        skip_klass=_NEW_SCOPE_NODES,
+    ):
+        if isinstance(target, (nodes.AssignName, nodes.DelName)):
+            name = target.name
+        else:
+            name = f"{target.expr.as_string()}.{target.attrname}"
+        if expression == name or expression.startswith(
+            (f"{name}.", f"{name}[", f"{name}(")
+        ):
+            return True
+    return False
 
 
 class SequentialExecutorJobsChecker(BaseChecker):
@@ -180,7 +241,9 @@ class SequentialExecutorJobsChecker(BaseChecker):
                 prev_executor = executor
                 continue
 
-            if not _is_transparent(stmt):
+            if not _is_transparent(stmt) or (
+                prev_executor is not None and _rebinds_executor(stmt, prev_executor)
+            ):
                 prev_executor = None
 
             # Recurse into control flow blocks (but not nested functions)
