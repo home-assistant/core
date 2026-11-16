@@ -1,0 +1,11 @@
+{
+  "domain": "karaca_connect",
+  "name": "Karaca Connect",
+  "codeowners": ["@Azadglr"],
+  "config_flow": true,
+  "documentation": "https://github.com/Azadglr/karaca-connect-unofficial",
+  "integration_type": "device",
+  "iot_class": "cloud_polling",
+  "requirements": ["karaca-connect-client==0.1.0a1"],
+  "quality_scale": "bronze"
+}
