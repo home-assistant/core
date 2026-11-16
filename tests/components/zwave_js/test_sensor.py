@@ -5,7 +5,11 @@ from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_fire_time_changed,
+)
 from zwave_js_server.const.command_class.meter import MeterType
 from zwave_js_server.event import Event
 from zwave_js_server.exceptions import FailedZWaveCommand
@@ -27,12 +31,12 @@ from homeassistant.components.zwave_js.helpers import get_valueless_base_unique_
 from homeassistant.components.zwave_js.sensor import (
     CONTROLLER_STATISTICS_KEY_MAP,
     NODE_STATISTICS_KEY_MAP,
-    NewZWaveNumericSensor,
 )
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
+    EVENT_STATE_CHANGED,
     PERCENTAGE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -939,15 +943,11 @@ async def test_new_sensor_no_rediscovery_without_scale_change(
 ) -> None:
     """Test the new-style sensor is not rediscovered when the scale is unchanged."""
     entity_id = AIR_TEMPERATURE_SENSOR
+    state_changed_events = async_capture_events(hass, EVENT_STATE_CHANGED)
 
-    with (
-        patch.object(
-            NewZWaveNumericSensor, "async_remove", autospec=True
-        ) as mock_remove,
-        patch.object(
-            hass.config_entries, "async_schedule_reload"
-        ) as mock_schedule_reload,
-    ):
+    with patch.object(
+        hass.config_entries, "async_schedule_reload"
+    ) as mock_schedule_reload:
         multisensor_6.receive_event(
             _air_temperature_metadata_updated_event(multisensor_6, 0, "°C")
         )
@@ -957,7 +957,12 @@ async def test_new_sensor_no_rediscovery_without_scale_change(
         )
         await hass.async_block_till_done()
 
-    mock_remove.assert_not_called()
+    # Removing the entity for rediscovery would write an unavailable state in between.
+    assert [
+        event.data["new_state"].state
+        for event in state_changed_events
+        if event.data["entity_id"] == entity_id
+    ] == ["20.0"]
     mock_schedule_reload.assert_not_called()
     state = hass.states.get(entity_id)
     assert state
