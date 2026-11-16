@@ -226,3 +226,34 @@ async def test_departed_connection_dropped_on_update(
         hass.states.get("sensor.zurich_bern_departure").state
         == "2024-01-06T17:04:00+00:00"
     )
+
+
+@pytest.mark.freeze_time("2024-01-06T17:02:45+00:00")
+async def test_departed_connection_after_delayed_one(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_opendata_client: AsyncMock,
+    swiss_public_transport_config_entry: MockConfigEntry,
+) -> None:
+    """Test a connection is dropped while a delayed earlier one is kept."""
+    mock_opendata_client.connections[0]["delay"] = 5
+    await setup_integration(hass, swiss_public_transport_config_entry)
+
+    assert (
+        hass.states.get("sensor.zurich_bern_departure_1").state
+        == "2024-01-06T17:04:00+00:00"
+    )
+
+    # Pass the grace period of the second connection, the first leaves at 17:08
+    freezer.tick(106)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("sensor.zurich_bern_departure").state
+        == "2024-01-06T17:03:00+00:00"
+    )
+    assert (
+        hass.states.get("sensor.zurich_bern_departure_1").state
+        == "2024-01-06T17:05:00+00:00"
+    )

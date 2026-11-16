@@ -146,15 +146,21 @@ class SwissPublicTransportDataUpdateCoordinator(
     def _async_schedule_departed(self, connections: list[DataConnection]) -> None:
         """Schedule the removal of the next departing connection."""
         self._async_cancel_departed()
-        if not connections or (departed := _departed_at(connections[0])) is None:
+        departures = [
+            departed
+            for connection in connections
+            if (departed := _departed_at(connection)) is not None
+        ]
+        if not departures:
             return
+        # A delayed connection can leave after the ones following it
         self._unsub_departed = async_track_point_in_time(
-            self.hass, self._async_handle_departed, departed
+            self.hass, self._async_handle_departed, min(departures)
         )
 
     @callback
     def _async_handle_departed(self, now: datetime) -> None:
-        """Remove the departed connection, the next ones move up."""
+        """Remove the departed connections, the next ones move up."""
         self._unsub_departed = None
         self.data = self._async_remaining(self.data)
         self.async_update_listeners()
