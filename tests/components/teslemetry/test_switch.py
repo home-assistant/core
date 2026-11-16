@@ -12,9 +12,9 @@ from teslemetry_stream import Signal
 
 from homeassistant.components.labs import async_update_preview_feature
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
@@ -477,8 +477,11 @@ async def test_charge_on_solar_switch_uses_lower_limit_number(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: "number.test_charge_on_solar_lower_limit", ATTR_VALUE: 40},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: "number.test_charge_on_solar_lower_limit",
+            NumberServiceArgument.VALUE: 40,
+        },
         blocking=True,
     )
 
@@ -548,10 +551,10 @@ async def test_charge_on_solar_switch_uses_limit_when_number_disabled(
 
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: "number.test_charge_on_solar_lower_limit",
-                ATTR_VALUE: 35,
+                CommonServiceArgument.ENTITY_ID: "number.test_charge_on_solar_lower_limit",
+                NumberServiceArgument.VALUE: 35,
             },
             blocking=True,
         )

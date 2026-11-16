@@ -10,11 +10,11 @@ from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
@@ -75,8 +75,8 @@ async def test_setting_a_value_leaves_a_released_limit_released(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: POWER_LIMIT, ATTR_VALUE: 60},
+        NumberService.SET_VALUE,
+        {CommonServiceArgument.ENTITY_ID: POWER_LIMIT, NumberServiceArgument.VALUE: 60},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -105,8 +105,8 @@ async def test_setting_a_value_re_enables_an_active_limit(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: POWER_LIMIT, ATTR_VALUE: 60},
+        NumberService.SET_VALUE,
+        {CommonServiceArgument.ENTITY_ID: POWER_LIMIT, NumberServiceArgument.VALUE: 60},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -130,8 +130,11 @@ async def test_battery_setpoint_leaves_the_mode_bits_alone(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: CHARGE_LIMIT, ATTR_VALUE: 50},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: CHARGE_LIMIT,
+            NumberServiceArgument.VALUE: 50,
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -160,8 +163,8 @@ async def test_battery_rates_are_signed(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: -50},
+        NumberService.SET_VALUE,
+        {CommonServiceArgument.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: -50},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -195,8 +198,11 @@ async def test_forcing_within_the_other_limit(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: DISCHARGE_LIMIT, ATTR_VALUE: -100},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: DISCHARGE_LIMIT,
+            NumberServiceArgument.VALUE: -100,
+        },
         blocking=True,
     )
 
@@ -224,8 +230,11 @@ async def test_forcing_beyond_the_other_limit_is_refused(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: DISCHARGE_LIMIT, ATTR_VALUE: -100},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: DISCHARGE_LIMIT,
+                NumberServiceArgument.VALUE: -100,
+            },
             blocking=True,
         )
 
@@ -249,7 +258,10 @@ async def test_a_refused_write_raises(
     with pytest.raises(HomeAssistantError, match="Could not write"):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: CHARGE_LIMIT, ATTR_VALUE: 50},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: CHARGE_LIMIT,
+                NumberServiceArgument.VALUE: 50,
+            },
             blocking=True,
         )

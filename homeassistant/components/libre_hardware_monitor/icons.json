@@ -1,0 +1,24 @@
+{
+  "entity": {
+    "sensor": {
+      "control": {
+        "default": "mdi:tune-vertical"
+      },
+      "factor": {
+        "default": "mdi:multiplication"
+      },
+      "fan": {
+        "default": "mdi:fan"
+      },
+      "level": {
+        "default": "mdi:gauge"
+      },
+      "load": {
+        "default": "mdi:speedometer"
+      },
+      "timing": {
+        "default": "mdi:timer-outline"
+      }
+    }
+  }
+}

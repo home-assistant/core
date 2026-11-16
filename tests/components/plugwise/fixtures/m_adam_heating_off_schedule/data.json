@@ -27,7 +27,14 @@
     "model": "Generic heater",
     "name": "OpenTherm",
     "sensors": {
+      "burner_operation_time": 11576,
+      "burner_starts": 50221,
+      "dhw_burner_operation_time": 913,
+      "failed_burner_flame_ignitions": 34,
+      "failed_burner_starts": 6,
       "intended_boiler_temperature": 0.0,
+      "fault_flags": 0,
+      "oem_fault_code": 255,
       "water_temperature": 37.0
     },
     "switches": {
@@ -96,6 +103,7 @@
     "model_id": "143.1",
     "name": "Anna",
     "sensors": {
+      "maximum_modulation_level": 100,
       "setpoint": 20.0,
       "temperature": 19.1
     },
