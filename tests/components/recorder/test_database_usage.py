@@ -236,10 +236,9 @@ def _delete_states(instance: Recorder) -> None:
         session.query(StateAttributes).delete()
 
 
-def _add_view_and_myisam_table(instance: Recorder) -> None:
-    """Add a view and a MyISAM table to the recorder database."""
+def _add_view(instance: Recorder) -> None:
+    """Add a view to the recorder database."""
     with session_scope(session=instance.get_session()) as session:
-        session.execute(text("CREATE TABLE usage_myisam (id INT) ENGINE=MyISAM"))
         session.execute(text("CREATE VIEW usage_view AS SELECT * FROM states"))
 
 
@@ -250,16 +249,14 @@ async def test_database_usage_mysql_size(
 ) -> None:
     """Test MySQL reports the tables and their free space as the size on disk."""
     await _record_data(hass)
-    await recorder_mock.async_add_executor_job(
-        _add_view_and_myisam_table, recorder_mock
-    )
+    await recorder_mock.async_add_executor_job(_add_view, recorder_mock)
 
     usage = await recorder_mock.async_add_executor_job(
         get_database_usage, recorder_mock
     )
 
     assert usage["tables"] is not None
-    assert {"states", "usage_myisam"} <= {table["table"] for table in usage["tables"]}
+    assert "states" in {table["table"] for table in usage["tables"]}
     assert "usage_view" not in {table["table"] for table in usage["tables"]}
     assert usage["free_bytes"] is not None
     assert usage["wal_bytes"] is None
@@ -516,10 +513,9 @@ def _mysql_session(
 ) -> tuple[MagicMock, list[tuple[Any, ...]]]:
     """Return a session that answers the MySQL size queries, and its statements."""
     tables = [
-        ("states", "InnoDB", 1000, 100),
-        ("events", "InnoDB", 500, 100),
-        ("statistics", "InnoDB", 200, 30),
-        ("legacy", "Aria", 50, 1000),
+        ("states", 1000, 100),
+        ("events", 500, 100),
+        ("statistics", 200, 30),
     ]
     results = {
         "@@SESSION.information_schema_stats_expiry": Mock(
@@ -546,8 +542,8 @@ def _mysql_session(
 @pytest.mark.parametrize(
     ("file_per_table", "free_bytes"),
     [
-        pytest.param(1, 1230, id="file_per_table"),
-        pytest.param(0, 1100, id="shared_tablespace"),
+        pytest.param(1, 230, id="file_per_table"),
+        pytest.param(0, 100, id="shared_tablespace"),
     ],
 )
 @pytest.mark.parametrize(
@@ -581,8 +577,8 @@ def test_mysql_free_bytes(
     session, executed = _mysql_session(is_mariadb, file_per_table)
 
     assert _mysql_table_bytes(session) == (
-        {"states": 1000, "events": 500, "statistics": 200, "legacy": 50},
-        1750 + free_bytes,
+        {"states": 1000, "events": 500, "statistics": 200},
+        1700 + free_bytes,
         free_bytes,
     )
     assert executed == statements
@@ -772,10 +768,12 @@ async def test_database_usage_single_flight(hass_ws_client: WebSocketGenerator) 
             await client.send_json_auto_id(
                 {"type": "recorder/database_usage", "refresh": True}
             )
-        # Messages are handled in order, so both requests wait once the pong is back
-        await client.send_json_auto_id({"type": "ping"})
-        assert (await client.receive_json())["type"] == "pong"
-        release.set()
+        try:
+            # Messages are handled in order, so both requests wait once the pong is back
+            await client.send_json_auto_id({"type": "ping"})
+            assert (await client.receive_json())["type"] == "pong"
+        finally:
+            release.set()
         responses = [await client.receive_json() for _ in range(2)]
 
     assert mock_usage.call_count == 1
@@ -803,16 +801,18 @@ async def test_database_usage_cancelled_request(
             await client.send_json_auto_id(
                 {"type": "recorder/database_usage", "refresh": True}
             )
-        # Messages are handled in order, so both requests wait once the pong is back
-        await client.send_json_auto_id({"type": "ping"})
-        assert (await client.receive_json())["type"] == "pong"
-        cancelled, waiting = (
-            task
-            for task in asyncio.all_tasks()
-            if task.get_name() == "websocket_api.async:ws_database_usage"
-        )
-        cancelled.cancel()
-        release.set()
+        try:
+            # Messages are handled in order, so both requests wait once the pong is back
+            await client.send_json_auto_id({"type": "ping"})
+            assert (await client.receive_json())["type"] == "pong"
+            cancelled, waiting = (
+                task
+                for task in asyncio.all_tasks()
+                if task.get_name() == "websocket_api.async:ws_database_usage"
+            )
+            cancelled.cancel()
+        finally:
+            release.set()
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert cancelled.cancelled()

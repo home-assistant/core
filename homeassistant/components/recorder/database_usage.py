@@ -152,7 +152,7 @@ def _mysql_table_bytes(session: Session) -> tuple[dict[str, int], int, int]:
     try:
         rows = session.execute(
             text(
-                "SELECT table_name, engine, data_length + index_length, data_free "
+                "SELECT table_name, data_length + index_length, data_free "
                 "FROM information_schema.tables WHERE table_schema = DATABASE() "
                 "AND table_type = 'BASE TABLE'"
             )
@@ -164,18 +164,16 @@ def _mysql_table_bytes(session: Session) -> tuple[dict[str, int], int, int]:
                 text("SET SESSION information_schema_stats_expiry = :expiry"),
                 {"expiry": stats_expiry},
             )
-    table_bytes = {table: int(size or 0) for table, _, size, _ in rows}
-    innodb_free = [int(free or 0) for _, engine, _, free in rows if engine == "InnoDB"]
-    free_bytes = sum(
-        int(free or 0) for _, engine, _, free in rows if engine != "InnoDB"
-    )
-    # InnoDB tables in the shared tablespace each report its free space. This
-    # assumes all tables were created under the current innodb_file_per_table:
+    table_bytes = {table: int(size or 0) for table, size, _ in rows}
+    table_free = [int(free or 0) for _, _, free in rows]
+    # Free space is computed as for InnoDB, the only engine the recorder creates
+    # tables with. Tables in the shared tablespace each report its free space.
+    # This assumes all tables were created under the current innodb_file_per_table:
     # it overcounts tables left in ibdata1 when on, and undercounts when off
     if session.execute(text("SELECT @@innodb_file_per_table")).scalar_one():
-        free_bytes += sum(innodb_free)
+        free_bytes = sum(table_free)
     else:
-        free_bytes += max(innodb_free, default=0)
+        free_bytes = max(table_free, default=0)
     return table_bytes, sum(table_bytes.values()) + free_bytes, free_bytes
 
 
