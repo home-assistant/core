@@ -2,7 +2,9 @@
 
 from enum import StrEnum
 from itertools import chain
+from pathlib import Path
 from typing import Any
+from unittest.mock import patch
 
 import pytest
 from pytest_homeassistant.common import (
@@ -13,9 +15,17 @@ from pytest_homeassistant.common import (
 from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant import config as hass_config
 from homeassistant.components import template
-from homeassistant.components.template.const import CONF_PICTURE, DOMAIN
-from homeassistant.components.template.weather import DEFAULT_NAME
+from homeassistant.components.template.const import (
+    CONF_PICTURE,
+    DOMAIN,
+    TemplateService,
+)
+from homeassistant.components.template.weather import (
+    DEFAULT_NAME,
+    DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID,
+)
 from homeassistant.components.weather import (
     DOMAIN as WEATHER_DOMAIN,
     Forecast,
@@ -32,9 +42,11 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import Context, HomeAssistant, State
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
+from homeassistant.util.yaml import load_yaml_dict
 
 from .conftest import (
     ConfigurationStyle,
@@ -1118,3 +1130,172 @@ async def test_attributes_template_with_blocked_attributes(
 
     error = f"Unsupported attribute(s) found for {TEST_WEATHER.entity_id}: {attribute}"
     assert error in caplog.text
+
+
+def get_deprecated_template_options_issues(
+    issue_registry: ir.IssueRegistry,
+) -> list[ir.IssueEntry]:
+    """Return the deprecated weather template options issues."""
+    return [
+        issue
+        for (domain, issue_id), issue in issue_registry.issues.items()
+        if domain == DOMAIN
+        and issue_id.startswith(f"{DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID}_")
+    ]
+
+
+async def async_setup_yaml_config(
+    hass: HomeAssistant, config_dir: Path, yaml_config: str
+) -> None:
+    """Write configuration.yaml and set up the template integration from it."""
+    yaml_path = config_dir / "configuration.yaml"
+    await hass.async_add_executor_job(yaml_path.write_text, yaml_config)
+    config = await hass.async_add_executor_job(load_yaml_dict, yaml_path)
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
+
+
+async def async_reload_yaml_config(
+    hass: HomeAssistant, config_dir: Path, yaml_config: str
+) -> None:
+    """Write configuration.yaml and reload the template integration from it."""
+    yaml_path = config_dir / "configuration.yaml"
+    await hass.async_add_executor_job(yaml_path.write_text, yaml_config)
+    with patch.object(hass_config, "YAML_CONFIG_FILE", str(yaml_path)):
+        await hass.services.async_call(DOMAIN, TemplateService.RELOAD, blocking=True)
+    await hass.async_block_till_done()
+
+
+LEGACY_YAML = """\
+template:
+  - weather:
+      - name: Test
+        condition_template: sunny
+        temperature_template: "{{ 20 }}"
+        humidity_template: "{{ 25 }}"
+"""
+
+
+@pytest.fixture
+def yaml_config_dir(hass: HomeAssistant, tmp_path: Path) -> Path:
+    """Use a temporary configuration directory."""
+    hass.config.config_dir = str(tmp_path)
+    return tmp_path
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize("config", [TEST_LEGACY_REQUIRED])
+@pytest.mark.usefixtures("setup_weather")
+async def test_deprecated_template_options_issue(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test a repair issue is created for deprecated *_template options."""
+    issues = get_deprecated_template_options_issues(issue_registry)
+    assert len(issues) == 1
+    assert issues[0].breaks_in_ha_version == "2027.6.0"
+    assert issues[0].translation_key == DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID
+    assert issues[0].translation_placeholders == {
+        "identifier": "name: template_weather",
+        "breaks_in_ha_version": "2027.6.0",
+        "options": (
+            "- `condition_template` → `condition`\n"
+            "- `temperature_template` → `temperature`\n"
+            "- `humidity_template` → `humidity`"
+        ),
+    }
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize("config", [TEST_MODERN_REQUIRED])
+@pytest.mark.usefixtures("setup_weather")
+async def test_no_deprecated_template_options_issue(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test no repair issue is created for modern options."""
+    assert get_deprecated_template_options_issues(issue_registry) == []
+
+
+async def test_deprecated_template_options_issue_file_and_line(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry, yaml_config_dir: Path
+) -> None:
+    """Test the repair lists file and line, and is removed after a fix."""
+    await async_setup_yaml_config(hass, yaml_config_dir, LEGACY_YAML)
+
+    issues = get_deprecated_template_options_issues(issue_registry)
+    assert len(issues) == 1
+    assert issues[0].translation_placeholders == {
+        "identifier": "name: Test",
+        "breaks_in_ha_version": "2027.6.0",
+        "options": (
+            "- `configuration.yaml:4`: `condition_template` → `condition`\n"
+            "- `configuration.yaml:5`: `temperature_template` → `temperature`\n"
+            "- `configuration.yaml:6`: `humidity_template` → `humidity`"
+        ),
+    }
+
+    await async_reload_yaml_config(
+        hass,
+        yaml_config_dir,
+        LEGACY_YAML.replace("_template:", ":"),
+    )
+
+    assert get_deprecated_template_options_issues(issue_registry) == []
+
+
+async def test_deprecated_template_options_issue_per_entity(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry, yaml_config_dir: Path
+) -> None:
+    """Test a repair is created for each weather entity with deprecated options."""
+    await async_setup_yaml_config(
+        hass,
+        yaml_config_dir,
+        LEGACY_YAML
+        + """\
+      - unique_id: second
+        condition_template: cloudy
+        temperature_template: "{{ 10 }}"
+        humidity_template: "{{ 50 }}"
+      - name: Modern
+        condition: sunny
+        temperature: "{{ 20 }}"
+        humidity: "{{ 25 }}"
+""",
+    )
+
+    issues = get_deprecated_template_options_issues(issue_registry)
+    assert sorted(
+        issue.translation_placeholders["identifier"]  # type: ignore[index]
+        for issue in issues
+    ) == ["name: Test", "unique_id: second"]
+
+
+async def test_deprecated_template_options_issue_dismissed(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry, yaml_config_dir: Path
+) -> None:
+    """Test a dismissed repair stays dismissed until the configuration changes."""
+    await async_setup_yaml_config(hass, yaml_config_dir, LEGACY_YAML)
+    issues = get_deprecated_template_options_issues(issue_registry)
+    assert len(issues) == 1
+    dismissed_issue_id = issues[0].issue_id
+    issue_registry.async_ignore(DOMAIN, dismissed_issue_id, True)
+
+    # Moving the options to other lines is not a configuration change
+    await async_reload_yaml_config(hass, yaml_config_dir, "\n" + LEGACY_YAML)
+
+    issues = get_deprecated_template_options_issues(issue_registry)
+    assert len(issues) == 1
+    assert issues[0].issue_id == dismissed_issue_id
+    assert issues[0].dismissed_version is not None
+
+    await async_reload_yaml_config(
+        hass, yaml_config_dir, LEGACY_YAML.replace("sunny", "cloudy")
+    )
+
+    issues = get_deprecated_template_options_issues(issue_registry)
+    assert len(issues) == 1
+    assert issues[0].issue_id != dismissed_issue_id
+    assert issues[0].dismissed_version is None
