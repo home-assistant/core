@@ -57,6 +57,7 @@ async def test_validation_gas_flow_rate_valid(
         "energy_sources": [[]],
         "device_consumption": [],
         "device_consumption_water": [],
+        "device_consumption_gas": [],
     }
 
 
@@ -109,6 +110,7 @@ async def test_validation_gas_flow_rate_wrong_unit(
         ],
         "device_consumption": [],
         "device_consumption_water": [],
+        "device_consumption_gas": [],
     }
 
 
@@ -159,6 +161,7 @@ async def test_validation_gas_flow_rate_wrong_state_class(
         ],
         "device_consumption": [],
         "device_consumption_water": [],
+        "device_consumption_gas": [],
     }
 
 
@@ -206,6 +209,7 @@ async def test_validation_gas_flow_rate_entity_missing(
         ],
         "device_consumption": [],
         "device_consumption_water": [],
+        "device_consumption_gas": [],
     }
 
 
@@ -238,6 +242,7 @@ async def test_validation_gas_without_flow_rate(
         "energy_sources": [[]],
         "device_consumption": [],
         "device_consumption_water": [],
+        "device_consumption_gas": [],
     }
 
 
@@ -280,6 +285,7 @@ async def test_validation_water_flow_rate_valid(
         "energy_sources": [[]],
         "device_consumption": [],
         "device_consumption_water": [],
+        "device_consumption_gas": [],
     }
 
 
@@ -332,6 +338,7 @@ async def test_validation_water_flow_rate_wrong_unit(
         ],
         "device_consumption": [],
         "device_consumption_water": [],
+        "device_consumption_gas": [],
     }
 
 
@@ -384,6 +391,7 @@ async def test_validation_water_flow_rate_wrong_state_class(
         ],
         "device_consumption": [],
         "device_consumption_water": [],
+        "device_consumption_gas": [],
     }
 
 
@@ -431,6 +439,7 @@ async def test_validation_water_flow_rate_entity_missing(
         ],
         "device_consumption": [],
         "device_consumption_water": [],
+        "device_consumption_gas": [],
     }
 
 
@@ -463,6 +472,7 @@ async def test_validation_water_without_flow_rate(
         "energy_sources": [[]],
         "device_consumption": [],
         "device_consumption_water": [],
+        "device_consumption_gas": [],
     }
 
 
@@ -528,6 +538,7 @@ async def test_validation_gas_flow_rate_different_units(
         "energy_sources": [[], []],
         "device_consumption": [],
         "device_consumption_water": [],
+        "device_consumption_gas": [],
     }
 
 
@@ -571,6 +582,7 @@ async def test_validation_gas_flow_rate_recorder_untracked(
         ],
         "device_consumption": [],
         "device_consumption_water": [],
+        "device_consumption_gas": [],
     }
 
 
@@ -614,4 +626,5 @@ async def test_validation_water_flow_rate_recorder_untracked(
         ],
         "device_consumption": [],
         "device_consumption_water": [],
+        "device_consumption_gas": [],
     }

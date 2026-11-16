@@ -7,8 +7,9 @@ from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.abode.const import DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.components.abode.services import AbodeService
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
+from homeassistant.const import ATTR_ENTITY_ID, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -35,7 +36,10 @@ async def test_switch_on(hass: HomeAssistant) -> None:
 
     with patch("jaraco.abode.devices.switch.Switch.switch_on") as mock_switch_on:
         await hass.services.async_call(
-            SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: DEVICE_ID}, blocking=True
+            SWITCH_DOMAIN,
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: DEVICE_ID},
+            blocking=True,
         )
         await hass.async_block_till_done()
 
@@ -48,7 +52,10 @@ async def test_switch_off(hass: HomeAssistant) -> None:
 
     with patch("jaraco.abode.devices.switch.Switch.switch_off") as mock_switch_off:
         await hass.services.async_call(
-            SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: DEVICE_ID}, blocking=True
+            SWITCH_DOMAIN,
+            SwitchService.TURN_OFF,
+            {CommonServiceArgument.ENTITY_ID: DEVICE_ID},
+            blocking=True,
         )
         await hass.async_block_till_done()
 
@@ -62,8 +69,8 @@ async def test_turn_automation_off(hass: HomeAssistant) -> None:
 
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: AUTOMATION_ID},
+            SwitchService.TURN_OFF,
+            {CommonServiceArgument.ENTITY_ID: AUTOMATION_ID},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -78,8 +85,8 @@ async def test_turn_automation_on(hass: HomeAssistant) -> None:
 
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: AUTOMATION_ID},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: AUTOMATION_ID},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -94,7 +101,7 @@ async def test_trigger_automation(hass: HomeAssistant) -> None:
     with patch("jaraco.abode.automation.Automation.trigger") as mock:
         await hass.services.async_call(
             DOMAIN,
-            "trigger_automation",
+            AbodeService.TRIGGER_AUTOMATION,
             {ATTR_ENTITY_ID: AUTOMATION_ID},
             blocking=True,
         )
@@ -145,7 +152,7 @@ async def test_trigger_automation_after_entity_id_change(
     with patch("jaraco.abode.automation.Automation.trigger") as mock:
         await hass.services.async_call(
             DOMAIN,
-            "trigger_automation",
+            AbodeService.TRIGGER_AUTOMATION,
             {ATTR_ENTITY_ID: AUTOMATION_ID},
             blocking=True,
         )
@@ -154,7 +161,7 @@ async def test_trigger_automation_after_entity_id_change(
 
         await hass.services.async_call(
             DOMAIN,
-            "trigger_automation",
+            AbodeService.TRIGGER_AUTOMATION,
             {ATTR_ENTITY_ID: "switch.renamed_automation"},
             blocking=True,
         )

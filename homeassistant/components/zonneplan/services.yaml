@@ -1,0 +1,16 @@
+get_electricity_prices:
+  fields:
+    config_entry:
+      required: true
+      selector:
+        config_entry:
+          integration: zonneplan
+    interval:
+      required: true
+      default: hour
+      selector:
+        select:
+          translation_key: interval
+          options:
+            - hour
+            - quarter

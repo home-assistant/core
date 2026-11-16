@@ -8,10 +8,10 @@ import pytest
 
 from homeassistant.components.homematicip_cloud import DOMAIN
 from homeassistant.components.homematicip_cloud.services import (
-    ATTR_PIN,
-    SERVICE_PULL_LATCH,
+    HomematicIPService,
+    HomematicIPServiceArgument,
 )
-from homeassistant.const import ATTR_DEVICE_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -21,7 +21,7 @@ from .helper import HomeFactory
 
 @pytest.mark.parametrize(
     ("service_data", "expected_pin"),
-    [({ATTR_PIN: "1234"}, "1234"), ({}, None)],
+    [({HomematicIPServiceArgument.PIN: "1234"}, "1234"), ({}, None)],
 )
 async def test_pull_latch(
     hass: HomeAssistant,
@@ -54,8 +54,8 @@ async def test_pull_latch(
     ) as mock_pull_latch:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_PULL_LATCH,
-            {ATTR_DEVICE_ID: entity_entry.device_id} | service_data,
+            HomematicIPService.PULL_LATCH,
+            {CommonServiceArgument.DEVICE_ID: entity_entry.device_id} | service_data,
             blocking=True,
         )
 
@@ -99,8 +99,11 @@ async def test_pull_latch_rejected_by_access_point(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_PULL_LATCH,
-            {ATTR_DEVICE_ID: entity_entry.device_id, ATTR_PIN: "0000"},
+            HomematicIPService.PULL_LATCH,
+            {
+                CommonServiceArgument.DEVICE_ID: entity_entry.device_id,
+                HomematicIPServiceArgument.PIN: "0000",
+            },
             blocking=True,
         )
 
@@ -119,8 +122,8 @@ async def test_pull_latch_on_non_opener_device(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_PULL_LATCH,
-            {ATTR_DEVICE_ID: entity_entry.device_id},
+            HomematicIPService.PULL_LATCH,
+            {CommonServiceArgument.DEVICE_ID: entity_entry.device_id},
             blocking=True,
         )
 
@@ -135,7 +138,7 @@ async def test_pull_latch_unknown_device(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_PULL_LATCH,
-            {ATTR_DEVICE_ID: "does-not-exist"},
+            HomematicIPService.PULL_LATCH,
+            {CommonServiceArgument.DEVICE_ID: "does-not-exist"},
             blocking=True,
         )

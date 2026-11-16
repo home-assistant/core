@@ -242,7 +242,7 @@
             }),
           ]),
           'explicit': False,
-          'favorite': False,
+          'favorite': None,
           'image': None,
           'media_type': <MediaType.TRACK: 'track'>,
           'name': 'November Rain',

@@ -18,7 +18,6 @@ from homeassistant.components.vacuum import (
     SERVICE_SEND_COMMAND,
     SERVICE_SET_FAN_SPEED,
     SERVICE_START,
-    SERVICE_START_PAUSE,
     SERVICE_STOP,
 )
 from homeassistant.const import (
@@ -84,14 +83,6 @@ async def async_return_to_base(
     """Tell all or specified vacuum to return to base."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
     await hass.services.async_call(DOMAIN, SERVICE_RETURN_TO_BASE, data, blocking=True)
-
-
-async def async_start_pause(
-    hass: HomeAssistant, entity_id: str = ENTITY_MATCH_ALL
-) -> None:
-    """Tell all or specified vacuum to start or pause the current task."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    await hass.services.async_call(DOMAIN, SERVICE_START_PAUSE, data, blocking=True)
 
 
 async def async_start(hass: HomeAssistant, entity_id: str = ENTITY_MATCH_ALL) -> None:

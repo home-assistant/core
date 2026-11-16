@@ -8,7 +8,10 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
-from homeassistant.components.event import ATTR_EVENT_TYPE, ATTR_EVENT_TYPES
+from homeassistant.components.event import (
+    EventEntityCapabilityAttribute,
+    EventEntityStateAttribute,
+)
 from homeassistant.components.transmission.const import (
     DEFAULT_SCAN_INTERVAL,
     EVENT_TYPE_DOWNLOADED,
@@ -35,8 +38,8 @@ async def test_event_entity_setup(
     state = hass.states.get("event.transmission_torrent")
     assert state is not None
     assert state.state == "unknown"
-    assert state.attributes[ATTR_EVENT_TYPE] is None
-    assert state.attributes[ATTR_EVENT_TYPES] == [
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] is None
+    assert state.attributes[EventEntityCapabilityAttribute.EVENT_TYPES] == [
         EVENT_TYPE_STARTED,
         EVENT_TYPE_DOWNLOADED,
         EVENT_TYPE_REMOVED,
@@ -93,7 +96,7 @@ async def test_event_updates_state(
 
     state = hass.states.get("event.transmission_torrent")
     assert state is not None
-    assert state.attributes[ATTR_EVENT_TYPE] == expected_event_type
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == expected_event_type
     assert state.attributes["id"] == 1
     assert state.attributes["name"] == "Test"
     assert state.attributes["download_path"] == "/downloads"

@@ -22,7 +22,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
-from homeassistant.helpers.typing import UndefinedType
+from homeassistant.helpers.typing import Undefined
 
 from .const import DOMAIN, FEATUREMAP_ATTRIBUTE_ID, ID_TYPE_DEVICE_ID
 from .helpers import (
@@ -288,7 +288,7 @@ class MatterEntity(Entity):
 
     @cached_property
     @override
-    def name(self) -> str | UndefinedType | None:
+    def name(self) -> str | Undefined | None:
         """Return the name of the entity."""
         if hasattr(self, "_attr_name"):
             # an explicit entity name was defined, we use that

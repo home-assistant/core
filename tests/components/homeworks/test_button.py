@@ -4,8 +4,8 @@ from unittest.mock import MagicMock
 
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 
 
@@ -27,7 +27,10 @@ async def test_button_service_calls(
 
     mock_controller._send.reset_mock()
     await hass.services.async_call(
-        BUTTON_DOMAIN, SERVICE_PRESS, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        BUTTON_DOMAIN,
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
+        blocking=True,
     )
     assert len(mock_controller._send.mock_calls) == 1
     assert mock_controller._send.mock_calls[0][1] == ("KBP, [02:08:02:01], 1",)
@@ -51,7 +54,10 @@ async def test_button_service_calls_delay(
 
     mock_controller._send.reset_mock()
     await hass.services.async_call(
-        BUTTON_DOMAIN, SERVICE_PRESS, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        BUTTON_DOMAIN,
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
+        blocking=True,
     )
     assert len(mock_controller._send.mock_calls) == 2
     assert mock_controller._send.mock_calls[0][1] == ("KBP, [02:08:02:01], 3",)

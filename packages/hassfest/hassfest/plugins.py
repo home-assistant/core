@@ -5,7 +5,7 @@ from types import ModuleType
 
 from .model import Config
 
-INTEGRATION_PLUGINS = ["codeowners", "json"]
+INTEGRATION_PLUGINS = ["brand_images", "codeowners", "json"]
 
 
 def load_plugins(config: Config) -> list[ModuleType]:

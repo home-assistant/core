@@ -15,7 +15,7 @@ from homeassistant.components.vodafone_station.const import SCAN_INTERVAL
 from homeassistant.components.vodafone_station.coordinator import CONSIDER_HOME_SECONDS
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from . import setup_integration
@@ -37,6 +37,35 @@ async def test_all_entities(
         await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.parametrize(
+    ("client_name", "expected_device_name"),
+    [
+        pytest.param(DEVICE_1_HOST, DEVICE_1_HOST, id="hostname"),
+        pytest.param("", DEVICE_1_MAC, id="no_hostname"),
+    ],
+)
+async def test_device_info(
+    hass: HomeAssistant,
+    mock_vodafone_station_router: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    client_name: str,
+    expected_device_name: str,
+) -> None:
+    """Test the tracked client device is named by hostname, else by MAC address."""
+    mock_vodafone_station_router.get_devices_data.return_value[
+        DEVICE_1_MAC
+    ].name = client_name
+    await setup_integration(hass, mock_config_entry)
+
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, DEVICE_1_MAC), mock_config_entry.entry_id
+    )
+    assert device is not None
+    assert device.name == expected_device_name
+    assert device.connections == {(dr.CONNECTION_NETWORK_MAC, DEVICE_1_MAC)}
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

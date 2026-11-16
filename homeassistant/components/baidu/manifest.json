@@ -3,6 +3,7 @@
   "name": "Baidu",
   "categories": ["ai_voice.speech"],
   "codeowners": [],
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/baidu",
   "iot_class": "cloud_push",
   "loggers": ["aip"],

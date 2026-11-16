@@ -2,7 +2,6 @@
 
 from collections.abc import Generator
 from contextlib import contextmanager
-import logging
 from unittest.mock import patch
 
 from coinbase.rest.rest_base import HTTPError
@@ -91,8 +90,6 @@ async def test_form_invalid_auth(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-
-    caplog.set_level(logging.DEBUG)
 
     api_auth_error_unknown = HTTPError("unknown error")
     with patch(
