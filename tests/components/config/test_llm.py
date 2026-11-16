@@ -28,12 +28,14 @@ from homeassistant.components.config.llm import (
     async_get_tools,
 )
 from homeassistant.config_entries import (
+    ConfigEntry,
     ConfigEntryDisabler,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
+    OptionsFlow,
 )
-from homeassistant.core import Context, HomeAssistant
+from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError, DependencyError
 from homeassistant.helpers import config_entry_oauth2_flow, llm, selector
 from homeassistant.setup import async_setup_component
@@ -51,6 +53,19 @@ def llm_context() -> llm.LLMContext:
         assistant="conversation",
         device_id=None,
     )
+
+
+@pytest.fixture
+async def llm_api(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+    llm_context: llm.LLMContext,
+) -> llm.APIInstance:
+    """Set up config and llm components and return the Home Assistant LLM API."""
+    assert await async_setup_component(hass, config_component.DOMAIN, {})
+    assert await async_setup_component(hass, "llm", {})
+    llm_context.context = Context(user_id=hass_admin_user.id)
+    return await llm.async_get_api(hass, llm.LLM_API_HOME_ASSISTANT, llm_context)
 
 
 async def test_async_get_tools(
@@ -1458,36 +1473,634 @@ async def test_oauth_and_external_step_on_configure_step(
 
 
 @pytest.mark.parametrize(
-    ("tool", "tool_args"),
+    ("tool_name", "tool_args"),
     [
         pytest.param(
-            StartFlowTool(),
-            {},
-            id="start_flow_missing_domain",
+            "config__start_flow",
+            {"flow_type": "invalid"},
+            id="start_flow_invalid_flow_type",
         ),
         pytest.param(
-            StartFlowTool(),
+            "config__start_flow",
             {"domain": "   "},
             id="start_flow_whitespace_domain",
         ),
         pytest.param(
-            ConfigureFlowTool(),
+            "config__start_flow",
+            {"flow_type": "options", "entry_id": "   "},
+            id="start_flow_whitespace_entry_id",
+        ),
+        pytest.param(
+            "config__configure_flow",
             {"flow_id": ""},
             id="configure_flow_empty_id",
         ),
         pytest.param(
-            ConfigureFlowTool(),
+            "config__configure_flow",
             {"flow_id": "abc", "next_step_id": "   "},
             id="configure_flow_whitespace_next_step_id",
         ),
     ],
 )
 async def test_flow_tools_invalid_parameters(
-    hass: HomeAssistant,
-    llm_context: llm.LLMContext,
-    tool: llm.Tool,
+    llm_api: llm.APIInstance,
+    tool_name: str,
     tool_args: dict[str, Any],
 ) -> None:
     """Test invalid arguments are rejected by StartFlowTool and ConfigureFlowTool."""
     with pytest.raises(probatio.Invalid):
-        await tool.async_call(hass, llm.ToolInput(tool.name, tool_args), llm_context)
+        await llm_api.async_call_tool(llm.ToolInput(tool_name, tool_args))
+
+
+async def test_get_config_entries_flow_capabilities(
+    hass: HomeAssistant, llm_api: llm.APIInstance
+) -> None:
+    """Test GetConfigEntriesTool exposes supports_options and supports_reconfigure."""
+    mock_integration(hass, MockModule(TEST_DOMAIN))
+    mock_platform(hass, f"{TEST_DOMAIN}.config_flow", None)
+
+    class CapableOptionsFlow(OptionsFlow):
+        """Options flow for capability test."""
+
+        async def async_step_init(
+            self, user_input: dict[str, Any] | None = None
+        ) -> ConfigFlowResult:
+            return self.async_show_form(step_id="init")
+
+    class CapableFlow(ConfigFlow):
+        """Config flow supporting both options and reconfigure."""
+
+        @staticmethod
+        @callback
+        @override
+        def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+            return CapableOptionsFlow()
+
+        async def async_step_reconfigure(
+            self, user_input: dict[str, Any] | None = None
+        ) -> ConfigFlowResult:
+            return self.async_show_form(step_id="reconfigure")
+
+    active = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        title="Active",
+        entry_id="01J00000000000000000002001",
+        state=ConfigEntryState.LOADED,
+    )
+    active.add_to_hass(hass)
+    errored = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        title="Errored",
+        entry_id="01J00000000000000000002004",
+        state=ConfigEntryState.SETUP_ERROR,
+    )
+    errored.add_to_hass(hass)
+    disabled = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        title="Disabled",
+        entry_id="01J00000000000000000002002",
+        disabled_by=ConfigEntryDisabler.USER,
+    )
+    disabled.add_to_hass(hass)
+    ignored = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        title="Ignored",
+        entry_id="01J00000000000000000002003",
+        source=config_entries.SOURCE_IGNORE,
+    )
+    ignored.add_to_hass(hass)
+
+    with mock_config_flow(TEST_DOMAIN, CapableFlow):
+        result = await llm_api.async_call_tool(
+            llm.ToolInput("config__get_config_entries", {"domain": TEST_DOMAIN})
+        )
+
+    assert result == llm.ToolResult(
+        data={
+            "result": [
+                {
+                    "entry_id": f"{TEST_DOMAIN}:2001",
+                    "domain": TEST_DOMAIN,
+                    "title": "Active",
+                    "state": "loaded",
+                    "supports_options": True,
+                    "supports_reconfigure": True,
+                },
+                {
+                    "entry_id": f"{TEST_DOMAIN}:2004",
+                    "domain": TEST_DOMAIN,
+                    "title": "Errored",
+                    "state": "setup_error",
+                    "supports_reconfigure": True,
+                },
+                {
+                    "entry_id": f"{TEST_DOMAIN}:2002",
+                    "domain": TEST_DOMAIN,
+                    "title": "Disabled",
+                    "state": "not_loaded",
+                    "disabled_by": "user",
+                },
+                {
+                    "entry_id": f"{TEST_DOMAIN}:2003",
+                    "domain": TEST_DOMAIN,
+                    "title": "Ignored",
+                    "state": "not_loaded",
+                    "source": "ignore",
+                },
+            ]
+        }
+    )
+
+
+async def test_options_flow_end_to_end(
+    hass: HomeAssistant, llm_api: llm.APIInstance
+) -> None:
+    """Test starting, inspecting, aborting, and completing an options flow on random."""
+    step1 = await llm_api.async_call_tool(
+        llm.ToolInput("config__start_flow", {"domain": "random"})
+    )
+    assert isinstance(step1_res := step1.data["result"], dict)
+    step2 = await llm_api.async_call_tool(
+        llm.ToolInput(
+            "config__configure_flow",
+            {"flow_id": step1_res["flow_id"], "next_step_id": "sensor"},
+        )
+    )
+    assert isinstance(step2_res := step2.data["result"], dict)
+    created = await llm_api.async_call_tool(
+        llm.ToolInput(
+            "config__configure_flow",
+            {
+                "flow_id": step2_res["flow_id"],
+                "user_input": {"name": "Random Opts", "minimum": 1, "maximum": 10},
+            },
+        )
+    )
+    await hass.async_block_till_done()
+    assert isinstance(created_res := created.data["result"], dict)
+    short_entry_id = created_res["entry_id"]
+    entry = hass.config_entries.async_entries("random")[0]
+    assert entry.options["minimum"] == 1
+    assert entry.options["maximum"] == 10
+
+    opt_start = await llm_api.async_call_tool(
+        llm.ToolInput(
+            "config__start_flow",
+            {"flow_type": "options", "entry_id": short_entry_id},
+        )
+    )
+    assert opt_start.error is False
+    assert isinstance(opt_step := opt_start.data["result"], dict)
+    opt_flow_id = opt_step["flow_id"]
+    assert opt_flow_id.startswith("random:")
+    assert opt_step["type"] == "form"
+    assert opt_step["step_id"] == "sensor"
+
+    inspected = await llm_api.async_call_tool(
+        llm.ToolInput("config__configure_flow", {"flow_id": opt_flow_id})
+    )
+    assert inspected.error is False
+    assert isinstance(inspected_res := inspected.data["result"], dict)
+    assert inspected_res["step_id"] == "sensor"
+
+    aborted = await llm_api.async_call_tool(
+        llm.ToolInput("config__configure_flow", {"flow_id": opt_flow_id, "abort": True})
+    )
+    assert aborted == llm.ToolResult(
+        data={
+            "result": {
+                "flow_id": opt_flow_id,
+                "type": "abort",
+                "reason": "aborted",
+            }
+        }
+    )
+
+    opt_start2 = await llm_api.async_call_tool(
+        llm.ToolInput(
+            "config__start_flow",
+            {"flow_type": "options", "entry_id": short_entry_id},
+        )
+    )
+    assert isinstance(opt_step2 := opt_start2.data["result"], dict)
+    opt_done = await llm_api.async_call_tool(
+        llm.ToolInput(
+            "config__configure_flow",
+            {
+                "flow_id": opt_step2["flow_id"],
+                "user_input": {"minimum": 5, "maximum": 25},
+            },
+        )
+    )
+    await hass.async_block_till_done()
+    assert opt_done.error is False
+    assert isinstance(opt_done_res := opt_done.data["result"], dict)
+    assert opt_done_res["type"] == "create_entry"
+    assert entry.options["minimum"] == 5
+    assert entry.options["maximum"] == 25
+
+
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", [TEST_DOMAIN])
+@pytest.mark.parametrize(
+    "mock_translations",
+    [
+        {
+            "config": {
+                f"component.{TEST_DOMAIN}.config.step.reconfigure.title": (
+                    "Reconfigure bridge"
+                ),
+                f"component.{TEST_DOMAIN}.config.step.reconfigure.data.host": "Host",
+                f"component.{TEST_DOMAIN}.config.error.cannot_connect": (
+                    "Cannot connect"
+                ),
+            },
+            "title": {f"component.{TEST_DOMAIN}.title": "Test Bridge"},
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("ignore_translations_for_mock_domains", "mock_translations")
+async def test_reconfigure_flow(hass: HomeAssistant, llm_api: llm.APIInstance) -> None:
+    """Test starting and completing a reconfigure flow with translations and validation."""
+    mock_integration(
+        hass,
+        MockModule(TEST_DOMAIN, async_setup_entry=AsyncMock(return_value=True)),
+    )
+    mock_platform(hass, f"{TEST_DOMAIN}.config_flow", None)
+
+    entry = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        title="Bridge",
+        entry_id="01J00000000000000000003001",
+        data={"host": "192.168.1.10"},
+    )
+    entry.add_to_hass(hass)
+
+    class ReconfigureFlow(ConfigFlow):
+        """Test flow supporting reconfigure."""
+
+        async def async_step_reconfigure(
+            self, user_input: dict[str, Any] | None = None
+        ) -> ConfigFlowResult:
+            reconf_entry = self._get_reconfigure_entry()
+            errors: dict[str, str] = {}
+            if user_input is not None:
+                if user_input["host"] == "bad":
+                    errors["base"] = "cannot_connect"
+                else:
+                    return self.async_update_reload_and_abort(
+                        reconf_entry,
+                        data_updates={"host": user_input["host"]},
+                    )
+            schema = self.add_suggested_values_to_schema(
+                probatio.Schema({probatio.Required("host"): str}),
+                reconf_entry.data,
+            )
+            return self.async_show_form(
+                step_id="reconfigure",
+                data_schema=schema,
+                errors=errors,
+            )
+
+    with mock_config_flow(TEST_DOMAIN, ReconfigureFlow):
+        started = await llm_api.async_call_tool(
+            llm.ToolInput(
+                "config__start_flow",
+                {"flow_type": "reconfigure", "entry_id": f"{TEST_DOMAIN}:3001"},
+            )
+        )
+        assert started.error is False
+        assert isinstance(step := started.data["result"], dict)
+        flow_id = step["flow_id"]
+        assert step["title"] == "Reconfigure bridge"
+        assert step["fields"] == [
+            {
+                "name": "host",
+                "required": True,
+                "type": "string",
+                "suggested_value": "192.168.1.10",
+                "label": "Host",
+            }
+        ]
+
+        err_res = await llm_api.async_call_tool(
+            llm.ToolInput(
+                "config__configure_flow",
+                {"flow_id": flow_id, "user_input": {"host": "bad"}},
+            )
+        )
+        assert err_res.error is False
+        assert isinstance(err_step := err_res.data["result"], dict)
+        assert err_step["errors"] == {"base": "Cannot connect"}
+
+        done = await llm_api.async_call_tool(
+            llm.ToolInput(
+                "config__configure_flow",
+                {"flow_id": flow_id, "user_input": {"host": "192.168.1.20"}},
+            )
+        )
+        await hass.async_block_till_done()
+
+    assert done == llm.ToolResult(
+        data={
+            "result": {
+                "flow_id": flow_id,
+                "type": "abort",
+                "reason": "reconfigure_successful",
+                "description": "Reconfiguration was successful",
+            }
+        }
+    )
+    assert entry.data == {"host": "192.168.1.20"}
+
+
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", [TEST_DOMAIN])
+@pytest.mark.usefixtures("ignore_translations_for_mock_domains")
+async def test_options_flow_abort_fallback_and_collision(
+    hass: HomeAssistant, llm_api: llm.APIInstance
+) -> None:
+    """Test options flow abort fallback to homeassistant.config.abort and short ID collision."""
+    mock_integration(hass, MockModule(TEST_DOMAIN))
+    mock_platform(hass, f"{TEST_DOMAIN}.config_flow", None)
+
+    entry = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        title="Entry",
+        entry_id="01J00000000000000000004001",
+        state=ConfigEntryState.LOADED,
+    )
+    entry.add_to_hass(hass)
+
+    class AbortingOptionsFlow(OptionsFlow):
+        """Options flow that can show a form or abort."""
+
+        async def async_step_init(
+            self, user_input: dict[str, Any] | None = None
+        ) -> ConfigFlowResult:
+            if user_input is not None:
+                return self.async_abort(reason="already_in_progress")
+            return self.async_show_form(step_id="init")
+
+    class CollidingFlow(ConfigFlow):
+        """Config flow with options support."""
+
+        @staticmethod
+        @callback
+        @override
+        def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+            return AbortingOptionsFlow()
+
+        async def async_step_user(
+            self, user_input: dict[str, Any] | None = None
+        ) -> ConfigFlowResult:
+            return self.async_show_form(step_id="user")
+
+    with mock_config_flow(TEST_DOMAIN, CollidingFlow):
+        with (
+            patch(
+                "homeassistant.config_entries.ulid_util.ulid_now",
+                return_value="01J0000000000000000000aaaa",
+            ),
+            patch(
+                "homeassistant.data_entry_flow.uuid_util.random_uuid_hex",
+                return_value="1111111111111111111111111111aaaa",
+            ),
+        ):
+            cfg_started = await llm_api.async_call_tool(
+                llm.ToolInput("config__start_flow", {"domain": TEST_DOMAIN})
+            )
+            opt_started = await llm_api.async_call_tool(
+                llm.ToolInput(
+                    "config__start_flow",
+                    {"flow_type": "options", "entry_id": f"{TEST_DOMAIN}:4001"},
+                )
+            )
+
+        assert isinstance(cfg_step := cfg_started.data["result"], dict)
+        assert isinstance(opt_step := opt_started.data["result"], dict)
+        assert cfg_step["flow_id"] == f"{TEST_DOMAIN}:aaaa"
+        assert opt_step["flow_id"] == f"{TEST_DOMAIN}:aaaa"
+
+        collision_err = await llm_api.async_call_tool(
+            llm.ToolInput("config__configure_flow", {"flow_id": f"{TEST_DOMAIN}:aaaa"})
+        )
+        assert collision_err == llm.ToolResult(
+            data={"error": f"Flow '{TEST_DOMAIN}:aaaa' not found."},
+            error=True,
+        )
+
+        # Abort the config flow so the options flow ID becomes unique, then finish it.
+        hass.config_entries.flow.async_abort("01J0000000000000000000aaaa")
+
+        aborted = await llm_api.async_call_tool(
+            llm.ToolInput(
+                "config__configure_flow",
+                {"flow_id": f"{TEST_DOMAIN}:aaaa", "user_input": {}},
+            )
+        )
+        assert aborted.error is False
+        assert isinstance(aborted_res := aborted.data["result"], dict)
+        assert aborted_res["type"] == "abort"
+        assert aborted_res["reason"] == "already_in_progress"
+        assert "description" in aborted_res
+
+
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", [TEST_DOMAIN])
+@pytest.mark.usefixtures("ignore_translations_for_mock_domains")
+@pytest.mark.parametrize(
+    "step_action",
+    [
+        pytest.param(_step_external, id="external_step"),
+        pytest.param(_step_redirect_runtime_error, id="redirect_runtime_error"),
+    ],
+)
+async def test_reconfigure_oauth_errors(
+    hass: HomeAssistant,
+    llm_api: llm.APIInstance,
+    step_action: Callable[[_BaseOAuthTestFlow], Coroutine[Any, Any, ConfigFlowResult]],
+) -> None:
+    """Test OAuth/external steps during reconfigure point to the existing integration page."""
+    mock_integration(hass, MockModule(TEST_DOMAIN))
+    mock_platform(hass, f"{TEST_DOMAIN}.config_flow", None)
+
+    entry = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        title="OAuth Entry",
+        entry_id="01J00000000000000000005001",
+    )
+    entry.add_to_hass(hass)
+
+    class ReconfigureOAuthStartFlow(_BaseOAuthTestFlow):
+        """Reconfigure flow hitting OAuth on step 1."""
+
+        async def async_step_reconfigure(
+            self, user_input: dict[str, Any] | None = None
+        ) -> ConfigFlowResult:
+            return await step_action(self)
+
+    class ReconfigureOAuthStep2Flow(_BaseOAuthTestFlow):
+        """Reconfigure flow hitting OAuth on step 2."""
+
+        async def async_step_reconfigure(
+            self, user_input: dict[str, Any] | None = None
+        ) -> ConfigFlowResult:
+            if user_input is not None:
+                return await step_action(self)
+            return self.async_show_form(step_id="reconfigure")
+
+    expected_url = f"/config/integrations/integration/{TEST_DOMAIN}"
+
+    with mock_config_flow(TEST_DOMAIN, ReconfigureOAuthStartFlow):
+        res1 = await llm_api.async_call_tool(
+            llm.ToolInput(
+                "config__start_flow",
+                {"flow_type": "reconfigure", "entry_id": f"{TEST_DOMAIN}:5001"},
+            )
+        )
+        assert res1.error is True
+        assert res1.data["frontend_url"] == expected_url
+
+    with mock_config_flow(TEST_DOMAIN, ReconfigureOAuthStep2Flow):
+        started = await llm_api.async_call_tool(
+            llm.ToolInput(
+                "config__start_flow",
+                {"flow_type": "reconfigure", "entry_id": f"{TEST_DOMAIN}:5001"},
+            )
+        )
+        assert isinstance(step1 := started.data["result"], dict)
+        res2 = await llm_api.async_call_tool(
+            llm.ToolInput(
+                "config__configure_flow",
+                {"flow_id": step1["flow_id"], "user_input": {}},
+            )
+        )
+        assert res2.error is True
+        assert res2.data["frontend_url"] == expected_url
+
+
+@pytest.mark.parametrize(
+    "ignore_translations_for_mock_domains",
+    [[TEST_DOMAIN, "test_llm_unloaded"]],
+)
+@pytest.mark.usefixtures("ignore_translations_for_mock_domains")
+@pytest.mark.parametrize(
+    ("tool_args", "expected_error"),
+    [
+        pytest.param(
+            {"domain": TEST_DOMAIN, "entry_id": f"{TEST_DOMAIN}:6001"},
+            "Cannot specify both 'domain' and 'entry_id'.",
+            id="both_domain_and_entry_id",
+        ),
+        pytest.param(
+            {"entry_id": f"{TEST_DOMAIN}:6001"},
+            "Specify 'flow_type' ('options' or 'reconfigure') when passing 'entry_id'.",
+            id="entry_id_without_flow_type",
+        ),
+        pytest.param(
+            {},
+            "'domain' is required when flow_type is 'config'.",
+            id="missing_domain_for_config",
+        ),
+        pytest.param(
+            {"flow_type": "options"},
+            "'entry_id' is required when flow_type is 'options'.",
+            id="missing_entry_id_for_options",
+        ),
+        pytest.param(
+            {"flow_type": "reconfigure"},
+            "'entry_id' is required when flow_type is 'reconfigure'.",
+            id="missing_entry_id_for_reconfigure",
+        ),
+        pytest.param(
+            {"flow_type": "options", "entry_id": f"{TEST_DOMAIN}:9999"},
+            f"Config entry '{TEST_DOMAIN}:9999' not found.",
+            id="unknown_entry_id",
+        ),
+        pytest.param(
+            {"flow_type": "options", "entry_id": f"{TEST_DOMAIN}:6002"},
+            f"Config entry '{TEST_DOMAIN}:6002' cannot be configured because it is disabled.",
+            id="disabled_entry",
+        ),
+        pytest.param(
+            {"flow_type": "reconfigure", "entry_id": f"{TEST_DOMAIN}:6003"},
+            f"Config entry '{TEST_DOMAIN}:6003' cannot be configured because it is ignored.",
+            id="ignored_entry",
+        ),
+        pytest.param(
+            {"flow_type": "options", "entry_id": f"{TEST_DOMAIN}:6005"},
+            (
+                f"Config entry '{TEST_DOMAIN}:6005' must be loaded to configure "
+                "options (current state: 'setup_error')."
+            ),
+            id="not_loaded_options_entry",
+        ),
+        pytest.param(
+            {"flow_type": "options", "entry_id": "test_llm_unloaded:6004"},
+            "Config entry 'test_llm_unloaded:6004' does not support options.",
+            id="unsupported_options_unloaded_handler",
+        ),
+        pytest.param(
+            {"flow_type": "options", "entry_id": f"{TEST_DOMAIN}:6001"},
+            f"Config entry '{TEST_DOMAIN}:6001' does not support options.",
+            id="unsupported_options_loaded_handler",
+        ),
+        pytest.param(
+            {"flow_type": "reconfigure", "entry_id": f"{TEST_DOMAIN}:6001"},
+            f"Config entry '{TEST_DOMAIN}:6001' does not support reconfigure.",
+            id="unsupported_reconfigure",
+        ),
+    ],
+)
+async def test_start_flow_entry_validation_errors(
+    hass: HomeAssistant,
+    llm_api: llm.APIInstance,
+    tool_args: dict[str, Any],
+    expected_error: str,
+) -> None:
+    """Test StartFlowTool parameter and entry capability validation errors."""
+    unloaded_domain = "test_llm_unloaded"
+    mock_integration(hass, MockModule(TEST_DOMAIN))
+    mock_platform(hass, f"{TEST_DOMAIN}.config_flow", None)
+    mock_integration(hass, MockModule(unloaded_domain))
+    mock_platform(hass, f"{unloaded_domain}.config_flow", None)
+
+    MockConfigEntry(
+        domain=TEST_DOMAIN,
+        title="Basic",
+        entry_id="01J00000000000000000006001",
+        state=ConfigEntryState.LOADED,
+    ).add_to_hass(hass)
+    MockConfigEntry(
+        domain=TEST_DOMAIN,
+        title="Disabled",
+        entry_id="01J00000000000000000006002",
+        disabled_by=ConfigEntryDisabler.USER,
+    ).add_to_hass(hass)
+    MockConfigEntry(
+        domain=TEST_DOMAIN,
+        title="Ignored",
+        entry_id="01J00000000000000000006003",
+        source=config_entries.SOURCE_IGNORE,
+    ).add_to_hass(hass)
+    MockConfigEntry(
+        domain=unloaded_domain,
+        title="Unloaded Handler",
+        entry_id="01J00000000000000000006004",
+        state=ConfigEntryState.LOADED,
+    ).add_to_hass(hass)
+    MockConfigEntry(
+        domain=TEST_DOMAIN,
+        title="Setup Error",
+        entry_id="01J00000000000000000006005",
+        state=ConfigEntryState.SETUP_ERROR,
+    ).add_to_hass(hass)
+
+    class BasicFlow(ConfigFlow):
+        """Basic flow without options or reconfigure."""
+
+    with mock_config_flow(TEST_DOMAIN, BasicFlow):
+        res = await llm_api.async_call_tool(
+            llm.ToolInput("config__start_flow", tool_args)
+        )
+
+    assert res == llm.ToolResult(data={"error": expected_error}, error=True)

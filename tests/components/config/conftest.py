@@ -1,6 +1,6 @@
 """Test fixtures for the config integration."""
 
-from collections.abc import Generator
+from collections.abc import Generator, Iterable
 from contextlib import contextmanager
 from copy import deepcopy
 import json
@@ -13,6 +13,7 @@ import pytest
 from pytest_homeassistant.common import raise_contains_mocks
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import translation
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,3 +78,40 @@ def hass_config_store() -> Generator[dict[str, Any]]:
     """Fixture to mock config yaml store."""
     with mock_config_store() as stored_data:
         yield stored_data
+
+
+@pytest.fixture
+def mock_translations(request: pytest.FixtureRequest) -> Generator[None]:
+    """Overlay parameterized category-keyed translations onto async_get_translations."""
+    extra_by_category: dict[str, dict[str, str]] = getattr(request, "param", {})
+    real_get_translations = translation.async_get_translations
+
+    async def _get_translations(
+        hass: HomeAssistant,
+        language: str,
+        category: str,
+        integrations: Iterable[str] | None = None,
+        config_flow: bool | None = None,
+    ) -> dict[str, str]:
+        result = await real_get_translations(
+            hass, language, category, integrations, config_flow
+        )
+        if not (extra := extra_by_category.get(category)):
+            return result
+        if integrations is None:
+            return {**result, **extra}
+        allowed = set(integrations)
+        return {
+            **result,
+            **{
+                key: val
+                for key, val in extra.items()
+                if key.split(".", 2)[1] in allowed
+            },
+        }
+
+    with patch(
+        "homeassistant.helpers.translation.async_get_translations",
+        side_effect=_get_translations,
+    ):
+        yield
