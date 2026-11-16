@@ -3,7 +3,7 @@
 import logging
 from typing import Any, override
 
-from PySrDaliGateway import Scene
+from PySrDaliGateway import DaliGateway, Scene
 
 from homeassistant.components.scene import Scene as SceneEntity
 from homeassistant.core import HomeAssistant
@@ -25,15 +25,18 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up DALI Center scene entities from config entry."""
-    async_add_entities(DaliCenterScene(scene) for scene in entry.runtime_data.scenes)
+    async_add_entities(
+        DaliCenterScene(scene, entry.runtime_data.gateway)
+        for scene in entry.runtime_data.scenes
+    )
 
 
 class DaliCenterScene(DaliCenterEntity, SceneEntity):
     """Representation of a DALI Center Scene."""
 
-    def __init__(self, scene: Scene) -> None:
+    def __init__(self, scene: Scene, gateway: DaliGateway) -> None:
         """Initialize the DALI scene."""
-        super().__init__(scene)
+        super().__init__(scene, gateway)
         self._scene = scene
         self._attr_name = scene.name
         self._attr_device_info = DeviceInfo(
@@ -43,4 +46,5 @@ class DaliCenterScene(DaliCenterEntity, SceneEntity):
     @override
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate the DALI scene."""
+        self._ensure_gateway_connected()
         await self.hass.async_add_executor_job(self._scene.activate)

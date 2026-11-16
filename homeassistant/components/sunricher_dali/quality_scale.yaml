@@ -30,11 +30,7 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: exempt
-    comment: |
-      Entity actions are fire-and-forget MQTT publishes; the library raises no
-      errors, and unavailable entities (gateway offline) are skipped by actions.
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt

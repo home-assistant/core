@@ -3,9 +3,10 @@
 import logging
 from typing import override
 
-from PySrDaliGateway import CallbackEventType, DaliObjectBase, Device
+from PySrDaliGateway import CallbackEventType, DaliGateway, DaliObjectBase, Device
 
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
@@ -22,9 +23,10 @@ class DaliCenterEntity(Entity):
     _attr_has_entity_name = True
     _attr_should_poll = False
 
-    def __init__(self, dali_object: DaliObjectBase) -> None:
+    def __init__(self, dali_object: DaliObjectBase, gateway: DaliGateway) -> None:
         """Initialize base entity."""
         self._dali_object = dali_object
+        self._gateway = gateway
         self._attr_unique_id = dali_object.unique_id
         self._unavailable_logged = False
         self._attr_available = True
@@ -38,6 +40,15 @@ class DaliCenterEntity(Entity):
                 self._handle_availability,
             )
         )
+
+    def _ensure_gateway_connected(self) -> None:
+        """Raise if a command can't reach the gateway."""
+        # The library drops commands silently when the gateway is disconnected.
+        if not self._gateway.is_connected:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="gateway_not_connected",
+            )
 
     @callback
     def _handle_availability(self, available: bool) -> None:
@@ -60,7 +71,7 @@ class DaliDeviceEntity(DaliCenterEntity):
         self, hass: HomeAssistant, device: Device, entry: DaliCenterConfigEntry
     ) -> None:
         """Initialize device entity."""
-        super().__init__(device)
+        super().__init__(device, entry.runtime_data.gateway)
         self._device = device
         self._attr_available = device.status == "online"
         self._attr_device_info = DeviceInfo(
