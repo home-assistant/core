@@ -259,11 +259,11 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
     def data_or_none(self) -> _DataT | None:
         """Return the data, or None before the first successful update.
 
-        `data` is typed as non-optional, so that entities set up after
-        `async_config_entry_first_refresh` need no checks. Use this instead in
-        code that can run before the first successful update, for example
-        `_async_update_data` reusing the previous data, or entities of a
-        coordinator that is refreshed in the background after setup.
+        `data` is annotated as `_DataT` rather than `_DataT | None`, so that
+        entities set up after `async_config_entry_first_refresh` need no checks.
+        Use this instead in code that can run before the first successful
+        update, for example `_async_update_data` reusing the previous data, or
+        entities of a coordinator that is refreshed in the background after setup.
         """
         return self.data
 
