@@ -1587,6 +1587,24 @@ async def test_media_player_get_queue_action_no_active_queue(
     assert err.value.translation_key == "no_active_queue"
 
 
+async def test_media_player_get_queue_action_offset_without_limit(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test get_queue refuses an offset without a limit instead of ignoring it."""
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET_QUEUE,
+            {ATTR_ENTITY_ID: "media_player.test_group_player_1", ATTR_OFFSET: 10},
+            blocking=True,
+            return_response=True,
+        )
+    assert err.value.translation_key == "offset_needs_limit"
+    music_assistant_client.send_command.assert_not_called()
+
+
 async def test_media_player_select_source_action(
     hass: HomeAssistant,
     music_assistant_client: MagicMock,

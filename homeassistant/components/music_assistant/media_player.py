@@ -700,6 +700,10 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         self, limit: int, offset: int, username: str | None = None
     ) -> ServiceResponse:
         """Handle get_queue action."""
+        if offset and not limit:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="offset_needs_limit"
+            )
         if not self.active_queue:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="no_active_queue"
