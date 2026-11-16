@@ -1,19 +1,25 @@
 """Reolink Integration views."""
 
+import asyncio
 from base64 import urlsafe_b64decode, urlsafe_b64encode
+from contextlib import aclosing
+from datetime import datetime
 from http import HTTPStatus
 import logging
+from typing import TYPE_CHECKING
 
 from aiohttp import ClientError, ClientTimeout, web
 from reolink_aio.enums import VodRequestType
 from reolink_aio.exceptions import ReolinkError
 
+from homeassistant.components.ffmpeg import get_ffmpeg_manager
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.media_source import Unresolvable
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.ssl import SSLCipherList
 
+from .host import ReolinkHost
 from .util import get_host
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,6 +61,7 @@ class PlaybackProxyView(HomeAssistantView):
             ssl_cipher=SSLCipherList.INSECURE,
         )
         self._vod_type: str | None = None
+        self._mp4_streams: dict[str, asyncio.Task] = {}
 
     async def get(
         self,
@@ -82,6 +89,11 @@ class PlaybackProxyView(HomeAssistantView):
             )
             _LOGGER.warning(err_str)
             return web.Response(body=err_str, status=HTTPStatus.BAD_REQUEST)
+
+        if vod_type == VodRequestType.NVR_DOWNLOAD.value:
+            return await self._async_stream_mp4(
+                request, host, ch, stream_res, filename_decoded
+            )
 
         try:
             _mime_type, reolink_url = await host.api.get_vod_source(
@@ -196,3 +208,67 @@ class PlaybackProxyView(HomeAssistantView):
 
         await response.write_eof()
         return response
+
+    async def _async_stream_mp4(
+        self,
+        request: web.Request,
+        host: ReolinkHost,
+        channel: int,
+        stream_res: str,
+        filename: str,
+    ) -> web.StreamResponse:
+        """Stream a NVR recording as fragmented mp4 using the Baichuan protocol."""
+        start_time, end_time = filename.split("_", 1)
+        mp4_stream = host.api.baichuan.stream_mp4(
+            channel,
+            datetime.strptime(start_time, "%Y%m%d%H%M%S"),
+            datetime.strptime(end_time, "%Y%m%d%H%M%S"),
+            stream_res,
+            get_ffmpeg_manager(self.hass).binary,
+        )
+        _LOGGER.debug(
+            "Opening Baichuan VOD stream from %s: %s",
+            host.api.camera_name(channel),
+            filename,
+        )
+
+        # the NVR allows only one download at a time, stop the previous playback
+        if (previous := self._mp4_streams.get(host.unique_id)) is not None:
+            _LOGGER.debug(
+                "Reolink %s: Cancelling previous Baichuan recording stream",
+                host.api.nvr_name,
+            )
+            previous.cancel()
+        task = asyncio.current_task()
+        if TYPE_CHECKING:
+            assert task is not None
+        self._mp4_streams[host.unique_id] = task
+
+        try:
+            # aclosing: stop ffmpeg and the download directly when the client disconnects
+            async with aclosing(mp4_stream):
+                # get the first part before sending the headers, to be able to return an error status
+                try:
+                    first_part = await anext(mp4_stream, b"")
+                except ReolinkError as err:
+                    _LOGGER.warning("Reolink playback proxy error: %s", str(err))
+                    return web.Response(body=str(err), status=HTTPStatus.BAD_REQUEST)
+
+                response = web.StreamResponse(headers={"Content-Type": "video/mp4"})
+                await response.prepare(request)
+                await response.write(first_part)
+                try:
+                    async for part in mp4_stream:
+                        await response.write(part)
+                except ReolinkError as err:
+                    _LOGGER.warning(
+                        "Reolink playback error while streaming mp4 from %s: %s",
+                        host.api.camera_name(channel),
+                        str(err),
+                    )
+
+            await response.write_eof()
+            return response
+        finally:
+            if self._mp4_streams.get(host.unique_id) is task:
+                del self._mp4_streams[host.unique_id]
