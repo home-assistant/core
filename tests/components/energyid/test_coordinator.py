@@ -294,6 +294,106 @@ async def test_unchanged_poll_updates_listeners(
     listener.assert_called_once()
 
 
+async def test_failed_refresh_cancels_the_signal_change(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_webhook_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test no signal change fires after a failed refresh."""
+    coordinator, point = await _setup_single_slot_schedule(
+        hass, mock_config_entry, mock_webhook_client, dt.timedelta(minutes=-8)
+    )
+    listener = MagicMock()
+    coordinator.async_add_listener(listener)
+    mock_webhook_client.get_directives.side_effect = ClientError("unreachable")
+
+    freezer.tick(DIRECTIVE_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert not coordinator.last_update_success
+    listener.assert_called_once()
+
+    # The slot ends before the next poll.
+    freezer.move_to(point.timestamp + dt.timedelta(minutes=15))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    listener.assert_called_once()
+
+
+async def test_unload_cancels_the_signal_change(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_webhook_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test no signal change fires after the entry is unloaded."""
+    coordinator, point = await _setup_single_slot_schedule(
+        hass, mock_config_entry, mock_webhook_client, dt.timedelta(minutes=-13)
+    )
+    listener = MagicMock()
+    coordinator.async_add_listener(listener)
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    freezer.move_to(point.timestamp + dt.timedelta(minutes=15))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    listener.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(KeyError("data"), id="missing_key"),
+        pytest.param(TypeError("bad payload"), id="wrong_type"),
+    ],
+)
+async def test_malformed_schedule_only_drops_that_directive(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_webhook_client: MagicMock,
+    error: Exception,
+) -> None:
+    """Test a schedule that cannot be parsed leaves the directive without one."""
+    resource, _ = _directive_fixture()
+    mock_webhook_client.api_access_token = "device-token"
+    mock_webhook_client.get_directives = AsyncMock(return_value=[resource])
+    mock_webhook_client.get_directive_data = AsyncMock(side_effect=error)
+
+    coordinator = await _setup_with_directives(hass, mock_config_entry)
+
+    assert coordinator.last_update_success
+    assert set(coordinator.data.resources) == {DIRECTIVE_ID}
+    assert coordinator.data.schedules == {}
+
+
+async def test_naive_schedule_only_drops_that_directive(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_webhook_client: MagicMock,
+) -> None:
+    """Test a schedule with naive timestamps does not break setup."""
+    resource, schedule = _directive_fixture()
+    naive = replace(
+        schedule,
+        data=tuple(
+            replace(point, timestamp=point.timestamp.replace(tzinfo=None))
+            for point in schedule.data
+        ),
+    )
+    mock_webhook_client.api_access_token = "device-token"
+    mock_webhook_client.get_directives = AsyncMock(return_value=[resource])
+    mock_webhook_client.get_directive_data = AsyncMock(return_value=naive)
+
+    coordinator = await _setup_with_directives(hass, mock_config_entry)
+
+    assert coordinator.last_update_success
+    assert coordinator.data.schedules == {}
+
+
 async def test_failing_schedule_keeps_directive_granted(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -547,23 +647,23 @@ async def test_failed_schedule_waits_for_the_other_requests(
 
     finished: list[str] = []
 
-    async def get_directive_data(directive_id: str) -> DirectiveData:
-        if directive_id == DIRECTIVE_ID:
-            raise ClientResponseError(request_info=MagicMock(), history=(), status=401)
+    async def refuse(directive_id: str) -> DirectiveData:
+        raise ClientResponseError(request_info=MagicMock(), history=(), status=401)
+
+    async def answer_late(directive_id: str) -> DirectiveData:
         for _ in range(3):
             await asyncio.sleep(0)
         finished.append(directive_id)
         return schedule
 
+    handlers = {DIRECTIVE_ID: refuse, other.id: answer_late}
+
+    async def get_directive_data(directive_id: str) -> DirectiveData:
+        return await handlers[directive_id](directive_id)
+
     mock_webhook_client.get_directive_data = AsyncMock(side_effect=get_directive_data)
     finished_at_failure: list[str] = []
-    coordinator.async_add_listener(
-        lambda: (
-            finished_at_failure.extend(finished)
-            if not coordinator.last_update_success
-            else None
-        )
-    )
+    coordinator.async_add_listener(lambda: finished_at_failure.extend(finished))
     freezer.tick(DIRECTIVE_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)

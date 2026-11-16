@@ -191,6 +191,9 @@ class EnergyIDDirectiveCoordinator(DataUpdateCoordinator[EnergyIDDirectivesData]
         """Return the schedule of one directive, or None when it is unavailable."""
         try:
             schedule = await self.client.get_directive_data(resource.id)
+            # Read the schedule once here, so one the change timer cannot read
+            # (such as naive timestamps) only drops this directive.
+            schedule.state_at(dt_util.utcnow())
         except EnergyIDAuthenticationError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
@@ -198,14 +201,23 @@ class EnergyIDDirectiveCoordinator(DataUpdateCoordinator[EnergyIDDirectivesData]
             ) from err
         except ClientResponseError as err:
             if err.status == HTTPStatus.UNAUTHORIZED:
-                self._raise_if_unclaimed()
+                # The claim is checked once all schedule requests have finished.
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
                     translation_key="directives_update_failed",
                 ) from err
             self._log_unavailable(resource, err)
             return None
-        except (PermissionError, ClientError, OSError, TimeoutError, ValueError) as err:
+        except (
+            PermissionError,
+            ClientError,
+            OSError,
+            TimeoutError,
+            KeyError,
+            TypeError,
+            ValueError,
+        ) as err:
+            # TypeError and KeyError come from a malformed or naive schedule.
             self._log_unavailable(resource, err)
             return None
         if resource.id in self._unavailable_directives:
