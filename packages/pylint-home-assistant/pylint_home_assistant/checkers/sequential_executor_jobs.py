@@ -107,11 +107,18 @@ def _eager_nodes(node: nodes.NodeNG) -> Iterator[nodes.NodeNG]:
             # The body of a generator expression runs only when it is consumed
             stack.append(current.generators[0].iter)
             continue
-        stack.extend(
-            child
-            for child in current.get_children()
-            if not isinstance(child, _NEW_SCOPE_NODES)
-        )
+        if isinstance(current, _NEW_SCOPE_NODES):
+            # Only the decorators and default values run at definition time
+            stack.extend(
+                child
+                for child in (
+                    getattr(current, "decorators", None),
+                    getattr(current, "args", None),
+                )
+                if child is not None
+            )
+            continue
+        stack.extend(current.get_children())
 
 
 def _awaits(node: nodes.NodeNG) -> list[nodes.Await]:
@@ -216,7 +223,11 @@ def _loop_executor_key(loop: nodes.For | nodes.While) -> str | None:
             jobs.append(call)
     if len(keys) != 1 or any(_calls_loop_only_api(part, jobs) for part in parts):
         return None
-    return keys.pop()
+    key = keys.pop()
+    # Each iteration can use a different executor when the loop rebinds it
+    if _rebinds_executor(loop, key):
+        return None
+    return key
 
 
 def _in_executor_loop(node: nodes.NodeNG) -> bool:

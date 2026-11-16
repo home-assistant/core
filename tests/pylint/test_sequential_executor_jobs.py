@@ -534,6 +534,25 @@ async def async_setup(hass, config):
 """,
             id="try_and_break",
         ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    for item in items:
+        @callback
+        def handle(value=None):
+            pass
+        await hass.async_add_executor_job(call_a, item, handle)
+""",
+            id="nested_function_definition",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    for item in items:
+        await loop.run_in_executor(pool, call_a, item)
+""",
+            id="same_custom_executor",
+        ),
     ],
 )
 def test_executor_job_in_loop_flagged(
@@ -623,6 +642,33 @@ async def async_setup(hass, config):
         do_something(inner)
 """,
             id="no_executor_job",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    for item in items:
+        async def work():
+            await hass.async_add_executor_job(call_a, item)
+        workers.append(work)
+""",
+            id="deferred_function_body",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    for pool in pools:
+        await loop.run_in_executor(pool, call_a)
+""",
+            id="executor_rebound_by_target",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    for entry in entries:
+        instance = get_instance(entry)
+        await instance.async_add_executor_job(call_a)
+""",
+            id="receiver_rebound_in_body",
         ),
     ],
 )
