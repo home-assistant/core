@@ -256,6 +256,10 @@ async def test_auth_error_during_longtime_update_failed_authentication(
         not mock_config_entry.runtime_data.longtime_data_coordinator.last_update_success
     )
     assert mock_solarlog_connector.login.await_count == 2
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
 
 
 @pytest.mark.parametrize(
