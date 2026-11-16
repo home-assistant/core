@@ -5,6 +5,7 @@
   "categories": ["ai_voice.ai_models"],
   "codeowners": ["@home-assistant/core"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["conversation"],
   "documentation": "https://www.home-assistant.io/integrations/ollama",
   "integration_type": "service",

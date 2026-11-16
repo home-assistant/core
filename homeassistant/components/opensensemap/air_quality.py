@@ -2,101 +2,19 @@
 
 from typing import override
 
-import probatio
-
 from homeassistant.components.air_quality import (
     DOMAIN as AIR_QUALITY_DOMAIN,
-    PLATFORM_SCHEMA as AIR_QUALITY_PLATFORM_SCHEMA,
     AirQualityEntity,
 )
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.script import scripts_with_entity
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_NAME
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import (
-    config_validation as cv,
-    entity_registry as er,
-    issue_registry as ir,
-)
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    AddEntitiesCallback,
-)
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    AIR_QUALITY_DEPRECATION_BREAKS_IN_VERSION,
-    CONF_STATION_ID,
-    DEPRECATED_YAML_BREAKS_IN_VERSION,
-    DOMAIN,
-    INTEGRATION_TITLE,
-    KNOWN_IMPORT_ABORT_REASONS,
-)
+from .const import AIR_QUALITY_DEPRECATION_BREAKS_IN_VERSION, CONF_STATION_ID, DOMAIN
 from .coordinator import OpenSenseMapConfigEntry, OpenSenseMapCoordinator
-
-PLATFORM_SCHEMA = AIR_QUALITY_PLATFORM_SCHEMA.extend(
-    {
-        probatio.Required(CONF_STATION_ID): cv.string,
-        probatio.Optional(CONF_NAME): cv.string,
-    }
-)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Import legacy YAML configuration into a config entry."""
-    # Keep the legacy platform entry point so existing YAML is migrated into a
-    # config entry instead of adding entities directly from YAML.
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=config,
-    )
-
-    if (
-        result["type"] is FlowResultType.ABORT
-        and result["reason"] in KNOWN_IMPORT_ABORT_REASONS
-    ):
-        # Per-reason issue conveys the deprecation notice itself, so don't also
-        # raise the generic deprecated_yaml issue on top of it.
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            f"deprecated_yaml_import_issue_{result['reason']}",
-            breaks_in_ha_version=DEPRECATED_YAML_BREAKS_IN_VERSION,
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key=f"deprecated_yaml_import_issue_{result['reason']}",
-            translation_placeholders={
-                "domain": DOMAIN,
-                "integration_title": INTEGRATION_TITLE,
-            },
-        )
-        return
-
-    # "deprecated_yaml" translation key lives under the "homeassistant" core domain.
-    ir.async_create_issue(
-        hass,
-        HOMEASSISTANT_DOMAIN,
-        f"deprecated_yaml_{DOMAIN}",
-        breaks_in_ha_version=DEPRECATED_YAML_BREAKS_IN_VERSION,
-        is_fixable=False,
-        issue_domain=DOMAIN,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-        translation_placeholders={
-            "domain": DOMAIN,
-            "integration_title": INTEGRATION_TITLE,
-        },
-    )
 
 
 def _automations_and_scripts_using_entity(

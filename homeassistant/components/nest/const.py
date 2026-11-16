@@ -13,6 +13,14 @@ CONF_SUBSCRIBER_ID = "subscriber_id"  # Old format
 CONF_SUBSCRIBER_ID_IMPORTED = "subscriber_id_imported"
 CONF_CLOUD_PROJECT_ID = "cloud_project_id"
 
+# Google-hosted Pub/Sub topics stop receiving events after November 30, 2026
+LEGACY_TOPIC_PREFIX = "projects/sdm-"
+LEGACY_TOPIC_ISSUE_ID = "legacy_pubsub_topic_{entry_id}"
+SUBSCRIPTION_NOT_FOUND_ISSUE_ID = "pubsub_subscription_not_found_{entry_id}"
+PUBSUB_LEARN_MORE_URL = (
+    "https://developers.google.com/nest/device-access/subscribe-to-events"
+)
+
 CONNECTIVITY_TRAIT_OFFLINE = "OFFLINE"
 
 SIGNAL_NEST_UPDATE = "nest_update"

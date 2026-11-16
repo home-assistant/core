@@ -2,12 +2,12 @@
 
 from collections.abc import Generator
 from functools import partial
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import ANY, AsyncMock, Mock, patch
 
 from caldav.lib.error import AuthorizationError, DAVError
 from caldav.lib.http_sync import requests as caldav_requests
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
 
 from homeassistant import config_entries
 from homeassistant.components.caldav.const import DOMAIN
@@ -204,6 +204,143 @@ async def test_reauth_failure(
         CONF_VERIFY_SSL: True,
     }
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_reconfigure_success(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    config_entry: MockConfigEntry,
+    dav_client: Mock,
+) -> None:
+    """Test reconfiguring the server connection."""
+
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    schema = result["data_schema"].schema
+    assert get_schema_suggested_value(schema, CONF_URL) == TEST_URL
+    assert get_schema_suggested_value(schema, CONF_PASSWORD) is None
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_URL: "https://example.com/url-2",
+            CONF_PASSWORD: "password-2",
+            CONF_VERIFY_SSL: False,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result2.get("type") is FlowResultType.ABORT
+    assert result2.get("reason") == "reconfigure_successful"
+    dav_client.assert_called_with(
+        "https://example.com/url-2",
+        username=TEST_USERNAME,
+        password="password-2",
+        ssl_verify_cert=False,
+        timeout=ANY,
+    )
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert dict(config_entry.data) == {
+        CONF_URL: "https://example.com/url-2",
+        CONF_USERNAME: TEST_USERNAME,
+        CONF_PASSWORD: "password-2",
+        CONF_VERIFY_SSL: False,
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        (Exception(), "unknown"),
+        (caldav_requests.exceptions.Timeout(), "cannot_connect"),
+        (caldav_requests.exceptions.ConnectionError(), "cannot_connect"),
+        (DAVError(), "cannot_connect"),
+        (AuthorizationError(reason="Unauthorized"), "invalid_auth"),
+        (AuthorizationError(reason="Other"), "cannot_connect"),
+    ],
+)
+async def test_reconfigure_failure(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    config_entry: MockConfigEntry,
+    dav_client: Mock,
+    side_effect: Exception,
+    expected_error: str,
+) -> None:
+    """Test a failure during reconfiguration and recovering from it."""
+
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+
+    dav_client.return_value.get_principal.side_effect = side_effect
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_URL: TEST_URL,
+            CONF_PASSWORD: "password-2",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result2.get("type") is FlowResultType.FORM
+    assert result2.get("errors") == {"base": expected_error}
+
+    dav_client.return_value.get_principal.side_effect = None
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_URL: TEST_URL,
+            CONF_PASSWORD: "password-3",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result3.get("type") is FlowResultType.ABORT
+    assert result3.get("reason") == "reconfigure_successful"
+
+    assert dict(config_entry.data) == {
+        CONF_URL: TEST_URL,
+        CONF_USERNAME: TEST_USERNAME,
+        CONF_PASSWORD: "password-3",
+        CONF_VERIFY_SSL: True,
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_duplicate(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfiguring to the server and account of another entry."""
+
+    config_entry.add_to_hass(hass)
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={**config_entry.data, CONF_URL: "https://example.com/url-2"},
+    ).add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_URL: "https://example.com/url-2",
+            CONF_PASSWORD: TEST_PASSWORD,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result2.get("type") is FlowResultType.ABORT
+    assert result2.get("reason") == "already_configured"
+    assert config_entry.data[CONF_URL] == TEST_URL
 
 
 @pytest.mark.parametrize(

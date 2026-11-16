@@ -2784,7 +2784,7 @@ async def test_subscribe_trigger(
             {"platform": "nonexistent"},
             {
                 "code": "invalid_format",
-                "message": "Invalid trigger 'nonexistent' specified",
+                "message": "Invalid trigger 'nonexistent' specified at 'trigger[0]'",
             },
         ),
         # Missing mandatory config for the trigger platform
@@ -2792,7 +2792,18 @@ async def test_subscribe_trigger(
             {"platform": "numeric_state"},
             {
                 "code": "invalid_format",
-                "message": "required key not provided at 'entity_id'",
+                "message": "required key not provided at 'trigger[0].entity_id'",
+            },
+        ),
+        # Unknown trigger platform in the second trigger
+        (
+            [
+                {"platform": "event", "event_type": "test_event"},
+                {"platform": "nonexistent"},
+            ],
+            {
+                "code": "invalid_format",
+                "message": "Invalid trigger 'nonexistent' specified at 'trigger[1]'",
             },
         ),
         # Unknown device, raised as a HomeAssistantError by the platform validator
@@ -2803,13 +2814,28 @@ async def test_subscribe_trigger(
                 "message": "Unknown device 'nonexistent'",
             },
         ),
+        # Empty device or domain of a device trigger, raised as probatio.Invalid
+        (
+            {"platform": "device", "domain": "", "device_id": "abc123"},
+            {
+                "code": "invalid_format",
+                "message": "required value is empty at 'trigger[0].domain'",
+            },
+        ),
+        (
+            {"platform": "device", "domain": "light", "device_id": ""},
+            {
+                "code": "invalid_format",
+                "message": "required value is empty at 'trigger[0].device_id'",
+            },
+        ),
     ],
 )
 async def test_subscribe_trigger_config_error(
     hass: HomeAssistant,
     websocket_client: MockHAClientWebSocket,
     caplog: pytest.LogCaptureFixture,
-    trigger: dict,
+    trigger: dict | list[dict],
     expected_error: dict,
 ) -> None:
     """Test trigger config errors are reported to the client without logging."""
@@ -3020,8 +3046,45 @@ async def test_test_condition_template_error(
             {
                 "code": "invalid_format",
                 "message": (
-                    "at least one of ['before', 'after'] is required at 'options'"
+                    "at least one of ['before', 'after'] is required"
+                    " at 'condition.options'"
                 ),
+            },
+        ),
+        # Unknown entity registry entry in a nested condition
+        (
+            {
+                "condition": "or",
+                "conditions": [
+                    {"condition": "state", "entity_id": "light.a", "state": "on"},
+                    {
+                        "condition": "state",
+                        "entity_id": "abcdabcdabcdabcdabcdabcdabcdabcd",
+                        "state": "on",
+                    },
+                ],
+            },
+            {
+                "code": "invalid_format",
+                "message": (
+                    "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd"
+                    " at 'condition.conditions[1]'"
+                ),
+            },
+        ),
+        # Empty device or domain of a device condition, raised as probatio.Invalid
+        (
+            {"condition": "device", "domain": "", "device_id": "abc123"},
+            {
+                "code": "invalid_format",
+                "message": "required value is empty at 'condition.domain'",
+            },
+        ),
+        (
+            {"condition": "device", "domain": "light", "device_id": ""},
+            {
+                "code": "invalid_format",
+                "message": "required value is empty at 'condition.device_id'",
             },
         ),
         # Failing enabled template, raised by async_condition_from_config
@@ -3450,8 +3513,45 @@ async def test_subscribe_condition_error(
             {
                 "code": "invalid_format",
                 "message": (
-                    "at least one of ['before', 'after'] is required at 'options'"
+                    "at least one of ['before', 'after'] is required"
+                    " at 'condition.options'"
                 ),
+            },
+        ),
+        # Unknown entity registry entry in a nested condition
+        (
+            {
+                "condition": "or",
+                "conditions": [
+                    {"condition": "state", "entity_id": "light.a", "state": "on"},
+                    {
+                        "condition": "state",
+                        "entity_id": "abcdabcdabcdabcdabcdabcdabcdabcd",
+                        "state": "on",
+                    },
+                ],
+            },
+            {
+                "code": "invalid_format",
+                "message": (
+                    "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd"
+                    " at 'condition.conditions[1]'"
+                ),
+            },
+        ),
+        # Empty device or domain of a device condition, raised as probatio.Invalid
+        (
+            {"condition": "device", "domain": "", "device_id": "abc123"},
+            {
+                "code": "invalid_format",
+                "message": "required value is empty at 'condition.domain'",
+            },
+        ),
+        (
+            {"condition": "device", "domain": "light", "device_id": ""},
+            {
+                "code": "invalid_format",
+                "message": "required value is empty at 'condition.device_id'",
             },
         ),
         # Failing enabled template, raised by async_condition_from_config
@@ -3700,6 +3800,58 @@ async def test_execute_script_with_dynamically_validated_action(
     module.async_call_action_from_config.assert_awaited_once()
 
 
+@pytest.mark.parametrize(
+    ("sequence", "expected_error"),
+    [
+        pytest.param(
+            [
+                {"event": "test_event"},
+                {
+                    "wait_for_trigger": [
+                        {"platform": "event", "event_type": "test_event"},
+                        {"platform": "nonexistent"},
+                    ]
+                },
+            ],
+            {
+                "code": "invalid_format",
+                "message": (
+                    "Invalid trigger 'nonexistent' specified at "
+                    "'sequence[1].wait_for_trigger[1]'. "
+                    "Got {'platform': 'nonexistent'}"
+                ),
+            },
+            id="invalid",
+        ),
+        pytest.param(
+            [
+                {"event": "test_event"},
+                {"device_id": "nonexistent", "domain": "light"},
+            ],
+            {
+                "code": "home_assistant_error",
+                "message": "Unknown device 'nonexistent'",
+            },
+            id="homeassistant_error",
+        ),
+    ],
+)
+async def test_execute_script_config_error(
+    websocket_client: MockHAClientWebSocket,
+    sequence: list[dict[str, Any]],
+    expected_error: dict[str, str],
+) -> None:
+    """Test the error when the sequence is rejected by a platform."""
+    await websocket_client.send_json_auto_id(
+        {"type": "execute_script", "sequence": sequence}
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == const.TYPE_RESULT
+    assert not msg["success"]
+    assert msg["error"] == expected_error
+
+
 async def test_subscribe_unsubscribe_bootstrap_integrations(
     hass: HomeAssistant,
     websocket_client: MockHAClientWebSocket,
@@ -3869,6 +4021,69 @@ async def test_validate_config_works(
             "Invalid trigger 'non_existing' specified",
         ),
         # Raises probatio.Invalid
+        ("triggers", [5], "expected a mapping at '[0]'"),
+        pytest.param(
+            "triggers",
+            [{"platform": "non_existing"}],
+            "Invalid trigger 'non_existing' specified at '[0]'",
+            id="trigger_list",
+        ),
+        pytest.param(
+            "triggers",
+            {"platform": "state"},
+            "required key not provided at 'entity_id'",
+            id="single_trigger_with_path",
+        ),
+        pytest.param(
+            "triggers",
+            [{"platform": "state"}],
+            "required key not provided at '[0].entity_id'",
+            id="trigger_list_with_path",
+        ),
+        pytest.param(
+            "triggers",
+            {"triggers": [{"platform": "event", "event_type": "a"}, {"platform": "x"}]},
+            "Invalid trigger 'x' specified at '[1]'",
+            id="single_trigger_sublist",
+        ),
+        pytest.param(
+            "conditions",
+            {"condition": "state", "entity_id": "abcd" * 8, "state": "on"},
+            f"Unknown entity registry entry {'abcd' * 8}",
+            id="single_condition",
+        ),
+        pytest.param(
+            "conditions",
+            [{"condition": "state", "entity_id": "abcd" * 8, "state": "on"}],
+            f"Unknown entity registry entry {'abcd' * 8} at '[0]'",
+            id="condition_list",
+        ),
+        pytest.param(
+            "conditions",
+            {
+                "condition": "and",
+                "conditions": {
+                    "condition": "state",
+                    "entity_id": "abcd" * 8,
+                    "state": "on",
+                },
+            },
+            f"Unknown entity registry entry {'abcd' * 8} at 'conditions[0]'",
+            id="single_condition_nested_single_condition",
+        ),
+        pytest.param(
+            "actions",
+            {"wait_for_trigger": {"platform": "non_existing"}},
+            "Invalid trigger 'non_existing' specified at 'wait_for_trigger[0]'",
+            id="single_action_nested_single_trigger",
+        ),
+        pytest.param(
+            "actions",
+            [{"wait_for_trigger": [{"platform": "non_existing"}]}],
+            "Invalid trigger 'non_existing' specified at '[0].wait_for_trigger[0]'",
+            id="action_list",
+        ),
+        # Raises probatio.Invalid
         (
             "conditions",
             {
@@ -3895,14 +4110,14 @@ async def test_validate_config_works(
         (
             "actions",
             {"non_existing": "domain_test.test_service"},
-            "Unable to determine action at '[0]'",
+            "Unable to determine action",
         ),
     ],
 )
 async def test_validate_config_invalid(
     websocket_client: MockHAClientWebSocket,
     key: str,
-    config: dict[str, Any],
+    config: dict[str, Any] | list[Any],
     error: str,
 ) -> None:
     """Test config validation."""
@@ -4382,6 +4597,34 @@ async def test_extract_from_target(
         areas={kitchen_area.id, label_area.id},
     )
 
+    # Test excluding from mixed targets
+    msg = await call_command(
+        {
+            "entity_id": ["light.direct"],
+            "device_id": [device1.id],
+            "area_id": [kitchen_area.id],
+            "label_id": [label1.label_id],
+            "exclude": {
+                "entity_id": [device1_entity2.entity_id],
+                "area_id": [kitchen_area.id],
+            },
+        },
+    )
+    _assert_extract_from_target_command_result(
+        msg,
+        entities={
+            "light.direct",
+            device1_entity1.entity_id,
+            label_entity.entity_id,
+        },
+        devices={device1.id},
+        areas={label_area.id},
+    )
+
+    # A target which only has an exclude block is accepted while editing
+    msg = await call_command({"exclude": {"entity_id": ["light.direct"]}})
+    _assert_extract_from_target_command_result(msg)
+
 
 async def test_extract_from_target_expand_group(
     hass: HomeAssistant, websocket_client: MockHAClientWebSocket
@@ -4566,6 +4809,175 @@ async def test_extract_from_target_validation_error(
     assert msg["type"] == const.TYPE_RESULT
     assert not msg["success"]
     assert "error" in msg
+
+
+async def test_explain_target(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test explain_target command."""
+    kitchen = area_registry.async_create("Kitchen")
+    in_kitchen = entity_registry.async_get_or_create("light", "test", "unique1")
+    entity_registry.async_update_entity(in_kitchen.entity_id, area_id=kitchen.id)
+    other = entity_registry.async_get_or_create("light", "test", "unique2")
+
+    await websocket_client.send_json_auto_id(
+        {
+            "type": "explain_target",
+            "target": {
+                "area_id": [kitchen.id],
+                "entity_id": [other.entity_id],
+                "exclude": {"entity_id": [in_kitchen.entity_id, "light.not_targeted"]},
+            },
+        }
+    )
+    msg = await websocket_client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "includes": [
+            {
+                "type": "entity",
+                "id": other.entity_id,
+                "entities": [other.entity_id],
+                "referenced_areas": [],
+                "referenced_devices": [],
+            },
+            {
+                "type": "area",
+                "id": kitchen.id,
+                "entities": [in_kitchen.entity_id],
+                "referenced_areas": [kitchen.id],
+                "referenced_devices": [],
+            },
+        ],
+        "excludes": [
+            {
+                "type": "entity",
+                "id": "light.not_targeted",
+                "removed": [],
+            },
+            {
+                "type": "entity",
+                "id": in_kitchen.entity_id,
+                "removed": [
+                    {
+                        "type": "area",
+                        "id": kitchen.id,
+                        "entities": [in_kitchen.entity_id],
+                    }
+                ],
+            },
+        ],
+    }
+
+
+async def test_explain_target_all_entities(
+    hass: HomeAssistant, websocket_client: MockHAClientWebSocket
+) -> None:
+    """Test explain_target command when all entities are targeted."""
+    hass.states.async_set("light.kitchen", "on")
+    hass.states.async_set("light.hallway", "on")
+
+    await websocket_client.send_json_auto_id(
+        {
+            "type": "explain_target",
+            "target": {"entity_id": "all", "exclude": {"entity_id": "light.kitchen"}},
+        }
+    )
+    msg = await websocket_client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "includes": [
+            {
+                "type": "entity",
+                "id": "all",
+                "entities": ["light.hallway", "light.kitchen"],
+                "referenced_areas": [],
+                "referenced_devices": [],
+            }
+        ],
+        "excludes": [
+            {
+                "type": "entity",
+                "id": "light.kitchen",
+                "removed": [
+                    {"type": "entity", "id": "all", "entities": ["light.kitchen"]}
+                ],
+            }
+        ],
+    }
+
+
+async def test_explain_target_filters_unreadable_entities(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    hass_admin_user: MockUser,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test explain_target only returns entities the user can read."""
+    hass_admin_user.groups = []
+    hass_admin_user.mock_policy({"entities": {"entity_ids": {"light.permitted": True}}})
+
+    kitchen = area_registry.async_create("Kitchen")
+    for unique_id, object_id in (
+        ("unique1", "permitted"),
+        ("unique2", "not_permitted"),
+    ):
+        entry = entity_registry.async_get_or_create(
+            "light", "test", unique_id, suggested_object_id=object_id
+        )
+        entity_registry.async_update_entity(entry.entity_id, area_id=kitchen.id)
+
+    await websocket_client.send_json_auto_id(
+        {
+            "type": "explain_target",
+            "target": {
+                "area_id": [kitchen.id],
+                "entity_id": ["light.not_permitted"],
+                "exclude": {
+                    "area_id": [kitchen.id],
+                    "entity_id": ["light.not_permitted"],
+                },
+            },
+        }
+    )
+    msg = await websocket_client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "includes": [
+            {
+                "type": "entity",
+                "id": "light.not_permitted",
+                "entities": [],
+                "referenced_areas": [],
+                "referenced_devices": [],
+            },
+            {
+                "type": "area",
+                "id": kitchen.id,
+                "entities": ["light.permitted"],
+                "referenced_areas": [kitchen.id],
+                "referenced_devices": [],
+            },
+        ],
+        "excludes": [
+            {"type": "entity", "id": "light.not_permitted", "removed": []},
+            {
+                "type": "area",
+                "id": kitchen.id,
+                "removed": [
+                    {
+                        "type": "area",
+                        "id": kitchen.id,
+                        "entities": ["light.permitted"],
+                    }
+                ],
+            },
+        ],
+    }
 
 
 @pytest.mark.usefixtures("target_entities")

@@ -7,14 +7,13 @@ from lektricowifi import DeviceConnectionError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.lektrico.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
-from homeassistant.const import (
-    ATTR_HW_VERSION,
-    ATTR_SERIAL_NUMBER,
-    CONF_HOST,
-    CONF_TYPE,
+from homeassistant.components.lektrico.const import (
+    CONF_HW_VERSION,
+    CONF_SERIAL_NUMBER,
+    DOMAIN,
 )
+from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.const import CONF_HOST, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -50,9 +49,9 @@ async def test_user_setup(hass: HomeAssistant, mock_device, mock_setup_entry) ->
     assert result.get("title") == f"{MOCKED_DEVICE_TYPE}_{MOCKED_DEVICE_SERIAL_NUMBER}"
     assert result.get("data") == {
         CONF_HOST: MOCKED_DEVICE_IP_ADDRESS,
-        ATTR_SERIAL_NUMBER: MOCKED_DEVICE_SERIAL_NUMBER,
+        CONF_SERIAL_NUMBER: MOCKED_DEVICE_SERIAL_NUMBER,
         CONF_TYPE: MOCKED_DEVICE_TYPE,
-        ATTR_HW_VERSION: MOCKED_DEVICE_BOARD_REV,
+        CONF_HW_VERSION: MOCKED_DEVICE_BOARD_REV,
     }
     assert "result" in result
     assert len(mock_setup_entry.mock_calls) == 1
@@ -132,9 +131,9 @@ async def test_discovered_zeroconf(hass: HomeAssistant, mock_device) -> None:
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == {
         CONF_HOST: MOCKED_DEVICE_IP_ADDRESS,
-        ATTR_SERIAL_NUMBER: MOCKED_DEVICE_SERIAL_NUMBER,
+        CONF_SERIAL_NUMBER: MOCKED_DEVICE_SERIAL_NUMBER,
         CONF_TYPE: MOCKED_DEVICE_TYPE,
-        ATTR_HW_VERSION: MOCKED_DEVICE_BOARD_REV,
+        CONF_HW_VERSION: MOCKED_DEVICE_BOARD_REV,
     }
     assert result2["title"] == f"{MOCKED_DEVICE_TYPE}_{MOCKED_DEVICE_SERIAL_NUMBER}"
     assert result2["result"].unique_id == MOCKED_DEVICE_SERIAL_NUMBER

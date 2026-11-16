@@ -5,6 +5,7 @@
   "categories": ["media_entertainment.speakers_audio"],
   "codeowners": ["@uvjustin"],
   "config_flow": true,
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/forked_daapd",
   "iot_class": "local_push",
   "loggers": ["pyforked_daapd", "pylibrespot_java"],

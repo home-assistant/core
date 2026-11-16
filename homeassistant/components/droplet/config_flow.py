@@ -5,7 +5,7 @@ from typing import Any, override
 import probatio
 from pydroplet.droplet import DropletConnection, DropletDiscovery
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_IGNORE, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_CODE, CONF_DEVICE_ID, CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -40,9 +40,32 @@ class DropletConfigFlow(ConfigFlow, domain=DOMAIN):
         device_id: str = await self._droplet_discovery.get_device_id()
         await self.async_set_unique_id(device_id)
 
-        self._abort_if_unique_id_configured(
-            updates={CONF_IP_ADDRESS: self._droplet_discovery.host},
+        host = self._droplet_discovery.host
+        entry = self.hass.config_entries.async_entry_for_domain_unique_id(
+            DOMAIN, device_id
         )
+
+        if entry is not None:
+            if entry.source == SOURCE_IGNORE:
+                return self.async_abort(reason="already_configured")
+
+            if entry.data[CONF_IP_ADDRESS] != host:
+                id_matches = False
+                discovery = DropletDiscovery(host, self._droplet_discovery.port, "")
+                session = async_get_clientsession(self.hass)
+                try:
+                    if (
+                        await discovery.try_connect(session, entry.data[CONF_CODE])
+                        and await discovery.get_device_id() == device_id
+                    ):
+                        id_matches = True
+                finally:
+                    await discovery.close()
+
+                if not id_matches:
+                    return self.async_abort(reason="already_configured")
+
+        self._abort_if_unique_id_configured(updates={CONF_IP_ADDRESS: host})
 
         self.context.update({"title_placeholders": {"name": device_id}})
         return await self.async_step_confirm()
@@ -114,7 +137,7 @@ class DropletConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
                 await self.async_set_unique_id(device_id, raise_on_progress=False)
                 self._abort_if_unique_id_configured(
-                    description_placeholders={CONF_DEVICE_ID: device_id},
+                    description_placeholders={"device_id": device_id},
                 )
 
                 return self.async_create_entry(

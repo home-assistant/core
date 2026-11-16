@@ -75,6 +75,26 @@ def test_urlencode_function(
     assert render(hass, template_str, parse_result=False) == expected
 
 
+@pytest.mark.parametrize(
+    ("template_str", "expected"),
+    [
+        pytest.param("{{ urlencode({'a': 'b c'}) }}", "a=b+c", id="only_node"),
+        pytest.param(
+            "{{ urlencode({'foo': 'x&y', 'bar': 42}) }}",
+            "foo=x%26y&bar=42",
+            id="special_characters",
+        ),
+    ],
+)
+def test_urlencode_function_parse_result(
+    hass: HomeAssistant, template_str: str, expected: str
+) -> None:
+    """Test the urlencode function renders a str with the default parse_result."""
+    result = render(hass, template_str)
+    assert result == expected
+    assert type(result) is str
+
+
 def test_string_functions_with_non_string_input(hass: HomeAssistant) -> None:
     """Test string functions with non-string input (automatic conversion)."""
     # Test ordinal with integer

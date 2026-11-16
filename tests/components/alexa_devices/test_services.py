@@ -8,9 +8,8 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.alexa_devices.const import DOMAIN
 from homeassistant.components.alexa_devices.services import (
-    ATTR_INFO_SKILL,
-    ATTR_SOUND,
-    ATTR_TEXT_COMMAND,
+    AlexaDevicesService,
+    AlexaDevicesServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID
@@ -31,9 +30,9 @@ async def test_setup_services(
     await setup_integration(hass, mock_config_entry)
 
     assert (services := hass.services.async_services_for_domain(DOMAIN))
-    assert "send_text_command" in services
-    assert "send_sound" in services
-    assert "send_info_skill" in services
+    assert AlexaDevicesService.SEND_TEXT_COMMAND in services
+    assert AlexaDevicesService.SEND_SOUND in services
+    assert AlexaDevicesService.SEND_INFO_SKILL in services
 
 
 async def test_info_skill_service(
@@ -54,9 +53,9 @@ async def test_info_skill_service(
 
     await hass.services.async_call(
         DOMAIN,
-        "send_info_skill",
+        AlexaDevicesService.SEND_INFO_SKILL,
         {
-            ATTR_INFO_SKILL: "tell_joke",
+            AlexaDevicesServiceArgument.INFO_SKILL: "tell_joke",
             ATTR_DEVICE_ID: device_entry.id,
         },
         blocking=True,
@@ -84,9 +83,9 @@ async def test_send_sound_service(
 
     await hass.services.async_call(
         DOMAIN,
-        "send_sound",
+        AlexaDevicesService.SEND_SOUND,
         {
-            ATTR_SOUND: "bell_02",
+            AlexaDevicesServiceArgument.SOUND: "bell_02",
             ATTR_DEVICE_ID: device_entry.id,
         },
         blocking=True,
@@ -114,9 +113,9 @@ async def test_send_text_service(
 
     await hass.services.async_call(
         DOMAIN,
-        "send_text_command",
+        AlexaDevicesService.SEND_TEXT_COMMAND,
         {
-            ATTR_TEXT_COMMAND: "Play B.B.C. radio on TuneIn",
+            AlexaDevicesServiceArgument.TEXT_COMMAND: "Play B.B.C. radio on TuneIn",
             ATTR_DEVICE_ID: device_entry.id,
         },
         blocking=True,
@@ -180,9 +179,9 @@ async def test_invalid_parameters(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            "send_sound",
+            AlexaDevicesService.SEND_SOUND,
             {
-                ATTR_SOUND: sound,
+                AlexaDevicesServiceArgument.SOUND: sound,
                 ATTR_DEVICE_ID: device_id,
             },
             blocking=True,
@@ -247,9 +246,9 @@ async def test_invalid_info_skillparameters(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            "send_info_skill",
+            AlexaDevicesService.SEND_INFO_SKILL,
             {
-                ATTR_INFO_SKILL: info_skill,
+                AlexaDevicesServiceArgument.INFO_SKILL: info_skill,
                 ATTR_DEVICE_ID: device_id,
             },
             blocking=True,
@@ -284,9 +283,9 @@ async def test_config_entry_not_loaded(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            "send_sound",
+            AlexaDevicesService.SEND_SOUND,
             {
-                ATTR_SOUND: "bell_02",
+                AlexaDevicesServiceArgument.SOUND: "bell_02",
                 ATTR_DEVICE_ID: device_entry.id,
             },
             blocking=True,
@@ -321,9 +320,9 @@ async def test_invalid_config_entry(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            "send_sound",
+            AlexaDevicesService.SEND_SOUND,
             {
-                ATTR_SOUND: "bell_02",
+                AlexaDevicesServiceArgument.SOUND: "bell_02",
                 ATTR_DEVICE_ID: TEST_DEVICE_1_ID,
             },
             blocking=True,
@@ -363,9 +362,9 @@ async def test_missing_config_entry(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            "send_sound",
+            AlexaDevicesService.SEND_SOUND,
             {
-                ATTR_SOUND: "bell_02",
+                AlexaDevicesServiceArgument.SOUND: "bell_02",
                 ATTR_DEVICE_ID: device_entry.id,
             },
             blocking=True,

@@ -39,7 +39,7 @@ from homeassistant.components.recorder.db_schema import (
     RecorderRuns,
     States,
 )
-from homeassistant.components.recorder.util import session_scope
+from homeassistant.components.recorder.util import get_engine_db_url, session_scope
 from homeassistant.core import HomeAssistant, State
 from homeassistant.util import dt as dt_util
 
@@ -698,7 +698,7 @@ def test_modify_column(engine_type, substr) -> None:
 
 def test_forgiving_add_column(recorder_db_url: str) -> None:
     """Test that add column will continue if column exists."""
-    engine = create_engine(recorder_db_url, poolclass=StaticPool)
+    engine = create_engine(get_engine_db_url(recorder_db_url), poolclass=StaticPool)
     with Session(engine) as session:
         session.execute(text("CREATE TABLE hello (id int)"))
         instance = Mock()
@@ -714,7 +714,7 @@ def test_forgiving_add_column(recorder_db_url: str) -> None:
 
 def test_forgiving_add_index(recorder_db_url: str) -> None:
     """Test that add index will continue if index exists."""
-    engine = create_engine(recorder_db_url, poolclass=StaticPool)
+    engine = create_engine(get_engine_db_url(recorder_db_url), poolclass=StaticPool)
     db_schema.Base.metadata.create_all(engine)
     with Session(engine) as session:
         instance = Mock()
@@ -729,7 +729,7 @@ def test_forgiving_drop_index(
     recorder_db_url: str, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test that drop index will continue if index drop fails."""
-    engine = create_engine(recorder_db_url, poolclass=StaticPool)
+    engine = create_engine(get_engine_db_url(recorder_db_url), poolclass=StaticPool)
     db_schema.Base.metadata.create_all(engine)
     with Session(engine) as session:
         instance = Mock()
@@ -844,7 +844,7 @@ def test_rebuild_sqlite_states_table(recorder_db_url: str) -> None:
 
     This test is specific for SQLite.
     """
-    engine = create_engine(recorder_db_url)
+    engine = create_engine(get_engine_db_url(recorder_db_url))
     session_maker = scoped_session(sessionmaker(bind=engine, future=True))
     with session_scope(session=session_maker()) as session:
         db_schema.Base.metadata.create_all(engine)
@@ -870,7 +870,7 @@ def test_rebuild_sqlite_states_table_missing_fails(
 
     This test is specific for SQLite.
     """
-    engine = create_engine(recorder_db_url)
+    engine = create_engine(get_engine_db_url(recorder_db_url))
     session_maker = scoped_session(sessionmaker(bind=engine, future=True))
     with session_scope(session=session_maker()) as session:
         db_schema.Base.metadata.create_all(engine)
@@ -905,7 +905,7 @@ def test_rebuild_sqlite_states_table_extra_columns(
 
     This test is specific for SQLite.
     """
-    engine = create_engine(recorder_db_url)
+    engine = create_engine(get_engine_db_url(recorder_db_url))
     session_maker = scoped_session(sessionmaker(bind=engine, future=True))
     with session_scope(session=session_maker()) as session:
         db_schema.Base.metadata.create_all(engine)
@@ -1009,7 +1009,7 @@ def test_drop_restore_foreign_key_constraints(recorder_db_url: str) -> None:
             if foreign_key["name"] and foreign_key["constrained_columns"] == [column]
         ]
 
-    engine = create_engine(recorder_db_url)
+    engine = create_engine(get_engine_db_url(recorder_db_url))
     db_schema.Base.metadata.create_all(engine)
 
     matching_constraints_1 = [
@@ -1135,7 +1135,7 @@ def test_restore_foreign_key_constraints_twice(recorder_db_url: str) -> None:
             if foreign_key["name"] and foreign_key["constrained_columns"] == [column]
         ]
 
-    engine = create_engine(recorder_db_url)
+    engine = create_engine(get_engine_db_url(recorder_db_url))
     db_schema.Base.metadata.create_all(engine)
 
     matching_constraints_1 = [
@@ -1269,7 +1269,7 @@ def test_drop_duplicated_foreign_key_constraints(recorder_db_url: str) -> None:
             if foreign_key["name"] and foreign_key["constrained_columns"] == [column]
         ]
 
-    engine = create_engine(recorder_db_url)
+    engine = create_engine(get_engine_db_url(recorder_db_url))
     db_schema.Base.metadata.create_all(engine)
 
     # Create a duplicate of the constraints
@@ -1379,7 +1379,7 @@ def test_restore_foreign_key_constraints_with_integrity_error(
         ("states", "old_state_id", "states", "state_id", States),
     )
 
-    engine = create_engine(recorder_db_url)
+    engine = create_engine(get_engine_db_url(recorder_db_url))
     db_schema.Base.metadata.create_all(engine)
 
     # Drop constraints

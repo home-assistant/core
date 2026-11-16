@@ -13,7 +13,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.storage import STORAGE_DIR
-from homeassistant.helpers.typing import UNDEFINED, ConfigType
+from homeassistant.helpers.typing import ConfigType, Undefined
 
 from .const import DOMAIN, MANUFACTURER
 from .services import async_setup_services
@@ -63,17 +63,15 @@ async def async_setup_entry(
     entry.runtime_data = hub
 
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create_device(
+    device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        device_info=dr.DeviceInfo(
-            connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)}
-            if entry.unique_id
-            else UNDEFINED,
-            identifiers={(DOMAIN, entry.entry_id)},
-            manufacturer=MANUFACTURER,
-            model="WMS WebControl pro",
-            configuration_url=f"http://{hub.host}/system",
-        ),
+        connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)}
+        if entry.unique_id
+        else Undefined,
+        identifiers={(DOMAIN, entry.entry_id)},
+        manufacturer=MANUFACTURER,
+        model="WMS WebControl pro",
+        configuration_url=f"http://{hub.host}/system",
     )
 
     try:

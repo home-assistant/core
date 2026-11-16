@@ -5,11 +5,10 @@ from dataclasses import dataclass
 import logging
 from typing import Any, Generic, Self, cast, override
 
-from ring_doorbell import RingCapability, RingDoorBell, RingStickUpCam
+from ring_doorbell import RingCapability, RingDoorBell
 from ring_doorbell.const import DOORBELL_EXISTING_TYPE
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -17,14 +16,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import RingConfigEntry, RingDataCoordinator
-from .entity import (
-    DeprecatedInfo,
-    RingDeviceT,
-    RingEntity,
-    RingEntityDescription,
-    async_check_create_deprecated,
-    refresh_after,
-)
+from .entity import RingDeviceT, RingEntity, refresh_after
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,7 +64,6 @@ async def _async_set_in_home_chime_enabled(device: RingDoorBell, enabled: bool) 
 @dataclass(frozen=True, kw_only=True)
 class RingSwitchEntityDescription(
     SwitchEntityDescription,
-    RingEntityDescription,
     Generic[RingDeviceT],  # noqa: UP046
 ):
     """Describes a Ring switch entity."""
@@ -87,17 +78,6 @@ class RingSwitchEntityDescription(
 
 
 SWITCHES: Sequence[RingSwitchEntityDescription[Any]] = (
-    RingSwitchEntityDescription[RingStickUpCam](
-        key="siren",
-        translation_key="siren",
-        exists_fn=lambda device: device.has_capability(RingCapability.SIREN),
-        is_on_fn=lambda device: device.siren > 0,
-        turn_on_fn=lambda device: device.async_set_siren(1),
-        turn_off_fn=lambda device: device.async_set_siren(0),
-        deprecated_info=DeprecatedInfo(
-            new_platform=Platform.SIREN, breaks_in_ha_version="2025.4.0"
-        ),
-    ),
     RingSwitchEntityDescription[RingDoorBell](
         key="in_home_chime",
         translation_key="in_home_chime",
@@ -131,12 +111,6 @@ async def async_setup_entry(
         for description in SWITCHES
         for device in ring_data.devices.all_devices
         if description.exists_fn(device)
-        and async_check_create_deprecated(
-            hass,
-            Platform.SWITCH,
-            description.unique_id_fn(description, device),
-            description,
-        )
     )
 
 

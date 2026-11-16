@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, call, patch, sentinel
 
 import pytest
 from zha.application.platforms.light.const import FLASH_EFFECTS
-from zigpy.device import Device
+from zigpy.device import ZigbeeDevice
 from zigpy.profiles import zha
 from zigpy.zcl import Cluster
 from zigpy.zcl.clusters import general, lighting
@@ -117,7 +117,7 @@ def light_platform_only():
 async def test_light(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
     device,
     reporting,
 ) -> None:
@@ -197,7 +197,7 @@ async def test_light(
 async def test_on_with_off_color(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
     """Test color commands sent before on/level for supporting lights."""
 
@@ -574,7 +574,7 @@ async def async_test_flash_from_hass(
 async def test_light_exception_on_creation(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test ZHA light entity creation exception."""

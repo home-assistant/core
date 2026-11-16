@@ -158,12 +158,18 @@ class IcloudTodoListEntity(
     def _create(self, item: TodoItem) -> None:
         """Create a reminder. Runs in the executor."""
         due, all_day = _as_due(item.due)
+        if isinstance(item.due, datetime):
+            time_zone = self.hass.config.time_zone
+        else:
+            time_zone = None
+
         self._service().create(
             list_id=self._list_id,
             title=item.summary or "",
             desc=item.description or "",
             due_date=due,
             all_day=all_day,
+            time_zone=time_zone,
         )
 
     def _update(self, item: TodoItem) -> None:
@@ -182,7 +188,19 @@ class IcloudTodoListEntity(
         if item.summary is not None:
             reminder.title = item.summary
         reminder.desc = item.description or ""
+        old_due = reminder.due_date
+        old_all_day = reminder.all_day
         reminder.due_date, reminder.all_day = _as_due(item.due)
+        if reminder.due_date is None or reminder.all_day:
+            reminder.time_zone = None
+        elif (
+            old_due is None
+            or reminder.all_day != old_all_day
+            or reminder.due_date.timestamp() != old_due.timestamp()
+        ):
+            reminder.time_zone = self.hass.config.time_zone
+        else:
+            reminder.due_date = old_due
         if item.status is not None:
             reminder.completed = item.status == TodoItemStatus.COMPLETED
 

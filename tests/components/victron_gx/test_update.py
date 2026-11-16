@@ -8,7 +8,10 @@ from pytest_homeassistant.common import MockConfigEntry
 from victron_mqtt import (
     FirmwareUpdateError,
     FirmwareUpdateErrorReason,
+    FirmwareUpdateState,
     Hub as VictronVenusHub,
+    NotConnectedError,
+    PublishError,
 )
 from victron_mqtt.testing import finalize_injection, inject_message
 
@@ -16,18 +19,21 @@ from homeassistant.components.update import (
     ATTR_IN_PROGRESS,
     ATTR_INSTALLED_VERSION,
     ATTR_LATEST_VERSION,
+    ATTR_SKIPPED_VERSION,
     ATTR_TITLE,
     ATTR_UPDATE_PERCENTAGE,
     DOMAIN as UPDATE_DOMAIN,
-    SERVICE_INSTALL,
     UpdateDeviceClass,
     UpdateEntityFeature,
+    UpdateService,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
-    ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
+    STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
+    CommonServiceArgument,
     EntityCategory,
 )
 from homeassistant.core import HomeAssistant
@@ -65,10 +71,15 @@ async def test_firmware_update_entity(
 ) -> None:
     """Test firmware versions create an available update."""
     victron_hub, config_entry = init_integration_with_update
-    await _async_inject_firmware_versions(hass, victron_hub, "v3.80~45", "v3.80~36")
 
     entity = er.async_entries_for_config_entry(entity_registry, config_entry.entry_id)
     update_entry = next(entry for entry in entity if entry.domain == UPDATE_DOMAIN)
+
+    state = hass.states.get(update_entry.entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    await _async_inject_firmware_versions(hass, victron_hub, "v3.80~45", "v3.80~36")
 
     state = hass.states.get(update_entry.entity_id)
     assert state is not None
@@ -115,6 +126,110 @@ async def test_firmware_update_entity(
     assert state is not None
     assert state.attributes[ATTR_IN_PROGRESS] is False
     assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
+
+
+async def test_firmware_without_available_version(
+    hass: HomeAssistant,
+    init_integration_with_update: tuple[VictronVenusHub, MockConfigEntry],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test installed firmware remains available without an online version."""
+    victron_hub, config_entry = init_integration_with_update
+    await inject_message(
+        victron_hub,
+        f"N/{MOCK_INSTALLATION_ID}/platform/0/Firmware/Installed/Version",
+        '{"value": "v3.60"}',
+    )
+    await finalize_injection(victron_hub)
+    await hass.async_block_till_done()
+
+    update_entry = next(
+        entry
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, config_entry.entry_id
+        )
+        if entry.domain == UPDATE_DOMAIN
+    )
+    state = hass.states.get(update_entry.entity_id)
+    assert state is not None
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "v3.60"
+    assert state.attributes[ATTR_LATEST_VERSION] == "v3.60"
+
+
+@pytest.mark.parametrize(
+    "firmware_state",
+    [
+        pytest.param(FirmwareUpdateState.CHECKING, id="checking"),
+        pytest.param(FirmwareUpdateState.ERROR_DURING_CHECK, id="check-failed"),
+    ],
+)
+async def test_firmware_check_preserves_skipped_update(
+    hass: HomeAssistant,
+    init_integration_with_update: tuple[VictronVenusHub, MockConfigEntry],
+    entity_registry: er.EntityRegistry,
+    firmware_state: FirmwareUpdateState,
+) -> None:
+    """Test unresolved checks preserve the last offer and skipped version."""
+    victron_hub, config_entry = init_integration_with_update
+    await _async_inject_firmware_versions(hass, victron_hub, "v3.60", "v3.70")
+    update_entry = next(
+        entry
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, config_entry.entry_id
+        )
+        if entry.domain == UPDATE_DOMAIN
+    )
+    await hass.services.async_call(
+        UPDATE_DOMAIN,
+        UpdateService.SKIP,
+        {CommonServiceArgument.ENTITY_ID: update_entry.entity_id},
+        blocking=True,
+    )
+
+    state = hass.states.get(update_entry.entity_id)
+    assert state is not None
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_SKIPPED_VERSION] == "v3.70"
+
+    await inject_message(
+        victron_hub,
+        f"N/{MOCK_INSTALLATION_ID}/platform/0/Firmware/Online/AvailableVersion",
+        '{"value": null}',
+    )
+    await inject_message(
+        victron_hub,
+        f"N/{MOCK_INSTALLATION_ID}/platform/0/Firmware/State",
+        f'{{"value": {firmware_state.code}}}',
+    )
+    await finalize_injection(victron_hub)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(update_entry.entity_id)
+    assert state is not None
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_LATEST_VERSION] == "v3.70"
+    assert state.attributes[ATTR_SKIPPED_VERSION] == "v3.70"
+
+    await inject_message(
+        victron_hub,
+        f"N/{MOCK_INSTALLATION_ID}/platform/0/Firmware/State",
+        f'{{"value": {FirmwareUpdateState.IDLE.code}}}',
+    )
+    await _async_inject_firmware_versions(hass, victron_hub, "v3.60", "v3.70")
+
+    state = hass.states.get(update_entry.entity_id)
+    assert state is not None
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_SKIPPED_VERSION] == "v3.70"
+
+    await _async_inject_firmware_versions(hass, victron_hub, "v3.60", "v3.80")
+
+    state = hass.states.get(update_entry.entity_id)
+    assert state is not None
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_LATEST_VERSION] == "v3.80"
+    assert state.attributes[ATTR_SKIPPED_VERSION] is None
 
 
 @pytest.mark.parametrize(
@@ -171,8 +286,8 @@ async def test_install_firmware_update_service(
         with pytest.raises(HomeAssistantError) as err:
             await hass.services.async_call(
                 UPDATE_DOMAIN,
-                SERVICE_INSTALL,
-                {ATTR_ENTITY_ID: update_entry.entity_id},
+                UpdateService.INSTALL,
+                {CommonServiceArgument.ENTITY_ID: update_entry.entity_id},
                 blocking=True,
             )
 
@@ -186,8 +301,8 @@ async def test_install_firmware_update_service(
     ) as install:
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: update_entry.entity_id},
+            UpdateService.INSTALL,
+            {CommonServiceArgument.ENTITY_ID: update_entry.entity_id},
             blocking=True,
         )
 
@@ -211,10 +326,32 @@ async def test_install_firmware_update_service(
     assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
 
 
+@pytest.mark.parametrize(
+    ("error", "translation_key"),
+    [
+        pytest.param(
+            FirmwareUpdateError(FirmwareUpdateErrorReason.ERROR_DURING_UPDATE),
+            "error_during_update",
+            id="firmware-error",
+        ),
+        pytest.param(
+            NotConnectedError("MQTT is disconnected"),
+            "not_connected",
+            id="disconnected",
+        ),
+        pytest.param(
+            PublishError("MQTT publish failed"),
+            "publish_failed",
+            id="publish-failed",
+        ),
+    ],
+)
 async def test_install_propagates_translated_failure_and_clears_progress(
     hass: HomeAssistant,
     init_integration_with_update: tuple[VictronVenusHub, MockConfigEntry],
     entity_registry: er.EntityRegistry,
+    error: FirmwareUpdateError | NotConnectedError | PublishError,
+    translation_key: str,
 ) -> None:
     """Test a GX failure is translated and install progress is cleared."""
     victron_hub, config_entry = init_integration_with_update
@@ -235,7 +372,7 @@ async def test_install_propagates_translated_failure_and_clears_progress(
         assert state is not None
         assert state.attributes[ATTR_IN_PROGRESS] is True
         assert state.attributes[ATTR_UPDATE_PERCENTAGE] == 42
-        raise FirmwareUpdateError(FirmwareUpdateErrorReason.ERROR_DURING_UPDATE)
+        raise error
 
     with (
         patch.object(
@@ -247,13 +384,14 @@ async def test_install_propagates_translated_failure_and_clears_progress(
     ):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: update_entry.entity_id},
+            UpdateService.INSTALL,
+            {CommonServiceArgument.ENTITY_ID: update_entry.entity_id},
             blocking=True,
         )
 
     assert err.value.translation_domain == "victron_gx"
-    assert err.value.translation_key == "error_during_update"
+    assert err.value.translation_key == translation_key
+    assert err.value.__cause__ is error
     state = hass.states.get(update_entry.entity_id)
     assert state is not None
     assert state.attributes[ATTR_IN_PROGRESS] is False

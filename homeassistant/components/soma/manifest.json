@@ -4,6 +4,7 @@
   "categories": ["blinds_curtains"],
   "codeowners": ["@ratsept"],
   "config_flow": true,
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/soma",
   "integration_type": "hub",
   "iot_class": "local_polling",

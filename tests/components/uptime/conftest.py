@@ -16,6 +16,7 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         title="Uptime",
         domain=DOMAIN,
+        entry_id="01JUPTIME00000000000000000",
     )
 
 

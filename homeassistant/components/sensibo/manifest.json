@@ -8,6 +8,7 @@
   ],
   "codeowners": ["@andrey-git", "@gjohansson-ST"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dhcp": [
     {
       "hostname": "sensibo*"

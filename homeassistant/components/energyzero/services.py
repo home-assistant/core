@@ -1,7 +1,7 @@
 """The EnergyZero services."""
 
 from datetime import date, datetime, timedelta
-from enum import Enum
+from enum import Enum, StrEnum
 from functools import partial
 from typing import Final
 from zoneinfo import ZoneInfo
@@ -23,36 +23,50 @@ from homeassistant.util import dt as dt_util
 from .const import DOMAIN
 from .coordinator import EnergyZeroConfigEntry, EnergyZeroDataUpdateCoordinator
 
-ATTR_CONFIG_ENTRY: Final = "config_entry"
-ATTR_START: Final = "start"
-ATTR_END: Final = "end"
-ATTR_INCL_VAT: Final = "incl_vat"
-ATTR_PRICE_TYPE: Final = "price_type"
-ATTR_INTERVAL: Final = "interval"
+
+class EnergyZeroService(StrEnum):
+    """Store keys for EnergyZero services."""
+
+    GET_GAS_PRICES = "get_gas_prices"
+    GET_ENERGY_PRICES = "get_energy_prices"
+
+
+class EnergyZeroServiceArgument(StrEnum):
+    """Store keys for EnergyZero service arguments."""
+
+    CONFIG_ENTRY = "config_entry"
+    INCL_VAT = "incl_vat"
+    START = "start"
+    END = "end"
+    PRICE_TYPE = "price_type"
+    INTERVAL = "interval"
+
 
 ENERGY_INTERVALS = {"hour": Interval.HOUR, "quarter": Interval.QUARTER}
 
-GAS_SERVICE_NAME: Final = "get_gas_prices"
-ENERGY_SERVICE_NAME: Final = "get_energy_prices"
 SERVICE_SCHEMA: Final = probatio.Schema(
     {
-        probatio.Required(ATTR_CONFIG_ENTRY): selector.ConfigEntrySelector(
+        probatio.Required(
+            EnergyZeroServiceArgument.CONFIG_ENTRY
+        ): selector.ConfigEntrySelector(
             {
                 "integration": DOMAIN,
             }
         ),
-        probatio.Required(ATTR_INCL_VAT): bool,
-        probatio.Optional(ATTR_START): str,
-        probatio.Optional(ATTR_END): str,
+        probatio.Required(EnergyZeroServiceArgument.INCL_VAT): bool,
+        probatio.Optional(EnergyZeroServiceArgument.START): str,
+        probatio.Optional(EnergyZeroServiceArgument.END): str,
     }
 )
 
 ENERGY_SERVICE_SCHEMA: Final = SERVICE_SCHEMA.extend(
     {
-        probatio.Optional(ATTR_PRICE_TYPE, default="market"): probatio.In(
-            ("market", "all_in")
-        ),
-        probatio.Optional(ATTR_INTERVAL, default="hour"): probatio.In(ENERGY_INTERVALS),
+        probatio.Optional(
+            EnergyZeroServiceArgument.PRICE_TYPE, default="market"
+        ): probatio.In(("market", "all_in")),
+        probatio.Optional(
+            EnergyZeroServiceArgument.INTERVAL, default="hour"
+        ): probatio.In(ENERGY_INTERVALS),
     }
 )
 
@@ -116,7 +130,7 @@ def __serialize_prices(
 def __get_coordinator(call: ServiceCall) -> EnergyZeroDataUpdateCoordinator:
     """Get the coordinator from the entry."""
     entry: EnergyZeroConfigEntry = service.async_get_config_entry(
-        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY]
+        call.hass, DOMAIN, call.data[EnergyZeroServiceArgument.CONFIG_ENTRY]
     )
     return entry.runtime_data
 
@@ -128,8 +142,12 @@ async def __get_prices(
 ) -> ServiceResponse:
     coordinator = __get_coordinator(call)
     local_tz = ZoneInfo(call.hass.config.time_zone)
-    start_date, start_datetime = __get_date(call.data.get(ATTR_START), local_tz)
-    end_date, end_datetime = __get_date(call.data.get(ATTR_END), local_tz)
+    start_date, start_datetime = __get_date(
+        call.data.get(EnergyZeroServiceArgument.START), local_tz
+    )
+    end_date, end_datetime = __get_date(
+        call.data.get(EnergyZeroServiceArgument.END), local_tz
+    )
 
     filter_start = start_datetime or dt_util.as_utc(
         dt_util.start_of_local_day(start_date)
@@ -150,18 +168,27 @@ async def __get_prices(
             translation_domain=DOMAIN,
             translation_key="invalid_range",
             translation_placeholders={
-                "start": call.data.get(ATTR_START) or start_date.isoformat(),
-                "end": call.data.get(ATTR_END) or end_date.isoformat(),
+                "start": call.data.get(EnergyZeroServiceArgument.START)
+                or start_date.isoformat(),
+                "end": call.data.get(EnergyZeroServiceArgument.END)
+                or end_date.isoformat(),
             },
         )
 
     selected_price_type = (
-        PriceType.MARKET_WITH_VAT if call.data[ATTR_INCL_VAT] else PriceType.MARKET
+        PriceType.MARKET_WITH_VAT
+        if call.data[EnergyZeroServiceArgument.INCL_VAT]
+        else PriceType.MARKET
     )
 
-    if price_type is ServicePriceType.ENERGY and call.data[ATTR_PRICE_TYPE] == "all_in":
+    if (
+        price_type is ServicePriceType.ENERGY
+        and call.data[EnergyZeroServiceArgument.PRICE_TYPE] == "all_in"
+    ):
         selected_price_type = (
-            PriceType.ALL_IN if call.data[ATTR_INCL_VAT] else PriceType.ALL_IN_EXCL_VAT
+            PriceType.ALL_IN
+            if call.data[EnergyZeroServiceArgument.INCL_VAT]
+            else PriceType.ALL_IN_EXCL_VAT
         )
 
     price_data: list[EnergyPrices] = []
@@ -178,7 +205,9 @@ async def __get_prices(
             prices = coordinator.energyzero.get_electricity_prices(
                 start_date=request_date,
                 end_date=request_date,
-                interval=ENERGY_INTERVALS[call.data[ATTR_INTERVAL]],
+                interval=ENERGY_INTERVALS[
+                    call.data[EnergyZeroServiceArgument.INTERVAL]
+                ],
                 price_type=selected_price_type,
                 local_tz=local_tz,
             )
@@ -203,14 +232,14 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        GAS_SERVICE_NAME,
+        EnergyZeroService.GET_GAS_PRICES,
         partial(__get_prices, price_type=ServicePriceType.GAS),
         schema=SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
     hass.services.async_register(
         DOMAIN,
-        ENERGY_SERVICE_NAME,
+        EnergyZeroService.GET_ENERGY_PRICES,
         partial(__get_prices, price_type=ServicePriceType.ENERGY),
         schema=ENERGY_SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,

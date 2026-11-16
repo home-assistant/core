@@ -164,7 +164,7 @@ async def test_migrate_entry_token_failure(hass: HomeAssistant) -> None:
 async def test_migrate_entry_creates_repair_issue(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
-    """Test migration creates a repair issue for redirect URI update."""
+    """Test migration creates a repair issue linked to the entry."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="ViCare",
@@ -193,6 +193,12 @@ async def test_migrate_entry_creates_repair_issue(
     issue = issue_registry.async_get_issue(DOMAIN, "update_redirect_uri")
     assert issue is not None
     assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.config_entry_id == config_entry.entry_id
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, "update_redirect_uri") is None
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -950,7 +956,7 @@ async def test_offline_gateway_does_not_stretch_the_cache(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """An offline gateway is never fetched, so it must not size the cache."""
+    """An unreachable gateway is skipped, so it must not size the cache."""
     fixtures: list[Fixture] = [
         Fixture({"type:climateSensor"}, "vicare/RoomSensor1.json", gateway_id="gwA"),
         Fixture({"type:climateSensor"}, "vicare/RoomSensor2.json", gateway_id="gwB"),
@@ -958,6 +964,49 @@ async def test_offline_gateway_does_not_stretch_the_cache(
             {"type:climateSensor"},
             "vicare/RoomSensor1.json",
             gateway_id="gwC",
+            online=False,
+        ),
+    ]
+    client = MockPyViCare(fixtures)
+    client.services[
+        "gwC"
+    ].fetch_all_features.side_effect = PyViCareDeviceCommunicationError(
+        {"extendedPayload": {"reason": "GATEWAY_OFFLINE"}}
+    )
+
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(f"{MODULE}.PyViCare", return_value=client),
+        patch(f"{MODULE}.PLATFORMS", [Platform.SENSOR]),
+    ):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    # Two reachable gateways out of three, so the cache matches the coordinator
+    # interval instead of being stretched to 3 x 60s.
+    assert call(DEFAULT_CACHE_DURATION * 2) in client.setCacheDuration.call_args_list
+    assert (
+        call(DEFAULT_CACHE_DURATION * 3) not in client.setCacheDuration.call_args_list
+    )
+    # Probed once, not again after the cache adjustment.
+    assert client.services["gwC"].fetch_all_features.call_count == 1
+
+
+async def test_device_reported_offline_with_data_is_set_up(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A device reported offline is set up when its gateway delivers data."""
+    fixtures: list[Fixture] = [
+        Fixture({"type:climateSensor"}, "vicare/RoomSensor1.json", gateway_id="gwA"),
+        Fixture(
+            {"type:climateSensor"},
+            "vicare/RoomSensor2.json",
+            gateway_id="gwB",
             online=False,
         ),
     ]
@@ -975,13 +1024,7 @@ async def test_offline_gateway_does_not_stretch_the_cache(
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    # Two online gateways out of three, so the cache matches the coordinator
-    # interval instead of being stretched to 3 x 60s.
-    assert call(DEFAULT_CACHE_DURATION * 2) in client.setCacheDuration.call_args_list
-    assert (
-        call(DEFAULT_CACHE_DURATION * 3) not in client.setCacheDuration.call_args_list
-    )
-    assert client.services["gwC"].fetch_all_features.call_count == 0
+    assert hass.states.get("sensor.model1_temperature").state == "16.9"
 
 
 async def test_setup_retries_until_a_device_is_online(
@@ -994,6 +1037,10 @@ async def test_setup_retries_until_a_device_is_online(
         Fixture({"type:boiler"}, "vicare/Vitodens300W.json", online=False)
     ]
     client = MockPyViCare(fixtures)
+    service = client.services["gateway0"]
+    service.fetch_all_features.side_effect = PyViCareDeviceCommunicationError(
+        {"extendedPayload": {"reason": "GATEWAY_OFFLINE"}}
+    )
 
     with (
         patch(
@@ -1010,6 +1057,7 @@ async def test_setup_retries_until_a_device_is_online(
         assert mock_config_entry.reason == "No ViCare device is online"
 
         client.devices[0].status = "Online"
+        service.fetch_all_features.side_effect = service._fetch_all_features
         freezer.tick(timedelta(seconds=10))
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
@@ -1045,3 +1093,102 @@ async def test_setup_loads_with_unpaid_package_gateway(
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_coordinator_backs_off_on_gateway_offline(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test coordinator sequential backoff (300s, 600s, 900s) on GATEWAY_OFFLINE errors."""
+    fixtures: list[Fixture] = [Fixture({"type:boiler"}, "vicare/Vitodens300W.json")]
+    mock_vicare = MockPyViCare(fixtures)
+    service = mock_vicare.devices[0].service
+
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(f"{MODULE}.PyViCare", return_value=mock_vicare),
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(SENSOR_ID).state != STATE_UNAVAILABLE
+
+    # 1st failure: GATEWAY_OFFLINE -> backoff 300s
+    service.fetch_all_features.side_effect = PyViCareDeviceCommunicationError(
+        {"extendedPayload": {"reason": "GATEWAY_OFFLINE"}}
+    )
+    freezer.tick(timedelta(seconds=DEFAULT_CACHE_DURATION))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(SENSOR_ID).state == STATE_UNAVAILABLE
+    calls = service.fetch_all_features.call_count
+
+    # Ordinary interval (60s) does not trigger fetch before 300s deadline
+    freezer.tick(timedelta(seconds=DEFAULT_CACHE_DURATION))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert service.fetch_all_features.call_count == calls
+
+    # Advance to 300s (remaining 240s) -> triggers fetch
+    freezer.tick(timedelta(seconds=240))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert service.fetch_all_features.call_count == calls + 1
+
+    # 2nd failure: backoff is 600s
+    calls = service.fetch_all_features.call_count
+    freezer.tick(timedelta(seconds=300))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert service.fetch_all_features.call_count == calls
+
+    freezer.tick(timedelta(seconds=300))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert service.fetch_all_features.call_count == calls + 1
+
+    # 3rd failure: backoff is 900s
+    calls = service.fetch_all_features.call_count
+    freezer.tick(timedelta(seconds=600))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert service.fetch_all_features.call_count == calls
+
+    # Recovery: gateway is back online before 900s retry
+    service.fetch_all_features.side_effect = None
+    freezer.tick(timedelta(seconds=300))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert service.fetch_all_features.call_count == calls + 1
+    assert hass.states.get(SENSOR_ID).state != STATE_UNAVAILABLE
+
+    # Subsequent refresh happens at regular interval (60s)
+    calls = service.fetch_all_features.call_count
+    freezer.tick(timedelta(seconds=DEFAULT_CACHE_DURATION))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert service.fetch_all_features.call_count == calls + 1
+    assert hass.states.get(SENSOR_ID).state != STATE_UNAVAILABLE
+
+    # A second offline episode restarts backoff at 300s
+    service.fetch_all_features.side_effect = PyViCareDeviceCommunicationError(
+        {"extendedPayload": {"reason": "GATEWAY_OFFLINE"}}
+    )
+    freezer.tick(timedelta(seconds=DEFAULT_CACHE_DURATION))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get(SENSOR_ID).state == STATE_UNAVAILABLE
+    calls = service.fetch_all_features.call_count
+
+    freezer.tick(timedelta(seconds=DEFAULT_CACHE_DURATION))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert service.fetch_all_features.call_count == calls
+
+    freezer.tick(timedelta(seconds=240))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert service.fetch_all_features.call_count == calls + 1

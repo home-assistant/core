@@ -1,13 +1,15 @@
 """Coordinator for SteamVR Base Station."""
 
+from collections.abc import Coroutine
 import logging
-from typing import override
+from typing import Any, override
 
 from lighthouse_ble import (
     BaseStationV2,
     DeviceInfo,
     LighthouseConnectionError,
     PowerState,
+    UnsupportedError,
     parse_advertisement,
 )
 
@@ -79,12 +81,30 @@ class SteamVRBaseStationCoordinator(PassiveBluetoothDataUpdateCoordinator):
 
     async def async_set_power(self, target: PowerState) -> None:
         """Switch the station's power and show the result right away."""
+        await self._async_run_command(self.station.set_power(target))
+        self.async_update_listeners()
+
+    async def async_set_channel(self, channel: int) -> None:
+        """Move the station to another channel and show it right away."""
+        await self._async_run_command(self.station.set_channel(channel))
+        self.async_update_listeners()
+
+    async def async_identify(self) -> None:
+        """Blink the station's LED."""
+        await self._async_run_command(self.station.identify())
+
+    async def _async_run_command(self, command: Coroutine[Any, Any, None]) -> None:
         try:
-            await self.station.set_power(target)
+            await command
         except LighthouseConnectionError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
                 translation_placeholders={"name": self.entry.title},
             ) from err
-        self.async_update_listeners()
+        except UnsupportedError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="not_supported",
+                translation_placeholders={"name": self.entry.title},
+            ) from err

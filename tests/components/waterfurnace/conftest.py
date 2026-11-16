@@ -43,7 +43,13 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_waterfurnace_client() -> Generator[Mock]:
+def device_fixture() -> str:
+    """Return the read response fixture the mock client returns."""
+    return "device_data.json"
+
+
+@pytest.fixture
+def mock_waterfurnace_client(device_fixture: str) -> Generator[Mock]:
     """Mock WaterFurnace client."""
     with (
         patch(
@@ -66,7 +72,7 @@ def mock_waterfurnace_client() -> Generator[Mock]:
         }
         client.devices = [WFGateway(gateway_data)]
 
-        device_data = WFReading(load_json_object_fixture("device_data.json", DOMAIN))
+        device_data = WFReading(load_json_object_fixture(device_fixture, DOMAIN))
         client.read.return_value = device_data
         client.get_energy_data.side_effect = WFNoDataError("No data")
 

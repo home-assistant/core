@@ -12,14 +12,23 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.airly.const import CONF_USE_NEAREST, DEFAULT_NAME, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_LATITUDE,
+    CONF_LOCATION,
+    CONF_LONGITUDE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-CONFIG = {
-    CONF_API_KEY: "foo",
-    CONF_LATITUDE: 12.3,
-    CONF_LONGITUDE: 45.6,
+TEST_API_KEY = "foo"
+TEST_LATITUDE = 12.3
+TEST_LONGITUDE = 45.6
+
+
+USER_INPUT = {
+    CONF_API_KEY: TEST_API_KEY,
+    CONF_LOCATION: {CONF_LATITUDE: TEST_LATITUDE, CONF_LONGITUDE: TEST_LONGITUDE},
 }
 
 UPDATE_API_KEY_FLOWS = [
@@ -57,7 +66,7 @@ async def test_invalid_api_key(
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=CONFIG
+        result["flow_id"], user_input=USER_INPUT
     )
 
     assert result["errors"] == {"base": "invalid_api_key"}
@@ -65,15 +74,15 @@ async def test_invalid_api_key(
     point_measurements.update.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=CONFIG
+        result["flow_id"], user_input=USER_INPUT
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == "12.3-45.6"
     assert result["title"] == DEFAULT_NAME
-    assert result["data"][CONF_LATITUDE] == CONFIG[CONF_LATITUDE]
-    assert result["data"][CONF_LONGITUDE] == CONFIG[CONF_LONGITUDE]
-    assert result["data"][CONF_API_KEY] == CONFIG[CONF_API_KEY]
+    assert result["data"][CONF_LATITUDE] == TEST_LATITUDE
+    assert result["data"][CONF_LONGITUDE] == TEST_LONGITUDE
+    assert result["data"][CONF_API_KEY] == TEST_API_KEY
     assert result["data"][CONF_USE_NEAREST] is False
 
 
@@ -99,7 +108,7 @@ async def test_invalid_location(
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=CONFIG
+        result["flow_id"], user_input=USER_INPUT
     )
 
     assert result["errors"] == {"base": "wrong_location"}
@@ -109,15 +118,15 @@ async def test_invalid_location(
     )
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=CONFIG
+        result["flow_id"], user_input=USER_INPUT
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == "12.3-45.6"
     assert result["title"] == DEFAULT_NAME
-    assert result["data"][CONF_LATITUDE] == CONFIG[CONF_LATITUDE]
-    assert result["data"][CONF_LONGITUDE] == CONFIG[CONF_LONGITUDE]
-    assert result["data"][CONF_API_KEY] == CONFIG[CONF_API_KEY]
+    assert result["data"][CONF_LATITUDE] == TEST_LATITUDE
+    assert result["data"][CONF_LONGITUDE] == TEST_LONGITUDE
+    assert result["data"][CONF_API_KEY] == TEST_API_KEY
     assert result["data"][CONF_USE_NEAREST] is False
 
 
@@ -142,7 +151,7 @@ async def test_invalid_location_for_point_and_nearest(
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=CONFIG
+        result["flow_id"], user_input=USER_INPUT
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -154,7 +163,15 @@ async def test_duplicate_error(
     mock_airly_client: MagicMock,
 ) -> None:
     """Test that errors are shown when duplicates are added."""
-    MockConfigEntry(domain=DOMAIN, unique_id="12.3-45.6", data=CONFIG).add_to_hass(hass)
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="12.3-45.6",
+        data={
+            CONF_API_KEY: TEST_API_KEY,
+            CONF_LATITUDE: TEST_LATITUDE,
+            CONF_LONGITUDE: TEST_LONGITUDE,
+        },
+    ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -164,7 +181,7 @@ async def test_duplicate_error(
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=CONFIG
+        result["flow_id"], user_input=USER_INPUT
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -184,15 +201,15 @@ async def test_create_entry(
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=CONFIG
+        result["flow_id"], user_input=USER_INPUT
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == "12.3-45.6"
     assert result["title"] == DEFAULT_NAME
-    assert result["data"][CONF_LATITUDE] == CONFIG[CONF_LATITUDE]
-    assert result["data"][CONF_LONGITUDE] == CONFIG[CONF_LONGITUDE]
-    assert result["data"][CONF_API_KEY] == CONFIG[CONF_API_KEY]
+    assert result["data"][CONF_LATITUDE] == TEST_LATITUDE
+    assert result["data"][CONF_LONGITUDE] == TEST_LONGITUDE
+    assert result["data"][CONF_API_KEY] == TEST_API_KEY
     assert result["data"][CONF_USE_NEAREST] is False
 
 
@@ -214,15 +231,15 @@ async def test_create_entry_with_nearest_method(
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=CONFIG
+        result["flow_id"], user_input=USER_INPUT
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == "12.3-45.6"
     assert result["title"] == DEFAULT_NAME
-    assert result["data"][CONF_LATITUDE] == CONFIG[CONF_LATITUDE]
-    assert result["data"][CONF_LONGITUDE] == CONFIG[CONF_LONGITUDE]
-    assert result["data"][CONF_API_KEY] == CONFIG[CONF_API_KEY]
+    assert result["data"][CONF_LATITUDE] == TEST_LATITUDE
+    assert result["data"][CONF_LONGITUDE] == TEST_LONGITUDE
+    assert result["data"][CONF_API_KEY] == TEST_API_KEY
     assert result["data"][CONF_USE_NEAREST] is True
 
 
@@ -253,7 +270,7 @@ async def test_cannot_connect(
     point_measurements.update.side_effect = exception
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=CONFIG
+        result["flow_id"], user_input=USER_INPUT
     )
 
     assert result["errors"] == {"base": error}
@@ -263,7 +280,7 @@ async def test_cannot_connect(
     point_measurements.update.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=CONFIG
+        result["flow_id"], user_input=USER_INPUT
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -300,7 +317,7 @@ async def test_unknown_error(
     point_measurements.update.side_effect = exception
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=CONFIG
+        result["flow_id"], user_input=USER_INPUT
     )
 
     assert result["errors"] == {"base": error}
@@ -310,7 +327,7 @@ async def test_unknown_error(
     point_measurements.update.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=CONFIG
+        result["flow_id"], user_input=USER_INPUT
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -342,7 +359,11 @@ async def test_update_api_key_successful(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == abort_reason
-    assert mock_config_entry.data == {**CONFIG, CONF_API_KEY: "new_api_key"}
+    assert mock_config_entry.data == {
+        CONF_LATITUDE: TEST_LATITUDE,
+        CONF_LONGITUDE: TEST_LONGITUDE,
+        CONF_API_KEY: "new_api_key",
+    }
     mock_airly_client.create_measurements_session_point.assert_called_once_with(
         latitude=12.3, longitude=45.6
     )
@@ -363,7 +384,12 @@ async def test_update_api_key_with_nearest_method(
         domain=DOMAIN,
         title="Home",
         unique_id="12.3-45.6",
-        data={**CONFIG, CONF_USE_NEAREST: True},
+        data={
+            CONF_API_KEY: TEST_API_KEY,
+            CONF_LATITUDE: TEST_LATITUDE,
+            CONF_LONGITUDE: TEST_LONGITUDE,
+            CONF_USE_NEAREST: True,
+        },
     )
     entry.add_to_hass(hass)
 
@@ -379,7 +405,8 @@ async def test_update_api_key_with_nearest_method(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == abort_reason
     assert entry.data == {
-        **CONFIG,
+        CONF_LATITUDE: TEST_LATITUDE,
+        CONF_LONGITUDE: TEST_LONGITUDE,
         CONF_API_KEY: "new_api_key",
         CONF_USE_NEAREST: True,
     }
@@ -445,7 +472,11 @@ async def test_update_api_key_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == step_id
     assert result["errors"] == {"base": error}
-    assert mock_config_entry.data == CONFIG
+    assert mock_config_entry.data == {
+        CONF_API_KEY: TEST_API_KEY,
+        CONF_LATITUDE: TEST_LATITUDE,
+        CONF_LONGITUDE: TEST_LONGITUDE,
+    }
 
     point_measurements.update.side_effect = None
 
@@ -455,4 +486,8 @@ async def test_update_api_key_errors(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == abort_reason
-    assert mock_config_entry.data == {**CONFIG, CONF_API_KEY: "new_api_key"}
+    assert mock_config_entry.data == {
+        CONF_LATITUDE: TEST_LATITUDE,
+        CONF_LONGITUDE: TEST_LONGITUDE,
+        CONF_API_KEY: "new_api_key",
+    }

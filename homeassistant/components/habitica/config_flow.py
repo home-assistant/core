@@ -17,7 +17,6 @@ import probatio
 
 from homeassistant import data_entry_flow
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -26,7 +25,6 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import (
     CONF_API_KEY,
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_URL,
     CONF_USERNAME,
@@ -281,7 +279,7 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
                 },
             ),
             description_placeholders={
-                CONF_NAME: reauth_entry.title,
+                "name": reauth_entry.title,
                 "habiticans": HABITICANS_URL,
             },
             errors=errors,
@@ -392,7 +390,7 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: HabiticaConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         return {"party_member": PartyMembersSubentryFlowHandler}

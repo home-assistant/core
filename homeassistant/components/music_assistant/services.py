@@ -1,17 +1,17 @@
 """Custom actions (previously known as services) for the Music Assistant integration."""
 
+from enum import StrEnum
 from typing import TYPE_CHECKING
 
 from music_assistant_models.enums import MediaType, QueueOption
 import probatio
 
 from homeassistant.components.media_player import (
-    ATTR_MEDIA_ENQUEUE,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     MediaPlayerDeviceClass,
 )
 from homeassistant.components.tts import DOMAIN as TTS_DOMAIN
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -23,43 +23,21 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, service
 
 from .const import (
-    ATTR_ALBUM,
-    ATTR_ALBUM_ARTISTS_ONLY,
-    ATTR_ALBUM_TYPE,
     ATTR_ALBUMS,
-    ATTR_ANNOUNCE_VOLUME,
-    ATTR_ARTIST,
     ATTR_ARTISTS,
     ATTR_AUDIOBOOKS,
-    ATTR_AUTO_PLAY,
-    ATTR_FAVORITE,
     ATTR_ITEMS,
-    ATTR_LIBRARY_ONLY,
     ATTR_LIMIT,
-    ATTR_MEDIA_ID,
     ATTR_MEDIA_TYPE,
-    ATTR_MESSAGE,
     ATTR_OFFSET,
     ATTR_ORDER_BY,
     ATTR_PLAYLISTS,
     ATTR_PODCASTS,
-    ATTR_PRE_ANNOUNCE_URL,
     ATTR_RADIO,
-    ATTR_RADIO_MODE,
-    ATTR_SEARCH,
-    ATTR_SEARCH_ALBUM,
-    ATTR_SEARCH_ARTIST,
-    ATTR_SEARCH_NAME,
-    ATTR_SOURCE_PLAYER,
-    ATTR_START_ITEM,
     ATTR_TRACKS,
-    ATTR_TTS_ENTITY_ID,
-    ATTR_URL,
-    ATTR_USE_PRE_ANNOUNCE,
-    ATTR_USERNAME,
     DOMAIN,
 )
-from .helpers import catch_user_not_found, get_music_assistant_client
+from .helpers import catch_user_not_found, get_music_assistant_client, user_from_context
 from .schemas import (
     LIBRARY_RESULTS_SCHEMA,
     SEARCH_RESULT_SCHEMA,
@@ -77,12 +55,6 @@ if TYPE_CHECKING:
         Track,
     )
 
-SERVICE_SEARCH = "search"
-SERVICE_GET_LIBRARY = "get_library"
-SERVICE_PLAY_MEDIA_ADVANCED = "play_media"
-SERVICE_PLAY_ANNOUNCEMENT = "play_announcement"
-SERVICE_TRANSFER_QUEUE = "transfer_queue"
-SERVICE_GET_QUEUE = "get_queue"
 
 DEFAULT_OFFSET = 0
 DEFAULT_LIMIT = 25
@@ -92,45 +64,97 @@ DEFAULT_SORT_ORDER = "name"
 PLAYER_ENTITY_DEVICE_CLASSES = [MediaPlayerDeviceClass.SPEAKER]
 
 
+class MusicAssistantService(StrEnum):
+    """Store keys for Music Assistant services."""
+
+    PLAY_MEDIA = "play_media"
+    PLAY_ANNOUNCEMENT = "play_announcement"
+    TRANSFER_QUEUE = "transfer_queue"
+    GET_QUEUE = "get_queue"
+    SEARCH = "search"
+    GET_LIBRARY = "get_library"
+
+
+class MusicAssistantServiceArgument(StrEnum):
+    """Store keys for Music Assistant service arguments."""
+
+    MEDIA_ID = "media_id"
+    MEDIA_TYPE = "media_type"
+    ARTIST = "artist"
+    ALBUM = "album"
+    ENQUEUE = "enqueue"
+    RADIO_MODE = "radio_mode"
+    SHUFFLE = "shuffle"
+    START_ITEM = "start_item"
+    USERNAME = "username"
+    MESSAGE = "message"
+    TTS_ENTITY_ID = "tts_entity_id"
+    URL = "url"
+    USE_PRE_ANNOUNCE = "use_pre_announce"
+    PRE_ANNOUNCE_URL = "pre_announce_url"
+    ANNOUNCE_VOLUME = "announce_volume"
+    SOURCE_PLAYER = "source_player"
+    AUTO_PLAY = "auto_play"
+    NAME = "name"
+    LIMIT = "limit"
+    LIBRARY_ONLY = "library_only"
+    FAVORITE = "favorite"
+    SEARCH = "search"
+    OFFSET = "offset"
+    ORDER_BY = "order_by"
+    ALBUM_TYPE = "album_type"
+    ALBUM_ARTISTS_ONLY = "album_artists_only"
+
+
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register custom actions."""
     hass.services.async_register(
         DOMAIN,
-        SERVICE_SEARCH,
+        MusicAssistantService.SEARCH,
         handle_search,
         schema=probatio.Schema(
             {
-                probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
-                probatio.Required(ATTR_SEARCH_NAME): cv.string,
-                probatio.Optional(ATTR_MEDIA_TYPE): probatio.All(
-                    probatio.EnsureList(), [probatio.Coerce(MediaType)]
-                ),
-                probatio.Optional(ATTR_SEARCH_ARTIST): cv.string,
-                probatio.Optional(ATTR_SEARCH_ALBUM): cv.string,
-                probatio.Optional(ATTR_LIMIT, default=5): probatio.Coerce(int),
-                probatio.Optional(ATTR_LIBRARY_ONLY, default=False): cv.boolean,
-                probatio.Optional(ATTR_USERNAME): cv.string,
+                probatio.Required(CommonServiceArgument.CONFIG_ENTRY_ID): str,
+                probatio.Required(MusicAssistantServiceArgument.NAME): cv.string,
+                probatio.Optional(
+                    MusicAssistantServiceArgument.MEDIA_TYPE
+                ): probatio.All(probatio.EnsureList(), [probatio.Coerce(MediaType)]),
+                probatio.Optional(MusicAssistantServiceArgument.ARTIST): cv.string,
+                probatio.Optional(MusicAssistantServiceArgument.ALBUM): cv.string,
+                probatio.Optional(
+                    MusicAssistantServiceArgument.LIMIT, default=5
+                ): probatio.Coerce(int),
+                probatio.Optional(
+                    MusicAssistantServiceArgument.LIBRARY_ONLY, default=False
+                ): cv.boolean,
+                probatio.Optional(MusicAssistantServiceArgument.USERNAME): cv.string,
             }
         ),
         supports_response=SupportsResponse.ONLY,
     )
     hass.services.async_register(
         DOMAIN,
-        SERVICE_GET_LIBRARY,
+        MusicAssistantService.GET_LIBRARY,
         handle_get_library,
         schema=probatio.Schema(
             {
-                probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
-                probatio.Required(ATTR_MEDIA_TYPE): probatio.Coerce(MediaType),
-                probatio.Optional(ATTR_FAVORITE): cv.boolean,
-                probatio.Optional(ATTR_SEARCH): cv.string,
-                probatio.Optional(ATTR_LIMIT): cv.positive_int,
-                probatio.Optional(ATTR_OFFSET): int,
-                probatio.Optional(ATTR_ORDER_BY): cv.string,
-                probatio.Optional(ATTR_ALBUM_TYPE): list[MediaType],
-                probatio.Optional(ATTR_ALBUM_ARTISTS_ONLY): cv.boolean,
-                probatio.Optional(ATTR_USERNAME): cv.string,
+                probatio.Required(CommonServiceArgument.CONFIG_ENTRY_ID): str,
+                probatio.Required(
+                    MusicAssistantServiceArgument.MEDIA_TYPE
+                ): probatio.Coerce(MediaType),
+                probatio.Optional(MusicAssistantServiceArgument.FAVORITE): cv.boolean,
+                probatio.Optional(MusicAssistantServiceArgument.SEARCH): cv.string,
+                probatio.Optional(MusicAssistantServiceArgument.LIMIT): cv.positive_int,
+                probatio.Optional(MusicAssistantServiceArgument.OFFSET): int,
+                probatio.Optional(MusicAssistantServiceArgument.ORDER_BY): cv.string,
+                probatio.Optional(MusicAssistantServiceArgument.ALBUM_TYPE): list[
+                    MediaType
+                ],
+                probatio.Optional(
+                    MusicAssistantServiceArgument.ALBUM_ARTISTS_ONLY
+                ): cv.boolean,
+                probatio.Optional(MusicAssistantServiceArgument.USERNAME): cv.string,
             }
         ),
         supports_response=SupportsResponse.ONLY,
@@ -140,63 +164,87 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_PLAY_MEDIA_ADVANCED,
+        MusicAssistantService.PLAY_MEDIA,
         entity_domain=MEDIA_PLAYER_DOMAIN,
         entity_device_classes=PLAYER_ENTITY_DEVICE_CLASSES,
         schema={
-            probatio.Required(ATTR_MEDIA_ID): probatio.All(
+            probatio.Required(MusicAssistantServiceArgument.MEDIA_ID): probatio.All(
                 probatio.EnsureList(), [cv.string]
             ),
-            probatio.Optional(ATTR_MEDIA_TYPE): probatio.Coerce(MediaType),
-            probatio.Optional(ATTR_MEDIA_ENQUEUE): probatio.Coerce(QueueOption),
-            probatio.Optional(ATTR_ARTIST): cv.string,
-            probatio.Optional(ATTR_ALBUM): cv.string,
-            probatio.Optional(ATTR_RADIO_MODE): probatio.Coerce(bool),
-            probatio.Optional(ATTR_START_ITEM): cv.string,
-            probatio.Optional(ATTR_USERNAME): cv.string,
+            probatio.Optional(
+                MusicAssistantServiceArgument.MEDIA_TYPE
+            ): probatio.Coerce(MediaType),
+            probatio.Optional(MusicAssistantServiceArgument.ENQUEUE): probatio.Coerce(
+                QueueOption
+            ),
+            probatio.Optional(MusicAssistantServiceArgument.ARTIST): cv.string,
+            probatio.Optional(MusicAssistantServiceArgument.ALBUM): cv.string,
+            probatio.Optional(
+                MusicAssistantServiceArgument.RADIO_MODE
+            ): probatio.Coerce(bool),
+            probatio.Optional(MusicAssistantServiceArgument.SHUFFLE): cv.boolean,
+            probatio.Optional(MusicAssistantServiceArgument.START_ITEM): cv.string,
+            probatio.Optional(MusicAssistantServiceArgument.USERNAME): cv.string,
         },
         func="_async_handle_play_media",
     )
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_PLAY_ANNOUNCEMENT,
+        MusicAssistantService.PLAY_ANNOUNCEMENT,
         entity_domain=MEDIA_PLAYER_DOMAIN,
         entity_device_classes=PLAYER_ENTITY_DEVICE_CLASSES,
         schema=probatio.All(
             cv.make_entity_service_schema(
                 {
-                    probatio.Optional(ATTR_URL): cv.string,
-                    probatio.Inclusive(ATTR_MESSAGE, "spoken_announcement"): cv.string,
+                    probatio.Optional(MusicAssistantServiceArgument.URL): cv.string,
                     probatio.Inclusive(
-                        ATTR_TTS_ENTITY_ID, "spoken_announcement"
+                        MusicAssistantServiceArgument.MESSAGE, "spoken_announcement"
+                    ): cv.string,
+                    probatio.Inclusive(
+                        MusicAssistantServiceArgument.TTS_ENTITY_ID,
+                        "spoken_announcement",
                     ): probatio.All(cv.entity_id, cv.entity_domain(TTS_DOMAIN)),
-                    probatio.Optional(ATTR_USE_PRE_ANNOUNCE): probatio.Coerce(bool),
-                    probatio.Optional(ATTR_PRE_ANNOUNCE_URL): cv.string,
-                    probatio.Optional(ATTR_ANNOUNCE_VOLUME): probatio.Coerce(int),
+                    probatio.Optional(
+                        MusicAssistantServiceArgument.USE_PRE_ANNOUNCE
+                    ): probatio.Coerce(bool),
+                    probatio.Optional(
+                        MusicAssistantServiceArgument.PRE_ANNOUNCE_URL
+                    ): cv.string,
+                    probatio.Optional(
+                        MusicAssistantServiceArgument.ANNOUNCE_VOLUME
+                    ): probatio.Coerce(int),
                 }
             ),
-            probatio.AtLeastOne(ATTR_URL, ATTR_MESSAGE),
-            probatio.AtMostOne(ATTR_URL, ATTR_MESSAGE),
+            probatio.AtLeastOne(
+                MusicAssistantServiceArgument.URL, MusicAssistantServiceArgument.MESSAGE
+            ),
+            probatio.AtMostOne(
+                MusicAssistantServiceArgument.URL, MusicAssistantServiceArgument.MESSAGE
+            ),
         ),
         func="_async_handle_play_announcement",
     )
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_TRANSFER_QUEUE,
+        MusicAssistantService.TRANSFER_QUEUE,
         entity_domain=MEDIA_PLAYER_DOMAIN,
         entity_device_classes=PLAYER_ENTITY_DEVICE_CLASSES,
         schema={
-            probatio.Optional(ATTR_SOURCE_PLAYER): cv.entity_id,
-            probatio.Optional(ATTR_AUTO_PLAY): probatio.Coerce(bool),
+            probatio.Optional(
+                MusicAssistantServiceArgument.SOURCE_PLAYER
+            ): cv.entity_id,
+            probatio.Optional(MusicAssistantServiceArgument.AUTO_PLAY): probatio.Coerce(
+                bool
+            ),
         },
         func="_async_handle_transfer_queue",
     )
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_GET_QUEUE,
+        MusicAssistantService.GET_QUEUE,
         entity_domain=MEDIA_PLAYER_DOMAIN,
         entity_device_classes=PLAYER_ENTITY_DEVICE_CLASSES,
         schema=None,
@@ -207,11 +255,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
 async def handle_search(call: ServiceCall) -> ServiceResponse:
     """Handle queue_command action."""
-    mass = get_music_assistant_client(call.hass, call.data[ATTR_CONFIG_ENTRY_ID])
-    search_name = call.data[ATTR_SEARCH_NAME]
-    search_artist = call.data.get(ATTR_SEARCH_ARTIST)
-    search_album = call.data.get(ATTR_SEARCH_ALBUM)
-    search_username = call.data.get(ATTR_USERNAME)
+    mass = get_music_assistant_client(
+        call.hass, call.data[CommonServiceArgument.CONFIG_ENTRY_ID]
+    )
+    search_name = call.data[MusicAssistantServiceArgument.NAME]
+    search_artist = call.data.get(MusicAssistantServiceArgument.ARTIST)
+    search_album = call.data.get(MusicAssistantServiceArgument.ALBUM)
+    search_username = call.data.get(MusicAssistantServiceArgument.USERNAME)
     if search_album and search_artist:
         search_name = f"{search_artist} - {search_album} - {search_name}"
     elif search_album:
@@ -221,10 +271,14 @@ async def handle_search(call: ServiceCall) -> ServiceResponse:
     with catch_user_not_found(search_username):
         search_results = await mass.music.search(
             search_query=search_name,
-            media_types=call.data.get(ATTR_MEDIA_TYPE, MediaType.ALL),
-            limit=call.data[ATTR_LIMIT],
-            library_only=call.data[ATTR_LIBRARY_ONLY],
-            user=search_username,
+            media_types=call.data.get(
+                MusicAssistantServiceArgument.MEDIA_TYPE, MediaType.ALL
+            ),
+            limit=call.data[MusicAssistantServiceArgument.LIMIT],
+            library_only=call.data[MusicAssistantServiceArgument.LIBRARY_ONLY],
+            user=search_username
+            if search_username is not None
+            else user_from_context(call.context),
         )
     response: ServiceResponse = SEARCH_RESULT_SCHEMA(
         {
@@ -263,15 +317,17 @@ async def handle_search(call: ServiceCall) -> ServiceResponse:
 
 async def handle_get_library(call: ServiceCall) -> ServiceResponse:
     """Handle get_library action."""
-    mass = get_music_assistant_client(call.hass, call.data[ATTR_CONFIG_ENTRY_ID])
-    media_type = call.data[ATTR_MEDIA_TYPE]
-    limit = call.data.get(ATTR_LIMIT, DEFAULT_LIMIT)
-    offset = call.data.get(ATTR_OFFSET, DEFAULT_OFFSET)
-    order_by = call.data.get(ATTR_ORDER_BY, DEFAULT_SORT_ORDER)
-    username = call.data.get(ATTR_USERNAME)
+    mass = get_music_assistant_client(
+        call.hass, call.data[CommonServiceArgument.CONFIG_ENTRY_ID]
+    )
+    media_type = call.data[MusicAssistantServiceArgument.MEDIA_TYPE]
+    limit = call.data.get(MusicAssistantServiceArgument.LIMIT, DEFAULT_LIMIT)
+    offset = call.data.get(MusicAssistantServiceArgument.OFFSET, DEFAULT_OFFSET)
+    order_by = call.data.get(MusicAssistantServiceArgument.ORDER_BY, DEFAULT_SORT_ORDER)
+    username = call.data.get(MusicAssistantServiceArgument.USERNAME)
     base_params = {
-        "favorite": call.data.get(ATTR_FAVORITE),
-        "search": call.data.get(ATTR_SEARCH),
+        "favorite": call.data.get(MusicAssistantServiceArgument.FAVORITE),
+        "search": call.data.get(MusicAssistantServiceArgument.SEARCH),
         "limit": limit,
         "offset": offset,
         "order_by": order_by,
@@ -290,12 +346,14 @@ async def handle_get_library(call: ServiceCall) -> ServiceResponse:
         if media_type == MediaType.ALBUM:
             library_result = await mass.music.get_library_albums(
                 **base_params,
-                album_types=call.data.get(ATTR_ALBUM_TYPE),
+                album_types=call.data.get(MusicAssistantServiceArgument.ALBUM_TYPE),
             )
         elif media_type == MediaType.ARTIST:
             library_result = await mass.music.get_library_artists(
                 **base_params,
-                album_artists_only=bool(call.data.get(ATTR_ALBUM_ARTISTS_ONLY)),
+                album_artists_only=bool(
+                    call.data.get(MusicAssistantServiceArgument.ALBUM_ARTISTS_ONLY)
+                ),
             )
         elif media_type == MediaType.TRACK:
             library_result = await mass.music.get_library_tracks(

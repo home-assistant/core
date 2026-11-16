@@ -19,9 +19,10 @@ from homeassistant.components.alexa_devices.select import (
 )
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -61,8 +62,11 @@ async def test_select_dropin_option(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_OPTION: "home"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+            SelectServiceArgument.OPTION: "home",
+        },
         blocking=True,
     )
 
@@ -83,8 +87,11 @@ async def test_select_dropin_option(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_OPTION: "off"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+            SelectServiceArgument.OPTION: "off",
+        },
         blocking=True,
     )
 
@@ -149,8 +156,11 @@ async def test_service_select_option(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: ENTITY_ID_2, ATTR_OPTION: TEST_DEVICE_2.account_name},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: ENTITY_ID_2,
+            SelectServiceArgument.OPTION: TEST_DEVICE_2.account_name,
+        },
         blocking=True,
     )
 
@@ -177,8 +187,11 @@ async def test_service_select_option_state_persists_after_coordinator_update(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: ENTITY_ID_2, ATTR_OPTION: TEST_DEVICE_2.account_name},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: ENTITY_ID_2,
+            SelectServiceArgument.OPTION: TEST_DEVICE_2.account_name,
+        },
         blocking=True,
     )
 
@@ -204,8 +217,11 @@ async def test_service_select_option_not_found(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: ENTITY_ID_2, ATTR_OPTION: "Nonexistent Device"},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: ENTITY_ID_2,
+                SelectServiceArgument.OPTION: "Nonexistent Device",
+            },
             blocking=True,
         )
 

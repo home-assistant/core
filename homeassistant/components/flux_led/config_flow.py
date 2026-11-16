@@ -195,7 +195,6 @@ class FluxLedConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return self._async_create_entry_from_device(self._discovered_device)
 
-        self._set_confirm_only()
         placeholders = {
             "model": device[ATTR_MODEL_DESCRIPTION]
             or device[ATTR_MODEL]

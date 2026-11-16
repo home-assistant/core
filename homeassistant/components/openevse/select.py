@@ -10,7 +10,7 @@ from openevsehttp import OpenEVSE
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -92,6 +92,7 @@ class OpenEVSESelect(OpenEVSEEntity, SelectEntity):
         with suppress(HomeAssistantError):
             await self._async_update_current_option()
 
+    @callback
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""

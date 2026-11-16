@@ -2,7 +2,6 @@
 
 from iometer import IOmeterSSEClient
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -31,6 +30,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: IOmeterConfigEntry) -> N
     entry.async_on_unload(coordinator.async_stop)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_unload_entry(hass: HomeAssistant, entry: IOmeterConfigEntry) -> None:
     """Unload a config entry."""
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

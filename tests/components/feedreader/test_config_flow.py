@@ -95,6 +95,23 @@ async def test_user_errors(
     assert result["options"][CONF_MAX_ENTRIES] == DEFAULT_MAX_ENTRIES
 
 
+async def test_user_already_configured(hass: HomeAssistant, feedparser: Mock) -> None:
+    """Test that a feed URL can only be configured once."""
+    create_mock_entry(VALID_CONFIG_DEFAULT).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_URL: URL}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    # The flow aborts before the feed is fetched.
+    feedparser.assert_not_called()
+
+
 async def test_reconfigure(hass: HomeAssistant, feedparser) -> None:
     """Test starting a reconfigure flow."""
     entry = create_mock_entry(VALID_CONFIG_DEFAULT)

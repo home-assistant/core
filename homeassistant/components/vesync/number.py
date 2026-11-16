@@ -5,6 +5,7 @@ from dataclasses import dataclass
 import logging
 from typing import override
 
+from pyvesync.base_devices import VeSyncHumidifier
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
 from pyvesync.device_container import DeviceContainer
 
@@ -28,43 +29,39 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 1
 
 
-def _mist_levels(device: VeSyncBaseDevice) -> list[int]:
-    """Check if the device supports mist level adjustment."""
-    if is_humidifier(device):
-        return device.mist_levels
-    raise HomeAssistantError("Device does not support mist level adjustment.")
-
-
-def _set_mist_level(device: VeSyncBaseDevice, value: float) -> Awaitable[bool]:
-    """Set mist level on humidifier."""
-    if is_humidifier(device):
-        return device.set_mist_level(int(value))
-    raise HomeAssistantError("Device does not support mist level adjustment.")
-
-
 @dataclass(frozen=True, kw_only=True)
 class VeSyncNumberEntityDescription(NumberEntityDescription):
     """Class to describe a Vesync number entity."""
 
-    exists_fn: Callable[[VeSyncBaseDevice], bool] = lambda _: True
-    value_fn: Callable[[VeSyncBaseDevice], float]
-    native_min_value_fn: Callable[[VeSyncBaseDevice], float]
-    native_max_value_fn: Callable[[VeSyncBaseDevice], float]
-    set_value_fn: Callable[[VeSyncBaseDevice, float], Awaitable[bool]]
+    exists_fn: Callable[[VeSyncHumidifier], bool] = lambda _: True
+    value_fn: Callable[[VeSyncHumidifier], float | None]
+    native_min_value_fn: Callable[[VeSyncHumidifier], float]
+    native_max_value_fn: Callable[[VeSyncHumidifier], float]
+    set_value_fn: Callable[[VeSyncHumidifier, float], Awaitable[bool]]
 
 
 NUMBER_DESCRIPTIONS: list[VeSyncNumberEntityDescription] = [
     VeSyncNumberEntityDescription(
         key="mist_level",
         translation_key="mist_level",
-        native_min_value_fn=lambda device: min(_mist_levels(device)),
-        native_max_value_fn=lambda device: max(_mist_levels(device)),
+        native_min_value_fn=lambda device: min(device.mist_levels),
+        native_max_value_fn=lambda device: max(device.mist_levels),
         native_step=1,
         mode=NumberMode.SLIDER,
-        exists_fn=is_humidifier,
-        set_value_fn=_set_mist_level,
+        set_value_fn=lambda device, value: device.set_mist_level(int(value)),
         value_fn=lambda device: device.state.mist_virtual_level,
-    )
+    ),
+    VeSyncNumberEntityDescription(
+        key="warm_mist_level",
+        translation_key="warm_mist_level",
+        native_min_value_fn=lambda device: min(device.warm_mist_levels),
+        native_max_value_fn=lambda device: max(device.warm_mist_levels),
+        native_step=1,
+        mode=NumberMode.SLIDER,
+        exists_fn=lambda device: device.supports_warm_mist,
+        set_value_fn=lambda device, value: device.set_warm_level(int(value)),
+        value_fn=lambda device: device.state.warm_mist_level or 0,
+    ),
 ]
 
 
@@ -102,19 +99,20 @@ def _setup_entities(
     async_add_entities(
         VeSyncNumberEntity(dev, description, coordinator)
         for dev in devices
+        if is_humidifier(dev)
         for description in NUMBER_DESCRIPTIONS
         if description.exists_fn(dev)
     )
 
 
-class VeSyncNumberEntity(VeSyncBaseEntity, NumberEntity):
+class VeSyncNumberEntity(VeSyncBaseEntity[VeSyncHumidifier], NumberEntity):
     """A class to set numeric options on Vesync device."""
 
     entity_description: VeSyncNumberEntityDescription
 
     def __init__(
         self,
-        device: VeSyncBaseDevice,
+        device: VeSyncHumidifier,
         description: VeSyncNumberEntityDescription,
         coordinator: VeSyncDataCoordinator,
     ) -> None:
@@ -125,7 +123,7 @@ class VeSyncNumberEntity(VeSyncBaseEntity, NumberEntity):
 
     @property
     @override
-    def native_value(self) -> float:
+    def native_value(self) -> float | None:
         """Return the value reported by the number."""
         return self.entity_description.value_fn(self.device)
 
@@ -145,5 +143,7 @@ class VeSyncNumberEntity(VeSyncBaseEntity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         if not await self.entity_description.set_value_fn(self.device, value):
-            raise HomeAssistantError(self.device.last_response.message)
+            if self.device.last_response:
+                raise HomeAssistantError(self.device.last_response.message)
+            raise HomeAssistantError("Failed to set value.")
         self.async_write_ha_state()

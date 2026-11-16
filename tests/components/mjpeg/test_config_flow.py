@@ -15,7 +15,6 @@ from homeassistant.components.mjpeg.const import (
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_AUTHENTICATION,
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
@@ -41,7 +40,6 @@ async def test_full_user_flow(
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            CONF_NAME: "Spy cam",
             CONF_MJPEG_URL: "https://example.com/mjpeg",
             CONF_STILL_IMAGE_URL: "https://example.com/still",
             CONF_USERNAME: "frenck",
@@ -51,7 +49,7 @@ async def test_full_user_flow(
     )
 
     assert result2.get("type") is FlowResultType.CREATE_ENTRY
-    assert result2.get("title") == "Spy cam"
+    assert result2.get("title") == "example.com/mjpeg"
     assert result2.get("data") == {}
     assert result2.get("options") == {
         CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
@@ -64,6 +62,31 @@ async def test_full_user_flow(
 
     assert len(mock_setup_entry.mock_calls) == 1
     assert mock_mjpeg_requests.call_count == 2
+
+
+@pytest.mark.parametrize(
+    ("url", "title"),
+    [
+        pytest.param("http://192.168.1.10:8080/", "192.168.1.10:8080", id="port"),
+        pytest.param("http://cam.local/video/1", "cam.local/video/1", id="path"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow_title(
+    hass: HomeAssistant, mock_mjpeg_requests: Mocker, url: str, title: str
+) -> None:
+    """Test the entry title is made from the host, port and path of the URL."""
+    mock_mjpeg_requests.get(url, text="resp")
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_MJPEG_URL: url}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == title
 
 
 async def test_full_flow_with_authentication_error(
@@ -89,7 +112,6 @@ async def test_full_flow_with_authentication_error(
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            CONF_NAME: "Sky cam",
             CONF_MJPEG_URL: "https://example.com/mjpeg",
             CONF_PASSWORD: "omgpuppies",
             CONF_USERNAME: "frenck",
@@ -107,7 +129,6 @@ async def test_full_flow_with_authentication_error(
     result3 = await hass.config_entries.flow.async_configure(
         result2["flow_id"],
         user_input={
-            CONF_NAME: "Sky cam",
             CONF_MJPEG_URL: "https://example.com/mjpeg",
             CONF_PASSWORD: "supersecret",
             CONF_USERNAME: "frenck",
@@ -115,7 +136,7 @@ async def test_full_flow_with_authentication_error(
     )
 
     assert result3.get("type") is FlowResultType.CREATE_ENTRY
-    assert result3.get("title") == "Sky cam"
+    assert result3.get("title") == "example.com/mjpeg"
     assert result3.get("data") == {}
     assert result3.get("options") == {
         CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
@@ -150,7 +171,6 @@ async def test_connection_error(
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            CONF_NAME: "My cam",
             CONF_MJPEG_URL: "https://example.com/mjpeg",
             CONF_STILL_IMAGE_URL: "https://example.com/still",
         },
@@ -173,7 +193,6 @@ async def test_connection_error(
     result3 = await hass.config_entries.flow.async_configure(
         result2["flow_id"],
         user_input={
-            CONF_NAME: "My cam",
             CONF_MJPEG_URL: "https://example.com/mjpeg",
             CONF_STILL_IMAGE_URL: "https://example.com/still",
         },
@@ -193,14 +212,13 @@ async def test_connection_error(
     result4 = await hass.config_entries.flow.async_configure(
         result3["flow_id"],
         user_input={
-            CONF_NAME: "My cam",
             CONF_MJPEG_URL: "https://example.com/mjpeg",
             CONF_STILL_IMAGE_URL: "https://example.com/still",
         },
     )
 
     assert result4.get("type") is FlowResultType.CREATE_ENTRY
-    assert result4.get("title") == "My cam"
+    assert result4.get("title") == "example.com/mjpeg"
     assert result4.get("data") == {}
     assert result4.get("options") == {
         CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
@@ -229,7 +247,6 @@ async def test_already_configured(
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            CONF_NAME: "My cam",
             CONF_MJPEG_URL: "https://example.com/mjpeg",
         },
     )

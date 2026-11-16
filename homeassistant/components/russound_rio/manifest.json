@@ -4,6 +4,7 @@
   "categories": ["media_entertainment.speakers_audio"],
   "codeowners": ["@noahhusby"],
   "config_flow": true,
+  "connectivity": ["network", "serial"],
   "dependencies": ["usb"],
   "documentation": "https://www.home-assistant.io/integrations/russound_rio",
   "integration_type": "hub",

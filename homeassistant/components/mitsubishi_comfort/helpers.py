@@ -2,11 +2,11 @@
 
 from mitsubishi_comfort import DeviceInfo
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
 from .const import CONF_ADDRESSES, CONF_CREDENTIALS, DOMAIN
+from .coordinator import MitsubishiComfortConfigEntry
 
 
 def is_fully_credentialed(info: DeviceInfo) -> bool:
@@ -39,7 +39,7 @@ def async_create_missing_address_issue(hass: HomeAssistant, entry_id: str) -> No
 
 
 def async_reconcile_missing_address_issue(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: MitsubishiComfortConfigEntry
 ) -> None:
     """Create or clear the repair from the entry's stored data alone.
 
