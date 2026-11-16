@@ -214,13 +214,14 @@ class BroadlinkDevice:
         mock_api.get_fwversion.return_value = self.fwversion
         return mock_api
 
-    def get_mock_entry(self):
+    def get_mock_entry(self, options=None):
         """Return a mock config entry."""
         return MockConfigEntry(
             domain=DOMAIN,
             unique_id=self.mac,
             title=self.name,
             data=self.get_entry_data(),
+            options=options or {},
         )
 
     def get_entry_data(self):
