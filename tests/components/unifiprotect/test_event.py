@@ -46,6 +46,7 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION,
     EVENT_HOMEASSISTANT_STOP,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
     Platform,
 )
 from homeassistant.core import Event as HAEvent, HomeAssistant, callback
@@ -3255,7 +3256,6 @@ async def test_public_only_sensor_added_after_setup(
 
 async def test_event_keeps_timestamp_when_hass_stops(
     hass: HomeAssistant,
-    entity_registry: EntityRegistry,
     ufp: MockUFPFixture,
     doorbell: Camera,
     unadopted_camera: Camera,
@@ -3290,11 +3290,9 @@ async def test_event_keeps_timestamp_when_hass_stops(
     ufp.api.subscribe_devices_websocket = subscribe_devices_websocket
     ufp.api.subscribe_devices_websocket_state = subscribe_devices_websocket_state
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    unique_id, _ = await ids_from_device_description(
+    _, entity_id = await ids_from_device_description(
         hass, Platform.EVENT, doorbell, EVENT_DESCRIPTIONS[0]
     )
-    entity_id = entity_registry.async_get_entity_id(Platform.EVENT, DOMAIN, unique_id)
-    assert entity_id is not None
     ufp.events_msg(
         ProtectEvent(
             id="test_ring_event",
@@ -3310,7 +3308,7 @@ async def test_event_keeps_timestamp_when_hass_stops(
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state != STATE_UNAVAILABLE
+    assert state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
