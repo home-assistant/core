@@ -665,12 +665,14 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
-            key="PowerSourceBatBatQuantity",
+            key="PowerSourceBatQuantity",
             translation_key="battery_quantity",
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.PowerSource.Attributes.BatQuantity,),
+        # Some devices report 0 when the value is not filled in
+        value_is_not=0,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
