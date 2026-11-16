@@ -1,61 +1,25 @@
 """Test the OpenRouter TTS entity."""
 
-from collections.abc import AsyncGenerator
-from typing import Self
-from unittest.mock import MagicMock
+import io
+from unittest.mock import AsyncMock, MagicMock
+import wave
 
 from openai import OpenAIError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.open_router.const import CONF_TTS_VOICE, DOMAIN
 from homeassistant.components.open_router.tts import OpenRouterTTSEntity
-from homeassistant.components.tts import (
-    ATTR_PREFERRED_FORMAT,
-    ATTR_VOICE,
-    TTSAudioRequest,
-)
+from homeassistant.components.tts import ATTR_VOICE
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import CONF_API_KEY, CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from .conftest import get_generator_from_data
 
-from tests.common import MockConfigEntry
-
-
-class _MockAudioStreamResponse:
-    """Mock the OpenAI SDK's async streamed binary API response."""
-
-    def __init__(self, chunks: list[bytes]) -> None:
-        """Initialize with the byte chunks to yield."""
-        self._chunks = chunks
-
-    async def __aenter__(self) -> Self:
-        """Enter the async context manager."""
-        return self
-
-    async def __aexit__(self, *args: object) -> None:
-        """Exit the async context manager."""
-
-    async def iter_bytes(self) -> AsyncGenerator[bytes]:
-        """Yield the mocked audio chunks."""
-        for chunk in self._chunks:
-            yield chunk
-
-
-class _MockAudioStreamError:
-    """Mock a streamed response that fails when entering the context manager."""
-
-    async def __aenter__(self) -> Self:
-        """Raise as if the API call failed."""
-        raise OpenAIError
-
-    async def __aexit__(self, *args: object) -> None:
-        """Exit the async context manager."""
-
-
-def _create_entity(hass: HomeAssistant, client: MagicMock) -> OpenRouterTTSEntity:
+def _create_entity(
+    hass: HomeAssistant, client: MagicMock, model: str = "openai/gpt-4o-mini-tts"
+) -> OpenRouterTTSEntity:
     """Create an OpenRouter TTS entity with a mocked client."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -63,7 +27,7 @@ def _create_entity(hass: HomeAssistant, client: MagicMock) -> OpenRouterTTSEntit
         subentries_data=[
             ConfigSubentryData(
                 data={
-                    CONF_MODEL: "openai/gpt-4o-mini-tts",
+                    CONF_MODEL: model,
                     "supported_voices": ["alloy", "echo"],
                     CONF_TTS_VOICE: "echo",
                 },
@@ -80,35 +44,45 @@ def _create_entity(hass: HomeAssistant, client: MagicMock) -> OpenRouterTTSEntit
     return OpenRouterTTSEntity(entry, entry.subentries["tts_subentry"])
 
 
+def _mock_client(content: bytes) -> MagicMock:
+    """Create a client that returns the given audio content."""
+    client = MagicMock()
+    client.audio.speech.create = AsyncMock(return_value=MagicMock(content=content))
+    return client
+
+
 async def test_default_options_use_configured_voice(
     hass: HomeAssistant,
 ) -> None:
     """Test the configured voice is used when model voices are available."""
     entity = _create_entity(hass, MagicMock())
 
-    assert entity.default_options == {"voice": "echo", "preferred_format": "mp3"}
+    assert entity.default_options == {"voice": "echo"}
 
 
-async def test_stream_tts_audio_streams_response_chunks(
-    hass: HomeAssistant,
-) -> None:
-    """Test the audio response is streamed through without being buffered."""
-    client = MagicMock()
-    client.audio.speech.with_streaming_response.create = MagicMock(
-        return_value=_MockAudioStreamResponse([b"abc", b"def"])
-    )
+async def test_entity_inherits_device_name(hass: HomeAssistant) -> None:
+    """Test the entity has no name of its own."""
+    entity = _create_entity(hass, MagicMock())
+
+    assert entity.name is None
+
+
+async def test_does_not_support_streaming_input(hass: HomeAssistant) -> None:
+    """Test the entity uses the non-streaming input contract."""
+    entity = _create_entity(hass, MagicMock())
+
+    assert not entity.async_supports_streaming_input()
+
+
+async def test_get_tts_audio_mp3(hass: HomeAssistant) -> None:
+    """Test MP3 audio is requested and returned as is."""
+    client = _mock_client(b"mp3data")
     entity = _create_entity(hass, client)
 
-    request = TTSAudioRequest(
-        language="en",
-        options={ATTR_VOICE: "echo"},
-        message_gen=get_generator_from_data(["Hello world"]),
-    )
-    response = await entity.async_stream_tts_audio(request)
-
-    assert response.extension == "mp3"
-    assert b"".join([chunk async for chunk in response.data_gen]) == b"abcdef"
-    client.audio.speech.with_streaming_response.create.assert_called_once_with(
+    assert await entity.async_get_tts_audio(
+        "Hello world", "en", {ATTR_VOICE: "echo"}
+    ) == ("mp3", b"mp3data")
+    client.audio.speech.create.assert_called_once_with(
         model="openai/gpt-4o-mini-tts",
         voice="echo",
         input="Hello world",
@@ -122,61 +96,37 @@ async def test_stream_tts_audio_streams_response_chunks(
 
 
 @pytest.mark.parametrize(
-    ("preferred_format", "expected_extension", "expected_codec"),
+    "model",
     [
-        pytest.param("ogg", "ogg", "opus", id="ogg-maps-to-opus-codec"),
-        pytest.param("oga", "oga", "opus", id="oga-maps-to-opus-codec"),
-        pytest.param("raw", "pcm", "pcm", id="raw-maps-to-pcm"),
-        pytest.param("bogus", "mp3", "mp3", id="unsupported-format-falls-back-to-mp3"),
-        pytest.param("wav", "wav", "wav", id="supported-format-is-used-as-is"),
+        pytest.param("google/gemini-2.5-flash-preview-tts", id="gemini"),
+        pytest.param("heygen/voice", id="heygen"),
     ],
 )
-async def test_stream_tts_audio_format_mapping(
-    hass: HomeAssistant,
-    preferred_format: str,
-    expected_extension: str,
-    expected_codec: str,
-) -> None:
-    """Test the preferred format is mapped to the extension and codec OpenRouter expects."""
-    client = MagicMock()
-    client.audio.speech.with_streaming_response.create = MagicMock(
-        return_value=_MockAudioStreamResponse([b"abc"])
-    )
-    entity = _create_entity(hass, client)
+async def test_get_tts_audio_pcm_only_model(hass: HomeAssistant, model: str) -> None:
+    """Test PCM is requested for PCM-only providers and wrapped in WAV."""
+    client = _mock_client(b"\x00\x01" * 10)
+    entity = _create_entity(hass, client, model)
 
-    request = TTSAudioRequest(
-        language="en",
-        options={ATTR_VOICE: "echo", ATTR_PREFERRED_FORMAT: preferred_format},
-        message_gen=get_generator_from_data(["Hello world"]),
-    )
-    response = await entity.async_stream_tts_audio(request)
-    [_ async for _ in response.data_gen]
-
-    assert response.extension == expected_extension
-    assert (
-        client.audio.speech.with_streaming_response.create.call_args.kwargs[
-            "response_format"
-        ]
-        == expected_codec
+    extension, data = await entity.async_get_tts_audio(
+        "Hello world", "en", {ATTR_VOICE: "echo"}
     )
 
+    assert client.audio.speech.create.call_args.kwargs["response_format"] == "pcm"
+    assert extension == "wav"
+    with wave.open(io.BytesIO(data), "rb") as wav_file:
+        assert wav_file.getframerate() == 24000
+        assert wav_file.getsampwidth() == 2
+        assert wav_file.getnchannels() == 1
+        assert wav_file.readframes(wav_file.getnframes()) == b"\x00\x01" * 10
 
-async def test_stream_tts_audio_raises_on_api_error(
+
+async def test_get_tts_audio_raises_on_api_error(
     hass: HomeAssistant,
 ) -> None:
-    """Test an OpenAI error is surfaced as a HomeAssistantError while streaming."""
+    """Test an OpenAI error is surfaced as a HomeAssistantError."""
     client = MagicMock()
-    client.audio.speech.with_streaming_response.create = MagicMock(
-        return_value=_MockAudioStreamError()
-    )
+    client.audio.speech.create = AsyncMock(side_effect=OpenAIError)
     entity = _create_entity(hass, client)
-
-    request = TTSAudioRequest(
-        language="en",
-        options={ATTR_VOICE: "echo"},
-        message_gen=get_generator_from_data(["Hello world"]),
-    )
-    response = await entity.async_stream_tts_audio(request)
 
     with pytest.raises(HomeAssistantError):
-        [_ async for _ in response.data_gen]
+        await entity.async_get_tts_audio("Hello world", "en", {ATTR_VOICE: "echo"})
