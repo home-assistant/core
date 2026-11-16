@@ -1,4 +1,4 @@
-""Shared entity implementation for Karaca Connect."""
+"""Shared entity implementation for Karaca Connect."""
 
 from typing import override
 

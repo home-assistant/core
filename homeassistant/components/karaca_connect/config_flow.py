@@ -46,7 +46,9 @@ class KaracaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 await client.login()
                 devices = await client.get_devices()
-                self._devices = [device for device in devices if device.get("id") is not None]
+                self._devices = [
+                    device for device in devices if device.get("id") is not None
+                ]
             except KaracaAuthError:
                 errors["base"] = "invalid_auth"
             except KaracaError:
