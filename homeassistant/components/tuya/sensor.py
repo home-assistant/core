@@ -221,7 +221,7 @@ def _indexed_electricity_data(
 
 def _has_multiple_meter_channels(device: CustomerDevice) -> bool:
     """Return if the device reports more than one meter channel."""
-    return "cur_power2" in device.status_range
+    return DPCode.CUR_POWER2 in device.status_range
 
 
 def _meter_channel_sensors(channel: int) -> tuple[TuyaSensorEntityDescription, ...]:
