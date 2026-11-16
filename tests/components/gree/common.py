@@ -1,6 +1,7 @@
 """Common helpers for gree test cases."""
 
 import asyncio
+from ipaddress import IPv4Address
 import logging
 from unittest.mock import AsyncMock, Mock
 
@@ -20,7 +21,8 @@ class FakeDiscovery:
     def __init__(self, timeout: int = DISCOVERY_TIMEOUT) -> None:
         """Initialize the class."""
         self.mock_devices = [build_device_mock()]
-        self.last_mock_infos = []
+        self.mock_devices_by_address: dict[str, list[Mock]] = {}
+        self.last_mock_infos: dict[str, Mock] = {}
         self.timeout = timeout
         self._listeners = []
         self.scan_count = 0
@@ -29,24 +31,33 @@ class FakeDiscovery:
         """Add an event listener."""
         self._listeners.append(listener)
 
-    async def scan(self, wait_for: int = 0, bcast_ifaces=None):
+    async def scan(
+        self,
+        wait_for: int = 0,
+        bcast_ifaces: list[IPv4Address] | None = None,
+        *,
+        target_addresses: list[IPv4Address] | None = None,
+    ) -> list[Mock]:
         """Search for devices, return mocked data."""
         self.scan_count += 1
         _LOGGER.info("CALLED SCAN %d TIMES", self.scan_count)
 
         mock_infos = [x.device_info for x in self.mock_devices]
+        mock_infos.extend(
+            device.device_info
+            for address in target_addresses or bcast_ifaces or []
+            for device in self.mock_devices_by_address.get(str(address), [])
+        )
 
         new_infos = []
         updated_infos = []
         for info in mock_infos:
-            if not [i for i in self.last_mock_infos if info.mac == i.mac]:
+            last_info = self.last_mock_infos.get(info.mac)
+            if last_info is None:
                 new_infos.append(info)
-            else:
-                last_info = next(i for i in self.last_mock_infos if info.mac == i.mac)
-                if info.ip != last_info.ip:
-                    updated_infos.append(info)
-
-        self.last_mock_infos = mock_infos
+            elif info.ip != last_info.ip:
+                updated_infos.append(info)
+            self.last_mock_infos[info.mac] = info
         for listener in self._listeners:
             [await listener.device_found(x) for x in new_infos]
             [await listener.device_update(x) for x in updated_infos]
