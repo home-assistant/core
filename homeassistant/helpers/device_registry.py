@@ -150,7 +150,7 @@ type _DeviceInfoLike = _DeviceInfoMapping | Mapping[str, Any]
 def _report_deprecated_mapping_use(what: str) -> None:
     """Report deprecated dict-style use of a device info."""
     what = f"{what}, which is deprecated as device infos are dataclasses"
-    # report_usage raises before the frame helper is set up, as in tests without hass
+    # report_usage raises before the frame helper is set up, as in check_config or tests
     if frame._hass.hass is None:  # noqa: SLF001
         _LOGGER.warning(
             "Detected code that %s. This will stop working in Home Assistant 2027.12",
