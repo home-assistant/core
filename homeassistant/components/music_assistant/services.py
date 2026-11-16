@@ -179,9 +179,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
             ),
             probatio.Optional(MusicAssistantServiceArgument.ARTIST): cv.string,
             probatio.Optional(MusicAssistantServiceArgument.ALBUM): cv.string,
-            probatio.Optional(
-                MusicAssistantServiceArgument.RADIO_MODE
-            ): probatio.Coerce(bool),
+            probatio.Optional(MusicAssistantServiceArgument.RADIO_MODE): cv.boolean,
             probatio.Optional(MusicAssistantServiceArgument.SHUFFLE): cv.boolean,
             probatio.Optional(MusicAssistantServiceArgument.START_ITEM): cv.string,
             probatio.Optional(MusicAssistantServiceArgument.USERNAME): cv.string,
@@ -207,7 +205,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                     ): probatio.All(cv.entity_id, cv.entity_domain(TTS_DOMAIN)),
                     probatio.Optional(
                         MusicAssistantServiceArgument.USE_PRE_ANNOUNCE
-                    ): probatio.Coerce(bool),
+                    ): cv.boolean,
                     probatio.Optional(
                         MusicAssistantServiceArgument.PRE_ANNOUNCE_URL
                     ): cv.string,
@@ -235,9 +233,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
             probatio.Optional(
                 MusicAssistantServiceArgument.SOURCE_PLAYER
             ): cv.entity_id,
-            probatio.Optional(MusicAssistantServiceArgument.AUTO_PLAY): probatio.Coerce(
-                bool
-            ),
+            probatio.Optional(MusicAssistantServiceArgument.AUTO_PLAY): cv.boolean,
         },
         func="_async_handle_transfer_queue",
     )
