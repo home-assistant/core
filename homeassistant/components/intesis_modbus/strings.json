@@ -64,6 +64,9 @@
     "no_component_answered": {
       "message": "The gateway answered none of the register blocks."
     },
+    "unit_unreachable": {
+      "message": "The gateway cannot reach the air conditioner."
+    },
     "write_failed": {
       "message": "The gateway did not accept the command."
     },

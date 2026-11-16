@@ -86,12 +86,6 @@ class IntesisClimate(IntesisEntity, ClimateEntity):
 
     @property
     @override
-    def available(self) -> bool:
-        """Whether the gateway answers and can reach the air conditioner."""
-        return super().available and not self.coordinator.unit_unreachable
-
-    @property
-    @override
     def hvac_mode(self) -> HVACMode | None:
         if (power := self._ac.power) is None:
             return None
