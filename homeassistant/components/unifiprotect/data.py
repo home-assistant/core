@@ -311,13 +311,16 @@ class ProtectData:
         # arriving while update_public() primes are buffered and replayed by
         # the library, so the subscribe/prime order is not load-bearing.
         self._unsubs = [
-            api.subscribe_devices_websocket(
-                self._async_process_public_devices_ws_message
-            ),
+            # State callbacks are listed first so they are unsubscribed first:
+            # the library stops a websocket when its last message subscriber
+            # leaves and reports the disconnect to the state callbacks.
             api.subscribe_devices_websocket_state(self._async_public_ws_state_changed),
             # The events websocket is public in both modes (see
             # ``async_subscribe_public_events``), so track its state in both.
             api.subscribe_events_websocket_state(self._async_events_ws_state_changed),
+            api.subscribe_devices_websocket(
+                self._async_process_public_devices_ws_message
+            ),
             api.subscribe_public_resync(self._async_public_resync_done),
         ]
         if api.is_public_only:
