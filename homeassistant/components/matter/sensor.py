@@ -66,6 +66,23 @@ AIR_QUALITY_MAP = {
     clusters.AirQuality.Enums.AirQualityEnum.kUnknownEnumValue: None,
 }
 
+# Currency codes (ISO 4217 numeric -> alphabetic)
+COMMODITY_PRICE_CURRENCY_MAP = {
+    978: "EUR",
+    840: "USD",
+    826: "GBP",
+    124: "CAD",
+    36: "AUD",
+    392: "JPY",
+    756: "CHF",
+}
+
+COMMODITY_PRICE_TARIFF_UNIT_MAP = {
+    clusters.Globals.Enums.TariffUnitEnum.kKVAh: "kKVA",
+    clusters.Globals.Enums.TariffUnitEnum.kKWh: "kWh",
+    clusters.Globals.Enums.TariffUnitEnum.kUnknownEnumValue: None,
+}
+
 CONTAMINATION_STATE_MAP = {
     clusters.SmokeCoAlarm.Enums.ContaminationStateEnum.kNormal: "normal",
     clusters.SmokeCoAlarm.Enums.ContaminationStateEnum.kLow: "low",
@@ -353,105 +370,43 @@ class MatterSensor(MatterEntity, SensorEntity):
 class MatterCommodityPriceSensor(MatterSensor):
     """Representation of a Matter Commodity Price sensor."""
 
+    @callback
     @override
-    @property
-    def native_value(self) -> float | None:
-        """Return the current commodity price."""
+    def _update_from_device(self) -> None:
+        """Update commodity price from device."""
         current_price = self.get_matter_attribute_value(
             clusters.CommodityPrice.Attributes.CurrentPrice
         )
-
-        if current_price in (None, NullValue):
-            return None
-
-        raw_price = current_price.price
-        if not isinstance(raw_price, (int, float)):
-            return None
-
-        currency = self.get_matter_attribute_value(
-            clusters.CommodityPrice.Attributes.Currency
-        )
-
-        if currency in (None, NullValue):
-            return None
-
-        raw_decimal_points = currency.decimalPoints
-        if not isinstance(raw_decimal_points, int):
-            return None
-
-        price: float = float(raw_price)
-        divisor: float = float(10**raw_decimal_points)
-        result: float = price / divisor
-        return result
-
-    @property
-    @override
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return additional commodity price attributes."""
         currency = self.get_matter_attribute_value(
             clusters.CommodityPrice.Attributes.Currency
         )
         tariff_unit = self.get_matter_attribute_value(
             clusters.CommodityPrice.Attributes.TariffUnit
         )
-        current_price = self.get_matter_attribute_value(
-            clusters.CommodityPrice.Attributes.CurrentPrice
-        )
 
-        currency_map = {
-            978: "EUR",
-            840: "USD",
-            826: "GBP",
-            124: "CAD",
-            36: "AUD",
-            392: "JPY",
-            756: "CHF",
-        }
+        self._attr_native_value = None
+        self._attr_native_unit_of_measurement = None
+        self._attr_suggested_display_precision = None
 
-        tariff_unit_map = {
-            clusters.Globals.Enums.TariffUnitEnum.kKWh: "kWh",
-            clusters.Globals.Enums.TariffUnitEnum.kKVAh: "kVAh",
-            clusters.Globals.Enums.TariffUnitEnum.kUnknownEnumValue: "unknown",
-        }
+        if current_price in (None, NullValue):
+            return
 
-        currency_code = currency.currency if currency not in (None, NullValue) else None
-        if not isinstance(currency_code, int):
-            currency_value = None
-        else:
-            currency_value = currency_map.get(currency_code, str(currency_code))
+        if currency in (None, NullValue):
+            return
 
-        tariff_value = (
-            tariff_unit_map.get(tariff_unit, "unknown")
-            if tariff_unit not in (None, NullValue)
-            else None
-        )
+        raw_price = current_price.price
+        decimal_points = currency.decimalPoints
+        currency_code = currency.currency
 
-        price_description = (
-            current_price.description
-            if current_price not in (None, NullValue)
-            and isinstance(current_price.description, str)
-            else None
-        )
+        currency_name = COMMODITY_PRICE_CURRENCY_MAP.get(currency_code)
+        tariff_name = COMMODITY_PRICE_TARIFF_UNIT_MAP.get(tariff_unit)
 
-        raw_period_start = (
-            current_price.periodStart
-            if current_price not in (None, NullValue)
-            else None
-        )
-        period_start = raw_period_start if isinstance(raw_period_start, int) else None
+        if currency_name is None or tariff_name is None:
+            return
 
-        raw_period_end = (
-            current_price.periodEnd if current_price not in (None, NullValue) else None
-        )
-        period_end = raw_period_end if isinstance(raw_period_end, int) else None
-
-        return {
-            "currency": currency_value,
-            "tariff_unit": tariff_value,
-            "price_description": price_description,
-            "period_start": period_start,
-            "period_end": period_end,
-        }
+        self._attr_native_value = raw_price / (10**decimal_points)
+        self._attr_native_unit_of_measurement = f"{currency_name}/{tariff_name}"
+        self._attr_suggested_display_precision = decimal_points
 
 
 class MatterConcentrationSensor(MatterSensor):
@@ -2020,5 +1975,6 @@ DISCOVERY_SCHEMAS = [
             clusters.CommodityPrice.Attributes.Currency,
             clusters.CommodityPrice.Attributes.TariffUnit,
         ),
+        allow_none_value=True,
     ),
 ]

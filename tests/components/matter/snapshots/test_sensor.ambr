@@ -27535,7 +27535,7 @@
     'state': '2025-01-01T13:57:07+00:00',
   })
 # ---
-# name: test_sensors[mock_commodity_price][sensor.mock_commodity_price-entry]
+# name: test_sensors[mock_commodity_price][sensor.mock_commodity_price_current_price-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -27551,7 +27551,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.mock_commodity_price',
+    'entity_id': 'sensor.mock_commodity_price_current_price',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -27559,34 +27559,33 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Current price',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Current price',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'commodity_price',
     'unique_id': '00000000000004D2-00000000000004B1-MatterNodeDevice-1-CommodityPriceCurrentPrice-149-2',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'EUR/kWh',
   })
 # ---
-# name: test_sensors[mock_commodity_price][sensor.mock_commodity_price-state]
+# name: test_sensors[mock_commodity_price][sensor.mock_commodity_price_current_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'currency': 'EUR',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Commodity Price',
-      'period_end': 1794704400,
-      'period_start': 1794700800,
-      'price_description': 'Heures creuses',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Commodity Price Current price',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'tariff_unit': 'kWh',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'EUR/kWh',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.mock_commodity_price',
+    'entity_id': 'sensor.mock_commodity_price_current_price',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
