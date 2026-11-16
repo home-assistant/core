@@ -29,6 +29,7 @@ class BondButtonEntityDescription(ButtonEntityDescription):
     name: str | None = None
     mutually_exclusive: Action | None
     argument: int | None
+    available_when_untrusted: bool = False
 
 
 STOP_BUTTON = BondButtonEntityDescription(
@@ -47,6 +48,7 @@ BUTTONS: tuple[BondButtonEntityDescription, ...] = (
         translation_key="toggle_power",
         mutually_exclusive=Action.TURN_ON,
         argument=None,
+        available_when_untrusted=True,
     ),
     BondButtonEntityDescription(
         key=Action.TOGGLE_LIGHT,
@@ -286,7 +288,7 @@ async def async_setup_entry(
                 description.mutually_exclusive is None
                 or not device.has_action(description.mutually_exclusive)
                 or (
-                    description.key == Action.TOGGLE_POWER
+                    description.available_when_untrusted
                     and data.hub.is_bridge
                     and not device.trust_state
                 )
@@ -320,8 +322,11 @@ class BondButtonEntity(BondEntity, ButtonEntity):
         """Init Bond button."""
         self.entity_description = description
         super().__init__(data, device, description.name, description.key.lower())
-        if description.key == Action.TOGGLE_POWER and device.has_action(Action.TURN_ON):
-            # Raw toggling is opt-in when absolute power controls also exist.
+        if (
+            description.available_when_untrusted
+            and description.mutually_exclusive is not None
+            and device.has_action(description.mutually_exclusive)
+        ):
             self._attr_entity_registry_enabled_default = False
 
     @override
