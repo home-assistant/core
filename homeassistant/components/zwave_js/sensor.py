@@ -1048,6 +1048,27 @@ class ZWaveListSensor(ZwaveSensor):
         if issue is not None and issue.dismissed_version is None:
             ir.async_delete_issue(self.hass, DOMAIN, issue_id)
 
+    @override
+    async def async_removed_from_registry(self) -> None:
+        """Drop the repair when the entity is deleted."""
+        if (issue_id := self._unmapped_issue_id) is not None:
+            ir.async_delete_issue(self.hass, DOMAIN, issue_id)
+
+    @override
+    async def async_will_remove_from_hass(self) -> None:
+        """Drop the repair when the entity is disabled.
+
+        Rediscovery and reloads remove the entity with its registry entry
+        still enabled, so the repair survives those.
+        """
+        await super().async_will_remove_from_hass()
+        if (
+            self.registry_entry is not None
+            and self.registry_entry.disabled
+            and (issue_id := self._unmapped_issue_id) is not None
+        ):
+            ir.async_delete_issue(self.hass, DOMAIN, issue_id)
+
     @callback
     @override
     def should_rediscover_on_metadata_update(self) -> bool:

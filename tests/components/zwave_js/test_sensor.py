@@ -2,7 +2,7 @@
 
 import copy
 from datetime import timedelta
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
@@ -1746,3 +1746,64 @@ async def test_unmapped_enum_value_cleared_when_states_removed(
         for (d, iid) in issue_registry.issues
         if d == DOMAIN and iid.startswith("unmapped_enum_value.")
     ]
+
+
+@pytest.mark.usefixtures("lock_id_lock_as_id150")
+async def test_unmapped_enum_value_repair_follows_entity(
+    hass: HomeAssistant,
+    client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    climate_adc_t3000: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test that the repair survives a reload and goes when the entity does."""
+    entity_id = "sensor.adc_t3000_power_source"
+    node = climate_adc_t3000
+    # The reload schedules a firmware update check.
+    client.async_send_command.return_value = {"updates": []}
+
+    def unmapped_issues() -> list[str]:
+        return [
+            iid
+            for (d, iid) in issue_registry.issues
+            if d == DOMAIN and iid.startswith("unmapped_enum_value.")
+        ]
+
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1)
+    )
+    await hass.async_block_till_done()
+
+    node.receive_event(_power_source_value_event(node, 99, 1))
+    await hass.async_block_till_done()
+    [issue_id] = unmapped_issues()
+    issue_registry.async_ignore(DOMAIN, issue_id, True)
+
+    # A reload removes the entity temporarily; the ignored repair stays.
+    await hass.config_entries.async_reload(integration.entry_id)
+    await hass.async_block_till_done()
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue
+    assert issue.dismissed_version is not None
+
+    entity_registry.async_update_entity(
+        entity_id, disabled_by=er.RegistryEntryDisabler.USER
+    )
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1)
+    )
+    await hass.async_block_till_done()
+    assert not unmapped_issues()
+
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1)
+    )
+    await hass.async_block_till_done()
+    assert unmapped_issues()
+
+    entity_registry.async_remove(entity_id)
+    await hass.async_block_till_done()
+    assert not unmapped_issues()
