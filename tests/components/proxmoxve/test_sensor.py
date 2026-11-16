@@ -1,6 +1,5 @@
 """Tests for the Proxmox VE sensor platform."""
 
-from typing import Any
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -125,21 +124,13 @@ async def test_sensors_for_offline_node(
     assert state.state == STATE_UNAVAILABLE
 
 
-GUEST_UPTIME_PARAMS = [
-    pytest.param("qemu", 100, "sensor.vm_web_uptime", id="vm"),
-    pytest.param("lxc", "200", "sensor.ct_nginx_uptime", id="container"),
-]
-
-
-def _guest(
-    mock_proxmox_client: MagicMock, endpoint: str, vmid: int | str
-) -> dict[str, Any]:
-    """Return the mocked API data of a guest."""
-    guests = getattr(mock_proxmox_client._node_mock, endpoint).get.return_value
-    return next(guest for guest in guests if guest["vmid"] == vmid)
-
-
-@pytest.mark.parametrize(("endpoint", "vmid", "entity_id"), GUEST_UPTIME_PARAMS)
+@pytest.mark.parametrize(
+    ("endpoint", "vmid", "entity_id"),
+    [
+        pytest.param("qemu", 100, "sensor.vm_web_uptime", id="vm"),
+        pytest.param("lxc", "200", "sensor.ct_nginx_uptime", id="container"),
+    ],
+)
 @pytest.mark.parametrize(
     ("status", "uptime"),
     [
@@ -161,7 +152,8 @@ async def test_guest_uptime_unknown(
     uptime: int | None,
 ) -> None:
     """Test the uptime is unknown and stays unchanged for a guest that is not up."""
-    guest = _guest(mock_proxmox_client, endpoint, vmid)
+    guests = getattr(mock_proxmox_client._node_mock, endpoint).get.return_value
+    guest = next(guest for guest in guests if guest["vmid"] == vmid)
     guest["status"] = status
     guest["uptime"] = uptime
 
