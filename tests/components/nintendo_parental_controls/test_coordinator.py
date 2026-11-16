@@ -75,7 +75,7 @@ async def test_update_errors(
     expected_log_message: str | None,
 ) -> None:
     """Test handling of update errors."""
-    mock_nintendo_client.update.side_effect = exception
+    mock_nintendo_client.discover_devices.side_effect = exception
 
     await setup_integration(hass, mock_config_entry)
 
@@ -100,6 +100,7 @@ async def test_device_update_failure(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_nintendo_client: AsyncMock,
+    mock_nintendo_device: AsyncMock,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
@@ -113,29 +114,55 @@ async def test_device_update_failure(
         )
     ]
     assert entity_ids
-
-    async def poll() -> None:
-        freezer.tick(60)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
-
-    await poll()
     for entity_id in entity_ids:
         assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
 
-    # A failed device update does not run the device callbacks
-    working_update = mock_nintendo_client.update.side_effect
-    mock_nintendo_client.update.side_effect = None
-    await poll()
+    mock_nintendo_device.update.side_effect = HttpException(
+        status_code=500, error_code="unknown", message="Unknown error"
+    )
+    freezer.tick(60)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     for entity_id in entity_ids:
         assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
     assert mock_config_entry.runtime_data.last_update_success
-    assert "Updating Nintendo device testdevid failed" in caplog.text
+    assert (
+        "Updating Nintendo device Home Assistant Test failed, marking it unavailable"
+        in caplog.text
+    )
 
-    mock_nintendo_client.update.side_effect = working_update
-    await poll()
+    mock_nintendo_device.update.side_effect = None
+    freezer.tick(60)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     for entity_id in entity_ids:
         assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
-    assert "Nintendo device testdevid is available again" in caplog.text
+    assert "Nintendo device Home Assistant Test is available again" in caplog.text
+
+
+async def test_device_update_failure_on_setup(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_nintendo_client: AsyncMock,
+    mock_nintendo_device: AsyncMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test entities start unavailable when their device fails to update on setup."""
+    mock_nintendo_device.update.side_effect = HttpException(
+        status_code=500, error_code="unknown", message="Unknown error"
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    entity_ids = [
+        entry.entity_id
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, mock_config_entry.entry_id
+        )
+    ]
+    assert entity_ids
+    for entity_id in entity_ids:
+        assert hass.states.get(entity_id).state == STATE_UNAVAILABLE

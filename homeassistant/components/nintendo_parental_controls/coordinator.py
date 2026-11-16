@@ -1,7 +1,6 @@
 """Nintendo parental controls data coordinator."""
 
 from datetime import timedelta
-from functools import partial
 import logging
 from typing import override
 
@@ -48,24 +47,17 @@ class NintendoUpdateCoordinator(DataUpdateCoordinator[None]):
         self.api = NintendoParental(
             authenticator, hass.config.time_zone, hass.config.language
         )
-        self._watched_devices: set[str] = set()
-        self._updated_devices: set[str] = set()
         self._unavailable_devices: set[str] = set()
 
     def device_available(self, device_id: str) -> bool:
         """Return if the device was updated in the last poll."""
         return device_id not in self._unavailable_devices
 
-    def _device_updated(self, device_id: str) -> None:
-        """Mark a device as updated in this poll."""
-        self._updated_devices.add(device_id)
-
     @override
     async def _async_update_data(self) -> None:
         """Update data from Nintendo's API."""
-        self._updated_devices.clear()
         try:
-            await self.api.update()
+            await self.api.discover_devices()
         except InvalidOAuthConfigurationException as err:
             # pylint: disable-next=home-assistant-exception-translation-key-missing
             raise ConfigEntryError(
@@ -87,19 +79,20 @@ class NintendoUpdateCoordinator(DataUpdateCoordinator[None]):
                     translation_key="update_required",
                 ) from err
             raise UpdateFailed(retry_after=900) from err
-        # The library logs and swallows errors raised while updating a device,
-        # and only runs the device callbacks after a successful update.
-        unavailable = self._watched_devices - self._updated_devices
-        for device_id in unavailable - self._unavailable_devices:
-            _LOGGER.warning(
-                "Updating Nintendo device %s failed, marking it unavailable", device_id
-            )
-        for device_id in self._unavailable_devices - unavailable:
-            _LOGGER.info("Nintendo device %s is available again", device_id)
-        self._unavailable_devices = unavailable
+        unavailable: set[str] = set()
         for device in self.api.devices.values():
-            if device.device_id not in self._watched_devices:
-                self._watched_devices.add(device.device_id)
-                device.add_device_callback(
-                    partial(self._device_updated, device.device_id)
-                )
+            was_unavailable = device.device_id in self._unavailable_devices
+            try:
+                await device.update()
+            except HttpException as err:
+                unavailable.add(device.device_id)
+                if not was_unavailable:
+                    _LOGGER.warning(
+                        "Updating Nintendo device %s failed, marking it unavailable: %s",
+                        device.name,
+                        err,
+                    )
+            else:
+                if was_unavailable:
+                    _LOGGER.info("Nintendo device %s is available again", device.name)
+        self._unavailable_devices = unavailable

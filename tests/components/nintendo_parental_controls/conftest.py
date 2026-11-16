@@ -2,7 +2,6 @@
 
 from collections.abc import Generator
 from datetime import datetime, time
-from functools import partial
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pynintendoparental import NintendoParental
@@ -91,17 +90,7 @@ def mock_nintendo_device(
     mock.applications = applications
     mock.players = players
     mock.get_player = MagicMock(side_effect=players.get_player)
-    mock.callbacks = []
-    mock.add_device_callback.side_effect = mock.callbacks.append
-    mock.remove_device_callback.side_effect = mock.callbacks.remove
     return mock
-
-
-async def _mock_update(client: AsyncMock) -> None:
-    """Run the device callbacks like a successful update."""
-    for device in client.devices.values():
-        for device_callback in list(device.callbacks):
-            device_callback()
 
 
 @pytest.fixture
@@ -160,9 +149,8 @@ def mock_nintendo_client(
         autospec=True,
     ) as mock_client_class:
         mock_client_class.return_value = mock_client_instance
-        mock_client_instance.update.return_value = None
-        mock_client_instance.update.side_effect = partial(
-            _mock_update, mock_client_instance
+        mock_client_instance.discover_devices.return_value = (
+            mock_client_instance.devices
         )
 
         yield mock_client_instance
