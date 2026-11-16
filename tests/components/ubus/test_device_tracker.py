@@ -12,7 +12,12 @@ from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOM
 from homeassistant.components.ubus.const import DOMAIN
 from homeassistant.components.ubus.coordinator import LEASE_REREAD_INTERVAL
 from homeassistant.components.ubus.device_tracker import UbusScannerEntity
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import (
+    SOURCE_IMPORT,
+    ConfigEntries,
+    ConfigEntryError,
+    ConfigEntryState,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -397,6 +402,40 @@ async def test_unload_entry_releases_client_claims(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_failed_unload_keeps_client_reported(
+    hass: HomeAssistant,
+    mock_ubus: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a failed unload leaves the router reporting its clients."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
+    )
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_HOME
+    assert state.attributes["source"] == MOCK_HOST
+
+    # The platform unload fails, so the entry stays loaded and reporting.
+    with patch.object(
+        ConfigEntries, "async_unload_platforms_or_raise", side_effect=ConfigEntryError
+    ):
+        assert not await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_HOME
+    assert state.attributes["source"] == MOCK_HOST
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_tracker_handed_to_other_entry_on_removal(
     hass: HomeAssistant,
     mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
@@ -526,6 +565,59 @@ async def test_tracker_unavailable_while_reporting_router_unreachable(
     assert state is not None
     assert state.state == STATE_HOME
     assert state.attributes["source"] == MOCK_HOST_B
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_tracker_unavailable_while_entry_in_setup_retry(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the tracker is unavailable while a router awaits setup retry."""
+    _mock, ubus = mock_ubus_by_host
+    entry_a = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, title=MOCK_HOST)
+    entry_b = MockConfigEntry(
+        domain=DOMAIN,
+        data={**MOCK_CONFIG, CONF_HOST: MOCK_HOST_B},
+        title=MOCK_HOST_B,
+    )
+    entry_a.add_to_hass(hass)
+    entry_b.add_to_hass(hass)
+
+    # Router B cannot be read, so its entry awaits a setup retry.
+    router_b = _mock(f"http://{MOCK_HOST_B}/ubus", "root", "password", verify=True)
+    router_b.connect.side_effect = ConnectionError
+
+    assert await hass.config_entries.async_setup(entry_a.entry_id)
+    await hass.async_block_till_done()
+    assert entry_b.state is ConfigEntryState.SETUP_RETRY
+
+    ubus[MOCK_HOST].get_hostapd_clients.return_value = {
+        "clients": {MAC_PHONE: {"authorized": True}}
+    }
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_id = entity_registry.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
+    )
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_HOME
+    assert state.attributes["source"] == MOCK_HOST
+
+    # The device leaves router A; router B still awaits a setup retry.
+    ubus[MOCK_HOST].get_hostapd_clients.return_value = {"clients": {}}
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(

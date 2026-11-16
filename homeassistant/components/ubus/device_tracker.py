@@ -159,9 +159,11 @@ async def async_setup_entry(
     @callback
     def _async_rename_devices() -> None:
         # Rename here, as trackers are disabled by default and get no updates.
-        for mac, report in shared.clients.items():
+        for mac, seen_by in shared.reports.items():
+            if (source := shared.source(mac)) is None:
+                continue
             if (
-                (hostname := report.hostname)
+                (hostname := seen_by[source].hostname)
                 and (
                     device_entry := device_registry.async_get_device_by_connection(
                         (dr.CONNECTION_NETWORK_MAC, mac), config_entry.entry_id
@@ -272,28 +274,29 @@ class UbusScannerEntity(CoordinatorEntity[UbusDataUpdateCoordinator], ScannerEnt
     @override
     def is_connected(self) -> bool:
         """Return whether the device is connected to any ubus router."""
-        return self._mac in self.hass.data[DOMAIN].clients
+        return self._mac in self.hass.data[DOMAIN].reports
 
     @property
     @override
     def hostname(self) -> str | None:
         """Return the hostname of the device."""
         shared: UbusSharedState = self.hass.data[DOMAIN]
-        if (report := shared.clients.get(self._mac)) is not None:
-            return report.hostname
-        return None
+        if (source := shared.source(self._mac)) is None:
+            return None
+        return shared.reports[self._mac][source].hostname
 
     @property
     @override
     def available(self) -> bool:
         """Return whether the device state is reported by any ubus router."""
-        if self._mac in self.hass.data[DOMAIN].clients:
+        if self._mac in self.hass.data[DOMAIN].reports:
             return True
         # An unreachable router may still be connected to the device.
         return all(
-            entry.runtime_data.last_update_success
+            entry.state is ConfigEntryState.LOADED
+            and entry.runtime_data.last_update_success
             for entry in self.hass.config_entries.async_entries(DOMAIN)
-            if entry.state is ConfigEntryState.LOADED
+            if entry.state in (ConfigEntryState.LOADED, ConfigEntryState.SETUP_RETRY)
         )
 
     @property
@@ -301,9 +304,9 @@ class UbusScannerEntity(CoordinatorEntity[UbusDataUpdateCoordinator], ScannerEnt
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the source attribute identifying the reporting router."""
         shared: UbusSharedState = self.hass.data[DOMAIN]
-        if (report := shared.clients.get(self._mac)) is not None:
-            return {"source": report.host}
-        return None
+        if (source := shared.source(self._mac)) is None:
+            return None
+        return {"source": source}
 
     @override
     async def async_added_to_hass(self) -> None:

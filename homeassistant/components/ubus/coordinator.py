@@ -36,28 +36,37 @@ LEASE_REREAD_INTERVAL = timedelta(minutes=10)
 type UbusConfigEntry = ConfigEntry[UbusDataUpdateCoordinator]
 
 
-class ClientReport(NamedTuple):
-    """A client as reported by a router."""
+class RouterReport(NamedTuple):
+    """The latest report of a client by one router."""
 
-    host: str
     hostname: str | None
+    seq: int
 
 
 class UbusSharedState:
     """State shared between the ubus config entries.
 
-    ``clients`` maps a MAC address to the router currently reporting the
-    client and its resolved hostname; ``owners`` maps a MAC address to the
+    ``reports`` maps a MAC address to the latest report of each router
+    which still sees the client; ``owners`` maps a MAC address to the
     config entry that owns its device tracker entity.
     """
 
-    clients: dict[str, ClientReport]
+    reports: dict[str, dict[str, RouterReport]]
     owners: dict[str, str]
+    seq: int
 
     def __init__(self) -> None:
         """Initialize the shared state."""
-        self.clients = {}
+        self.reports = {}
         self.owners = {}
+        self.seq = 0
+
+    def source(self, mac: str) -> str | None:
+        """Return the host of the router which last reported the client."""
+        seen_by = self.reports.get(mac)
+        if not seen_by:
+            return None
+        return max(seen_by, key=lambda host: seen_by[host].seq)
 
 
 class UbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
@@ -108,22 +117,32 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
     def _async_publish_clients(self, clients: dict[str, str | None]) -> None:
         """Publish which clients this router sees to the shared state.
 
-        Any router may report a client, but only the router which last
-        reported it releases the entry, so a client stays reported while
-        any router still sees it.
+        Each router keeps its own report for the clients it sees, so a
+        client stays reported while any router still sees it, and the
+        source follows the router which reported it most recently.
         """
         shared: UbusSharedState = self.hass.data[DOMAIN]
-        updated = False
-        for mac, report in list(shared.clients.items()):
-            if report.host == self.host and mac not in clients:
-                del shared.clients[mac]
-                updated = True
+        reports = shared.reports
+
+        def visible(mac: str) -> tuple[str, str | None] | None:
+            if (source := shared.source(mac)) is None:
+                return None
+            return source, reports[mac][source].hostname
+
+        affected = set(clients)
+        affected.update(mac for mac, seen_by in reports.items() if self.host in seen_by)
+        before = {mac: visible(mac) for mac in affected}
+
         for mac, hostname in clients.items():
-            report = ClientReport(host=self.host, hostname=hostname)
-            if shared.clients.get(mac) != report:
-                shared.clients[mac] = report
-                updated = True
-        if updated:
+            shared.seq += 1
+            reports.setdefault(mac, {})[self.host] = RouterReport(hostname, shared.seq)
+        for mac, seen_by in list(reports.items()):
+            if self.host in seen_by and mac not in clients:
+                del seen_by[self.host]
+                if not seen_by:
+                    del reports[mac]
+
+        if any(visible(mac) != before[mac] for mac in affected):
             async_dispatcher_send(self.hass, SIGNAL_CLIENTS_UPDATED)
 
     @callback
