@@ -962,6 +962,7 @@ def _deprecated_or_removed(
     default: Any | None,
     raise_if_present: bool,
     option_removed: bool,
+    breaks_in_ha_version: str | None = None,
 ) -> Callable[[dict], dict]:
     """Log key as deprecated and provide a replacement (if exists) or fail.
 
@@ -985,6 +986,10 @@ def _deprecated_or_removed(
             else:
                 level = logging.WARNING
                 option_status = "is deprecated"
+                if breaks_in_ha_version:
+                    option_status += (
+                        f" and will be removed in Home Assistant {breaks_in_ha_version}"
+                    )
 
             try:
                 near = (
@@ -1031,12 +1036,15 @@ def deprecated(
     replacement_key: str | None = None,
     default: Any | None = None,
     raise_if_present: bool | None = False,
+    breaks_in_ha_version: str | None = None,
 ) -> Callable[[dict], dict]:
     """Log key as deprecated and provide a replacement (if exists).
 
     Expected behavior:
         - Outputs the appropriate deprecation warning if key is detected
           or raises an exception
+        - Mentions the version in which the key will be removed, if
+          breaks_in_ha_version is provided
         - Processes schema moving the value from key to replacement_key
         - Processes schema changing nothing if only replacement_key provided
         - No warning if only replacement_key provided
@@ -1049,6 +1057,7 @@ def deprecated(
         default=default,
         raise_if_present=raise_if_present or False,
         option_removed=False,
+        breaks_in_ha_version=breaks_in_ha_version,
     )
 
 

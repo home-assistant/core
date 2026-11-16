@@ -4,13 +4,8 @@ from unittest.mock import Mock, patch
 
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    Platform,
-)
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -58,8 +53,8 @@ async def test_switch_turn_on(
         # Act
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.test_switch_room_1_test_switch"},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: "switch.test_switch_room_1_test_switch"},
             blocking=True,
         )
         # Assert
@@ -83,8 +78,8 @@ async def test_switch_turn_off(
         # Act
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "switch.test_switch_room_1_test_switch"},
+            SwitchService.TURN_OFF,
+            {CommonServiceArgument.ENTITY_ID: "switch.test_switch_room_1_test_switch"},
             blocking=True,
         )
         # Assert

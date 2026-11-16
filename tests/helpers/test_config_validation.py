@@ -1812,6 +1812,66 @@ def test_deprecated_with_replacement_key(
     assert test_data == output
 
 
+@pytest.mark.parametrize(
+    ("replacement_key", "expected_output", "expected_message"),
+    [
+        pytest.param(
+            None,
+            {"mars": True},
+            "The 'mars' option is deprecated and will be removed in Home Assistant "
+            "2027.6, please remove it from your configuration",
+            id="no_replacement_key",
+        ),
+        pytest.param(
+            "jupiter",
+            {"jupiter": True},
+            "The 'mars' option is deprecated and will be removed in Home Assistant "
+            "2027.6, please replace it with 'jupiter'",
+            id="replacement_key",
+        ),
+    ],
+)
+def test_deprecated_with_breaks_in_ha_version(
+    caplog: pytest.LogCaptureFixture,
+    schema: probatio.Schema,
+    replacement_key: str | None,
+    expected_output: dict[str, bool],
+    expected_message: str,
+) -> None:
+    """Test the deprecation warning mentions the version the key is removed in."""
+    deprecated_schema = probatio.All(
+        cv.deprecated(
+            "mars", replacement_key=replacement_key, breaks_in_ha_version="2027.6"
+        ),
+        schema,
+    )
+
+    output = deprecated_schema({"mars": True})
+    assert len(caplog.records) == 1
+    assert caplog.records[0].levelno == logging.WARNING
+    assert expected_message in caplog.text
+    assert output == expected_output
+
+
+def test_deprecated_with_breaks_in_ha_version_and_raise(
+    schema: probatio.Schema,
+) -> None:
+    """Test the raised error mentions the version the key is removed in."""
+    deprecated_schema = probatio.All(
+        cv.deprecated("mars", raise_if_present=True, breaks_in_ha_version="2027.6"),
+        schema,
+    )
+
+    with pytest.raises(
+        probatio.Invalid,
+        match=(
+            "The 'mars' option is deprecated and will be removed in Home Assistant "
+            "2027.6, please remove it from your configuration"
+        ),
+    ):
+        deprecated_schema({"mars": True})
+
+
 def test_deprecated_with_default(caplog: pytest.LogCaptureFixture, schema) -> None:
     """Test deprecation behaves correctly with a default value.
 
