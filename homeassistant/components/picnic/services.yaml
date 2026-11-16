@@ -10,6 +10,11 @@ add_product:
       example: "10510201"
       selector:
         text:
+    gtin:
+      required: false
+      example: "8720326041724"
+      selector:
+        text:
     product_name:
       required: false
       example: "Yoghurt"

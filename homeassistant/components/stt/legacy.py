@@ -151,6 +151,13 @@ class Provider(ABC):
         """Return required/preferred input audio processing settings."""
         return DEFAULT_AUDIO_PROCESSING
 
+    @callback
+    def async_get_audio_processing(
+        self, metadata: SpeechMetadata
+    ) -> SpeechAudioProcessing:
+        """Return required/preferred input audio processing settings for a request."""
+        return self.audio_processing
+
     @abstractmethod
     async def async_process_audio_stream(
         self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]

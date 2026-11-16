@@ -1,3 +1,26 @@
+add_ingredient:
+  target:
+    entity:
+      integration: mealie
+      domain: todo
+  fields:
+    food_id:
+      selector:
+        text:
+    note:
+      selector:
+        text:
+    unit_id:
+      selector:
+        text:
+    quantity:
+      default: 0
+      selector:
+        number:
+          min: 0
+          step: any
+          mode: box
+
 delete_mealplan:
   fields:
     config_entry_id:

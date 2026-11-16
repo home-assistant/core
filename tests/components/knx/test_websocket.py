@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 from unittest.mock import patch
 
-from knx_telegram_store import KnxTelegramStoreException
+from knx_telegram_store import BufferedSqliteStore, KnxTelegramStoreException
 import pytest
 from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
@@ -243,7 +244,35 @@ async def test_knx_group_monitor_info_command(
     res = await client.receive_json()
     assert res["success"], res
     assert res["result"]["project_loaded"] is False
+    assert res["result"]["telegram_store_status"] == "ready"
     assert res["result"]["recent_telegrams"] == []
+
+
+async def test_telegram_store_initializing(
+    hass: HomeAssistant, knx: KNXTestKit, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test telegram commands while the storage backend is still initializing."""
+
+    async def hanging_initialize(self: BufferedSqliteStore) -> None:
+        await asyncio.Event().wait()
+
+    with patch.object(BufferedSqliteStore, "initialize", hanging_initialize):
+        await knx.setup_integration(
+            real_telegram_store=True, wait_for_telegram_store=False
+        )
+        client = await hass_ws_client(hass)
+        assert hass.data[KNX_MODULE_KEY].telegrams.store is None
+
+        await client.send_json_auto_id({"type": "knx/group_monitor_info"})
+        res = await client.receive_json()
+        assert res["success"], res
+        assert res["result"]["telegram_store_status"] == "initializing"
+        assert res["result"]["recent_telegrams"] == []
+
+        await client.send_json_auto_id({"type": "knx/query_telegrams"})
+        res = await client.receive_json()
+        assert not res["success"]
+        assert res["error"]["code"] == "telegram_store_initializing"
 
 
 async def test_knx_query_telegrams_command(

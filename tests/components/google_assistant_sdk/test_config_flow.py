@@ -63,7 +63,7 @@ async def test_full_flow(
 
     with patch(
         "homeassistant.components.google_assistant_sdk.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup:
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
@@ -128,7 +128,7 @@ async def test_reauth(
 
     with patch(
         "homeassistant.components.google_assistant_sdk.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup:
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 

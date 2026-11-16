@@ -384,7 +384,7 @@ async def test_prevent_flooding(
     """Test to ensure a report is only written once to the log."""
 
     what = "accessed hi instead of hello"
-    key = "/home/paulus/homeassistant/components/hue/light.py:23"
+    key_prefix = "/home/paulus/homeassistant/components/hue/light.py:23:"
     integration = "hue"
     filename = "homeassistant/components/hue/light.py"
 
@@ -395,17 +395,31 @@ async def test_prevent_flooding(
         f"q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+{integration}%22"
     )
 
-    frame.report_usage(what, core_behavior=frame.ReportBehavior.LOG)
+    def report(what: str) -> None:
+        """Report like a single deprecation in core does."""
+        frame.report_usage(what, core_behavior=frame.ReportBehavior.LOG)
+
+    report(what)
     assert expected_message in caplog.text
-    assert key in frame._REPORTED_INTEGRATIONS
     assert len(frame._REPORTED_INTEGRATIONS) == 1
+    assert next(iter(frame._REPORTED_INTEGRATIONS)).startswith(key_prefix)
 
     caplog.clear()
 
-    frame.report_usage(what, core_behavior=frame.ReportBehavior.LOG)
+    report(what)
     assert expected_message not in caplog.text
-    assert key in frame._REPORTED_INTEGRATIONS
     assert len(frame._REPORTED_INTEGRATIONS) == 1
+
+    # The same report with different details is not logged again
+    report(f"{what} again")
+    assert f"{what} again" not in caplog.text
+    assert len(frame._REPORTED_INTEGRATIONS) == 1
+
+    # A report from another place in core is logged for the same integration line
+    other_what = "accessed bye instead of goodbye"
+    frame.report_usage(other_what, core_behavior=frame.ReportBehavior.LOG)
+    assert other_what in caplog.text
+    assert len(frame._REPORTED_INTEGRATIONS) == 2
 
 
 @pytest.mark.usefixtures("hass", "mock_integration_frame")

@@ -5,15 +5,17 @@ from functools import partial
 import logging
 from typing import Any
 from urllib.error import HTTPError, URLError
+from uuid import UUID
 
 from panasonic_viera import EncryptionRequired, Keys, RemoteControl, SOAPError
 import probatio
 
 from homeassistant.components.media_player import MediaPlayerState, MediaType
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, Platform
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT, Platform
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType
 
@@ -54,6 +56,23 @@ CONFIG_SCHEMA = probatio.Schema(
 )
 
 PLATFORMS = [Platform.MEDIA_PLAYER, Platform.REMOTE]
+
+
+def mac_from_udn(udn: str) -> str | None:
+    """Return the MAC address a UDN is built from, if any.
+
+    Panasonic TVs use time-based UUIDs (RFC 4122 version 1), whose node field
+    is the MAC address of the device, e.g. uuid:4D454930-0100-1000-8001-D8AFF1123456
+    for a TV whose Ethernet MAC address is D8:AF:F1:12:34:56.
+    """
+    try:
+        uuid = UUID(udn.removeprefix("uuid:"))
+    except ValueError:
+        return None
+    # A node that is not a MAC address has the multicast bit set (RFC 4122 §4.5)
+    if uuid.version != 1 or not uuid.node or uuid.node & (1 << 40):
+        return None
+    return format_mac(f"{uuid.node:012x}")
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -108,6 +127,15 @@ async def async_setup_entry(
             config_entry,
             unique_id=unique_id,
             data={**config, ATTR_DEVICE_INFO: device_info},
+        )
+
+    if (
+        CONF_MAC not in config_entry.data
+        and (device_info := config_entry.data[ATTR_DEVICE_INFO]) is not None
+        and (mac := mac_from_udn(device_info[ATTR_UDN])) is not None
+    ):
+        hass.config_entries.async_update_entry(
+            config_entry, data={**config_entry.data, CONF_MAC: mac}
         )
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
@@ -204,8 +232,8 @@ class Remote:
         if self.source_list is None:
             try:
                 self.source_list = self._control.list_inputs()
-            except SOAPError:
-                # The TV does not implement the optional PAC service
+            except SOAPError, HTTPError:
+                # TVs without the optional PAC service answer with an HTTP error
                 _LOGGER.debug("Input selection is not supported by the TV")
                 self.source_list = []
         if self.source_list:
@@ -267,6 +295,26 @@ class Remote:
         device_info = await self._handle_errors(self._control.get_device_info)
         _LOGGER.debug("Fetched device info: %s", str(device_info))
         return device_info
+
+    async def async_fetch_device_info(self) -> dict[str, Any] | None:
+        """Return the description the TV serves now, None when it is unreachable.
+
+        Unlike async_get_device_info, this leaves the state the entities report
+        alone, so a failed fetch cannot mark the TV off.
+        """
+        if self._control is None:
+            await self.async_create_remote_control()
+            if self._control is None:
+                return None
+        try:
+            device_info = await self._hass.async_add_executor_job(
+                self._control.get_device_info
+            )
+        except OSError as err:
+            _LOGGER.error("Could not fetch the device description: %s", err)
+            return None
+        else:
+            return device_info
 
     async def _handle_errors[_R, *_Ts](
         self, func: Callable[[*_Ts], _R], *args: *_Ts

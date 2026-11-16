@@ -296,10 +296,10 @@ async def test_external_usb_new_device(
             assert sensor.attributes[attr_key] == attr_value
 
 
+@pytest.mark.usefixtures("mock_dsm_with_usb_no_devices")
 async def test_external_usb_first_device(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_dsm_with_usb_no_devices: MagicMock,
     setup_dsm_with_usb: MagicMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
@@ -327,13 +327,15 @@ async def test_external_usb_first_device(
     assert state.state == "normal"
 
     # The API is no longer updated once all entities of the device are disabled
-    for entity_entry in er.async_entries_for_config_entry(
-        entity_registry, entry.entry_id
+    for usb_entity_id in (
+        "sensor.nas_meontheinternet_com_usb_disk_1_status",
+        "sensor.nas_meontheinternet_com_usb_disk_1_partition_1_partition_size",
+        "sensor.nas_meontheinternet_com_usb_disk_1_partition_1_partition_used_space",
+        "sensor.nas_meontheinternet_com_usb_disk_1_partition_1_partition_used",
     ):
-        if "USB Disk" in entity_entry.unique_id and not entity_entry.disabled:
-            entity_registry.async_update_entity(
-                entity_entry.entity_id, disabled_by=er.RegistryEntryDisabler.USER
-            )
+        entity_registry.async_update_entity(
+            usb_entity_id, disabled_by=er.RegistryEntryDisabler.USER
+        )
     await hass.async_block_till_done()
     freezer.tick(timedelta(minutes=15, seconds=1))
     async_fire_time_changed(hass)

@@ -18,18 +18,20 @@ from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SCAN_INTERVAL
+from homeassistant.components.switch import (
+    DOMAIN as SWITCH_DOMAIN,
+    SCAN_INTERVAL,
+    SwitchService,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    CommonServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util import dt as dt_util
 
 from . import mock_asyncio_subprocess_run
 
@@ -61,8 +63,8 @@ async def test_state_integration_yaml(hass: HomeAssistant) -> None:
 
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.test"},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: "switch.test"},
             blocking=True,
         )
 
@@ -72,8 +74,8 @@ async def test_state_integration_yaml(hass: HomeAssistant) -> None:
 
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "switch.test"},
+            SwitchService.TURN_OFF,
+            {CommonServiceArgument.ENTITY_ID: "switch.test"},
             blocking=True,
         )
 
@@ -115,8 +117,8 @@ async def test_state_value(hass: HomeAssistant) -> None:
 
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.test"},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: "switch.test"},
             blocking=True,
         )
 
@@ -127,8 +129,8 @@ async def test_state_value(hass: HomeAssistant) -> None:
 
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "switch.test"},
+            SwitchService.TURN_OFF,
+            {CommonServiceArgument.ENTITY_ID: "switch.test"},
             blocking=True,
         )
 
@@ -174,8 +176,8 @@ async def test_state_json_value(hass: HomeAssistant) -> None:
 
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.test"},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: "switch.test"},
             blocking=True,
         )
 
@@ -186,8 +188,8 @@ async def test_state_json_value(hass: HomeAssistant) -> None:
 
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "switch.test"},
+            SwitchService.TURN_OFF,
+            {CommonServiceArgument.ENTITY_ID: "switch.test"},
             blocking=True,
         )
 
@@ -225,8 +227,8 @@ async def test_state_code(hass: HomeAssistant) -> None:
 
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.test"},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: "switch.test"},
             blocking=True,
         )
 
@@ -236,8 +238,8 @@ async def test_state_code(hass: HomeAssistant) -> None:
 
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "switch.test"},
+            SwitchService.TURN_OFF,
+            {CommonServiceArgument.ENTITY_ID: "switch.test"},
             blocking=True,
         )
 
@@ -326,7 +328,9 @@ async def test_name_is_set_correctly(hass: HomeAssistant) -> None:
 
 
 async def test_switch_command_state_fail(
-    caplog: pytest.LogCaptureFixture, hass: HomeAssistant
+    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that switch failures are handled correctly."""
     await setup.async_setup_component(
@@ -347,7 +351,8 @@ async def test_switch_command_state_fail(
     )
     await hass.async_block_till_done()
 
-    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     entity_state = hass.states.get("switch.test")
@@ -356,8 +361,8 @@ async def test_switch_command_state_fail(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.test"},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: "switch.test"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -370,7 +375,9 @@ async def test_switch_command_state_fail(
 
 
 async def test_switch_command_state_code_exceptions(
-    caplog: pytest.LogCaptureFixture, hass: HomeAssistant
+    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that switch state code exceptions are handled correctly."""
 
@@ -393,20 +400,24 @@ async def test_switch_command_state_code_exceptions(
         )
         await hass.async_block_till_done()
 
-        async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
         assert run.called
         assert "Timeout for command" in caplog.text
 
     with mock_asyncio_subprocess_run(returncode=127) as run:
-        async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL * 2)
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
         assert run.called
         assert "Error trying to exec command" in caplog.text
 
 
 async def test_switch_command_state_value_exceptions(
-    caplog: pytest.LogCaptureFixture, hass: HomeAssistant
+    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that switch state value exceptions are handled correctly."""
 
@@ -430,13 +441,15 @@ async def test_switch_command_state_value_exceptions(
         )
         await hass.async_block_till_done()
 
-        async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
         assert run.call_count == 1
         assert "Timeout for command" in caplog.text
 
     with mock_asyncio_subprocess_run(returncode=127) as run:
-        async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL * 2)
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
         assert run.call_count == 1
         assert "Command failed (with return code 127)" in caplog.text
@@ -511,7 +524,10 @@ async def test_command_failure(
     await hass.async_block_till_done()
 
     await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: "switch.test"}, blocking=True
+        SWITCH_DOMAIN,
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: "switch.test"},
+        blocking=True,
     )
     assert "return code 33" in caplog.text
 
@@ -567,14 +583,14 @@ async def test_templating(hass: HomeAssistant) -> None:
 
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.test"},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: "switch.test"},
             blocking=True,
         )
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.test2"},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: "switch.test2"},
             blocking=True,
         )
 
@@ -587,7 +603,9 @@ async def test_templating(hass: HomeAssistant) -> None:
 
 
 async def test_updating_to_often(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test handling updating when command already running."""
 
@@ -632,7 +650,8 @@ async def test_updating_to_often(
         "Updating Command Line Switch Test took longer"
         " than the scheduled update interval" not in caplog.text
     )
-    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=11))
+    freezer.tick(timedelta(seconds=11))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert called
     called.clear()
@@ -644,9 +663,11 @@ async def test_updating_to_often(
 
     # Simulate update takes too long
     wait_till_event.clear()
-    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=10))
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
     await asyncio.sleep(0)
-    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=10))
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
     wait_till_event.set()
 
     # Finish processing update
@@ -659,7 +680,9 @@ async def test_updating_to_often(
 
 
 async def test_updating_manually(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test handling manual updating using homeassistant udate_entity service."""
     await setup.async_setup_component(hass, HA_DOMAIN, {})
@@ -695,7 +718,8 @@ async def test_updating_manually(
         )
         await hass.async_block_till_done()
 
-    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=10))
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert called
     called.clear()

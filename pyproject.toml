@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "homeassistant"
-version = "2026.11.0.dev0"
+version = "2026.12.0.dev0"
 license = "Apache-2.0"
 license-files = ["LICENSE*", "homeassistant/backports/LICENSE*"]
 description = "Open-source home automation platform running on Python 3."
@@ -43,14 +43,14 @@ dependencies = [
   "bcrypt==5.0.0",
   "certifi>=2021.5.30",
   "ciso8601==2.3.3",
-  "cronsim==2.7",
+  "cronsim==2.8",
   "fnv-hash-fast==2.0.3",
   # hass-nabucasa is imported by helpers which don't depend on the cloud
   # integration
-  "hass-nabucasa==2.7.0",
+  "hass-nabucasa==2.8.1",
   # When bumping httpx2, please check the version pins of
   # anyio and h11 in gen_requirements_all
-  "httpx2==2.13.1",
+  "httpx2==2.14.0",
   "home-assistant-bluetooth==2.0.0",
   "ifaddr==0.2.0",
   "Jinja2==3.1.6",
@@ -58,7 +58,7 @@ dependencies = [
   "PyJWT==2.15.1",
   # PyJWT has loose dependency. We want the latest one.
   "cryptography==50.0.2",
-  "Pillow==12.3.0",
+  "Pillow==13.0.0",
   "propcache==0.5.4",
   "pyopenssl==26.4.0",
   # We patch pyserial at runtime in `block_shared_serial` and need it to be available
@@ -73,7 +73,7 @@ dependencies = [
   "PyYAML==6.0.3",
   "requests==2.34.2",
   "securetar==2026.10.0",
-  "SQLAlchemy==2.0.54",
+  "SQLAlchemy==2.1.8",
   "standard-aifc==3.13.0",
   "standard-telnetlib==3.13.0",
   # truststore.SSLContext is replaced in homeassistant/__init__.py
@@ -81,11 +81,11 @@ dependencies = [
   "typing-extensions>=4.16.0,<5.0",
   "ulid-transform==2.2.9",
   "urllib3>=2.0",
-  "uv==0.13.0",
+  "uv==0.13.7",
   "probatio==0.13.0",
   "yarl==1.25.1",
   "webrtc-models==0.3.0",
-  "zeroconf==0.151.5",
+  "zeroconf==0.154.0",
 ]
 
 [project.urls]
@@ -415,7 +415,7 @@ per-file-ignores = [
   # use-implicit-booleaness-not-comparison: Tests need to validate that a list
   # or a dict is returned
   "tests/**:redefined-outer-name,use-implicit-booleaness-not-comparison",
-  "packages/pytest-home-assistant/**:redefined-outer-name,use-implicit-booleaness-not-comparison",
+  "packages/pytest-homeassistant/**:redefined-outer-name,use-implicit-booleaness-not-comparison",
 ]
 
 [tool.pylint.REPORTS]
@@ -514,8 +514,6 @@ filterwarnings = [
   # Locale changes might take some time to resolve upstream
   # https://github.com/Squachen/micloud/blob/v_0.6/micloud/micloud.py#L35 - v0.6 - 2022-12-08
   "ignore:'locale.getdefaultlocale' is deprecated and slated for removal in Python 3.15:DeprecationWarning:micloud.micloud",
-  # https://pypi.org/project/agent-py/ - v0.0.24 - 2024-11-07
-  "ignore:with timeout\\(\\) is deprecated:DeprecationWarning:agent.a",
   # https://github.com/MatsNl/pyatag/issues/11 - v0.3.7.1 - 2023-10-09
   "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:pyatag.gateway",
   # https://github.com/lidatong/dataclasses-json/issues/328
@@ -651,7 +649,7 @@ exclude_lines = [
 ]
 
 [tool.ruff]
-required-version = ">=0.17.0"
+required-version = ">=0.17.4"
 extend-exclude = [
   # Recorded HTTP response bodies, served verbatim by the Marketplace test harness
   "tests/components/marketplace/fixtures/proxy",
@@ -881,6 +879,7 @@ mark-parentheses = false
 [tool.ruff.lint.isort]
 force-sort-within-sections = true
 known-first-party = ["homeassistant"]
+known-third-party = ["hassfest"]
 combine-as-imports = true
 split-on-trailing-comma = false
 
@@ -890,6 +889,9 @@ split-on-trailing-comma = false
 "homeassistant/__main__.py" = ["T201"]
 "homeassistant/scripts/*" = ["T201"]
 "script/*" = ["T20"]
+
+# Keep Core's wrapper from shadowing the installed hassfest package.
+"script/hassfest/*" = ["INP001"]
 
 # Some utils have constants that benefit from being uppercase
 "homeassistant/util/*" = ["N806"]

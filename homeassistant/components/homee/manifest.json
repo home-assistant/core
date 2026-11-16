@@ -4,12 +4,13 @@
   "categories": ["hubs_protocols.smart_home_hubs"],
   "codeowners": ["@Taraman17"],
   "config_flow": true,
+  "connectivity": ["enocean", "network", "zigbee", "zwave"],
   "documentation": "https://www.home-assistant.io/integrations/homee",
   "integration_type": "hub",
   "iot_class": "local_push",
   "loggers": ["homee", "pyHomee"],
   "quality_scale": "silver",
-  "requirements": ["pyHomee==1.4.6"],
+  "requirements": ["pyHomee==1.4.7"],
   "zeroconf": [
     {
       "name": "homee-*",

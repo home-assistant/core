@@ -86,7 +86,7 @@ async def test_cloud_form(hass: HomeAssistant) -> None:
         ) as mock_close,
         patch(
             "homeassistant.components.risco.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -143,7 +143,7 @@ async def test_cloud_error(hass: HomeAssistant, error: str) -> None:
         patch("homeassistant.components.risco.config_flow.RiscoCloud.close"),
         patch(
             "homeassistant.components.risco.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result4 = await hass.config_entries.flow.async_configure(
@@ -202,7 +202,7 @@ async def test_form_reauth(
         ),
         patch(
             "homeassistant.components.risco.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -239,7 +239,7 @@ async def test_form_reauth_with_new_username(
         ),
         patch(
             "homeassistant.components.risco.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -282,7 +282,7 @@ async def test_local_form(hass: HomeAssistant) -> None:
         ) as mock_close,
         patch(
             "homeassistant.components.risco.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -340,7 +340,7 @@ async def test_local_error(hass: HomeAssistant, error: str) -> None:
         patch("homeassistant.components.risco.config_flow.RiscoLocal.disconnect"),
         patch(
             "homeassistant.components.risco.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result4 = await hass.config_entries.flow.async_configure(
@@ -419,7 +419,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "ha_to_risco"
 
-    with patch("homeassistant.components.risco.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.risco.async_setup_entry", return_value=None):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input=TEST_HA_TO_RISCO,
@@ -467,7 +467,7 @@ async def test_more_options_flow(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "ha_to_risco"
 
-    with patch("homeassistant.components.risco.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.risco.async_setup_entry", return_value=None):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input=TEST_HA_TO_RISCO,

@@ -98,6 +98,7 @@ def mock_api_tts() -> AsyncMock:
         voices=[
             cloud_tts.Voice(language_codes=["en-US"], name="en-US-Standard-A"),
             cloud_tts.Voice(language_codes=["en-US"], name="en-US-Standard-B"),
+            cloud_tts.Voice(language_codes=["en-US"], name="en-US-Chirp3-HD-Achernar"),
             cloud_tts.Voice(language_codes=["en-US"], name="Standard-A"),
             cloud_tts.Voice(language_codes=["el-GR"], name="el-GR-Standard-A"),
         ]
@@ -137,6 +138,6 @@ def mock_api_tts_from_service_account_file(
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.google_cloud.async_setup_entry", return_value=True
+        "homeassistant.components.google_cloud.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry

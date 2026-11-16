@@ -86,6 +86,7 @@ model_list = [
                 supported=True,
                 types=ThinkingTypes(
                     adaptive=CapabilitySupport(supported=True),
+                    between_tools=CapabilitySupport(supported=False),
                     disabled=CapabilitySupport(supported=True),
                     enabled=CapabilitySupport(supported=False),
                 ),
@@ -133,6 +134,7 @@ model_list = [
                 supported=True,
                 types=ThinkingTypes(
                     adaptive=CapabilitySupport(supported=True),
+                    between_tools=CapabilitySupport(supported=True),
                     disabled=CapabilitySupport(supported=False),
                     enabled=CapabilitySupport(supported=False),
                 ),
@@ -180,6 +182,7 @@ model_list = [
                 supported=True,
                 types=ThinkingTypes(
                     adaptive=CapabilitySupport(supported=True),
+                    between_tools=CapabilitySupport(supported=False),
                     disabled=CapabilitySupport(supported=False),
                     enabled=CapabilitySupport(supported=False),
                 ),
@@ -227,6 +230,7 @@ model_list = [
                 supported=True,
                 types=ThinkingTypes(
                     adaptive=CapabilitySupport(supported=True),
+                    between_tools=CapabilitySupport(supported=False),
                     disabled=CapabilitySupport(supported=False),
                     enabled=CapabilitySupport(supported=False),
                 ),
@@ -274,6 +278,7 @@ model_list = [
                 supported=True,
                 types=ThinkingTypes(
                     adaptive=CapabilitySupport(supported=True),
+                    between_tools=CapabilitySupport(supported=False),
                     disabled=CapabilitySupport(supported=True),
                     enabled=CapabilitySupport(supported=False),
                 ),
@@ -321,6 +326,7 @@ model_list = [
                 supported=True,
                 types=ThinkingTypes(
                     adaptive=CapabilitySupport(supported=True),
+                    between_tools=CapabilitySupport(supported=False),
                     disabled=CapabilitySupport(supported=True),
                     enabled=CapabilitySupport(supported=False),
                 ),
@@ -368,6 +374,7 @@ model_list = [
                 supported=True,
                 types=ThinkingTypes(
                     adaptive=CapabilitySupport(supported=True),
+                    between_tools=CapabilitySupport(supported=False),
                     disabled=CapabilitySupport(supported=False),
                     enabled=CapabilitySupport(supported=False),
                 ),
@@ -415,6 +422,7 @@ model_list = [
                 supported=True,
                 types=ThinkingTypes(
                     adaptive=CapabilitySupport(supported=True),
+                    between_tools=CapabilitySupport(supported=False),
                     disabled=CapabilitySupport(supported=True),
                     enabled=CapabilitySupport(supported=False),
                 ),
@@ -462,6 +470,7 @@ model_list = [
                 supported=True,
                 types=ThinkingTypes(
                     adaptive=CapabilitySupport(supported=True),
+                    between_tools=CapabilitySupport(supported=False),
                     disabled=CapabilitySupport(supported=True),
                     enabled=CapabilitySupport(supported=False),
                 ),
@@ -509,6 +518,7 @@ model_list = [
                 supported=True,
                 types=ThinkingTypes(
                     adaptive=CapabilitySupport(supported=True),
+                    between_tools=CapabilitySupport(supported=False),
                     disabled=CapabilitySupport(supported=True),
                     enabled=CapabilitySupport(supported=True),
                 ),
@@ -556,6 +566,7 @@ model_list = [
                 supported=True,
                 types=ThinkingTypes(
                     adaptive=CapabilitySupport(supported=True),
+                    between_tools=CapabilitySupport(supported=False),
                     disabled=CapabilitySupport(supported=True),
                     enabled=CapabilitySupport(supported=True),
                 ),
@@ -603,6 +614,7 @@ model_list = [
                 supported=True,
                 types=ThinkingTypes(
                     adaptive=CapabilitySupport(supported=False),
+                    between_tools=CapabilitySupport(supported=False),
                     disabled=CapabilitySupport(supported=True),
                     enabled=CapabilitySupport(supported=True),
                 ),
@@ -650,6 +662,7 @@ model_list = [
                 supported=True,
                 types=ThinkingTypes(
                     adaptive=CapabilitySupport(supported=False),
+                    between_tools=CapabilitySupport(supported=False),
                     disabled=CapabilitySupport(supported=True),
                     enabled=CapabilitySupport(supported=True),
                 ),
@@ -697,6 +710,7 @@ model_list = [
                 supported=True,
                 types=ThinkingTypes(
                     adaptive=CapabilitySupport(supported=False),
+                    between_tools=CapabilitySupport(supported=False),
                     disabled=CapabilitySupport(supported=True),
                     enabled=CapabilitySupport(supported=True),
                 ),

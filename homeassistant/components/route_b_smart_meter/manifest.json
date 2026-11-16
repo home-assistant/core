@@ -4,6 +4,7 @@
   "categories": ["energy.meters_monitoring"],
   "codeowners": ["@SeraphicRav"],
   "config_flow": true,
+  "connectivity": ["rf", "serial"],
   "dependencies": ["usb"],
   "documentation": "https://www.home-assistant.io/integrations/route_b_smart_meter",
   "integration_type": "device",

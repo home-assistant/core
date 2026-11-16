@@ -10,6 +10,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_SHOW_ON_MAP
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import CONF_SENSOR_ID, DOMAIN
 
@@ -44,7 +45,9 @@ class SensorCommunityFlowHandler(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(str(user_input[CONF_SENSOR_ID]))
         self._abort_if_unique_id_configured()
 
-        sensor_community = Luftdaten(user_input[CONF_SENSOR_ID])
+        sensor_community = Luftdaten(
+            user_input[CONF_SENSOR_ID], httpx_client=get_async_client(self.hass)
+        )
         try:
             await sensor_community.get_data()
             valid = await sensor_community.validate_sensor()

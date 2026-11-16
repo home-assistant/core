@@ -36,6 +36,7 @@ async def async_get_config_entry_diagnostics(
         },
         "coordinator": {
             "last_update_success": coordinator.last_update_success,
+            "open_api_quota_exceeded": coordinator.open_api_quota_exceeded,
         },
         "devices": [
             _serialize_device(device)

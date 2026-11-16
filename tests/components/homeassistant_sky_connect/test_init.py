@@ -30,9 +30,11 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
+
+from .common import USB_DATA_ZBT1
 
 from tests.components.usb import async_request_scan, patch_scanned_serial_ports
 from tests.components.usb.conftest import force_usb_polling_watcher  # noqa: F401
@@ -148,52 +150,6 @@ async def test_config_entry_migration_v2(hass: HomeAssistant) -> None:
             },
             "9e2adbd75b8beb119fe564a0f320645d",
         ),
-        # Two entries with identical unique IDs for the same dongle
-        (
-            {
-                "unique_id": (
-                    "10C4:EA60_3c0ed67c628beb11b1cd64a0f320645d"
-                    "_Nabu_Casa_SkyConnect v1.0"
-                ),
-                "source": "usb",
-                "data": {
-                    "description": "SkyConnect v1.0",
-                    "device": (
-                        "/dev/serial/by-id/"
-                        "usb-Nabu_Casa_SkyConnect_v1.0_3c0ed67c628beb11b1cd64a0f320645d-if00-port0"
-                    ),
-                    "vid": "10C4",
-                    "pid": "EA60",
-                    "serial_number": "3c0ed67c628beb11b1cd64a0f320645d",
-                    "manufacturer": "Nabu Casa",
-                    "product": "SkyConnect v1.0",
-                    "firmware": "ezsp",
-                    "firmware_version": "7.4.4.0",
-                },
-            },
-            {
-                "unique_id": (
-                    "10C4:EA60_3c0ed67c628beb11b1cd64a0f320645d"
-                    "_Nabu_Casa_SkyConnect v1.0"
-                ),
-                "source": "import",
-                "data": {
-                    "description": "SkyConnect v1.0",
-                    "device": (
-                        "/dev/serial/by-id/"
-                        "usb-Nabu_Casa_SkyConnect_v1.0_3c0ed67c628beb11b1cd64a0f320645d-if00-port0"
-                    ),
-                    "vid": "10C4",
-                    "pid": "EA60",
-                    "serial_number": "3c0ed67c628beb11b1cd64a0f320645d",
-                    "manufacturer": "Nabu Casa",
-                    "product": "SkyConnect v1.0",
-                    "firmware": "spinel",
-                    "firmware_version": "SL-OPENTHREAD/2.7.2.0_GitHub-fb0446f53; EFR32",
-                },
-            },
-            "3c0ed67c628beb11b1cd64a0f320645d",
-        ),
     ],
 )
 async def test_config_entry_migration_v5_collapses_duplicates(
@@ -226,7 +182,7 @@ async def test_config_entry_migration_v5_collapses_duplicates(
     newer_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.homeassistant_sky_connect.os.path.exists",
+        "homeassistant.components.homeassistant_sky_connect.async_is_serial_port_present",
         return_value=True,
     ):
         await async_setup_component(hass, DOMAIN, {})
@@ -299,7 +255,7 @@ async def test_config_entry_migration_v5_prefers_active_entry(
     sibling_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.homeassistant_sky_connect.os.path.exists",
+        "homeassistant.components.homeassistant_sky_connect.async_is_serial_port_present",
         return_value=True,
     ):
         await async_setup_component(hass, DOMAIN, {})
@@ -369,7 +325,7 @@ async def test_config_entry_migration_v5_removes_duplicates_of_migrated_entry(
     migrated_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.homeassistant_sky_connect.os.path.exists",
+        "homeassistant.components.homeassistant_sky_connect.async_is_serial_port_present",
         return_value=True,
     ):
         await async_setup_component(hass, DOMAIN, {})
@@ -413,7 +369,7 @@ async def test_setup_fails_on_missing_usb_port(hass: HomeAssistant) -> None:
 
     # Set up the config entry
     with patch(
-        "homeassistant.components.homeassistant_sky_connect.os.path.exists"
+        "homeassistant.components.homeassistant_sky_connect.async_is_serial_port_present"
     ) as mock_exists:
         mock_exists.return_value = False
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -423,7 +379,7 @@ async def test_setup_fails_on_missing_usb_port(hass: HomeAssistant) -> None:
         assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
         mock_exists.return_value = True
-        async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=30))
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
         await hass.async_block_till_done(wait_background_tasks=True)
 
         # Now it's ready
@@ -464,7 +420,7 @@ async def test_usb_device_reactivity(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.homeassistant_sky_connect.os.path.exists"
+        "homeassistant.components.homeassistant_sky_connect.async_is_serial_port_present"
     ) as mock_exists:
         mock_exists.return_value = False
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -505,7 +461,7 @@ async def test_usb_device_reactivity(hass: HomeAssistant) -> None:
 
         with patch_scanned_serial_ports(return_value=[]):
             # Wait for a bit for the USB scan debouncer to cool off
-            async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=5))
+            async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
             await async_request_scan(hass)
 
         # The integration has reloaded and is now in a failed state
@@ -666,7 +622,7 @@ async def test_multi_pan_migration_issue_not_created_for_cpc(
 
     with (
         patch(
-            "homeassistant.components.homeassistant_sky_connect.os.path.exists",
+            "homeassistant.components.homeassistant_sky_connect.async_is_serial_port_present",
             return_value=True,
         ),
         patch(
@@ -695,7 +651,7 @@ async def test_multi_pan_migration_issue_created_for_addon(
 
     with (
         patch(
-            "homeassistant.components.homeassistant_sky_connect.os.path.exists",
+            "homeassistant.components.homeassistant_sky_connect.async_is_serial_port_present",
             return_value=True,
         ),
         patch(
@@ -750,7 +706,7 @@ async def test_multi_pan_migration_issue_deleted_for_ezsp(
 
     with (
         patch(
-            "homeassistant.components.homeassistant_sky_connect.os.path.exists",
+            "homeassistant.components.homeassistant_sky_connect.async_is_serial_port_present",
             return_value=True,
         ),
         patch(
@@ -768,3 +724,63 @@ async def test_multi_pan_migration_issue_deleted_for_ezsp(
         )
         is None
     )
+
+
+async def test_device_via_esphome_device(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test the device is linked to the ESPHome device proxying its serial port."""
+    esphome_entry = MockConfigEntry(domain="esphome", unique_id="11:22:33:44:55:66")
+    esphome_entry.add_to_hass(hass)
+
+    esphome_device = device_registry.async_get_or_create(
+        config_entry_id=esphome_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "11:22:33:44:55:66")},
+    )
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=USB_DATA_ZBT1.serial_number,
+        data={
+            "description": USB_DATA_ZBT1.description,
+            "device": (
+                f"esphome-hass://esphome/{esphome_entry.entry_id}?port_udev_id=some_id"
+            ),
+            "vid": USB_DATA_ZBT1.vid,
+            "pid": USB_DATA_ZBT1.pid,
+            "serial_number": USB_DATA_ZBT1.serial_number,
+            "manufacturer": USB_DATA_ZBT1.manufacturer,
+            "product": USB_DATA_ZBT1.description,
+            "firmware": "ezsp",
+            "firmware_version": "7.4.4.0",
+        },
+        version=1,
+        minor_version=5,
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.homeassistant_sky_connect.multi_pan_addon_using_device",
+        return_value=False,
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, USB_DATA_ZBT1.serial_number), config_entry.entry_id
+        )
+        assert device is not None
+        assert device.via_device_id == esphome_device.id
+
+        # Plugging the adapter directly into the host removes the link
+        hass.config_entries.async_update_entry(
+            config_entry, data={**config_entry.data, "device": USB_DATA_ZBT1.device}
+        )
+        assert await hass.config_entries.async_reload(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, USB_DATA_ZBT1.serial_number), config_entry.entry_id
+        )
+        assert device is not None
+        assert device.via_device_id is None

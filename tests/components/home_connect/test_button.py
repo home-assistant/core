@@ -5,6 +5,7 @@ from typing import Any, cast
 from unittest.mock import AsyncMock, MagicMock
 
 from aiohomeconnect.model import (
+    ApplianceType,
     ArrayOfCommands,
     CommandKey,
     Event,
@@ -18,10 +19,10 @@ from aiohomeconnect.model.event import ArrayOfEvents, EventType
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.home_connect.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -33,7 +34,7 @@ def platforms() -> list[Platform]:
     return [Platform.BUTTON]
 
 
-@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.WASHER], indirect=True)
 async def test_paired_depaired_devices_flow(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -95,7 +96,7 @@ async def test_paired_depaired_devices_flow(
     ("appliance", "keys_to_check"),
     [
         (
-            "Washer",
+            ApplianceType.WASHER,
             (CommandKey.BSH_COMMON_PAUSE_PROGRAM,),
         )
     ],
@@ -177,7 +178,7 @@ async def test_connected_devices(
         )
 
 
-@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.WASHER], indirect=True)
 async def test_button_entity_availability(
     hass: HomeAssistant,
     client: MagicMock,
@@ -229,7 +230,7 @@ async def test_button_entity_availability(
         assert state.state != STATE_UNAVAILABLE
 
 
-@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.WASHER], indirect=True)
 @pytest.mark.parametrize(
     ("entity_id", "method_call", "expected_kwargs"),
     [
@@ -261,8 +262,8 @@ async def test_button_functionality(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: entity_id},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
     getattr(client, method_call).assert_called_with(appliance.ha_id, **expected_kwargs)
@@ -297,8 +298,8 @@ async def test_command_button_exception(
     with pytest.raises(HomeAssistantError, match=r"Error.*executing.*command"):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: entity_id},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -322,13 +323,13 @@ async def test_stop_program_button_exception(
     with pytest.raises(HomeAssistantError, match=r"Error.*stop.*program"):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: entity_id},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
 
 
-@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.WASHER], indirect=True)
 async def test_enable_resume_command_on_pause(
     hass: HomeAssistant,
     client: MagicMock,

@@ -13,9 +13,6 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-if TYPE_CHECKING:
-    from . import YaleConfigEntry
-
 from .const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
@@ -24,6 +21,9 @@ from .const import (
     MODEL,
     YALE_BASE_ERRORS,
 )
+
+if TYPE_CHECKING:
+    from . import YaleConfigEntry
 
 
 class YaleDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):

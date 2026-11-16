@@ -11,6 +11,7 @@ from pytest_homeassistant.common import get_test_config_dir
 from homeassistant.components.blueprint import BLUEPRINT_SCHEMA, errors, models
 from homeassistant.config import _get_annotation
 from homeassistant.core import HomeAssistant
+from homeassistant.util import yaml as yaml_util
 from homeassistant.util.yaml import Input
 from homeassistant.util.yaml.objects import NodeDictClass, NodeListClass, NodeStrClass
 
@@ -210,6 +211,46 @@ def test_blueprint_validate() -> None:
         },
         schema=BLUEPRINT_SCHEMA,
     ).validate() == ["Requires at least Home Assistant 100000.0.0"]
+
+
+def test_blueprint_dump_preserves_original_data() -> None:
+    """Test blueprint dump preserves original data.
+
+    Blueprint validation resolves some values to types that are not supported
+    by the schema, therefore dumping should keep the original values.
+    """
+    bp = models.Blueprint(
+        {
+            "blueprint": {
+                "name": "Hello",
+                "domain": "automation",
+                "input": {
+                    "light": {
+                        "selector": {
+                            "entity": {
+                                "filter": [
+                                    {
+                                        "supported_features": [
+                                            "light.LightEntityFeature.EFFECT"
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                },
+            },
+        },
+        schema=BLUEPRINT_SCHEMA,
+    )
+
+    bp.update_metadata(source_url="http://example.com/blueprint.yaml")
+    dumped = bp.yaml()
+
+    assert "light.LightEntityFeature.EFFECT" in dumped
+    reloaded = models.Blueprint(yaml_util.parse_yaml(dumped), schema=BLUEPRINT_SCHEMA)
+    assert reloaded.inputs == bp.inputs
+    assert reloaded.metadata["source_url"] == "http://example.com/blueprint.yaml"
 
 
 def test_blueprint_inputs(blueprint_2: models.Blueprint) -> None:
@@ -448,4 +489,126 @@ async def test_inputs_from_config_nonexisting_blueprint(
     with pytest.raises(errors.FailedToLoad):
         await domain_bps.async_inputs_from_config(
             {"use_blueprint": {"path": "non-existing.yaml"}}
+        )
+
+
+def _visible_blueprint(inputs: dict[str, Any]) -> models.Blueprint:
+    return models.Blueprint(
+        {
+            "blueprint": {"name": "Hello", "domain": "automation", "input": inputs},
+            "dim_mode": Input("dim_mode"),
+            "brightness": Input("brightness"),
+        },
+        schema=BLUEPRINT_SCHEMA,
+    )
+
+
+def _resolve(blueprint: models.Blueprint, values: dict[str, Any]) -> dict[str, Any]:
+    inputs = models.BlueprintInputs(
+        blueprint, {"use_blueprint": {"path": "bla", "input": values}}
+    )
+    inputs.validate()
+    return inputs.async_substitute()
+
+
+VISIBLE_BRIGHTNESS = {"field": "dim_mode", "value": "fixed"}
+
+
+@pytest.mark.parametrize(
+    ("brightness", "values", "expected"),
+    [
+        pytest.param(
+            {"visible": VISIBLE_BRIGHTNESS},
+            {"dim_mode": "none"},
+            {"dim_mode": "none", "brightness": None},
+            id="hidden_without_default",
+        ),
+        pytest.param(
+            {"default": 50, "visible": VISIBLE_BRIGHTNESS},
+            {"dim_mode": "none", "brightness": 80},
+            {"dim_mode": "none", "brightness": 50},
+            id="hidden_uses_default",
+        ),
+        pytest.param(
+            {"default": 50, "visible": VISIBLE_BRIGHTNESS},
+            {"dim_mode": "fixed", "brightness": 80},
+            {"dim_mode": "fixed", "brightness": 80},
+            id="visible",
+        ),
+    ],
+)
+def test_blueprint_inputs_visible(
+    brightness: dict[str, Any], values: dict[str, Any], expected: dict[str, Any]
+) -> None:
+    """Test a hidden input resolves to its default, or None without one."""
+    blueprint = _visible_blueprint({"dim_mode": None, "brightness": brightness})
+    assert _resolve(blueprint, values) == expected
+
+
+@pytest.mark.parametrize(
+    "inputs",
+    [
+        pytest.param({"dim_mode": {}, "brightness": {}}, id="top_level"),
+        pytest.param(
+            {"dim_mode": {}, "dimming": {"input": {"brightness": {}}}},
+            id="in_section",
+        ),
+    ],
+)
+def test_blueprint_inputs_empty_definition(inputs: dict[str, Any]) -> None:
+    """Test empty input definitions have no visible condition."""
+    blueprint = _visible_blueprint(inputs)
+    assert _resolve(blueprint, {"dim_mode": "none", "brightness": 80}) == {
+        "dim_mode": "none",
+        "brightness": 80,
+    }
+
+
+def test_blueprint_inputs_visible_missing() -> None:
+    """Test a visible input without a value or default is still required."""
+    blueprint = _visible_blueprint(
+        {"dim_mode": None, "brightness": {"visible": VISIBLE_BRIGHTNESS}}
+    )
+    inputs = models.BlueprintInputs(
+        blueprint, {"use_blueprint": {"path": "bla", "input": {"dim_mode": "fixed"}}}
+    )
+    with pytest.raises(errors.MissingInput):
+        inputs.validate()
+
+
+def test_blueprint_inputs_visible_section() -> None:
+    """Test inputs of a hidden section resolve like hidden inputs."""
+    blueprint = _visible_blueprint(
+        {
+            "dim_mode": None,
+            "dimming": {
+                "visible": VISIBLE_BRIGHTNESS,
+                "input": {"brightness": None},
+            },
+        }
+    )
+    assert _resolve(blueprint, {"dim_mode": "none"}) == {
+        "dim_mode": "none",
+        "brightness": None,
+    }
+    assert _resolve(blueprint, {"dim_mode": "fixed", "brightness": 80}) == {
+        "dim_mode": "fixed",
+        "brightness": 80,
+    }
+
+
+@pytest.mark.parametrize(
+    "visible",
+    [{"value": 1}, {"field": "dim_mode", "operator": "gt"}, "yes"],
+)
+def test_blueprint_invalid_visible(visible: Any) -> None:
+    """Test an invalid visible condition is rejected."""
+    with pytest.raises(errors.InvalidBlueprint):
+        _visible_blueprint({"dim_mode": None, "brightness": {"visible": visible}})
+    with pytest.raises(errors.InvalidBlueprint):
+        _visible_blueprint(
+            {
+                "dim_mode": None,
+                "dimming": {"visible": visible, "input": {"brightness": None}},
+            }
         )

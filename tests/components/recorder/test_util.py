@@ -1,5 +1,6 @@
 """Test util methods."""
 
+from collections.abc import Callable
 from contextlib import AbstractContextManager, nullcontext as does_not_raise
 from datetime import UTC, datetime, timedelta
 import os
@@ -21,20 +22,16 @@ from pytest_homeassistant.typing import (
     RecorderInstanceContextManager,
     RecorderInstanceGenerator,
 )
-from sqlalchemy import lambda_stmt, text
-from sqlalchemy.engine.result import ChunkedIteratorResult
+from sqlalchemy import lambda_stmt, make_url, text
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
+from sqlalchemy.orm import Session
 from sqlalchemy.sql.elements import TextClause
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder import Recorder, util
-from homeassistant.components.recorder.const import (
-    DOMAIN,
-    SQLITE_URL_PREFIX,
-    SupportedDialect,
-)
-from homeassistant.components.recorder.db_schema import RecorderRuns
+from homeassistant.components.recorder.const import DOMAIN, SupportedDialect
+from homeassistant.components.recorder.db_schema import RecorderRuns, StatesMeta
 from homeassistant.components.recorder.history import _get_single_entity_start_time_stmt
 from homeassistant.components.recorder.models import (
     UnsupportedDialect,
@@ -44,7 +41,10 @@ from homeassistant.components.recorder.util import (
     MIN_VERSION_SQLITE,
     RETRYABLE_MYSQL_ERRORS,
     database_job_retry_wrapper,
+    dburl_to_path,
     end_incomplete_runs,
+    get_engine_db_url,
+    is_file_sqlite_url,
     is_second_sunday,
     resolve_period,
     retryable_database_job,
@@ -54,6 +54,7 @@ from homeassistant.components.recorder.util import (
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.recorder import SESSION_INFO_READ_ONLY
 from homeassistant.util import dt as dt_util
 
 
@@ -82,6 +83,22 @@ async def test_session_scope_not_setup(
         pass
 
 
+async def test_session_scope_read_only_marker_ends_with_scope(
+    hass: HomeAssistant,
+    setup_recorder: None,
+) -> None:
+    """Test a session is only marked read-only within a read-only scope.
+
+    Sessions are reused per thread, so a marker left behind would let a failed
+    query roll back a later session holding writes.
+    """
+    with util.session_scope(hass=hass, read_only=True) as session:
+        assert session.info[SESSION_INFO_READ_ONLY] is True
+    with util.session_scope(hass=hass) as reused_session:
+        assert reused_session is session
+        assert SESSION_INFO_READ_ONLY not in reused_session.info
+
+
 async def test_recorder_bad_execute(hass: HomeAssistant, setup_recorder: None) -> None:
     """Bad execute, retry 3 times."""
 
@@ -101,6 +118,102 @@ async def test_recorder_bad_execute(hass: HomeAssistant, setup_recorder: None) -
     assert e_mock.call_count == 2
 
 
+@pytest.mark.parametrize(
+    ("db_url", "expected"),
+    [
+        pytest.param(
+            "postgresql://user:pass@host/db",
+            "postgresql+psycopg2://user:pass@host/db",
+            id="postgresql",
+        ),
+        pytest.param(
+            "postgresql://user:pass@host:5432/db?sslmode=require",
+            "postgresql+psycopg2://user:pass@host:5432/db?sslmode=require",
+            id="postgresql_port_query",
+        ),
+    ],
+)
+def test_get_engine_db_url(db_url: str, expected: str) -> None:
+    """Test a PostgreSQL URL without a driver uses psycopg2."""
+    assert get_engine_db_url(db_url) == make_url(expected)
+
+
+@pytest.mark.parametrize(
+    "db_url",
+    [
+        pytest.param("mysql://user:pass@host/db?charset=utf8mb4", id="mysql"),
+        pytest.param(
+            "mysql+pymysql://user:pass@host:3306/db?charset=utf8mb4",
+            id="mysql_pymysql",
+        ),
+        pytest.param("mariadb://user:pass@[::1]:3306/db", id="mariadb_ipv6"),
+        pytest.param(
+            "postgresql+psycopg2://us%40er:pa%40ss@host/db", id="postgresql_psycopg2"
+        ),
+        pytest.param(
+            "postgresql+psycopg://user:pa/ss@host:5432/db", id="postgresql_psycopg"
+        ),
+        pytest.param("sqlite:////config/home-assistant_v2.db?timeout=0.1", id="sqlite"),
+        pytest.param(
+            "sqlite:////config/ha%20copy/home-assistant_v2.db", id="sqlite_percent"
+        ),
+        pytest.param("sqlite://", id="sqlite_memory"),
+    ],
+)
+def test_get_engine_db_url_unchanged(db_url: str) -> None:
+    """Test the URL is used as SQLAlchemy parses it when there is no driver to pin."""
+    assert get_engine_db_url(db_url) == make_url(db_url)
+
+
+@pytest.mark.parametrize(
+    ("db_url", "expected"),
+    [
+        pytest.param("sqlite:////config/home-assistant_v2.db", True, id="absolute"),
+        pytest.param("sqlite:///home-assistant_v2.db", True, id="relative"),
+        pytest.param("sqlite+pysqlite:////config/db.db", True, id="pysqlite"),
+        pytest.param("sqlite:////config/db.db?timeout=0.1", True, id="query"),
+        pytest.param("sqlite://", False, id="memory"),
+        pytest.param("sqlite:///:memory:", False, id="memory_database"),
+        pytest.param(
+            "sqlite:///file::memory:?cache=shared&uri=true", False, id="memory_uri"
+        ),
+        pytest.param("mysql://user:pass@host/db", False, id="mysql"),
+        pytest.param("postgresql://user:pass@host/db", False, id="postgresql"),
+    ],
+)
+def test_is_file_sqlite_url(db_url: str, expected: bool) -> None:
+    """Test detecting SQLite databases stored in a file."""
+    assert is_file_sqlite_url(make_url(db_url)) is expected
+
+
+@pytest.mark.parametrize(
+    ("db_url", "expected"),
+    [
+        pytest.param(
+            "sqlite:////config/home-assistant_v2.db",
+            "/config/home-assistant_v2.db",
+            id="absolute",
+        ),
+        pytest.param(
+            "sqlite:///home-assistant_v2.db", "home-assistant_v2.db", id="relative"
+        ),
+        pytest.param(
+            "sqlite:////config/home-assistant_v2.db?timeout=0.1",
+            "/config/home-assistant_v2.db",
+            id="query",
+        ),
+        pytest.param(
+            "sqlite+pysqlite:////config/home-assistant_v2.db",
+            "/config/home-assistant_v2.db",
+            id="pysqlite",
+        ),
+    ],
+)
+def test_dburl_to_path(db_url: str, expected: str) -> None:
+    """Test the path is the file the engine opens."""
+    assert dburl_to_path(db_url) == expected
+
+
 def test_validate_or_move_away_sqlite_database(
     hass: HomeAssistant, tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -108,7 +221,7 @@ def test_validate_or_move_away_sqlite_database(
     test_dir = tmp_path.joinpath("test_validate_or_move_away_sqlite_database")
     test_dir.mkdir()
     test_db_file = f"{test_dir}/broken.db"
-    dburl = f"{SQLITE_URL_PREFIX}{test_db_file}"
+    dburl = f"sqlite:///{test_db_file}"
 
     assert util.validate_sqlite_database(test_db_file) is False
     assert os.path.exists(test_db_file) is True
@@ -125,6 +238,23 @@ def test_validate_or_move_away_sqlite_database(
     assert util.validate_sqlite_database(dburl) is False
 
     assert util.validate_or_move_away_sqlite_database(dburl) is True
+
+
+@pytest.mark.parametrize("suffix", ["", "/"])
+def test_validate_or_move_away_sqlite_database_directory(
+    tmp_path: Path, suffix: str
+) -> None:
+    """Ensure a directory given as the database is not moved away."""
+    test_dir = tmp_path.joinpath("config")
+    test_dir.mkdir()
+    test_dir.joinpath("configuration.yaml").touch()
+
+    assert (
+        util.validate_or_move_away_sqlite_database(f"sqlite:///{test_dir}{suffix}")
+        is True
+    )
+    assert list(tmp_path.iterdir()) == [test_dir]
+    assert test_dir.joinpath("configuration.yaml").exists()
 
 
 @pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
@@ -1173,6 +1303,156 @@ def test_build_mysqldb_conv() -> None:
     )
 
 
+@pytest.mark.parametrize("persistent_database", [True])
+@patch("homeassistant.components.recorder.util.QUERY_RETRY_WAIT", 0)
+async def test_execute_recovers_after_lost_connection(
+    hass: HomeAssistant,
+    setup_recorder: None,
+) -> None:
+    """Test execute reconnects and returns rows after the connection is lost.
+
+    The database must survive the lost connection, which an in-memory SQLite
+    database does not.
+    """
+    instance = recorder.get_instance(hass)
+    hass.states.async_set("sensor.on", "on")
+    await async_wait_recording_done(hass)
+
+    def _query() -> None:
+        with session_scope(hass=hass, read_only=True) as session:
+            query = session.query(StatesMeta).limit(1)
+            # Simulate a lost connection: the session object stays intact and unaware
+            session.connection().invalidate()
+            assert len(util.execute(query)) == 1
+
+    await instance.async_add_executor_job(_query)
+
+
+@pytest.mark.parametrize("persistent_database", [True])
+@patch("homeassistant.components.recorder.util.QUERY_RETRY_WAIT", 0)
+async def test_execute_stmt_lambda_element_recovers_after_lost_connection(
+    hass: HomeAssistant,
+    setup_recorder: None,
+) -> None:
+    """Test execute_stmt_lambda_element reconnects after the connection is lost."""
+    instance = recorder.get_instance(hass)
+    hass.states.async_set("sensor.on", "on")
+    new_state = hass.states.get("sensor.on")
+    await async_wait_recording_done(hass)
+
+    def _query() -> None:
+        with session_scope(hass=hass, read_only=True) as session:
+            metadata_id = instance.states_meta_manager.get("sensor.on", session, True)
+            start_time_ts = dt_util.utcnow().timestamp()
+            stmt = lambda_stmt(
+                lambda: _get_single_entity_start_time_stmt(
+                    start_time_ts, metadata_id, False, False, False
+                )
+            )
+            session.connection().invalidate()
+
+            rows = util.execute_stmt_lambda_element(session, stmt)
+            assert rows[0].state == new_state.state
+            assert rows[0].metadata_id == metadata_id
+
+    await instance.async_add_executor_job(_query)
+
+
+def _execute_failing_once(session: Session) -> Any:
+    """Run a query through execute which fails on the first attempt."""
+    query = MagicMock(session=session)
+    query.all.side_effect = [OperationalError("SELECT", {}, Exception()), ["row"]]
+    return util.execute(query)
+
+
+def _execute_stmt_lambda_element_failing_once(session: Session) -> Any:
+    """Run a statement through execute_stmt_lambda_element which fails once."""
+    result = MagicMock()
+    result.all.return_value = ["row"]
+    with patch.object(
+        session,
+        "execute",
+        side_effect=[OperationalError("SELECT", {}, Exception()), result],
+    ):
+        return util.execute_stmt_lambda_element(session, MagicMock())
+
+
+def _execute_select_failing_once(session: Session) -> Any:
+    """Run a statement through execute_select which fails once."""
+    result = MagicMock()
+    result.all.return_value = ["row"]
+    connection = MagicMock()
+    connection.execute.side_effect = [
+        OperationalError("SELECT", {}, Exception()),
+        result,
+    ]
+    with patch.object(session, "connection", return_value=connection):
+        return util.execute_select(session, MagicMock(), {})
+
+
+QUERIES_FAILING_ONCE = [
+    pytest.param(_execute_failing_once, id="execute"),
+    pytest.param(
+        _execute_stmt_lambda_element_failing_once, id="execute_stmt_lambda_element"
+    ),
+    pytest.param(_execute_select_failing_once, id="execute_select"),
+]
+
+
+@pytest.mark.parametrize(
+    ("read_only", "pending_write_kept"),
+    [
+        pytest.param(True, False, id="read_only_session_rolled_back"),
+        pytest.param(False, True, id="write_session_not_rolled_back"),
+    ],
+)
+@pytest.mark.parametrize("run_query", QUERIES_FAILING_ONCE)
+@patch("homeassistant.components.recorder.util.QUERY_RETRY_WAIT", 0)
+async def test_query_retry_only_rolls_back_read_only_session(
+    hass: HomeAssistant,
+    setup_recorder: None,
+    run_query: Callable[[Session], Any],
+    read_only: bool,
+    pending_write_kept: bool,
+) -> None:
+    """Test a failed query only rolls back a read-only session before retrying.
+
+    A read-only session is never committed, so rolling it back loses nothing. A
+    session holding writes must not be rolled back, as the retry would then succeed
+    and the caller would go on to commit what is left of its unit of work.
+    """
+    with session_scope(hass=hass, read_only=read_only) as session:
+        pending_write = RecorderRuns(start=dt_util.utcnow())
+        session.add(pending_write)
+
+        run_query(session)
+
+        assert (pending_write in session.new) is pending_write_kept
+        # Don't commit the pending write when the scope ends
+        session.expunge_all()
+
+
+@pytest.mark.parametrize("run_query", QUERIES_FAILING_ONCE)
+@patch("homeassistant.components.recorder.util.QUERY_RETRY_WAIT", 0)
+async def test_query_retry_continues_after_failed_rollback(
+    hass: HomeAssistant,
+    setup_recorder: None,
+    caplog: pytest.LogCaptureFixture,
+    run_query: Callable[[Session], Any],
+) -> None:
+    """Test a rollback which fails neither replaces the query error nor ends the retries."""
+    with (
+        session_scope(hass=hass, read_only=True) as session,
+        patch.object(
+            session, "rollback", side_effect=SQLAlchemyError("rollback failed")
+        ),
+    ):
+        # The retry after the failed rollback returns the rows
+        assert run_query(session) == ["row"]
+
+    assert "rollback failed" in caplog.text
+
+
 @patch("homeassistant.components.recorder.util.QUERY_RETRY_WAIT", 0)
 async def test_execute_stmt_lambda_element(
     hass: HomeAssistant,
@@ -1183,9 +1463,6 @@ async def test_execute_stmt_lambda_element(
     hass.states.async_set("sensor.on", "on")
     new_state = hass.states.get("sensor.on")
     await async_wait_recording_done(hass)
-    now = dt_util.utcnow()
-    tomorrow = now + timedelta(days=1)
-    one_week_from_now = now + timedelta(days=7)
     all_calls = 0
 
     class MockExecutor:
@@ -1200,7 +1477,6 @@ async def test_execute_stmt_lambda_element(
             raise SQLAlchemyError
 
     with session_scope(hass=hass) as session:
-        # No time window, we always get a list
         metadata_id = instance.states_meta_manager.get("sensor.on", session, True)
         start_time_ts = dt_util.utcnow().timestamp()
         stmt = lambda_stmt(
@@ -1213,31 +1489,13 @@ async def test_execute_stmt_lambda_element(
         assert rows[0].state == new_state.state
         assert rows[0].metadata_id == metadata_id
 
-        # Time window >= 2 days, we get a ChunkedIteratorResult
-        rows = util.execute_stmt_lambda_element(session, stmt, now, one_week_from_now)
-        assert isinstance(rows, ChunkedIteratorResult)
-        row = next(rows)
-        assert row.state == new_state.state
-        assert row.metadata_id == metadata_id
-
-        # Time window >= 2 days, we should not get a ChunkedIteratorResult
-        # because orm_rows=False
-        rows = util.execute_stmt_lambda_element(
-            session, stmt, now, one_week_from_now, orm_rows=False
-        )
-        assert not isinstance(rows, ChunkedIteratorResult)
-        row = next(rows)
-        assert row.state == new_state.state
-        assert row.metadata_id == metadata_id
-
-        # Time window < 2 days, we get a list
-        rows = util.execute_stmt_lambda_element(session, stmt, now, tomorrow)
+        rows = util.execute_stmt_lambda_element(session, stmt, orm_rows=False)
         assert isinstance(rows, list)
         assert rows[0].state == new_state.state
         assert rows[0].metadata_id == metadata_id
 
         with patch.object(session, "execute", MockExecutor):
-            rows = util.execute_stmt_lambda_element(session, stmt, now, tomorrow)
+            rows = util.execute_stmt_lambda_element(session, stmt)
             assert rows == ["mock_row"]
 
 
@@ -1469,3 +1727,230 @@ def test_retryable_database_job_method(
         assert test.job(instance) == retval
 
     assert len(mock_job.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("time_zone", "now", "offset", "expected_start", "expected_end"),
+    [
+        pytest.param(
+            "US/Pacific",
+            # 01:30 PDT, before the fall-back
+            datetime(2022, 11, 6, 8, 30, tzinfo=UTC),
+            0,
+            "2022-11-06T08:00:00+00:00",
+            "2022-11-06T09:00:00+00:00",
+            id="fall_back_first_occurrence",
+        ),
+        pytest.param(
+            "US/Pacific",
+            # 01:30 PST, the repeated hour after the fall-back
+            datetime(2022, 11, 6, 9, 30, tzinfo=UTC),
+            0,
+            "2022-11-06T09:00:00+00:00",
+            "2022-11-06T10:00:00+00:00",
+            id="fall_back_repeated_occurrence",
+        ),
+        pytest.param(
+            "US/Pacific",
+            datetime(2022, 11, 6, 9, 30, tzinfo=UTC),
+            -1,
+            "2022-11-06T08:00:00+00:00",
+            "2022-11-06T09:00:00+00:00",
+            id="fall_back_repeated_occurrence_previous_hour",
+        ),
+        pytest.param(
+            "US/Pacific",
+            # 03:30 PDT, right after the spring-forward
+            datetime(2022, 3, 13, 10, 30, tzinfo=UTC),
+            -1,
+            "2022-03-13T09:00:00+00:00",
+            "2022-03-13T10:00:00+00:00",
+            id="spring_forward_previous_hour",
+        ),
+        pytest.param(
+            "Australia/Lord_Howe",
+            # 02:45 +11:00, in the half-hour left after the spring-forward
+            datetime(2022, 10, 1, 15, 45, tzinfo=UTC),
+            0,
+            "2022-10-01T15:30:00+00:00",
+            "2022-10-01T16:00:00+00:00",
+            id="half_hour_spring_forward",
+        ),
+        pytest.param(
+            "Australia/Lord_Howe",
+            datetime(2022, 10, 1, 15, 45, tzinfo=UTC),
+            -1,
+            "2022-10-01T14:30:00+00:00",
+            "2022-10-01T15:30:00+00:00",
+            id="half_hour_spring_forward_previous_hour",
+        ),
+        pytest.param(
+            "Australia/Lord_Howe",
+            # 01:45 +10:30, before the spring-forward
+            datetime(2022, 10, 1, 15, 15, tzinfo=UTC),
+            1,
+            "2022-10-01T15:30:00+00:00",
+            "2022-10-01T16:00:00+00:00",
+            id="half_hour_spring_forward_next_hour",
+        ),
+        pytest.param(
+            "Australia/Lord_Howe",
+            # 03:15 +11:00
+            datetime(2022, 10, 1, 16, 15, tzinfo=UTC),
+            -1,
+            "2022-10-01T15:30:00+00:00",
+            "2022-10-01T16:00:00+00:00",
+            id="half_hour_spring_forward_from_next_hour",
+        ),
+        pytest.param(
+            "Australia/Lord_Howe",
+            # 01:45 +10:30, in the repeated half-hour after the fall-back
+            datetime(2022, 4, 2, 15, 15, tzinfo=UTC),
+            0,
+            "2022-04-02T15:00:00+00:00",
+            "2022-04-02T15:30:00+00:00",
+            id="half_hour_fall_back_repeated",
+        ),
+        pytest.param(
+            "Australia/Lord_Howe",
+            datetime(2022, 4, 2, 15, 15, tzinfo=UTC),
+            -1,
+            "2022-04-02T14:00:00+00:00",
+            "2022-04-02T15:00:00+00:00",
+            id="half_hour_fall_back_repeated_previous_hour",
+        ),
+        pytest.param(
+            "Australia/Lord_Howe",
+            # 01:45 +11:00, before the fall-back
+            datetime(2022, 4, 2, 14, 45, tzinfo=UTC),
+            1,
+            "2022-04-02T15:00:00+00:00",
+            "2022-04-02T15:30:00+00:00",
+            id="half_hour_fall_back_next_hour",
+        ),
+        pytest.param(
+            "Australia/Lord_Howe",
+            # 02:15 +10:30
+            datetime(2022, 4, 2, 15, 45, tzinfo=UTC),
+            -1,
+            "2022-04-02T15:00:00+00:00",
+            "2022-04-02T15:30:00+00:00",
+            id="half_hour_fall_back_from_next_hour",
+        ),
+        pytest.param(
+            "Antarctica/Casey",
+            # 03:26 +11:00, after the offset changed from +08:00 at 00:01
+            datetime(2022, 10, 1, 16, 26, 13, tzinfo=UTC),
+            -1,
+            "2022-10-01T16:00:00+00:00",
+            "2022-10-01T16:01:00+00:00",
+            id="offset_change_within_hour",
+        ),
+        pytest.param(
+            "Pacific/Chatham",
+            # 03:50 +13:45, after the spring-forward from 02:45 +12:45
+            datetime(2022, 9, 24, 14, 5, tzinfo=UTC),
+            0,
+            "2022-09-24T14:00:00+00:00",
+            "2022-09-24T14:15:00+00:00",
+            id="three_quarter_hour_spring_forward",
+        ),
+        pytest.param(
+            "Pacific/Chatham",
+            datetime(2022, 9, 24, 14, 5, tzinfo=UTC),
+            -1,
+            "2022-09-24T13:15:00+00:00",
+            "2022-09-24T14:00:00+00:00",
+            id="three_quarter_hour_spring_forward_previous_hour",
+        ),
+        pytest.param(
+            "Pacific/Chatham",
+            datetime(2022, 9, 24, 14, 5, tzinfo=UTC),
+            1,
+            "2022-09-24T14:15:00+00:00",
+            "2022-09-24T15:15:00+00:00",
+            id="three_quarter_hour_spring_forward_next_hour",
+        ),
+        pytest.param(
+            "Pacific/Chatham",
+            # 02:55 +12:45, after the fall-back from 03:45 +13:45
+            datetime(2022, 4, 2, 14, 10, tzinfo=UTC),
+            0,
+            "2022-04-02T14:00:00+00:00",
+            "2022-04-02T14:15:00+00:00",
+            id="three_quarter_hour_fall_back",
+        ),
+        pytest.param(
+            "Pacific/Chatham",
+            datetime(2022, 4, 2, 14, 10, tzinfo=UTC),
+            -1,
+            "2022-04-02T13:15:00+00:00",
+            "2022-04-02T14:00:00+00:00",
+            id="three_quarter_hour_fall_back_previous_hour",
+        ),
+        pytest.param(
+            "Pacific/Chatham",
+            datetime(2022, 4, 2, 14, 10, tzinfo=UTC),
+            1,
+            "2022-04-02T14:15:00+00:00",
+            "2022-04-02T15:15:00+00:00",
+            id="three_quarter_hour_fall_back_next_hour",
+        ),
+        pytest.param(
+            "US/Pacific",
+            datetime(2022, 11, 6, 9, 30, tzinfo=UTC),
+            10**6,
+            "2136-12-05T01:00:00+00:00",
+            "2136-12-05T02:00:00+00:00",
+            id="huge_offset",
+        ),
+        pytest.param(
+            "Australia/Lord_Howe",
+            datetime(2022, 10, 1, 15, 45, tzinfo=UTC),
+            100000,
+            "2034-02-26T20:00:00+00:00",
+            "2034-02-26T21:00:00+00:00",
+            id="large_offset_half_hour_dst",
+        ),
+        pytest.param(
+            "Australia/Lord_Howe",
+            datetime(2022, 10, 1, 15, 45, tzinfo=UTC),
+            -100000,
+            "2011-05-06T10:30:00+00:00",
+            "2011-05-06T11:30:00+00:00",
+            id="large_negative_offset_half_hour_dst",
+        ),
+        pytest.param(
+            "Pacific/Chatham",
+            datetime(2022, 9, 24, 14, 5, tzinfo=UTC),
+            100000,
+            "2034-02-19T07:15:00+00:00",
+            "2034-02-19T08:15:00+00:00",
+            id="large_offset_three_quarter_hour_dst",
+        ),
+        pytest.param(
+            "Pacific/Chatham",
+            datetime(2022, 9, 24, 14, 5, tzinfo=UTC),
+            -100000,
+            "2011-04-29T20:15:00+00:00",
+            "2011-04-29T21:15:00+00:00",
+            id="large_negative_offset_three_quarter_hour_dst",
+        ),
+    ],
+)
+async def test_resolve_period_hour_dst(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    time_zone: str,
+    now: datetime,
+    offset: int,
+    expected_start: str,
+    expected_end: str,
+) -> None:
+    """Test calendar hours follow local hours around DST changes."""
+    await hass.config.async_set_time_zone(time_zone)
+    freezer.move_to(now)
+
+    start_t, end_t = resolve_period({"calendar": {"period": "hour", "offset": offset}})
+    assert start_t.isoformat() == expected_start
+    assert end_t.isoformat() == expected_end

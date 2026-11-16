@@ -49,7 +49,7 @@ def mock_setup_entry() -> Generator[None]:
     """Prevent the integration from actually setting up after config flow."""
     with patch(
         "homeassistant.components.opendisplay.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         yield
 

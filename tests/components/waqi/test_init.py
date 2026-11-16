@@ -234,12 +234,11 @@ async def test_migration_from_v1(
                     "sensor_entity_id": (
                         "sensor.not_de_jongweg_utrecht_air_quality_index"
                     ),
-                    # Device 2 was created enabled; the migration moves it onto the
-                    # disabled merged config entry, so the move re-evaluates it as disabled
-                    # by CONFIG_ENTRY (the entity keeps its own disabled_by - propagating a
-                    # move-disable to entities is a separate mechanism)
+                    # Device 2 and its entity were created enabled; the migration
+                    # moves them onto the disabled merged config entry, so the move
+                    # re-evaluates them as disabled by CONFIG_ENTRY
                     "device_disabled_by": DeviceEntryDisabler.CONFIG_ENTRY,
-                    "entity_disabled_by": None,
+                    "entity_disabled_by": RegistryEntryDisabler.CONFIG_ENTRY,
                     "device": 1,
                 },
             ],
@@ -309,7 +308,7 @@ async def test_migration_from_v1_disabled(
     # enabled device.
     device_2 = attr.evolve(device_2, disabled_by=None)
     device_registry._devices[device_2.id] = device_2
-    entity_registry.async_get_or_create(
+    entity_2 = entity_registry.async_get_or_create(
         "sensor",
         DOMAIN,
         mock_config_entry_2.unique_id,
@@ -317,13 +316,15 @@ async def test_migration_from_v1_disabled(
         device_id=device_2.id,
         suggested_object_id="not_de_jongweg_utrecht_air_quality_index",
     )
+    entity_2 = attr.evolve(entity_2, disabled_by=None)
+    entity_registry.entities[entity_2.entity_id] = entity_2
 
     devices = [device_1, device_2]
 
     # Run migration
     with patch(
         "homeassistant.components.waqi.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()

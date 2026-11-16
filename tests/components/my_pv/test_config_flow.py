@@ -337,7 +337,6 @@ async def test_step_discovery_already_configured(
         ),
     ],
 )
-@pytest.mark.usefixtures("mock_my_pv_client")
 async def test_step_discovery_unsupported_device(
     hass: HomeAssistant,
     mock_my_pv_client: AsyncMock,

@@ -553,6 +553,8 @@ async def test_shutdown_releases_parent_class(hass: HomeAssistant) -> None:
     calls = []
 
     class SomeClass:
+        # Executor workers briefly keep the job after completion, so run in the loop
+        @callback
         def run_func(self) -> None:
             calls.append(None)
 

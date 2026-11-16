@@ -3,6 +3,7 @@
   "name": "Yandex TTS",
   "categories": ["ai_voice.speech"],
   "codeowners": [],
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/yandextts",
   "iot_class": "cloud_push",
   "quality_scale": "legacy"

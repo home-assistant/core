@@ -23,7 +23,7 @@ async def test_async_step_bluetooth_valid_device(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
 
-    with patch("homeassistant.components.mopeka.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.mopeka.async_setup_entry", return_value=None):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_MEDIUM_TYPE: MediumType.PROPANE.value}
         )
@@ -66,7 +66,7 @@ async def test_async_step_user_with_found_devices(hass: HomeAssistant) -> None:
         )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    with patch("homeassistant.components.mopeka.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.mopeka.async_setup_entry", return_value=None):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={"address": "aa:bb:cc:dd:ee:ff"},
@@ -99,7 +99,7 @@ async def test_async_step_user_replace_ignored(hass: HomeAssistant) -> None:
         )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    with patch("homeassistant.components.mopeka.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.mopeka.async_setup_entry", return_value=None):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={"address": "aa:bb:cc:dd:ee:ff"},
@@ -132,7 +132,7 @@ async def test_async_step_user_device_added_between_steps(hass: HomeAssistant) -
     )
     entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.mopeka.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.mopeka.async_setup_entry", return_value=None):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={"address": "aa:bb:cc:dd:ee:ff"},
@@ -221,7 +221,7 @@ async def test_async_step_user_takes_precedence_over_discovery(
         )
         assert result["type"] is FlowResultType.FORM
 
-    with patch("homeassistant.components.mopeka.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.mopeka.async_setup_entry", return_value=None):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={"address": "aa:bb:cc:dd:ee:ff"},

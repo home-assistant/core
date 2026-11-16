@@ -18,6 +18,7 @@ ABBREVIATIONS = {
     "bri_stat_t": "brightness_state_topic",
     "bri_tpl": "brightness_template",
     "bri_val_tpl": "brightness_value_template",
+    "cdevs": "child_devices",
     "cln_segmnts_cmd_t": "clean_segments_command_topic",
     "cln_segmnts_cmd_tpl": "clean_segments_command_template",
     "clr_temp_cmd_tpl": "color_temp_command_template",
@@ -290,6 +291,7 @@ DEVICE_ABBREVIATIONS = {
     "sw": "sw_version",
     "sa": "suggested_area",
     "sn": "serial_number",
+    "cdev": "child_device",
 }
 
 ORIGIN_ABBREVIATIONS = {

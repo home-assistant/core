@@ -88,27 +88,24 @@ async def test_electricity_interval(
 
     expected = prices.price_at_time(dt_util.utcnow() + step)
     assert expected != prices.current_price
-    assert (state := hass.states.get("sensor.energyzero_today_energy_next_hour_price"))
+    assert (state := hass.states.get("sensor.electricity_price_next_market_price"))
     assert state.state == str(expected)
     assert (
-        all_in_state := hass.states.get(
-            "sensor.energyzero_today_energy_all_in_next_price"
-        )
+        all_in_state := hass.states.get("sensor.electricity_price_next_all_in_price")
     )
     assert all_in_state.state == str(expected + 100)
-    for suffix, market_value, all_in_value in (
-        ("current_hour_price", prices.current_price, all_in_prices.current_price),
-        ("average_price", prices.average_price, all_in_prices.average_price),
-        ("min_price", prices.extreme_prices[0], all_in_prices.extreme_prices[0]),
-        ("max_price", prices.extreme_prices[1], all_in_prices.extreme_prices[1]),
+    for name, market_value, all_in_value in (
+        ("current", prices.current_price, all_in_prices.current_price),
+        ("average", prices.average_price, all_in_prices.average_price),
+        ("minimum", prices.extreme_prices[0], all_in_prices.extreme_prices[0]),
+        ("maximum", prices.extreme_prices[1], all_in_prices.extreme_prices[1]),
     ):
-        assert (state := hass.states.get(f"sensor.energyzero_today_energy_{suffix}"))
-        assert state.state == str(market_value)
-        all_in_suffix = suffix.replace("current_hour", "current")
         assert (
-            state := hass.states.get(
-                f"sensor.energyzero_today_energy_all_in_{all_in_suffix}"
-            )
+            state := hass.states.get(f"sensor.electricity_price_{name}_market_price")
+        )
+        assert state.state == str(market_value)
+        assert (
+            state := hass.states.get(f"sensor.electricity_price_{name}_all_in_price")
         )
         assert state.state == str(all_in_value)
     diagnostics = await get_diagnostics_for_config_entry(
@@ -147,10 +144,7 @@ async def test_electricity_interval(
         entity_registry, mock_config_entry.entry_id
     )
     assert len(entries) == 16
-    assert all(
-        entry.unique_id == f"12345_{entry.entity_id.removeprefix('sensor.energyzero_')}"
-        for entry in entries
-    )
+    assert all(entry.unique_id.startswith("12345_today_") for entry in entries)
 
 
 @pytest.mark.freeze_time("2026-04-10 21:42:00")
@@ -218,8 +212,8 @@ async def test_next_price_across_midnight(
     await hass.async_block_till_done(wait_background_tasks=True)
     assert mock_energyzero.get_electricity_prices.await_count == 4
     for entity_id, value in (
-        ("sensor.energyzero_today_energy_next_hour_price", 0.0),
-        ("sensor.energyzero_today_energy_all_in_next_price", 0.11),
+        ("sensor.electricity_price_next_market_price", 0.0),
+        ("sensor.electricity_price_next_all_in_price", 0.11),
     ):
         assert (state := hass.states.get(entity_id))
         assert state.state == (STATE_UNKNOWN if missing_tomorrow else str(value))
@@ -242,8 +236,8 @@ async def test_next_price_across_midnight(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     for entity_id, value in (
-        ("sensor.energyzero_today_energy_next_hour_price", 0.01),
-        ("sensor.energyzero_today_energy_all_in_next_price", 0.12),
+        ("sensor.electricity_price_next_market_price", 0.01),
+        ("sensor.electricity_price_next_all_in_price", 0.12),
     ):
         assert (state := hass.states.get(entity_id))
         assert state.state == str(value)

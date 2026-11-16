@@ -955,6 +955,50 @@ RPC_SENSORS: Final = {
         entity_class=RpcEnergyConsumedSensor,
         removal_condition=lambda _, status, key: status[key].get("ret_aenergy") is None,
     ),
+    "switch_on_time": RpcSensorDescription(
+        key="switch",
+        sub_key="counts",
+        translation_key="total_runtime",
+        # API docs state minutes, but the firmware reports seconds
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        value=lambda status, _: status["on_time"],
+        suggested_display_precision=1,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        removal_condition=lambda _, status, key: "on_time" not in status[key]["counts"],
+    ),
+    "switch_on_count": RpcSensorDescription(
+        key="switch",
+        sub_key="counts",
+        translation_key="switching_cycles",
+        value=lambda status, _: status["switch_on"],
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        removal_condition=lambda _, status, key: (
+            "switch_on" not in status[key]["counts"]
+        ),
+    ),
+    "switch_on_above_thr": RpcSensorDescription(
+        key="switch",
+        sub_key="counts",
+        translation_key="runtime_above_power_threshold",
+        # API docs state minutes, but the firmware reports seconds
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        value=lambda status, _: status["on_above_thr"],
+        suggested_display_precision=1,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        removal_condition=lambda _, status, key: (
+            "on_above_thr" not in status[key]["counts"]
+        ),
+    ),
     "energy_light": RpcSensorDescription(
         key="light",
         sub_key="aenergy",
@@ -1031,6 +1075,16 @@ RPC_SENSORS: Final = {
     ),
     "energy_rgbcct": RpcSensorDescription(
         key="rgbcct",
+        sub_key="aenergy",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        value=lambda status, _: status["total"],
+        suggested_display_precision=2,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    "energy_fan": RpcSensorDescription(
+        key="fan",
         sub_key="aenergy",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -1499,6 +1553,22 @@ RPC_SENSORS: Final = {
         translation_key="illuminance_level",
         device_class=SensorDeviceClass.ENUM,
         options=["dark", "twilight", "bright"],
+    ),
+    "fan_light": RpcSensorDescription(
+        key="fan",
+        sub_key="light",
+        translation_key="illuminance_level",
+        device_class=SensorDeviceClass.ENUM,
+        value=lambda status, _: status["level"],
+        options=["dark", "twilight", "bright"],
+    ),
+    "fan_hum": RpcSensorDescription(
+        key="fan",
+        sub_key="hum",
+        translation_key="humidity_level",
+        device_class=SensorDeviceClass.ENUM,
+        value=lambda status, _: status["level"],
+        options=["low", "medium", "high", "very_high"],
     ),
     "number_average_temperature": RpcSensorDescription(
         key="number",

@@ -136,6 +136,6 @@ def mock_from_connection_string_fixture() -> Generator[MagicMock]:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock the setup entry call, used for config flow tests."""
     with patch(
-        f"{AZURE_EVENT_HUB_PATH}.async_setup_entry", return_value=True
+        f"{AZURE_EVENT_HUB_PATH}.async_setup_entry", return_value=None
     ) as setup_entry:
         yield setup_entry

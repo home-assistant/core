@@ -8,8 +8,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from . import TeslemetryConfigEntry
 from .entity import TeslemetryEnergyInfoEntity
+from .models import TeslemetryConfigEntry
 
 PARALLEL_UPDATES = 0
 

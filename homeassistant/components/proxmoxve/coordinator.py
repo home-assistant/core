@@ -24,7 +24,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailed,
+    UpdateFailedUnreachable,
+)
 
 from .common import sanitize_config_entry
 from .const import (
@@ -153,7 +157,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                 translation_key="ssl_error",
             ) from err
         except ConnectTimeout as err:
-            raise UpdateFailed(
+            raise UpdateFailedUnreachable(
                 translation_domain=DOMAIN,
                 translation_key="timeout_connect",
             ) from err
@@ -173,7 +177,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                 translation_key="no_nodes_found",
             ) from err
         except requests.exceptions.ConnectionError as err:
-            raise ConfigEntryError(
+            raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
             ) from err
@@ -195,7 +199,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                 translation_key="ssl_error",
             ) from err
         except ConnectTimeout as err:
-            raise UpdateFailed(
+            raise UpdateFailedUnreachable(
                 translation_domain=DOMAIN,
                 translation_key="timeout_connect",
             ) from err
@@ -205,7 +209,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                 translation_key="no_nodes_found",
             ) from err
         except requests.exceptions.ConnectionError as err:
-            raise UpdateFailed(
+            raise UpdateFailedUnreachable(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
             ) from err
@@ -329,9 +333,9 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
             new_node_data = [data[node_name] for node_name in new_nodes]
             device_registry = dr.async_get(self.hass)
             for node_data in new_node_data:
-                device_registry.async_get_or_create(
+                device_registry.async_get_or_create_from_info(
                     config_entry_id=self.config_entry.entry_id,
-                    **node_device_info(self, node_data),
+                    device_info=node_device_info(self, node_data),
                 )
             for nodes_callback in self.new_nodes_callbacks:
                 nodes_callback(new_node_data)

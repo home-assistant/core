@@ -980,6 +980,60 @@ async def test_custom_unit(
 
 
 @pytest.mark.parametrize(
+    ("native_unit", "custom_unit", "expected_state"),
+    [
+        pytest.param(
+            UnitOfEnergyDistance.KM_PER_KILO_WATT_HOUR,
+            UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM,
+            STATE_UNKNOWN,
+            id="km_per_kwh_to_kwh_per_100km",
+        ),
+        pytest.param(
+            UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM,
+            UnitOfEnergyDistance.MILES_PER_KILO_WATT_HOUR,
+            STATE_UNKNOWN,
+            id="kwh_per_100km_to_mi_per_kwh",
+        ),
+        pytest.param(
+            UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM,
+            UnitOfEnergyDistance.WATT_HOUR_PER_KM,
+            "0.0",
+            id="kwh_per_100km_to_wh_per_km",
+        ),
+    ],
+)
+async def test_custom_unit_zero_between_inverse_units(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    native_unit: str,
+    custom_unit: str,
+    expected_state: str,
+) -> None:
+    """Test a zero value converted between inverse units gives an unknown state."""
+    entry = entity_registry.async_get_or_create("sensor", "test", "very_unique")
+    entity_registry.async_update_entity_options(
+        entry.entity_id, "sensor", {"unit_of_measurement": custom_unit}
+    )
+    await hass.async_block_till_done()
+
+    entity0 = MockSensor(
+        name="Test",
+        native_value="0",
+        native_unit_of_measurement=native_unit,
+        device_class=SensorDeviceClass.ENERGY_DISTANCE,
+        unique_id="very_unique",
+    )
+    setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
+
+    assert await async_setup_component(hass, DOMAIN, {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity0.entity_id)
+    assert state.state == expected_state
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == custom_unit
+
+
+@pytest.mark.parametrize(
     (
         "native_unit",
         "custom_unit",
@@ -1642,6 +1696,49 @@ async def test_unit_conversion_priority_precision(
     assert float(async_rounded_state(hass, entity4.entity_id, state)) == pytest.approx(
         round(automatic_state, 4)
     )
+
+
+@pytest.mark.parametrize(
+    ("suggested_precision", "custom_unit", "expected_precision"),
+    [
+        pytest.param(2, UnitOfElectricPotential.MILLIVOLT, 0, id="mV_precision_2"),
+        pytest.param(3, UnitOfElectricPotential.MILLIVOLT, 0, id="mV_precision_3"),
+        pytest.param(4, UnitOfElectricPotential.MILLIVOLT, 1, id="mV_precision_4"),
+        pytest.param(2, UnitOfElectricPotential.KILOVOLT, 5, id="kV_precision_2"),
+    ],
+)
+async def test_custom_unit_adjusted_precision(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    suggested_precision: int,
+    custom_unit: str,
+    expected_precision: int,
+) -> None:
+    """Test suggested precision is scaled by the ratio to a custom unit."""
+    entity0 = MockSensor(
+        name="Test",
+        device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
+        native_value="4150",
+        suggested_display_precision=suggested_precision,
+        suggested_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        unique_id="very_unique",
+    )
+    setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
+
+    assert await async_setup_component(hass, DOMAIN, {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    entry = entity_registry.async_get(entity0.entity_id)
+    assert entry.options["sensor"]["suggested_display_precision"] == suggested_precision
+
+    entity_registry.async_update_entity_options(
+        entity0.entity_id, "sensor", {"unit_of_measurement": custom_unit}
+    )
+    await hass.async_block_till_done()
+
+    entry = entity_registry.async_get(entity0.entity_id)
+    assert entry.options["sensor"]["suggested_display_precision"] == expected_precision
 
 
 @pytest.mark.parametrize(
@@ -2889,12 +2986,11 @@ async def test_name(hass: HomeAssistant) -> None:
 
     async def async_setup_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
             config_entry, [Platform.SENSOR]
         )
-        return True
 
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
     mock_integration(

@@ -1,5 +1,11 @@
 {
   "domain": "philips",
   "name": "Philips",
-  "integrations": ["dynalite", "hue", "hue_ble", "philips_js"]
+  "integrations": [
+    "dynalite",
+    "hue",
+    "hue_ble",
+    "philips_infrared",
+    "philips_js"
+  ]
 }
