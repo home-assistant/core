@@ -163,8 +163,6 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
             auth_status = await self._perform_auth_and_get_details()
 
             if auth_status is None:
-                await self.async_set_unique_id(device_id)
-                self._abort_if_unique_id_configured()
                 return await self.async_step_directives()
 
             if auth_status == "needs_claim":
@@ -265,19 +263,21 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
         # The unique ID is the generated device ID, so the record is the identity.
         if self._flow_data["record_number"] != reauth_entry.data["record_number"]:
             return self.async_abort(reason="wrong_account")
-        credentials = {
-            CONF_PROVISIONING_KEY: self._flow_data[CONF_PROVISIONING_KEY],
-            CONF_PROVISIONING_SECRET: self._flow_data[CONF_PROVISIONING_SECRET],
-        }
-        # A loaded entry reloads from its update listener when the credentials
-        # change. Nothing else reloads an entry that failed setup, or one whose
-        # credentials stay the same because only the claim was renewed.
-        reload = (
-            reauth_entry.state is not ConfigEntryState.LOADED
-            or credentials.items() <= reauth_entry.data.items()
+        key = self._flow_data[CONF_PROVISIONING_KEY]
+        secret = self._flow_data[CONF_PROVISIONING_SECRET]
+        # The update listener reloads a loaded entry whose credentials changed.
+        reload = reauth_entry.state is not ConfigEntryState.LOADED or (
+            key == reauth_entry.data[CONF_PROVISIONING_KEY]
+            and secret == reauth_entry.data[CONF_PROVISIONING_SECRET]
         )
-        result = self.async_update_and_abort(reauth_entry, data_updates=credentials)
-        # The reload starts right away, so the credentials must be stored first.
+        result = self.async_update_and_abort(
+            reauth_entry,
+            data_updates={
+                CONF_PROVISIONING_KEY: key,
+                CONF_PROVISIONING_SECRET: secret,
+            },
+        )
+        # The reload starts right away, so it must follow the update.
         if reload:
             self.hass.config_entries.async_schedule_reload(reauth_entry.entry_id)
         return result
