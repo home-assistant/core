@@ -108,7 +108,6 @@ class TcpConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the user step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
             if self._is_duplicate(user_input):
                 return self.async_abort(reason="already_configured")
             if await self.hass.async_add_executor_job(_can_connect, user_input):
@@ -131,7 +130,6 @@ class TcpConfigFlow(ConfigFlow, domain=DOMAIN):
         entry = self._get_reconfigure_entry()
         errors: dict[str, str] = {}
         if user_input is not None:
-            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
             if self._is_duplicate(user_input, entry.entry_id):
                 return self.async_abort(reason="already_configured")
             if await self.hass.async_add_executor_job(_can_connect, user_input):

@@ -39,7 +39,7 @@ async def async_setup_entry(
     """Set up the TCP sensor."""
     entity = await hass.async_add_executor_job(TcpSensor, hass, entry)
     async_add_entities(
-        [entity, TcpSensor(hass, entry)],
+        [entity],
         update_before_add=True,
     )
 
