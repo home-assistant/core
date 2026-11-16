@@ -406,6 +406,12 @@ async def test_service_error(
         ),
         pytest.param(
             MediaType.URL,
+            "https://example.test/stream.mp3",
+            "https://example.test/stream.mp3",
+            id="https_url",
+        ),
+        pytest.param(
+            MediaType.URL,
             "/local/stream.mp3",
             "http://homeassistant.local:8123/local/stream.mp3",
             id="home_assistant_path",
@@ -475,35 +481,25 @@ async def test_play_media_source(
 
 
 @pytest.mark.parametrize(
-    ("media_type", "media_id", "error", "translation_key"),
+    ("media_type", "media_id", "translation_key"),
     [
         pytest.param(
             MediaType.VIDEO,
             "http://example.test/video.mp4",
-            ServiceValidationError,
             "media_type_unsupported",
             id="unsupported_media_type",
         ),
         pytest.param(
             MediaType.MUSIC,
             "track-id",
-            ServiceValidationError,
             "media_url_invalid",
             id="invalid_url",
         ),
         pytest.param(
             MediaType.URL,
             "http:///stream.mp3",
-            ServiceValidationError,
             "media_url_invalid",
             id="url_without_host",
-        ),
-        pytest.param(
-            MediaType.URL,
-            "https://example.test/stream.mp3",
-            HomeAssistantError,
-            "https_unsupported",
-            id="https",
         ),
     ],
 )
@@ -513,13 +509,12 @@ async def test_play_media_rejected(
     mock_airlino_api: MagicMock,
     media_type: str,
     media_id: str,
-    error: type[HomeAssistantError],
     translation_key: str,
 ) -> None:
     """Test media the device cannot play is rejected."""
     await setup_integration(hass, mock_config_entry)
 
-    with pytest.raises(error) as exc_info:
+    with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
             SERVICE_PLAY_MEDIA,

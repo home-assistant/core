@@ -233,11 +233,6 @@ class AirlinoMediaPlayer(
             )
 
         media_id = async_process_play_media_url(self.hass, media_id)
-        if urlsplit(media_id).scheme == "https":
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="https_unsupported",
-            )
 
         _LOGGER.debug("Playing media on AirLino")
         await self._async_call(self.coordinator.api.async_play_station, media_id)

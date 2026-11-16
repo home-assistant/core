@@ -36,9 +36,6 @@
     "cannot_connect": {
       "message": "Could not connect to the AirLino."
     },
-    "https_unsupported": {
-      "message": "AirLino cannot play HTTPS streams: the device cannot verify SSL certificates. Use an HTTP stream URL instead."
-    },
     "media_type_unsupported": {
       "message": "Media type {media_type} is not supported by AirLino; only audio URLs can be played."
     },
