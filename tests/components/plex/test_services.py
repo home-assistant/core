@@ -24,6 +24,7 @@ from homeassistant.components.plex.const import (
 from homeassistant.components.plex.services import (
     PlexService,
     _media_result_info,
+    _sign_thumbnails,
     process_plex_payload,
 )
 from homeassistant.const import CONF_URL
@@ -529,6 +530,50 @@ async def test_search_service_advanced_filters(
     assert "or" not in search.call_args.kwargs
     assert search.call_args.kwargs["year"] == 2000
     assert search.call_args.kwargs["libtype"] == "movie"
+
+
+async def test_media_result_info_show_thumbnail(
+    hass: HomeAssistant, mock_plex_server
+) -> None:
+    """Test seasons and episodes also return the poster of their show."""
+    episode = SimpleNamespace(
+        title="Episode 1",
+        type="episode",
+        guid="plex://episode/1",
+        ratingKey=35,
+        key="/library/metadata/35",
+        thumbUrl="https://plex.example/library/metadata/35/thumb/1?X-Plex-Token=secret",
+        grandparentThumb="/library/metadata/30/thumb/1",
+        grandparentRatingKey=30,
+        url=lambda part: f"https://plex.example{part}?X-Plex-Token=secret",
+    )
+    server_id = mock_plex_server.machine_identifier
+    info = _media_result_info(episode, mock_plex_server)
+
+    assert info["thumb_path"] == f"/api/plex_image_proxy/{server_id}/35"
+    assert info["show_thumb_path"] == f"/api/plex_image_proxy/{server_id}/30"
+    assert mock_plex_server.thumbnail_cache["30"].endswith(
+        "/30/thumb/1?X-Plex-Token=secret"
+    )
+
+    response = {"results": [{**info, "on_deck": dict(info)}]}
+    _sign_thumbnails(hass, response)
+    result = response["results"][0]
+    for entry in (result, result["on_deck"]):
+        assert entry["thumb_url"].startswith(f"{entry['thumb_path']}?authSig=")
+        assert entry["show_thumb_url"].startswith(
+            f"{entry['show_thumb_path']}?authSig="
+        )
+        assert "X-Plex-Token" not in entry["show_thumb_url"]
+
+    movie = SimpleNamespace(
+        title="Movie",
+        type="movie",
+        guid="plex://movie/1",
+        ratingKey=1,
+        key="/library/metadata/1",
+    )
+    assert "show_thumb_path" not in _media_result_info(movie, mock_plex_server)
 
 
 async def test_media_result_info_hierarchy(mock_plex_server) -> None:

@@ -141,6 +141,16 @@ ON_DECK_SCHEMA = probatio.Schema(
     }
 )
 
+THUMBNAIL_FIELDS = (
+    ("thumb_path", "thumb_url"),
+    ("show_thumb_path", "show_thumb_url"),
+)
+
+SHOW_THUMBNAIL_ATTRIBUTES = {
+    "season": ("parentThumb", "parentRatingKey"),
+    "episode": ("grandparentThumb", "grandparentRatingKey"),
+}
+
 # Signed links stop working at a restart, because the signing secret is lost
 THUMBNAIL_URL_EXPIRATION = timedelta(days=365)
 
@@ -392,6 +402,16 @@ def _proxy_thumb_url(item: Any, plex_server: PlexServer) -> str | None:
     return get_proxy_image_url(plex_server.machine_identifier, item.ratingKey)
 
 
+def _proxy_show_thumb_path(
+    item: Any, plex_server: PlexServer, thumb: str | None, rating_key: Any
+) -> str | None:
+    """Return the proxy path of the poster of the show of an item."""
+    if not thumb or rating_key is None:
+        return None
+    plex_server.thumbnail_cache.setdefault(str(rating_key), item.url(thumb))
+    return get_proxy_image_url(plex_server.machine_identifier, rating_key)
+
+
 @callback
 def _sign_thumbnails(hass: HomeAssistant, response: dict[str, Any]) -> None:
     """Sign the thumbnail paths of a response.
@@ -400,10 +420,13 @@ def _sign_thumbnails(hass: HomeAssistant, response: dict[str, Any]) -> None:
     """
     for info in response["results"]:
         for entry in (info, info.get("on_deck")):
-            if entry and (path := entry.get("thumb_path")):
-                entry["thumb_url"] = async_sign_path(
-                    hass, path, THUMBNAIL_URL_EXPIRATION, use_content_user=True
-                )
+            if not entry:
+                continue
+            for path_key, url_key in THUMBNAIL_FIELDS:
+                if path := entry.get(path_key):
+                    entry[url_key] = async_sign_path(
+                        hass, path, THUMBNAIL_URL_EXPIRATION, use_content_user=True
+                    )
 
 
 def _media_result_info(item: Any, plex_server: PlexServer) -> dict[str, Any]:
@@ -425,6 +448,15 @@ def _media_result_info(item: Any, plex_server: PlexServer) -> dict[str, Any]:
     }
     for name, attribute in attributes.items():
         info[name] = getattr(item, attribute, None)
+    if show_thumbnail := SHOW_THUMBNAIL_ATTRIBUTES.get(item.type):
+        thumb_attribute, key_attribute = show_thumbnail
+        info["show_thumb_path"] = _proxy_show_thumb_path(
+            item,
+            plex_server,
+            getattr(item, thumb_attribute, None),
+            getattr(item, key_attribute, None),
+        )
+        info["show_thumb_url"] = None
     for name, attribute in SEARCH_RESULT_DATES.items():
         value = getattr(item, attribute, None)
         info[name] = value.isoformat() if value else None
