@@ -618,19 +618,19 @@ async def test_update_locks(
     await crd.async_shutdown()
 
 
-async def test_last_data(
+async def test_data_or_none(
     crd: update_coordinator.DataUpdateCoordinator[int],
 ) -> None:
-    """Test last_data is None until the first successful update and kept on failure."""
-    assert crd.last_data is None
+    """Test data_or_none before and after the first successful update."""
+    assert crd.data_or_none is None
 
     await crd.async_refresh()
-    assert crd.last_data == 1
+    assert crd.data_or_none == 1
 
     crd.update_method = AsyncMock(side_effect=update_coordinator.UpdateFailed)
     await crd.async_refresh()
     assert crd.last_update_success is False
-    assert crd.last_data == 1
+    assert crd.data_or_none == 1
 
 
 async def test_refresh_recover(

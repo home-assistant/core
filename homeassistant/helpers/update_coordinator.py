@@ -254,8 +254,8 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             self._unsub_shutdown = None
 
     @property
-    def last_data(self) -> _DataT | None:
-        """Return the last data, or None before the first successful update."""
+    def data_or_none(self) -> _DataT | None:
+        """Return the data, or None before the first successful update."""
         return self.data
 
     @property

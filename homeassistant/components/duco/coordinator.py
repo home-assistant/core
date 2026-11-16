@@ -179,7 +179,7 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
 
     async def _async_fetch_data(self) -> DucoData:
         """Fetch node data while holding the request lock."""
-        previous_data = self.last_data
+        previous_data = self.data_or_none
         try:
             nodes = await self.client.async_get_nodes()
         except DucoConnectionError as err:
