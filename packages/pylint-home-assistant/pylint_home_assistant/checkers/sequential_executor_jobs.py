@@ -8,6 +8,7 @@ https://contributors.home-assistant.io/core/internals/asyncio/#move-blocking-wor
 """
 
 from collections.abc import Collection, Iterator
+import re
 
 from astroid import nodes
 from pylint.checkers import BaseChecker
@@ -38,11 +39,13 @@ _TRANSPARENT_STATEMENTS = (
 
 _LOOP_ONLY_FUNCTIONS = frozenset(
     {
+        "all_tasks",
         "call_at",
         "call_later",
         "call_soon",
         "create_future",
         "create_task",
+        "current_task",
         "ensure_future",
         "get_event_loop",
         "get_running_loop",
@@ -97,13 +100,18 @@ def _executor_key(call: nodes.Call) -> str | None:
     return None
 
 
-def _eager_nodes(node: nodes.NodeNG) -> Iterator[nodes.NodeNG]:
-    """Yield *node* and its descendants that run when *node* is evaluated."""
+def _eager_nodes(
+    node: nodes.NodeNG, generator_bodies: bool = False
+) -> Iterator[nodes.NodeNG]:
+    """Yield *node* and its descendants that run when *node* is evaluated.
+
+    With *generator_bodies*, the bodies of generator expressions are included.
+    """
     stack = [node]
     while stack:
         current = stack.pop()
         yield current
-        if isinstance(current, nodes.GeneratorExp):
+        if isinstance(current, nodes.GeneratorExp) and not generator_bodies:
             # The body of a generator expression runs only when it is consumed
             stack.append(current.generators[0].iter)
             continue
@@ -164,8 +172,8 @@ def _calls_loop_only_api(
     """
     # Generator expression bodies are included, as sync code often consumes
     # them right away.
-    for call in node.nodes_of_class(nodes.Call, skip_klass=_NEW_SCOPE_NODES):
-        if call in exclude:
+    for call in _eager_nodes(node, generator_bodies=True):
+        if not isinstance(call, nodes.Call) or call in exclude:
             continue
         func = call.func
         name = func.attrname if isinstance(func, nodes.Attribute) else None
@@ -253,9 +261,9 @@ def _rebinds_executor(node: nodes.NodeNG, executor: str) -> bool:
             name = target.name
         else:
             name = f"{target.expr.as_string()}.{target.attrname}"
-        if expression == name or expression.startswith(
-            (f"{name}.", f"{name}[", f"{name}(")
-        ):
+        # Any name the expression refers to, such as a subscript index or a
+        # call argument, can change the executor it evaluates to.
+        if re.search(rf"(?<![\w.]){re.escape(name)}(?!\w)", expression):
             return True
     return False
 
@@ -311,7 +319,7 @@ class SequentialExecutorJobsChecker(BaseChecker):
                         "home-assistant-sequential-executor-jobs",
                         node=stmt,
                     )
-                prev_executor = executor
+                prev_executor = None if _rebinds_executor(stmt, executor) else executor
                 continue
 
             if not _is_transparent(stmt) or (
