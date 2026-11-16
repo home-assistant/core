@@ -510,6 +510,7 @@ FLOWS = {
         "met_eireann",
         "meteo_france",
         "meteo_lt",
+        "meteoalarm",
         "meteoclimatic",
         "metoffice",
         "microbees",
