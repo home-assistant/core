@@ -7040,6 +7040,18 @@
       ],
       "config_flow": false
     },
+    "intesis_modbus": {
+      "name": "Intesis Modbus",
+      "integration_type": "device",
+      "categories": [
+        "climate.heat_pumps_air_conditioning"
+      ],
+      "connectivity": [
+        "modbus"
+      ],
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "intesishome": {
       "name": "IntesisHome",
       "integration_type": "hub",
