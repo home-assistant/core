@@ -6,7 +6,9 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from google_weather_api import (
+    Date,
     GoogleWeatherApiError,
+    Interval,
     PrecipitationSegment,
     QuantitativePrecipitationForecast,
     WeatherCondition,
@@ -35,6 +37,7 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_PARTLYCLOUDY,
     ATTR_CONDITION_SUNNY,
+    ATTR_FORECAST_TIME,
     DOMAIN as WEATHER_DOMAIN,
     WeatherEntityFeature,
     WeatherService,
@@ -50,6 +53,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
+
+pytestmark = pytest.mark.freeze_time("2025-02-10T16:00:00Z")
 
 
 async def test_weather(
@@ -178,13 +183,13 @@ def test_all_precipitation_segment_values_mapped() -> None:
         assert intensity in _PRECIPITATION_INTENSITY_MAP
 
 
-@pytest.mark.parametrize(("forecast_type"), ["daily", "hourly", "twice_daily"])
+@pytest.mark.parametrize("forecast_type", ["daily", "hourly", "twice_daily"])
 async def test_forecast_service(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     mock_google_weather_api: AsyncMock,
-    forecast_type,
+    forecast_type: str,
 ) -> None:
     """Test forecast service."""
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -193,13 +198,153 @@ async def test_forecast_service(
         WEATHER_DOMAIN,
         WeatherService.GET_FORECASTS,
         {
-            "entity_id": "weather.home",
+            ATTR_ENTITY_ID: "weather.home",
             "type": forecast_type,
         },
         blocking=True,
         return_response=True,
     )
     assert response == snapshot
+
+
+@pytest.mark.parametrize(
+    ("frozen_time", "time_zone_id", "forecast_type", "expected_times"),
+    [
+        pytest.param(
+            "2025-02-10T16:00:00Z",
+            "America/Los_Angeles",
+            "daily",
+            ["2025-02-10T15:00:00Z", "2025-02-11T15:00:00Z"],
+            id="daily_daytime",
+        ),
+        pytest.param(
+            "2025-02-11T04:00:00Z",
+            "America/Los_Angeles",
+            "daily",
+            ["2025-02-10T15:00:00Z", "2025-02-11T15:00:00Z"],
+            id="daily_evening_before_midnight",
+        ),
+        pytest.param(
+            "2025-02-11T08:00:00Z",
+            "America/Los_Angeles",
+            "daily",
+            ["2025-02-11T15:00:00Z"],
+            id="daily_at_local_midnight",
+        ),
+        pytest.param(
+            "2025-02-11T11:00:00Z",
+            "America/Los_Angeles",
+            "daily",
+            ["2025-02-11T15:00:00Z"],
+            id="daily_between_midnight_and_7am",
+        ),
+        pytest.param(
+            "2025-02-10T16:00:00Z",
+            "Asia/Tokyo",
+            "daily",
+            ["2025-02-11T15:00:00Z"],
+            id="daily_uses_location_time_zone",
+        ),
+        pytest.param(
+            "2025-02-11T08:00:00Z",
+            "Invalid/Timezone",
+            "daily",
+            ["2025-02-11T15:00:00Z"],
+            id="daily_invalid_time_zone_falls_back_to_default",
+        ),
+        pytest.param(
+            "2025-02-10T16:00:00Z",
+            "America/Los_Angeles",
+            "twice_daily",
+            [
+                "2025-02-10T15:00:00Z",
+                "2025-02-11T03:00:00Z",
+                "2025-02-11T15:00:00Z",
+                "2025-02-12T03:00:00Z",
+            ],
+            id="twice_daily_daytime",
+        ),
+        pytest.param(
+            "2025-02-11T04:00:00Z",
+            "America/Los_Angeles",
+            "twice_daily",
+            [
+                "2025-02-11T03:00:00Z",
+                "2025-02-11T15:00:00Z",
+                "2025-02-12T03:00:00Z",
+            ],
+            id="twice_daily_evening_skips_ended_daytime",
+        ),
+        pytest.param(
+            "2025-02-11T11:00:00Z",
+            "America/Los_Angeles",
+            "twice_daily",
+            [
+                "2025-02-11T03:00:00Z",
+                "2025-02-11T15:00:00Z",
+                "2025-02-12T03:00:00Z",
+            ],
+            id="twice_daily_between_midnight_and_7am_keeps_active_night",
+        ),
+        pytest.param(
+            "2025-02-11T16:00:00Z",
+            "America/Los_Angeles",
+            "twice_daily",
+            [
+                "2025-02-11T15:00:00Z",
+                "2025-02-12T03:00:00Z",
+            ],
+            id="twice_daily_after_7am_skips_ended_night",
+        ),
+    ],
+)
+async def test_forecast_filters_past_periods(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_google_weather_api: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    frozen_time: str,
+    time_zone_id: str,
+    forecast_type: str,
+    expected_times: list[str],
+) -> None:
+    """Test daily and twice-daily forecasts skip past days and ended dayparts."""
+    daily_forecast = mock_google_weather_api.async_get_daily_forecast.return_value
+    daily_forecast.time_zone.id = time_zone_id
+    second_day = deepcopy(daily_forecast.forecast_days[0])
+    second_day.display_date = Date(year=2025, month=2, day=11)
+    second_day.interval = Interval(
+        start_time="2025-02-11T15:00:00Z",
+        end_time="2025-02-12T15:00:00Z",
+    )
+    assert second_day.daytime_forecast is not None
+    second_day.daytime_forecast.interval = Interval(
+        start_time="2025-02-11T15:00:00Z",
+        end_time="2025-02-12T03:00:00Z",
+    )
+    assert second_day.nighttime_forecast is not None
+    second_day.nighttime_forecast.interval = Interval(
+        start_time="2025-02-12T03:00:00Z",
+        end_time="2025-02-12T15:00:00Z",
+    )
+    daily_forecast.forecast_days.append(second_day)
+
+    freezer.move_to(frozen_time)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    response = await hass.services.async_call(
+        WEATHER_DOMAIN,
+        WeatherService.GET_FORECASTS,
+        {
+            ATTR_ENTITY_ID: "weather.home",
+            "type": forecast_type,
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert [
+        item[ATTR_FORECAST_TIME] for item in response["weather.home"]["forecast"]
+    ] == expected_times
 
 
 async def test_forecast_subscription(
