@@ -15,9 +15,9 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.growatt_server.coordinator import SCAN_INTERVAL
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
@@ -56,7 +56,7 @@ async def test_set_number_value_api_error(
     """Test handling API error when setting number value."""
     # Mock API to raise error
     mock_growatt_v1_api.min_write_parameter.side_effect = GrowattV1ApiError(
-        message="API Error",
+        message="Error during writing parameter",
         error_code=GrowattV1ApiErrorCode.NO_PRIVILEGE,
         error_msg="API Error",
     )
@@ -64,16 +64,19 @@ async def test_set_number_value_api_error(
     with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
                 "entity_id": "number.min123456_battery_charge_power_limit",
-                ATTR_VALUE: 75,
+                NumberServiceArgument.VALUE: 75,
             },
             blocking=True,
         )
     assert excinfo.value.translation_domain == "growatt_server"
-    assert excinfo.value.translation_key == "api_error"
-    assert "error" in excinfo.value.translation_placeholders
+    assert excinfo.value.translation_key == "api_error_with_code"
+    assert excinfo.value.translation_placeholders == {
+        "error": "API Error",
+        "code": "10011",
+    }
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
@@ -104,8 +107,8 @@ async def test_all_number_entities_service_calls(
 
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {"entity_id": entity_id, ATTR_VALUE: test_value},
+            NumberService.SET_VALUE,
+            {"entity_id": entity_id, NumberServiceArgument.VALUE: test_value},
             blocking=True,
         )
 
@@ -210,8 +213,11 @@ async def test_float_to_int_conversion(
     # Test setting a float value gets converted to int
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {"entity_id": "number.min123456_battery_charge_power_limit", ATTR_VALUE: 75.7},
+        NumberService.SET_VALUE,
+        {
+            "entity_id": "number.min123456_battery_charge_power_limit",
+            NumberServiceArgument.VALUE: 75.7,
+        },
         blocking=True,
     )
 

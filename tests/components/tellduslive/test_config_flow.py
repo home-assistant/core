@@ -1,26 +1,24 @@
 """Tests for the TelldusLive config flow."""
 
-from unittest.mock import MagicMock, Mock, patch
+from collections.abc import Generator
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant import data_entry_flow
-from homeassistant.components.tellduslive import APPLICATION_NAME, DOMAIN, config_flow
-from homeassistant.config_entries import SOURCE_DISCOVERY
+from homeassistant.components.tellduslive import APPLICATION_NAME, DOMAIN
+from homeassistant.config_entries import SOURCE_DISCOVERY, SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 
-def init_config_flow(
-    hass: HomeAssistant, side_effect: type[Exception] | None = None
-) -> config_flow.FlowHandler:
-    """Init a configuration flow."""
-    flow = config_flow.FlowHandler()
-    flow.hass = hass
-    if side_effect:
-        flow._get_auth_url = Mock(side_effect=side_effect)
-    return flow
+@pytest.fixture(autouse=True)
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Prevent setting up the integration when an entry is created."""
+    with patch(
+        "homeassistant.components.tellduslive.async_setup_entry", return_value=None
+    ) as mock_setup_entry:
+        yield mock_setup_entry
 
 
 @pytest.fixture
@@ -52,30 +50,35 @@ def mock_tellduslive(supports_local_api, authorize):
         yield Session, tellduslive_supports_local_api
 
 
+# The "already_setup" abort reason has no translation in strings.json
+@pytest.mark.parametrize(
+    "ignore_missing_translations",
+    ["component.tellduslive.config.abort.already_setup"],
+)
 async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
     """Test we abort if TelldusLive is already setup."""
-    flow = init_config_flow(hass)
+    MockConfigEntry(domain=DOMAIN, data={}).add_to_hass(hass)
 
-    with patch.object(hass.config_entries, "async_entries", return_value=[{}]):
-        result = await flow.async_step_user()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_setup"
 
 
 async def test_full_flow_implementation(hass: HomeAssistant, mock_tellduslive) -> None:
     """Test registering an implementation and finishing flow works."""
-    flow = init_config_flow(hass)
-    flow.context = {"source": SOURCE_DISCOVERY}
-    result = await flow.async_step_discovery(["localhost", "tellstick"])
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert len(flow._hosts) == 2
-
-    result = await flow.async_step_user()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DISCOVERY},
+        data=["localhost", "tellstick"],
+    )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    result = await flow.async_step_user({"host": "localhost"})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"host": "localhost"}
+    )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth"
     assert result["description_placeholders"] == {
@@ -83,7 +86,7 @@ async def test_full_flow_implementation(hass: HomeAssistant, mock_tellduslive) -
         "app_name": APPLICATION_NAME,
     }
 
-    result = await flow.async_step_auth("")
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "localhost"
     assert result["data"]["host"] == "localhost"
@@ -94,21 +97,28 @@ async def test_full_flow_implementation(hass: HomeAssistant, mock_tellduslive) -
 @pytest.mark.parametrize("supports_local_api", [False])
 async def test_step_disco_no_local_api(hass: HomeAssistant, mock_tellduslive) -> None:
     """Test configuring from discovery, not supporting local api."""
-    flow = init_config_flow(hass)
-    flow.context = {"source": SOURCE_DISCOVERY}
-
-    result = await flow.async_step_discovery(["localhost", "tellstick"])
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DISCOVERY},
+        data=["localhost", "tellstick"],
+    )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth"
-    assert len(flow._hosts) == 1
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Cloud API"
 
 
 async def test_step_auth(hass: HomeAssistant, mock_tellduslive) -> None:
-    """Test that create cloud entity from auth."""
-    flow = init_config_flow(hass)
+    """Test that create cloud entity from auth, without picking a host."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "auth"
 
-    await flow.async_step_auth()
-    result = await flow.async_step_auth(["localhost", "tellstick"])
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Cloud API"
     assert result["data"]["host"] == "Cloud API"
@@ -124,57 +134,54 @@ async def test_wrong_auth_flow_implementation(
     hass: HomeAssistant, mock_tellduslive: tuple[MagicMock, MagicMock]
 ) -> None:
     """Test wrong auth."""
-    flow = init_config_flow(hass)
-
-    await flow.async_step_auth()
-    result = await flow.async_step_auth("")
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth"
     assert result["errors"]["base"] == "invalid_auth"
 
     session_cls, _ = mock_tellduslive
     session_cls.return_value.authorize.return_value = True
-    result = await flow.async_step_auth("")
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_not_pick_host_if_only_one(hass: HomeAssistant, mock_tellduslive) -> None:
-    """Test not picking host if we have just one."""
-    flow = init_config_flow(hass)
-
-    result = await flow.async_step_user()
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "auth"
-
-
-async def test_abort_if_timeout_generating_auth_url(
-    hass: HomeAssistant, mock_tellduslive
+@pytest.mark.parametrize(
+    ("side_effect", "reason"),
+    [
+        (TimeoutError, "authorize_url_timeout"),
+        (ValueError, "unknown_authorize_url_generation"),
+    ],
+)
+async def test_abort_if_error_generating_auth_url(
+    hass: HomeAssistant,
+    mock_tellduslive: tuple[MagicMock, MagicMock],
+    side_effect: type[Exception],
+    reason: str,
 ) -> None:
-    """Test abort if generating authorize url timeout."""
-    flow = init_config_flow(hass, side_effect=TimeoutError)
+    """Test abort if generating authorize url times out or blows up."""
+    session_cls, _ = mock_tellduslive
+    session_cls.side_effect = side_effect
 
-    result = await flow.async_step_user()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "authorize_url_timeout"
+    assert result["reason"] == reason
 
 
-async def test_abort_no_auth_url(hass: HomeAssistant, mock_tellduslive) -> None:
+async def test_abort_no_auth_url(
+    hass: HomeAssistant, mock_tellduslive: tuple[MagicMock, MagicMock]
+) -> None:
     """Test abort if generating authorize url returns none."""
-    flow = init_config_flow(hass)
-    flow._get_auth_url = Mock(return_value=False)
+    session_cls, _ = mock_tellduslive
+    session_cls.return_value.authorize_url = None
 
-    result = await flow.async_step_user()
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "unknown_authorize_url_generation"
-
-
-async def test_abort_if_exception_generating_auth_url(
-    hass: HomeAssistant, mock_tellduslive
-) -> None:
-    """Test we abort if generating authorize url blows up."""
-    flow = init_config_flow(hass, side_effect=ValueError)
-
-    result = await flow.async_step_user()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unknown_authorize_url_generation"
 
@@ -184,8 +191,11 @@ async def test_discovery_already_configured(
 ) -> None:
     """Test abort if already configured fires from discovery."""
     MockConfigEntry(domain=DOMAIN, data={"host": "some-host"}).add_to_hass(hass)
-    flow = init_config_flow(hass)
-    flow.context = {"source": SOURCE_DISCOVERY}
 
-    with pytest.raises(data_entry_flow.AbortFlow):
-        await flow.async_step_discovery(["some-host", ""])
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DISCOVERY},
+        data=["some-host", ""],
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"

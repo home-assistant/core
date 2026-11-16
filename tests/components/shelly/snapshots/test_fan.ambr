@@ -1,0 +1,64 @@
+# serializer version: 1
+# name: test_rpc_fan[fan.test_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
+        'auto',
+        'manual',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('shelly', '123456789ABC')]>,
+    'disabled_by': None,
+    'domain': 'fan',
+    'entity_category': None,
+    'entity_id': 'fan.test_name',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <FanEntityFeature: 57>,
+    'translation_key': 'fan',
+    'unique_id': '123456789ABC-fan:0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_rpc_fan[fan.test_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name',
+      <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 0,
+      <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 1.0,
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'manual',
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
+        'auto',
+        'manual',
+      ]),
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 57>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'fan.test_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

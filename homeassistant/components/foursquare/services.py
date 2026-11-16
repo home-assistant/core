@@ -1,5 +1,6 @@
 """Services for the Foursquare integration."""
 
+from enum import StrEnum
 from http import HTTPStatus
 import logging
 
@@ -13,17 +14,38 @@ from .const import DATA_ACCESS_TOKEN, DOMAIN, EVENT_CHECKIN
 
 _LOGGER = logging.getLogger(__name__)
 
+
+class FoursquareService(StrEnum):
+    """Store keys for Foursquare services."""
+
+    CHECKIN = "checkin"
+
+
+class FoursquareServiceArgument(StrEnum):
+    """Store keys for Foursquare service arguments."""
+
+    ALT = "alt"
+    ALT_ACC = "altAcc"
+    BROADCAST = "broadcast"
+    EVENT_ID = "eventId"
+    LL = "ll"
+    LL_ACC = "llAcc"
+    MENTIONS = "mentions"
+    SHOUT = "shout"
+    VENUE_ID = "venueId"
+
+
 CHECKIN_SERVICE_SCHEMA = probatio.Schema(
     {
-        probatio.Optional("alt"): cv.string,
-        probatio.Optional("altAcc"): cv.string,
-        probatio.Optional("broadcast"): cv.string,
-        probatio.Optional("eventId"): cv.string,
-        probatio.Optional("ll"): cv.string,
-        probatio.Optional("llAcc"): cv.string,
-        probatio.Optional("mentions"): cv.string,
-        probatio.Optional("shout"): cv.string,
-        probatio.Required("venueId"): cv.string,
+        probatio.Optional(FoursquareServiceArgument.ALT): cv.string,
+        probatio.Optional(FoursquareServiceArgument.ALT_ACC): cv.string,
+        probatio.Optional(FoursquareServiceArgument.BROADCAST): cv.string,
+        probatio.Optional(FoursquareServiceArgument.EVENT_ID): cv.string,
+        probatio.Optional(FoursquareServiceArgument.LL): cv.string,
+        probatio.Optional(FoursquareServiceArgument.LL_ACC): cv.string,
+        probatio.Optional(FoursquareServiceArgument.MENTIONS): cv.string,
+        probatio.Optional(FoursquareServiceArgument.SHOUT): cv.string,
+        probatio.Required(FoursquareServiceArgument.VENUE_ID): cv.string,
     }
 )
 
@@ -47,5 +69,5 @@ def _checkin_user(call: ServiceCall) -> None:
 def setup_services(hass: HomeAssistant) -> None:
     """Register the Foursquare services."""
     hass.services.register(
-        DOMAIN, "checkin", _checkin_user, schema=CHECKIN_SERVICE_SCHEMA
+        DOMAIN, FoursquareService.CHECKIN, _checkin_user, schema=CHECKIN_SERVICE_SCHEMA
     )

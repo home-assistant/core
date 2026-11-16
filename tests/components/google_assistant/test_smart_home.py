@@ -13,7 +13,12 @@ from pytest_homeassistant.common import (
 from pytest_unordered import unordered
 
 from homeassistant.components.camera import CameraEntityFeature
-from homeassistant.components.climate import ATTR_MAX_TEMP, ATTR_MIN_TEMP, HVACMode
+from homeassistant.components.climate import (
+    ATTR_MAX_TEMP,
+    ATTR_MIN_TEMP,
+    ClimateEntityCapabilityAttribute,
+    HVACMode,
+)
 
 # pylint: disable-next=home-assistant-component-root-import
 from homeassistant.components.demo.binary_sensor import DemoBinarySensor
@@ -36,7 +41,6 @@ from homeassistant.components.google_assistant.const import (
     EVENT_SYNC_RECEIVED,
 )
 from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT,
     EVENT_CALL_SERVICE,
     Platform,
     UnitOfTemperature,
@@ -837,7 +841,7 @@ async def test_raising_error_trait(hass: HomeAssistant) -> None:
         {
             ATTR_MIN_TEMP: 15,
             ATTR_MAX_TEMP: 30,
-            ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         },
     )
 

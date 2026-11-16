@@ -4,6 +4,7 @@ from collections.abc import Callable
 import contextlib
 from copy import deepcopy
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 import logging
 from typing import TYPE_CHECKING, Any, cast
 
@@ -41,7 +42,11 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    OAuth2TokenRequestBaseError,
+)
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
@@ -49,6 +54,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     async_get_config_entry_implementation,
 )
 from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import Undefined
 
 from .const import (
@@ -64,6 +70,8 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+TOKEN_CHECK_INTERVAL = timedelta(minutes=1)
 
 
 def format_zigbee_address(address: str) -> str:
@@ -138,6 +146,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
         return token
 
     client.refresh_token_function = _refresh_token
+
+    refresh_failing = False
+
+    # The event stream makes no requests, so nothing else refreshes the token,
+    # and SmartThings stops delivering events once it has expired.
+    async def _async_keep_token_valid(_: datetime) -> None:
+        nonlocal refresh_failing
+        try:
+            await session.async_ensure_token_valid()
+        except (OAuth2TokenRequestBaseError, TimeoutError) as err:
+            if not refresh_failing:
+                _LOGGER.warning("Error refreshing the token: %s", err)
+            refresh_failing = True
+        else:
+            refresh_failing = False
+
+    entry.async_on_unload(
+        async_track_time_interval(hass, _async_keep_token_valid, TOKEN_CHECK_INTERVAL)
+    )
 
     def _handle_max_connections() -> None:
         _LOGGER.debug(
@@ -327,7 +354,9 @@ async def async_unload_entry(
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_migrate_entry(
+    hass: HomeAssistant, entry: SmartThingsConfigEntry
+) -> None:
     """Handle config entry migration."""
 
     if entry.version < 3:

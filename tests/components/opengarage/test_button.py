@@ -7,7 +7,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import button
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -25,8 +25,8 @@ async def test_buttons(
     assert entry.unique_id == "12345_restart"
     await hass.services.async_call(
         button.DOMAIN,
-        button.SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.garage_abcdef_restart"},
+        button.ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: "button.garage_abcdef_restart"},
         blocking=True,
     )
     assert len(mock_opengarage.reboot.mock_calls) == 1
