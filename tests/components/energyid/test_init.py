@@ -664,6 +664,8 @@ async def test_config_entry_update_listener(
         mock_client.recordNumber = "site_123"
         mock_client.recordName = "Test Site"
         mock_client.webhook_policy = None
+        mock_client.provisioning_key = "test_key"
+        mock_client.provisioning_secret = "test_secret"
         mock_client.get_or_create_sensor = MagicMock(return_value=MagicMock())
         mock_client_class.return_value = mock_client
 
@@ -684,6 +686,10 @@ async def test_config_entry_update_listener(
         # This should trigger config_entry_update_listener
         hass.config_entries.async_update_entry(entry, data=entry.data)
         await hass.async_block_till_done()
+
+    # The listeners are updated in place; unchanged credentials need no reload.
+    mock_client.authenticate.assert_awaited_once()
+    assert entry.state is ConfigEntryState.LOADED
 
 
 async def test_initial_state_non_numeric(
@@ -1066,6 +1072,8 @@ async def test_config_entry_update_listener_called(hass: HomeAssistant) -> None:
         mock_client.recordNumber = "site_123"
         mock_client.recordName = "Test Site"
         mock_client.webhook_policy = None
+        mock_client.provisioning_key = "test_key"
+        mock_client.provisioning_secret = "test_secret"
         mock_client_class.return_value = mock_client
 
         await hass.config_entries.async_setup(entry.entry_id)
@@ -1076,6 +1084,9 @@ async def test_config_entry_update_listener_called(hass: HomeAssistant) -> None:
             entry, data={**entry.data, "test": "value"}
         )
         await hass.async_block_till_done()
+
+    mock_client.authenticate.assert_awaited_once()
+    assert entry.state is ConfigEntryState.LOADED
 
 
 async def test_initial_state_conversion_error_valueerror(
