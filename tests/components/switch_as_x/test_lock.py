@@ -2,7 +2,7 @@
 
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockState
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockService, LockState
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.components.switch_as_x.config_flow import SwitchAsXConfigFlowHandler
 from homeassistant.components.switch_as_x.const import (
@@ -12,8 +12,6 @@ from homeassistant.components.switch_as_x.const import (
 )
 from homeassistant.const import (
     CONF_ENTITY_ID,
-    SERVICE_LOCK,
-    SERVICE_UNLOCK,
     STATE_OFF,
     STATE_ON,
     CommonServiceArgument,
@@ -70,8 +68,8 @@ async def test_service_calls(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         LOCK_DOMAIN,
-        SERVICE_LOCK,
-        {CONF_ENTITY_ID: "lock.decorative_lights"},
+        LockService.LOCK,
+        {CommonServiceArgument.ENTITY_ID: "lock.decorative_lights"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -81,8 +79,8 @@ async def test_service_calls(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         LOCK_DOMAIN,
-        SERVICE_UNLOCK,
-        {CONF_ENTITY_ID: "lock.decorative_lights"},
+        LockService.UNLOCK,
+        {CommonServiceArgument.ENTITY_ID: "lock.decorative_lights"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -148,8 +146,8 @@ async def test_service_calls_inverted(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         LOCK_DOMAIN,
-        SERVICE_LOCK,
-        {CONF_ENTITY_ID: "lock.decorative_lights"},
+        LockService.LOCK,
+        {CommonServiceArgument.ENTITY_ID: "lock.decorative_lights"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -159,8 +157,8 @@ async def test_service_calls_inverted(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         LOCK_DOMAIN,
-        SERVICE_UNLOCK,
-        {CONF_ENTITY_ID: "lock.decorative_lights"},
+        LockService.UNLOCK,
+        {CommonServiceArgument.ENTITY_ID: "lock.decorative_lights"},
         blocking=True,
     )
     await hass.async_block_till_done()

@@ -19,6 +19,18 @@
     }
   },
   "issues": {
+    "battery_from_grid_without_grid_import": {
+      "description": "The following entities measure battery charging from the grid, but no grid import meter is configured. Add one so the energy dashboard can show where this energy comes from:",
+      "title": "Battery charging from the grid without grid import"
+    },
+    "battery_from_solar_without_solar": {
+      "description": "The following entities measure battery charging from solar, but no solar production is configured. Add your solar panels so the energy dashboard can show where this energy comes from:",
+      "title": "Battery charging from solar without solar production"
+    },
+    "battery_to_grid_without_grid_export": {
+      "description": "The following entities measure battery discharging to the grid, but no grid export meter is configured. Add one so the energy dashboard can show where this energy goes:",
+      "title": "Battery discharging to the grid without grid export"
+    },
     "entity_gas_price_unit_mismatch": {
       "description": "Use a price per energy unit (such as kWh) for a gas sensor that measures energy, or a price per volume unit (such as m³) for a gas sensor that measures volume. Until then, the gas cost is not calculated. The following price entities do not match the unit of their gas sensor:",
       "title": "Gas price unit does not match the gas sensor"
@@ -65,6 +77,10 @@
     },
     "entity_unexpected_unit_gas_price": {
       "description": "[%key:component::energy::issues::entity_unexpected_unit_energy_price::description%]",
+      "title": "[%key:component::energy::issues::entity_unexpected_unit_energy::title%]"
+    },
+    "entity_unexpected_unit_power": {
+      "description": "The following entities do not have an expected unit of measurement (either of {power_units}):",
       "title": "[%key:component::energy::issues::entity_unexpected_unit_energy::title%]"
     },
     "entity_unexpected_unit_volume_flow_rate": {

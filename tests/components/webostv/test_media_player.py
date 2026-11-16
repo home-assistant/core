@@ -6,7 +6,7 @@ from typing import Any
 from unittest.mock import MagicMock
 
 import aiohttp
-from aiowebostv import WebOsTvPairError
+from aiowebostv import WebOsTvInfo, WebOsTvPairError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import async_fire_time_changed, mock_restore_cache
@@ -66,13 +66,13 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     EntityStateAttribute,
 )
-from homeassistant.core import HomeAssistant, State
+from homeassistant.core import CoreState, HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from . import setup_webostv
-from .const import CHANNEL_2, ENTITY_ID, TV_NAME
+from .const import CHANNEL_2, ENTITY_ID, TV_MODEL, TV_NAME
 
 
 async def mock_scan_interval(
@@ -312,10 +312,14 @@ async def test_select_sound_output(
 
 
 async def test_device_info_startup_off(
-    hass: HomeAssistant, client, device_registry: dr.DeviceRegistry
+    hass: HomeAssistant,
+    client,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test device info when device is off at startup."""
-    client.tv_info.system = {}
+    tv_info = client.tv_info
+    client.tv_info = WebOsTvInfo()
     client.tv_state.is_on = False
     entry = await setup_webostv(hass)
     await client.mock_state_update()
@@ -332,6 +336,22 @@ async def test_device_info_startup_off(
     assert device.name == TV_NAME
     assert device.sw_version is None
     assert device.model is None
+    assert device.serial_number is None
+    assert device.connections == set()
+
+    # Device info is received when the client connects to the TV
+    client.tv_info = tv_info
+    client.is_connected.return_value = False
+    await mock_scan_interval(hass, freezer)
+
+    device = device_registry.async_get(device.id)
+    assert device.sw_version == "major.minor"
+    assert device.model == TV_MODEL
+    assert device.serial_number == "1234567890"
+    assert device.connections == {
+        (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:01"),
+        (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:02"),
+    }
 
 
 async def test_entity_attributes(
@@ -1249,8 +1269,9 @@ async def test_availability(
     await mock_scan_interval(hass, freezer)
 
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
-    unavailable_log = f"Device {TV_NAME} is unavailable"
+    unavailable_log = f"{TV_NAME} is unavailable"
     assert unavailable_log in caplog.text
+    assert "Error fetching" not in caplog.text
 
     # Clear logs and update the offline entity again - should NOT log again
     caplog.clear()
@@ -1302,9 +1323,35 @@ async def test_availability(
             ],
         },
     )
+    await hass.async_block_till_done()
 
-    await mock_scan_interval(hass, freezer)
-
+    # Available without waiting for the next poll
     assert hass.states.get(ENTITY_ID).state == MediaPlayerState.ON
     available_log = f"Fetching {TV_NAME} data recovered"
     assert available_log in caplog.text
+
+
+async def test_availability_during_startup(
+    hass: HomeAssistant,
+    client: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test entity is not marked unavailable before Home Assistant is running."""
+    hass.set_state(CoreState.starting)
+    await setup_webostv(hass)
+
+    client.connect.side_effect = TimeoutError
+    client.is_connected.return_value = False
+    client.tv_state.is_on = False
+    await mock_scan_interval(hass, freezer)
+
+    # turn_on trigger may not be attached yet
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
+    assert f"{TV_NAME} is unavailable" not in caplog.text
+
+    hass.set_state(CoreState.running)
+    await mock_scan_interval(hass, freezer)
+
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+    assert f"{TV_NAME} is unavailable" in caplog.text

@@ -55,6 +55,12 @@
       "schedule_override_active": {
         "name": "Schedule override active"
       },
+      "siren_acoustic_alarm": {
+        "name": "Acoustic alarm"
+      },
+      "siren_visual_alarm": {
+        "name": "Visual alarm"
+      },
       "summer_mode": {
         "name": "Heating break"
       },
@@ -97,6 +103,12 @@
     "number": {
       "bypass_timeout": {
         "name": "Break function timeout"
+      },
+      "dimmer_max": {
+        "name": "Maximum brightness"
+      },
+      "dimmer_min": {
+        "name": "Minimum brightness"
       },
       "dimmer_speed": {
         "name": "Dimming speed"
