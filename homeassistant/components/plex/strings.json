@@ -93,6 +93,32 @@
       }
     }
   },
+  "selector": {
+    "on_deck_media_type": {
+      "options": {
+        "episode": "Episode",
+        "movie": "Movie"
+      }
+    },
+    "recently_added_media_type": {
+      "options": {
+        "movie": "Movie",
+        "show": "Show"
+      }
+    },
+    "search_media_type": {
+      "options": {
+        "album": "Album",
+        "artist": "Artist",
+        "episode": "Episode",
+        "movie": "Movie",
+        "playlist": "Playlist",
+        "season": "Season",
+        "show": "Show",
+        "track": "Track"
+      }
+    }
+  },
   "services": {
     "on_deck": {
       "description": "Returns unfinished movies and the next episodes to watch from the Continue Watching list, with the same info as the search service plus watch progress. The results have a signed poster link (thumb_url) that works in dashboard cards and stays valid for a year or until Home Assistant restarts, and the same link without a signature (thumb_path).",
@@ -119,6 +145,32 @@
         }
       },
       "name": "On deck"
+    },
+    "recently_added": {
+      "description": "Returns the most recently added movies and shows, newest first, with the same info as the search service. Shows are returned as shows, not as individual episodes. The results have a signed poster link (thumb_url) that works in dashboard cards and stays valid for a year or until Home Assistant restarts, and the same link without a signature (thumb_path).",
+      "fields": {
+        "library_name": {
+          "description": "Only return items from this Plex library.",
+          "name": "Library name"
+        },
+        "limit": {
+          "description": "Maximum number of items to return.",
+          "name": "Limit"
+        },
+        "media_type": {
+          "description": "Only return movies or shows.",
+          "name": "Media type"
+        },
+        "server_name": {
+          "description": "Name of a Plex server if multiple Plex servers configured.",
+          "name": "Server name"
+        },
+        "username": {
+          "description": "Plex user to get the list for.",
+          "name": "Username"
+        }
+      },
+      "name": "Recently added"
     },
     "refresh_library": {
       "description": "Refreshes a Plex library to scan for new and updated media.",

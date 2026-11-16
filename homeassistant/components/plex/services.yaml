@@ -30,6 +30,36 @@ on_deck:
           options:
             - "movie"
             - "episode"
+          translation_key: on_deck_media_type
+    limit:
+      default: 20
+      selector:
+        number:
+          mode: box
+          min: 1
+          max: 100
+recently_added:
+  fields:
+    server_name:
+      example: "My Plex Server"
+      selector:
+        text:
+    username:
+      example: "my_user"
+      selector:
+        text:
+    library_name:
+      example: "Movies"
+      selector:
+        text:
+    media_type:
+      example: "movie"
+      selector:
+        select:
+          options:
+            - "movie"
+            - "show"
+          translation_key: recently_added_media_type
     limit:
       default: 20
       selector:
@@ -79,6 +109,7 @@ search:
             - "album"
             - "track"
             - "playlist"
+          translation_key: search_media_type
     title:
       example: "The Matrix"
       selector:

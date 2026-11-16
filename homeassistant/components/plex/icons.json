@@ -10,6 +10,9 @@
     "on_deck": {
       "service": "mdi:play-circle-outline"
     },
+    "recently_added": {
+      "service": "mdi:new-box"
+    },
     "refresh_library": {
       "service": "mdi:refresh"
     },

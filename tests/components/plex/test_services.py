@@ -489,6 +489,41 @@ async def test_on_deck_service(
     assert result["results"] == []
 
 
+async def test_recently_added_service(hass: HomeAssistant, mock_plex_server) -> None:
+    """Test the recently added service."""
+    result = await hass.services.async_call(
+        DOMAIN,
+        PlexService.RECENTLY_ADDED,
+        {"limit": 3},
+        blocking=True,
+        return_response=True,
+    )
+    results = result["results"]
+    assert len(results) == 3
+    assert {item["media_type"] for item in results} <= {"movie", "show"}
+    added_at = [item["added_at"] for item in results]
+    assert added_at == sorted(added_at, reverse=True)
+    assert all(item["thumb_url"] for item in results if item["thumb_path"])
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        PlexService.RECENTLY_ADDED,
+        {"library_name": "Movies", "media_type": "movie"},
+        blocking=True,
+        return_response=True,
+    )
+    assert {item["library_name"] for item in result["results"]} == {"Movies"}
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        PlexService.RECENTLY_ADDED,
+        {"library_name": "Not a Library"},
+        blocking=True,
+        return_response=True,
+    )
+    assert result["results"] == []
+
+
 async def test_search_service_library_filters(
     hass: HomeAssistant, mock_plex_server
 ) -> None:

@@ -35,6 +35,7 @@ class PlexService(StrEnum):
 
     REFRESH_LIBRARY = "refresh_library"
     ON_DECK = "on_deck"
+    RECENTLY_ADDED = "recently_added"
     SEARCH = "search"
 
 
@@ -115,7 +116,9 @@ SEARCH_SCHEMA = probatio.All(
             probatio.Optional(PlexServiceArgument.TRACK_NAME): str,
             probatio.Optional(PlexServiceArgument.TRACK_NUMBER): int,
             probatio.Optional(PlexServiceArgument.YEAR): int,
-            probatio.Optional(PlexServiceArgument.FILTERS): dict,
+            probatio.Optional(PlexServiceArgument.FILTERS): {
+                str: probatio.Any(str, int, float, bool, list)
+            },
             probatio.Optional(PlexServiceArgument.INCLUDE_ON_DECK, default=False): bool,
         }
     ),
@@ -134,6 +137,20 @@ ON_DECK_SCHEMA = probatio.Schema(
         probatio.Optional(PlexServiceArgument.LIBRARY_NAME): str,
         probatio.Optional(PlexServiceArgument.MEDIA_TYPE): probatio.In(
             ["movie", "episode"]
+        ),
+        probatio.Optional(PlexServiceArgument.LIMIT, default=20): probatio.All(
+            int, probatio.Range(min=1, max=100)
+        ),
+    }
+)
+
+RECENTLY_ADDED_SCHEMA = probatio.Schema(
+    {
+        probatio.Optional(PlexServiceArgument.SERVER_NAME): str,
+        probatio.Optional(PlexServiceArgument.USERNAME): str,
+        probatio.Optional(PlexServiceArgument.LIBRARY_NAME): str,
+        probatio.Optional(PlexServiceArgument.MEDIA_TYPE): probatio.In(
+            ["movie", "show"]
         ),
         probatio.Optional(PlexServiceArgument.LIMIT, default=20): probatio.All(
             int, probatio.Range(min=1, max=100)
@@ -190,6 +207,23 @@ def async_setup_services(hass: HomeAssistant) -> None:
         PlexService.ON_DECK,
         async_on_deck_service,
         schema=ON_DECK_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    async def async_recently_added_service(
+        service_call: ServiceCall,
+    ) -> ServiceResponse:
+        response = await hass.async_add_executor_job(
+            get_recently_added_media, hass, service_call
+        )
+        _sign_thumbnails(hass, response)
+        return response
+
+    hass.services.async_register(
+        DOMAIN,
+        PlexService.RECENTLY_ADDED,
+        async_recently_added_service,
+        schema=RECENTLY_ADDED_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
 
@@ -297,6 +331,36 @@ def get_on_deck_media(hass: HomeAssistant, service_call: ServiceCall) -> dict[st
             _media_result_info(item, plex_server)
             for item in items[: data[PlexServiceArgument.LIMIT]]
         ]
+    }
+
+
+def get_recently_added_media(
+    hass: HomeAssistant, service_call: ServiceCall
+) -> dict[str, Any]:
+    """Return the most recently added movies and shows, newest first."""
+    data = service_call.data
+    plex_server = get_plex_server(hass, data.get(PlexServiceArgument.SERVER_NAME))
+
+    if username := data.get(PlexServiceArgument.USERNAME):
+        plex_server = _switch_user(plex_server, username)
+
+    library_name = data.get(PlexServiceArgument.LIBRARY_NAME)
+    media_type = data.get(PlexServiceArgument.MEDIA_TYPE)
+    limit = data[PlexServiceArgument.LIMIT]
+
+    items: list[Any] = []
+    for section in plex_server.library.sections():
+        if section.type not in ("movie", "show"):
+            continue
+        if library_name and section.title != library_name:
+            continue
+        if media_type and section.type != media_type:
+            continue
+        items.extend(section.recentlyAdded(maxresults=limit, libtype=section.type))
+
+    items.sort(key=lambda item: item.addedAt, reverse=True)
+    return {
+        "results": [_media_result_info(item, plex_server) for item in items[:limit]]
     }
 
 
