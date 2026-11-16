@@ -14,6 +14,8 @@ HOME_ZONE = "home"
 
 DATA_ZONE: HassKey[ZoneData] = HassKey(DOMAIN)
 
+# Revisit the known limitations listed in
+# https://github.com/home-assistant/core/pull/188768 before promoting this out of labs
 PREVIEW_FEATURE_IMPROVED_PRESENCE_DETECTION = "improved_presence_detection"
 
 
