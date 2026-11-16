@@ -66,12 +66,24 @@ def mock_scanners_all_passive() -> Generator[None]:
         yield
 
 
-async def test_bluetooth_discovery(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("service_info", "title", "sensor_type"),
+    [
+        pytest.param(WOHAND_SERVICE_INFO, "Bot EEFF", "bot", id="bot"),
+        pytest.param(HUB4_SERVICE_INFO, "Hub4 EEFF", "hub4", id="hub4"),
+    ],
+)
+async def test_bluetooth_discovery(
+    hass: HomeAssistant,
+    service_info: BluetoothServiceInfoBleak,
+    title: str,
+    sensor_type: str,
+) -> None:
     """Test discovery via bluetooth with a valid device."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_BLUETOOTH},
-        data=WOHAND_SERVICE_INFO,
+        data=service_info,
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
@@ -84,38 +96,10 @@ async def test_bluetooth_discovery(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Bot EEFF"
+    assert result["title"] == title
     assert result["data"] == {
         CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
-        CONF_SENSOR_TYPE: "bot",
-    }
-    assert result["result"].unique_id == "aabbccddeeff"
-
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_bluetooth_discovery_hub4(hass: HomeAssistant) -> None:
-    """Test discovery via bluetooth with a valid device."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_BLUETOOTH},
-        data=HUB4_SERVICE_INFO,
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "confirm"
-
-    with patch_async_setup_entry() as mock_setup_entry:
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {},
-        )
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Hub4 EEFF"
-    assert result["data"] == {
-        CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
-        CONF_SENSOR_TYPE: "hub4",
+        CONF_SENSOR_TYPE: sensor_type,
     }
     assert result["result"].unique_id == "aabbccddeeff"
 
