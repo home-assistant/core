@@ -53,7 +53,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.condition import async_validate_conditions_config
 from homeassistant.helpers.issue_registry import IssueSeverity
-from homeassistant.helpers.template import Template
 from homeassistant.helpers.trigger import async_validate_trigger_config
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_notify_setup_error
@@ -81,43 +80,13 @@ from . import (
     water_heater as water_heater_platform,
     weather as weather_platform,
 )
-from .const import (
-    CONF_DEFAULT_ENTITY_ID,
-    CONF_TRIGGER_VARIABLES,
-    DOMAIN,
-    PLATFORMS,
-    TemplateConfig,
-)
+from .const import CONF_TRIGGER_VARIABLES, DOMAIN, PLATFORMS, TemplateConfig
 from .helpers import async_get_blueprints
+from .validators import entity_config_identifier
 
 _LOGGER = logging.getLogger(__name__)
 
 PACKAGE_MERGE_HINT = "list"
-
-
-_DEFAULT_NAME = "Template Entity"
-_DEFAULT_NAMES = {
-    Platform.ALARM_CONTROL_PANEL: alarm_control_panel_platform.DEFAULT_NAME,
-    Platform.BINARY_SENSOR: binary_sensor_platform.DEFAULT_NAME,
-    Platform.BUTTON: button_platform.DEFAULT_NAME,
-    Platform.COVER: cover_platform.DEFAULT_NAME,
-    Platform.CLIMATE: climate_platform.DEFAULT_NAME,
-    Platform.DEVICE_TRACKER: device_tracker_platform.DEFAULT_NAME,
-    Platform.EVENT: event_platform.DEFAULT_NAME,
-    Platform.FAN: fan_platform.DEFAULT_NAME,
-    Platform.IMAGE: image_platform.DEFAULT_NAME,
-    Platform.LIGHT: light_platform.DEFAULT_NAME,
-    Platform.LOCK: lock_platform.DEFAULT_NAME,
-    Platform.MEDIA_PLAYER: media_player_platform.DEFAULT_NAME,
-    Platform.NUMBER: number_platform.DEFAULT_NAME,
-    Platform.SELECT: select_platform.DEFAULT_NAME,
-    Platform.SENSOR: sensor_platform.DEFAULT_NAME,
-    Platform.SWITCH: switch_platform.DEFAULT_NAME,
-    Platform.UPDATE: update_platform.DEFAULT_NAME,
-    Platform.VACUUM: vacuum_platform.DEFAULT_NAME,
-    Platform.WATER_HEATER: water_heater_platform.DEFAULT_NAME,
-    Platform.WEATHER: weather_platform.DEFAULT_NAME,
-}
 
 
 def _identify_entity_config_requires_trigger(
@@ -127,19 +96,7 @@ def _identify_entity_config_requires_trigger(
     if option not in entity_config:
         return
 
-    _default_name = _DEFAULT_NAMES.get(platform, _DEFAULT_NAME)
-    identifier = f"{CONF_NAME}: {_default_name}"
-    if (
-        (name := entity_config.get(CONF_NAME))
-        and isinstance(name, Template)
-        and name.template != _default_name
-    ):
-        identifier = f"{CONF_NAME}: {name.template}"
-    elif default_entity_id := entity_config.get(CONF_DEFAULT_ENTITY_ID):
-        identifier = f"{CONF_DEFAULT_ENTITY_ID}: {default_entity_id}"
-    elif unique_id := entity_config.get(CONF_UNIQUE_ID):
-        identifier = f"{CONF_UNIQUE_ID}: {unique_id}"
-
+    identifier = entity_config_identifier(platform, entity_config)
     raise probatio.Invalid(
         f"The {option} option for template {platform.replace('_', ' ')}: {identifier} "
         f"requires a trigger, remove the {option} option or rewrite "
@@ -441,23 +398,36 @@ async def _async_resolve_template_config(
     return template_config
 
 
+async def _async_validate_triggers_and_conditions(
+    hass: HomeAssistant, config: TemplateConfig
+) -> None:
+    """Validate the triggers and conditions of a resolved config section."""
+    if CONF_TRIGGERS in config:
+        try:
+            config[CONF_TRIGGERS] = await async_validate_trigger_config(
+                hass, config[CONF_TRIGGERS]
+            )
+        except probatio.Invalid as err:
+            err.prepend([CONF_TRIGGERS])
+            raise
+
+    if CONF_CONDITIONS in config:
+        try:
+            config[CONF_CONDITIONS] = await async_validate_conditions_config(
+                hass, config[CONF_CONDITIONS]
+            )
+        except probatio.Invalid as err:
+            err.prepend([CONF_CONDITIONS])
+            raise
+
+
 async def async_validate_config_section(
     hass: HomeAssistant, config: ConfigType
 ) -> TemplateConfig:
     """Validate an entire config section for the template integration."""
 
     validated_config = await _async_resolve_template_config(hass, config)
-
-    if CONF_TRIGGERS in validated_config:
-        validated_config[CONF_TRIGGERS] = await async_validate_trigger_config(
-            hass, validated_config[CONF_TRIGGERS]
-        )
-
-    if CONF_CONDITIONS in validated_config:
-        validated_config[CONF_CONDITIONS] = await async_validate_conditions_config(
-            hass, validated_config[CONF_CONDITIONS]
-        )
-
+    await _async_validate_triggers_and_conditions(hass, validated_config)
     return validated_config
 
 
@@ -479,11 +449,17 @@ async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> Conf
 
     for cfg in itertools.chain(*configs):
         try:
-            template_config: TemplateConfig = await async_validate_config_section(
-                hass, cfg
-            )
+            template_config = await _async_resolve_template_config(hass, cfg)
         except probatio.Invalid as err:
             async_log_schema_error(err, DOMAIN, cfg, hass)
+            async_notify_setup_error(hass, DOMAIN)
+            continue
+
+        try:
+            await _async_validate_triggers_and_conditions(hass, template_config)
+        except probatio.Invalid as err:
+            # The path of a trigger or condition error indexes the resolved section
+            async_log_schema_error(err, DOMAIN, template_config, hass)
             async_notify_setup_error(hass, DOMAIN)
             continue
 

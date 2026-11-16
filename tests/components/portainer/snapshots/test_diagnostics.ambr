@@ -12,7 +12,7 @@
       }),
       'domain': 'portainer',
       'entry_id': 'portainer_test_entry_123',
-      'minor_version': 2,
+      'minor_version': 3,
       'options': dict({
       }),
       'pref_disable_new_entities': False,

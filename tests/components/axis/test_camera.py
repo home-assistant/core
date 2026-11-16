@@ -5,6 +5,7 @@ from urllib.parse import unquote, urlsplit
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import camera
@@ -13,7 +14,7 @@ from homeassistant.components.axis.const import (
     CONF_STREAM_PROFILE,
     CONF_VIDEO_SOURCE,
 )
-from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
+from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN, async_get_image
 from homeassistant.const import (
     CONF_HOST,
     CONF_MODEL,
@@ -82,6 +83,28 @@ async def test_camera(
         == "rtsp://root:pass@1.2.3.4/axis-media/media.amp?videocodec=h264"
         f"{'' if not stream_profile else f'&{stream_profile}'}"
     )
+
+
+@pytest.mark.parametrize("basic_auth_challenge", [pytest.param(True, id="basic")])
+async def test_camera_uses_vapix_basic_authentication_for_snapshot(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    config_entry_factory: ConfigEntryFactoryType,
+    basic_auth_challenge: bool,
+) -> None:
+    """Test snapshot requests use the Basic auth resolved by VAPIX."""
+    assert basic_auth_challenge
+    await config_entry_factory()
+
+    entity_id = f"{CAMERA_DOMAIN}.{NAME}"
+    camera_entity = camera.helper.get_camera_from_entity_id(hass, entity_id)
+    image_bytes = b"image_bytes"
+    aioclient_mock.get(camera_entity.image_source, content=image_bytes)
+
+    image = await async_get_image(hass, entity_id)
+
+    assert image.content == image_bytes
+    assert aioclient_mock.mock_calls[-1][3]["Authorization"] == "Basic cm9vdDpwYXNz"
 
 
 @pytest.mark.parametrize("param_properties_payload", [PROPERTY_DATA])

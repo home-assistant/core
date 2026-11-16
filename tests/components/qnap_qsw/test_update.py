@@ -5,14 +5,14 @@ from unittest.mock import patch
 from aioqsw.const import API_ERROR_CODE, API_ERROR_MESSAGE, API_RESULT, API_VERSION
 
 from homeassistant.components.update import (
-    ATTR_BACKUP,
     ATTR_IN_PROGRESS,
     ATTR_INSTALLED_VERSION,
     ATTR_LATEST_VERSION,
     DOMAIN as UPDATE_DOMAIN,
-    SERVICE_INSTALL,
+    UpdateService,
+    UpdateServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 
 from .util import (
@@ -63,10 +63,10 @@ async def test_qnap_qsw_update(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
+            UpdateService.INSTALL,
             {
-                ATTR_BACKUP: False,
-                ATTR_ENTITY_ID: "update.qsw_m408_4c_firmware",
+                UpdateServiceArgument.BACKUP: False,
+                CommonServiceArgument.ENTITY_ID: "update.qsw_m408_4c_firmware",
             },
             blocking=True,
         )

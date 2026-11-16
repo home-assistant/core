@@ -255,6 +255,13 @@ class SonosDiscoveryManager:
         """Check if device at provided IP is known to be invisible."""
         return any(x for x in self._known_invisible if x.ip_address == ip_address)
 
+    def is_available_speaker_ip(self, ip_address: str) -> bool:
+        """Check if provided IP belongs to a known, available speaker."""
+        return any(
+            speaker.available and speaker.soco.ip_address == ip_address
+            for speaker in self.data.discovered.values()
+        )
+
     async def _process_http_connection_error(
         self, err: HTTPError, ip_address: str
     ) -> None:
@@ -662,6 +669,14 @@ class SonosDiscoveryManager:
                 await self.async_subscribe_to_zone_updates(discovered_ip)
             elif uid not in self.data.discovered:
                 if self.is_device_invisible(discovered_ip):
+                    return
+                if self.is_available_speaker_ip(discovered_ip):
+                    # Subscribing would replace that speaker's ZoneGroupTopology subscription
+                    _LOGGER.debug(
+                        "Ignoring %s for %s, IP belongs to a known speaker",
+                        uid,
+                        discovered_ip,
+                    )
                     return
                 await self.async_subscribe_to_zone_updates(discovered_ip)
             elif boot_seqnum and boot_seqnum > self.data.boot_counts[uid]:

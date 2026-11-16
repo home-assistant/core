@@ -15,6 +15,10 @@ class ServerNotSpecified(PlexException):
     """Multiple servers linked to account without choice provided."""
 
 
+class ServerNotFound(PlexException):
+    """Requested server not found on Plex account."""
+
+
 class ShouldUpdateConfigEntry(PlexException):
     """Config entry data is out of date and should be updated."""
 
