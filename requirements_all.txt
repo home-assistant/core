@@ -1498,6 +1498,9 @@ kaco-modbus==2.0.0
 # homeassistant.components.kaco_rs485
 kaco-serial==1.0.3
 
+# homeassistant.components.karaca_connect
+karaca-connect-client==0.1.0a1
+
 # homeassistant.components.kaiterra
 kaiterra-async-client==1.1.0
 
