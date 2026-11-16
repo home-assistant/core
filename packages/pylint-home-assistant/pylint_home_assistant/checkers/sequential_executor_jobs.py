@@ -119,10 +119,15 @@ def _awaits(node: nodes.NodeNG) -> list[nodes.Await]:
     return [child for child in _eager_nodes(node) if isinstance(child, nodes.Await)]
 
 
-def _has_async_comprehension(node: nodes.NodeNG) -> bool:
-    """Return True if *node* iterates an async comprehension, which awaits."""
+def _suspends_implicitly(node: nodes.NodeNG) -> bool:
+    """Return True if *node* suspends without an explicit await.
+
+    Async comprehensions await on each iteration, and a yield suspends until
+    the consumer resumes the generator.
+    """
     return any(
-        isinstance(child, nodes.Comprehension) and child.is_async
+        isinstance(child, (nodes.Yield, nodes.YieldFrom))
+        or (isinstance(child, nodes.Comprehension) and child.is_async)
         for child in _eager_nodes(node)
     )
 
@@ -136,7 +141,7 @@ def _executor_job_key(node: nodes.NodeNG) -> str | None:
         return None
     # The rest of the statement runs in the event loop between this job and
     # its neighbors, so it must not use loop-only APIs or suspend.
-    if _has_async_comprehension(node) or _calls_loop_only_api(node, exclude=call):
+    if _suspends_implicitly(node) or _calls_loop_only_api(node, exclude=call):
         return None
     return _executor_key(call)
 
@@ -169,7 +174,7 @@ def _is_transparent(node: nodes.NodeNG) -> bool:
     return (
         isinstance(node, _TRANSPARENT_STATEMENTS)
         and not _awaits(node)
-        and not _has_async_comprehension(node)
+        and not _suspends_implicitly(node)
         and not _calls_loop_only_api(node)
     )
 

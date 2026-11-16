@@ -157,6 +157,24 @@ async def async_setup(hass, config):
 """,
             id="receiver_rebound",
         ),
+        pytest.param(
+            """
+async def async_gen(hass):
+    await hass.async_add_executor_job(call_a)
+    yield value
+    await hass.async_add_executor_job(call_b)
+""",
+            id="separated_by_yield",
+        ),
+        pytest.param(
+            """
+async def async_gen(hass):
+    await hass.async_add_executor_job(call_a)
+    yield await hass.async_add_executor_job(call_b)
+    await hass.async_add_executor_job(call_c)
+""",
+            id="executor_job_yielded",
+        ),
     ],
 )
 def test_no_warning(
