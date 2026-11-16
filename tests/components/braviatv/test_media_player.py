@@ -1,5 +1,6 @@
 """Test the Bravia TV media player."""
 
+from contextlib import AbstractContextManager, nullcontext
 from datetime import UTC, datetime
 from http import HTTPStatus
 from typing import Any
@@ -567,6 +568,48 @@ async def test_command_error(
         await hass.services.async_call(
             MP_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
         )
+
+
+@pytest.mark.parametrize(
+    ("exception", "expected"),
+    [
+        pytest.param(BraviaConnectionError, nullcontext(), id="connection_error"),
+        pytest.param(BraviaConnectionTimeout, nullcontext(), id="connection_timeout"),
+        pytest.param(BraviaTurnedOff, nullcontext(), id="turned_off"),
+        pytest.param(
+            BraviaNotFound,
+            pytest.raises(
+                HomeAssistantError, match="the Bravia API service is reloading"
+            ),
+            id="not_found",
+        ),
+        pytest.param(
+            BraviaError,
+            pytest.raises(
+                HomeAssistantError,
+                match="Error sending command to BRAVIA TV-Model: BraviaError",
+            ),
+            id="bravia_error",
+        ),
+    ],
+)
+async def test_turn_off_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_braviatv_client: AsyncMock,
+    exception: type[BraviaError],
+    expected: AbstractContextManager[object],
+) -> None:
+    """Test turn-off suppresses only errors indicating the TV is offline."""
+    await init_integration(hass, mock_config_entry)
+    mock_braviatv_client.turn_off.side_effect = exception
+
+    with expected:
+        await hass.services.async_call(
+            MP_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        )
+
+    mock_braviatv_client.turn_off.assert_awaited_once_with()
 
 
 @pytest.mark.parametrize(

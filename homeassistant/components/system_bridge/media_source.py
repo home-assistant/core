@@ -2,12 +2,15 @@
 
 from typing import override
 
-from packaging.version import parse as parse_version
-from systembridgeconnector.helpers import media_file_url
+from systembridgeconnector.exceptions import (
+    AuthenticationException,
+    BadRequestException,
+    ConnectionErrorException,
+)
+from systembridgeconnector.http_client import HTTPClient
 from systembridgeconnector.models.media_directories import MediaDirectory
 from systembridgeconnector.models.media_files import MediaFile, MediaFiles
 from systembridgeconnector.models.media_get_files import MediaGetFiles
-from yarl import URL
 
 from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.components.media_source import (
@@ -22,8 +25,9 @@ from homeassistant.components.media_source import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, SIGNED_MEDIA_URL_MIN_VERSION
+from .const import DOMAIN
 from .coordinator import SystemBridgeConfigEntry
 
 
@@ -75,7 +79,9 @@ class SystemBridgeSource(MediaSource):
         entry_id, path, mime_type = item.identifier.split("~~", 2)
         entry = _get_loaded_entry(self.hass, entry_id, Unresolvable)
         base, file_path = path.split("/", 1)
-        return PlayMedia(_build_file_url(entry, base, file_path), mime_type)
+        return PlayMedia(
+            await _async_build_file_url(self.hass, entry, base, file_path), mime_type
+        )
 
     @override
     async def async_browse_media(
@@ -138,29 +144,32 @@ class SystemBridgeSource(MediaSource):
         )
 
 
-def _build_file_url(entry: SystemBridgeConfigEntry, base: str, path: str) -> str:
-    """Build the URL for a System Bridge media file."""
-    host = entry.data[CONF_HOST]
-    port = entry.data[CONF_PORT]
-    token = entry.data[CONF_TOKEN]
-    system = entry.runtime_data.data.system
-    if (
-        system is not None
-        and system.version is not None
-        and parse_version(system.version).release >= SIGNED_MEDIA_URL_MIN_VERSION
-    ):
-        # The URL goes to players such as cast devices, so it's signed for
-        # this file rather than carrying the API token
-        return media_file_url(host, port, token, base, path)
-    return str(
-        URL.build(
-            scheme="http",
-            host=host,
-            port=int(port),
-            path="/api/media/file/data",
-            query={"token": token, "base": base, "path": path},
-        )
+async def _async_build_file_url(
+    hass: HomeAssistant, entry: SystemBridgeConfigEntry, base: str, path: str
+) -> str:
+    """Build the URL for a System Bridge media file.
+
+    The URL goes to players such as cast devices, so System Bridge signs it
+    for this file rather than it carrying the key.
+    """
+    http_client = HTTPClient(
+        entry.data[CONF_HOST],
+        entry.data[CONF_PORT],
+        entry.data[CONF_TOKEN],
+        session=async_get_clientsession(hass),
     )
+    try:
+        return await http_client.media_file_url(base, path)
+    except (
+        AuthenticationException,
+        BadRequestException,
+        ConnectionErrorException,
+    ) as exception:
+        raise Unresolvable(
+            translation_domain=DOMAIN,
+            translation_key="media_url_failed",
+            translation_placeholders={"path": path},
+        ) from exception
 
 
 def _build_root_paths(

@@ -122,6 +122,7 @@ AGENTS.md @home-assistant/core
 /homeassistant/components/altruist/ @airalab @LoSk-p
 /tests/components/altruist/ @airalab @LoSk-p
 /homeassistant/components/amazon_polly/ @jschlyter
+/tests/components/amazon_polly/ @jschlyter
 /homeassistant/components/amberelectric/ @madpilot
 /tests/components/amberelectric/ @madpilot
 /homeassistant/components/ambient_network/ @thomaskistler
@@ -2056,6 +2057,8 @@ AGENTS.md @home-assistant/core
 /tests/components/trend/ @jpbede
 /homeassistant/components/triggercmd/ @rvmey
 /tests/components/triggercmd/ @rvmey
+/homeassistant/components/trimlight/ @spdevpro @bsholy
+/tests/components/trimlight/ @spdevpro @bsholy
 /homeassistant/components/trmnl/ @joostlek
 /tests/components/trmnl/ @joostlek
 /homeassistant/components/tts/ @home-assistant/core

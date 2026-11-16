@@ -151,9 +151,7 @@ CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
         device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         mode=NumberMode.BOX,
-        value_getter=lambda api: api.getDesiredTemperatureForProgram(
-            HeatingProgram.NORMAL
-        ),
+        value_getter=lambda api: api.getProgramTemperature(HeatingProgram.NORMAL),
         value_setter=lambda api, value: api.setProgramTemperature(
             HeatingProgram.NORMAL, value
         ),
@@ -172,9 +170,7 @@ CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
         device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         mode=NumberMode.BOX,
-        value_getter=lambda api: api.getDesiredTemperatureForProgram(
-            HeatingProgram.REDUCED
-        ),
+        value_getter=lambda api: api.getProgramTemperature(HeatingProgram.REDUCED),
         value_setter=lambda api, value: api.setProgramTemperature(
             HeatingProgram.REDUCED, value
         ),
@@ -193,9 +189,7 @@ CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
         device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         mode=NumberMode.BOX,
-        value_getter=lambda api: api.getDesiredTemperatureForProgram(
-            HeatingProgram.COMFORT
-        ),
+        value_getter=lambda api: api.getProgramTemperature(HeatingProgram.COMFORT),
         value_setter=lambda api, value: api.setProgramTemperature(
             HeatingProgram.COMFORT, value
         ),
@@ -214,7 +208,7 @@ CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
         device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         mode=NumberMode.BOX,
-        value_getter=lambda api: api.getDesiredTemperatureForProgram(
+        value_getter=lambda api: api.getProgramTemperature(
             HeatingProgram.NORMAL_HEATING
         ),
         value_setter=lambda api, value: api.setProgramTemperature(
@@ -237,7 +231,7 @@ CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
         device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         mode=NumberMode.BOX,
-        value_getter=lambda api: api.getDesiredTemperatureForProgram(
+        value_getter=lambda api: api.getProgramTemperature(
             HeatingProgram.REDUCED_HEATING
         ),
         value_setter=lambda api, value: api.setProgramTemperature(
@@ -260,7 +254,7 @@ CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
         device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         mode=NumberMode.BOX,
-        value_getter=lambda api: api.getDesiredTemperatureForProgram(
+        value_getter=lambda api: api.getProgramTemperature(
             HeatingProgram.COMFORT_HEATING
         ),
         value_setter=lambda api, value: api.setProgramTemperature(
@@ -283,7 +277,7 @@ CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
         device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         mode=NumberMode.BOX,
-        value_getter=lambda api: api.getDesiredTemperatureForProgram(
+        value_getter=lambda api: api.getProgramTemperature(
             HeatingProgram.NORMAL_COOLING
         ),
         value_setter=lambda api, value: api.setProgramTemperature(
@@ -306,7 +300,7 @@ CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
         device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         mode=NumberMode.BOX,
-        value_getter=lambda api: api.getDesiredTemperatureForProgram(
+        value_getter=lambda api: api.getProgramTemperature(
             HeatingProgram.REDUCED_COOLING
         ),
         value_setter=lambda api, value: api.setProgramTemperature(
@@ -329,7 +323,7 @@ CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
         device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         mode=NumberMode.BOX,
-        value_getter=lambda api: api.getDesiredTemperatureForProgram(
+        value_getter=lambda api: api.getProgramTemperature(
             HeatingProgram.COMFORT_COOLING
         ),
         value_setter=lambda api, value: api.setProgramTemperature(
