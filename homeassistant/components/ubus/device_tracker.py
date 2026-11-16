@@ -128,12 +128,31 @@ async def async_setup_entry(
     shared: UbusSharedState = hass.data[DOMAIN]
 
     @callback
+    def _async_take_over(mac: str, entity_id: str, previous_owner: str | None) -> None:
+        """Re-home a tracker whose previous owner no longer hosts it."""
+        entity_registry.async_update_entity(
+            entity_id, config_entry_id=config_entry.entry_id
+        )
+        if previous_owner is None:
+            return
+        # Move the previous owner's device, so this entry's tracker reuses it
+        # instead of creating a duplicate for the same client.
+        device = device_registry.async_get_device_by_connection(
+            (dr.CONNECTION_NETWORK_MAC, mac), previous_owner
+        )
+        if device is not None:
+            device_registry.async_update_device(
+                device.id, new_config_entry_id=config_entry.entry_id
+            )
+
+    @callback
     def _async_update_devices() -> None:
         new_macs = [mac for mac in coordinator.data if mac not in tracked]
         claimed: list[str] = []
         for mac in new_macs:
-            # One tracker per MAC: an entry only creates a tracker it owns,
-            # so another entry's tracker for the same MAC is left alone.
+            # One tracker per MAC: an entry only creates a tracker it owns, so
+            # another entry's tracker for the same MAC is left alone, unless
+            # that entry no longer hosts it.
             entity_id = entity_registry.async_get_entity_id(
                 DEVICE_TRACKER_DOMAIN, DOMAIN, mac
             )
@@ -143,7 +162,13 @@ async def async_setup_entry(
                     registry_entry is not None
                     and registry_entry.config_entry_id != config_entry.entry_id
                 ):
-                    continue
+                    # A loaded owner keeps its claim, so only take over a
+                    # tracker whose owner has no live claim on the MAC (e.g. it
+                    # is offline and its platform never loaded, as after a
+                    # restart).
+                    if shared.owners.get(mac) is not None:
+                        continue
+                    _async_take_over(mac, entity_id, registry_entry.config_entry_id)
             # The claim is made before adding the entity so two entries which
             # see the same client at setup time don't both create it.
             if (
