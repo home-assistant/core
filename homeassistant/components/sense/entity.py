@@ -20,7 +20,6 @@ class SenseEntity(CoordinatorEntity[SenseCoordinator]):
     """Base implementation of a Sense sensor."""
 
     _attr_attribution = ATTRIBUTION
-    _attr_should_poll = False
     _attr_has_entity_name = True
 
     def __init__(
@@ -47,7 +46,6 @@ class SenseDeviceEntity(CoordinatorEntity[SenseCoordinator]):
     """Base implementation of a Sense sensor."""
 
     _attr_attribution = ATTRIBUTION
-    _attr_should_poll = False
     _attr_has_entity_name = True
 
     def __init__(

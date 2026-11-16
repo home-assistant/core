@@ -1,0 +1,13 @@
+{
+  "domain": "silvercrest_infrared",
+  "name": "SilverCrest Infrared",
+  "categories": ["climate.fans_ventilation"],
+  "codeowners": ["@tr4nt0r"],
+  "config_flow": true,
+  "connectivity": ["infrared"],
+  "dependencies": ["infrared"],
+  "documentation": "https://www.home-assistant.io/integrations/silvercrest_infrared",
+  "integration_type": "device",
+  "iot_class": "assumed_state",
+  "quality_scale": "bronze"
+}

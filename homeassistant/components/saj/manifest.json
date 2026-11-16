@@ -4,9 +4,10 @@
   "categories": ["energy.solar_batteries"],
   "codeowners": ["@fredericvl", "@edurenye"],
   "config_flow": true,
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/saj",
   "integration_type": "hub",
   "iot_class": "local_polling",
-  "loggers": ["pysaj"],
-  "requirements": ["pysaj==0.0.16"]
+  "loggers": ["aiosaj"],
+  "requirements": ["aiosaj==0.2.2"]
 }

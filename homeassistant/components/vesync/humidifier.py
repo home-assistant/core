@@ -4,6 +4,7 @@ import logging
 from typing import TYPE_CHECKING, Any, override
 
 from pyvesync.base_devices.humidifier_base import VeSyncHumidifier
+from pyvesync.const import DeviceStatus
 
 from homeassistant.components.humidifier import (
     MODE_AUTO,
@@ -220,4 +221,4 @@ class VeSyncHumidifierHA(VeSyncBaseEntity[VeSyncHumidifier], HumidifierEntity):
     @override
     def is_on(self) -> bool:
         """Return True if device is on."""
-        return self.device.state.device_status == "on"
+        return self.device.state.device_status == DeviceStatus.ON

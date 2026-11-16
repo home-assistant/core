@@ -44,6 +44,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.storage import Store
 
+from . import MockAppleDevice, MockDevicesContainer
 from .const import (
     DEVICE,
     DEVICE_WITH_HALF_A_LOCATION,
@@ -112,51 +113,6 @@ async def test_setup_fails_when_userinfo_missing(
 
     with pytest.raises(ConfigEntryNotReady, match="No user info found"):
         account.setup()
-
-
-class MockAppleDevice:
-    """Mock Apple device implementing .status() used by the account."""
-
-    def __init__(self, status_dict) -> None:
-        """Set status."""
-        self._status = status_dict
-
-    def status(self, key):
-        """Return current status."""
-        return self._status
-
-    def __getitem__(self, key):
-        """Allow indexing to proxy into the raw status dict."""
-        return self._status.get(key)
-
-
-class MockDevicesContainer:
-    """Mock devices container, iterable and indexable."""
-
-    def __init__(self, userinfo, devices) -> None:
-        """Initialize with userinfo and list of device objects."""
-        self.user_info = userinfo
-        self._devices = devices
-        self.refresh_calls: list[bool] = []
-
-    def refresh(self, locate: bool = False) -> None:
-        """Record refresh calls made by the account."""
-        self.refresh_calls.append(locate)
-
-    def __iter__(self):
-        """Iterate returns device objects (each must have .status(...))."""
-        return iter(self._devices)
-
-    def __len__(self):
-        """Return number of devices."""
-        return len(self._devices)
-
-    def __getitem__(self, idx):
-        """Indexing returns device object (which must have .status(...))."""
-        dev = self._devices[idx]
-        if hasattr(dev, "status"):
-            return dev.status(None)
-        return dev
 
 
 @pytest.fixture(name="mock_icloud_service")
@@ -692,7 +648,7 @@ async def test_a_poll_with_no_devices_still_schedules_the_next_one(
     schedule.assert_called_once()
 
 
-class FakeAppleDevice:
+class FakeAppleDevice(AppleDevice):
     """A device that reports status through pyicloud's own implementation.
 
     Reusing AppleDevice.status keeps these tests honest about how iCloud data
@@ -706,7 +662,16 @@ class FakeAppleDevice:
 
     def __init__(self, content: dict) -> None:
         """Store the payload iCloud would have returned."""
-        self._content = content
+        super().__init__(
+            content,
+            params={},
+            manager=Mock(is_alive=True),
+            sound_url="",
+            lost_url="",
+            erase_url="",
+            erase_token_url="",
+            message_url="",
+        )
 
     def __getitem__(self, key):
         """Proxy into the raw payload, as AppleDevice does."""

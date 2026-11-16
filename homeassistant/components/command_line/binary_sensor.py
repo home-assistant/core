@@ -2,7 +2,7 @@
 
 import asyncio
 from datetime import datetime, timedelta
-from typing import override
+from typing import Any, override
 
 from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
@@ -27,9 +27,15 @@ from homeassistant.helpers.trigger_template_entity import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_COMMAND_TIMEOUT, LOGGER, TRIGGER_ENTITY_OPTIONS
+from .const import (
+    CONF_COMMAND_TIMEOUT,
+    CONF_JSON_ATTRIBUTES,
+    CONF_JSON_ATTRIBUTES_PATH,
+    LOGGER,
+    TRIGGER_ENTITY_OPTIONS,
+)
 from .sensor import CommandSensorData
-from .utils import create_platform_yaml_not_supported_issue
+from .utils import create_platform_yaml_not_supported_issue, parse_json_attributes
 
 DEFAULT_NAME = "Binary Command Sensor"
 DEFAULT_PAYLOAD_ON = "ON"
@@ -58,6 +64,10 @@ async def async_setup_platform(
         CONF_SCAN_INTERVAL, SCAN_INTERVAL
     )
     value_template: ValueTemplate | None = binary_sensor_config.get(CONF_VALUE_TEMPLATE)
+    json_attributes: list[str] | None = binary_sensor_config.get(CONF_JSON_ATTRIBUTES)
+    json_attributes_path: str | None = binary_sensor_config.get(
+        CONF_JSON_ATTRIBUTES_PATH
+    )
 
     data = CommandSensorData(
         hass,
@@ -82,6 +92,8 @@ async def async_setup_platform(
                 payload_on,
                 payload_off,
                 value_template,
+                json_attributes,
+                json_attributes_path,
                 scan_interval,
             )
         ],
@@ -100,17 +112,28 @@ class CommandBinarySensor(ManualTriggerEntity, BinarySensorEntity):
         payload_on: str,
         payload_off: str,
         value_template: ValueTemplate | None,
+        json_attributes: list[str] | None,
+        json_attributes_path: str | None,
         scan_interval: timedelta,
     ) -> None:
         """Initialize the Command line binary sensor."""
         super().__init__(self.hass, config)
         self.data = data
         self._attr_is_on = None
+        self._attr_extra_state_attributes: dict[str, Any] = {}
         self._payload_on = payload_on
         self._payload_off = payload_off
         self._value_template = value_template
+        self._json_attributes = json_attributes
+        self._json_attributes_path = json_attributes_path
         self._scan_interval = scan_interval
         self._process_updates: asyncio.Lock | None = None
+
+    @property
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return extra state attributes."""
+        return self._attr_extra_state_attributes
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -152,6 +175,11 @@ class CommandBinarySensor(ManualTriggerEntity, BinarySensorEntity):
         if not self._render_availability_template(variables):
             self.async_write_ha_state()
             return
+
+        if self._json_attributes:
+            self._attr_extra_state_attributes = parse_json_attributes(
+                value, self._json_attributes, self._json_attributes_path
+            )
 
         if self._value_template is not None:
             value = self._value_template.async_render_as_value_template(

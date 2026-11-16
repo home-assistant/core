@@ -107,8 +107,7 @@ async def async_setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
 
     hass.data[DATA_CONFIG] = yaml_config[DOMAIN]
 
-    if CONF_SERVICE_ACCOUNT in yaml_config[DOMAIN]:
-        async_setup_services(hass)
+    async_setup_services(hass)
 
     hass.async_create_task(
         hass.config_entries.flow.async_init(
@@ -142,7 +141,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> No
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, config[CONF_PROJECT_ID])},
         manufacturer="Google",
-        model="Google Assistant",
+        model="Google Home",
         name=config[CONF_PROJECT_ID],
         entry_type=dr.DeviceEntryType.SERVICE,
     )
@@ -154,7 +153,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> No
 
     hass.http.register_view(GoogleAssistantView(google_config))
 
-    if google_config.should_report_state:
-        google_config.async_enable_report_state()
+    google_config.async_update_report_state()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
