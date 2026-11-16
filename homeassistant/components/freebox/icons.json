@@ -1,6 +1,24 @@
 {
   "entity": {
     "sensor": {
+      "bandwidth_down": {
+        "default": "mdi:download-network-outline"
+      },
+      "bandwidth_up": {
+        "default": "mdi:upload-network-outline"
+      },
+      "connection_state": {
+        "default": "mdi:web",
+        "state": {
+          "down": "mdi:web-off"
+        }
+      },
+      "ipv4": {
+        "default": "mdi:ip-network"
+      },
+      "ipv6": {
+        "default": "mdi:ip-network"
+      },
       "missed": {
         "default": "mdi:phone-missed"
       },

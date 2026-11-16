@@ -1,6 +1,7 @@
 """TTS platform for the Fish Audio integration."""
 
 from collections.abc import AsyncGenerator
+from enum import StrEnum
 import logging
 from typing import Any, override
 
@@ -36,6 +37,15 @@ PARALLEL_UPDATES = 1
 _LOGGER = logging.getLogger(__name__)
 
 
+class FishAudioTextToSpeechOption(StrEnum):
+    """Store keys for the Fish Audio text-to-speech options."""
+
+    BACKEND = "backend"
+    LATENCY = "latency"
+    SPEED = "speed"
+    VOICE_ID = "voice_id"
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: FishAudioConfigEntry,
@@ -60,7 +70,12 @@ class FishAudioTTSEntity(TextToSpeechEntity):
     """Fish Audio TTS entity."""
 
     _attr_has_entity_name = True
-    _attr_supported_options = [CONF_VOICE_ID, CONF_BACKEND, CONF_LATENCY, CONF_SPEED]
+    _attr_supported_options = [
+        FishAudioTextToSpeechOption.VOICE_ID,
+        FishAudioTextToSpeechOption.BACKEND,
+        FishAudioTextToSpeechOption.LATENCY,
+        FishAudioTextToSpeechOption.SPEED,
+    ]
 
     def __init__(self, entry: FishAudioConfigEntry, sub_entry: ConfigSubentry) -> None:
         """Initialize the TTS entity."""
@@ -69,7 +84,9 @@ class FishAudioTTSEntity(TextToSpeechEntity):
         self._attr_unique_id = sub_entry.subentry_id
         # Configured speed must be a default option so it is part of the TTS cache key.
         self._attr_default_options = {
-            CONF_SPEED: sub_entry.data.get(CONF_SPEED, DEFAULT_SPEED)
+            FishAudioTextToSpeechOption.SPEED: sub_entry.data.get(
+                CONF_SPEED, DEFAULT_SPEED
+            )
         }
         title = sub_entry.title
         backend = sub_entry.data[CONF_BACKEND]
@@ -96,13 +113,19 @@ class FishAudioTTSEntity(TextToSpeechEntity):
         return TTS_SUPPORTED_LANGUAGES
 
     def _get_options(self, options: dict[str, Any]) -> tuple[str, str, str, float]:
-        voice_id = options.get(CONF_VOICE_ID, self.sub_entry.data.get(CONF_VOICE_ID))
-        backend = options.get(CONF_BACKEND, self.sub_entry.data.get(CONF_BACKEND))
+        voice_id = options.get(
+            FishAudioTextToSpeechOption.VOICE_ID, self.sub_entry.data.get(CONF_VOICE_ID)
+        )
+        backend = options.get(
+            FishAudioTextToSpeechOption.BACKEND, self.sub_entry.data.get(CONF_BACKEND)
+        )
         latency = options.get(
-            CONF_LATENCY, self.sub_entry.data.get(CONF_LATENCY, "balanced")
+            FishAudioTextToSpeechOption.LATENCY,
+            self.sub_entry.data.get(CONF_LATENCY, "balanced"),
         )
         speed = options.get(
-            CONF_SPEED, self.sub_entry.data.get(CONF_SPEED, DEFAULT_SPEED)
+            FishAudioTextToSpeechOption.SPEED,
+            self.sub_entry.data.get(CONF_SPEED, DEFAULT_SPEED),
         )
 
         if voice_id is None:

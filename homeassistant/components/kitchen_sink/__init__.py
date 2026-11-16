@@ -95,7 +95,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     )
 
     # Create issues
-    _create_issues(hass)
+    _create_issues(hass, entry)
 
     # Insert some external statistics
     if "recorder" in hass.config.components:
@@ -186,12 +186,13 @@ async def _notify_backup_listeners(hass: HomeAssistant) -> None:
         listener()
 
 
-def _create_issues(hass: HomeAssistant) -> None:
+def _create_issues(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Create some issue registry issues."""
     async_create_issue(
         hass,
         DOMAIN,
         "transmogrifier_deprecated",
+        config_entry_id=entry.entry_id,
         breaks_in_ha_version="2023.1.1",
         is_fixable=False,
         learn_more_url="https://en.wiktionary.org/wiki/transmogrifier",
@@ -203,6 +204,7 @@ def _create_issues(hass: HomeAssistant) -> None:
         hass,
         DOMAIN,
         "out_of_blinker_fluid",
+        config_entry_id=entry.entry_id,
         breaks_in_ha_version="2023.1.1",
         is_fixable=True,
         learn_more_url="https://www.youtube.com/watch?v=b9rntRxLlbU",
@@ -214,6 +216,7 @@ def _create_issues(hass: HomeAssistant) -> None:
         hass,
         DOMAIN,
         "unfixable_problem",
+        config_entry_id=entry.entry_id,
         is_fixable=False,
         learn_more_url="https://www.youtube.com/watch?v=dQw4w9WgXcQ",
         severity=IssueSeverity.WARNING,
@@ -224,6 +227,7 @@ def _create_issues(hass: HomeAssistant) -> None:
         hass,
         DOMAIN,
         "bad_psu",
+        config_entry_id=entry.entry_id,
         is_fixable=True,
         learn_more_url="https://www.youtube.com/watch?v=b9rntRxLlbU",
         severity=IssueSeverity.CRITICAL,
@@ -234,6 +238,7 @@ def _create_issues(hass: HomeAssistant) -> None:
         hass,
         DOMAIN,
         "cold_tea",
+        config_entry_id=entry.entry_id,
         is_fixable=True,
         severity=IssueSeverity.WARNING,
         translation_key="cold_tea",

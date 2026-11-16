@@ -7,13 +7,12 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
-from homeassistant.components.lektrico.const import DOMAIN
-from homeassistant.const import (
-    ATTR_HW_VERSION,
-    ATTR_SERIAL_NUMBER,
-    CONF_HOST,
-    CONF_TYPE,
+from homeassistant.components.lektrico.const import (
+    CONF_HW_VERSION,
+    CONF_SERIAL_NUMBER,
+    DOMAIN,
 )
+from homeassistant.const import CONF_HOST, CONF_TYPE
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 MOCKED_DEVICE_IP_ADDRESS = "192.168.100.10"
@@ -83,8 +82,8 @@ def mock_config_entry() -> MockConfigEntry:
         data={
             CONF_HOST: MOCKED_DEVICE_IP_ADDRESS,
             CONF_TYPE: MOCKED_DEVICE_TYPE,
-            ATTR_SERIAL_NUMBER: MOCKED_DEVICE_SERIAL_NUMBER,
-            ATTR_HW_VERSION: "B",
+            CONF_SERIAL_NUMBER: MOCKED_DEVICE_SERIAL_NUMBER,
+            CONF_HW_VERSION: "B",
         },
         unique_id=MOCKED_DEVICE_SERIAL_NUMBER,
     )

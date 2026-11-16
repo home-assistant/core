@@ -1,6 +1,7 @@
 """Helpers for the Sofar integration."""
 
 from collections.abc import Mapping
+from enum import IntEnum
 from typing import Any
 
 from modbus_connection import ModbusSerialParams, ModbusTcpParams
@@ -19,3 +20,18 @@ def create_modbus_params(
             device=data[CONF_DEVICE], baudrate=data[CONF_BAUDRATE]
         )
     return ModbusTcpParams(host=data[CONF_HOST], port=data[CONF_PORT])
+
+
+def option_slug(member: IntEnum) -> str:
+    """Return the option slug of a device enum member."""
+    return member.name.lower()
+
+
+def enum_options(enum_type: type[IntEnum]) -> list[str]:
+    """Return the option slugs of a device enum."""
+    return [option_slug(member) for member in enum_type]
+
+
+def enum_member[E: IntEnum](enum_type: type[E], option: str) -> E:
+    """Return the device enum member an option slug names."""
+    return enum_type[option.upper()]

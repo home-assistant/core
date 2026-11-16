@@ -6,16 +6,10 @@ from datetime import UTC, datetime
 from typing import Any, override
 
 from homematicip.base.enums import FunctionalChannelType, ValveState
-from homematicip.base.functionalChannels import (
-    FloorTerminalBlockMechanicChannel,
-    FunctionalChannel,
-)
+from homematicip.base.functionalChannels import FunctionalChannel
 from homematicip.device import (
     Device,
     EnergySensorsInterface,
-    FloorTerminalBlock6,
-    FloorTerminalBlock10,
-    FloorTerminalBlock12,
     HeatingThermostat,
     HeatingThermostatCompact,
     HeatingThermostatEvo,
@@ -30,7 +24,6 @@ from homematicip.device import (
     RotaryHandleSensor,
     SmokeDetector,
     SoilMoistureSensorInterface,
-    SwitchMeasuring,
     TemperatureDifferenceSensor2,
     TemperatureHumiditySensorDisplay,
     TemperatureHumiditySensorOutdoor,
@@ -42,7 +35,6 @@ from homematicip.device import (
     WeatherSensor,
     WeatherSensorPlus,
     WeatherSensorPro,
-    WiredFloorTerminalBlock12,
 )
 
 from homeassistant.components.sensor import (
@@ -174,6 +166,12 @@ ATTR_ESI_TYPE = "type"
 CARBON_DIOXIDE_CHANNELS = (
     FunctionalChannelType.CARBON_DIOXIDE_SENSOR_CHANNEL,
     FunctionalChannelType.WALL_MOUNTED_THERMOSTAT_WITH_CARBON_CHANNEL,
+)
+
+FLOOR_TERMINAL_BLOCK_VALVE_CHANNELS = (
+    FunctionalChannelType.FLOOR_TERMINAL_BLOCK_MECHANIC_CHANNEL,
+    FunctionalChannelType.FLOOR_TERMINAL_BLOCK_CHANNEL,
+    FunctionalChannelType.FLOOR_TERMINAL_BLOCK_LOCAL_PUMP_CHANNEL,
 )
 
 ESI_TYPE_UNKNOWN = "UNKNOWN"
@@ -317,8 +315,9 @@ POWER_DESC = HmipSensorDescription[Device](
     device_class=SensorDeviceClass.POWER,
     native_unit_of_measurement=UnitOfPower.WATT,
     state_class=SensorStateClass.MEASUREMENT,
-    value_fn=lambda d: d.currentPowerConsumption,
+    channel_value_fn=lambda channel: channel.currentPowerConsumption,
     channel=1,
+    channel_type=FunctionalChannelType.SWITCH_MEASURING_CHANNEL,
 )
 
 ENERGY_DESC = HmipSensorDescription[Device](
@@ -326,8 +325,9 @@ ENERGY_DESC = HmipSensorDescription[Device](
     device_class=SensorDeviceClass.ENERGY,
     native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
     state_class=SensorStateClass.TOTAL_INCREASING,
-    value_fn=lambda d: d.energyCounter,
+    channel_value_fn=lambda channel: channel.energyCounter,
     channel=1,
+    channel_type=FunctionalChannelType.SWITCH_MEASURING_CHANNEL,
 )
 
 WIND_SPEED_DESC = HmipSensorDescription[Device](
@@ -493,7 +493,6 @@ SENSOR_DESCRIPTIONS_BY_DEVICE: dict[
     MotionDetectorOutdoor: (ILLUMINANCE_DESC,),
     MotionDetectorSwitchOutdoor: (MOTION_SWITCH_ILLUMINANCE_DESC,),
     PresenceDetectorIndoor: (ILLUMINANCE_DESC,),
-    SwitchMeasuring: (POWER_DESC, ENERGY_DESC),
     PassageDetector: (PASSAGE_COUNTER_DESC,),
     TemperatureDifferenceSensor2: (
         TEMPERATURE_EXTERNAL_CH1_DESC,
@@ -526,6 +525,13 @@ SENSOR_DESCRIPTIONS_BY_DEVICE: dict[
         TODAY_RAIN_DESC,
         ABSOLUTE_HUMIDITY_DESC,
     ),
+}
+
+# Keyed by channel type, so devices without a class in the library get these too.
+SENSOR_DESCRIPTIONS_BY_CHANNEL: dict[
+    FunctionalChannelType, tuple[HmipSensorDescription[Device], ...]
+] = {
+    FunctionalChannelType.SWITCH_MEASURING_CHANNEL: (POWER_DESC, ENERGY_DESC),
 }
 
 
@@ -629,6 +635,14 @@ async def async_setup_entry(
             # test_simple_sensor_descriptions_no_overlap), so further
             # iteration cannot add entities.
             break
+        for channel_type, descriptions in SENSOR_DESCRIPTIONS_BY_CHANNEL.items():
+            if get_channel_index_by_type(device, channel_type) is None:
+                continue
+            entities.extend(
+                HomematicipSensor(hap, device, description)
+                for description in descriptions
+                if description.exists_fn(device)
+            )
 
     device_handlers = get_device_handlers(hap)
 
@@ -638,21 +652,13 @@ async def async_setup_entry(
             if isinstance(device, device_class):
                 entities.extend(handler(device))
 
-    # Handle floor terminal blocks separately
-    floor_terminal_blocks = (
-        FloorTerminalBlock6,
-        FloorTerminalBlock10,
-        FloorTerminalBlock12,
-        WiredFloorTerminalBlock12,
-    )
     entities.extend(
         HomematicipFloorTerminalBlockMechanicChannelValve(
             hap, device, channel=channel.index
         )
         for device in hap.home.devices
-        if isinstance(device, floor_terminal_blocks)
         for channel in device.functionalChannels
-        if isinstance(channel, FloorTerminalBlockMechanicChannel)
+        if channel.functionalChannelType in FLOOR_TERMINAL_BLOCK_VALVE_CHANNELS
         and getattr(channel, "valvePosition", None) is not None
     )
 
@@ -864,7 +870,10 @@ class HomematicipFloorTerminalBlockMechanicChannelValve(
             device,
             channel=channel,
             is_multi_channel=is_multi_channel,
-            post="Valve Position",
+            # the channels are listed as 0, 1, 10, 11, 12, 2, ...
+            channel_real_index=channel,
+            # only used for channels without a label, which would share one name
+            post=f"Valve Position {channel}",
             feature_id="ftb_valve_position",
         )
 
@@ -874,12 +883,7 @@ class HomematicipFloorTerminalBlockMechanicChannelValve(
         """Return the icon."""
         if super().icon:
             return super().icon
-        channel = next(
-            channel
-            for channel in self._device.functionalChannels
-            if channel.index == self._channel
-        )
-        if channel.valveState != ValveState.ADAPTION_DONE:
+        if self._adaption_pending():
             return "mdi:alert"
         return "mdi:heating-coil"
 
@@ -887,14 +891,21 @@ class HomematicipFloorTerminalBlockMechanicChannelValve(
     @override
     def native_value(self) -> int | None:
         """Return the floor terminal block valve position."""
-        channel = next(
+        if self._adaption_pending():
+            return None
+        return round(self._valve_channel().valvePosition * 100)
+
+    def _valve_channel(self) -> FunctionalChannel:
+        return next(
             channel
             for channel in self._device.functionalChannels
             if channel.index == self._channel
         )
-        if channel.valveState != ValveState.ADAPTION_DONE:
-            return None
-        return round(channel.valvePosition * 100)
+
+    def _adaption_pending(self) -> bool:
+        # thermal actuator channels report no valveState, they need no adaption
+        valve_state = getattr(self._valve_channel(), "valveState", None)
+        return valve_state is not None and valve_state != ValveState.ADAPTION_DONE
 
 
 class HmipEsiSensorEntity(HomematicipGenericEntity, SensorEntity):

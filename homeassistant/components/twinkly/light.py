@@ -13,7 +13,7 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DEV_LED_PROFILE, DEV_PROFILE_RGB, DEV_PROFILE_RGBW
@@ -184,6 +184,7 @@ class TwinklyLight(TwinklyEntity, LightEntity):
         self._attr_is_on = self.coordinator.data.is_on
         self._attr_brightness = self.coordinator.data.brightness
 
+    @callback
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""

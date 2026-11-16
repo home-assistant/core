@@ -7,7 +7,6 @@ from typing import Any, override
 from pyfibaro.fibaro_device import DeviceModel
 
 from homeassistant.components.climate import (
-    ENTITY_ID_FORMAT,
     PRESET_AWAY,
     PRESET_BOOST,
     ClimateEntity,
@@ -100,6 +99,7 @@ TARGET_TEMP_ACTIONS = (
     "setTargetLevel",
     "setThermostatSetpoint",
     "setHeatingThermostatSetpoint",
+    "setCoolingThermostatSetpoint",
 )
 
 OP_MODE_ACTIONS = ("setMode", "setOperatingMode", "setThermostatMode")
@@ -133,10 +133,14 @@ class FibaroThermostat(FibaroEntity, ClimateEntity):
         self._target_temp_device: DeviceModel | None = None
         self._op_mode_device: DeviceModel | None = None
         self._fan_mode_device: DeviceModel | None = None
-        self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
 
         siblings = self.controller.get_siblings(fibaro_device)
-        _LOGGER.debug("%s siblings: %s", self.ha_id, siblings)
+        _LOGGER.debug(
+            "%s (%s) siblings: %s",
+            fibaro_device.name,
+            fibaro_device.fibaro_id,
+            siblings,
+        )
         tempunit: str | None = "C"
         for device in siblings:
             # Detecting temperature device, one strong and one weak way of
@@ -144,7 +148,11 @@ class FibaroThermostat(FibaroEntity, ClimateEntity):
             if device.type == "com.fibaro.temperatureSensor" or (
                 self._temp_sensor_device is None
                 and device.has_unit
-                and (device.value.has_value or device.has_heating_thermostat_setpoint)
+                and (
+                    device.value.has_value
+                    or device.has_heating_thermostat_setpoint
+                    or device.has_cooling_thermostat_setpoint
+                )
                 and device.unit in ("C", "F")
             ):
                 self._temp_sensor_device = device
@@ -216,13 +224,14 @@ class FibaroThermostat(FibaroEntity, ClimateEntity):
         """Call when entity is added to hass."""
         _LOGGER.debug(
             (
-                "Climate %s\n"
+                "Climate %s (%s)\n"
                 "- _temp_sensor_device %s\n"
                 "- _target_temp_device %s\n"
                 "- _op_mode_device %s\n"
                 "- _fan_mode_device %s"
             ),
-            self.ha_id,
+            self.fibaro_device.name,
+            self.fibaro_device.fibaro_id,
             self._temp_sensor_device.fibaro_id if self._temp_sensor_device else "None",
             self._target_temp_device.fibaro_id if self._target_temp_device else "None",
             self._op_mode_device.fibaro_id if self._op_mode_device else "None",
@@ -359,6 +368,11 @@ class FibaroThermostat(FibaroEntity, ClimateEntity):
         """Return the current temperature."""
         if self._temp_sensor_device:
             device = self._temp_sensor_device
+            if (
+                device.has_cooling_thermostat_setpoint
+                and self.hvac_mode == HVACMode.COOL
+            ):
+                return device.cooling_thermostat_setpoint
             if device.has_heating_thermostat_setpoint:
                 return device.heating_thermostat_setpoint
             return device.value.float_value()
@@ -370,6 +384,11 @@ class FibaroThermostat(FibaroEntity, ClimateEntity):
         """Return the temperature we try to reach."""
         if self._target_temp_device:
             device = self._target_temp_device
+            if (
+                device.has_cooling_thermostat_setpoint_future
+                and self.hvac_mode == HVACMode.COOL
+            ):
+                return device.cooling_thermostat_setpoint_future
             if device.has_heating_thermostat_setpoint_future:
                 return device.heating_thermostat_setpoint_future
             return device.target_level
@@ -385,6 +404,14 @@ class FibaroThermostat(FibaroEntity, ClimateEntity):
                 target.execute_action(
                     "setThermostatSetpoint", [self.fibaro_op_mode, temperature]
                 )
+            elif "setCoolingThermostatSetpoint" in target.actions and (
+                self.hvac_mode == HVACMode.COOL
+                or (
+                    "setHeatingThermostatSetpoint" not in target.actions
+                    and "setTargetLevel" not in target.actions
+                )
+            ):
+                target.execute_action("setCoolingThermostatSetpoint", [temperature])
             elif "setHeatingThermostatSetpoint" in target.actions:
                 target.execute_action("setHeatingThermostatSetpoint", [temperature])
             else:

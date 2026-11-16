@@ -10,7 +10,6 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -94,7 +93,7 @@ class AirzoneZoneSwitch(AirzoneZoneEntity, AirzoneBaseSwitch):
         self,
         coordinator: AirzoneUpdateCoordinator,
         description: AirzoneSwitchDescription,
-        entry: ConfigEntry,
+        entry: AirzoneConfigEntry,
         system_zone_id: str,
         zone_data: dict[str, Any],
     ) -> None:

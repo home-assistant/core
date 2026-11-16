@@ -3,46 +3,19 @@
 import logging
 from typing import Any, override
 
-import probatio
 from pyhik.constants import SENSOR_MAP
 
 from homeassistant.components.binary_sensor import (
-    PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import (
-    ATTR_LAST_TRIP_TIME,
-    CONF_CUSTOMIZE,
-    CONF_DELAY,
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_SSL,
-    CONF_USERNAME,
-    EntityCategory,
-)
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import config_validation as cv, issue_registry as ir
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    AddEntitiesCallback,
-)
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.const import ATTR_LAST_TRIP_TIME, EntityCategory
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import HikvisionConfigEntry
-from .const import DEFAULT_PORT, DOMAIN
 from .entity import HikvisionEntity
-
-CONF_IGNORED = "ignored"
-
-DEFAULT_DELAY = 0
-DEFAULT_IGNORED = False
-
 
 # Keyed by the friendly names pyhik emits in `current_event_states`. Going
 # through SENSOR_MAP keeps each description attached to the right event if
@@ -168,74 +141,7 @@ IGNORED_SENSOR_TYPES: frozenset[str] = frozenset(
 
 _LOGGER = logging.getLogger(__name__)
 
-CUSTOMIZE_SCHEMA = probatio.Schema(
-    {
-        probatio.Optional(CONF_IGNORED, default=DEFAULT_IGNORED): cv.boolean,
-        probatio.Optional(CONF_DELAY, default=DEFAULT_DELAY): cv.positive_int,
-    }
-)
-
-PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
-    {
-        probatio.Optional(CONF_NAME): cv.string,
-        probatio.Required(CONF_HOST): cv.string,
-        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
-        probatio.Optional(CONF_SSL, default=False): cv.boolean,
-        probatio.Required(CONF_USERNAME): cv.string,
-        probatio.Required(probatio.Secret(CONF_PASSWORD)): cv.string,
-        probatio.Optional(CONF_CUSTOMIZE, default={}): probatio.Schema(
-            {cv.string: CUSTOMIZE_SCHEMA}
-        ),
-    }
-)
-
 PARALLEL_UPDATES = 0
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the Hikvision binary sensor platform from YAML."""
-    # Trigger the import flow to migrate YAML config to config entry
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-    )
-
-    if (
-        result.get("type") is FlowResultType.ABORT
-        and result.get("reason") != "already_configured"
-    ):
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            f"deprecated_yaml_import_issue_{result.get('reason')}",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="deprecated_yaml_import_issue",
-            translation_placeholders={
-                "domain": DOMAIN,
-                "integration_title": "Hikvision",
-            },
-        )
-        return
-
-    ir.async_create_issue(
-        hass,
-        HOMEASSISTANT_DOMAIN,
-        f"deprecated_yaml_{DOMAIN}",
-        is_fixable=False,
-        issue_domain=DOMAIN,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-        translation_placeholders={
-            "domain": DOMAIN,
-            "integration_title": "Hikvision",
-        },
-    )
 
 
 async def async_setup_entry(

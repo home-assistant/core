@@ -3,7 +3,12 @@
 from collections.abc import Mapping
 from typing import Any, override
 
-from powerfox import Powerfox, PowerfoxAuthenticationError, PowerfoxConnectionError
+from powerfox import (
+    Powerfox,
+    PowerfoxAuthenticationError,
+    PowerfoxConnectionError,
+    PowerfoxNoDataError,
+)
 import probatio
 
 from homeassistant.config_entries import (
@@ -121,4 +126,6 @@ class PowerfoxConfigFlow(ConfigFlow, domain=DOMAIN):
             return "invalid_auth"
         except PowerfoxConnectionError:
             return "cannot_connect"
+        except PowerfoxNoDataError:
+            return "no_devices"
         return None

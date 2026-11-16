@@ -5,7 +5,8 @@ from unittest.mock import AsyncMock
 
 import aiohttp
 from freezegun.api import FrozenDateTimeFactory
-from lunatone_rest_api_client.models import LineStatus
+from lunatone_rest_api_client.models import DeviceData, FeaturesStatus, LineStatus
+from lunatone_rest_api_client.models.common import Status
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
@@ -17,7 +18,11 @@ from homeassistant.components.light import (
     ATTR_RGBW_COLOR,
     DOMAIN as LIGHT_DOMAIN,
 )
-from homeassistant.components.lunatone.coordinator import DEFAULT_INFO_UPDATE_INTERVAL
+from homeassistant.components.lunatone.const import DOMAIN
+from homeassistant.components.lunatone.coordinator import (
+    DEFAULT_DEVICES_UPDATE_INTERVAL,
+    DEFAULT_INFO_UPDATE_INTERVAL,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -54,6 +59,126 @@ async def test_setup(
         assert entity_entry
         assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
         assert entity_state == snapshot(name=f"{entity_entry.entity_id}-state")
+
+
+async def test_device_added_after_setup(
+    hass: HomeAssistant,
+    mock_lunatone_info: AsyncMock,
+    mock_lunatone_devices: AsyncMock,
+    mock_lunatone_sensors: AsyncMock,
+    mock_lunatone_scan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a device added after setup creates an entity."""
+    entity_id = "light.device_1"
+    device = mock_lunatone_devices.data.devices.pop(0)
+
+    await setup_integration(hass, mock_config_entry)
+
+    entity = hass.states.get(entity_id)
+    assert entity is None
+
+    mock_lunatone_devices.data.devices.append(device)
+
+    freezer.tick(DEFAULT_DEVICES_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity = hass.states.get(entity_id)
+    assert entity
+
+
+async def test_device_removed_after_setup(
+    hass: HomeAssistant,
+    mock_lunatone_info: AsyncMock,
+    mock_lunatone_devices: AsyncMock,
+    mock_lunatone_sensors: AsyncMock,
+    mock_lunatone_scan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that removing a device after setup removes its entity."""
+    entity_id = "light.device_6"
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(entity_id)
+    assert entity_registry.async_get(entity_id)
+
+    mock_lunatone_devices.data.devices.pop()
+
+    freezer.tick(DEFAULT_DEVICES_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(entity_id) is None
+    assert entity_registry.async_get(entity_id) is None
+
+
+async def test_light_added_before_line_device(
+    hass: HomeAssistant,
+    mock_lunatone_info: AsyncMock,
+    mock_lunatone_devices: AsyncMock,
+    mock_lunatone_sensors: AsyncMock,
+    mock_lunatone_scan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a light is added before its line device and linked later."""
+    entity_id = "light.device_7"
+
+    await setup_integration(hass, mock_config_entry)
+
+    new_device_data = DeviceData(
+        id=7,
+        name="Device 7",
+        line=2,
+        address=0,
+        features=FeaturesStatus(switchable=Status[bool](status=False)),
+    )
+    mock_lunatone_devices.data.devices.append(new_device_data)
+
+    freezer.tick(DEFAULT_DEVICES_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state
+
+    light_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{mock_config_entry.unique_id}-device7"),
+        mock_config_entry.entry_id,
+    )
+    assert light_device
+    assert light_device.via_device_id is None
+
+    info_data = deepcopy(mock_lunatone_info.data)
+    info_data.lines["2"] = deepcopy(info_data.lines["1"])
+    mock_lunatone_info.data = info_data
+
+    freezer.tick(DEFAULT_INFO_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state
+
+    assert mock_config_entry.unique_id
+
+    line_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{mock_config_entry.unique_id}-line2"),
+        mock_config_entry.entry_id,
+    )
+    assert line_device
+
+    light_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{mock_config_entry.unique_id}-device7"), mock_config_entry.entry_id
+    )
+    assert light_device
+    assert light_device.via_device_id == line_device.id
 
 
 async def test_turn_on_off(

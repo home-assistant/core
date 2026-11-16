@@ -13,7 +13,12 @@ from aiofarmad import (
 )
 import probatio
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CODE, CONF_EMAIL, CONF_PASSWORD
 from homeassistant.helpers.selector import (
     TextSelector,
@@ -135,6 +140,25 @@ class FarmadConfigFlow(ConfigFlow, domain=DOMAIN):
         """Start reauthentication after an authentication error."""
         return await self.async_step_reauth_confirm()
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Change the credentials of the existing entry."""
+        errors: dict[str, str] = {}
+        entry = self._get_reconfigure_entry()
+        if user_input is not None:
+            result, errors = await self._async_attempt_login(user_input)
+            if result is not None:
+                return result
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, {CONF_EMAIL: entry.data[CONF_EMAIL]}
+            ),
+            errors=errors,
+        )
+
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -189,13 +213,19 @@ class FarmadConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Create the config entry, or renew it during reauthentication."""
         await self.async_set_unique_id(account.id)
-        if self.source == SOURCE_REAUTH:
+        if self.source in (SOURCE_REAUTH, SOURCE_RECONFIGURE):
             self._abort_if_unique_id_mismatch(reason="wrong_account")
-            data_updates = {CONF_ACCESS_TOKEN: access_token}
+            data_updates = {
+                CONF_EMAIL: self._login_data[CONF_EMAIL],
+                CONF_ACCESS_TOKEN: access_token,
+            }
             if refresh_token is not None:
                 data_updates[CONF_REFRESH_TOKEN] = refresh_token
             return self.async_update_reload_and_abort(
-                self._get_reauth_entry(), data_updates=data_updates
+                self._get_reauth_entry()
+                if self.source == SOURCE_REAUTH
+                else self._get_reconfigure_entry(),
+                data_updates=data_updates,
             )
         return self.async_create_entry(
             title=account.full_name,

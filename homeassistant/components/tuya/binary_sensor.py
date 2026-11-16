@@ -247,11 +247,53 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
         ),
         TAMPER_BINARY_SENSOR,
     ),
+    DeviceCategory.DLQ: (
+        *(
+            TuyaBinarySensorEntityDescription(
+                key=f"{DPCode.FAULT}_{label}",
+                dpcode=DPCode.FAULT,
+                bitmap_key=label,
+                translation_key=translation_key,
+                device_class=BinarySensorDeviceClass.PROBLEM,
+                entity_category=EntityCategory.DIAGNOSTIC,
+            )
+            for label, translation_key in (
+                ("short_circuit_alarm", "short_circuit"),
+                ("surge_alarm", "surge"),
+                ("overload_alarm", "overload"),
+                ("leakagecurr_alarm", "leakage_current_alarm"),
+                ("temp_dif_fault", "temperature_difference"),
+                ("fire_alarm", "fire"),
+                ("high_power_alarm", "high_power"),
+                ("self_test_alarm", "self_test"),
+                ("ov_cr", "overcurrent"),
+                ("unbalance_alarm", "current_unbalance"),
+                ("ov_vol", "overvoltage"),
+                ("undervoltage_alarm", "undervoltage"),
+                ("miss_phase_alarm", "phase_loss"),
+                ("outage_alarm", "power_outage"),
+                ("magnetism_alarm", "magnetic_interference"),
+                ("credit_alarm", "low_credit"),
+                ("no_balance_alarm", "no_credit"),
+                ("leakage_early_warning", "leakage_current_early_warning"),
+                ("overcur_early_warning", "overcurrent_early_warning"),
+                ("overvol_early_warning", "overvoltage_early_warning"),
+                ("overpow_early_warning", "overpower_early_warning"),
+                ("undvol_early_warning", "undervoltage_early_warning"),
+                ("higtemp_early_warning", "high_temperature_early_warning"),
+            )
+        ),
+    ),
     DeviceCategory.HPS: (
         TuyaBinarySensorEntityDescription(
             key=DPCode.PRESENCE_STATE,
             device_class=BinarySensorDeviceClass.OCCUPANCY,
             on_value={"presence", "small_move", "large_move", "peaceful"},
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.DROP_STATE,
+            translation_key="fall",
+            on_value="drop",
         ),
     ),
     DeviceCategory.JQBJ: (
@@ -365,6 +407,20 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
             device_class=BinarySensorDeviceClass.SAFETY,
         ),
         TAMPER_BINARY_SENSOR,
+    ),
+    DeviceCategory.SP: (
+        TuyaBinarySensorEntityDescription(
+            # Pet feeders with a camera are reported as "sp"
+            key=DPCode.FEED_BLOCK_STATUS,
+            translation_key="feed_blocked",
+            device_class=BinarySensorDeviceClass.PROBLEM,
+        ),
+        TuyaBinarySensorEntityDescription(
+            # Pet feeders with a camera are reported as "sp"
+            key=DPCode.FEED_STUCK_STATUS,
+            translation_key="food_stuck",
+            device_class=BinarySensorDeviceClass.PROBLEM,
+        ),
     ),
     DeviceCategory.VOC: (
         TuyaBinarySensorEntityDescription(

@@ -238,3 +238,51 @@ async def test_api_access_checked_before_entry(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == reason
     assert not hass.config_entries.async_entries(DOMAIN)
+
+
+@pytest.mark.usefixtures("setup_credentials")
+@pytest.mark.parametrize(
+    ("account_id", "reason"),
+    [(ACCOUNT_ID, "reauth_successful"), ("other-account-sub", "wrong_account")],
+)
+async def test_reauth(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_config_entry: MockConfigEntry,
+    account_id: str,
+    reason: str,
+) -> None:
+    """Test reauthentication updates the token only for the same account."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass, {"flow_id": result["flow_id"], "redirect_uri": REDIRECT_URI}
+    )
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == HTTPStatus.OK
+
+    new_token = _fake_access_token({"sub": account_id})
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        json={
+            "refresh_token": "new-refresh-token",
+            "access_token": new_token,
+            "token_type": "Bearer",
+            "expires_in": 60,
+        },
+    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
+    expected = new_token if reason == "reauth_successful" else "fake-access-token"
+    assert mock_config_entry.data["token"]["access_token"] == expected

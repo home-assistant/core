@@ -38,6 +38,21 @@
         },
         "description": "The access token of this Seafile account is no longer valid. Log in again to create a new one."
       },
+      "reconfigure": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "url": "[%key:common::config_flow::data::url%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "password": "[%key:component::seafile::config::step::user::data_description::password%]",
+          "url": "[%key:component::seafile::config::step::user::data_description::url%]",
+          "username": "[%key:component::seafile::config::step::user::data_description::username%]",
+          "verify_ssl": "[%key:component::seafile::config::step::user::data_description::verify_ssl%]"
+        },
+        "description": "Log in again to change the address of the Seafile server, the username or the password. This creates a new access token and revokes the old one."
+      },
       "user": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
@@ -93,6 +108,26 @@
     }
   },
   "entity": {
+    "button": {
+      "empty_trash": {
+        "name": "Empty trash"
+      }
+    },
+    "number": {
+      "history_days": {
+        "name": "History days"
+      }
+    },
+    "select": {
+      "history": {
+        "name": "History",
+        "state": {
+          "keep_all": "Keep full history",
+          "keep_none": "Don't keep history",
+          "limited": "Keep a period of history"
+        }
+      }
+    },
     "sensor": {
       "file_count": {
         "name": "Files",
@@ -115,6 +150,9 @@
     },
     "invalid_auth": {
       "message": "The access token of the Seafile account is no longer valid."
+    },
+    "library_not_found": {
+      "message": "The library no longer exists on the Seafile server."
     },
     "permission_denied": {
       "message": "The Seafile account is not allowed to perform this action on the library."

@@ -78,6 +78,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: OllamaConfigEntry) -> No
             else None
         ),
         verify=get_default_context(),
+        # Bound only the connect, so slow models can still take their time to answer
+        timeout=httpx2.Timeout(None, connect=DEFAULT_TIMEOUT),
     )
     try:
         async with asyncio.timeout(DEFAULT_TIMEOUT):
@@ -102,7 +104,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OllamaConfigEntry) -> No
     entry.async_on_unload(entry.add_update_listener(async_update_options))
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_unload_entry(hass: HomeAssistant, entry: OllamaConfigEntry) -> None:
     """Unload Ollama."""
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
@@ -123,7 +125,7 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
     if not any(entry.version == 1 for entry in entries):
         return
 
-    url_entries: dict[str, tuple[ConfigEntry, bool]] = {}
+    url_entries: dict[str, tuple[OllamaConfigEntry, bool]] = {}
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
 

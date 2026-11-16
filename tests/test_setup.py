@@ -606,6 +606,46 @@ async def test_component_setup_after_dependencies(hass: HomeAssistant) -> None:
     assert "dep" in hass.config.components
 
 
+@pytest.mark.parametrize(
+    ("manifest", "expected_result"),
+    [
+        pytest.param({"dependencies": ["dep"]}, False, id="dependency"),
+        pytest.param({"after_dependencies": ["dep"]}, True, id="after_dependency"),
+        pytest.param(
+            {"dependencies": ["dep"], "after_dependencies": ["dep"]},
+            False,
+            id="dependency_and_after_dependency",
+        ),
+    ],
+)
+async def test_component_setup_failing_dependency(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    manifest: dict[str, list[str]],
+    expected_result: bool,
+) -> None:
+    """Test a failing dependency fails the component, a failing after dependency does not."""
+
+    async def mock_dep_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+        return False
+
+    mock_integration(hass, MockModule("dep", async_setup=mock_dep_setup))
+    mock_integration(hass, MockModule("comp", partial_manifest=manifest))
+    setup.async_set_domains_to_be_loaded(hass, {"comp", "dep"})
+
+    assert await setup.async_setup_component(hass, "comp", {}) is expected_result
+    assert ("comp" in hass.config.components) is expected_result
+    assert "dep" not in hass.config.components
+    assert "Setup failed for 'dep'" in caplog.text
+    assert (
+        "Unable to set up dependencies of 'comp'. "
+        "Setup failed for dependencies: ['dep']" in caplog.text
+    ) is not expected_result
+    assert (
+        "Ignoring failed after dependency 'dep' of 'comp'" in caplog.text
+    ) is expected_result
+
+
 async def test_component_setup_with_validation_and_dependency(
     hass: HomeAssistant,
 ) -> None:
