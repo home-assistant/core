@@ -177,6 +177,9 @@ DEVICE_SUPPORT_MAP: Final[dict[str, SwitchbotCloudDeviceConfig]] = {
     "Blind Tilt": SwitchbotCloudDeviceConfig(
         True, entity_config=(Platform.SENSOR, Platform.BINARY_SENSOR, Platform.COVER)
     ),
+    "Garage Door Opener": SwitchbotCloudDeviceConfig(
+        True, entity_config=(Platform.BINARY_SENSOR, Platform.COVER)
+    ),
     "Plug": SwitchbotCloudDeviceConfig(False, entity_config=(Platform.SWITCH,)),
     "Plug Mini (US)": SwitchbotCloudDeviceConfig(
         False, entity_config=(Platform.SWITCH, Platform.SENSOR)
