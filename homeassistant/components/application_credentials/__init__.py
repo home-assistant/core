@@ -100,10 +100,11 @@ class AuthorizationServer:
 class DeviceFlowAuthorizationServer:
     """Represent an OAuth2 Authorization Server that supports Device Flow.
 
-    The authorize_url is the device authorization endpoint (RFC 8628 section 3.1).
+    device_authorization_url is the device authorization endpoint (RFC 8628
+    section 3.1), where the device requests its device and user codes.
     """
 
-    authorize_url: str
+    device_authorization_url: str
     token_url: str
 
 
@@ -265,7 +266,7 @@ class DeviceFlowImplementation(config_entry_oauth2_flow.DeviceFlowImplementation
             hass,
             domain,
             credential.client_id,
-            authorization_server.authorize_url,
+            authorization_server.device_authorization_url,
             authorization_server.token_url,
         )
         self._name = credential.name or integration_name

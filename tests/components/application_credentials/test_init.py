@@ -46,7 +46,7 @@ NAME = "Name"
 
 TEST_DOMAIN = "fake_integration"
 DEVICE_FLOW_DOMAIN = "fake_device_integration"
-DEVICE_AUTHORIZE_URL = "https://example.com/oauth2/device"
+DEVICE_AUTHORIZATION_URL = "https://example.com/oauth2/device"
 
 
 @pytest.fixture
@@ -778,7 +778,9 @@ def _mock_device_flow_platform(hass: HomeAssistant) -> Mock:
     """Mock an application_credentials platform that supplies a device flow client."""
     platform = Mock(
         async_get_device_flow_authorization_server=AsyncMock(
-            return_value=DeviceFlowAuthorizationServer(DEVICE_AUTHORIZE_URL, TOKEN_URL)
+            return_value=DeviceFlowAuthorizationServer(
+                device_authorization_url=DEVICE_AUTHORIZATION_URL, token_url=TOKEN_URL
+            )
         ),
         async_get_device_flow_client_credential=AsyncMock(
             return_value=DeviceFlowClientCredential(CLIENT_ID)
@@ -839,7 +841,7 @@ async def test_device_flow_platform(hass: HomeAssistant) -> None:
     implementation = implementations[DEVICE_FLOW_DOMAIN]
     assert isinstance(implementation, config_entry_oauth2_flow.DeviceFlowImplementation)
     assert implementation.client_id == CLIENT_ID
-    assert implementation.authorize_url == DEVICE_AUTHORIZE_URL
+    assert implementation.device_authorization_url == DEVICE_AUTHORIZATION_URL
     assert implementation.token_url == TOKEN_URL
     assert implementation.domain == DEVICE_FLOW_DOMAIN
     # Falls back to the integration name, which a mocked integration takes from its domain

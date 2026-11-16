@@ -160,7 +160,9 @@ async def async_token_request(
                 detail = error_body[:200] if error_body else "unknown error"
             if (
                 return_error_body
+                # 429 is raised as transient so a device flow poll backs off
                 and resp.status < 500
+                and resp.status != HTTPStatus.TOO_MANY_REQUESTS
                 and isinstance(error_data, dict)
                 and isinstance(error_data.get("error"), str)
             ):

@@ -69,7 +69,6 @@ __all__ = [
     "OAuth2AuthorizeCallbackView",
     "OAuth2Session",
     "async_add_implementation_provider",
-    "async_get_config_entry_device_flow_implementation",
     "async_get_config_entry_implementation",
     "async_get_implementations",
     "async_get_redirect_uri",
@@ -497,14 +496,14 @@ class DeviceFlowImplementation(OAuth2TokenEndpointMixin):
         hass: HomeAssistant,
         domain: str,
         client_id: str,
-        authorize_url: str,
+        device_authorization_url: str,
         token_url: str,
     ) -> None:
         """Initialize device flow implementation."""
         self.hass = hass
         self._domain = domain
         self.client_id = client_id
-        self.authorize_url = authorize_url
+        self.device_authorization_url = device_authorization_url
         self.token_url = token_url
 
     @property
@@ -541,7 +540,7 @@ class DeviceFlowImplementation(OAuth2TokenEndpointMixin):
                 }.items()
                 if value is not None
             },
-            self.authorize_url,
+            self.device_authorization_url,
         )
         return DeviceAuthorization.from_response(response)
 
@@ -634,6 +633,9 @@ class AbstractOAuth2BaseFlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta
 
     VERSION = 1
 
+    # The grant's implementation class, set by the grant specific handlers
+    _implementation_type: ClassVar[type[AbstractOAuth2BaseImplementation]]
+
     def __init__(self) -> None:
         """Instantiate config flow."""
         if self.DOMAIN == "":
@@ -689,8 +691,7 @@ class AbstractOAuth2BaseFlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta
             if (
                 implementation := implementations.get(user_input["implementation"])
             ) is not None:
-                self.flow_impl = implementation
-                return await self.async_step_auth()
+                return await self._async_step_auth_with(implementation)
 
         if not implementations:
             if self.DOMAIN in await async_get_application_credentials(self.hass):
@@ -701,8 +702,7 @@ class AbstractOAuth2BaseFlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta
         if len(implementations) == 1 and req is not None:
             # Pick first implementation if we have only one, but only
             # if this is triggered by a user interaction (request).
-            self.flow_impl = list(implementations.values())[0]
-            return await self.async_step_auth()
+            return await self._async_step_auth_with(list(implementations.values())[0])
 
         return self.async_show_form(
             step_id="pick_implementation",
@@ -716,6 +716,20 @@ class AbstractOAuth2BaseFlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta
                 }
             ),
         )
+
+    async def _async_step_auth_with(
+        self, implementation: AbstractOAuth2BaseImplementation
+    ) -> config_entries.ConfigFlowResult:
+        """Continue with the picked implementation if it has the handler's grant."""
+        if not isinstance(implementation, self._implementation_type):
+            self.logger.error(
+                "Implementation %s is not a %s",
+                type(implementation).__name__,
+                self._implementation_type.__name__,
+            )
+            return self.async_abort(reason="missing_configuration")
+        self.flow_impl = implementation
+        return await self.async_step_auth()
 
     @abstractmethod
     async def async_step_auth(
@@ -810,6 +824,7 @@ class AbstractOAuth2FlowHandler(AbstractOAuth2BaseFlowHandler, metaclass=ABCMeta
     """Handle an authorization code grant config flow."""
 
     flow_impl: AbstractOAuth2Implementation
+    _implementation_type = AbstractAuthorizationCodeImplementation
 
     def __init__(self) -> None:
         """Instantiate config flow."""
@@ -898,13 +913,10 @@ class AbstractOAuth2FlowHandler(AbstractOAuth2BaseFlowHandler, metaclass=ABCMeta
 
 
 class AbstractOAuth2DeviceFlowHandler(AbstractOAuth2BaseFlowHandler, metaclass=ABCMeta):
-    """Handle a device authorization grant config flow (RFC 8628).
-
-    Integrations ship the wait_for_device progress string, with the url,
-    url_complete and code placeholders, in their strings.json.
-    """
+    """Handle a device authorization grant config flow (RFC 8628)."""
 
     flow_impl: DeviceFlowImplementation
+    _implementation_type = DeviceFlowImplementation
     _device_authorization: DeviceAuthorization
 
     def __init__(self) -> None:
@@ -962,7 +974,7 @@ class AbstractOAuth2DeviceFlowHandler(AbstractOAuth2BaseFlowHandler, metaclass=A
                 self.flow_impl.async_check_device_activation(self._device_authorization)
             )
 
-        return self.async_show_progress(
+        result = self.async_show_progress(
             step_id="device_flow",
             progress_action="wait_for_device",
             description_placeholders={
@@ -976,6 +988,9 @@ class AbstractOAuth2DeviceFlowHandler(AbstractOAuth2BaseFlowHandler, metaclass=A
             },
             progress_task=self._login_task,
         )
+        # The progress string is shared, like the abort reasons
+        result["translation_domain"] = HOMEASSISTANT_DOMAIN
+        return result
 
     async def async_step_device_flow_complete(
         self, user_input: dict[str, Any] | None = None
@@ -1047,10 +1062,10 @@ async def async_get_implementations(
     return registered
 
 
-async def _async_get_config_entry_implementation(
+async def async_get_config_entry_implementation(
     hass: HomeAssistant, config_entry: config_entries.ConfigEntry
 ) -> AbstractOAuth2BaseImplementation:
-    """Return the implementation for this config entry, of any grant type."""
+    """Return the implementation for this config entry."""
     implementations, exceptions = await _async_get_implementations(
         hass, config_entry.domain
     )
@@ -1065,32 +1080,6 @@ async def _async_get_config_entry_implementation(
         raise ImplementationUnavailableError(*exceptions)
 
     raise UnknownImplementationError
-
-
-async def async_get_config_entry_implementation(
-    hass: HomeAssistant, config_entry: config_entries.ConfigEntry
-) -> AbstractOAuth2Implementation:
-    """Return the authorization code implementation for this config entry."""
-    implementation = await _async_get_config_entry_implementation(hass, config_entry)
-    if not isinstance(implementation, AbstractAuthorizationCodeImplementation):
-        raise TypeError(
-            f"{config_entry.domain} has no authorization code implementation, "
-            f"it uses {type(implementation).__name__}"
-        )
-    return implementation
-
-
-async def async_get_config_entry_device_flow_implementation(
-    hass: HomeAssistant, config_entry: config_entries.ConfigEntry
-) -> DeviceFlowImplementation:
-    """Return the device flow implementation for this config entry."""
-    implementation = await _async_get_config_entry_implementation(hass, config_entry)
-    if not isinstance(implementation, DeviceFlowImplementation):
-        raise TypeError(
-            f"{config_entry.domain} has no device flow implementation, "
-            f"it uses {type(implementation).__name__}"
-        )
-    return implementation
 
 
 @callback
@@ -1190,7 +1179,7 @@ class OAuth2Session:
 
             try:
                 new_token = await self.implementation.async_refresh_token(self.token)
-            except OAuth2TokenRequestReauthError:
+            except ConfigEntryAuthFailed:
                 # Start reauth here so it also happens for callers that map the
                 # error onto a recoverable one, which would retry indefinitely.
                 self.config_entry.async_start_reauth_if_available(self.hass)

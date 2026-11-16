@@ -17,7 +17,7 @@ class ConfigEntryAuth(pybotvac.OAuthSession):  # type: ignore[misc]
         self,
         hass: core.HomeAssistant,
         config_entry: config_entries.ConfigEntry,
-        implementation: config_entry_oauth2_flow.AbstractOAuth2Implementation,
+        implementation: config_entry_oauth2_flow.AbstractOAuth2BaseImplementation,
     ) -> None:
         """Initialize Neato Botvac Auth."""
         self.hass = hass
