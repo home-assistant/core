@@ -4,6 +4,7 @@ from dataclasses import replace
 from unittest.mock import MagicMock, call
 
 from music_assistant_models.enums import EventType
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.music_assistant.const import DOMAIN
@@ -109,6 +110,7 @@ async def test_external_update(
 async def test_option_added_after_player(
     hass: HomeAssistant,
     music_assistant_client: MagicMock,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that an option the player reports after it was added gets an entity."""
     mass_player_id = "00:00:00:00:00:01"
@@ -134,6 +136,7 @@ async def test_option_added_after_player(
 
     assert hass.states.get(entity_id) is not None
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2
+    assert "does not generate unique IDs" not in caplog.text
 
 
 async def test_ignored(
