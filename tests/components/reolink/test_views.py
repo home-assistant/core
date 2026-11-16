@@ -511,8 +511,10 @@ async def test_playback_service_unavailable(
     [
         ("sub", "sub"),
         ("main", "sub"),
-        ("autotrack_sub", "autotrack_sub"),
-        ("autotrack_main", "autotrack_sub"),
+        ("autotrack_sub", "telephoto_sub"),
+        ("autotrack_main", "telephoto_sub"),
+        ("telephoto_sub", "telephoto_sub"),
+        ("telephoto_main", "telephoto_sub"),
     ],
 )
 async def test_thumbnail(
@@ -550,7 +552,8 @@ async def test_thumbnail(
     ("stream", "thumbnail_stream"),
     [
         ("main", "main"),
-        ("autotrack_main", "autotrack_main"),
+        ("autotrack_main", "telephoto_main"),
+        ("telephoto_main", "telephoto_main"),
     ],
 )
 async def test_thumbnail_no_sub_stream(

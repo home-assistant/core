@@ -326,7 +326,7 @@ async def test_browsing_autotrack_thumbnail(
     browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/{browse_day_id}")
 
     assert browse.children[0].thumbnail == (
-        f"/api/reolink/thumbnail/{entry_id}/{TEST_CHANNEL}/autotrack_sub/{TEST_START}"
+        f"/api/reolink/thumbnail/{entry_id}/{TEST_CHANNEL}/telephoto_sub/{TEST_START}"
     )
 
 

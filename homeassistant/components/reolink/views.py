@@ -27,7 +27,8 @@ _LOGGER = logging.getLogger(__name__)
 
 # Each thumbnail costs a Baichuan request and an ffmpeg decode.
 MAX_PARALLEL_THUMBNAILS = 2
-THUMBNAIL_STREAMS = {"sub", "autotrack_sub"}
+THUMBNAIL_STREAMS = {"sub", "telephoto_sub"}
+TELEPHOTO_PREFIXES = ("autotrack_", "telephoto_")
 
 
 @callback
@@ -54,7 +55,7 @@ def async_generate_thumbnail_url(
     return ThumbnailView.url.format(
         config_entry_id=config_entry_id,
         channel=channel,
-        stream="autotrack_sub" if stream.startswith("autotrack_") else "sub",
+        stream="telephoto_sub" if stream.startswith(TELEPHOTO_PREFIXES) else "sub",
         start_time_id=start_time_id,
     )
 
