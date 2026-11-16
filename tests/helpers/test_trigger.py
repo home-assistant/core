@@ -5441,7 +5441,7 @@ async def test_entity_trigger_target_exclude_registry_update(
         duration=None,
         target={
             TargetKey.ENTITY_ID: _INCLUDED_ENTITY_ID,
-            TargetKey.EXCLUDE: {TargetKey.LABEL_ID: excluded_label.label_id},
+            CONF_EXCLUDE: {TargetKey.LABEL_ID: excluded_label.label_id},
         },
     )
 

@@ -7021,7 +7021,7 @@ async def test_state_condition_target_exclude_registry_update(
         hass,
         target_config={
             TargetKey.ENTITY_ID: [_INCLUDED_ENTITY_ID, _EXCLUDED_ENTITY_ID],
-            TargetKey.EXCLUDE: {TargetKey.LABEL_ID: excluded_label.label_id},
+            CONF_EXCLUDE: {TargetKey.LABEL_ID: excluded_label.label_id},
         },
         states=STATE_ON,
         condition_options={ATTR_BEHAVIOR: BEHAVIOR_ALL},

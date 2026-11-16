@@ -47,6 +47,7 @@ from homeassistant.const import (
     CONF_EVENT,
     CONF_EVENT_DATA,
     CONF_EVENT_DATA_TEMPLATE,
+    CONF_EXCLUDE,
     CONF_FOR,
     CONF_FOR_EACH,
     CONF_ID,
@@ -1357,7 +1358,7 @@ TARGET_EXCLUDE_SCHEMA = probatio.Schema(TARGET_ID_FIELDS)
 
 TARGET_FIELDS: VolDictType = {
     **TARGET_ID_FIELDS,
-    probatio.Optional(TargetKey.EXCLUDE): TARGET_EXCLUDE_SCHEMA,
+    probatio.Optional(CONF_EXCLUDE): TARGET_EXCLUDE_SCHEMA,
 }
 
 
@@ -1366,7 +1367,7 @@ def exclude_requires_target(value: dict[str, Any]) -> dict[str, Any]:
 
     Not part of TARGET_FIELDS, which also validates partial targets while editing.
     """
-    if TargetKey.EXCLUDE in value and not any(value.get(key) for key in TARGET_ID_KEYS):
+    if CONF_EXCLUDE in value and not any(value.get(key) for key in TARGET_ID_KEYS):
         raise probatio.Invalid("an exclude block requires a target to exclude from")
     return value
 
@@ -1389,7 +1390,7 @@ ENTITY_SERVICE_FIELDS: VolDictType = {
         ENTITY_MATCH_NONE,
         probatio.All(ensure_list, [str]),
     ),
-    probatio.Optional(TargetKey.EXCLUDE): TARGET_EXCLUDE_SCHEMA,
+    probatio.Optional(CONF_EXCLUDE): TARGET_EXCLUDE_SCHEMA,
 }
 
 TARGET_SERVICE_FIELDS: VolDictType = {
@@ -1432,7 +1433,7 @@ _TARGET_SERVICE_FIELDS_TEMPLATED: VolDictType = {
         dynamic_template,
         probatio.All(ensure_list, [probatio.Any(dynamic_template, str)]),
     ),
-    probatio.Optional(TargetKey.EXCLUDE): probatio.Schema(
+    probatio.Optional(CONF_EXCLUDE): probatio.Schema(
         {
             probatio.Optional(TargetKey.ENTITY_ID): probatio.Any(
                 TARGET_ID_FIELDS[TargetKey.ENTITY_ID],

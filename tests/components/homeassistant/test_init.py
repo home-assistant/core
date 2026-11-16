@@ -383,7 +383,7 @@ async def test_turn_on_exclude(hass: HomeAssistant) -> None:
         SERVICE_TURN_ON,
         {
             TargetKey.ENTITY_ID: ["light.ceiling", "light.kitchen"],
-            TargetKey.EXCLUDE: {TargetKey.ENTITY_ID: "light.kitchen"},
+            CONF_EXCLUDE: {TargetKey.ENTITY_ID: "light.kitchen"},
         },
         blocking=True,
     )

@@ -10,7 +10,12 @@ from typing import Any, TypeGuard, override
 
 import probatio
 
-from homeassistant.const import ENTITY_MATCH_ALL, ENTITY_MATCH_NONE, TargetKey
+from homeassistant.const import (
+    CONF_EXCLUDE,
+    ENTITY_MATCH_ALL,
+    ENTITY_MATCH_NONE,
+    TargetKey,
+)
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
@@ -96,7 +101,7 @@ class TargetSelection:
         # Entities matched by the exclude block are removed from the resolved
         # target. Config validation prevents nesting exclude blocks.
         self.exclude: TargetSelection | None = None
-        if exclude_config := config.get(TargetKey.EXCLUDE):
+        if exclude_config := config.get(CONF_EXCLUDE):
             exclude = TargetSelection(exclude_config)
             if exclude.has_any_target:
                 self.exclude = exclude

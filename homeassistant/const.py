@@ -471,14 +471,13 @@ class CommonServiceArgument(StrEnum):
 
 
 class TargetKey(StrEnum):
-    """Keys of an action, condition or trigger target and its exclude block."""
+    """Keys that select the entities of an action, condition or trigger target."""
 
     ENTITY_ID = "entity_id"
     DEVICE_ID = "device_id"
     AREA_ID = "area_id"
     FLOOR_ID = "floor_id"
     LABEL_ID = "label_id"
-    EXCLUDE = "exclude"
 
 
 class EntityCapabilityAttribute(StrEnum):

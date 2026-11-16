@@ -11,6 +11,7 @@ from homeassistant.components.group import DOMAIN, SERVICE_RELOAD
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockService, LockState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    CONF_EXCLUDE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     CommonServiceArgument,
@@ -477,7 +478,7 @@ async def test_service_call_all_exclude_nested_group(hass: HomeAssistant) -> Non
         LockService.LOCK,
         {
             TargetKey.ENTITY_ID: "all",
-            TargetKey.EXCLUDE: {TargetKey.ENTITY_ID: "lock.nested_group"},
+            CONF_EXCLUDE: {TargetKey.ENTITY_ID: "lock.nested_group"},
         },
         blocking=True,
     )
