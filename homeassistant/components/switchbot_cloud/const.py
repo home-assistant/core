@@ -53,7 +53,16 @@ BATTERY_CIRCULATOR_FAN_2_PRO_NIGHT_LIGHT_PARAMETERS_MAP = {
     NIGHT_LIGHT_SOFT: "1",
 }
 
-CURTAIN_MODE_MAP = {"performance": "0", "silent": "1", "default": "ff"}
+
+CURTAIN_MODE_PERFORMANCE = "performance"
+CURTAIN_MODE_SILENT = "silent"
+CURTAIN_MODE_DEFAULT = "default"
+
+CURTAIN_MODE_MAP = {
+    CURTAIN_MODE_PERFORMANCE: "0",
+    CURTAIN_MODE_SILENT: "1",
+    CURTAIN_MODE_DEFAULT: "ff",
+}
 
 
 @dataclass(frozen=True)

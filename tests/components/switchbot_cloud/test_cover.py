@@ -13,6 +13,11 @@ from switchbot_api import (
 
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.components.switchbot_cloud import SwitchBotAPI
+from homeassistant.components.switchbot_cloud.const import (
+    CURTAIN_MODE_DEFAULT,
+    CURTAIN_MODE_PERFORMANCE,
+    CURTAIN_MODE_SILENT,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -118,43 +123,43 @@ async def test_cover_set_attributes_coordinator_is_none(
         (
             SERVICE_OPEN_COVER,
             CurtainCommands.SET_POSITION,
-            {"speed": "performance"},
+            {"speed": CURTAIN_MODE_PERFORMANCE},
             "0,ff,0",
         ),
         (
             SERVICE_OPEN_COVER,
             CurtainCommands.SET_POSITION,
-            {"speed": "silent"},
+            {"speed": CURTAIN_MODE_SILENT},
             "1,ff,0",
         ),
         (
             SERVICE_OPEN_COVER,
             CurtainCommands.SET_POSITION,
-            {"speed": "default"},
+            {"speed": CURTAIN_MODE_DEFAULT},
             "ff,ff,0",
         ),
         (
             SERVICE_CLOSE_COVER,
             CurtainCommands.SET_POSITION,
-            {"speed": "performance"},
+            {"speed": CURTAIN_MODE_PERFORMANCE},
             "0,ff,100",
         ),
         (
             SERVICE_CLOSE_COVER,
             CurtainCommands.SET_POSITION,
-            {"speed": "silent"},
+            {"speed": CURTAIN_MODE_SILENT},
             "1,ff,100",
         ),
         (
             SERVICE_CLOSE_COVER,
             CurtainCommands.SET_POSITION,
-            {"speed": "default"},
+            {"speed": CURTAIN_MODE_DEFAULT},
             "ff,ff,100",
         ),
         (
             SERVICE_SET_COVER_POSITION,
             CurtainCommands.SET_POSITION,
-            {"speed": "default", "position": 50},
+            {"speed": CURTAIN_MODE_DEFAULT, "position": 50},
             "ff,ff,50",
         ),
         (
