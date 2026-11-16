@@ -15,6 +15,7 @@
   "categories": ["sensors.temperature_humidity"],
   "codeowners": ["@bdraco"],
   "config_flow": true,
+  "connectivity": ["bluetooth"],
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/sensorpush",
   "integration_type": "device",

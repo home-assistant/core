@@ -6,9 +6,9 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.cover import (
-    ATTR_CURRENT_POSITION,
-    ATTR_POSITION,
     DOMAIN as COVER_DOMAIN,
+    CoverEntityStateAttribute,
+    CoverServiceArgument,
     CoverState,
 )
 from homeassistant.components.devolo_home_control.const import DOMAIN
@@ -50,7 +50,7 @@ async def test_cover(
     await hass.async_block_till_done()
     state = hass.states.get(f"{COVER_DOMAIN}.test_test")
     assert state.state == CoverState.CLOSED
-    assert state.attributes[ATTR_CURRENT_POSITION] == 0.0
+    assert state.attributes[CoverEntityStateAttribute.CURRENT_POSITION] == 0.0
 
     # Test setting position
     with patch(
@@ -77,7 +77,10 @@ async def test_cover(
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_SET_COVER_POSITION,
-            {ATTR_ENTITY_ID: f"{COVER_DOMAIN}.test_test", ATTR_POSITION: 50},
+            {
+                ATTR_ENTITY_ID: f"{COVER_DOMAIN}.test_test",
+                CoverServiceArgument.POSITION: 50,
+            },
             blocking=True,
         )  # In reality, this leads to a websocket message like already tested above
         set_value.assert_called_once_with(50)
@@ -92,7 +95,10 @@ async def test_cover(
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_SET_COVER_POSITION,
-            {ATTR_ENTITY_ID: f"{COVER_DOMAIN}.test_test", ATTR_POSITION: 50},
+            {
+                ATTR_ENTITY_ID: f"{COVER_DOMAIN}.test_test",
+                CoverServiceArgument.POSITION: 50,
+            },
             blocking=True,
         )
     assert error.value.translation_key == "set_failed"

@@ -7,13 +7,8 @@ from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.exceptions import VehicleOffline
 
-from homeassistant.components.lock import (
-    DOMAIN as LOCK_DOMAIN,
-    SERVICE_LOCK,
-    SERVICE_UNLOCK,
-    LockState,
-)
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockService, LockState
+from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -63,8 +58,8 @@ async def test_lock_services(
     ) as call:
         await hass.services.async_call(
             LOCK_DOMAIN,
-            SERVICE_LOCK,
-            {ATTR_ENTITY_ID: entity_id},
+            LockService.LOCK,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
         state = hass.states.get(entity_id)
@@ -77,8 +72,8 @@ async def test_lock_services(
     ) as call:
         await hass.services.async_call(
             LOCK_DOMAIN,
-            SERVICE_UNLOCK,
-            {ATTR_ENTITY_ID: entity_id},
+            LockService.UNLOCK,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
         state = hass.states.get(entity_id)
@@ -90,8 +85,8 @@ async def test_lock_services(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             LOCK_DOMAIN,
-            SERVICE_LOCK,
-            {ATTR_ENTITY_ID: entity_id},
+            LockService.LOCK,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -101,8 +96,8 @@ async def test_lock_services(
     ) as call:
         await hass.services.async_call(
             LOCK_DOMAIN,
-            SERVICE_UNLOCK,
-            {ATTR_ENTITY_ID: entity_id},
+            LockService.UNLOCK,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
         state = hass.states.get(entity_id)

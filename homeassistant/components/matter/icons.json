@@ -54,6 +54,14 @@
       "laundry_washer_spin_speed": {
         "default": "mdi:reload"
       },
+      "night_vision": {
+        "default": "mdi:weather-night",
+        "state": {
+          "auto": "mdi:weather-night-partly-cloudy",
+          "off": "mdi:weather-sunny",
+          "on": "mdi:weather-night"
+        }
+      },
       "power_level": {
         "default": "mdi:power-settings"
       },

@@ -211,6 +211,7 @@ async def test_download_diagnostics(
             {
                 "breaks_in_ha_version": "2023.10.0",
                 "config_entry_id": None,
+                "config_subentry_id": None,
                 "created": "2025-07-09T14:00:00+00:00",
                 "data": None,
                 "dismissed_version": None,
@@ -317,6 +318,7 @@ async def test_download_diagnostics(
             {
                 "breaks_in_ha_version": "2023.10.0",
                 "config_entry_id": None,
+                "config_subentry_id": None,
                 "created": "2025-07-09T14:00:00+00:00",
                 "data": None,
                 "dismissed_version": None,

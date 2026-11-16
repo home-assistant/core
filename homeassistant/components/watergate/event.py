@@ -60,7 +60,7 @@ class AutoShutOffEvent(WatergateEntity, EventEntity):
         self.entity_description = entity_description
 
     @override
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register the callback for event handling when the entity is added."""
         await super().async_added_to_hass()
         self.async_on_remove(

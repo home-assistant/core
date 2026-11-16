@@ -24,7 +24,6 @@ from homeassistant.backup_restore import RESTORE_BACKUP_FILE, RESTORE_BACKUP_RES
 from homeassistant.const import __version__ as HAVERSION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
-    frame,
     instance_id,
     integration_platform,
     issue_registry as ir,
@@ -821,15 +820,6 @@ class BackupManager:
                 continue
             if isinstance(result, BaseException):
                 raise result  # unexpected error
-            # Check for None to be backwards compatible with the old BackupAgent API,
-            # this can be removed in HA Core 2025.10
-            if not result:
-                frame.report_usage(
-                    "returns None from BackupAgent.async_get_backup",
-                    breaks_in_ha_version="2025.10",
-                    integration_domain=agent_id.partition(".")[0],
-                )
-                continue
             if backup is None:
                 if known_backup := self.known_backups.get(backup_id):
                     failed_addons = known_backup.failed_addons
@@ -1467,22 +1457,11 @@ class BackupManager:
         """Initiate restoring a backup."""
         agent = self.backup_agents[agent_id]
         try:
-            backup = await agent.async_get_backup(backup_id)
+            await agent.async_get_backup(backup_id)
         except BackupNotFound as err:
             raise BackupManagerError(
                 f"Backup {backup_id} not found in agent {agent_id}"
             ) from err
-        # Check for None to be backwards compatible with the old BackupAgent API,
-        # this can be removed in HA Core 2025.10
-        if not backup:
-            frame.report_usage(
-                "returns None from BackupAgent.async_get_backup",
-                breaks_in_ha_version="2025.10",
-                integration_domain=agent_id.partition(".")[0],
-            )
-            raise BackupManagerError(
-                f"Backup {backup_id} not found in agent {agent_id}"
-            )
 
         async def open_backup() -> AsyncIterator[bytes]:
             return await agent.async_download_backup(backup_id)
@@ -1637,22 +1616,11 @@ class BackupManager:
         except KeyError as err:
             raise BackupManagerError(f"Invalid agent selected: {agent_id}") from err
         try:
-            backup = await agent.async_get_backup(backup_id)
+            await agent.async_get_backup(backup_id)
         except BackupNotFound as err:
             raise BackupManagerError(
                 f"Backup {backup_id} not found in agent {agent_id}"
             ) from err
-        # Check for None to be backwards compatible with the old BackupAgent API,
-        # this can be removed in HA Core 2025.10
-        if not backup:
-            frame.report_usage(
-                "returns None from BackupAgent.async_get_backup",
-                breaks_in_ha_version="2025.10",
-                integration_domain=agent_id.partition(".")[0],
-            )
-            raise BackupManagerError(
-                f"Backup {backup_id} not found in agent {agent_id}"
-            )
         reader: IO[bytes]
         if agent_id in self.local_backup_agents:
             local_agent = self.local_backup_agents[agent_id]

@@ -9,7 +9,10 @@ from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries
-from homeassistant.components.threshold.const import DOMAIN
+from homeassistant.components.threshold.const import (
+    DOMAIN,
+    ThresholdEntityStateAttribute,
+)
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -171,7 +174,7 @@ async def test_options(hass: HomeAssistant) -> None:
     # Check the state of the entity has changed as expected
     state = hass.states.get("binary_sensor.my_threshold")
     assert state.state == "off"
-    assert state.attributes["type"] == "upper"
+    assert state.attributes[ThresholdEntityStateAttribute.TYPE] == "upper"
 
 
 @pytest.mark.parametrize(

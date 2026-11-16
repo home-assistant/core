@@ -10,10 +10,10 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.google_air_quality.const import DOMAIN
 from homeassistant.components.google_air_quality.services import (
-    ATTR_HOURS,
-    SERVICE_GET_FORECAST,
+    GoogleAirQualityService,
+    GoogleAirQualityServiceArgument,
 )
-from homeassistant.const import ATTR_DEVICE_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
@@ -41,10 +41,10 @@ async def test_get_forecast_service(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_FORECAST,
+        GoogleAirQualityService.GET_FORECAST,
         {
-            ATTR_DEVICE_ID: device.id,
-            ATTR_HOURS: 12,
+            CommonServiceArgument.DEVICE_ID: device.id,
+            GoogleAirQualityServiceArgument.HOURS: 12,
         },
         blocking=True,
         return_response=True,
@@ -64,10 +64,10 @@ async def test_get_forecast_service_unknown_subentry(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_FORECAST,
+            GoogleAirQualityService.GET_FORECAST,
             {
-                ATTR_DEVICE_ID: "unknown-device-id",
-                ATTR_HOURS: 12,
+                CommonServiceArgument.DEVICE_ID: "unknown-device-id",
+                GoogleAirQualityServiceArgument.HOURS: 12,
             },
             blocking=True,
             return_response=True,

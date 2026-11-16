@@ -395,7 +395,8 @@
 # name: test_all_entities[event.4_4_ktlx_g3_fault-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      'category': 'grid',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'grid_over_voltage',
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'grid_over_voltage',
         'grid_undervoltage',
@@ -751,13 +752,15 @@
         'bcu_fault',
         'bmu_fault',
       ]),
+      'fault_id': 1,
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '4.4 KTLX-G3 Fault',
+      'occurred_at': '2026-10-09T17:01:23-07:00',
     }),
     'context': <ANY>,
     'entity_id': 'event.4_4_ktlx_g3_fault',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2026-10-09T15:05:00.000+00:00',
   })
 # ---

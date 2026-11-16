@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import AsyncGenerator, MutableMapping
+from contextlib import suppress
 from dataclasses import dataclass, field
 from datetime import datetime
 import hashlib
@@ -14,7 +15,7 @@ from pathlib import Path
 import re
 import secrets
 import struct
-from time import monotonic
+from time import monotonic, time, time_ns
 from typing import Any, Final, Protocol
 
 from aiohttp import web
@@ -47,7 +48,8 @@ from homeassistant.exceptions import (
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import get_url
-from homeassistant.helpers.typing import UNDEFINED, ConfigType
+from homeassistant.helpers.os_error import os_read_error, os_write_error
+from homeassistant.helpers.typing import ConfigType, Undefined
 from homeassistant.util import language as language_util, ulid as ulid_util
 
 from .const import (
@@ -67,6 +69,7 @@ from .const import (
     DOMAIN,
     MEDIA_SOURCE_STREAM_PATH,
     SERVICE_CLEAR_CACHE,
+    TextToSpeechCommonOption,
     TextToSpeechService,
     TextToSpeechServiceArgument,
     TtsAudioType,
@@ -98,6 +101,7 @@ __all__ = [
     "SampleFormat",
     "TTSAudioRequest",
     "TTSAudioResponse",
+    "TextToSpeechCommonOption",
     "TextToSpeechEntity",
     "TextToSpeechService",
     "TextToSpeechServiceArgument",
@@ -112,21 +116,23 @@ __all__ = [
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_PLATFORM = "platform"
-ATTR_AUDIO_OUTPUT = "audio_output"
-ATTR_PREFERRED_FORMAT = "preferred_format"
-ATTR_PREFERRED_SAMPLE_RATE = "preferred_sample_rate"
-ATTR_PREFERRED_SAMPLE_CHANNELS = "preferred_sample_channels"
-ATTR_PREFERRED_SAMPLE_BYTES = "preferred_sample_bytes"
-ATTR_PREFERRED_BITRATE = "preferred_bitrate"
-ATTR_VOICE = "voice"
+
+# Former names of the common options, kept for the integrations still using them
+ATTR_AUDIO_OUTPUT = TextToSpeechCommonOption.AUDIO_OUTPUT
+ATTR_PREFERRED_BITRATE = TextToSpeechCommonOption.PREFERRED_BITRATE
+ATTR_PREFERRED_FORMAT = TextToSpeechCommonOption.PREFERRED_FORMAT
+ATTR_PREFERRED_SAMPLE_BYTES = TextToSpeechCommonOption.PREFERRED_SAMPLE_BYTES
+ATTR_PREFERRED_SAMPLE_CHANNELS = TextToSpeechCommonOption.PREFERRED_SAMPLE_CHANNELS
+ATTR_PREFERRED_SAMPLE_RATE = TextToSpeechCommonOption.PREFERRED_SAMPLE_RATE
+ATTR_VOICE = TextToSpeechCommonOption.VOICE
 
 _DEFAULT_FORMAT = "mp3"
 _PREFFERED_FORMAT_OPTIONS: Final[set[str]] = {
-    ATTR_PREFERRED_FORMAT,
-    ATTR_PREFERRED_SAMPLE_RATE,
-    ATTR_PREFERRED_SAMPLE_CHANNELS,
-    ATTR_PREFERRED_SAMPLE_BYTES,
-    ATTR_PREFERRED_BITRATE,
+    TextToSpeechCommonOption.PREFERRED_FORMAT,
+    TextToSpeechCommonOption.PREFERRED_SAMPLE_RATE,
+    TextToSpeechCommonOption.PREFERRED_SAMPLE_CHANNELS,
+    TextToSpeechCommonOption.PREFERRED_SAMPLE_BYTES,
+    TextToSpeechCommonOption.PREFERRED_BITRATE,
 }
 
 # Streaming WAV sources write a header before the sample rate and length of the
@@ -862,11 +868,11 @@ class ResultStream:
         return any(
             self.options.get(option) is not None
             for option in (
-                ATTR_PREFERRED_FORMAT,
-                ATTR_PREFERRED_SAMPLE_RATE,
-                ATTR_PREFERRED_SAMPLE_CHANNELS,
-                ATTR_PREFERRED_SAMPLE_BYTES,
-                ATTR_PREFERRED_BITRATE,
+                TextToSpeechCommonOption.PREFERRED_FORMAT,
+                TextToSpeechCommonOption.PREFERRED_SAMPLE_RATE,
+                TextToSpeechCommonOption.PREFERRED_SAMPLE_CHANNELS,
+                TextToSpeechCommonOption.PREFERRED_SAMPLE_BYTES,
+                TextToSpeechCommonOption.PREFERRED_BITRATE,
             )
         )
 
@@ -891,7 +897,7 @@ class ResultStream:
         """Get the stream of the overridden result."""
         assert self._override_media_path is not None
 
-        preferred_format = self.options.get(ATTR_PREFERRED_FORMAT)
+        preferred_format = self.options.get(TextToSpeechCommonOption.PREFERRED_FORMAT)
 
         if not self._needs_conversion:
             # Read file directly (no conversion)
@@ -925,10 +931,16 @@ class ResultStream:
             from_extension=None,
             audio_input=self._override_media_path,
             to_extension=preferred_format,
-            to_sample_rate=self.options.get(ATTR_PREFERRED_SAMPLE_RATE),
-            to_sample_channels=self.options.get(ATTR_PREFERRED_SAMPLE_CHANNELS),
-            to_sample_bytes=self.options.get(ATTR_PREFERRED_SAMPLE_BYTES),
-            to_bitrate=self.options.get(ATTR_PREFERRED_BITRATE),
+            to_sample_rate=self.options.get(
+                TextToSpeechCommonOption.PREFERRED_SAMPLE_RATE
+            ),
+            to_sample_channels=self.options.get(
+                TextToSpeechCommonOption.PREFERRED_SAMPLE_CHANNELS
+            ),
+            to_sample_bytes=self.options.get(
+                TextToSpeechCommonOption.PREFERRED_SAMPLE_BYTES
+            ),
+            to_bitrate=self.options.get(TextToSpeechCommonOption.PREFERRED_BITRATE),
         )
         chunks: list[bytes] = []
         async for chunk in converted_audio:
@@ -1032,6 +1044,7 @@ class SpeechManager:
         self.cache_dir = cache_dir
         self.memory_cache_maxage = memory_cache_maxage
         self.file_cache: dict[str, str] = {}
+        self._files_pending_removal: set[str] = set()
         self.mem_cache: dict[str, TTSCache] = {}
         self.token_to_stream: dict[str, ResultStream] = {}
         self.converted_override_cache: dict[
@@ -1047,19 +1060,23 @@ class SpeechManager:
         try:
             self.cache_dir = _init_tts_cache_dir(self.hass, self.cache_dir)
         except OSError as err:
-            raise HomeAssistantError(f"Can't init cache dir {err}") from err
+            raise os_write_error(err, self.hass.config.path(self.cache_dir)) from err
 
         try:
             return _get_cache_files(self.cache_dir)
         except OSError as err:
-            raise HomeAssistantError(f"Can't read cache dir {err}") from err
+            raise os_read_error(err, self.cache_dir) from err
 
     async def async_init_cache(self) -> None:
         """Init config folder and load file cache."""
         self.file_cache.update(await self.hass.async_add_executor_job(self._init_cache))
 
-    async def async_clear_cache(self) -> None:
-        """Read file cache and delete files."""
+    async def async_clear_cache(self, days: int | None = None) -> None:
+        """Delete cached files, or only those not used for the given days."""
+        if days is not None:
+            await self._async_clear_unused_cache(days)
+            return
+
         self.mem_cache.clear()
 
         def remove_files(files: list[str]) -> None:
@@ -1075,6 +1092,66 @@ class SpeechManager:
         )
         self.file_cache.clear()
         await task
+
+    async def _async_clear_unused_cache(self, days: int) -> None:
+        """Delete cached files that were not used for the given days."""
+        cutoff = time() - days * 86400
+
+        def find_unused_files(files: dict[str, str]) -> list[str]:
+            """Return the keys of files that were not used since the cutoff."""
+            unused = []
+            for cache_key, filename in files.items():
+                try:
+                    if (
+                        os.stat(os.path.join(self.cache_dir, filename)).st_atime
+                        >= cutoff
+                    ):
+                        continue
+                except FileNotFoundError:
+                    pass
+                except OSError as err:
+                    _LOGGER.warning("Can't check cache file '%s': %s", filename, err)
+                    continue
+                unused.append(cache_key)
+            return unused
+
+        def remove_files(files: dict[str, str]) -> dict[str, str]:
+            """Remove files from filesystem and return the ones that failed."""
+            failed = {}
+            for cache_key, filename in files.items():
+                try:
+                    os.remove(os.path.join(self.cache_dir, filename))
+                except FileNotFoundError:
+                    pass
+                except OSError as err:
+                    _LOGGER.warning("Can't remove cache file '%s': %s", filename, err)
+                    failed[cache_key] = filename
+            return failed
+
+        # Messages in the memory cache are in use
+        unused = await self.hass.async_add_executor_job(
+            find_unused_files,
+            {
+                cache_key: filename
+                for cache_key, filename in self.file_cache.items()
+                if cache_key not in self.mem_cache
+            },
+        )
+        # Unindex before removing, so a request started meanwhile regenerates
+        # the audio instead of reading a removed file
+        files = {
+            cache_key: filename
+            for cache_key in unused
+            if cache_key not in self.mem_cache
+            and (filename := self.file_cache.pop(cache_key, None))
+        }
+        self._files_pending_removal.update(files.values())
+        try:
+            failed = await self.hass.async_add_executor_job(remove_files, files)
+        finally:
+            self._files_pending_removal.difference_update(files.values())
+        for cache_key, filename in failed.items():
+            self.file_cache.setdefault(cache_key, filename)
 
     @callback
     def async_get_cache_file_path(self, cache_key: str) -> Path | None:
@@ -1227,7 +1304,9 @@ class SpeechManager:
         supports_streaming_input: bool,
     ) -> ResultStream:
         """Create a result stream and register its token."""
-        extension = options.get(ATTR_PREFERRED_FORMAT, _DEFAULT_FORMAT)
+        extension = options.get(
+            TextToSpeechCommonOption.PREFERRED_FORMAT, _DEFAULT_FORMAT
+        )
         token = f"{secrets.token_urlsafe(16)}.{extension}"
         content, _ = mimetypes.guess_type(token)
         result_stream = ResultStream(
@@ -1266,7 +1345,9 @@ class SpeechManager:
             )
 
         cache_key = ulid_util.ulid_now()
-        extension = options.get(ATTR_PREFERRED_FORMAT, _DEFAULT_FORMAT)
+        extension = options.get(
+            TextToSpeechCommonOption.PREFERRED_FORMAT, _DEFAULT_FORMAT
+        )
         data_gen = self._async_generate_tts_audio(
             engine_instance, message_stream, language, options
         )
@@ -1315,6 +1396,10 @@ class SpeechManager:
         # Is speech already in memory
         if cache := self.mem_cache.get(cache_key):
             _LOGGER.debug("Found audio in cache for %s", message[0:32])
+            if filename := self.file_cache.get(cache_key):
+                self.hass.async_add_executor_job(
+                    _mark_file_used, os.path.join(self.cache_dir, filename)
+                )
             return cache
 
         store_to_disk = use_file_cache
@@ -1327,7 +1412,9 @@ class SpeechManager:
         else:
             _LOGGER.debug("Generating audio for %s", message[0:32])
 
-            extension = options.get(ATTR_PREFERRED_FORMAT, _DEFAULT_FORMAT)
+            extension = options.get(
+                TextToSpeechCommonOption.PREFERRED_FORMAT, _DEFAULT_FORMAT
+            )
             data_gen = self._async_generate_tts_audio(
                 engine_instance, message, language, options
             )
@@ -1359,16 +1446,22 @@ class SpeechManager:
         The audio is converted to the preferred format in options. Returns the
         cache object.
         """
-        final_extension = options.get(ATTR_PREFERRED_FORMAT, _DEFAULT_FORMAT)
+        final_extension = options.get(
+            TextToSpeechCommonOption.PREFERRED_FORMAT, _DEFAULT_FORMAT
+        )
         data_gen = _async_convert_audio(
             self.hass,
             None,
             audio_stream,
             to_extension=final_extension,
-            to_sample_rate=options.get(ATTR_PREFERRED_SAMPLE_RATE),
-            to_sample_channels=options.get(ATTR_PREFERRED_SAMPLE_CHANNELS),
-            to_sample_bytes=options.get(ATTR_PREFERRED_SAMPLE_BYTES),
-            to_bitrate=options.get(ATTR_PREFERRED_BITRATE),
+            to_sample_rate=options.get(TextToSpeechCommonOption.PREFERRED_SAMPLE_RATE),
+            to_sample_channels=options.get(
+                TextToSpeechCommonOption.PREFERRED_SAMPLE_CHANNELS
+            ),
+            to_sample_bytes=options.get(
+                TextToSpeechCommonOption.PREFERRED_SAMPLE_BYTES
+            ),
+            to_bitrate=options.get(TextToSpeechCommonOption.PREFERRED_BITRATE),
             from_pcm_format=pcm_format,
         )
 
@@ -1426,6 +1519,10 @@ class SpeechManager:
                 f"TTS filename '{filename}' from {engine_instance.name} is invalid!"
             )
 
+        # Writing now could race the removal of the old file with this name
+        if filename in self._files_pending_removal:
+            return
+
         if cache.extension == "mp3":
             name = (
                 engine_instance.name if isinstance(engine_instance.name, str) else "-"
@@ -1462,10 +1559,10 @@ class SpeechManager:
         convert_options = {
             option
             for option in (
-                ATTR_PREFERRED_SAMPLE_RATE,
-                ATTR_PREFERRED_SAMPLE_CHANNELS,
-                ATTR_PREFERRED_SAMPLE_BYTES,
-                ATTR_PREFERRED_BITRATE,
+                TextToSpeechCommonOption.PREFERRED_SAMPLE_RATE,
+                TextToSpeechCommonOption.PREFERRED_SAMPLE_CHANNELS,
+                TextToSpeechCommonOption.PREFERRED_SAMPLE_BYTES,
+                TextToSpeechCommonOption.PREFERRED_BITRATE,
             )
             if options.get(option) is not None and option not in supported_options
         }
@@ -1478,44 +1575,56 @@ class SpeechManager:
         # The TTS system ideally supports options directly so we won't have
         # to convert with ffmpeg later. If not, we pop the options here and
         # perform the conversation after receiving the audio.
-        if ATTR_PREFERRED_FORMAT in supported_options:
-            final_extension = options.get(ATTR_PREFERRED_FORMAT, _DEFAULT_FORMAT)
+        if TextToSpeechCommonOption.PREFERRED_FORMAT in supported_options:
+            final_extension = options.get(
+                TextToSpeechCommonOption.PREFERRED_FORMAT, _DEFAULT_FORMAT
+            )
         else:
-            final_extension = options.pop(ATTR_PREFERRED_FORMAT, _DEFAULT_FORMAT)
+            final_extension = options.pop(
+                TextToSpeechCommonOption.PREFERRED_FORMAT, _DEFAULT_FORMAT
+            )
 
-        if ATTR_PREFERRED_SAMPLE_RATE in supported_options:
-            sample_rate = options.get(ATTR_PREFERRED_SAMPLE_RATE)
+        if TextToSpeechCommonOption.PREFERRED_SAMPLE_RATE in supported_options:
+            sample_rate = options.get(TextToSpeechCommonOption.PREFERRED_SAMPLE_RATE)
         else:
-            sample_rate = options.pop(ATTR_PREFERRED_SAMPLE_RATE, None)
+            sample_rate = options.pop(
+                TextToSpeechCommonOption.PREFERRED_SAMPLE_RATE, None
+            )
 
         if sample_rate is not None:
             sample_rate = int(sample_rate)
 
-        if ATTR_PREFERRED_SAMPLE_CHANNELS in supported_options:
-            sample_channels = options.get(ATTR_PREFERRED_SAMPLE_CHANNELS)
+        if TextToSpeechCommonOption.PREFERRED_SAMPLE_CHANNELS in supported_options:
+            sample_channels = options.get(
+                TextToSpeechCommonOption.PREFERRED_SAMPLE_CHANNELS
+            )
         else:
-            sample_channels = options.pop(ATTR_PREFERRED_SAMPLE_CHANNELS, None)
+            sample_channels = options.pop(
+                TextToSpeechCommonOption.PREFERRED_SAMPLE_CHANNELS, None
+            )
 
         if sample_channels is not None:
             sample_channels = int(sample_channels)
 
-        if ATTR_PREFERRED_SAMPLE_BYTES in supported_options:
-            sample_bytes = options.get(ATTR_PREFERRED_SAMPLE_BYTES)
+        if TextToSpeechCommonOption.PREFERRED_SAMPLE_BYTES in supported_options:
+            sample_bytes = options.get(TextToSpeechCommonOption.PREFERRED_SAMPLE_BYTES)
         else:
-            sample_bytes = options.pop(ATTR_PREFERRED_SAMPLE_BYTES, None)
+            sample_bytes = options.pop(
+                TextToSpeechCommonOption.PREFERRED_SAMPLE_BYTES, None
+            )
 
         if sample_bytes is not None:
             sample_bytes = int(sample_bytes)
 
-        if ATTR_PREFERRED_BITRATE in supported_options:
-            bitrate = options.get(ATTR_PREFERRED_BITRATE)
+        if TextToSpeechCommonOption.PREFERRED_BITRATE in supported_options:
+            bitrate = options.get(TextToSpeechCommonOption.PREFERRED_BITRATE)
         else:
-            bitrate = options.pop(ATTR_PREFERRED_BITRATE, None)
+            bitrate = options.pop(TextToSpeechCommonOption.PREFERRED_BITRATE, None)
 
         if bitrate is not None:
             bitrate = int(bitrate)
 
-        if engine_instance.name is None or engine_instance.name is UNDEFINED:
+        if engine_instance.name is None or engine_instance.name is Undefined:
             raise HomeAssistantError("TTS engine name is not set.")
 
         if isinstance(engine_instance, Provider) or (
@@ -1594,13 +1703,15 @@ class SpeechManager:
         def load_speech() -> bytes:
             """Load a speech from filesystem."""
             with open(voice_file, "rb") as speech:
-                return speech.read()
+                data = speech.read()
+                _mark_file_used(speech.fileno())
+                return data
 
         try:
             data = await self.hass.async_add_executor_job(load_speech)
         except OSError as err:
-            del self.file_cache[cache_key]
-            raise HomeAssistantError(f"Can't read {voice_file}") from err
+            self.file_cache.pop(cache_key, None)
+            raise os_read_error(err, voice_file) from err
 
         yield data
 
@@ -1644,6 +1755,12 @@ class SpeechManager:
             _LOGGER.error("ID3 tag error: %s", err)
 
         return data_bytes.getvalue()
+
+
+def _mark_file_used(file: int | str) -> None:
+    """Set the access time of a cache file, independent of the mount's atime setting."""
+    with suppress(OSError):
+        os.utime(file, ns=(time_ns(), os.stat(file).st_mtime_ns))
 
 
 def _init_tts_cache_dir(hass: HomeAssistant, cache_dir: str) -> str:

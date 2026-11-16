@@ -7,6 +7,7 @@ import probatio
 from homeassistant.components.infrared import (
     DOMAIN as INFRARED_DOMAIN,
     async_get_emitters,
+    async_get_receivers,
 )
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers import entity_registry as er
@@ -21,6 +22,7 @@ from homeassistant.helpers.selector import (
 from .const import (
     CONF_DEVICE_TYPE,
     CONF_INFRARED_ENTITY_ID,
+    CONF_INFRARED_RECEIVER_ENTITY_ID,
     DEVICE_NAMES,
     DOMAIN,
     SilverCrestIrDeviceType,
@@ -37,14 +39,23 @@ class SilverCrestIfConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         emitter_entity_ids = async_get_emitters(self.hass)
-        if not emitter_entity_ids:
+        receiver_entity_ids = async_get_receivers(self.hass)
+        if not emitter_entity_ids and not receiver_entity_ids:
             return self.async_abort(reason="no_infrared_entities")
 
         if user_input is not None:
             emitter_id = user_input.get(CONF_INFRARED_ENTITY_ID)
-            if emitter_id:
-                self._async_abort_entries_match({CONF_INFRARED_ENTITY_ID: emitter_id})
-                title_entity_id = emitter_id
+            receiver_id = user_input.get(CONF_INFRARED_RECEIVER_ENTITY_ID)
+            if emitter_id or receiver_id:
+                if emitter_id:
+                    self._async_abort_entries_match(
+                        {CONF_INFRARED_ENTITY_ID: emitter_id}
+                    )
+                if receiver_id:
+                    self._async_abort_entries_match(
+                        {CONF_INFRARED_RECEIVER_ENTITY_ID: receiver_id}
+                    )
+                title_entity_id = emitter_id or receiver_id
                 if TYPE_CHECKING:
                     assert title_entity_id is not None
                 ent_reg = er.async_get(self.hass)
@@ -64,26 +75,96 @@ class SilverCrestIfConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=probatio.Schema(
-                {
-                    probatio.Required(CONF_DEVICE_TYPE): SelectSelector(
-                        SelectSelectorConfig(
-                            options=[
-                                device_type.value
-                                for device_type in SilverCrestIrDeviceType
-                            ],
-                            translation_key=CONF_DEVICE_TYPE,
-                            mode=SelectSelectorMode.DROPDOWN,
-                            sort=True,
-                        )
-                    ),
-                    probatio.Optional(CONF_INFRARED_ENTITY_ID): EntitySelector(
-                        EntitySelectorConfig(
-                            domain=INFRARED_DOMAIN,
-                            include_entities=emitter_entity_ids,
-                        )
-                    ),
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema(
+                    {
+                        probatio.Required(CONF_DEVICE_TYPE): SelectSelector(
+                            SelectSelectorConfig(
+                                options=[
+                                    device_type.value
+                                    for device_type in SilverCrestIrDeviceType
+                                ],
+                                translation_key=CONF_DEVICE_TYPE,
+                                mode=SelectSelectorMode.DROPDOWN,
+                                sort=True,
+                            )
+                        ),
+                        probatio.Optional(CONF_INFRARED_ENTITY_ID): EntitySelector(
+                            EntitySelectorConfig(
+                                domain=INFRARED_DOMAIN,
+                                include_entities=emitter_entity_ids,
+                            )
+                        ),
+                        probatio.Optional(
+                            CONF_INFRARED_RECEIVER_ENTITY_ID
+                        ): EntitySelector(
+                            EntitySelectorConfig(
+                                domain=INFRARED_DOMAIN,
+                                include_entities=receiver_entity_ids,
+                            )
+                        ),
+                    }
+                ),
+                user_input,
+            ),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfigure flow."""
+        errors: dict[str, str] = {}
+
+        entry = self._get_reconfigure_entry()
+
+        emitter_entity_ids = async_get_emitters(self.hass)
+        receiver_entity_ids = async_get_receivers(self.hass)
+        if not emitter_entity_ids and not receiver_entity_ids:
+            return self.async_abort(reason="no_infrared_entities")
+
+        if user_input is not None:
+            emitter_id = user_input.get(CONF_INFRARED_ENTITY_ID)
+            receiver_id = user_input.get(CONF_INFRARED_RECEIVER_ENTITY_ID)
+
+            if emitter_id or receiver_id:
+                if emitter_id:
+                    self._async_abort_entries_match(
+                        {CONF_INFRARED_ENTITY_ID: emitter_id}
+                    )
+                if receiver_id:
+                    self._async_abort_entries_match(
+                        {CONF_INFRARED_RECEIVER_ENTITY_ID: receiver_id}
+                    )
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data={CONF_DEVICE_TYPE: entry.data[CONF_DEVICE_TYPE], **user_input},
+                )
+
+            errors["base"] = "missing_infrared_entity"
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema(
+                    {
+                        probatio.Optional(CONF_INFRARED_ENTITY_ID): EntitySelector(
+                            EntitySelectorConfig(
+                                domain=INFRARED_DOMAIN,
+                                include_entities=emitter_entity_ids,
+                            )
+                        ),
+                        probatio.Optional(
+                            CONF_INFRARED_RECEIVER_ENTITY_ID
+                        ): EntitySelector(
+                            EntitySelectorConfig(
+                                domain=INFRARED_DOMAIN,
+                                include_entities=receiver_entity_ids,
+                            )
+                        ),
+                    }
+                ),
+                entry.data,
             ),
             errors=errors,
         )

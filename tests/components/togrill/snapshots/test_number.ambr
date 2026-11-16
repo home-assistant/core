@@ -60,7 +60,7 @@
     'state': '0',
   })
 # ---
-# name: test_setup[no_data][number.probe_1_maximum_temperature-entry]
+# name: test_setup[no_data][number.pro_05_probe_1_maximum_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -75,11 +75,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_1')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.probe_1_maximum_temperature',
+    'entity_id': 'number.pro_05_probe_1_maximum_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -102,7 +102,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_setup[no_data][number.probe_1_maximum_temperature-state]
+# name: test_setup[no_data][number.pro_05_probe_1_maximum_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -115,14 +115,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.probe_1_maximum_temperature',
+    'entity_id': 'number.pro_05_probe_1_maximum_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup[no_data][number.probe_1_minimum_temperature-entry]
+# name: test_setup[no_data][number.pro_05_probe_1_minimum_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -137,11 +137,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_1')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.probe_1_minimum_temperature',
+    'entity_id': 'number.pro_05_probe_1_minimum_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -164,7 +164,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_setup[no_data][number.probe_1_minimum_temperature-state]
+# name: test_setup[no_data][number.pro_05_probe_1_minimum_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -177,14 +177,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.probe_1_minimum_temperature',
+    'entity_id': 'number.pro_05_probe_1_minimum_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup[no_data][number.probe_1_target_temperature-entry]
+# name: test_setup[no_data][number.pro_05_probe_1_target_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -199,11 +199,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_1')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.probe_1_target_temperature',
+    'entity_id': 'number.pro_05_probe_1_target_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -226,7 +226,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_setup[no_data][number.probe_1_target_temperature-state]
+# name: test_setup[no_data][number.pro_05_probe_1_target_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -239,14 +239,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.probe_1_target_temperature',
+    'entity_id': 'number.pro_05_probe_1_target_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup[no_data][number.probe_1_timer-entry]
+# name: test_setup[no_data][number.pro_05_probe_1_timer-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -261,11 +261,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_1')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.probe_1_timer',
+    'entity_id': 'number.pro_05_probe_1_timer',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -288,7 +288,7 @@
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
-# name: test_setup[no_data][number.probe_1_timer-state]
+# name: test_setup[no_data][number.pro_05_probe_1_timer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
@@ -301,14 +301,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.probe_1_timer',
+    'entity_id': 'number.pro_05_probe_1_timer',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup[no_data][number.probe_2_maximum_temperature-entry]
+# name: test_setup[no_data][number.pro_05_probe_2_maximum_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -323,11 +323,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_2')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_2')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.probe_2_maximum_temperature',
+    'entity_id': 'number.pro_05_probe_2_maximum_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -350,7 +350,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_setup[no_data][number.probe_2_maximum_temperature-state]
+# name: test_setup[no_data][number.pro_05_probe_2_maximum_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -363,14 +363,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.probe_2_maximum_temperature',
+    'entity_id': 'number.pro_05_probe_2_maximum_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup[no_data][number.probe_2_minimum_temperature-entry]
+# name: test_setup[no_data][number.pro_05_probe_2_minimum_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -385,11 +385,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_2')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_2')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.probe_2_minimum_temperature',
+    'entity_id': 'number.pro_05_probe_2_minimum_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -412,7 +412,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_setup[no_data][number.probe_2_minimum_temperature-state]
+# name: test_setup[no_data][number.pro_05_probe_2_minimum_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -425,14 +425,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.probe_2_minimum_temperature',
+    'entity_id': 'number.pro_05_probe_2_minimum_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup[no_data][number.probe_2_target_temperature-entry]
+# name: test_setup[no_data][number.pro_05_probe_2_target_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -447,11 +447,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_2')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_2')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.probe_2_target_temperature',
+    'entity_id': 'number.pro_05_probe_2_target_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -474,7 +474,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_setup[no_data][number.probe_2_target_temperature-state]
+# name: test_setup[no_data][number.pro_05_probe_2_target_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -487,14 +487,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.probe_2_target_temperature',
+    'entity_id': 'number.pro_05_probe_2_target_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup[no_data][number.probe_2_timer-entry]
+# name: test_setup[no_data][number.pro_05_probe_2_timer-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -509,11 +509,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_2')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_2')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.probe_2_timer',
+    'entity_id': 'number.pro_05_probe_2_timer',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -536,7 +536,7 @@
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
-# name: test_setup[no_data][number.probe_2_timer-state]
+# name: test_setup[no_data][number.pro_05_probe_2_timer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
@@ -549,7 +549,7 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.probe_2_timer',
+    'entity_id': 'number.pro_05_probe_2_timer',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -617,7 +617,7 @@
     'state': '5',
   })
 # ---
-# name: test_setup[one_probe_with_target_alarm][number.probe_1_maximum_temperature-entry]
+# name: test_setup[one_probe_with_target_alarm][number.pro_05_probe_1_maximum_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -632,11 +632,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_1')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.probe_1_maximum_temperature',
+    'entity_id': 'number.pro_05_probe_1_maximum_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -659,7 +659,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_setup[one_probe_with_target_alarm][number.probe_1_maximum_temperature-state]
+# name: test_setup[one_probe_with_target_alarm][number.pro_05_probe_1_maximum_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -672,14 +672,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.probe_1_maximum_temperature',
+    'entity_id': 'number.pro_05_probe_1_maximum_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup[one_probe_with_target_alarm][number.probe_1_minimum_temperature-entry]
+# name: test_setup[one_probe_with_target_alarm][number.pro_05_probe_1_minimum_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -694,11 +694,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_1')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.probe_1_minimum_temperature',
+    'entity_id': 'number.pro_05_probe_1_minimum_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -721,7 +721,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_setup[one_probe_with_target_alarm][number.probe_1_minimum_temperature-state]
+# name: test_setup[one_probe_with_target_alarm][number.pro_05_probe_1_minimum_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -734,14 +734,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.probe_1_minimum_temperature',
+    'entity_id': 'number.pro_05_probe_1_minimum_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup[one_probe_with_target_alarm][number.probe_1_target_temperature-entry]
+# name: test_setup[one_probe_with_target_alarm][number.pro_05_probe_1_target_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -756,11 +756,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_1')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.probe_1_target_temperature',
+    'entity_id': 'number.pro_05_probe_1_target_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -783,7 +783,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_setup[one_probe_with_target_alarm][number.probe_1_target_temperature-state]
+# name: test_setup[one_probe_with_target_alarm][number.pro_05_probe_1_target_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -796,14 +796,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.probe_1_target_temperature',
+    'entity_id': 'number.pro_05_probe_1_target_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '50.0',
   })
 # ---
-# name: test_setup[one_probe_with_target_alarm][number.probe_1_timer-entry]
+# name: test_setup[one_probe_with_target_alarm][number.pro_05_probe_1_timer-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -818,11 +818,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_1')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.probe_1_timer',
+    'entity_id': 'number.pro_05_probe_1_timer',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -845,7 +845,7 @@
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
-# name: test_setup[one_probe_with_target_alarm][number.probe_1_timer-state]
+# name: test_setup[one_probe_with_target_alarm][number.pro_05_probe_1_timer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
@@ -858,14 +858,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.probe_1_timer',
+    'entity_id': 'number.pro_05_probe_1_timer',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_setup[one_probe_with_target_alarm][number.probe_2_maximum_temperature-entry]
+# name: test_setup[one_probe_with_target_alarm][number.pro_05_probe_2_maximum_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -880,11 +880,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_2')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_2')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.probe_2_maximum_temperature',
+    'entity_id': 'number.pro_05_probe_2_maximum_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -907,7 +907,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_setup[one_probe_with_target_alarm][number.probe_2_maximum_temperature-state]
+# name: test_setup[one_probe_with_target_alarm][number.pro_05_probe_2_maximum_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -920,14 +920,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.probe_2_maximum_temperature',
+    'entity_id': 'number.pro_05_probe_2_maximum_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup[one_probe_with_target_alarm][number.probe_2_minimum_temperature-entry]
+# name: test_setup[one_probe_with_target_alarm][number.pro_05_probe_2_minimum_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -942,11 +942,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_2')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_2')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.probe_2_minimum_temperature',
+    'entity_id': 'number.pro_05_probe_2_minimum_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -969,7 +969,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_setup[one_probe_with_target_alarm][number.probe_2_minimum_temperature-state]
+# name: test_setup[one_probe_with_target_alarm][number.pro_05_probe_2_minimum_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -982,14 +982,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.probe_2_minimum_temperature',
+    'entity_id': 'number.pro_05_probe_2_minimum_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup[one_probe_with_target_alarm][number.probe_2_target_temperature-entry]
+# name: test_setup[one_probe_with_target_alarm][number.pro_05_probe_2_target_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1004,11 +1004,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_2')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_2')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.probe_2_target_temperature',
+    'entity_id': 'number.pro_05_probe_2_target_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1031,7 +1031,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_setup[one_probe_with_target_alarm][number.probe_2_target_temperature-state]
+# name: test_setup[one_probe_with_target_alarm][number.pro_05_probe_2_target_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -1044,14 +1044,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.probe_2_target_temperature',
+    'entity_id': 'number.pro_05_probe_2_target_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup[one_probe_with_target_alarm][number.probe_2_timer-entry]
+# name: test_setup[one_probe_with_target_alarm][number.pro_05_probe_2_timer-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1066,11 +1066,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_2')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_2')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.probe_2_timer',
+    'entity_id': 'number.pro_05_probe_2_timer',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1093,7 +1093,7 @@
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
-# name: test_setup[one_probe_with_target_alarm][number.probe_2_timer-state]
+# name: test_setup[one_probe_with_target_alarm][number.pro_05_probe_2_timer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
@@ -1106,7 +1106,7 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.probe_2_timer',
+    'entity_id': 'number.pro_05_probe_2_timer',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1298,7 +1298,7 @@
     'state': '5.0',
   })
 # ---
-# name: test_setup_with_ambient[ambient_with_range][number.probe_1_maximum_temperature-entry]
+# name: test_setup_with_ambient[ambient_with_range][number.pro_05_probe_1_maximum_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1313,11 +1313,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_1')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.probe_1_maximum_temperature',
+    'entity_id': 'number.pro_05_probe_1_maximum_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1340,7 +1340,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_setup_with_ambient[ambient_with_range][number.probe_1_maximum_temperature-state]
+# name: test_setup_with_ambient[ambient_with_range][number.pro_05_probe_1_maximum_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -1353,14 +1353,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.probe_1_maximum_temperature',
+    'entity_id': 'number.pro_05_probe_1_maximum_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup_with_ambient[ambient_with_range][number.probe_1_minimum_temperature-entry]
+# name: test_setup_with_ambient[ambient_with_range][number.pro_05_probe_1_minimum_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1375,11 +1375,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_1')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.probe_1_minimum_temperature',
+    'entity_id': 'number.pro_05_probe_1_minimum_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1402,7 +1402,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_setup_with_ambient[ambient_with_range][number.probe_1_minimum_temperature-state]
+# name: test_setup_with_ambient[ambient_with_range][number.pro_05_probe_1_minimum_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -1415,14 +1415,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.probe_1_minimum_temperature',
+    'entity_id': 'number.pro_05_probe_1_minimum_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup_with_ambient[ambient_with_range][number.probe_1_target_temperature-entry]
+# name: test_setup_with_ambient[ambient_with_range][number.pro_05_probe_1_target_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1437,11 +1437,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_1')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.probe_1_target_temperature',
+    'entity_id': 'number.pro_05_probe_1_target_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1464,7 +1464,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_setup_with_ambient[ambient_with_range][number.probe_1_target_temperature-state]
+# name: test_setup_with_ambient[ambient_with_range][number.pro_05_probe_1_target_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -1477,14 +1477,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.probe_1_target_temperature',
+    'entity_id': 'number.pro_05_probe_1_target_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup_with_ambient[ambient_with_range][number.probe_1_timer-entry]
+# name: test_setup_with_ambient[ambient_with_range][number.pro_05_probe_1_timer-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1499,11 +1499,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_1')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.probe_1_timer',
+    'entity_id': 'number.pro_05_probe_1_timer',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1526,7 +1526,7 @@
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
-# name: test_setup_with_ambient[ambient_with_range][number.probe_1_timer-state]
+# name: test_setup_with_ambient[ambient_with_range][number.pro_05_probe_1_timer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
@@ -1539,14 +1539,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.probe_1_timer',
+    'entity_id': 'number.pro_05_probe_1_timer',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup_with_ambient[ambient_with_range][number.probe_2_maximum_temperature-entry]
+# name: test_setup_with_ambient[ambient_with_range][number.pro_05_probe_2_maximum_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1561,11 +1561,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_2')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_2')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.probe_2_maximum_temperature',
+    'entity_id': 'number.pro_05_probe_2_maximum_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1588,7 +1588,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_setup_with_ambient[ambient_with_range][number.probe_2_maximum_temperature-state]
+# name: test_setup_with_ambient[ambient_with_range][number.pro_05_probe_2_maximum_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -1601,14 +1601,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.probe_2_maximum_temperature',
+    'entity_id': 'number.pro_05_probe_2_maximum_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup_with_ambient[ambient_with_range][number.probe_2_minimum_temperature-entry]
+# name: test_setup_with_ambient[ambient_with_range][number.pro_05_probe_2_minimum_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1623,11 +1623,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_2')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_2')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.probe_2_minimum_temperature',
+    'entity_id': 'number.pro_05_probe_2_minimum_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1650,7 +1650,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_setup_with_ambient[ambient_with_range][number.probe_2_minimum_temperature-state]
+# name: test_setup_with_ambient[ambient_with_range][number.pro_05_probe_2_minimum_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -1663,14 +1663,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.probe_2_minimum_temperature',
+    'entity_id': 'number.pro_05_probe_2_minimum_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup_with_ambient[ambient_with_range][number.probe_2_target_temperature-entry]
+# name: test_setup_with_ambient[ambient_with_range][number.pro_05_probe_2_target_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1685,11 +1685,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_2')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_2')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.probe_2_target_temperature',
+    'entity_id': 'number.pro_05_probe_2_target_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1712,7 +1712,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_setup_with_ambient[ambient_with_range][number.probe_2_target_temperature-state]
+# name: test_setup_with_ambient[ambient_with_range][number.pro_05_probe_2_target_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -1725,14 +1725,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.probe_2_target_temperature',
+    'entity_id': 'number.pro_05_probe_2_target_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup_with_ambient[ambient_with_range][number.probe_2_timer-entry]
+# name: test_setup_with_ambient[ambient_with_range][number.pro_05_probe_2_timer-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1747,11 +1747,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_2')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_2')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.probe_2_timer',
+    'entity_id': 'number.pro_05_probe_2_timer',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1774,7 +1774,7 @@
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
-# name: test_setup_with_ambient[ambient_with_range][number.probe_2_timer-state]
+# name: test_setup_with_ambient[ambient_with_range][number.pro_05_probe_2_timer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
@@ -1787,7 +1787,7 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.probe_2_timer',
+    'entity_id': 'number.pro_05_probe_2_timer',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1979,7 +1979,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_setup_with_ambient[ambient_wrong_alarm_type][number.probe_1_maximum_temperature-entry]
+# name: test_setup_with_ambient[ambient_wrong_alarm_type][number.pro_05_probe_1_maximum_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1994,11 +1994,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_1')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.probe_1_maximum_temperature',
+    'entity_id': 'number.pro_05_probe_1_maximum_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2021,7 +2021,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_setup_with_ambient[ambient_wrong_alarm_type][number.probe_1_maximum_temperature-state]
+# name: test_setup_with_ambient[ambient_wrong_alarm_type][number.pro_05_probe_1_maximum_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -2034,14 +2034,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.probe_1_maximum_temperature',
+    'entity_id': 'number.pro_05_probe_1_maximum_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup_with_ambient[ambient_wrong_alarm_type][number.probe_1_minimum_temperature-entry]
+# name: test_setup_with_ambient[ambient_wrong_alarm_type][number.pro_05_probe_1_minimum_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2056,11 +2056,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_1')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.probe_1_minimum_temperature',
+    'entity_id': 'number.pro_05_probe_1_minimum_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2083,7 +2083,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_setup_with_ambient[ambient_wrong_alarm_type][number.probe_1_minimum_temperature-state]
+# name: test_setup_with_ambient[ambient_wrong_alarm_type][number.pro_05_probe_1_minimum_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -2096,14 +2096,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.probe_1_minimum_temperature',
+    'entity_id': 'number.pro_05_probe_1_minimum_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup_with_ambient[ambient_wrong_alarm_type][number.probe_1_target_temperature-entry]
+# name: test_setup_with_ambient[ambient_wrong_alarm_type][number.pro_05_probe_1_target_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2118,11 +2118,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_1')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.probe_1_target_temperature',
+    'entity_id': 'number.pro_05_probe_1_target_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2145,7 +2145,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_setup_with_ambient[ambient_wrong_alarm_type][number.probe_1_target_temperature-state]
+# name: test_setup_with_ambient[ambient_wrong_alarm_type][number.pro_05_probe_1_target_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -2158,14 +2158,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.probe_1_target_temperature',
+    'entity_id': 'number.pro_05_probe_1_target_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup_with_ambient[ambient_wrong_alarm_type][number.probe_1_timer-entry]
+# name: test_setup_with_ambient[ambient_wrong_alarm_type][number.pro_05_probe_1_timer-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2180,11 +2180,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_1')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.probe_1_timer',
+    'entity_id': 'number.pro_05_probe_1_timer',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2207,7 +2207,7 @@
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
-# name: test_setup_with_ambient[ambient_wrong_alarm_type][number.probe_1_timer-state]
+# name: test_setup_with_ambient[ambient_wrong_alarm_type][number.pro_05_probe_1_timer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
@@ -2220,14 +2220,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.probe_1_timer',
+    'entity_id': 'number.pro_05_probe_1_timer',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup_with_ambient[ambient_wrong_alarm_type][number.probe_2_maximum_temperature-entry]
+# name: test_setup_with_ambient[ambient_wrong_alarm_type][number.pro_05_probe_2_maximum_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2242,11 +2242,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_2')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_2')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.probe_2_maximum_temperature',
+    'entity_id': 'number.pro_05_probe_2_maximum_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2269,7 +2269,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_setup_with_ambient[ambient_wrong_alarm_type][number.probe_2_maximum_temperature-state]
+# name: test_setup_with_ambient[ambient_wrong_alarm_type][number.pro_05_probe_2_maximum_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -2282,14 +2282,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.probe_2_maximum_temperature',
+    'entity_id': 'number.pro_05_probe_2_maximum_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup_with_ambient[ambient_wrong_alarm_type][number.probe_2_minimum_temperature-entry]
+# name: test_setup_with_ambient[ambient_wrong_alarm_type][number.pro_05_probe_2_minimum_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2304,11 +2304,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_2')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_2')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.probe_2_minimum_temperature',
+    'entity_id': 'number.pro_05_probe_2_minimum_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2331,7 +2331,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_setup_with_ambient[ambient_wrong_alarm_type][number.probe_2_minimum_temperature-state]
+# name: test_setup_with_ambient[ambient_wrong_alarm_type][number.pro_05_probe_2_minimum_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -2344,14 +2344,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.probe_2_minimum_temperature',
+    'entity_id': 'number.pro_05_probe_2_minimum_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup_with_ambient[ambient_wrong_alarm_type][number.probe_2_target_temperature-entry]
+# name: test_setup_with_ambient[ambient_wrong_alarm_type][number.pro_05_probe_2_target_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2366,11 +2366,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_2')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_2')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.probe_2_target_temperature',
+    'entity_id': 'number.pro_05_probe_2_target_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2393,7 +2393,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_setup_with_ambient[ambient_wrong_alarm_type][number.probe_2_target_temperature-state]
+# name: test_setup_with_ambient[ambient_wrong_alarm_type][number.pro_05_probe_2_target_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -2406,14 +2406,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.probe_2_target_temperature',
+    'entity_id': 'number.pro_05_probe_2_target_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup_with_ambient[ambient_wrong_alarm_type][number.probe_2_timer-entry]
+# name: test_setup_with_ambient[ambient_wrong_alarm_type][number.pro_05_probe_2_timer-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2428,11 +2428,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_2')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_2')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.probe_2_timer',
+    'entity_id': 'number.pro_05_probe_2_timer',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2455,7 +2455,7 @@
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
-# name: test_setup_with_ambient[ambient_wrong_alarm_type][number.probe_2_timer-state]
+# name: test_setup_with_ambient[ambient_wrong_alarm_type][number.pro_05_probe_2_timer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
@@ -2468,7 +2468,7 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.probe_2_timer',
+    'entity_id': 'number.pro_05_probe_2_timer',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2660,7 +2660,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_setup_with_ambient[no_data][number.probe_1_maximum_temperature-entry]
+# name: test_setup_with_ambient[no_data][number.pro_05_probe_1_maximum_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2675,11 +2675,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_1')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.probe_1_maximum_temperature',
+    'entity_id': 'number.pro_05_probe_1_maximum_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2702,7 +2702,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_setup_with_ambient[no_data][number.probe_1_maximum_temperature-state]
+# name: test_setup_with_ambient[no_data][number.pro_05_probe_1_maximum_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -2715,14 +2715,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.probe_1_maximum_temperature',
+    'entity_id': 'number.pro_05_probe_1_maximum_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup_with_ambient[no_data][number.probe_1_minimum_temperature-entry]
+# name: test_setup_with_ambient[no_data][number.pro_05_probe_1_minimum_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2737,11 +2737,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_1')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.probe_1_minimum_temperature',
+    'entity_id': 'number.pro_05_probe_1_minimum_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2764,7 +2764,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_setup_with_ambient[no_data][number.probe_1_minimum_temperature-state]
+# name: test_setup_with_ambient[no_data][number.pro_05_probe_1_minimum_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -2777,14 +2777,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.probe_1_minimum_temperature',
+    'entity_id': 'number.pro_05_probe_1_minimum_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup_with_ambient[no_data][number.probe_1_target_temperature-entry]
+# name: test_setup_with_ambient[no_data][number.pro_05_probe_1_target_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2799,11 +2799,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_1')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.probe_1_target_temperature',
+    'entity_id': 'number.pro_05_probe_1_target_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2826,7 +2826,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_setup_with_ambient[no_data][number.probe_1_target_temperature-state]
+# name: test_setup_with_ambient[no_data][number.pro_05_probe_1_target_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -2839,14 +2839,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.probe_1_target_temperature',
+    'entity_id': 'number.pro_05_probe_1_target_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup_with_ambient[no_data][number.probe_1_timer-entry]
+# name: test_setup_with_ambient[no_data][number.pro_05_probe_1_timer-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2861,11 +2861,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_1')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.probe_1_timer',
+    'entity_id': 'number.pro_05_probe_1_timer',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2888,7 +2888,7 @@
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
-# name: test_setup_with_ambient[no_data][number.probe_1_timer-state]
+# name: test_setup_with_ambient[no_data][number.pro_05_probe_1_timer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
@@ -2901,14 +2901,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.probe_1_timer',
+    'entity_id': 'number.pro_05_probe_1_timer',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup_with_ambient[no_data][number.probe_2_maximum_temperature-entry]
+# name: test_setup_with_ambient[no_data][number.pro_05_probe_2_maximum_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2923,11 +2923,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_2')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_2')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.probe_2_maximum_temperature',
+    'entity_id': 'number.pro_05_probe_2_maximum_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2950,7 +2950,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_setup_with_ambient[no_data][number.probe_2_maximum_temperature-state]
+# name: test_setup_with_ambient[no_data][number.pro_05_probe_2_maximum_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -2963,14 +2963,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.probe_2_maximum_temperature',
+    'entity_id': 'number.pro_05_probe_2_maximum_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup_with_ambient[no_data][number.probe_2_minimum_temperature-entry]
+# name: test_setup_with_ambient[no_data][number.pro_05_probe_2_minimum_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2985,11 +2985,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_2')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_2')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.probe_2_minimum_temperature',
+    'entity_id': 'number.pro_05_probe_2_minimum_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3012,7 +3012,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_setup_with_ambient[no_data][number.probe_2_minimum_temperature-state]
+# name: test_setup_with_ambient[no_data][number.pro_05_probe_2_minimum_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -3025,14 +3025,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.probe_2_minimum_temperature',
+    'entity_id': 'number.pro_05_probe_2_minimum_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup_with_ambient[no_data][number.probe_2_target_temperature-entry]
+# name: test_setup_with_ambient[no_data][number.pro_05_probe_2_target_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3047,11 +3047,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_2')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_2')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.probe_2_target_temperature',
+    'entity_id': 'number.pro_05_probe_2_target_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3074,7 +3074,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_setup_with_ambient[no_data][number.probe_2_target_temperature-state]
+# name: test_setup_with_ambient[no_data][number.pro_05_probe_2_target_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -3087,14 +3087,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.probe_2_target_temperature',
+    'entity_id': 'number.pro_05_probe_2_target_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup_with_ambient[no_data][number.probe_2_timer-entry]
+# name: test_setup_with_ambient[no_data][number.pro_05_probe_2_timer-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3109,11 +3109,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_2')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('togrill', '00000000-0000-0000-0000-000000000001_2')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.probe_2_timer',
+    'entity_id': 'number.pro_05_probe_2_timer',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3136,7 +3136,7 @@
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
-# name: test_setup_with_ambient[no_data][number.probe_2_timer-state]
+# name: test_setup_with_ambient[no_data][number.pro_05_probe_2_timer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
@@ -3149,7 +3149,7 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.probe_2_timer',
+    'entity_id': 'number.pro_05_probe_2_timer',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

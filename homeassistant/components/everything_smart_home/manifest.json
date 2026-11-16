@@ -1,0 +1,6 @@
+{
+  "domain": "everything_smart_home",
+  "name": "Everything Smart Home",
+  "integration_type": "virtual",
+  "supported_by": "esphome"
+}

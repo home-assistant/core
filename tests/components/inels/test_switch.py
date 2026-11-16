@@ -4,12 +4,13 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.switch import (
-    DOMAIN as SWITCH_DOMAIN,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
+from homeassistant.const import (
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    CommonServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from .common import MAC_ADDRESS, UNIQUE_ID, get_entity_id
@@ -122,8 +123,8 @@ async def test_switch_turn_on(
     with patch("inelsmqtt.devices.Device.set_ha_value") as mock_set_state:
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: get_entity_id(entity_config, index)},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: get_entity_id(entity_config, index)},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -156,8 +157,8 @@ async def test_switch_turn_off(
     with patch("inelsmqtt.devices.Device.set_ha_value") as mock_set_state:
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: get_entity_id(entity_config, index)},
+            SwitchService.TURN_OFF,
+            {CommonServiceArgument.ENTITY_ID: get_entity_id(entity_config, index)},
             blocking=True,
         )
         await hass.async_block_till_done()

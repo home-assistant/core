@@ -4,6 +4,7 @@
   "categories": ["sensors", "hubs_protocols.wireless_protocols"],
   "codeowners": ["@akx"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["bluetooth"],
   "dhcp": [
     {
