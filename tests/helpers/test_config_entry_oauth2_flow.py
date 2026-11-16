@@ -312,7 +312,8 @@ async def test_abort_if_implementation_of_other_grant(
     )
 
     assert result["type"] is data_entry_flow.FlowResultType.ABORT
-    assert result["reason"] == "missing_configuration"
+    assert result["reason"] == "oauth_error"
+    assert result["translation_domain"] == HOMEASSISTANT_DOMAIN
 
 
 async def test_abort_if_oauth_implementation_unavailable(
@@ -1476,19 +1477,42 @@ async def test_device_flow_check_activation_errors(
 
 
 @pytest.mark.parametrize(
-    ("slow_down", "expected_delays"),
+    ("interval", "slow_downs", "expected_delays"),
     [
-        pytest.param({"error": "slow_down"}, [5, 10], id="increment"),
+        pytest.param(5, [{"error": "slow_down"}], [5, 10], id="increment"),
         pytest.param(
-            {"error": "slow_down", "interval": "20"}, [5, 20], id="server_interval"
+            5,
+            [{"error": "slow_down", "interval": "20"}],
+            [5, 20],
+            id="server_interval",
         ),
         pytest.param(
-            {"error": "slow_down", "interval": 600}, [5, 120], id="capped_interval"
+            5,
+            [{"error": "slow_down", "interval": 600}],
+            [5, 600],
+            id="server_interval_above_cap",
         ),
         pytest.param(
-            {"error": "slow_down", "interval": "soon"},
+            5,
+            [{"error": "slow_down", "interval": "soon"}],
             [5, 10],
             id="invalid_server_interval",
+        ),
+        pytest.param(118, [{"error": "slow_down"}], [118, 120], id="increment_capped"),
+        pytest.param(
+            5,
+            [{"error": "slow_down", "interval": 130}, {"error": "slow_down"}],
+            [5, 130, 130],
+            id="increment_never_lowers",
+        ),
+        pytest.param(
+            5,
+            [
+                {"error": "slow_down", "interval": 20},
+                {"error": "slow_down", "interval": 10},
+            ],
+            [5, 20, 20],
+            id="server_interval_never_lowers",
         ),
     ],
 )
@@ -1496,16 +1520,20 @@ async def test_device_flow_slow_down(
     device_impl: config_entry_oauth2_flow.DeviceFlowImplementation,
     aioclient_mock: AiohttpClientMocker,
     poll_sleep: FakeSleep,
-    slow_down: dict[str, Any],
+    interval: int,
+    slow_downs: list[dict[str, Any]],
     expected_delays: list[int],
 ) -> None:
     """Test slow_down raises the interval for the next polls."""
     _mock_token_responses(
         aioclient_mock,
-        [{"status": 400, "json": slow_down}, {"json": TOKEN_RESPONSE}],
+        [{"status": 400, "json": slow_down} for slow_down in slow_downs]
+        + [{"json": TOKEN_RESPONSE}],
     )
 
-    token = await device_impl.async_check_device_activation(_device_authorization())
+    token = await device_impl.async_check_device_activation(
+        _device_authorization(interval=interval)
+    )
 
     assert token == TOKEN_RESPONSE
     assert poll_sleep.delays == expected_delays

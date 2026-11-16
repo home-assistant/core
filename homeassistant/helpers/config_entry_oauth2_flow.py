@@ -117,6 +117,18 @@ _SHARED_ABORT_REASONS = frozenset(
 )
 
 
+class DeviceFlowError(HomeAssistantError):
+    """Exception raised for device flow errors."""
+
+
+class DeviceFlowTimeout(DeviceFlowError):
+    """Exception raised when device flow times out."""
+
+
+class DeviceFlowUnauthorized(DeviceFlowError):
+    """Exception raised when user denies authorization in device flow."""
+
+
 @callback
 def async_get_redirect_uri(hass: HomeAssistant) -> str:
     """Return the redirect uri."""
@@ -174,7 +186,10 @@ class AbstractOAuth2BaseImplementation(ABC):
 
     @abstractmethod
     async def _async_refresh_token(self, token: dict) -> dict:
-        """Refresh a token."""
+        """Refresh a token.
+
+        Should raise OAuth2TokenRequestError on token refresh failure.
+        """
 
 
 class AbstractAuthorizationCodeImplementation(AbstractOAuth2BaseImplementation):
@@ -203,7 +218,12 @@ class AbstractAuthorizationCodeImplementation(AbstractOAuth2BaseImplementation):
 
     @abstractmethod
     async def async_resolve_external_data(self, external_data: Any) -> dict:
-        """Resolve external data to tokens."""
+        """Resolve external data to tokens.
+
+        Turn the data that the implementation passed to the config flow as external
+        step data into tokens. These tokens will be stored as 'token' in the
+        config entry data.
+        """
 
 
 AbstractOAuth2Implementation = AbstractAuthorizationCodeImplementation
@@ -551,8 +571,9 @@ class DeviceFlowImplementation(OAuth2TokenEndpointMixin):
 
         Each poll posts grant_type device_code, the device_code and
         client_id (RFC 8628 section 3.4). Error codes (section 3.5):
-        authorization_pending keeps polling, slow_down adds 5 seconds (or takes
-        the server's interval, at most 120 seconds), access_denied raises
+        authorization_pending keeps polling, slow_down adds 5 seconds (up to
+        120) or takes the server's interval, never lowering the current
+        interval, access_denied raises
         DeviceFlowUnauthorized, expired_token raises DeviceFlowTimeout and any
         other raises DeviceFlowError. Connection timeouts, 429 and 5xx double the interval.
         """
@@ -594,10 +615,10 @@ class DeviceFlowImplementation(OAuth2TokenEndpointMixin):
                 case "authorization_pending":
                     pass
                 case "slow_down":
-                    interval += 5
+                    new_interval = min(interval + 5, 120)
                     with suppress(KeyError, TypeError, ValueError):
-                        interval = max(interval, int(response["interval"]))
-                    interval = min(interval, 120)
+                        new_interval = int(response["interval"])
+                    interval = max(interval, new_interval)
                     _LOGGER.debug("Asked to slow down, polling every %s s", interval)
                 case "access_denied":
                     raise DeviceFlowUnauthorized
@@ -727,7 +748,7 @@ class AbstractOAuth2BaseFlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta
                 type(implementation).__name__,
                 self._implementation_type.__name__,
             )
-            return self.async_abort(reason="missing_configuration")
+            return self.async_abort(reason="oauth_error")
         self.flow_impl = implementation
         return await self.async_step_auth()
 
@@ -1229,15 +1250,3 @@ def _decode_jwt(hass: HomeAssistant, encoded: str) -> dict[str, Any] | None:
         return jwt.decode(encoded, secret, algorithms=["HS256"])
     except jwt.InvalidTokenError:
         return None
-
-
-class DeviceFlowError(HomeAssistantError):
-    """Exception raised for device flow errors."""
-
-
-class DeviceFlowTimeout(DeviceFlowError):
-    """Exception raised when device flow times out."""
-
-
-class DeviceFlowUnauthorized(DeviceFlowError):
-    """Exception raised when user denies authorization in device flow."""

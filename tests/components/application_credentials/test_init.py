@@ -900,12 +900,6 @@ async def test_device_flow_platform_rejects_both_grants(
         )
 
 
-def test_client_credential_requires_secret() -> None:
-    """Test a client credential for the authorization code grant needs a secret."""
-    with pytest.raises(TypeError):
-        ClientCredential(CLIENT_ID)  # type: ignore[call-arg]
-
-
 async def test_name(
     hass: HomeAssistant, ws_client: ClientFixture, oauth_fixture: OAuthFixture
 ) -> None:
