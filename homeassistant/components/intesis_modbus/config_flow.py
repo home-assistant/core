@@ -94,8 +94,8 @@ class IntesisModbusConfigFlow(ConfigFlow, domain=DOMAIN):
                         description_placeholders={"brand": probe.unsupported_brand},
                     )
                 if probe.model is None:
-                    return self.async_abort(reason="unsupported_device")
-                if probe.temperature_format is None:
+                    errors["base"] = "unsupported_device"
+                elif probe.temperature_format is None:
                     errors["base"] = "gateway_starting"
                 else:
                     self._model = probe.model

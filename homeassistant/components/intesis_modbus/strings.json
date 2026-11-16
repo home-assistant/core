@@ -2,13 +2,13 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "unsupported_brand": "This is a {brand} gateway. Its code and error tables are not written yet, so it cannot be set up. See the intesis-gw-modbus library for how to contribute them.",
-      "unsupported_device": "The device on this port did not identify itself as a supported Intesis gateway."
+      "unsupported_brand": "This is a {brand} gateway. Its code and error tables are not written yet, so it cannot be set up. See the intesis-gw-modbus library for how to contribute them."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "device_in_use": "The serial port is already in use with other link settings. This gateway always uses 8 data bits, no parity and 2 stop bits, so the other devices on this line must use the same framing and baud rate.",
-      "gateway_starting": "The gateway is still starting up and does not report its values yet. Wait a few minutes and try again."
+      "gateway_starting": "The gateway is still starting up and does not report its values yet. Wait a few minutes and try again.",
+      "unsupported_device": "The device at this unit ID did not identify itself as a supported Intesis gateway. Check the Modbus unit ID."
     },
     "step": {
       "features": {

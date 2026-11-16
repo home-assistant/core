@@ -173,24 +173,41 @@ async def test_untabled_brand_aborts(
     assert mock_setup_entry.call_count == 0
 
 
-async def test_unknown_device_id_aborts(hass: HomeAssistant) -> None:
-    """A device that answers with an unknown device id is refused."""
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_other_device_on_the_line_can_be_corrected(hass: HomeAssistant) -> None:
+    """A unit ID that reaches another device is corrected in the same flow."""
     connection = _seeded()
     connection.for_unit(1).holding[49] = 0x7777
+    seed_single_unit(connection.for_unit(2))
     with _patch_temporary_unit(connection):
         result = await _submit_link(hass)
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "unsupported_device"
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {"base": "unsupported_device"}
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {**MOCK_USER_INPUT, CONF_UNIT_ID: 2}
+        )
+    result = await _finish_features(hass, result)
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {**MOCK_ENTRY_DATA, CONF_UNIT_ID: 2}
 
 
-async def test_refused_device_id_register_aborts(hass: HomeAssistant) -> None:
-    """A device that refuses the device id register is refused."""
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_refused_device_id_register_can_be_retried(hass: HomeAssistant) -> None:
+    """A device that refuses the device id register is not a gateway."""
     connection = _seeded()
     connection.for_unit(1).fail_read(49, IllegalDataAddressError())
     with _patch_temporary_unit(connection):
         result = await _submit_link(hass)
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "unsupported_device"
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "unsupported_device"}
+        connection.for_unit(1).fail_read(49, None)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], MOCK_USER_INPUT
+        )
+    result = await _finish_features(hass, result)
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == MOCK_ENTRY_DATA
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
