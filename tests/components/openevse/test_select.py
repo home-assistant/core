@@ -21,11 +21,11 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.openevse.const import DOMAIN
 from homeassistant.components.openevse.coordinator import SCAN_INTERVAL
 from homeassistant.components.select import (
-    ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -89,10 +89,10 @@ async def test_select_option(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: "select.openevse_mock_config_override_state",
-            ATTR_OPTION: option,
+            CommonServiceArgument.ENTITY_ID: "select.openevse_mock_config_override_state",
+            SelectServiceArgument.OPTION: option,
         },
         blocking=True,
     )
@@ -189,10 +189,10 @@ async def test_select_raises(
     with pytest.raises(expected) as exc_info:
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: "select.openevse_mock_config_override_state",
-                ATTR_OPTION: "active",
+                CommonServiceArgument.ENTITY_ID: "select.openevse_mock_config_override_state",
+                SelectServiceArgument.OPTION: "active",
             },
             blocking=True,
         )

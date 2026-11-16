@@ -4,11 +4,10 @@ from datetime import datetime
 from typing import Any, override
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
-    ATTR_TILT_POSITION,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
+    CoverServiceArgument,
     CoverSpeed,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -200,7 +199,7 @@ class DemoCover(CoverEntity):
     @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        position: int = kwargs[ATTR_POSITION]
+        position: int = kwargs[CoverServiceArgument.POSITION]
         self._set_position = round(position, -1)
         if self._position == position:
             return
@@ -217,7 +216,7 @@ class DemoCover(CoverEntity):
     @override
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover til to a specific position."""
-        tilt_position: int = kwargs[ATTR_TILT_POSITION]
+        tilt_position: int = kwargs[CoverServiceArgument.TILT_POSITION]
         self._set_tilt_position = round(tilt_position, -1)
         if self._tilt_position == tilt_position:
             return

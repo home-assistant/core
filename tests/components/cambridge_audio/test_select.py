@@ -8,9 +8,10 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -42,10 +43,10 @@ async def test_setting_value(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: "select.cambridge_audio_cxnv2_display_brightness",
-            ATTR_OPTION: "dim",
+            CommonServiceArgument.ENTITY_ID: "select.cambridge_audio_cxnv2_display_brightness",
+            SelectServiceArgument.OPTION: "dim",
         },
         blocking=True,
     )
@@ -53,10 +54,10 @@ async def test_setting_value(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: "select.cambridge_audio_cxnv2_audio_output",
-            ATTR_OPTION: "Speaker A",
+            CommonServiceArgument.ENTITY_ID: "select.cambridge_audio_cxnv2_audio_output",
+            SelectServiceArgument.OPTION: "Speaker A",
         },
         blocking=True,
     )

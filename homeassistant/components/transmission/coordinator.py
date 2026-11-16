@@ -16,14 +16,14 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
-    ATTR_DOWNLOAD_PATH,
-    ATTR_LABELS,
     CONF_LIMIT,
     CONF_ORDER,
     DEFAULT_LIMIT,
     DEFAULT_ORDER,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
+    EVENT_ATTR_DOWNLOAD_PATH,
+    EVENT_ATTR_LABELS,
     EVENT_DOWNLOADED_TORRENT,
     EVENT_REMOVED_TORRENT,
     EVENT_STARTED_TORRENT,
@@ -161,8 +161,8 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
                     {
                         ATTR_NAME: torrent.name,
                         ATTR_ID: torrent.id,
-                        ATTR_DOWNLOAD_PATH: torrent.download_dir,
-                        ATTR_LABELS: torrent.labels,
+                        EVENT_ATTR_DOWNLOAD_PATH: torrent.download_dir,
+                        EVENT_ATTR_LABELS: torrent.labels,
                     },
                 )
                 event = TransmissionEventData(
@@ -192,8 +192,8 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
                     {
                         ATTR_NAME: torrent.name,
                         ATTR_ID: torrent.id,
-                        ATTR_DOWNLOAD_PATH: torrent.download_dir,
-                        ATTR_LABELS: torrent.labels,
+                        EVENT_ATTR_DOWNLOAD_PATH: torrent.download_dir,
+                        EVENT_ATTR_LABELS: torrent.labels,
                     },
                 )
                 event = TransmissionEventData(
@@ -219,8 +219,8 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
                     {
                         ATTR_NAME: torrent.name,
                         ATTR_ID: torrent.id,
-                        ATTR_DOWNLOAD_PATH: torrent.download_dir,
-                        ATTR_LABELS: torrent.labels,
+                        EVENT_ATTR_DOWNLOAD_PATH: torrent.download_dir,
+                        EVENT_ATTR_LABELS: torrent.labels,
                     },
                 )
                 event = TransmissionEventData(

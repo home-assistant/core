@@ -3,6 +3,7 @@
 from collections.abc import Mapping
 from http import HTTPStatus
 from typing import Any, override
+from urllib.parse import urlparse
 
 import probatio
 import requests
@@ -17,7 +18,6 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import (
     CONF_AUTHENTICATION,
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
@@ -31,39 +31,38 @@ from .const import CONF_MJPEG_URL, CONF_STILL_IMAGE_URL, DOMAIN, LOGGER
 
 
 @callback
-def async_get_schema(
-    defaults: Mapping[str, Any], show_name: bool = False
-) -> probatio.Schema:
+def async_get_schema(defaults: Mapping[str, Any]) -> probatio.Schema:
     """Return MJPEG IP Camera schema."""
-    schema = {
-        probatio.Required(CONF_MJPEG_URL, default=defaults.get(CONF_MJPEG_URL)): str,
-        probatio.Optional(
-            CONF_STILL_IMAGE_URL,
-            description={"suggested_value": defaults.get(CONF_STILL_IMAGE_URL)},
-        ): str,
-        probatio.Optional(
-            CONF_USERNAME,
-            description={"suggested_value": defaults.get(CONF_USERNAME)},
-        ): str,
-        probatio.Optional(
-            probatio.Secret(CONF_PASSWORD),
-            default=defaults.get(CONF_PASSWORD, ""),
-        ): str,
-        probatio.Optional(
-            CONF_VERIFY_SSL,
-            default=defaults.get(CONF_VERIFY_SSL, True),
-        ): bool,
-    }
-
-    if show_name:
-        schema = {
-            # Name field is no longer allowed in config flow schemas
-            # pylint: disable-next=home-assistant-config-flow-name-field
-            probatio.Required(CONF_NAME, default=defaults.get(CONF_NAME)): str,
-            **schema,
+    return probatio.Schema(
+        {
+            probatio.Required(
+                CONF_MJPEG_URL, default=defaults.get(CONF_MJPEG_URL)
+            ): str,
+            probatio.Optional(
+                CONF_STILL_IMAGE_URL,
+                description={"suggested_value": defaults.get(CONF_STILL_IMAGE_URL)},
+            ): str,
+            probatio.Optional(
+                CONF_USERNAME,
+                description={"suggested_value": defaults.get(CONF_USERNAME)},
+            ): str,
+            probatio.Optional(
+                probatio.Secret(CONF_PASSWORD),
+                default=defaults.get(CONF_PASSWORD, ""),
+            ): str,
+            probatio.Optional(
+                CONF_VERIFY_SSL,
+                default=defaults.get(CONF_VERIFY_SSL, True),
+            ): bool,
         }
+    )
 
-    return probatio.Schema(schema)
+
+def _title_from_url(url: str) -> str:
+    """Return a title from the host, port and path of the stream URL."""
+    parsed = urlparse(url)
+    host = f"{parsed.hostname}:{parsed.port}" if parsed.port else parsed.hostname
+    return f"{host}{parsed.path.rstrip('/')}"
 
 
 def validate_url(
@@ -161,7 +160,7 @@ class MJPEGFlowHandler(ConfigFlow, domain=DOMAIN):
                 # Storing data in option, to allow for changing them later
                 # using an options flow.
                 return self.async_create_entry(
-                    title=user_input.get(CONF_NAME, user_input[CONF_MJPEG_URL]),
+                    title=_title_from_url(user_input[CONF_MJPEG_URL]),
                     data={},
                     options={
                         CONF_AUTHENTICATION: authentication,
@@ -177,7 +176,7 @@ class MJPEGFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=async_get_schema(user_input, show_name=True),
+            data_schema=async_get_schema(user_input),
             errors=errors,
         )
 
@@ -203,7 +202,6 @@ class MJPEGOptionsFlowHandler(OptionsFlow):
 
                 if not errors:
                     return self.async_create_entry(
-                        title=user_input.get(CONF_NAME, user_input[CONF_MJPEG_URL]),
                         data={
                             CONF_AUTHENTICATION: authentication,
                             CONF_MJPEG_URL: user_input[CONF_MJPEG_URL],

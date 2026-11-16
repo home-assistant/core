@@ -1,5 +1,7 @@
 """Support for VeSync Services."""
 
+from enum import StrEnum
+
 from pyvesync.utils.errors import VeSyncError
 
 from homeassistant.config_entries import ConfigEntryState
@@ -7,8 +9,14 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import DOMAIN, SERVICE_UPDATE_DEVS, VS_DEVICES, VS_DISCOVERY
+from .const import DOMAIN, VS_DEVICES, VS_DISCOVERY
 from .coordinator import VesyncConfigEntry
+
+
+class VeSyncService(StrEnum):
+    """Store keys for VeSync services."""
+
+    UPDATE_DEVICES = "update_devices"
 
 
 @callback
@@ -16,7 +24,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     """Handle for services."""
 
     hass.services.async_register(
-        DOMAIN, SERVICE_UPDATE_DEVS, async_new_device_discovery
+        DOMAIN, VeSyncService.UPDATE_DEVICES, async_new_device_discovery
     )
 
 

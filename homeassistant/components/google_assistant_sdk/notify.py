@@ -13,6 +13,8 @@ from .helpers import (
     default_language_code,
 )
 
+PARALLEL_UPDATES = 0
+
 # https://support.google.com/assistant/answer/9071582?hl=en
 LANG_TO_BROADCAST_COMMAND = {
     "en": ("broadcast {0}", "broadcast to {1} {0}"),

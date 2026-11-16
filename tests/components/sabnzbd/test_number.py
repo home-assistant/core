@@ -14,11 +14,11 @@ from pytest_homeassistant.common import (
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -54,10 +54,10 @@ async def test_number_set(
     """Test the sabnzbd number set."""
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_VALUE: input_number,
-            ATTR_ENTITY_ID: f"number.sabnzbd_{number}",
+            NumberServiceArgument.VALUE: input_number,
+            CommonServiceArgument.ENTITY_ID: f"number.sabnzbd_{number}",
         },
         blocking=True,
     )
@@ -89,10 +89,10 @@ async def test_number_exception(
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_VALUE: input_number,
-                ATTR_ENTITY_ID: f"number.sabnzbd_{number}",
+                NumberServiceArgument.VALUE: input_number,
+                CommonServiceArgument.ENTITY_ID: f"number.sabnzbd_{number}",
             },
             blocking=True,
         )

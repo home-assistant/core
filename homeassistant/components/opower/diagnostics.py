@@ -59,9 +59,7 @@ async def async_get_config_entry_diagnostics(
                     "last_changed": (
                         data.last_changed.isoformat() if data.last_changed else None
                     ),
-                    "last_updated": (
-                        data.last_updated.isoformat() if data.last_updated else None
-                    ),
+                    "last_updated": data.last_updated.isoformat(),
                 }
                 for data in coordinator.data.values()
                 for account in (data.account,)

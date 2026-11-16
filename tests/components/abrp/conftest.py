@@ -121,15 +121,21 @@ def mock_expires_at() -> float:
     return time.time() + 86400
 
 
+@pytest.fixture
+def id_token() -> str:
+    """Fixture for the stored OIDC id_token."""
+    return build_id_token()
+
+
 @pytest.fixture(name="token_entry")
-def mock_token_entry(expires_at: float) -> dict[str, Any]:
+def mock_token_entry(expires_at: float, id_token: str) -> dict[str, Any]:
     """Fixture for OAuth ``token`` data for a ConfigEntry."""
     return {
         "access_token": "mock-access-token",
         "refresh_token": "mock-refresh-token",
         "token_type": "Bearer",
         "expires_at": expires_at,
-        "id_token": build_id_token(),
+        "id_token": id_token,
     }
 
 
