@@ -240,9 +240,8 @@ class TodSensor(BinarySensorEntity):
         self._time_before += self._before_offset
 
     def _add_one_dst_aware_day(self, a_date: datetime, target_time: time) -> datetime:
-        """Add 24 hours (1 day) but account for DST."""
-        tentative_new_date = a_date + timedelta(days=1)
-        tentative_new_date = dt_util.as_local(tentative_new_date)
+        """Advance to the next local calendar day, accounting for DST."""
+        tentative_new_date = dt_util.as_local(a_date) + timedelta(days=1)
         tentative_new_date = tentative_new_date.replace(
             hour=target_time.hour, minute=target_time.minute
         )

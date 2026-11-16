@@ -4,10 +4,11 @@
   "categories": ["media_entertainment.music_radio_services"],
   "codeowners": ["@frenck", "@joostlek"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/spotify",
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["spotifyaio"],
-  "requirements": ["spotifyaio==2.0.2"]
+  "requirements": ["spotifyaio==2.1.0"]
 }

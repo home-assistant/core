@@ -1,6 +1,5 @@
 """The Z-Wave-Me WS integration."""
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -30,7 +29,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ZWaveMeConfigEntry) -> 
 
 
 async def async_setup_platforms(
-    hass: HomeAssistant, entry: ConfigEntry, controller: ZWaveMeController
+    hass: HomeAssistant, entry: ZWaveMeConfigEntry, controller: ZWaveMeController
 ) -> None:
     """Set up platforms."""
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

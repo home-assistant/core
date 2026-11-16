@@ -24,6 +24,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
 
 from .const import (
+    API_WS_URL,
     BLE_SCANNER_FIRMWARE_UNSUPPORTED_ISSUE_ID,
     BLE_SCANNER_MIN_FIRMWARE,
     CONF_BLE_SCANNER_MODE,
@@ -44,7 +45,6 @@ from .utils import (
     get_device_entry_gen,
     get_rpc_key_id,
     get_rpc_key_instances,
-    get_rpc_ws_url,
 )
 
 if TYPE_CHECKING:
@@ -188,7 +188,7 @@ def async_manage_outbound_websocket_incorrectly_enabled_issue(
     if (
         (ws_config := device.config.get("ws"))
         and ws_config["enable"]
-        and ws_config["server"] == get_rpc_ws_url(hass)
+        and (ws_config["server"] or "").endswith(API_WS_URL)
     ):
         ir.async_create_issue(
             hass,
@@ -339,6 +339,7 @@ def async_manage_ir_raw_receive_disabled_issue(
                 "ip_address": device.ip_address,
             },
             data={"entry_id": entry.entry_id},
+            config_entry_id=entry.entry_id,
         )
         return
 
@@ -501,10 +502,9 @@ class DisableOutboundWebSocketFlow(ShellyRpcRepairsFlow):
 class ShellyRpcMenuRepairsFlow(RepairsFlow):
     """Handler for an issue fixing flow with confirm and ignore menu."""
 
-    def __init__(self, device: RpcDevice, issue_id: str) -> None:
+    def __init__(self, device: RpcDevice) -> None:
         """Initialize."""
         self._device = device
-        self.issue_id = issue_id
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
@@ -609,12 +609,12 @@ async def async_create_fix_flow(
         return DisableOutboundWebSocketFlow(device)
 
     if "open_wifi_ap" in issue_id:
-        return DisableOpenWiFiApFlow(device, issue_id)
+        return DisableOpenWiFiApFlow(device)
 
     if "rtsp_disabled" in issue_id:
-        return EnableRtspFlow(device, issue_id)
+        return EnableRtspFlow(device)
 
     if "ir_raw_receive_disabled" in issue_id:
-        return EnableIrRawReceiveFlow(device, issue_id)
+        return EnableIrRawReceiveFlow(device)
 
     return ConfirmRepairFlow()

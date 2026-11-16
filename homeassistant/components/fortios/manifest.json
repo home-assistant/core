@@ -6,6 +6,7 @@
     "presence_location.network_presence"
   ],
   "codeowners": ["@kimfrellsen"],
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/fortios",
   "iot_class": "local_polling",
   "loggers": ["fortiosapi", "paramiko"],

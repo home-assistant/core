@@ -10,6 +10,7 @@
   "categories": ["appliances_cleaning.cooking"],
   "codeowners": ["@Invader444"],
   "config_flow": true,
+  "connectivity": ["bluetooth"],
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/chef_iq",
   "integration_type": "device",

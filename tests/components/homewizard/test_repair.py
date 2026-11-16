@@ -135,6 +135,7 @@ async def test_repair_shown_again_after_restart(
             "issues": [
                 {
                     "config_entry_id": None,
+                    "config_subentry_id": None,
                     "created": "2026-01-01T00:00:00+00:00",
                     "dismissed_version": None,
                     "domain": DOMAIN,

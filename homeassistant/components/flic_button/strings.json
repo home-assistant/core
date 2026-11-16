@@ -7,11 +7,11 @@
     "error": {
       "cannot_connect": "Failed to connect to the device. Make sure it is in range and try again.",
       "invalid_signature": "Invalid device signature during pairing.",
-      "pairing_failed": "Pairing failed. Please ensure the device is in pairing mode (LED flashing) and try again.",
+      "pairing_failed": "Pairing failed. Make sure your Flic is in pairing mode and try again.",
       "unknown": "An unexpected error occurred during pairing."
     },
     "progress": {
-      "wait_for_discovery": "Push and hold your Flic until it connects. This should take no longer than 10 seconds\u2026"
+      "wait_for_discovery": "Push and hold your Flic for 6 seconds to put it in pairing mode (1.5 seconds if it is new or was factory reset)\u2026"
     },
     "step": {
       "bluetooth_confirm": {
@@ -19,7 +19,7 @@
         "title": "Discovered Flic device"
       },
       "pair": {
-        "description": "Push and hold your Flic until it connects. This should take no longer than 10 seconds. Then submit this form to complete pairing with {name}.",
+        "description": "Push and hold {name} for 6 seconds to put it in pairing mode (1.5 seconds if it is new or was factory reset). It stays in pairing mode for up to 30 seconds. Then submit this form to pair.",
         "title": "Pair with Flic device"
       },
       "user": {

@@ -12,10 +12,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import BluesoundCoordinator
-from .entity import BluesoundEntity
+from .entity import BluesoundEntity, bluesound_exception_handler
 
 if TYPE_CHECKING:
     from .coordinator import BluesoundConfigEntry
+
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
@@ -95,6 +97,7 @@ class BluesoundButton(BluesoundEntity, ButtonEntity):
         self.entity_description = description
 
     @override
+    @bluesound_exception_handler
     async def async_press(self) -> None:
         """Handle the button press."""
         await self.entity_description.press_fn(self._player)

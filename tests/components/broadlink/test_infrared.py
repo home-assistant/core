@@ -80,6 +80,9 @@ async def test_infrared_send_command(
 
     assert mock_setup.api.send_data.call_count == 1
     assert mock_setup.api.send_data.call_args == call(expected_packet)
+    # NEC ends on its stop pulse. The packet must close with the off time a
+    # learned code ends with, or the device holds the last pulse too long.
+    assert expected_packet.endswith(b"\x00\x0d\x05")
 
 
 @pytest.mark.parametrize("error", [BroadlinkException("boom"), OSError("boom")])

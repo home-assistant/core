@@ -6,13 +6,13 @@ from aioshelly.exceptions import DeviceConnectionError, RpcCallError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.shelly.const import ATTR_KEY, ATTR_VALUE, DOMAIN
-from homeassistant.components.shelly.services import (
-    SERVICE_GET_KVS_VALUE,
-    SERVICE_SET_KVS_VALUE,
+from homeassistant.components.shelly.const import (
+    DOMAIN,
+    ShellyService,
+    ShellyServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_DEVICE_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
@@ -37,8 +37,11 @@ async def test_service_get_kvs_value(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_KVS_VALUE,
-        {ATTR_DEVICE_ID: device.id, ATTR_KEY: "test_key"},
+        ShellyService.GET_KVS_VALUE,
+        {
+            CommonServiceArgument.DEVICE_ID: device.id,
+            ShellyServiceArgument.KEY: "test_key",
+        },
         blocking=True,
         return_response=True,
     )
@@ -54,17 +57,18 @@ async def test_service_get_kvs_value_invalid_device(hass: HomeAssistant) -> None
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_KVS_VALUE,
-            {ATTR_DEVICE_ID: "invalid_device_id", ATTR_KEY: "test_key"},
+            ShellyService.GET_KVS_VALUE,
+            {
+                CommonServiceArgument.DEVICE_ID: "invalid_device_id",
+                ShellyServiceArgument.KEY: "test_key",
+            },
             blocking=True,
             return_response=True,
         )
 
     assert exc_info.value.translation_domain == HOMEASSISTANT_DOMAIN
     assert exc_info.value.translation_key == "service_device_not_found"
-    assert exc_info.value.translation_placeholders == {
-        ATTR_DEVICE_ID: "invalid_device_id"
-    }
+    assert exc_info.value.translation_placeholders == {"device_id": "invalid_device_id"}
 
 
 async def test_service_get_kvs_value_block_device(
@@ -78,8 +82,11 @@ async def test_service_get_kvs_value_block_device(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_KVS_VALUE,
-            {ATTR_DEVICE_ID: device.id, ATTR_KEY: "test_key"},
+            ShellyService.GET_KVS_VALUE,
+            {
+                CommonServiceArgument.DEVICE_ID: device.id,
+                ShellyServiceArgument.KEY: "test_key",
+            },
             blocking=True,
             return_response=True,
         )
@@ -113,8 +120,11 @@ async def test_service_get_kvs_value_exc(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_KVS_VALUE,
-            {ATTR_DEVICE_ID: device.id, ATTR_KEY: "test_key"},
+            ShellyService.GET_KVS_VALUE,
+            {
+                CommonServiceArgument.DEVICE_ID: device.id,
+                ShellyServiceArgument.KEY: "test_key",
+            },
             blocking=True,
             return_response=True,
         )
@@ -142,8 +152,11 @@ async def test_config_entry_not_loaded(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_KVS_VALUE,
-            {ATTR_DEVICE_ID: device.id, ATTR_KEY: "test_key"},
+            ShellyService.GET_KVS_VALUE,
+            {
+                CommonServiceArgument.DEVICE_ID: device.id,
+                ShellyServiceArgument.KEY: "test_key",
+            },
             blocking=True,
             return_response=True,
         )
@@ -171,8 +184,11 @@ async def test_service_get_kvs_value_sleeping_device(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_KVS_VALUE,
-            {ATTR_DEVICE_ID: device.id, ATTR_KEY: "test_key"},
+            ShellyService.GET_KVS_VALUE,
+            {
+                CommonServiceArgument.DEVICE_ID: device.id,
+                ShellyServiceArgument.KEY: "test_key",
+            },
             blocking=True,
             return_response=True,
         )
@@ -194,8 +210,12 @@ async def test_service_set_kvs_value(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_KVS_VALUE,
-        {ATTR_DEVICE_ID: device.id, ATTR_KEY: "test_key", ATTR_VALUE: "test_value"},
+        ShellyService.SET_KVS_VALUE,
+        {
+            CommonServiceArgument.DEVICE_ID: device.id,
+            ShellyServiceArgument.KEY: "test_key",
+            ShellyServiceArgument.VALUE: "test_value",
+        },
         blocking=True,
     )
 
@@ -218,8 +238,11 @@ async def test_service_get_kvs_value_device_not_initialized(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_KVS_VALUE,
-            {ATTR_DEVICE_ID: device.id, ATTR_KEY: "test_key"},
+            ShellyService.GET_KVS_VALUE,
+            {
+                CommonServiceArgument.DEVICE_ID: device.id,
+                ShellyServiceArgument.KEY: "test_key",
+            },
             blocking=True,
             return_response=True,
         )
@@ -229,33 +252,33 @@ async def test_service_get_kvs_value_device_not_initialized(
     assert exc_info.value.translation_placeholders == {"device": entry.title}
 
 
+@pytest.mark.usefixtures("mock_rpc_device")
 async def test_service_get_kvs_value_wrong_domain(
     hass: HomeAssistant,
-    mock_rpc_device: Mock,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test get_kvs_value when device has config entries from different domains."""
-    entry = await init_integration(hass, 2)
+    """Test get_kvs_value when the device belongs to a different domain."""
+    await init_integration(hass, 2)
 
-    device = dr.async_entries_for_config_entry(device_registry, entry.entry_id)[0]
-
-    # Create a config entry with different domain and add it to the device
     other_entry = MockConfigEntry(
         domain="other_domain",
         data={},
     )
     other_entry.add_to_hass(hass)
-
-    # Move the device to the other domain's config entry
-    device_registry.async_update_device(
-        device.id, new_config_entry_id=other_entry.entry_id
+    device = device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id,
+        identifiers={("other_domain", "other_device")},
+        name="Other device",
     )
 
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_KVS_VALUE,
-            {ATTR_DEVICE_ID: device.id, ATTR_KEY: "test_key"},
+            ShellyService.GET_KVS_VALUE,
+            {
+                CommonServiceArgument.DEVICE_ID: device.id,
+                ShellyServiceArgument.KEY: "test_key",
+            },
             blocking=True,
             return_response=True,
         )

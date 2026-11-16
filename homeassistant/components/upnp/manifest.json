@@ -4,6 +4,7 @@
   "categories": ["computers_network.routers_network"],
   "codeowners": ["@StevenLooman"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["network", "ssdp"],
   "documentation": "https://www.home-assistant.io/integrations/upnp",
   "integration_type": "device",

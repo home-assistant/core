@@ -208,9 +208,9 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="discovery_confirm",
             description_placeholders={
-                CONF_PRODUCT_TYPE: self.product_type,
-                CONF_SERIAL: self.serial,
-                CONF_IP_ADDRESS: self.ip_address,
+                "product_type": self.product_type,
+                "serial": self.serial,
+                "ip_address": self.ip_address,
             },
             errors=errors,
         )

@@ -30,12 +30,14 @@ from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    SwitchService,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -167,7 +169,10 @@ async def test_a_poll_right_after_a_command_waits_for_the_charger(
     freezer.tick(IDLE_INTERVAL - timedelta(seconds=1))
     async_fire_time_changed(hass)
     await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: CHARGING_SWITCH}, blocking=True
+        SWITCH_DOMAIN,
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: CHARGING_SWITCH},
+        blocking=True,
     )
     mock_charger.async_get_status.reset_mock()
 
@@ -197,8 +202,8 @@ async def test_a_persistent_link_is_held_through_a_command(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: CHARGING_SWITCH},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: CHARGING_SWITCH},
         blocking=True,
     )
 
@@ -235,8 +240,8 @@ async def test_a_failed_command_raises(
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: CHARGING_SWITCH},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: CHARGING_SWITCH},
             blocking=True,
         )
 
@@ -264,8 +269,8 @@ async def test_teardown_waits_for_a_command_in_flight(
     command = hass.async_create_task(
         hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: CHARGING_SWITCH},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: CHARGING_SWITCH},
             blocking=True,
         )
     )
@@ -296,8 +301,8 @@ async def test_a_command_queued_behind_teardown_is_refused(
     running = hass.async_create_task(
         hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: CHARGING_SWITCH},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: CHARGING_SWITCH},
             blocking=True,
         )
     )
@@ -306,8 +311,8 @@ async def test_a_command_queued_behind_teardown_is_refused(
     queued = hass.async_create_task(
         hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: CHARGING_SWITCH},
+            SwitchService.TURN_OFF,
+            {CommonServiceArgument.ENTITY_ID: CHARGING_SWITCH},
             blocking=True,
         )
     )
@@ -345,8 +350,8 @@ async def test_a_poll_waits_for_a_command_holding_the_link(
     command = hass.async_create_task(
         hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: CHARGING_SWITCH},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: CHARGING_SWITCH},
             blocking=True,
         )
     )
@@ -395,8 +400,8 @@ async def test_a_command_waits_for_a_poll_holding_the_link(
     command = hass.async_create_task(
         hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: CHARGING_SWITCH},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: CHARGING_SWITCH},
             blocking=True,
         )
     )

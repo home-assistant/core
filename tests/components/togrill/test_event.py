@@ -8,7 +8,7 @@ from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_i
 from syrupy.assertion import SnapshotAssertion
 from togrill_bluetooth.packets import PacketA1Notify, PacketA5Notify
 
-from homeassistant.components.event import ATTR_EVENT_TYPE
+from homeassistant.components.event import EventEntityStateAttribute
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -74,4 +74,6 @@ async def test_events(
     state = hass.states.get("event.pro_05_probe_1_event")
     assert state
     assert state.state == "2023-10-21T00:00:00.000+00:00"
-    assert state.attributes.get(ATTR_EVENT_TYPE) == slugify(message.name)
+    assert state.attributes.get(EventEntityStateAttribute.EVENT_TYPE) == slugify(
+        message.name
+    )

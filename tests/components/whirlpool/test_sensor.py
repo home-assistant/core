@@ -484,6 +484,7 @@ async def test_oven_cook_mode_sensor_kept_when_used_by_automation(
     issue = issue_registry.async_get_issue(DOMAIN, DEPRECATED_COOK_MODE_ISSUE_ID)
     assert issue is not None
     assert issue.translation_key == "deprecated_oven_cook_mode_scripts"
+    assert issue.breaks_in_ha_version == "2027.2.0"
     assert issue.config_entry_id == entry.entry_id
 
     await hass.config_entries.async_remove(entry.entry_id)
@@ -604,6 +605,7 @@ async def test_oven_target_temperature_sensor_kept_when_used_by_automation(
     issue = issue_registry.async_get_issue(DOMAIN, DEPRECATED_TARGET_TEMP_ISSUE_ID)
     assert issue is not None
     assert issue.translation_key == "deprecated_oven_target_temperature_scripts"
+    assert issue.breaks_in_ha_version == "2027.2.0"
     assert issue.config_entry_id == entry.entry_id
 
     await hass.config_entries.async_remove(entry.entry_id)

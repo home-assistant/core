@@ -12,14 +12,7 @@ from homeassistant import config as conf_util, core_config
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
 from homeassistant.components import persistent_notification
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
-from homeassistant.const import (
-    ATTR_ELEVATION,
-    ATTR_ENTITY_ID,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    CONF_EXCLUDE,
-    SERVICE_RELOAD,
-)
+from homeassistant.const import CONF_EXCLUDE, SERVICE_RELOAD, CommonServiceArgument
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -40,25 +33,27 @@ from homeassistant.helpers.target import (
 )
 from homeassistant.helpers.template import async_load_custom_templates
 
-from .const import DATA_STOP_HANDLER, DOMAIN, HomeAssistantService
-
-ATTR_ENTRY_ID = "entry_id"
-ATTR_SAFE_MODE = "safe_mode"
+from .const import (
+    DATA_STOP_HANDLER,
+    DOMAIN,
+    HomeAssistantService,
+    HomeAssistantServiceArgument,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-SCHEMA_UPDATE_ENTITY = probatio.Schema({ATTR_ENTITY_ID: cv.entity_ids})
+SCHEMA_UPDATE_ENTITY = probatio.Schema({CommonServiceArgument.ENTITY_ID: cv.entity_ids})
 SCHEMA_RELOAD_CONFIG_ENTRY = probatio.All(
     probatio.Schema(
         {
-            probatio.Optional(ATTR_ENTRY_ID): str,
+            probatio.Optional(HomeAssistantServiceArgument.ENTRY_ID): str,
             **cv.ENTITY_SERVICE_FIELDS,
         },
     ),
-    probatio.AtLeastOne(ATTR_ENTRY_ID, *cv.TARGET_ID_KEYS),
+    probatio.AtLeastOne(HomeAssistantServiceArgument.ENTRY_ID, *cv.TARGET_ID_KEYS),
 )
 SCHEMA_RESTART = probatio.Schema(
-    {probatio.Optional(ATTR_SAFE_MODE, default=False): bool}
+    {probatio.Optional(HomeAssistantServiceArgument.SAFE_MODE, default=False): bool}
 )
 
 SHUTDOWN_SERVICES = (HomeAssistantService.STOP, HomeAssistantService.RESTART)
@@ -112,7 +107,7 @@ async def _async_handle_turn_service(service: ServiceCall) -> None:
         data = dict(service.data)
 
         # ent_ids is a generator, convert it to a list.
-        data[ATTR_ENTITY_ID] = list(ent_ids)
+        data[CommonServiceArgument.ENTITY_ID] = list(ent_ids)
 
         tasks.append(
             hass.services.async_call(
@@ -171,7 +166,7 @@ async def _async_handle_core_service(call: ServiceCall) -> None:
         )
 
     if call.service == HomeAssistantService.RESTART:
-        if call.data[ATTR_SAFE_MODE]:
+        if call.data[HomeAssistantServiceArgument.SAFE_MODE]:
             await conf_util.async_enable_safe_mode(hass)
         stop_handler = hass.data[DATA_STOP_HANDLER]
         await stop_handler(hass, True)
@@ -190,7 +185,7 @@ async def _async_handle_update_service(call: ServiceCall) -> None:
                 user_id=call.context.user_id,
             )
 
-        for entity in call.data[ATTR_ENTITY_ID]:
+        for entity in call.data[CommonServiceArgument.ENTITY_ID]:
             if not user.permissions.check_entity(entity, POLICY_CONTROL):
                 raise Unauthorized(
                     context=call.context,
@@ -199,7 +194,10 @@ async def _async_handle_update_service(call: ServiceCall) -> None:
                     perm_category=CAT_ENTITIES,
                 )
 
-    tasks = [async_update_entity(hass, entity) for entity in call.data[ATTR_ENTITY_ID]]
+    tasks = [
+        async_update_entity(hass, entity)
+        for entity in call.data[CommonServiceArgument.ENTITY_ID]
+    ]
 
     if tasks:
         await asyncio.gather(*tasks)
@@ -225,11 +223,11 @@ async def _async_set_location(call: ServiceCall) -> None:
     """Service handler to set location."""
     hass = call.hass
     service_data = {
-        "latitude": call.data[ATTR_LATITUDE],
-        "longitude": call.data[ATTR_LONGITUDE],
+        "latitude": call.data[HomeAssistantServiceArgument.LATITUDE],
+        "longitude": call.data[HomeAssistantServiceArgument.LONGITUDE],
     }
 
-    if (elevation := call.data.get(ATTR_ELEVATION)) is not None:
+    if (elevation := call.data.get(HomeAssistantServiceArgument.ELEVATION)) is not None:
         service_data["elevation"] = elevation
 
     await hass.config.async_update(**service_data)
@@ -245,8 +243,8 @@ async def _async_handle_reload_config_entry(call: ServiceCall) -> None:
     """Service handler for reloading a config entry."""
     hass = call.hass
     reload_entries: set[str] = set()
-    if ATTR_ENTRY_ID in call.data:
-        reload_entries.add(call.data[ATTR_ENTRY_ID])
+    if HomeAssistantServiceArgument.ENTRY_ID in call.data:
+        reload_entries.add(call.data[HomeAssistantServiceArgument.ENTRY_ID])
     if TargetSelection(call.data).has_any_target:
         _LOGGER.warning(
             "Reloading a config entry by target is deprecated and will stop "
@@ -316,7 +314,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     service_schema = probatio.Schema(
         {
-            ATTR_ENTITY_ID: cv.entity_ids,
+            CommonServiceArgument.ENTITY_ID: cv.entity_ids,
             probatio.Optional(CONF_EXCLUDE): cv.TARGET_EXCLUDE_SCHEMA,
         },
         extra=probatio.ALLOW_EXTRA,
@@ -375,9 +373,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
         _async_set_location,
         probatio.Schema(
             {
-                probatio.Required(ATTR_LATITUDE): cv.latitude,
-                probatio.Required(ATTR_LONGITUDE): cv.longitude,
-                probatio.Optional(ATTR_ELEVATION): probatio.Coerce(int),
+                probatio.Required(HomeAssistantServiceArgument.LATITUDE): cv.latitude,
+                probatio.Required(HomeAssistantServiceArgument.LONGITUDE): cv.longitude,
+                probatio.Optional(
+                    HomeAssistantServiceArgument.ELEVATION
+                ): probatio.Coerce(int),
             }
         ),
     )

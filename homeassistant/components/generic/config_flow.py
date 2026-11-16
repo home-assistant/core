@@ -47,7 +47,7 @@ from homeassistant.const import (
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import section
 from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import config_validation as cv, template as template_helper
@@ -332,6 +332,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
         self.title = ""
 
     @staticmethod
+    @callback
     @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
@@ -526,10 +527,10 @@ class CameraImagePreview(HomeAssistantView):
         """Start a GET request."""
         _LOGGER.debug("processing GET request for flow_id=%s", flow_id)
         flow = cast(
-            GenericIPCamConfigFlow,
+            GenericIPCamConfigFlow | None,
             self.hass.config_entries.flow._progress.get(flow_id),  # noqa: SLF001
         ) or cast(
-            GenericOptionsFlowHandler,
+            GenericOptionsFlowHandler | None,
             self.hass.config_entries.options._progress.get(flow_id),  # noqa: SLF001
         )
         if not flow:
