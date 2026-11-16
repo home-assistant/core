@@ -115,12 +115,11 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
         """Release claimed clients and record this router's health."""
         shared: UbusSharedState = self.hass.data[DOMAIN]
         healthy = self.last_update_success
+        health_changed = shared.health.get(self.host, True) != healthy
+        shared.health[self.host] = healthy
         if not healthy:
             self.clear_clients()
-        if shared.health.get(self.host, True) != healthy:
-            shared.health[self.host] = healthy
-            # A health transition changes the availability of a tracker
-            # which no router reports, without any client list change.
+        if health_changed:
             async_dispatcher_send(self.hass, SIGNAL_CLIENTS_UPDATED)
 
     @callback
