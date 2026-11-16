@@ -10,7 +10,7 @@ from homeassistant.components.number import (
     NumberService,
     NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -56,7 +56,7 @@ async def test_set_target_percentage(
             NumberServiceArgument.VALUE: 100,
         },
         target={
-            ATTR_ENTITY_ID: "number.ohme_home_pro_target_percentage",
+            TargetKey.ENTITY_ID: "number.ohme_home_pro_target_percentage",
         },
         blocking=True,
     )
@@ -88,7 +88,7 @@ async def test_set_state_of_charge_input(
             NumberServiceArgument.VALUE: 100,
         },
         target={
-            ATTR_ENTITY_ID: "number.ohme_home_pro_state_of_charge_input",
+            TargetKey.ENTITY_ID: "number.ohme_home_pro_state_of_charge_input",
         },
         blocking=True,
     )
