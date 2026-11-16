@@ -49,7 +49,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: Modbus devices have no discovery protocol to update connection info from.
