@@ -41746,7 +41746,7 @@
     'device_id': <DeviceEntry identifiers=[('tuya', 'fcdadqsiax2gvnt0qld')]>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.yi_lu_dai_ji_liang_ci_bao_chi_tong_duan_qi_temperature',
     'has_entity_name': True,
     'hidden_by': None,
