@@ -43,10 +43,6 @@ TUYA_RESPONSE_QR_CODE = "qrcode"
 TUYA_RESPONSE_RESULT = "result"
 TUYA_RESPONSE_SUCCESS = "success"
 
-TUYA_ERROR_CODE_GENERIC = "-9999999"
-TUYA_ERROR_RATE_LIMITED = "API_QPS_LIMIT_OR_DEGRADE"
-TUYA_ERROR_SIGN_INVALID = "sign invalid"
-
 CELSIUS_ALIASES = {"°c", "c", "celsius", "℃"}
 FAHRENHEIT_ALIASES = {"°f", "f", "fahrenheit", "℉"}
 

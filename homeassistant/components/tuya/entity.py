@@ -14,20 +14,17 @@ from homeassistant.helpers.device_registry import ChildDeviceInfo, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, EntityDescription
 
-from .const import (
-    DOMAIN,
-    LOGGER,
-    TUYA_ERROR_CODE_GENERIC,
-    TUYA_ERROR_RATE_LIMITED,
-    TUYA_ERROR_SIGN_INVALID,
-    TUYA_HA_SIGNAL_UPDATE_ENTITY,
-)
+from .const import DOMAIN, LOGGER, TUYA_HA_SIGNAL_UPDATE_ENTITY
+
+_TUYA_ERROR_CODE_GENERIC = "-9999999"
+_TUYA_ERROR_RATE_LIMITED = "API_QPS_LIMIT_OR_DEGRADE"
+_TUYA_ERROR_SIGN_INVALID = "sign invalid"
 
 # Matched on (code, message) first, then on code alone (message None)
 _API_ERROR_TRANSLATION_KEYS: dict[tuple[str, str | None], str] = {
     ("2008", None): "command_not_accepted",
-    (TUYA_ERROR_CODE_GENERIC, TUYA_ERROR_SIGN_INVALID): "command_sign_invalid",
-    (TUYA_ERROR_CODE_GENERIC, TUYA_ERROR_RATE_LIMITED): "command_rate_limited",
+    (_TUYA_ERROR_CODE_GENERIC, _TUYA_ERROR_SIGN_INVALID): "command_sign_invalid",
+    (_TUYA_ERROR_CODE_GENERIC, _TUYA_ERROR_RATE_LIMITED): "command_rate_limited",
 }
 
 
