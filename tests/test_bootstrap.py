@@ -2027,6 +2027,42 @@ async def test_bootstrap_progress_failures_and_running_summary(
 
 @pytest.mark.parametrize("load_registries", [False])
 @patch("homeassistant.bootstrap.DEFAULT_INTEGRATIONS", set())
+async def test_bootstrap_progress_cancelled_entry_setup(hass: HomeAssistant) -> None:
+    """Test a setup cancelled during its config entry setup counts as failed."""
+    hass.set_state(CoreState.not_running)
+
+    async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+        # Cancel like a stage timeout, after the domain was added to components.
+        task = asyncio.current_task()
+        assert task is not None
+        task.cancel()
+        await asyncio.Event().wait()
+        return True
+
+    mock_integration(
+        hass,
+        MockModule(domain="integration_cancel", async_setup_entry=async_setup_entry),
+    )
+    mock_platform(hass, "integration_cancel.config_flow", None)
+    MockConfigEntry(domain="integration_cancel").add_to_hass(hass)
+    progress = _track_bootstrap_progress(hass)
+
+    with mock_config_flow("integration_cancel", config_entries.ConfigFlow):
+        await bootstrap._async_set_up_integrations(
+            hass, {"integration_cancel": {}}, monotonic()
+        )
+
+    _, final = progress[-1]
+    assert "integration_cancel" in hass.config.components
+    assert final["integrations"] == {
+        "total": 1,
+        "done": 1,
+        "failed": ["integration_cancel"],
+    }
+
+
+@pytest.mark.parametrize("load_registries", [False])
+@patch("homeassistant.bootstrap.DEFAULT_INTEGRATIONS", set())
 async def test_bootstrap_progress_unscheduled_dependency(hass: HomeAssistant) -> None:
     """Test a dependency no stage sets up does not keep progress below the total."""
     hass.set_state(CoreState.not_running)

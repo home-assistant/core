@@ -225,6 +225,14 @@ def _async_get_domains_pending_setup(hass: core.HomeAssistant) -> set[str]:
     return set(hass.data.get(_DATA_SETUP_DONE, ()))
 
 
+@callback
+def _async_get_setup_done_futures(
+    hass: core.HomeAssistant,
+) -> dict[str, asyncio.Future[bool]]:
+    """Return the setup done futures of domains scheduled by bootstrap."""
+    return hass.data.get(_DATA_SETUP_DONE, {})
+
+
 @core.callback
 def async_set_domains_to_be_loaded(hass: core.HomeAssistant, domains: set[str]) -> None:
     """Set domains that are going to be loaded from the config.

@@ -106,6 +106,7 @@ from .setup import (
     # used for internal tracking of which integrations are being set up.
     _async_dispatch_bootstrap_progress,
     _async_get_domains_pending_setup,
+    _async_get_setup_done_futures,
     _async_set_bootstrap_progress_source,
     _setup_started,
     async_get_setup_timings,
@@ -1063,6 +1064,7 @@ class _WatchPendingSetups:
         self._started = started
         self._phase = BootstrapPhase.PREPARING
         self._planned_domains: set[str] | None = None
+        self._failed_domains: set[str] = set()
         self._progress_handle: asyncio.TimerHandle | None = None
 
     def _async_watch(self) -> None:
@@ -1107,7 +1109,20 @@ class _WatchPendingSetups:
     def async_set_planned_domains(self, domains: set[str]) -> None:
         """Set the domains bootstrap will set up, including dependencies."""
         self._planned_domains = domains
+        setup_done_futures = _async_get_setup_done_futures(self._hass)
+        for domain in domains:
+            if (future := setup_done_futures.get(domain)) is not None:
+                future.add_done_callback(partial(self._async_setup_done, domain))
+            elif domain not in self._hass.config.components:
+                # Dropped during resolution, so setup was never scheduled.
+                self._failed_domains.add(domain)
         _async_dispatch_bootstrap_progress(self._hass)
+
+    @core.callback
+    def _async_setup_done(self, domain: str, future: asyncio.Future[bool]) -> None:
+        """Record the domain as failed if its setup attempt did not succeed."""
+        if future.cancelled() or future.exception() is not None or not future.result():
+            self._failed_domains.add(domain)
 
     @core.callback
     def async_set_phase(self, phase: BootstrapPhase) -> None:
@@ -1162,9 +1177,7 @@ class _WatchPendingSetups:
             pending = _async_get_domains_pending_setup(self._hass) & planned
             integrations["total"] = len(planned)
             integrations["done"] = len(planned) - len(pending)
-            integrations["failed"] = sorted(
-                planned - pending - self._hass.config.components
-            )
+            integrations["failed"] = sorted(self._failed_domains)
 
         return BootstrapProgress(
             phase=self._phase,
