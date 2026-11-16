@@ -8,6 +8,7 @@ import logging
 
 from aiohttp import ClientError, ClientResponseError
 from energyid_webhooks.client_v2 import WebhookClient
+from energyid_webhooks.exceptions import EnergyIDAuthenticationError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
@@ -125,6 +126,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> 
             if entry.runtime_data.unavailable_logged:
                 _LOGGER.info("Connection to EnergyID re-established")
                 entry.runtime_data.unavailable_logged = False
+        except EnergyIDAuthenticationError:
+            # The client signs in again on its own, and EnergyID refused it.
+            entry.async_start_reauth(hass)
         except (ClientError, OSError, RuntimeError) as err:
             if not entry.runtime_data.unavailable_logged:
                 _LOGGER.info("EnergyID is unavailable: %s", err)
