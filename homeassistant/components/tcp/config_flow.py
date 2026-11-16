@@ -1,6 +1,8 @@
 """Config flow for the TCP integration."""
 
+from collections.abc import Mapping
 import socket
+import ssl
 from typing import Any, override
 
 import probatio
@@ -23,7 +25,6 @@ from .const import (
     CONF_TITLE,
     CONF_VALUE_ON,
     DEFAULT_BUFFER_SIZE,
-    DEFAULT_NAME,
     DEFAULT_SSL,
     DEFAULT_TIMEOUT,
     DEFAULT_VERIFY_SSL,
@@ -32,7 +33,6 @@ from .const import (
 
 DATA_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_TITLE, default=DEFAULT_NAME): str,
         probatio.Required(CONF_HOST): str,
         probatio.Required(CONF_PORT): probatio.All(
             int, probatio.Range(min=1, max=65535)
@@ -53,30 +53,53 @@ DATA_SCHEMA = probatio.Schema(
 )
 
 
-def _can_connect(data: dict[str, Any]) -> bool:
-    """Return True if a TCP connection can be opened."""
+def _can_connect(data: Mapping[str, Any]) -> bool:
+    """Return True if the connection, including the TLS handshake, succeeds."""
+    host = data[CONF_HOST]
     try:
         with socket.create_connection(
-            (data[CONF_HOST], data[CONF_PORT]), data[CONF_TIMEOUT]
-        ):
-            return True
+            (host, data[CONF_PORT]), data[CONF_TIMEOUT]
+        ) as sock:
+            if data[CONF_SSL]:
+                context = ssl.create_default_context()
+                if not data[CONF_VERIFY_SSL]:
+                    context.check_hostname = False
+                    context.verify_mode = ssl.CERT_NONE
+                with context.wrap_socket(sock, server_hostname=host):
+                    pass
     except OSError:
         return False
+    return True
 
 
-def _match_keys(data: dict[str, Any]) -> dict[str, Any]:
-    """Return the keys that identify a duplicate entry."""
-    return {
-        CONF_HOST: data[CONF_HOST],
-        CONF_PORT: data[CONF_PORT],
-        CONF_PAYLOAD: data[CONF_PAYLOAD],
-    }
+def _identity(data: Mapping[str, Any]) -> tuple[Any, ...]:
+    """Return the values that define the entities of an entry."""
+    return tuple(
+        data.get(key) or None
+        for key in (
+            CONF_HOST,
+            CONF_PORT,
+            CONF_PAYLOAD,
+            CONF_VALUE_TEMPLATE,
+            CONF_VALUE_ON,
+        )
+    )
 
 
 class TcpConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for TCP."""
 
     VERSION = 1
+
+    def _is_duplicate(
+        self, data: Mapping[str, Any], ignore_entry_id: str | None = None
+    ) -> bool:
+        """Return True if another entry defines the same entities."""
+        return any(
+            entry.entry_id != ignore_entry_id
+            and _identity(entry.data) == _identity(data)
+            for entry in self._async_current_entries()
+        )
 
     @override
     async def async_step_user(
@@ -85,10 +108,13 @@ class TcpConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the user step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            self._async_abort_entries_match(_match_keys(user_input))
+            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
+            if self._is_duplicate(user_input):
+                return self.async_abort(reason="already_configured")
             if await self.hass.async_add_executor_job(_can_connect, user_input):
                 return self.async_create_entry(
-                    title=user_input[CONF_TITLE], data=user_input
+                    title=f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}",
+                    data=user_input,
                 )
             errors["base"] = "cannot_connect"
 
@@ -105,10 +131,11 @@ class TcpConfigFlow(ConfigFlow, domain=DOMAIN):
         entry = self._get_reconfigure_entry()
         errors: dict[str, str] = {}
         if user_input is not None:
+            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
+            if self._is_duplicate(user_input, entry.entry_id):
+                return self.async_abort(reason="already_configured")
             if await self.hass.async_add_executor_job(_can_connect, user_input):
-                return self.async_update_reload_and_abort(
-                    entry, title=user_input[CONF_TITLE], data=user_input
-                )
+                return self.async_update_reload_and_abort(entry, data=user_input)
             errors["base"] = "cannot_connect"
 
         return self.async_show_form(
@@ -121,7 +148,10 @@ class TcpConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import a config from YAML."""
-        self._async_abort_entries_match(_match_keys(import_data))
-        if not await self.hass.async_add_executor_job(_can_connect, import_data):
+        data = dict(import_data)
+        title = data.pop(CONF_TITLE, None) or f"{data[CONF_HOST]}:{data[CONF_PORT]}"
+        if self._is_duplicate(data):
+            return self.async_abort(reason="already_configured")
+        if not await self.hass.async_add_executor_job(_can_connect, data):
             return self.async_abort(reason="cannot_connect")
-        return self.async_create_entry(title=import_data[CONF_TITLE], data=import_data)
+        return self.async_create_entry(title=title, data=data)

@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 from homeassistant.components.homeassistant import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.components.tcp.const import (
     DEFAULT_BUFFER_SIZE,
+    DEFAULT_NAME,
     DEFAULT_TIMEOUT,
     DOMAIN,
 )
@@ -52,6 +53,22 @@ async def test_yaml_import(
     assert entry.data["buffer_size"] == DEFAULT_BUFFER_SIZE
     assert hass.states.get("sensor.tcp_sensor").state == "123"
     assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, "deprecated_yaml_tcp")
+    assert entry.title == DEFAULT_NAME
+
+
+async def test_yaml_import_keeps_name(
+    hass: HomeAssistant, mock_socket: MagicMock
+) -> None:
+    """Test the legacy name is used as the entry title."""
+    assert await async_setup_component(
+        hass, "sensor", {"sensor": {**YAML, "name": "Legacy"}}
+    )
+    await hass.async_block_till_done()
+
+    (entry,) = hass.config_entries.async_entries(DOMAIN)
+    assert entry.title == "Legacy"
+    assert "name" not in entry.data
+    assert hass.states.get("sensor.legacy").state == "123"
 
 
 async def test_yaml_import_cannot_connect(

@@ -8,6 +8,7 @@ from homeassistant.components.homeassistant import DOMAIN as HOMEASSISTANT_DOMAI
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_HOST,
+    CONF_NAME,
     CONF_PAYLOAD,
     CONF_PORT,
     CONF_SSL,
@@ -38,7 +39,7 @@ TCP_PLATFORM_SCHEMA: Final[dict[probatio.Marker, Any]] = {
     probatio.Required(CONF_PORT): probatio.Port(),
     probatio.Required(CONF_PAYLOAD): cv.string,
     probatio.Optional(CONF_BUFFER_SIZE, default=DEFAULT_BUFFER_SIZE): cv.positive_int,
-    probatio.Optional(CONF_TITLE, default=DEFAULT_NAME): cv.string,
+    probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     probatio.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     probatio.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     probatio.Optional(CONF_VALUE_ON): cv.string,
@@ -53,6 +54,7 @@ YAML_KEYS: Final = {str(key) for key in TCP_PLATFORM_SCHEMA}
 async def async_import_yaml(hass: HomeAssistant, config: ConfigType) -> None:
     """Import a YAML platform config and raise the deprecation issue."""
     data = {key: value for key, value in config.items() if key in YAML_KEYS}
+    data[CONF_TITLE] = data.pop(CONF_NAME, DEFAULT_NAME)
     if (template := data.get(CONF_VALUE_TEMPLATE)) is not None:
         data[CONF_VALUE_TEMPLATE] = template.template
 

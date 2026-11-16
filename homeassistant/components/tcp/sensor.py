@@ -37,7 +37,11 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the TCP sensor."""
-    async_add_entities([TcpSensor(hass, entry)], update_before_add=True)
+    entity = await hass.async_add_executor_job(TcpSensor, hass, entry)
+    async_add_entities(
+        [entity, TcpSensor(hass, entry)],
+        update_before_add=True,
+    )
 
 
 class TcpSensor(TcpEntity, SensorEntity):

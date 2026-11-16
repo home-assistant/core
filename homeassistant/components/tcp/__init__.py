@@ -12,7 +12,7 @@ type TcpConfigEntry = ConfigEntry[list[Platform]]
 async def async_setup_entry(hass: HomeAssistant, entry: TcpConfigEntry) -> None:
     """Set up TCP from a config entry."""
     platforms = [Platform.SENSOR]
-    if entry.data.get(CONF_VALUE_ON):
+    if CONF_VALUE_ON in entry.data:
         platforms.append(Platform.BINARY_SENSOR)
     entry.runtime_data = platforms
     await hass.config_entries.async_forward_entry_setups(entry, platforms)
@@ -20,4 +20,4 @@ async def async_setup_entry(hass: HomeAssistant, entry: TcpConfigEntry) -> None:
 
 async def async_unload_entry(hass: HomeAssistant, entry: TcpConfigEntry) -> None:
     """Unload a config entry."""
-    await hass.config_entries.async_unload_platforms(entry, entry.runtime_data)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, entry.runtime_data)
