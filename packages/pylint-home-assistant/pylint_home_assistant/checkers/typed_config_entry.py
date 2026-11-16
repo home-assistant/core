@@ -5,7 +5,7 @@ When an integration defines a typed config entry, such as
 everywhere it handles its own config entry, so ``entry.runtime_data`` stays
 typed. A plain ``ConfigEntry`` loses that.
 
-``W7460`` (``home-assistant-use-typed-config-entry``)
+``W7464`` (``home-assistant-use-typed-config-entry``)
 """
 
 from collections.abc import Iterator
@@ -65,7 +65,7 @@ class HassTypedConfigEntryChecker(BaseChecker):
     name = "home_assistant_typed_config_entry"
     priority = -1
     msgs = {
-        "W7460": (
+        "W7464": (
             "Use the integration's typed config entry (%s) instead of `ConfigEntry`",
             "home-assistant-use-typed-config-entry",
             (
