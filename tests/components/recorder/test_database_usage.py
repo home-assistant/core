@@ -35,8 +35,8 @@ from homeassistant.components.recorder.database_usage import (
     CACHE_TIME,
     REFRESH_INTERVAL,
     DatabaseUsage,
-    _attribute_lengths,
     _mysql_table_bytes,
+    _sqlite_table_bytes,
     _sqlite_wal_bytes,
     get_database_usage,
 )
@@ -482,12 +482,13 @@ async def test_database_usage_snapshot(
     """Test a purge during the report does not change what it reads."""
     await _record_data(hass)
 
-    def purge_during_report(*args: Any) -> dict[int | None, float]:
+    def purge_during_report(*args: Any) -> tuple[dict[str, int] | None, int, int]:
+        result = _sqlite_table_bytes(*args)
         _purge_entity(recorder_mock, "sensor.busy")
-        return _attribute_lengths(*args)
+        return result
 
     with patch(
-        "homeassistant.components.recorder.database_usage._attribute_lengths",
+        "homeassistant.components.recorder.database_usage._sqlite_table_bytes",
         side_effect=purge_during_report,
     ):
         usage = await recorder_mock.async_add_executor_job(
@@ -763,13 +764,14 @@ async def test_database_usage_slow_run(
     freezer.move_to(START)
     slow = timedelta(minutes=10)
 
-    def slow_attribute_lengths(*args: Any) -> dict[int | None, float]:
+    def slow_table_bytes(*args: Any) -> tuple[dict[str, int] | None, int, int]:
+        result = _sqlite_table_bytes(*args)
         freezer.tick(slow)
-        return _attribute_lengths(*args)
+        return result
 
     with patch(
-        "homeassistant.components.recorder.database_usage._attribute_lengths",
-        side_effect=slow_attribute_lengths,
+        "homeassistant.components.recorder.database_usage._sqlite_table_bytes",
+        side_effect=slow_table_bytes,
     ):
         report = await _async_usage(client, refresh=True)
 
