@@ -29,6 +29,8 @@ _LOGGER = logging.getLogger(__name__)
 class OPNsenseDeviceTrackerCoordinator(DataUpdateCoordinator[DeviceDetailsByMAC]):
     """Coordinator for OPNsense device tracker updates."""
 
+    config_entry: OPNsenseConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -46,7 +48,6 @@ class OPNsenseDeviceTrackerCoordinator(DataUpdateCoordinator[DeviceDetailsByMAC]
         )
         self.client = client
         self.interfaces = interfaces
-        self.tracked_devices: set[str] = set()
 
     def _get_mac_addrs(self, devices: list[DeviceDetails]) -> DeviceDetailsByMAC:
         """Create dict with mac address keys from list of devices."""

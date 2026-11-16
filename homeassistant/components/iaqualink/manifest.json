@@ -4,6 +4,7 @@
   "categories": ["water.pools_spas"],
   "codeowners": ["@flz"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dhcp": [{ "hostname": "iaqualink-*" }],
   "documentation": "https://www.home-assistant.io/integrations/iaqualink",
   "integration_type": "hub",

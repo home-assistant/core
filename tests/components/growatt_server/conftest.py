@@ -455,6 +455,6 @@ def mock_setup_entry():
     """Mock async_setup_entry to prevent actual setup during config flow tests."""
     with patch(
         "homeassistant.components.growatt_server.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock:
         yield mock

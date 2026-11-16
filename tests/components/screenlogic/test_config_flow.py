@@ -49,7 +49,7 @@ async def test_flow_discovery(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.screenlogic.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={GATEWAY_SELECT_KEY: "00:c0:33:01:01:01"}
@@ -113,7 +113,7 @@ async def test_flow_replace_ignored(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.screenlogic.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={GATEWAY_SELECT_KEY: "00:c0:33:01:01:01"}
@@ -148,7 +148,7 @@ async def test_flow_discover_error(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.screenlogic.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.screenlogic.config_flow.login.async_get_mac_address",
@@ -192,7 +192,7 @@ async def test_dhcp(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.screenlogic.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.screenlogic.config_flow.login.async_get_mac_address",
@@ -251,7 +251,7 @@ async def test_form_manual_entry(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.screenlogic.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.screenlogic.config_flow.login.async_get_mac_address",
@@ -305,7 +305,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.screenlogic.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch(
             "homeassistant.components.screenlogic.config_flow.login.async_get_mac_address",

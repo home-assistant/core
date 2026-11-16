@@ -176,6 +176,18 @@ async def test_next_departure(
     assert {key: sensor.attributes[key] for key in attributes} == attributes
 
 
+@pytest.mark.freeze_time("2026-10-19 09:00:00-04:00")
+@pytest.mark.usefixtures("feed_file")
+async def test_next_departure_in_feed_time_zone(hass: HomeAssistant) -> None:
+    """Test departures are chosen in the feed's time zone, not Home Assistant's."""
+    # 06:00 in Los Angeles is 09:00 at the agency, after the 08:00 departure.
+    await hass.config.async_set_time_zone("America/Los_Angeles")
+    await setup_yaml_sensor(hass, **DAY_ROUTE)
+
+    assert (sensor := hass.states.get(DAY_ENTITY_ID)) is not None
+    assert sensor.state == "2026-10-19T21:00:00+00:00"
+
+
 @pytest.mark.freeze_time("2026-10-19 07:30:00-04:00")
 @pytest.mark.usefixtures("feed_file")
 async def test_update(

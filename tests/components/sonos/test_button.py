@@ -7,7 +7,7 @@ import pytest
 from sonos_websocket import CLIP_ID_KEY
 from sonos_websocket.exception import SonosWebsocketError
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.media_player import (
     ATTR_MEDIA_ANNOUNCE,
     ATTR_MEDIA_CONTENT_ID,
@@ -15,7 +15,7 @@ from homeassistant.components.media_player import (
     DOMAIN as MP_DOMAIN,
     SERVICE_PLAY_MEDIA,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
@@ -49,8 +49,8 @@ async def test_cancel_announcement_no_prior(
     ):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: CANCEL_ANNOUNCEMENT_BUTTON},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: CANCEL_ANNOUNCEMENT_BUTTON},
             blocking=True,
         )
 
@@ -71,8 +71,8 @@ async def test_cancel_announcement(
     sonos_websocket.cancel_clip = AsyncMock(return_value=[{"success": 1}, {}])
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: CANCEL_ANNOUNCEMENT_BUTTON},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: CANCEL_ANNOUNCEMENT_BUTTON},
         blocking=True,
     )
     sonos_websocket.cancel_clip.assert_called_once_with("clip-123")
@@ -93,8 +93,8 @@ async def test_cancel_announcement_no_clip_id_from_announce_response(
     ):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: CANCEL_ANNOUNCEMENT_BUTTON},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: CANCEL_ANNOUNCEMENT_BUTTON},
             blocking=True,
         )
 
@@ -139,7 +139,7 @@ async def test_cancel_announcement_errors(
     with pytest.raises(HomeAssistantError, match=error_match):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: CANCEL_ANNOUNCEMENT_BUTTON},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: CANCEL_ANNOUNCEMENT_BUTTON},
             blocking=True,
         )

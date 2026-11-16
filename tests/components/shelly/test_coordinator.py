@@ -1,10 +1,12 @@
 """Tests for Shelly coordinator."""
 
 from datetime import timedelta
+import logging
+from typing import Any
 from unittest.mock import AsyncMock, Mock, call, patch
 
 from aioshelly.const import MODEL_2PM_G3, MODEL_BULB, MODEL_BUTTON1
-from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
+from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import (
@@ -57,7 +59,8 @@ from . import (
     register_entity,
 )
 
-RECONNECT_ERROR = "An error occurred while reconnecting to Test name"
+RECONNECT_ERROR = "The device could not be reconnected"
+SHELLY_LOGGER = "homeassistant.components.shelly"
 RELAY_BLOCK_ID = 0
 LIGHT_BLOCK_ID = 2
 SENSOR_BLOCK_ID = 3
@@ -256,6 +259,7 @@ async def test_block_polling_connection_error(
     freezer: FrozenDateTimeFactory,
     mock_block_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test block device polling connection error."""
     monkeypatch.setattr(
@@ -277,15 +281,36 @@ async def test_block_polling_connection_error(
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE
+    assert (
+        SHELLY_LOGGER,
+        logging.INFO,
+        "Test name is unavailable: The device cannot be reached",
+    ) in caplog.record_tuples
 
 
-@pytest.mark.parametrize("exc", [DeviceConnectionError, MacAddressMismatchError])
+@pytest.mark.parametrize(
+    ("exc", "message"),
+    [
+        pytest.param(
+            DeviceConnectionError,
+            "Test name is unavailable: The device cannot be reached",
+            id="unreachable",
+        ),
+        pytest.param(
+            MacAddressMismatchError,
+            "Test name is unavailable: A different device responded at 10.10.10.11",
+            id="mac_mismatch",
+        ),
+    ],
+)
 async def test_block_rest_update_connection_error(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_block_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
     exc: Exception,
+    message: str,
 ) -> None:
     """Test block REST update connection error."""
     entity_id = register_entity(hass, BINARY_SENSOR_DOMAIN, "test_name_cloud", "cloud")
@@ -302,6 +327,7 @@ async def test_block_rest_update_connection_error(
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE
+    assert (SHELLY_LOGGER, logging.INFO, message) in caplog.record_tuples
 
 
 async def test_block_sleeping_device_no_periodic_updates(
@@ -445,6 +471,146 @@ async def test_rpc_reload_on_cfg_change(
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id) is None
+
+
+def _inject_config_changed(
+    monkeypatch: pytest.MonkeyPatch, mock_rpc_device: Mock, component: str
+) -> None:
+    """Inject a config_changed event for a component."""
+    inject_rpc_device_event(
+        monkeypatch,
+        mock_rpc_device,
+        {
+            "events": [
+                {
+                    "component": component,
+                    "event": "config_changed",
+                    "restart_required": False,
+                    "ts": 1668522399.2,
+                    "cfg_rev": 16,
+                },
+            ],
+            "ts": 1668522399.2,
+        },
+    )
+
+
+@pytest.mark.parametrize(
+    ("component", "changed", "reload_count"),
+    [
+        pytest.param("plugs_ui", {"leds"}, 0, id="plugs_ui"),
+        pytest.param("powerstrip_ui", {"leds"}, 0, id="powerstrip_ui"),
+        pytest.param("switch:0", {"in_locked"}, 0, id="switch_state_key"),
+        pytest.param("switch:0", set(), 0, id="switch_no_change"),
+        pytest.param("switch:0", {"name"}, 1, id="switch_other_key"),
+        pytest.param("switch:0", {"in_locked", "name"}, 1, id="switch_mixed_keys"),
+        pytest.param("cover:0", {"in_locked"}, 0, id="cover_state_key"),
+        pytest.param("cover:0", {"name"}, 1, id="cover_other_key"),
+    ],
+)
+async def test_rpc_cfg_change_refresh(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    component: str,
+    changed: set[str],
+    reload_count: int,
+) -> None:
+    """Test RPC config change refreshes the component config, reloads if needed."""
+    mock_rpc_device.update_component_config.return_value = changed
+    await init_integration(hass, 2)
+    assert mock_rpc_device.initialize.call_count == 1
+
+    _inject_config_changed(monkeypatch, mock_rpc_device, component)
+    await hass.async_block_till_done()
+
+    mock_rpc_device.update_component_config.assert_awaited_once_with(component)
+
+    freezer.tick(timedelta(seconds=ENTRY_RELOAD_COOLDOWN))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_rpc_device.initialize.call_count == 1 + reload_count
+
+
+@pytest.mark.parametrize(
+    "event",
+    [
+        pytest.param(
+            {"event": "config_changed", "ts": 1668522399.2}, id="no_component"
+        ),
+        pytest.param(
+            {"component": "sys", "event": "config_changed", "ts": 1668522399.2},
+            id="unsupported_component",
+        ),
+        pytest.param(
+            {"component": "switch:1", "event": "component_added", "ts": 1668522399.2},
+            id="component_added",
+        ),
+        pytest.param(
+            {
+                "component": "switch:0",
+                "event": "component_removed",
+                "ts": 1668522399.2,
+            },
+            id="component_removed",
+        ),
+    ],
+)
+async def test_rpc_reload_without_refresh(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    event: dict[str, Any],
+) -> None:
+    """Test RPC config or component change reloads the entry without a refresh."""
+    await init_integration(hass, 2)
+
+    inject_rpc_device_event(
+        monkeypatch, mock_rpc_device, {"events": [event], "ts": 1668522399.2}
+    )
+    await hass.async_block_till_done()
+
+    freezer.tick(timedelta(seconds=ENTRY_RELOAD_COOLDOWN))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    mock_rpc_device.update_component_config.assert_not_awaited()
+    assert mock_rpc_device.initialize.call_count == 2
+
+
+@pytest.mark.parametrize(
+    ("exception", "reauth_flows"),
+    [
+        (DeviceConnectionError, 0),
+        (RpcCallError(999), 0),
+        (InvalidAuthError, 1),
+    ],
+)
+async def test_rpc_cfg_change_refresh_error(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    exception: Exception,
+    reauth_flows: int,
+) -> None:
+    """Test RPC config change when refreshing the component config fails."""
+    mock_rpc_device.update_component_config.side_effect = exception
+    await init_integration(hass, 2)
+
+    _inject_config_changed(monkeypatch, mock_rpc_device, "powerstrip_ui")
+    await hass.async_block_till_done()
+
+    freezer.tick(timedelta(seconds=ENTRY_RELOAD_COOLDOWN))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # No reload, a reconnect fetches the full config
+    assert mock_rpc_device.initialize.call_count == 1
+    assert len(hass.config_entries.flow.async_progress()) == reauth_flows
 
 
 async def test_rpc_reload_with_invalid_auth(
@@ -798,6 +964,7 @@ async def test_rpc_reconnect_error(
     freezer: FrozenDateTimeFactory,
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
     exc: Exception,
 ) -> None:
     """Test RPC reconnect error."""
@@ -819,6 +986,11 @@ async def test_rpc_reconnect_error(
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE
+    assert (
+        SHELLY_LOGGER,
+        logging.INFO,
+        f"Test name is unavailable: {RECONNECT_ERROR}",
+    ) in caplog.record_tuples
 
 
 def _inject_ota_event(
@@ -946,11 +1118,33 @@ async def test_rpc_error_running_connected_events(
     assert state.state == STATE_ON
 
 
+@pytest.mark.parametrize(
+    ("exc", "level", "message"),
+    [
+        pytest.param(
+            DeviceConnectionError,
+            logging.INFO,
+            "Test name is unavailable: The device cannot be reached",
+            id="unreachable",
+        ),
+        pytest.param(
+            RpcCallError(999),
+            logging.ERROR,
+            "Error fetching Test name data: An error occurred while retrieving "
+            "data from Test name",
+            id="rpc_call_error",
+        ),
+    ],
+)
 async def test_rpc_polling_connection_error(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+    exc: Exception,
+    level: int,
+    message: str,
 ) -> None:
     """Test RPC polling connection error."""
     entity_id = register_entity(hass, SENSOR_DOMAIN, "test_name_rssi", "wifi-rssi")
@@ -959,9 +1153,7 @@ async def test_rpc_polling_connection_error(
     monkeypatch.setattr(
         mock_rpc_device,
         "poll",
-        AsyncMock(
-            side_effect=DeviceConnectionError,
-        ),
+        AsyncMock(side_effect=exc),
     )
 
     assert (state := hass.states.get(entity_id))
@@ -971,6 +1163,7 @@ async def test_rpc_polling_connection_error(
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE
+    assert (SHELLY_LOGGER, level, message) in caplog.record_tuples
 
 
 async def test_rpc_polling_disconnected(
@@ -978,6 +1171,7 @@ async def test_rpc_polling_disconnected(
     freezer: FrozenDateTimeFactory,
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test RPC polling device disconnected."""
     entity_id = register_entity(hass, SENSOR_DOMAIN, "test_name_rssi", "wifi-rssi")
@@ -990,6 +1184,34 @@ async def test_rpc_polling_disconnected(
 
     await mock_polling_rpc_update(hass, freezer)
 
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE
+    assert (
+        SHELLY_LOGGER,
+        logging.INFO,
+        "Test name is unavailable: The device is disconnected",
+    ) in caplog.record_tuples
+
+
+async def test_rpc_polling_not_initialized(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC polling is skipped while the device is re-initializing."""
+    entity_id = register_entity(hass, SENSOR_DOMAIN, "test_name_rssi", "wifi-rssi")
+    await init_integration(hass, 2)
+
+    # The websocket is connected but initialization has not completed yet
+    monkeypatch.setattr(mock_rpc_device, "initialized", False)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "-63"
+
+    await mock_polling_rpc_update(hass, freezer)
+
+    mock_rpc_device.poll.assert_not_called()
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE
 
@@ -1142,7 +1364,12 @@ async def test_block_sleeping_device_connection_error(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert "Sleeping device Test name did not update" in caplog.text
+    assert (
+        SHELLY_LOGGER,
+        logging.INFO,
+        "Test name is unavailable: Sleeping device Test name did not update "
+        f"within {sleep_period} seconds interval",
+    ) in caplog.record_tuples
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE
 
@@ -1196,7 +1423,12 @@ async def test_rpc_sleeping_device_connection_error(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert "Sleeping device Test name did not update" in caplog.text
+    assert (
+        SHELLY_LOGGER,
+        logging.INFO,
+        "Test name is unavailable: Sleeping device Test name did not update "
+        f"within {sleep_period} seconds interval",
+    ) in caplog.record_tuples
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE
 
@@ -1267,6 +1499,53 @@ async def test_xmod_model_lookup(
     assert device.model == xmod_model
 
 
+@pytest.mark.parametrize(
+    ("xmod_info", "manufacturer"),
+    [
+        pytest.param(
+            {"m": "Test XMOD manufacturer"}, "Test XMOD manufacturer", id="xmod"
+        ),
+        pytest.param(
+            {"n": "Test XMOD model name"}, "Shelly", id="xmod_no_manufacturer"
+        ),
+        pytest.param({}, "Shelly", id="no_xmod"),
+    ],
+)
+async def test_xmod_manufacturer_lookup(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    xmod_info: dict[str, str],
+    manufacturer: str,
+) -> None:
+    """Test XMOD manufacturer look-up."""
+    monkeypatch.setattr(mock_rpc_device, "xmod_info", xmod_info)
+    entry = await init_integration(hass, 2)
+
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, dr.format_mac(entry.unique_id)), entry.entry_id
+    )
+    assert device
+    assert device.manufacturer == manufacturer
+
+
+@pytest.mark.usefixtures("mock_sleepy_rpc_device")
+async def test_sleeping_device_manufacturer(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test not initialized sleeping device manufacturer falls back to Shelly."""
+    entry = await init_integration(hass, 2, sleep_period=1000)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, dr.format_mac(entry.unique_id)), entry.entry_id
+    )
+    assert device
+    assert device.manufacturer == "Shelly"
+
+
 async def test_sub_device_area_from_main_device(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
@@ -1274,7 +1553,7 @@ async def test_sub_device_area_from_main_device(
     device_registry: DeviceRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test Shelly sub-device area is set to main device area when created."""
+    """Test Shelly sub-devices inherit the main device area."""
     device_fixture = await async_load_json_object_fixture(hass, "2pm_gen3.json", DOMAIN)
     monkeypatch.setattr(mock_rpc_device, "shelly", device_fixture["shelly"])
     monkeypatch.setattr(mock_rpc_device, "status", device_fixture["status"])
@@ -1296,7 +1575,6 @@ async def test_sub_device_area_from_main_device(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # verify sub-devices have the same area as main device
     for relay_index in range(2):
         entity_id = f"switch.living_room_test_name_output_{relay_index}"
         assert hass.states.get(entity_id) is not None
@@ -1304,8 +1582,9 @@ async def test_sub_device_area_from_main_device(
         assert entry
 
         device_entry = device_registry.async_get(entry.device_id)
-        assert device_entry
-        assert device_entry.area_id == "living_room"
+        assert isinstance(device_entry, dr.ChildDeviceEntry)
+        assert device_entry.area_id is None
+        assert dr.async_get_effective_area_id(hass, device_entry) == "living_room"
 
 
 @pytest.mark.parametrize("restart_required", [True, False])

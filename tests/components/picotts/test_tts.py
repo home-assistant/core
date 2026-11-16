@@ -3,9 +3,8 @@
 from http import HTTPStatus
 import io
 from pathlib import Path
-import subprocess
 from typing import Any
-from unittest.mock import MagicMock, mock_open, patch
+from unittest.mock import MagicMock
 import wave
 
 import pytest
@@ -30,17 +29,6 @@ async def get_tts_audio(hass: HomeAssistant) -> bytes:
     return b"".join([chunk async for chunk in stream.async_stream_result()])
 
 
-def get_empty_wav() -> bytes:
-    """Get bytes for empty WAV file."""
-    with io.BytesIO() as wav_io:
-        with wave.open(wav_io, "wb") as wav_file:
-            wav_file.setframerate(22050)
-            wav_file.setsampwidth(2)
-            wav_file.setnchannels(1)
-            wav_file.writeframes(bytes(22050 * 2))
-        return wav_io.getvalue()
-
-
 @pytest.fixture(autouse=True)
 def tts_mutagen_mock_fixture_autouse(tts_mutagen_mock: MagicMock) -> None:
     """Mock writing tags."""
@@ -62,6 +50,7 @@ async def setup_internal_url(hass: HomeAssistant) -> None:
 @pytest.fixture
 async def setup_picotts(
     hass: HomeAssistant,
+    mock_nanotts: MagicMock,
     config: dict[str, Any],
 ) -> None:
     """Set up picotts integration via config entry."""
@@ -69,12 +58,7 @@ async def setup_picotts(
     config_entry = MockConfigEntry(domain=DOMAIN, data=default_config | config)
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.picotts.shutil.which",
-        return_value="/usr/local/bin/pico2wave",
-    ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
 
@@ -84,109 +68,86 @@ def config_fixture() -> dict[str, Any]:
     return {}
 
 
+@pytest.mark.usefixtures("setup_picotts")
 @pytest.mark.parametrize(
-    ("config", "entity_id", "extra_service_data"),
+    ("config", "entity_id", "extra_service_data", "expected_voice"),
     [
-        ({}, "tts.pico_tts_en_us", {}),
-        ({tts.CONF_LANG: "de-DE"}, "tts.pico_tts_de_de", {}),
-        ({}, "tts.pico_tts_en_us", {tts.ATTR_LANGUAGE: "de-DE"}),
-        ({tts.CONF_LANG: "en-GB"}, "tts.pico_tts_en_gb", {}),
-        ({}, "tts.pico_tts_en_us", {tts.ATTR_LANGUAGE: "en-GB"}),
+        ({}, "tts.pico_tts_en_us", {}, "en-US"),
+        ({tts.CONF_LANG: "de-DE"}, "tts.pico_tts_de_de", {}, "de-DE"),
+        ({}, "tts.pico_tts_en_us", {tts.ATTR_LANGUAGE: "de-DE"}, "de-DE"),
+        ({tts.CONF_LANG: "en-GB"}, "tts.pico_tts_en_gb", {}, "en-GB"),
+        ({}, "tts.pico_tts_en_us", {tts.ATTR_LANGUAGE: "en-GB"}, "en-GB"),
     ],
 )
 async def test_tts_service(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     service_calls: list[ServiceCall],
-    setup_picotts: None,
+    mock_nanotts: MagicMock,
     entity_id: str,
     extra_service_data: dict[str, Any],
+    expected_voice: str,
 ) -> None:
     """Test tts speak service with various language configurations."""
-    mock_result = MagicMock()
-    mock_result.returncode = 0
-    with (
-        patch(
-            "homeassistant.components.picotts.tts.subprocess.run",
-            return_value=mock_result,
-        ),
-        patch(
-            "homeassistant.components.picotts.tts.open",
-            mock_open(read_data=get_empty_wav()),
-        ),
-    ):
-        await hass.services.async_call(
-            tts.DOMAIN,
-            "speak",
-            {
-                ATTR_ENTITY_ID: entity_id,
-                tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
-                tts.ATTR_MESSAGE: "There is a person at the front door.",
-                **extra_service_data,
-            },
-            blocking=True,
-        )
+    await hass.services.async_call(
+        tts.DOMAIN,
+        "speak",
+        {
+            ATTR_ENTITY_ID: entity_id,
+            tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
+            tts.ATTR_MESSAGE: "There is a person at the front door.",
+            **extra_service_data,
+        },
+        blocking=True,
+    )
 
-        assert len(service_calls) == 2
+    assert len(service_calls) == 2
+    assert (
+        await retrieve_media(
+            hass, hass_client, service_calls[1].data[ATTR_MEDIA_CONTENT_ID]
+        )
+        == HTTPStatus.OK
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_nanotts.speak.assert_called_once_with(
+        "There is a person at the front door.", voice=expected_voice
+    )
+
+
+@pytest.mark.usefixtures("setup_picotts")
+async def test_get_tts_audio_wav(
+    hass: HomeAssistant,
+    mock_nanotts: MagicMock,
+) -> None:
+    """Test raw PCM from the engine is wrapped in a WAV container."""
+    # Use the entity directly, since the TTS stream converts to MP3
+    entity = hass.data[tts.DOMAIN].get_entity("tts.pico_tts_en_us")
+    extension, data = await entity.async_get_tts_audio("Hello world", "en-US", {})
+
+    assert extension == "wav"
+    with io.BytesIO(data) as wav_io, wave.open(wav_io, "rb") as wav_file:
+        assert wav_file.getframerate() == 16000
+        assert wav_file.getsampwidth() == 2
+        assert wav_file.getnchannels() == 1
         assert (
-            await retrieve_media(
-                hass, hass_client, service_calls[1].data[ATTR_MEDIA_CONTENT_ID]
-            )
-            == HTTPStatus.OK
+            wav_file.readframes(wav_file.getnframes())
+            == mock_nanotts.speak.return_value
         )
-        await hass.async_block_till_done(wait_background_tasks=True)
 
 
-async def test_get_tts_audio_subprocess_error(
+@pytest.mark.usefixtures("setup_picotts")
+async def test_get_tts_audio_error(
     hass: HomeAssistant,
-    setup_picotts: None,
+    mock_nanotts: MagicMock,
 ) -> None:
-    """Test get_tts_audio when subprocess returns non-zero exit code."""
-    with (
-        patch(
-            "homeassistant.components.picotts.tts.subprocess.run",
-            side_effect=subprocess.CalledProcessError(1, "pico2wave"),
-        ),
-        pytest.raises(HomeAssistantError) as exc_info,
-    ):
+    """Test get_tts_audio when synthesis fails."""
+    mock_nanotts.speak.side_effect = RuntimeError("pico_putTextUtf8 failed")
+
+    with pytest.raises(HomeAssistantError) as exc_info:
         await get_tts_audio(hass)
 
-    assert exc_info.value.translation_key == "returncode_error"
-    assert exc_info.value.translation_placeholders == {"returncode": "1"}
-
-
-async def test_get_tts_audio_timeout(
-    hass: HomeAssistant,
-    setup_picotts: None,
-) -> None:
-    """Test get_tts_audio when pico2wave times out."""
-    with (
-        patch(
-            "homeassistant.components.picotts.tts.subprocess.run",
-            side_effect=subprocess.TimeoutExpired("pico2wave", 30),
-        ),
-        pytest.raises(HomeAssistantError) as exc_info,
-    ):
-        await get_tts_audio(hass)
-
-    assert exc_info.value.translation_key == "timeout_error"
-
-
-async def test_get_tts_audio_file_read_error(
-    hass: HomeAssistant,
-    setup_picotts: None,
-) -> None:
-    """Test get_tts_audio when reading the wav file fails."""
-    with (
-        patch(
-            "homeassistant.components.picotts.tts.subprocess.run",
-        ),
-        patch(
-            "homeassistant.components.picotts.tts.open",
-            side_effect=FileNotFoundError("No such file"),
-        ),
-        pytest.raises(HomeAssistantError) as exc_info,
-    ):
-        await get_tts_audio(hass)
-
-    assert exc_info.value.translation_key == "file_read_error"
+    assert exc_info.value.translation_key == "synthesis_error"
+    assert exc_info.value.translation_placeholders == {
+        "error": "pico_putTextUtf8 failed"
+    }

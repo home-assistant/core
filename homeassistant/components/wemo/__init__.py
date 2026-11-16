@@ -83,16 +83,26 @@ CONFIG_SCHEMA = probatio.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up for WeMo devices."""
-    async_setup_services(hass)
+def _start_registry_and_responder() -> tuple[
+    pywemo.SubscriptionRegistry, pywemo.ssdp.DiscoveryResponder
+]:
+    """Start the subscription registry and the discovery responder."""
     # Keep track of WeMo device subscriptions for push updates
     registry = pywemo.SubscriptionRegistry()
-    await hass.async_add_executor_job(registry.start)
+    registry.start()
 
     # Respond to discovery requests from WeMo devices.
     discovery_responder = pywemo.ssdp.DiscoveryResponder(registry.port)
-    await hass.async_add_executor_job(discovery_responder.start)
+    discovery_responder.start()
+    return registry, discovery_responder
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up for WeMo devices."""
+    async_setup_services(hass)
+    registry, discovery_responder = await hass.async_add_executor_job(
+        _start_registry_and_responder
+    )
 
     def _on_hass_stop(_: Event) -> None:
         discovery_responder.stop()

@@ -86,8 +86,8 @@ async def validate_input(hass: HomeAssistant, data):
 class NexiaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Nexia."""
 
-    VERSION = 1
-    MINOR_VERSION = 2
+    VERSION = 2
+    MINOR_VERSION = 1
 
     @override
     async def async_step_user(
@@ -155,7 +155,7 @@ class NexiaConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=REAUTH_SCHEMA,
-            description_placeholders={CONF_USERNAME: reauth_entry.data[CONF_USERNAME]},
+            description_placeholders={"username": reauth_entry.data[CONF_USERNAME]},
             errors=errors,
         )
 

@@ -146,7 +146,7 @@ class MikrotikFlowHandler(ConfigFlow, domain=DOMAIN):
                 return self.async_update_reload_and_abort(reauth_entry, data=user_input)
 
         return self.async_show_form(
-            description_placeholders={CONF_USERNAME: reauth_entry.data[CONF_USERNAME]},
+            description_placeholders={"username": reauth_entry.data[CONF_USERNAME]},
             step_id="reauth_confirm",
             data_schema=probatio.Schema(
                 {

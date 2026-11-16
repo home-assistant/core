@@ -11,6 +11,7 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_SHOW_ON_MAP
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.httpx_client import get_async_client
 
 
 async def test_duplicate_error(
@@ -104,9 +105,7 @@ async def test_invalid_sensor(hass: HomeAssistant, mock_luftdaten: MagicMock) ->
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_luftdaten")
-async def test_step_user(
-    hass: HomeAssistant,
-) -> None:
+async def test_step_user(hass: HomeAssistant, mock_luftdaten_class: MagicMock) -> None:
     """Test that the user step works."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -130,3 +129,6 @@ async def test_step_user(
         CONF_SHOW_ON_MAP: True,
     }
     assert result2["result"].unique_id == "12345"
+    mock_luftdaten_class.assert_called_once_with(
+        12345, httpx_client=get_async_client(hass)
+    )

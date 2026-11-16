@@ -35,7 +35,7 @@ async def test_async_step_user_with_found_devices(hass: HomeAssistant) -> None:
         )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    with patch("homeassistant.components.leaone.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.leaone.async_setup_entry", return_value=None):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={"address": "5F:5A:5C:52:D3:94"},
@@ -65,7 +65,7 @@ async def test_async_step_user_device_added_between_steps(hass: HomeAssistant) -
     )
     entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.leaone.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.leaone.async_setup_entry", return_value=None):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={"address": "5F:5A:5C:52:D3:94"},
@@ -120,7 +120,7 @@ async def test_user_setup_replaces_ignored_device(hass: HomeAssistant) -> None:
     # Verify the ignored device is in the dropdown
     assert "5F:5A:5C:52:D3:94" in result["data_schema"].schema["address"].container
 
-    with patch("homeassistant.components.leaone.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.leaone.async_setup_entry", return_value=None):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={"address": "5F:5A:5C:52:D3:94"},

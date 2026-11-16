@@ -76,7 +76,7 @@
         'unit_of_measurement': None,
       }),
     }),
-    'entry_version': '2.4',
+    'entry_version': '2.5',
     'options': dict({
     }),
     'state': 'loaded',

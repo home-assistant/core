@@ -32,10 +32,9 @@ from homeassistant.components.input_number import (
 )
 from homeassistant.components.lawn_mower import (
     DOMAIN as LAWN_MOWER_DOMAIN,
-    SERVICE_DOCK,
-    SERVICE_START_MOWING,
     LawnMowerActivity,
     LawnMowerEntityFeature,
+    LawnMowerService,
 )
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.select import ATTR_OPTIONS
@@ -44,6 +43,7 @@ from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
     SERVICE_RETURN_TO_BASE,
     SERVICE_START,
+    SERVICE_STOP,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     VacuumActivity,
@@ -60,6 +60,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_OPEN,
+    CommonServiceArgument,
 )
 from homeassistant.core import Event, HomeAssistant, split_entity_id
 from homeassistant.util import dt as dt_util
@@ -388,13 +389,16 @@ async def test_vacuum_set_state_with_returnhome_and_start_support(
     assert events[-1].data[ATTR_VALUE] is None
 
 
-async def test_vacuum_set_state_without_returnhome_and_start_support(
+async def test_vacuum_set_state_without_returnhome_support(
     hass: HomeAssistant, hk_driver, events: list[Event]
 ) -> None:
-    """Test if Vacuum accessory and HA are updated accordingly."""
+    """Test a Vacuum accessory without return home support stops the vacuum."""
     entity_id = "vacuum.roomba"
+    attrs = {
+        ATTR_SUPPORTED_FEATURES: VacuumEntityFeature.START | VacuumEntityFeature.STOP
+    }
 
-    hass.states.async_set(entity_id, None)
+    hass.states.async_set(entity_id, VacuumActivity.IDLE, attrs)
     await hass.async_block_till_done()
 
     acc = Vacuum(hass, hk_driver, "Vacuum", entity_id, 2, None)
@@ -405,31 +409,31 @@ async def test_vacuum_set_state_without_returnhome_and_start_support(
 
     assert acc.char_on.value == 0
 
-    hass.states.async_set(entity_id, STATE_ON)
+    hass.states.async_set(entity_id, VacuumActivity.CLEANING, attrs)
     await hass.async_block_till_done()
     assert acc.char_on.value == 1
 
-    hass.states.async_set(entity_id, STATE_OFF)
+    hass.states.async_set(entity_id, VacuumActivity.IDLE, attrs)
     await hass.async_block_till_done()
     assert acc.char_on.value == 0
 
     # Set from HomeKit
-    call_turn_on = async_mock_service(hass, VACUUM_DOMAIN, SERVICE_TURN_ON)
-    call_turn_off = async_mock_service(hass, VACUUM_DOMAIN, SERVICE_TURN_OFF)
+    call_start = async_mock_service(hass, VACUUM_DOMAIN, SERVICE_START)
+    call_stop = async_mock_service(hass, VACUUM_DOMAIN, SERVICE_STOP)
 
     acc.char_on.client_update_value(1)
     await hass.async_block_till_done()
     assert acc.char_on.value == 1
-    assert call_turn_on
-    assert call_turn_on[0].data[ATTR_ENTITY_ID] == entity_id
+    assert call_start
+    assert call_start[0].data[ATTR_ENTITY_ID] == entity_id
     assert len(events) == 1
     assert events[-1].data[ATTR_VALUE] is None
 
     acc.char_on.client_update_value(0)
     await hass.async_block_till_done()
     assert acc.char_on.value == 0
-    assert call_turn_off
-    assert call_turn_off[0].data[ATTR_ENTITY_ID] == entity_id
+    assert call_stop
+    assert call_stop[0].data[ATTR_ENTITY_ID] == entity_id
     assert len(events) == 2
     assert events[-1].data[ATTR_VALUE] is None
 
@@ -481,14 +485,16 @@ async def test_lawn_mower_set_state(
     assert acc.char_on.value == 0
 
     # Set from HomeKit
-    call_turn_on = async_mock_service(hass, LAWN_MOWER_DOMAIN, SERVICE_START_MOWING)
-    call_turn_off = async_mock_service(hass, LAWN_MOWER_DOMAIN, SERVICE_DOCK)
+    call_turn_on = async_mock_service(
+        hass, LAWN_MOWER_DOMAIN, LawnMowerService.START_MOWING
+    )
+    call_turn_off = async_mock_service(hass, LAWN_MOWER_DOMAIN, LawnMowerService.DOCK)
 
     acc.char_on.client_update_value(1)
     await hass.async_block_till_done()
     assert acc.char_on.value == 1
     assert call_turn_on
-    assert call_turn_on[0].data[ATTR_ENTITY_ID] == entity_id
+    assert call_turn_on[0].data[CommonServiceArgument.ENTITY_ID] == entity_id
     assert len(events) == 1
     assert events[-1].data[ATTR_VALUE] is None
 
@@ -496,7 +502,7 @@ async def test_lawn_mower_set_state(
     await hass.async_block_till_done()
     assert acc.char_on.value == 0
     assert call_turn_off
-    assert call_turn_off[0].data[ATTR_ENTITY_ID] == entity_id
+    assert call_turn_off[0].data[CommonServiceArgument.ENTITY_ID] == entity_id
     assert len(events) == 2
     assert events[-1].data[ATTR_VALUE] is None
 

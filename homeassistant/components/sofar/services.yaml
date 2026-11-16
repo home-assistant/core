@@ -100,3 +100,42 @@ set_passive_mode_power:
           max: 100000
           unit_of_measurement: W
           mode: box
+
+set_battery_cutoffs:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: sofar
+    on_grid_discharge_cutoff_soc:
+      required: true
+      selector:
+        number:
+          min: 10
+          max: 100
+          unit_of_measurement: "%"
+          mode: box
+    off_grid_discharge_cutoff_soc:
+      required: true
+      selector:
+        number:
+          min: 10
+          max: 30
+          unit_of_measurement: "%"
+          mode: box
+    off_grid_recovery_soc:
+      required: true
+      selector:
+        number:
+          min: 15
+          max: 100
+          unit_of_measurement: "%"
+          mode: box
+    charge_cutoff_soc:
+      selector:
+        number:
+          min: 60
+          max: 100
+          unit_of_measurement: "%"
+          mode: box

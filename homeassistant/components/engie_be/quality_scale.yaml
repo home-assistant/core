@@ -47,7 +47,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: Cloud account-bound integration; no discovery surface.
@@ -66,9 +66,9 @@ rules:
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
-  exception-translations: todo
-  icon-translations: todo
-  reconfiguration-flow: todo
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow: done
   repair-issues: todo
   stale-devices: todo
 

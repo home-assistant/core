@@ -1238,15 +1238,13 @@ async def websocket_provision_smart_start_node(
             )
 
         # Create an empty device
-        device = dev_reg.async_get_or_create_device(
+        device = dev_reg.async_get_or_create(
             config_entry_id=entry.entry_id,
-            device_info=dr.DeviceInfo(
-                identifiers={device_identifier},
-                name=device_name,
-                manufacturer=manufacturer,
-                model=model,
-                via_device_id=via_device_id,
-            ),
+            identifiers={device_identifier},
+            name=device_name,
+            manufacturer=manufacturer,
+            model=model,
+            via_device_id=via_device_id,
         )
         dev_reg.async_update_device(
             device.id, area_id=msg.get(AREA_ID), name_by_user=device_name
@@ -2413,7 +2411,6 @@ async def websocket_get_log_config(
     driver: Driver,
 ) -> None:
     """Get log configuration for the Z-Wave JS driver."""
-    assert client and client.driver
     connection.send_result(
         msg[ID],
         dataclasses.asdict(driver.log_config),
@@ -2475,7 +2472,6 @@ async def websocket_data_collection_status(
     driver: Driver,
 ) -> None:
     """Return data collection preference and status."""
-    assert client and client.driver
     result = {
         OPTED_IN: entry.data.get(CONF_DATA_COLLECTION_OPTED_IN),
         ENABLED: await driver.async_is_statistics_enabled(),

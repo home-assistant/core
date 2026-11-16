@@ -18,13 +18,13 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: SMHIConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator, fire_coordinator = entry.runtime_data
+    runtime_data = entry.runtime_data
 
     return async_redact_data(
         {
             "entry_data": entry.data,
-            "current": coordinator.current,
-            "fire_current": fire_coordinator.fire_current,
+            "current": runtime_data.coordinator.current,
+            "fire_current": runtime_data.fire_coordinator.fire_current,
         },
         TO_REDACT,
     )

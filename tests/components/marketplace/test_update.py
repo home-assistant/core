@@ -28,12 +28,12 @@ from homeassistant.components.marketplace.exceptions import (
 from homeassistant.components.marketplace.repositories.base import Repository
 from homeassistant.components.marketplace.update import RepositoryUpdateEntity
 from homeassistant.components.update import (
-    ATTR_VERSION,
     DOMAIN as UPDATE_DOMAIN,
-    SERVICE_INSTALL,
+    UpdateService,
+    UpdateServiceArgument,
 )
 from homeassistant.config_entries import SOURCE_SYSTEM
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -211,6 +211,49 @@ async def test_update_entity_follows_its_repository_on_github(
     ]
 
 
+async def test_update_entity_follows_the_repository_page(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    response_mocker: MarketplaceResponses,
+    integration_update_entity: str,
+) -> None:
+    """Test the update entity learns what the repository page fetched from GitHub."""
+    assert hass.states.get(integration_update_entity).state == "off"
+    url = f"https://api.github.com/repos/{REPOSITORY_INTEGRATION}/releases"
+    response_mocker.add(
+        url,
+        mocked_response(
+            url,
+            json_content=[
+                {
+                    "tag_name": version,
+                    "name": version,
+                    "body": "",
+                    "prerelease": False,
+                    "draft": False,
+                    "assets": [],
+                }
+                for version in ("2.0.0", "1.0.0")
+            ],
+        ),
+    )
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "marketplace/repository/info",
+            "repository_id": REPOSITORY_INTEGRATION_ID,
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"]["available_version"] == "2.0.0"
+    state = hass.states.get(integration_update_entity)
+    assert state.state == "on"
+    assert state.attributes["latest_version"] == "2.0.0"
+
+
 @pytest.mark.usefixtures("stored_repositories")
 async def test_update_device_info(
     hass: HomeAssistant,
@@ -350,10 +393,10 @@ async def test_install(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
+        UpdateService.INSTALL,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_VERSION: category_test_data["version_update"],
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            UpdateServiceArgument.VERSION: category_test_data["version_update"],
         },
         blocking=True,
     )
@@ -386,7 +429,10 @@ async def test_install_update_from_the_catalog(
     aioclient_mock.mock_calls.clear()
 
     await hass.services.async_call(
-        UPDATE_DOMAIN, SERVICE_INSTALL, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        UPDATE_DOMAIN,
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
+        blocking=True,
     )
 
     assert (
@@ -445,7 +491,10 @@ async def test_install_newest_commit_of_a_custom_repository(
         patch.object(installed_repository, "update_repository"),
     ):
         await hass.services.async_call(
-            UPDATE_DOMAIN, SERVICE_INSTALL, {ATTR_ENTITY_ID: entity_id}, blocking=True
+            UPDATE_DOMAIN,
+            UpdateService.INSTALL,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
+            blocking=True,
         )
 
     requested = [str(call[1]) for call in aioclient_mock.mock_calls]
@@ -475,7 +524,10 @@ async def test_install_update_of_a_custom_repository(
 
     with patch.object(marketplace.repositories, "is_default", return_value=False):
         await hass.services.async_call(
-            UPDATE_DOMAIN, SERVICE_INSTALL, {ATTR_ENTITY_ID: entity_id}, blocking=True
+            UPDATE_DOMAIN,
+            UpdateService.INSTALL,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
+            blocking=True,
         )
 
     assert (
@@ -509,7 +561,10 @@ async def test_template_update_writes_only_the_template(
         get_marketplace(hass).repositories, "is_default", return_value=False
     ):
         await hass.services.async_call(
-            UPDATE_DOMAIN, SERVICE_INSTALL, {ATTR_ENTITY_ID: entity_id}, blocking=True
+            UPDATE_DOMAIN,
+            UpdateService.INSTALL,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
+            blocking=True,
         )
 
     assert sorted(
@@ -529,8 +584,11 @@ async def test_install_already_installed_version(
     ):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: integration_update_entity, ATTR_VERSION: "1.0.0"},
+            UpdateService.INSTALL,
+            {
+                CommonServiceArgument.ENTITY_ID: integration_update_entity,
+                UpdateServiceArgument.VERSION: "1.0.0",
+            },
             blocking=True,
         )
 
@@ -542,10 +600,10 @@ async def test_install_refuses_a_version_that_is_a_path(
     with pytest.raises(ServiceValidationError, match="not a version"):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
+            UpdateService.INSTALL,
             {
-                ATTR_ENTITY_ID: integration_update_entity,
-                ATTR_VERSION: "../../other/repo/archive/refs/heads/main",
+                CommonServiceArgument.ENTITY_ID: integration_update_entity,
+                UpdateServiceArgument.VERSION: "../../other/repo/archive/refs/heads/main",
             },
             blocking=True,
         )
@@ -561,8 +619,8 @@ async def test_install_without_an_update(
     ):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: integration_update_entity},
+            UpdateService.INSTALL,
+            {CommonServiceArgument.ENTITY_ID: integration_update_entity},
             blocking=True,
         )
 
@@ -583,8 +641,11 @@ async def test_install_failure_without_its_own_message(
     ):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: integration_update_entity, ATTR_VERSION: "2.0.0"},
+            UpdateService.INSTALL,
+            {
+                CommonServiceArgument.ENTITY_ID: integration_update_entity,
+                UpdateServiceArgument.VERSION: "2.0.0",
+            },
             blocking=True,
         )
 
@@ -609,8 +670,11 @@ async def test_install_version_without_a_manifest(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: integration_update_entity, ATTR_VERSION: "3.0.0"},
+            UpdateService.INSTALL,
+            {
+                CommonServiceArgument.ENTITY_ID: integration_update_entity,
+                UpdateServiceArgument.VERSION: "3.0.0",
+            },
             blocking=True,
         )
 
@@ -635,12 +699,47 @@ async def test_install_version_requiring_a_newer_core(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: integration_update_entity, ATTR_VERSION: "3.0.0"},
+            UpdateService.INSTALL,
+            {
+                CommonServiceArgument.ENTITY_ID: integration_update_entity,
+                UpdateServiceArgument.VERSION: "3.0.0",
+            },
             blocking=True,
         )
 
     assert exc_info.value.translation_key == "requires_newer_home_assistant"
+
+
+@pytest.mark.parametrize("github_token", [None])
+async def test_install_catalog_update_requiring_a_newer_core(
+    hass: HomeAssistant,
+    integration_update_entity: str,
+    response_mocker: MarketplaceResponses,
+) -> None:
+    """Test the update the catalog announces is refused when it needs a newer core."""
+    repository = get_marketplace(hass).repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    repository.data.last_version = "2.0.0"
+    # The catalog leaves the minimum version out of the manifest it carries
+    assert repository.repository_manifest.homeassistant is None
+    url = f"https://raw.githubusercontent.com/{REPOSITORY_INTEGRATION}/2.0.0/hacs.json"
+    response_mocker.add(
+        url,
+        mocked_response(
+            url, content=json.dumps({"homeassistant": "9999.99.99"}).encode()
+        ),
+        keep=True,
+    )
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            UPDATE_DOMAIN,
+            UpdateService.INSTALL,
+            {CommonServiceArgument.ENTITY_ID: integration_update_entity},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "requires_newer_home_assistant"
+    assert repository.data.installed_version == "1.0.0"
 
 
 async def test_install_download_failure(
@@ -665,8 +764,11 @@ async def test_install_download_failure(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: integration_update_entity, ATTR_VERSION: "2.0.0"},
+            UpdateService.INSTALL,
+            {
+                CommonServiceArgument.ENTITY_ID: integration_update_entity,
+                UpdateServiceArgument.VERSION: "2.0.0",
+            },
             blocking=True,
         )
 
@@ -723,8 +825,11 @@ async def test_install_without_github(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: integration_update_entity, ATTR_VERSION: "2.0.0"},
+        UpdateService.INSTALL,
+        {
+            CommonServiceArgument.ENTITY_ID: integration_update_entity,
+            UpdateServiceArgument.VERSION: "2.0.0",
+        },
         blocking=True,
     )
 
@@ -750,8 +855,11 @@ async def test_install_needs_accepted_warning(
     ):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: integration_update_entity, ATTR_VERSION: "2.0.0"},
+            UpdateService.INSTALL,
+            {
+                CommonServiceArgument.ENTITY_ID: integration_update_entity,
+                UpdateServiceArgument.VERSION: "2.0.0",
+            },
             blocking=True,
         )
 
@@ -764,8 +872,11 @@ async def test_install_needs_accepted_warning(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: integration_update_entity, ATTR_VERSION: "2.0.0"},
+        UpdateService.INSTALL,
+        {
+            CommonServiceArgument.ENTITY_ID: integration_update_entity,
+            UpdateServiceArgument.VERSION: "2.0.0",
+        },
         blocking=True,
     )
 
@@ -788,8 +899,11 @@ async def test_install_needs_warning_accepted_by_caller(
     ):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: integration_update_entity, ATTR_VERSION: "2.0.0"},
+            UpdateService.INSTALL,
+            {
+                CommonServiceArgument.ENTITY_ID: integration_update_entity,
+                UpdateServiceArgument.VERSION: "2.0.0",
+            },
             blocking=True,
             context=Context(user_id=second_admin_user.id),
         )
@@ -798,8 +912,11 @@ async def test_install_needs_warning_accepted_by_caller(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: integration_update_entity, ATTR_VERSION: "2.0.0"},
+        UpdateService.INSTALL,
+        {
+            CommonServiceArgument.ENTITY_ID: integration_update_entity,
+            UpdateServiceArgument.VERSION: "2.0.0",
+        },
         blocking=True,
         context=Context(user_id=hass_admin_user.id),
     )
@@ -843,8 +960,11 @@ async def test_install_rate_limited_without_github(
     ):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: integration_update_entity, ATTR_VERSION: "2.0.0"},
+            UpdateService.INSTALL,
+            {
+                CommonServiceArgument.ENTITY_ID: integration_update_entity,
+                UpdateServiceArgument.VERSION: "2.0.0",
+            },
             blocking=True,
         )
     await hass.async_block_till_done()

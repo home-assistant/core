@@ -12,18 +12,21 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
+from . import setup_integration
+
+pytestmark = pytest.mark.usefixtures("entity_registry_enabled_by_default")
+
 
 @pytest.mark.usefixtures("mock_my_pv_client")
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_number(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -31,12 +34,8 @@ async def test_number(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test successful setup of the number platform."""
-
     with patch("homeassistant.components.my_pv.PLATFORMS", [Platform.NUMBER]):
-        mock_config_entry.add_to_hass(hass)
-
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+        await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
@@ -47,14 +46,9 @@ async def test_number_unavailable_not_connected(
     mock_my_pv_client: AsyncMock,
 ) -> None:
     """Test if a number is unavailable when not connected."""
+    mock_my_pv_client.connected = False
 
-    with patch("homeassistant.components.my_pv.PLATFORMS", [Platform.NUMBER]):
-        mock_config_entry.add_to_hass(hass)
-
-        mock_my_pv_client.connected = False
-
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get("number.my_pv_ac_elwa_2_boost_target_temperature")
     assert state.state == STATE_UNAVAILABLE
@@ -66,14 +60,9 @@ async def test_number_unavailable_setup_value_none(
     mock_my_pv_client: AsyncMock,
 ) -> None:
     """Test if a number is unavailable when setup value is None."""
+    mock_my_pv_client.get_setup_value = Mock(return_value=None)
 
-    with patch("homeassistant.components.my_pv.PLATFORMS", [Platform.NUMBER]):
-        mock_config_entry.add_to_hass(hass)
-
-        mock_my_pv_client.get_setup_value = Mock(return_value=None)
-
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get("number.my_pv_ac_elwa_2_boost_target_temperature")
     assert state.state == STATE_UNAVAILABLE
@@ -85,11 +74,7 @@ async def test_number_set_value(
     mock_my_pv_client: AsyncMock,
 ) -> None:
     """Test setting value."""
-    with patch("homeassistant.components.my_pv.PLATFORMS", [Platform.NUMBER]):
-        mock_config_entry.add_to_hass(hass)
-
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get("number.my_pv_ac_elwa_2_boost_target_temperature")
     assert state.state == "55.0"
@@ -98,10 +83,10 @@ async def test_number_set_value(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: "number.my_pv_ac_elwa_2_boost_target_temperature",
-            ATTR_VALUE: 70.0,
+            CommonServiceArgument.ENTITY_ID: "number.my_pv_ac_elwa_2_boost_target_temperature",
+            NumberServiceArgument.VALUE: 70.0,
         },
         blocking=True,
     )
@@ -117,23 +102,17 @@ async def test_number_set_value_returns_false(
     mock_my_pv_client: AsyncMock,
 ) -> None:
     """Test for HomeAssistantError when set_setup_value returns false."""
-    with patch("homeassistant.components.my_pv.PLATFORMS", [Platform.NUMBER]):
-        mock_config_entry.add_to_hass(hass)
+    await setup_integration(hass, mock_config_entry)
 
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    mock_my_pv_client.set_setup_value.return_value = False
 
-    mock_my_pv_client.set_setup_value = AsyncMock(return_value=False)
-
-    with (
-        pytest.raises(HomeAssistantError),
-    ):
+    with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: "number.my_pv_ac_elwa_2_boost_target_temperature",
-                ATTR_VALUE: 70,
+                CommonServiceArgument.ENTITY_ID: "number.my_pv_ac_elwa_2_boost_target_temperature",
+                NumberServiceArgument.VALUE: 70,
             },
             blocking=True,
         )
@@ -159,23 +138,17 @@ async def test_number_set_value_raises_error(
     expected_ha_error: type[HomeAssistantError],
 ) -> None:
     """Test for HomeAssistantError when set_setup_value raises error."""
-    with patch("homeassistant.components.my_pv.PLATFORMS", [Platform.NUMBER]):
-        mock_config_entry.add_to_hass(hass)
-
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
 
     mock_my_pv_client.set_setup_value.side_effect = error
 
-    with (
-        pytest.raises(expected_ha_error),
-    ):
+    with pytest.raises(expected_ha_error):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: "number.my_pv_ac_elwa_2_boost_target_temperature",
-                ATTR_VALUE: 70,
+                CommonServiceArgument.ENTITY_ID: "number.my_pv_ac_elwa_2_boost_target_temperature",
+                NumberServiceArgument.VALUE: 70,
             },
             blocking=True,
         )

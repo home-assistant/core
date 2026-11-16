@@ -7,7 +7,6 @@ from pytradfri.api.aiocoap_api import APIFactory, APIRequestProtocol
 from pytradfri.command import Command
 from pytradfri.device import Device
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -71,17 +70,15 @@ async def async_setup_entry(
         raise ConfigEntryNotReady from exc
 
     dev_reg = dr.async_get(hass)
-    dev_reg.async_get_or_create_device(
+    dev_reg.async_get_or_create(
         config_entry_id=entry.entry_id,
-        device_info=dr.DeviceInfo(
-            connections=set(),
-            identifiers={(DOMAIN, entry.data[CONF_GATEWAY_ID])},
-            manufacturer="IKEA of Sweden",
-            name="Gateway",
-            # They just have 1 gateway model. Type is not exposed yet.
-            model="E1526",
-            sw_version=gateway_info.firmware_version,
-        ),
+        connections=set(),
+        identifiers={(DOMAIN, entry.data[CONF_GATEWAY_ID])},
+        manufacturer="IKEA of Sweden",
+        name="Gateway",
+        # They just have 1 gateway model. Type is not exposed yet.
+        model="E1526",
+        sw_version=gateway_info.firmware_version,
     )
 
     remove_stale_devices(hass, entry, devices)
@@ -130,7 +127,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: TradfriConfigEntry) -> 
 
 @callback
 def remove_stale_devices(
-    hass: HomeAssistant, config_entry: ConfigEntry, devices: list[Device]
+    hass: HomeAssistant, config_entry: TradfriConfigEntry, devices: list[Device]
 ) -> None:
     """Remove stale devices from device registry."""
     device_registry = dr.async_get(hass)
@@ -169,7 +166,9 @@ def remove_stale_devices(
             device_registry.async_remove_device(device_entry.id)
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: TradfriConfigEntry
+) -> None:
     """Migrate old entry."""
     LOGGER.debug(
         "Migrating Tradfri configuration from version %s.%s",
@@ -191,7 +190,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
 
 def migrate_config_entry_and_identifiers(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: TradfriConfigEntry
 ) -> None:
     """Migrate old non-unique identifiers to new unique identifiers."""
 

@@ -184,5 +184,11 @@ def build_sensors_data() -> SensorsData:
                     line=0, address=0, instanceNumber=0
                 ),
             ),
+            SensorData(
+                id=4,
+                name="CPU temperature",
+                type=SensorType.TEMPERATURE,
+                addressType="internal",
+            ),
         ]
     )

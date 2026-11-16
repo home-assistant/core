@@ -25,7 +25,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Create a mocked Green Planet Energy API."""
     with patch(
         "homeassistant.components.green_planet_energy.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 

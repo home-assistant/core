@@ -169,7 +169,7 @@ async def test_user_form_duplicate(hass: HomeAssistant) -> None:
 def _patch_async_setup_entry():
     return patch(
         "homeassistant.components.nightscout.async_setup_entry",
-        return_value=True,
+        return_value=None,
     )
 
 

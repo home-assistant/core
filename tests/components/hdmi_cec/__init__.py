@@ -2,11 +2,7 @@
 
 from unittest.mock import AsyncMock, Mock
 
-from homeassistant.components.hdmi_cec import (
-    CecCommand,
-    KeyPressCommand,
-    KeyReleaseCommand,
-)
+from pycec.commands import CecCommand, KeyPressCommand, KeyReleaseCommand
 
 
 class MockHDMIDevice:

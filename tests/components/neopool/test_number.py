@@ -18,9 +18,9 @@ from pytest_homeassistant.common import (
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, PERCENTAGE, Platform
 from homeassistant.core import HomeAssistant
@@ -59,8 +59,8 @@ def _number_entity_id(
 async def _set_value(hass: HomeAssistant, entity_id: str, value: float) -> None:
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {"entity_id": entity_id, ATTR_VALUE: value},
+        NumberService.SET_VALUE,
+        {"entity_id": entity_id, NumberServiceArgument.VALUE: value},
         blocking=True,
     )
 
@@ -275,6 +275,30 @@ async def test_heating_setpoint_writes_via_high_level_api(
 
     mock_neopool_client.async_set_setpoint.assert_awaited_once_with(
         SetpointKind.HEATING, 28
+    )
+
+
+async def test_intelligent_setpoint_writes_via_high_level_api(
+    hass: HomeAssistant,
+    mock_config_entry_number: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Writing the intelligent setpoint delegates to async_set_setpoint(INTELLIGENT)."""
+    mock_neopool_client.async_set_setpoint = AsyncMock(
+        return_value={"MBF_PAR_INTELLIGENT_TEMP": 28}
+    )
+
+    await setup_integration(hass, mock_config_entry_number)
+    entity_id = _number_entity_id(
+        hass, mock_config_entry_number, "mbf_par_intelligent_temp"
+    )
+    mock_neopool_client.async_set_setpoint.reset_mock()
+
+    await _write(hass, freezer, entity_id, 28.0)
+
+    mock_neopool_client.async_set_setpoint.assert_awaited_once_with(
+        SetpointKind.INTELLIGENT, 28
     )
 
 

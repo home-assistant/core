@@ -57,7 +57,7 @@ async def test_user_flow(
         patch("homeassistant.components.vlc_telnet.config_flow.Client.disconnect"),
         patch(
             "homeassistant.components.vlc_telnet.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -144,7 +144,7 @@ async def test_errors(
         patch("homeassistant.components.vlc_telnet.config_flow.Client.disconnect"),
         patch(
             "homeassistant.components.vlc_telnet.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -176,7 +176,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         patch("homeassistant.components.vlc_telnet.config_flow.Client.disconnect"),
         patch(
             "homeassistant.components.vlc_telnet.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -245,7 +245,7 @@ async def test_reauth_errors(
         patch("homeassistant.components.vlc_telnet.config_flow.Client.disconnect"),
         patch(
             "homeassistant.components.vlc_telnet.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -266,7 +266,7 @@ async def test_hassio_flow(hass: HomeAssistant) -> None:
         patch("homeassistant.components.vlc_telnet.config_flow.Client.disconnect"),
         patch(
             "homeassistant.components.vlc_telnet.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         test_data = HassioServiceInfo(

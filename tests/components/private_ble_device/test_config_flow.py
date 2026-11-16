@@ -35,7 +35,7 @@ async def _async_configure_valid_irk(hass: HomeAssistant, flow_id: str) -> FlowR
     )
     with patch(
         "homeassistant.components.private_ble_device.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         return await hass.config_entries.flow.async_configure(
             flow_id, user_input={"irk": "irk:00000000000000000000000000000000"}
@@ -151,7 +151,7 @@ async def test_flow_works(hass: HomeAssistant) -> None:
     # Check you can finish the flow
     with patch(
         "homeassistant.components.private_ble_device.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -189,7 +189,7 @@ async def test_flow_works_by_base64(hass: HomeAssistant) -> None:
     # Check you can finish the flow
     with patch(
         "homeassistant.components.private_ble_device.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],

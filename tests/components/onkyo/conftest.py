@@ -41,7 +41,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock integration setup."""
     with patch(
         "homeassistant.components.onkyo.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 

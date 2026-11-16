@@ -4,6 +4,7 @@
   "categories": ["computers_network.routers_network"],
   "codeowners": ["@karlbeecken"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dhcp": [
     {
       "macaddress": "209727*"

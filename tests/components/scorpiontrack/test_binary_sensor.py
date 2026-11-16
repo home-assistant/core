@@ -19,7 +19,7 @@ from homeassistant.const import (
     ATTR_LONGITUDE,
     STATE_OFF,
     STATE_ON,
-    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -66,7 +66,7 @@ async def test_ignition_binary_sensor_snapshot(
     [
         pytest.param(True, STATE_ON, id="on"),
         pytest.param(False, STATE_OFF, id="off"),
-        pytest.param(None, STATE_UNAVAILABLE, id="missing"),
+        pytest.param(None, STATE_UNKNOWN, id="missing"),
     ],
 )
 async def test_ignition_binary_sensor_availability(

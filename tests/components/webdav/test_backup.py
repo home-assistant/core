@@ -1,10 +1,12 @@
 """Test the backups for WebDAV."""
 
-from collections.abc import AsyncGenerator, AsyncIterator
+from collections.abc import AsyncGenerator, Callable
 from copy import deepcopy
 from io import StringIO
+from pathlib import PurePosixPath
 from unittest.mock import Mock, patch
 
+from aiowebdav2 import ResourceInfo
 from aiowebdav2.exceptions import UnauthorizedError, WebDavError
 import pytest
 from pytest_homeassistant.common import AsyncMock, MockConfigEntry
@@ -19,6 +21,8 @@ from homeassistant.helpers.json import json_dumps
 from homeassistant.setup import async_setup_component
 
 from .const import BACKUP_METADATA
+
+from tests.components.backup.common import collect_upload_events, upload_backup_via_http
 
 
 @pytest.fixture(autouse=True)
@@ -43,22 +47,34 @@ async def test_agents_info(
     hass_ws_client: WebSocketGenerator,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test backup agent info."""
+    """Test backup agent info, following config entry unload and setup."""
     client = await hass_ws_client(hass)
+    local_agent = {"agent_id": "backup.local", "name": "local"}
+    webdav_agent = {
+        "agent_id": f"{DOMAIN}.{mock_config_entry.entry_id}",
+        "name": mock_config_entry.title,
+    }
 
     await client.send_json_auto_id({"type": "backup/agents/info"})
     response = await client.receive_json()
-
     assert response["success"]
-    assert response["result"] == {
-        "agents": [
-            {"agent_id": "backup.local", "name": "local"},
-            {
-                "agent_id": f"{DOMAIN}.{mock_config_entry.entry_id}",
-                "name": mock_config_entry.title,
-            },
-        ],
-    }
+    assert response["result"] == {"agents": [local_agent, webdav_agent]}
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await client.send_json_auto_id({"type": "backup/agents/info"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"agents": [local_agent]}
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await client.send_json_auto_id({"type": "backup/agents/info"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"agents": [local_agent, webdav_agent]}
 
 
 async def test_agents_list_backups(
@@ -154,7 +170,7 @@ async def test_agents_delete(
 
     assert response["success"]
     assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
-    assert webdav_client.clean.call_count == 2
+    assert webdav_client.delete.call_count == 2
 
 
 async def test_agents_upload(
@@ -184,81 +200,47 @@ async def test_agents_upload(
         )
 
     assert resp.status == 201
-    assert webdav_client.upload_iter.call_count == 2
+    assert webdav_client.write.call_count == 2
 
 
+@pytest.mark.usefixtures("freezer")
 async def test_agents_upload_emits_progress_events(
     hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
     hass_client: ClientSessionGenerator,
     webdav_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test upload emits progress events with bytes from upload_iter callbacks."""
+    """Test upload emits progress events with bytes from write callbacks."""
     test_backup = AgentBackup.from_dict(BACKUP_METADATA)
-    client = await hass_client()
-    ws_client = await hass_ws_client(hass)
-    observed_progress_bytes: list[int] = []
+    agent_id = f"{DOMAIN}.{mock_config_entry.entry_id}"
 
-    await ws_client.send_json_auto_id({"type": "backup/subscribe_events"})
-    response = await ws_client.receive_json()
-    assert response["event"] == {"manager_state": "idle"}
-    response = await ws_client.receive_json()
-    assert response["success"] is True
+    def _report_tar_progress(progress: Callable[[int, int | None], None]) -> None:
+        progress(1024, test_backup.size)
+        progress(test_backup.size, test_backup.size)
 
-    async def _mock_upload_iter(*args: object, **kwargs: object) -> None:
-        """Mock upload and trigger progress callback for backup upload."""
-        path = args[1]
-        if path.endswith(".tar"):
-            progress = kwargs.get("progress")
-            assert callable(progress)
-            progress(1024, test_backup.size)
-            progress(test_backup.size, test_backup.size)
+    upload_progress = {
+        ".tar": _report_tar_progress,
+        ".json": lambda progress: None,
+    }
 
-    with (
-        patch(
-            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
-        ) as fetch_backup,
-        patch(
-            "homeassistant.components.backup.manager.read_backup",
-            return_value=test_backup,
-        ),
-        patch("pathlib.Path.open") as mocked_open,
-    ):
-        mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
-        webdav_client.upload_iter.side_effect = _mock_upload_iter
-        fetch_backup.return_value = test_backup
-        resp = await client.post(
-            f"/api/backup/upload?agent_id={DOMAIN}.{mock_config_entry.entry_id}",
-            data={"file": StringIO("test")},
-        )
-        await hass.async_block_till_done()
+    async def _mock_write(
+        path: str,
+        data: object,
+        progress: Callable[[int, int | None], None] | None = None,
+        **kwargs: object,
+    ) -> None:
+        """Mock write and report progress for the backup tar upload."""
+        upload_progress[PurePosixPath(path).suffix](progress)
+
+    webdav_client.write.side_effect = _mock_write
+
+    with collect_upload_events(hass, agent_id) as events:
+        resp = await upload_backup_via_http(await hass_client(), agent_id, test_backup)
 
     assert resp.status == 201
-
-    # Gather progress events from the upload flow.
-    reached_idle = False
-    for _ in range(20):
-        response = await ws_client.receive_json()
-        event = response.get("event")
-
-        if event is None:
-            continue
-
-        if (
-            event.get("manager_state") == "receive_backup"
-            and event.get("agent_id") == f"{DOMAIN}.{mock_config_entry.entry_id}"
-            and "uploaded_bytes" in event
-        ):
-            observed_progress_bytes.append(event["uploaded_bytes"])
-
-        if event == {"manager_state": "idle"}:
-            reached_idle = True
-            break
-
-    assert reached_idle
-    assert 1024 in observed_progress_bytes
-    assert test_backup.size in observed_progress_bytes
+    # The manager emits the first (0) and last (backup size) events; later
+    # progress is debounced
+    assert [e.uploaded_bytes for e in events] == [0, 1024, test_backup.size]
 
 
 async def test_agents_download(
@@ -285,7 +267,7 @@ async def test_error_on_agents_download(
     """Test we get not found on a not existing backup on download."""
     client = await hass_client()
     backup_id = BACKUP_METADATA["backup_id"]
-    webdav_client.list_files.return_value = []
+    webdav_client.list.return_value = []
 
     resp = await client.get(
         f"/api/backup/download/{backup_id}?agent_id={DOMAIN}.{mock_config_entry.entry_id}"
@@ -312,7 +294,7 @@ async def test_delete_error(
     error: str,
 ) -> None:
     """Test error during delete."""
-    webdav_client.clean.side_effect = side_effect
+    webdav_client.delete.side_effect = side_effect
 
     client = await hass_ws_client(hass)
 
@@ -337,7 +319,7 @@ async def test_agents_delete_not_found_does_not_throw(
     webdav_client: AsyncMock,
 ) -> None:
     """Test agent delete backup."""
-    webdav_client.list_files.return_value = {}
+    webdav_client.list.return_value = {}
     client = await hass_ws_client(hass)
 
     await client.send_json_auto_id(
@@ -358,7 +340,7 @@ async def test_agents_backup_not_found(
     webdav_client: AsyncMock,
 ) -> None:
     """Test backup not found."""
-    webdav_client.list_files.return_value = []
+    webdav_client.list.return_value = []
     backup_id = BACKUP_METADATA["backup_id"]
     client = await hass_ws_client(hass)
     await client.send_json_auto_id({"type": "backup/details", "backup_id": backup_id})
@@ -375,9 +357,7 @@ async def test_raises_on_403(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test we raise on 403."""
-    webdav_client.list_files.side_effect = UnauthorizedError(
-        "https://webdav.example.com"
-    )
+    webdav_client.list.side_effect = UnauthorizedError("https://webdav.example.com")
     backup_id = BACKUP_METADATA["backup_id"]
     client = await hass_ws_client(hass)
     await client.send_json_auto_id({"type": "backup/details", "backup_id": backup_id})
@@ -407,47 +387,6 @@ async def test_listeners_get_cleaned_up(hass: HomeAssistant) -> None:
     assert hass.data.get(DATA_BACKUP_AGENT_LISTENERS) is None
 
 
-async def test_agents_list_backups_with_multi_chunk_metadata(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    webdav_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test listing backups when metadata is returned in multiple chunks."""
-    metadata_json = json_dumps(BACKUP_METADATA).encode()
-    mid = len(metadata_json) // 2
-    chunk1 = metadata_json[:mid]
-    chunk2 = metadata_json[mid:]
-
-    async def _multi_chunk_download(path: str, timeout=None) -> AsyncIterator[bytes]:
-        """Mock download returning metadata in multiple chunks."""
-        if path.endswith(".json"):
-            yield chunk1
-            yield chunk2
-            return
-        yield b"backup data"
-
-    webdav_client.download_iter.side_effect = _multi_chunk_download
-
-    # Invalidate the metadata cache so the new mock is used
-    hass.config_entries.async_update_entry(
-        mock_config_entry, title=mock_config_entry.title
-    )
-    await hass.config_entries.async_reload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    client = await hass_ws_client(hass)
-    await client.send_json_auto_id({"type": "backup/info"})
-    response = await client.receive_json()
-
-    assert response["success"]
-    assert response["result"]["agent_errors"] == {}
-    backups = response["result"]["backups"]
-    assert len(backups) == 1
-    assert backups[0]["backup_id"] == BACKUP_METADATA["backup_id"]
-    assert backups[0]["name"] == BACKUP_METADATA["name"]
-
-
 async def test_agents_list_backups_skips_invalid_metadata_file(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -460,21 +399,15 @@ async def test_agents_list_backups_skips_invalid_metadata_file(
     valid_backup["backup_id"] = "valid-backup"
     valid_backup["name"] = "Valid backup"
 
-    webdav_client.list_files.return_value = [broken_metadata_path, valid_metadata_path]
-
-    async def _download_metadata(path: str, timeout=None) -> AsyncIterator[bytes]:
-        """Mock metadata downloads with one broken and one valid file."""
-        if path == broken_metadata_path:
-            yield b""
-            return
-
-        if path == valid_metadata_path:
-            yield json_dumps(valid_backup).encode()
-            return
-
-        yield b"backup data"
-
-    webdav_client.download_iter.side_effect = _download_metadata
+    webdav_client.list.return_value = [
+        ResourceInfo(path=broken_metadata_path, name="broken", is_dir=False),
+        ResourceInfo(path=valid_metadata_path, name="valid", is_dir=False),
+    ]
+    metadata_files = {
+        broken_metadata_path: b"",
+        valid_metadata_path: json_dumps(valid_backup).encode(),
+    }
+    webdav_client.read.side_effect = lambda path: metadata_files[path]
 
     client = await hass_ws_client(hass)
     await client.send_json_auto_id({"type": "backup/info"})

@@ -80,6 +80,7 @@ class HTML5ConfigFlow(ConfigFlow, domain=DOMAIN):
             user_input = {}
 
         return self.async_show_form(
+            step_id="user",
             data_schema=probatio.Schema(
                 {
                     probatio.Required(

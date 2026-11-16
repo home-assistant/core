@@ -10,7 +10,7 @@ from pyheltycloud import (
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
@@ -44,12 +44,12 @@ async def test_setup_connection_error(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_setup_auth_error(
+async def test_setup_auth_error_starts_reauth(
     hass: HomeAssistant,
     mock_helty_cloud: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test rejected credentials fail the setup without a retry."""
+    """Test rejected credentials at setup ask the user to sign in again."""
     mock_helty_cloud.get_devices.side_effect = HeltyCloudAuthError
 
     mock_config_entry.add_to_hass(hass)
@@ -57,11 +57,12 @@ async def test_setup_auth_error(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
 
 
-@pytest.mark.parametrize(
-    "error", [HeltyCloudNoDataError, HeltyCloudConnectionError, HeltyCloudAuthError]
-)
+@pytest.mark.parametrize("error", [HeltyCloudNoDataError, HeltyCloudConnectionError])
 async def test_a_unit_with_nothing_to_read_still_loads(
     hass: HomeAssistant,
     mock_helty_cloud: AsyncMock,
@@ -74,3 +75,19 @@ async def test_a_unit_with_nothing_to_read_still_loads(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_poll_auth_error_starts_reauth(
+    hass: HomeAssistant,
+    mock_helty_cloud: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test credentials refused while reading ask the user to sign in again."""
+    mock_helty_cloud.get_last_telemetry.side_effect = HeltyCloudAuthError
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH

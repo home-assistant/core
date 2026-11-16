@@ -19,7 +19,7 @@ from homeassistant.data_entry_flow import FlowResultType
 def override_async_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.opower.async_setup_entry", return_value=True
+        "homeassistant.components.opower.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -29,7 +29,7 @@ def mock_unload_entry() -> Generator[AsyncMock]:
     """Mock unloading a config entry."""
     with patch(
         "homeassistant.components.opower.async_unload_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_unload_entry:
         yield mock_unload_entry
 

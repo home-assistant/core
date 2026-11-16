@@ -64,7 +64,9 @@ async def test_async_set_valve_position(
     expected_position: int,
 ) -> None:
     """Test that valve services write to the device and update state."""
-    entity_id = "valve.heating_circuit_1_patterilammitys_valve_position_setpoint"
+    entity_id = (
+        "valve.ouman_eh_800_heating_circuit_1_patterilammitys_valve_position_setpoint"
+    )
 
     await hass.services.async_call(
         VALVE_DOMAIN,
@@ -117,7 +119,7 @@ async def test_async_set_valve_position_errors(
             VALVE_DOMAIN,
             SERVICE_SET_VALVE_POSITION,
             {
-                ATTR_ENTITY_ID: "valve.heating_circuit_1_patterilammitys_valve_position_setpoint",
+                ATTR_ENTITY_ID: "valve.ouman_eh_800_heating_circuit_1_patterilammitys_valve_position_setpoint",
                 ATTR_POSITION: 50,
             },
             blocking=True,

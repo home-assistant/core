@@ -4,7 +4,7 @@ from abc import abstractmethod
 import asyncio
 from collections.abc import AsyncIterable
 import contextlib
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from enum import StrEnum
 import logging
 from typing import Any, Literal, final, override
@@ -26,6 +26,7 @@ from homeassistant.components.assist_pipeline import (
     vad,
 )
 from homeassistant.components.media_player import async_process_play_media_url
+from homeassistant.components.tts import TextToSpeechCommonOption
 from homeassistant.core import Context, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import chat_session, entity
@@ -301,7 +302,7 @@ class AssistSatelliteEntity(entity.Entity):
 
         with (
             # Not passing in a conversation ID will force a new one to be created
-            chat_session.async_get_chat_session(self.hass) as session,
+            chat_session.async_get_chat_session(self.hass, context=None) as session,
             conversation.async_get_chat_log(self.hass, session) as chat_log,
         ):
             self._conversation_id = session.conversation_id
@@ -447,8 +448,14 @@ class AssistSatelliteEntity(entity.Entity):
         wake_word_phrase: str | None = None,
         *,
         context: Context | None = None,
+        audio_settings: AudioSettings | None = None,
+        wake_word_audio_ms: int | None = None,
     ) -> None:
-        """Triggers an Assist pipeline in Home Assistant from a satellite."""
+        """Triggers an Assist pipeline in Home Assistant from a satellite.
+
+        silence_seconds in audio_settings is always taken from the satellite's
+        VAD sensitivity.
+        """
         await self._cancel_running_pipeline()
 
         # Consume system prompt in first pipeline
@@ -498,8 +505,9 @@ class AssistSatelliteEntity(entity.Entity):
 
         assert self.platform.config_entry is not None
 
+        # The pipeline checks the owner with the input of the user.
         with chat_session.async_get_chat_session(
-            self.hass, self._conversation_id
+            self.hass, self._conversation_id, context=None
         ) as session:
             # Store the conversation ID. If it is no longer valid,
             # get_chat_session will reset it
@@ -526,8 +534,10 @@ class AssistSatelliteEntity(entity.Entity):
                         satellite_id=self.entity_id,
                         tts_audio_output=self.tts_options,
                         wake_word_phrase=wake_word_phrase,
-                        audio_settings=AudioSettings(
-                            silence_seconds=self._resolve_vad_sensitivity()
+                        wake_word_audio_ms=wake_word_audio_ms,
+                        audio_settings=replace(
+                            audio_settings or AudioSettings(),
+                            silence_seconds=self._resolve_vad_sensitivity(),
                         ),
                         start_stage=start_stage,
                         end_stage=end_stage,
@@ -667,7 +677,7 @@ class AssistSatelliteEntity(entity.Entity):
 
             tts_options: dict[str, Any] = {}
             if pipeline.tts_voice is not None:
-                tts_options[tts.ATTR_VOICE] = pipeline.tts_voice
+                tts_options[TextToSpeechCommonOption.VOICE] = pipeline.tts_voice
 
             if self.tts_options is not None:
                 tts_options.update(self.tts_options)

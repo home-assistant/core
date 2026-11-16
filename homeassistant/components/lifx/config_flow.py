@@ -173,7 +173,6 @@ class LIFXConfigFlow(ConfigFlow, domain=DOMAIN):
             return self._async_create_entry_from_device(discovered)
 
         self._abort_if_unique_id_configured(updates={CONF_HOST: discovered.ip})
-        self._set_confirm_only()
         placeholders = {"label": discovered.label, "group": discovered.group}
         self.context["title_placeholders"] = placeholders
         return self.async_show_form(

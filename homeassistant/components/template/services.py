@@ -1,14 +1,13 @@
 """Services for the template integration."""
 
 from homeassistant import config as conf_util
-from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.reload import async_reload_integration_platforms
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.loader import async_get_integration
 
-from .const import DOMAIN, PLATFORMS
+from .const import DOMAIN, PLATFORMS, TemplateService
 from .helpers import async_get_blueprints, process_config
 
 
@@ -45,4 +44,6 @@ async def _async_reload_config(call: ServiceCall) -> None:
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register the template services."""
-    async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, _async_reload_config)
+    async_register_admin_service(
+        hass, DOMAIN, TemplateService.RELOAD, _async_reload_config
+    )
