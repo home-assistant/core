@@ -521,23 +521,22 @@ def websocket_explorer_details(
                 or registry_entry.device_id not in item_device_ids
             ):
                 continue
+            if _entity_source(hass, sources, entity_id, registry_entry) in configs:
+                continue
+            # A stale entity has no config
+            if (
+                config := _async_entity_config(
+                    hass, entry, sources, entity_id, registry_entry
+                )
+            ) is None:
+                continue
             has_items = True
             # A subentry device gets the device part of its subentry below
-            if (
-                (
-                    config := _async_entity_config(
-                        hass, entry, sources, entity_id, registry_entry
-                    )
-                )
-                is None
-                or config["device_discovery"]
-                or config["type"] == SOURCE_SUBENTRY
-            ):
+            if config["device_discovery"] or config["type"] == SOURCE_SUBENTRY:
                 continue
-            configs.setdefault(
-                config["source"],
-                config | {"payload": config["payload"].get(CONF_DEVICE) or {}},
-            )
+            configs[config["source"]] = config | {
+                "payload": config["payload"].get(CONF_DEVICE) or {}
+            }
         for artifact in artifacts:
             if artifact.device_id not in item_device_ids:
                 continue

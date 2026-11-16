@@ -938,7 +938,19 @@ async def test_device_discovery_child_devices_details(
     [
         pytest.param(
             {},
-            [(DISCOVERY_CHILD_SENSOR_TOPIC, DISCOVERY_CHILD_SENSOR_CONFIG)],
+            [
+                (DISCOVERY_CHILD_SENSOR_TOPIC, DISCOVERY_CHILD_SENSOR_CONFIG),
+                # The device part of a source comes from its first item
+                (
+                    "homeassistant/sensor/z2m_node/z2m_child_battery/config",
+                    DISCOVERY_CHILD_SENSOR_CONFIG
+                    | {
+                        "name": "Battery",
+                        "unique_id": "z2m_child_battery",
+                        "state_topic": "z2m/child/battery",
+                    },
+                ),
+            ],
             ("z2m_device", "z2m_child"),
             {
                 "source": "origin:Zigbee2MQTT",
@@ -971,6 +983,7 @@ async def test_parent_registered_by_child_device_details(
     hass_ws_client: WebSocketGenerator,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     discovery_messages: list[tuple[str, dict[str, Any]]],
     identifiers: tuple[str, str],
     expected_config: dict[str, Any],
@@ -980,19 +993,25 @@ async def test_parent_registered_by_child_device_details(
     for topic, config in discovery_messages:
         async_fire_mqtt_message(hass, topic, json.dumps(config))
     await hass.async_block_till_done()
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
     parent_identifier, child_identifier = identifiers
+    parent_device_id = _device_id(hass, device_registry, parent_identifier)
     child_device = device_registry.async_get_child_device_by_identifier(
-        (DOMAIN, child_identifier),
-        hass.config_entries.async_entries(DOMAIN)[0].entry_id,
+        (DOMAIN, child_identifier), entry.entry_id
     )
     assert child_device is not None
+    # An entity removed from the config stays in the registry, without a config
+    entity_registry.async_get_or_create(
+        sensor.DOMAIN,
+        DOMAIN,
+        "removed_sensor",
+        config_entry=entry,
+        device_id=parent_device_id,
+    )
     client = await hass_ws_client(hass)
 
     # The parent shows the device part of its child's config, like the child
-    for device_id in (
-        _device_id(hass, device_registry, parent_identifier),
-        child_device.id,
-    ):
+    for device_id in (parent_device_id, child_device.id):
         await client.send_json_auto_id(
             {"type": "mqtt/explorer/details", "device_id": device_id}
         )
