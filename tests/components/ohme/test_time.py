@@ -10,7 +10,7 @@ from homeassistant.components.time import (
     TimeService,
     TimeServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -46,7 +46,7 @@ async def test_set_time(
             TimeServiceArgument.TIME: "00:00:00",
         },
         target={
-            ATTR_ENTITY_ID: "time.ohme_home_pro_target_time",
+            TargetKey.ENTITY_ID: "time.ohme_home_pro_target_time",
         },
         blocking=True,
     )

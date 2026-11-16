@@ -5,6 +5,7 @@
 # Home Assistant Core
 aiodns==4.0.4
 aiogithubapi==26.0.0
+aiohasupervisor==0.11.0
 aiohttp-asyncmdnsresolver==0.2.0
 aiohttp-fast-zlib==0.3.0
 aiohttp==3.14.5
@@ -62,4 +63,4 @@ urllib3>=2.0
 uv==0.13.7
 webrtc-models==0.3.0
 yarl==1.25.1
-zeroconf==0.153.0
+zeroconf==0.154.0
