@@ -221,6 +221,30 @@ async def test_update_sensor_network_errors(hass: HomeAssistant) -> None:
     assert state.state == STATE_UNAVAILABLE
 
 
+async def test_update_sensors_os_error(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that a plain OSError makes the sensor unavailable without a traceback."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: HOST, CONF_PORT: PORT},
+        unique_id=f"{HOST}:{PORT}",
+    )
+
+    with patch(
+        "homeassistant.components.cert_expiry.helper.async_get_cert",
+        side_effect=OSError("Multiple exceptions: [Errno 111] Connect call failed"),
+    ):
+        entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.example_com_cert_expiry")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+    assert "Unexpected error" not in caplog.text
+
+
 async def test_error_attribute_is_none_when_cert_valid(hass: HomeAssistant) -> None:
     """Test that the error attribute is None (not the string 'None') for a valid cert.
 

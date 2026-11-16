@@ -4,7 +4,7 @@ from typing import override
 
 import pyvera as veraApi
 
-from homeassistant.components.binary_sensor import ENTITY_ID_FORMAT, BinarySensorEntity
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -39,7 +39,6 @@ class VeraBinarySensor(VeraEntity[veraApi.VeraBinarySensor], BinarySensorEntity)
     ) -> None:
         """Initialize the binary_sensor."""
         VeraEntity.__init__(self, vera_device, controller_data)
-        self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
     @override
     def update(self) -> None:

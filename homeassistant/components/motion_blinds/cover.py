@@ -15,7 +15,12 @@ from homeassistant.components.cover import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import ATTR_ABSOLUTE_POSITION, ATTR_WIDTH, UPDATE_DELAY_STOP
+from .const import (
+    ATTR_ABSOLUTE_POSITION,
+    ATTR_WIDTH,
+    UPDATE_DELAY_STOP,
+    MotionBlindsServiceArgument,
+)
 from .coordinator import MotionBlindsConfigEntry
 from .entity import MotionCoordinatorEntity
 
@@ -201,8 +206,8 @@ class MotionBaseDevice(MotionCoordinatorEntity, CoverEntity):
 
     async def async_set_absolute_position(self, **kwargs):
         """Move the cover to a specific absolute position (see TDBU)."""
-        position = kwargs[ATTR_ABSOLUTE_POSITION]
-        angle = kwargs.get(ATTR_TILT_POSITION)
+        position = kwargs[MotionBlindsServiceArgument.ABSOLUTE_POSITION]
+        angle = kwargs.get(MotionBlindsServiceArgument.TILT_POSITION)
         if angle is not None:
             angle = angle * 180 / 100
             angle = 180 - angle
@@ -405,7 +410,7 @@ class MotionTiltOnlyDevice(MotionTiltDevice):
     @override
     async def async_set_absolute_position(self, **kwargs):
         """Move the cover to a specific absolute position (see TDBU)."""
-        angle = kwargs.get(ATTR_TILT_POSITION)
+        angle = kwargs.get(MotionBlindsServiceArgument.TILT_POSITION)
         if angle is None:
             return
 
@@ -502,8 +507,8 @@ class MotionTDBUDevice(MotionBaseDevice):
     @override
     async def async_set_absolute_position(self, **kwargs):
         """Move the cover to a specific absolute position."""
-        position = kwargs[ATTR_ABSOLUTE_POSITION]
-        target_width = kwargs.get(ATTR_WIDTH)
+        position = kwargs[MotionBlindsServiceArgument.ABSOLUTE_POSITION]
+        target_width = kwargs.get(MotionBlindsServiceArgument.WIDTH)
 
         async with self._api_lock:
             await self.hass.async_add_executor_job(

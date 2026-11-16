@@ -344,6 +344,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
                 hass,
                 DOMAIN,
                 "protocol_5_migration",
+                config_entry_id=entry.entry_id,
                 issue_domain=DOMAIN,
                 is_fixable=False,
                 breaks_in_ha_version="2027.1.0",

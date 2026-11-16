@@ -5,7 +5,7 @@ from typing import Any, override
 from gardena_bluetooth.const import Valve
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -51,6 +51,7 @@ class GardenaBluetoothValveSwitch(GardenaBluetoothEntity, SwitchEntity):
         self._attr_is_on = None
         self._attr_entity_registry_enabled_default = False
 
+    @callback
     @override
     def _handle_coordinator_update(self) -> None:
         self._attr_is_on = self.coordinator.get_cached(Valve.state)

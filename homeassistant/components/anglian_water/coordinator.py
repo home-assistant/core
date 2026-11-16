@@ -1,6 +1,6 @@
 """Anglian Water data coordinator."""
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 from typing import Any, override
 
@@ -145,27 +145,9 @@ class AnglianWaterUpdateCoordinator(DataUpdateCoordinator[None]):
                     continue
                 start = dt_util.as_local(parsed_read_at) - timedelta(hours=1)
                 _LOGGER.debug("Getting statistics at %s", start)
-                stats: dict[str, list[Any]] = {}
-                for end in (start + timedelta(seconds=1), None):
-                    stats = await get_instance(self.hass).async_add_executor_job(
-                        statistics_during_period,
-                        self.hass,
-                        start,
-                        end,
-                        {
-                            usage_statistic_id,
-                        },
-                        "hour",
-                        None,
-                        {"sum"},
-                    )
-                    if stats:
-                        break
-                    if end:
-                        _LOGGER.debug(
-                            "Not found, trying to find oldest statistic after %s",
-                            start,
-                        )
+                stats = await get_instance(self.hass).async_add_executor_job(
+                    self._get_statistics, start, usage_statistic_id
+                )
 
                 if not stats or not stats.get(usage_statistic_id):
                     _LOGGER.debug(
@@ -222,3 +204,29 @@ class AnglianWaterUpdateCoordinator(DataUpdateCoordinator[None]):
                 "Adding %s statistics for %s", len(usage_statistics), usage_statistic_id
             )
             async_add_external_statistics(self.hass, usage_metadata, usage_statistics)
+
+    def _get_statistics(
+        self, start: datetime, statistic_id: str
+    ) -> dict[str, list[Any]]:
+        """Get the statistic at start, or the oldest statistic after start."""
+        stats: dict[str, list[Any]] = {}
+        for end in (start + timedelta(seconds=1), None):
+            stats = statistics_during_period(
+                self.hass,
+                start,
+                end,
+                {
+                    statistic_id,
+                },
+                "hour",
+                None,
+                {"sum"},
+            )
+            if stats:
+                break
+            if end:
+                _LOGGER.debug(
+                    "Not found, trying to find oldest statistic after %s",
+                    start,
+                )
+        return stats

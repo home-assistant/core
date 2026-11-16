@@ -29,7 +29,7 @@ def discovery_fixture():
 def device_fixture():
     """Patch the device search and bind."""
     with patch(
-        "homeassistant.components.gree.coordinator.Device",
+        "homeassistant.components.gree.coordinator.AirConditionerDevice",
         return_value=build_device_mock(),
     ) as mock:
         yield mock
