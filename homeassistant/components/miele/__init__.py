@@ -6,6 +6,11 @@ from pymiele import MieleAPI
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
@@ -65,12 +70,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: MieleConfigEntry) -> Non
     ]
     try:
         await asyncio.gather(*refresh_tasks)
-    except BaseException:
+    except BaseException as err:
         # A failed refresh must not leave its sibling running.
         for task in refresh_tasks:
             task.cancel()
         await asyncio.gather(*refresh_tasks, return_exceptions=True)
-        raise
+        if isinstance(
+            err, asyncio.CancelledError | ConfigEntryAuthFailed | ConfigEntryError
+        ):
+            raise
+        raise ConfigEntryNotReady(str(err)) from err
 
     entry.runtime_data = MieleRuntimeData(_api, _coordinator, _aux_coordinator)
 
