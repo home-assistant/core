@@ -30,6 +30,7 @@ from .entity import (
     UnifiEntity,
     UnifiEntityDescription,
     async_client_device_info_fn,
+    async_client_ssid_allowed_fn,
     async_device_available_fn,
     async_device_device_info_fn,
     async_device_supported_fn,
@@ -81,21 +82,6 @@ WIRELESS_DISCONNECTION = (
     EventKey.WIRELESS_CLIENT_DISCONNECTED,
     EventKey.WIRELESS_GUEST_DISCONNECTED,
 )
-
-
-@callback
-def async_client_ssid_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
-    """Check if client is connected to an allowed SSID."""
-    client = hub.api.clients[obj_id]
-
-    is_wireless = hub.entity_loader.wireless_clients.is_wireless(client)
-
-    return not (
-        is_wireless
-        and client.essid
-        and hub.config.option_ssid_filter
-        and client.essid not in hub.config.option_ssid_filter
-    )
 
 
 @callback
