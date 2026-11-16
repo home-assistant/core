@@ -1,6 +1,7 @@
 """Services for the Viessmann ViCare integration."""
 
 from datetime import time
+from enum import StrEnum
 from typing import Any
 
 import probatio
@@ -13,11 +14,20 @@ from homeassistant.helpers import config_validation as cv, service
 
 from .const import DOMAIN
 
-SERVICE_SET_VICARE_MODE = "set_vicare_mode"
-SERVICE_SET_VICARE_MODE_ATTR_MODE = "vicare_mode"
 
-SERVICE_GET_CIRCULATION_SCHEDULE = "get_circulation_schedule"
-SERVICE_SET_CIRCULATION_SCHEDULE = "set_circulation_schedule"
+class ViCareService(StrEnum):
+    """Store keys for ViCare services."""
+
+    GET_CIRCULATION_SCHEDULE = "get_circulation_schedule"
+    SET_CIRCULATION_SCHEDULE = "set_circulation_schedule"
+    SET_VICARE_MODE = "set_vicare_mode"
+
+
+class ViCareServiceArgument(StrEnum):
+    """Store keys for ViCare service arguments."""
+
+    VICARE_MODE = "vicare_mode"
+
 
 WEEKDAYS = (
     "monday",
@@ -79,15 +89,15 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_SET_VICARE_MODE,
+        ViCareService.SET_VICARE_MODE,
         entity_domain=CLIMATE_DOMAIN,
-        schema={probatio.Required(SERVICE_SET_VICARE_MODE_ATTR_MODE): cv.string},
+        schema={probatio.Required(ViCareServiceArgument.VICARE_MODE): cv.string},
         func="set_vicare_mode",
     )
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_GET_CIRCULATION_SCHEDULE,
+        ViCareService.GET_CIRCULATION_SCHEDULE,
         entity_domain=WATER_HEATER_DOMAIN,
         schema=None,
         func="get_circulation_schedule",
@@ -96,7 +106,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_SET_CIRCULATION_SCHEDULE,
+        ViCareService.SET_CIRCULATION_SCHEDULE,
         entity_domain=WATER_HEATER_DOMAIN,
         schema={
             probatio.Optional(day): probatio.All(

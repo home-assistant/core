@@ -8,7 +8,6 @@ from functools import partial
 import logging
 from typing import TYPE_CHECKING, Any, override
 
-from aiopowerwall import PowerwallClient, PowerwallEnergySite, PowerwallError
 from tesla_fleet_api.const import VehicleDataEndpoint
 from tesla_fleet_api.exceptions import (
     GatewayTimeout,
@@ -26,6 +25,11 @@ from tesla_fleet_api.router import (
     merge_live_status,
     merge_site_info,
 )
+from tesla_fleet_api.tesla.powerwall import (
+    PowerwallClient,
+    PowerwallEnergySite,
+    PowerwallError,
+)
 from tesla_fleet_api.teslemetry import EnergySite, Teslemetry, Vehicle
 from teslemetry_stream.const import EnergyTotalsEvent, WallConnectorTotalsEvent
 
@@ -36,11 +40,11 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-if TYPE_CHECKING:
-    from .models import TeslemetryConfigEntry
-
 from .const import DOMAIN, LOGGER
 from .helpers import async_update_device_sw_version, flatten, gateway_issue_id
+
+if TYPE_CHECKING:
+    from .models import TeslemetryConfigEntry
 
 RETRY_EXCEPTIONS = (
     InvalidResponse,

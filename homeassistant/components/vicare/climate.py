@@ -170,7 +170,7 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
 
             with suppress(PyViCareNotSupportedFeatureError):
                 self._attr_native_target_temperature = (
-                    self._api.getCurrentDesiredTemperature()
+                    self._api.getActiveProgramTemperature()
                 )
 
             with suppress(PyViCareNotSupportedFeatureError):
