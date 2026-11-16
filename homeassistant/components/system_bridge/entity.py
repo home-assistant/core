@@ -53,13 +53,13 @@ class SystemBridgeEntity(CoordinatorEntity[SystemBridgeDataUpdateCoordinator]):
         # From DMI, which only Linux hosts report
         manufacturer = model = hw_version = None
         if hardware := system.device_info:
-            manufacturer = hardware.manufacturer
-            model = hardware.model
             hw_version = hardware.version
-            # Self-built computers have no model, so their motherboard stands in,
-            # with its vendor as the manufacturer so the two always match
-            if model is None and hardware.board_name:
-                manufacturer = hardware.board_vendor or manufacturer
+            if hardware.model:
+                manufacturer = hardware.manufacturer
+                model = hardware.model
+            else:
+                # Self-built computers have no model, so their motherboard stands in
+                manufacturer = hardware.board_vendor
                 model = hardware.board_name
 
         self._attr_device_info = DeviceInfo(
