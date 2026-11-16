@@ -1501,6 +1501,37 @@ async def test_get_history_service_invalid_times(
     assert exc_info.value.translation_key == error_key
 
 
+@pytest.mark.usefixtures("recorder_mock")
+async def test_get_history_service_max_entities_exceeded(
+    hass: HomeAssistant,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test the get_history service raises when max entities is exceeded."""
+    monkeypatch.setattr(
+        "homeassistant.components.recorder.services.MAX_GET_HISTORY_ENTITIES",
+        2,
+    )
+
+    await async_recorder_block_till_done(hass)
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            "recorder",
+            "get_history",
+            {
+                "start_time": "2023-05-08 05:00:00Z",
+                "entity_id": ["sensor.one", "sensor.two", "sensor.three"],
+            },
+            return_response=True,
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "max_entities_exceeded"
+    assert exc_info.value.translation_placeholders == {
+        "max_entities": "2",
+    }
+
+
 @pytest.mark.parametrize(
     "start_time",
     [
