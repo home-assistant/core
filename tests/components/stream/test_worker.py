@@ -21,7 +21,7 @@ import logging
 import math
 from pathlib import Path
 import threading
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import av
 from av.codec.codec import UnknownCodecError  # pylint: disable=no-name-in-module
@@ -867,13 +867,18 @@ async def test_update_stream_source(hass: HomeAssistant) -> None:
         await stream.stop()
 
 
-async def test_output_added_while_stopping_is_kept(hass: HomeAssistant) -> None:
+async def test_output_added_while_stopping_is_kept(
+    hass: HomeAssistant, should_retry: Mock
+) -> None:
     """Test that an output added while the stream stops survives the restart.
 
     A viewer that asks for the stream while its worker is still stopping (busy
     in a read) adds an output and waits in start() for the stop to end. The
     stopped worker must not remove that output.
     """
+    # Keep the replacement worker alive until the final stop(): without retries
+    # it could reach the end of its packets, exit and remove the new output.
+    should_retry.return_value = True
     worker_open = threading.Event()
     worker_wake = threading.Event()
 
