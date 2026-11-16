@@ -272,12 +272,15 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
         # A loaded entry reloads from its update listener when the credentials
         # change. Nothing else reloads an entry that failed setup, or one whose
         # credentials stay the same because only the claim was renewed.
-        if (
+        reload = (
             reauth_entry.state is not ConfigEntryState.LOADED
             or credentials.items() <= reauth_entry.data.items()
-        ):
+        )
+        result = self.async_update_and_abort(reauth_entry, data_updates=credentials)
+        # The reload starts right away, so the credentials must be stored first.
+        if reload:
             self.hass.config_entries.async_schedule_reload(reauth_entry.entry_id)
-        return self.async_update_and_abort(reauth_entry, data_updates=credentials)
+        return result
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
