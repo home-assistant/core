@@ -2,7 +2,10 @@
 
 import probatio
 
-from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
+from homeassistant.components.device_automation import (
+    DEVICE_TRIGGER_BASE_SCHEMA,
+    async_get_entity_registry_entry_or_raise,
+)
 from homeassistant.components.homeassistant.triggers import (
     numeric_state as numeric_state_trigger,
     state as state_trigger,
@@ -23,11 +26,18 @@ from homeassistant.const import (
     PERCENTAGE,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers.entity import get_capability
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, HVAC_MODES, ClimateEntityStateAttribute
+from .const import (
+    DOMAIN,
+    HVAC_MODES,
+    ClimateEntityCapabilityAttribute,
+    ClimateEntityStateAttribute,
+)
 
 TRIGGER_TYPES = {
     "current_temperature_changed",
@@ -193,20 +203,28 @@ async def async_get_trigger_capabilities(
             )
         }
 
+    unit_of_measurement: str | None = PERCENTAGE
     if trigger_type == "current_temperature_changed":
-        unit_of_measurement: str = hass.config.units.temperature_unit
-    else:
-        unit_of_measurement = PERCENTAGE
+        try:
+            entry = async_get_entity_registry_entry_or_raise(
+                hass, config[CONF_ENTITY_ID]
+            )
+            unit_of_measurement = get_capability(
+                hass, entry.entity_id, ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT
+            )
+        except HomeAssistantError:
+            unit_of_measurement = None
+    description = {"suffix": unit_of_measurement} if unit_of_measurement else None
 
     return {
         "extra_fields": probatio.Schema(
             {
-                probatio.Optional(
-                    CONF_ABOVE, description={"suffix": unit_of_measurement}
-                ): probatio.Coerce(float),
-                probatio.Optional(
-                    CONF_BELOW, description={"suffix": unit_of_measurement}
-                ): probatio.Coerce(float),
+                probatio.Optional(CONF_ABOVE, description=description): probatio.Coerce(
+                    float
+                ),
+                probatio.Optional(CONF_BELOW, description=description): probatio.Coerce(
+                    float
+                ),
                 probatio.Optional(CONF_FOR): cv.positive_time_period_dict,
             }
         )

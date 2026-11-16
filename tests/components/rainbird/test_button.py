@@ -12,9 +12,9 @@ from pytest_homeassistant.test_util.aiohttp import (
     AiohttpClientMockResponse,
 )
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, EntityCategory, Platform
+from homeassistant.const import CommonServiceArgument, EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -104,8 +104,10 @@ async def test_press(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: f"button.rain_bird_controller_run_pgm_{program}"},
+        ButtonService.PRESS,
+        {
+            CommonServiceArgument.ENTITY_ID: f"button.rain_bird_controller_run_pgm_{program}"
+        },
         blocking=True,
     )
 
@@ -140,8 +142,8 @@ async def test_press_error(
     with pytest.raises(HomeAssistantError, match=expected_msg):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: PROGRAM_A_ENTITY_ID},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: PROGRAM_A_ENTITY_ID},
             blocking=True,
         )
 
@@ -209,8 +211,8 @@ async def test_sync_time_press(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: SYNC_TIME_ENTITY_ID},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: SYNC_TIME_ENTITY_ID},
         blocking=True,
     )
 
@@ -257,8 +259,8 @@ async def test_sync_time_press_error(
     with pytest.raises(HomeAssistantError, match=expected_msg):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: SYNC_TIME_ENTITY_ID},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: SYNC_TIME_ENTITY_ID},
             blocking=True,
         )
 

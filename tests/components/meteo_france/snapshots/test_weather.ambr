@@ -1,11 +1,53 @@
 # serializer version: 1
+# name: test_forecast_service[daily]
+  dict({
+    'weather.la_clusaz': dict({
+      'forecast': list([
+        dict({
+          'condition': 'partlycloudy',
+          'datetime': '2025-01-27T00:00:00+00:00',
+          'humidity': 90,
+          'precipitation': 1.3,
+          'temperature': 10.4,
+          'templow': 6.9,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_forecast_service[hourly]
+  dict({
+    'weather.la_clusaz': dict({
+      'forecast': list([
+        dict({
+          'apparent_temperature': 5.4,
+          'condition': 'partlycloudy',
+          'datetime': '2025-01-27T15:00:00+00:00',
+          'humidity': 75,
+          'precipitation': 0.0,
+          'temperature': 9.1,
+          'uv_index': 1,
+          'wind_bearing': 200,
+          'wind_gust_speed': 64.8,
+          'wind_speed': 28.8,
+        }),
+      ]),
+    }),
+  })
+# ---
 # name: test_weather[weather.la_clusaz-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <WeatherEntityCapabilityAttribute.PRECIPITATION_UNIT: 'precipitation_unit'>: <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+      <WeatherEntityCapabilityAttribute.PRESSURE_UNIT: 'pressure_unit'>: <UnitOfPressure.HPA: 'hPa'>,
+      <WeatherEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
+      <WeatherEntityCapabilityAttribute.VISIBILITY_UNIT: 'visibility_unit'>: <UnitOfLength.KILOMETERS: 'km'>,
+      <WeatherEntityCapabilityAttribute.WIND_SPEED_UNIT: 'wind_speed_unit'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
@@ -43,18 +85,18 @@
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Météo-France',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'La Clusaz',
       <WeatherEntityStateAttribute.HUMIDITY: 'humidity'>: 75,
-      <WeatherEntityStateAttribute.PRECIPITATION_UNIT: 'precipitation_unit'>: <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+      <WeatherEntityCapabilityAttribute.PRECIPITATION_UNIT: 'precipitation_unit'>: <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
       <WeatherEntityStateAttribute.PRESSURE: 'pressure'>: 988.7,
-      <WeatherEntityStateAttribute.PRESSURE_UNIT: 'pressure_unit'>: <UnitOfPressure.HPA: 'hPa'>,
+      <WeatherEntityCapabilityAttribute.PRESSURE_UNIT: 'pressure_unit'>: <UnitOfPressure.HPA: 'hPa'>,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WeatherEntityFeature: 3>,
       <WeatherEntityStateAttribute.TEMPERATURE: 'temperature'>: 9.1,
-      <WeatherEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
+      <WeatherEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
       <WeatherEntityStateAttribute.UV_INDEX: 'uv_index'>: 1.0,
-      <WeatherEntityStateAttribute.VISIBILITY_UNIT: 'visibility_unit'>: <UnitOfLength.KILOMETERS: 'km'>,
+      <WeatherEntityCapabilityAttribute.VISIBILITY_UNIT: 'visibility_unit'>: <UnitOfLength.KILOMETERS: 'km'>,
       <WeatherEntityStateAttribute.WIND_BEARING: 'wind_bearing'>: 200,
       <WeatherEntityStateAttribute.WIND_GUST_SPEED: 'wind_gust_speed'>: 64.8,
       <WeatherEntityStateAttribute.WIND_SPEED: 'wind_speed'>: 28.8,
-      <WeatherEntityStateAttribute.WIND_SPEED_UNIT: 'wind_speed_unit'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+      <WeatherEntityCapabilityAttribute.WIND_SPEED_UNIT: 'wind_speed_unit'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'weather.la_clusaz',

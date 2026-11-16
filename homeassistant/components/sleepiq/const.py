@@ -22,6 +22,8 @@ SLEEP_DURATION = "sleep_duration"
 HEART_RATE = "heart_rate"
 RESPIRATORY_RATE = "respiratory_rate"
 HRV = "hrv"
+BEDTIME = "bedtime"
+WAKE_TIME = "wake_time"
 ENTITY_TYPES = {
     ACTUATOR: "Position",
     CORE_CLIMATE_TIMER: "Core Climate Timer",
@@ -38,6 +40,8 @@ ENTITY_TYPES = {
     HEART_RATE: "Heart Rate Average",
     RESPIRATORY_RATE: "Respiratory Rate Average",
     HRV: "Heart Rate Variability",
+    BEDTIME: "Bedtime",
+    WAKE_TIME: "Wake Time",
 }
 
 LEFT = "left"

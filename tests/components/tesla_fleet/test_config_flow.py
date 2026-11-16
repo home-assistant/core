@@ -21,7 +21,6 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.components.tesla_fleet.config_flow import OAuth2FlowHandler
 from homeassistant.components.tesla_fleet.const import (
     AUTHORIZE_URL,
     DOMAIN,
@@ -242,6 +241,17 @@ async def test_region_partner_login_error(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.parametrize(
+    "domain",
+    [
+        "example.com",
+        "exa-mple.com",
+        "test.example.com",
+        "tes-t.example.com",
+        "sub.domain.example.org",
+        "su-b.dom-ain.exam-ple.org",
+    ],
+)
 @pytest.mark.usefixtures("current_request_with_host")
 async def test_full_flow_with_domain_registration(
     hass: HomeAssistant,
@@ -249,6 +259,7 @@ async def test_full_flow_with_domain_registration(
     aioclient_mock: AiohttpClientMocker,
     access_token: str,
     mock_private_key,
+    domain: str,
 ) -> None:
     """Test full flow with domain registration."""
     result = await hass.config_entries.flow.async_init(
@@ -343,10 +354,15 @@ async def test_full_flow_with_domain_registration(
         # Enter domain - this should automatically register and go to
         # registration_complete
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_DOMAIN: "example.com"}
+            result["flow_id"], {CONF_DOMAIN: domain}
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "registration_complete"
+        assert (
+            result["description_placeholders"]["virtual_key_url"]
+            == f"https://www.tesla.com/_ak/{domain}"
+        )
+        mock_api.partner.register.assert_called_once_with(domain)
 
         # Complete flow - provide user input to complete registration
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
@@ -358,6 +374,20 @@ async def test_full_flow_with_domain_registration(
     assert mock_api_class.call_args.kwargs["server"] == SERVERS["na"]
 
 
+@pytest.mark.parametrize(
+    "invalid_domain",
+    [
+        "https://example.com",
+        "invalid-domain",
+        "",
+        "example",
+        "example.",
+        ".example.com",
+        "exam ple.com",
+        "-example.com",
+        "domain-.example.com",
+    ],
+)
 @pytest.mark.usefixtures("current_request_with_host")
 async def test_domain_input_invalid_domain(
     hass: HomeAssistant,
@@ -365,6 +395,7 @@ async def test_domain_input_invalid_domain(
     aioclient_mock: AiohttpClientMocker,
     access_token: str,
     mock_private_key: Mock,
+    invalid_domain: str,
 ) -> None:
     """Test domain input with invalid domain."""
     result = await hass.config_entries.flow.async_init(
@@ -417,7 +448,7 @@ async def test_domain_input_invalid_domain(
 
         # Enter invalid domain
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_DOMAIN: "invalid-domain"}
+            result["flow_id"], {CONF_DOMAIN: invalid_domain}
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "domain_input"
@@ -886,56 +917,6 @@ async def test_region_default_fallback(
 
 
 @pytest.mark.usefixtures("current_request_with_host")
-async def test_registration_complete_no_domain(
-    hass: HomeAssistant,
-) -> None:
-    """Test registration complete step without domain."""
-
-    flow_instance = OAuth2FlowHandler()
-    flow_instance.hass = hass
-    flow_instance.domain = None
-
-    result = await flow_instance.async_step_registration_complete({})
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "domain_input"
-
-
-async def test_registration_complete_with_domain_and_user_input(
-    hass: HomeAssistant,
-) -> None:
-    """Test registration complete step with domain and user input."""
-
-    flow_instance = OAuth2FlowHandler()
-    flow_instance.hass = hass
-    flow_instance.domain = "example.com"
-    flow_instance.uid = UNIQUE_ID
-    flow_instance.data = {"token": {"access_token": "test"}}
-
-    result = await flow_instance.async_step_registration_complete({"complete": True})
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == UNIQUE_ID
-
-
-async def test_registration_complete_with_domain_no_user_input(
-    hass: HomeAssistant,
-) -> None:
-    """Test registration complete step with domain but no user input."""
-
-    flow_instance = OAuth2FlowHandler()
-    flow_instance.hass = hass
-    flow_instance.domain = "example.com"
-
-    result = await flow_instance.async_step_registration_complete(None)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "registration_complete"
-    assert (
-        result["description_placeholders"]["virtual_key_url"]
-        == "https://www.tesla.com/_ak/example.com"
-    )
-
-
-@pytest.mark.usefixtures("current_request_with_host")
 async def test_reauthentication(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -1096,29 +1077,3 @@ async def test_reauth_confirm_form(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["description_placeholders"] == {"name": "Tesla Fleet"}
-
-
-@pytest.mark.parametrize(
-    ("domain", "expected_valid"),
-    [
-        ("example.com", True),
-        ("exa-mple.com", True),
-        ("test.example.com", True),
-        ("tes-t.example.com", True),
-        ("sub.domain.example.org", True),
-        ("su-b.dom-ain.exam-ple.org", True),
-        ("https://example.com", False),
-        ("invalid-domain", False),
-        ("", False),
-        ("example", False),
-        ("example.", False),
-        (".example.com", False),
-        ("exam ple.com", False),
-        ("-example.com", False),
-        ("domain-.example.com", False),
-    ],
-)
-def test_is_valid_domain(domain: str, expected_valid: bool) -> None:
-    """Test domain validation."""
-
-    assert OAuth2FlowHandler()._is_valid_domain(domain) == expected_valid

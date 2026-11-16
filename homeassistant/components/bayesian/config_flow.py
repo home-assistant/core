@@ -441,6 +441,7 @@ class BayesianConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
         """Return subentries supported by this integration."""
         return {"observation": ObservationSubentryFlowHandler}
 
+    @callback
     @override
     def async_config_entry_title(self, options: Mapping[str, str]) -> str:
         """Return config entry title."""

@@ -8,8 +8,8 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import group
 from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
+    EntityStateAttribute,
     UnitOfArea,
     UnitOfLength,
     UnitOfMass,
@@ -1226,7 +1226,9 @@ def test_generate_select(hass: HomeAssistant) -> None:
 
 def test_state_with_unit(hass: HomeAssistant) -> None:
     """Test the state_with_unit property helper."""
-    hass.states.async_set("sensor.test", "23", {ATTR_UNIT_OF_MEASUREMENT: "beers"})
+    hass.states.async_set(
+        "sensor.test", "23", {EntityStateAttribute.UNIT_OF_MEASUREMENT: "beers"}
+    )
     hass.states.async_set("sensor.test2", "wow")
 
     result = render(hass, "{{ states.sensor.test.state_with_unit }}")
@@ -1260,10 +1262,18 @@ def test_state_with_unit_and_rounding(
     )
     assert entry.entity_id == "sensor.test"
 
-    hass.states.async_set("sensor.test", "23", {ATTR_UNIT_OF_MEASUREMENT: "beers"})
-    hass.states.async_set("sensor.test2", "23", {ATTR_UNIT_OF_MEASUREMENT: "beers"})
-    hass.states.async_set("sensor.test3", "-0.0", {ATTR_UNIT_OF_MEASUREMENT: "beers"})
-    hass.states.async_set("sensor.test4", "-0", {ATTR_UNIT_OF_MEASUREMENT: "beers"})
+    hass.states.async_set(
+        "sensor.test", "23", {EntityStateAttribute.UNIT_OF_MEASUREMENT: "beers"}
+    )
+    hass.states.async_set(
+        "sensor.test2", "23", {EntityStateAttribute.UNIT_OF_MEASUREMENT: "beers"}
+    )
+    hass.states.async_set(
+        "sensor.test3", "-0.0", {EntityStateAttribute.UNIT_OF_MEASUREMENT: "beers"}
+    )
+    hass.states.async_set(
+        "sensor.test4", "-0", {EntityStateAttribute.UNIT_OF_MEASUREMENT: "beers"}
+    )
 
     # state_with_unit property
     tpl = template.Template("{{ states.sensor.test.state_with_unit }}", hass)
@@ -1294,8 +1304,12 @@ def test_state_with_unit_and_rounding(
     assert tpl9.async_render() == 0.0
     assert tpl10.async_render() == 0
 
-    hass.states.async_set("sensor.test", "23.015", {ATTR_UNIT_OF_MEASUREMENT: "beers"})
-    hass.states.async_set("sensor.test2", "23.015", {ATTR_UNIT_OF_MEASUREMENT: "beers"})
+    hass.states.async_set(
+        "sensor.test", "23.015", {EntityStateAttribute.UNIT_OF_MEASUREMENT: "beers"}
+    )
+    hass.states.async_set(
+        "sensor.test2", "23.015", {EntityStateAttribute.UNIT_OF_MEASUREMENT: "beers"}
+    )
 
     assert tpl.async_render() == "23.02 beers"
     assert tpl2.async_render() == "23.015 beers"
