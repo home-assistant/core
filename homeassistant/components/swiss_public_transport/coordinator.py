@@ -30,7 +30,7 @@ from .helper import offset_opendata
 _LOGGER = logging.getLogger(__name__)
 
 # Spare connections which replace departed ones until the next update
-CONNECTIONS_SPARE = 2
+CONNECTIONS_SPARE = 3
 DEPARTED_GRACE = timedelta(seconds=30)
 
 type SwissPublicTransportConfigEntry = ConfigEntry[
