@@ -1659,6 +1659,73 @@ async def test_web_get_url_missing_data(
     assert req.status == HTTPStatus.BAD_REQUEST
 
 
+async def test_web_get_url_pregenerate(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_tts_cache_dir: Path,
+) -> None:
+    """Test /api/tts_get_url waits for synthesis when pregenerate is true."""
+    started = asyncio.Event()
+    release = asyncio.Event()
+
+    class SlowEntity(MockTTSEntity):
+        async def async_get_tts_audio(
+            self, message: str, language: str, options: dict[str, Any]
+        ) -> tts.TtsAudioType:
+            started.set()
+            await release.wait()
+            return ("mp3", b"pregenerated audio")
+
+    await mock_config_entry_setup(hass, SlowEntity(DEFAULT_LANG))
+    client = await hass_client()
+
+    post_task = hass.async_create_task(
+        client.post(
+            "/api/tts_get_url",
+            json={
+                "engine_id": "tts.test",
+                "message": "There is someone at the door.",
+                "cache": False,
+                "pregenerate": True,
+            },
+        )
+    )
+    await started.wait()
+    assert not post_task.done()
+
+    release.set()
+    req = await post_task
+    assert req.status == HTTPStatus.OK
+    response = await req.json()
+
+    audio_req = await client.get(response["path"])
+    assert audio_req.status == HTTPStatus.OK
+    assert await audio_req.read() == b"pregenerated audio"
+
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert list(mock_tts_cache_dir.iterdir()) == []
+
+
+async def test_web_get_url_pregenerate_error(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test /api/tts_get_url returns HTTP 500 when pregeneration fails."""
+    await mock_config_entry_setup(hass, MockEntityBoom(DEFAULT_LANG))
+    client = await hass_client()
+
+    req = await client.post(
+        "/api/tts_get_url",
+        json={
+            "engine_id": "tts.test",
+            "message": "There is someone at the door.",
+            "pregenerate": True,
+        },
+    )
+    assert req.status == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert await req.json() == {"message": "Error generating audio"}
+
+
 async def test_tags_with_wave() -> None:
     """Set up a TTS platform and call service and receive voice."""
 
