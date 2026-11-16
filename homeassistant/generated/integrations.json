@@ -3850,7 +3850,7 @@
         "cloud"
       ],
       "config_flow": true,
-      "iot_class": "cloud_push"
+      "iot_class": "cloud_polling"
     },
     "energyzero": {
       "name": "EnergyZero",
@@ -3972,8 +3972,8 @@
       "connectivity": [
         "cloud"
       ],
-      "config_flow": false,
-      "iot_class": "local_polling"
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "epic_games_store": {
       "name": "Epic Games Store",
@@ -4405,18 +4405,6 @@
       "integration_type": "service",
       "categories": [
         "ai_voice.speech"
-      ],
-      "connectivity": [
-        "cloud"
-      ],
-      "config_flow": true,
-      "iot_class": "cloud_polling"
-    },
-    "fitbit": {
-      "name": "Fitbit",
-      "integration_type": "service",
-      "categories": [
-        "health_wellbeing"
       ],
       "connectivity": [
         "cloud"
@@ -7052,6 +7040,18 @@
       ],
       "config_flow": false
     },
+    "intesis_modbus": {
+      "name": "Intesis Modbus",
+      "integration_type": "device",
+      "categories": [
+        "climate.heat_pumps_air_conditioning"
+      ],
+      "connectivity": [
+        "modbus"
+      ],
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "intesishome": {
       "name": "IntesisHome",
       "integration_type": "hub",
@@ -8956,14 +8956,14 @@
     },
     "meteoalarm": {
       "name": "MeteoAlarm",
-      "integration_type": "hub",
+      "integration_type": "service",
       "categories": [
         "weather_alerts.public_warnings"
       ],
       "connectivity": [
         "cloud"
       ],
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "meteoclimatic": {
@@ -15669,6 +15669,15 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "trimlight": {
+      "name": "Trimlight",
+      "integration_type": "device",
+      "categories": [
+        "lighting.led_strips_controllers"
+      ],
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "trmnl": {
       "name": "TRMNL",
       "integration_type": "hub",
@@ -16386,6 +16395,18 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "voice_support": {
+      "name": "Voice support",
+      "integration_type": "service",
+      "categories": [
+        "ai_voice.voice_assistants"
+      ],
+      "connectivity": [
+        "network"
+      ],
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "voicerss": {
       "name": "VoiceRSS",
       "integration_type": "hub",
@@ -16715,6 +16736,17 @@
       ],
       "config_flow": true,
       "iot_class": "local_push"
+    },
+    "wij_vergelijken_energie": {
+      "name": "Wij Vergelijken Energie",
+      "integration_type": "virtual",
+      "categories": [
+        "energy.meters_monitoring"
+      ],
+      "connectivity": [
+        "network"
+      ],
+      "supported_by": "earn_e_p1"
     },
     "wilight": {
       "name": "WiLight",

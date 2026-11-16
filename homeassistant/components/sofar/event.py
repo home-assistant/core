@@ -6,9 +6,7 @@ from datetime import datetime
 from itertools import takewhile
 from typing import override
 
-from sofar_modbus.modern.device import SofarInverter
-from sofar_modbus.modern.fault_log import FaultLog
-from sofar_modbus.modern.faults import FAULTS, FaultLogEntry
+from sofar_modbus import FAULTS, FaultLog, FaultLogEntry, SofarInverter
 
 from homeassistant.components.event import EventEntity, EventEntityDescription
 from homeassistant.const import EntityCategory
@@ -138,11 +136,10 @@ class SofarFaultEvent(SofarEntity, EventEntity):
     def _remember(self, handled: EntryKey | None) -> None:
         """Take the log as handled up to an entry, across restarts too."""
         self._handled = handled
-        entry = self.coordinator.config_entry
         self.hass.config_entries.async_update_entry(
-            entry,
+            self.coordinator.config_entry,
             data={
-                **entry.data,
+                **self.coordinator.config_entry.data,
                 LAST_HANDLED_FAULT: None
                 if handled is None
                 else [handled[0], handled[1].isoformat()],

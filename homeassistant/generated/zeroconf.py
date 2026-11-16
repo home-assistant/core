@@ -753,10 +753,18 @@ ZEROCONF = {
     ],
     "_ipp._tcp.local.": [
         {
+            "domain": "hp_printer",
+            "name": "hp*",
+        },
+        {
             "domain": "ipp",
         },
     ],
     "_ipps._tcp.local.": [
+        {
+            "domain": "hp_printer",
+            "name": "hp*",
+        },
         {
             "domain": "ipp",
         },
@@ -1106,6 +1114,11 @@ ZEROCONF = {
             "domain": "technove",
         },
     ],
+    "_tlight._tcp.local.": [
+        {
+            "domain": "trimlight",
+        },
+    ],
     "_touch-able._tcp.local.": [
         {
             "domain": "apple_tv",
@@ -1130,6 +1143,11 @@ ZEROCONF = {
     "_viziocast._tcp.local.": [
         {
             "domain": "vizio",
+        },
+    ],
+    "_voice-support._tcp.local.": [
+        {
+            "domain": "voice_support",
         },
     ],
     "_waermeleser._tcp.local.": [
