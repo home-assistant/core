@@ -3,6 +3,7 @@
 from collections.abc import Iterable
 import json
 import logging
+from pathlib import Path
 from typing import Any, override
 
 from homeassistant.components.remote import (
@@ -259,6 +260,7 @@ class HarmonyRemote(HarmonyEntity, RemoteEntity, RestoreEntity):
             return
 
         try:
+            Path(self._config_path).parent.mkdir(parents=True, exist_ok=True)
             with open(self._config_path, "w+", encoding="utf-8") as file_out:
                 json.dump(json_config, file_out, sort_keys=True, indent=4)
         except OSError as exc:

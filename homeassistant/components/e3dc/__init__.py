@@ -11,7 +11,7 @@ from .config_flow import create_modbus_params
 from .const import DOMAIN, UNIT_ID
 from .coordinator import E3dcConfigEntry, E3dcDataUpdateCoordinator
 
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: E3dcConfigEntry) -> None:

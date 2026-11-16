@@ -67,17 +67,21 @@ from .conftest import (
     TEST_CAM_MODEL,
     TEST_CAM_NAME,
     TEST_HOST,
+    TEST_HOST2,
     TEST_HOST_MODEL,
     TEST_MAC,
+    TEST_MAC2,
     TEST_MAC_CAM,
     TEST_NVR_NAME,
     TEST_PASSWORD,
     TEST_PORT,
     TEST_PRIVACY,
     TEST_UID,
+    TEST_UID2,
     TEST_UID_CAM,
     TEST_USE_HTTPS,
     TEST_USERNAME,
+    _init_host_mock,
 )
 
 pytestmark = pytest.mark.usefixtures("reolink_host", "reolink_platforms")
@@ -1214,15 +1218,24 @@ async def test_firmware_repair_issue(
 async def test_firmware_repair_issue_per_entry(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    reolink_host_class: MagicMock,
     reolink_host: MagicMock,
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test each host gets its own firmware issue, removed with its entry."""
     reolink_host.camera_sw_version_update_required.return_value = True
+    reolink_host_2 = MagicMock()
+    _init_host_mock(reolink_host_2)
+    reolink_host_2.mac_address = TEST_MAC2
+    reolink_host_2.uid = TEST_UID2
+    reolink_host_2.camera_sw_version_update_required.return_value = True
+    reolink_host_class.side_effect = lambda host, *args, **kwargs: (
+        reolink_host_2 if host == TEST_HOST2 else reolink_host
+    )
     config_entry_2 = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="aa:bb:cc:dd:ee:ff",
-        data=config_entry.data,
+        unique_id=format_mac(TEST_MAC2),
+        data={**config_entry.data, CONF_HOST: TEST_HOST2, CONF_UID: TEST_UID2},
         options=config_entry.options,
         title="Second NVR",
     )

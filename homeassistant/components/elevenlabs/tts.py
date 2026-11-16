@@ -22,7 +22,7 @@ from homeassistant.components.tts import (
     Voice,
 )
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -51,6 +51,10 @@ class ElevenLabsTextToSpeechOption(StrEnum):
     """Store keys for the ElevenLabs text-to-speech options."""
 
     MODEL = "model"
+
+
+# Not a user-facing option, only part of default_options for the cache key.
+ATTR_VOICE_SETTINGS = "voice_settings"
 
 
 def to_voice_settings(options: Mapping[str, Any]) -> VoiceSettings:
@@ -124,6 +128,13 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
         if voice_indices:
             self._voices.insert(0, self._voices.pop(voice_indices[0]))
         self._voice_settings = voice_settings
+        # Expose the configured defaults so they are part of the TTS cache key
+        # and changing them in the options flow invalidates cached audio.
+        self._attr_default_options = {
+            TextToSpeechCommonOption.VOICE: default_voice_id,
+            ElevenLabsTextToSpeechOption.MODEL: model.model_id,
+            ATTR_VOICE_SETTINGS: voice_settings.model_dump_json(),
+        }
 
         # Entity attributes
         self._attr_unique_id = entry_id
@@ -144,6 +155,7 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
             else "en"
         )
 
+    @callback
     @override
     def async_get_supported_voices(self, language: str) -> list[Voice]:
         """Return a list of supported voices for a language."""

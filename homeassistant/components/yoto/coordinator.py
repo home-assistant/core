@@ -59,7 +59,6 @@ class YotoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, YotoPlayer]]):
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="update_error",
-                translation_placeholders={"error": str(err)},
             ) from err
 
         await self._async_load_library()
@@ -72,7 +71,6 @@ class YotoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, YotoPlayer]]):
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="update_error",
-                translation_placeholders={"error": str(err)},
             ) from err
 
         self._subscribed_players = set(self.client.players)
@@ -99,7 +97,6 @@ class YotoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, YotoPlayer]]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_error",
-                translation_placeholders={"error": str(err)},
             ) from err
 
         await self._async_sync_subscriptions()
