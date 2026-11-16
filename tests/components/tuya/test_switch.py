@@ -10,7 +10,7 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 import requests
 from syrupy.assertion import SnapshotAssertion
 from tuya_sharing import CustomerDevice, Manager
-from tuya_sharing.exceptions import ApiRequestException
+from tuya_sharing.exceptions import ApiRequestException, TuyaSDKException
 
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
@@ -229,6 +229,11 @@ async def test_action(
     [
         pytest.param(
             ApiRequestException(error_code="-9999999", error_message="sign invalid"),
+            "The Tuya cloud rejected the command (error -9999999)",
+            id="rejected_with_reason",
+        ),
+        pytest.param(
+            TuyaSDKException(),
             "The Tuya cloud rejected the command",
             id="rejected",
         ),

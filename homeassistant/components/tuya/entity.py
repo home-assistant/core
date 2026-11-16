@@ -7,7 +7,7 @@ from typing import Any, override
 import requests
 from tuya_device_handlers.device_wrapper import DeviceWrapper
 from tuya_sharing import CustomerDevice, Manager
-from tuya_sharing.exceptions import TuyaSDKException
+from tuya_sharing.exceptions import ApiRequestException, TuyaSDKException
 
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import ChildDeviceInfo, DeviceInfo
@@ -132,6 +132,12 @@ class TuyaEntity(Entity):
             await self.hass.async_add_executor_job(
                 self.device_manager.send_commands, self.device.id, commands
             )
+        except ApiRequestException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_rejected_with_reason",
+                translation_placeholders={"code": err.error_code},
+            ) from err
         except TuyaSDKException as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="command_rejected"

@@ -1392,6 +1392,9 @@
     "command_rejected": {
       "message": "The Tuya cloud rejected the command."
     },
+    "command_rejected_with_reason": {
+      "message": "The Tuya cloud rejected the command (error {code})."
+    },
     "device_not_found": {
       "message": "Feeder with ID {device_id} could not be found."
     },
