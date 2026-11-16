@@ -9,7 +9,7 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant.components.karaca_connect.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResultType, InvalidData
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -213,11 +213,10 @@ async def test_invalid_device_selection_recovers(hass: HomeAssistant) -> None:
             user_input={"email": "example@example.invalid", "password": "password"},
         )
         assert result["step_id"] == "select_device"
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={"device_id": "missing"}
-        )
-        assert result["type"] is FlowResultType.FORM
-        assert result["errors"]["base"] == "device_not_found"
+        with pytest.raises(InvalidData, match="Schema validation failed"):
+            await hass.config_entries.flow.async_configure(
+                result["flow_id"], user_input={"device_id": "missing"}
+            )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={"device_id": "device-456"}
         )
