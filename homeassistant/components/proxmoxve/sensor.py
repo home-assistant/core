@@ -142,10 +142,12 @@ NODE_SENSORS: tuple[ProxmoxNodeSensorEntityDescription, ...] = (
     ),
     ProxmoxNodeSensorEntityDescription(
         key="node_uptime",
-        value_fn=lambda data: (
-            dt_util.utcnow() - timedelta(seconds=data.node["uptime"])
-            if data.node["uptime"]
-            else None
+        value_fn=(
+            lambda data: (
+                (dt_util.utcnow() - timedelta(seconds=data.node["uptime"]))
+                if data.node["uptime"] is not None
+                else None
+            )
         ),
         device_class=SensorDeviceClass.UPTIME,
         entity_category=EntityCategory.DIAGNOSTIC,
