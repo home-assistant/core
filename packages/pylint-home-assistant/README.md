@@ -108,6 +108,7 @@ Every check has a code following the
 | `C7427` | [`home-assistant-enforce-naive-now`](#c7427-home-assistant-enforce-naive-now) | Use `homeassistant.util.dt.naive_now` instead of `datetime.now()` |
 | `C7458` | [`home-assistant-logger-const-name`](#c7458-home-assistant-logger-const-name) | Logger in an integration's `const.py` should use `__package__` |
 | `C7459` | [`home-assistant-placeholder-key`](#c7459-home-assistant-placeholder-key) | Placeholder keys should be string literals, not constants such as `CONF_*` |
+| `C7464` | [`home-assistant-type-checking-block-position`](#c7464-home-assistant-type-checking-block-position) | `if TYPE_CHECKING:` block should come after all module-level imports |
 | `E7401` | [`home-assistant-invalid-inheritance`](#e7401-home-assistant-invalid-inheritance) | Invalid entity class inheritance chain |
 | `E7402` | [`home-assistant-argument-type`](#e7402-home-assistant-argument-type) | Function argument should have the specified type hint |
 | `E7403` | [`home-assistant-return-type`](#e7403-home-assistant-return-type) | Function should have the specified return type hint |
@@ -248,6 +249,30 @@ Imports of submodules only (e.g. `from . import sensor, switch  # noqa: F401`,
 used to preload platforms) are allowed, as are imports inside functions or
 classes, which cannot be exported through `__all__`.
 
+
+## `home_assistant_type_checking_block` checker
+
+Checks the position of the module-level `if TYPE_CHECKING:` block. Neither
+ruff nor pylint flag imports after it, because both allow conditional blocks
+between imports.
+
+### `C7464`: `home-assistant-type-checking-block-position`
+
+A module-level import follows the `if TYPE_CHECKING:` block. Move the block
+below the last import.
+
+```python
+# Bad
+if TYPE_CHECKING:
+    from . import MyConfigEntry
+from .const import DOMAIN
+
+# Good
+from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from . import MyConfigEntry
+```
 
 ## `home_assistant_init_first` checker
 
