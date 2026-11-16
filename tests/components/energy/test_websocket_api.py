@@ -118,7 +118,6 @@ async def test_save_preferences(
                 "entity_energy_price_export": None,
                 "number_energy_price_export": None,
                 "stat_rate": "sensor.grid_power",
-                "cost_adjustment_day": 1.2,
                 "name": "Main Grid",
             },
             # Grid 2: heat_pump_meter_2 paired with return_to_grid_offpeak
@@ -132,7 +131,6 @@ async def test_save_preferences(
                 "number_energy_price": 0.20,
                 "entity_energy_price_export": None,
                 "number_energy_price_export": 0.20,
-                "cost_adjustment_day": 1.2,
             },
             {
                 "type": "solar",
@@ -220,7 +218,6 @@ async def test_save_preferences(
                 "number_energy_price": None,
                 "entity_energy_price_export": None,
                 "number_energy_price_export": None,
-                "cost_adjustment_day": 1.2,
             },
             {
                 "type": "solar",
@@ -239,6 +236,45 @@ async def test_save_preferences(
     assert msg["result"] == {**new_prefs, **new_prefs_2}
 
 
+async def test_save_preferences_drops_cost_adjustment_day(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test cost_adjustment_day is still accepted but not stored."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "energy/save_prefs",
+            "energy_sources": [
+                {
+                    "type": "grid",
+                    "stat_energy_from": "sensor.heat_pump_meter",
+                    "cost_adjustment_day": 0,
+                }
+            ],
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["id"] == 5
+    assert msg["success"]
+    assert msg["result"]["energy_sources"] == [
+        {
+            "type": "grid",
+            "stat_energy_from": "sensor.heat_pump_meter",
+            "stat_energy_to": None,
+            "stat_cost": None,
+            "stat_compensation": None,
+            "entity_energy_price": None,
+            "number_energy_price": None,
+            "entity_energy_price_export": None,
+            "number_energy_price_export": None,
+        }
+    ]
+
+
 async def test_handle_duplicate_from_stat(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
@@ -254,12 +290,10 @@ async def test_handle_duplicate_from_stat(
                 {
                     "type": "grid",
                     "stat_energy_from": "sensor.heat_pump_meter",
-                    "cost_adjustment_day": 0,
                 },
                 {
                     "type": "grid",
                     "stat_energy_from": "sensor.heat_pump_meter",
-                    "cost_adjustment_day": 0,
                 },
             ],
         }

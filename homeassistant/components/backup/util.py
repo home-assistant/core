@@ -491,9 +491,13 @@ class _CipherBackupStreamer:
             worker.writer.abort()
         await asyncio.gather(*(worker.done.wait() for worker in self._workers))
         await asyncio.gather(*(worker.reader.aclose() for worker in self._workers))
+        await self._hass.async_add_executor_job(self._join_workers)
+
+    def _join_workers(self) -> None:
+        """Wait for the worker threads to finish."""
         for worker in self._workers:
             if worker.thread.is_alive():
-                await self._hass.async_add_executor_job(worker.thread.join)
+                worker.thread.join()
 
 
 class DecryptedBackupStreamer(_CipherBackupStreamer):

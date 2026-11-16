@@ -108,10 +108,8 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         if device.connected:
             return utc_point_in_time, True
 
-        # No data yet during the first refresh
-        data: UpdateCoordinatorDataType | None = self.data
         if (
-            data
+            (data := self.data_or_none)
             and (stored_device := data.devices.get(device.mac))
             and (update_time := stored_device.update_time)
         ):
