@@ -842,12 +842,9 @@ class NewZWaveNumericSensor(ZWaveBaseEntity, SensorEntity):
 
     @callback
     @override
-    def on_value_update(self) -> None:
-        """Handle scale changes for this value on value updated event."""
-        # TODO: Try to limit this to metadata updated event.  # pylint: disable=fixme
-        scale_type = self._get_scale_type()
-        if scale_type is not self._scale_type:
-            self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
+    def should_rediscover_on_metadata_update(self) -> bool:
+        """Check if the scale has changed."""
+        return self._get_scale_type() is not self._scale_type
 
     @property
     @override
