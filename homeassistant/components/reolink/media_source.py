@@ -414,7 +414,6 @@ class ReolinkVODMediaSource(MediaSource):
                 file_name += " " + " ".join(
                     str(trigger.name).title() for trigger in file.triggers
                 )
-            # take the thumbnail from the middle of the recording
             thumbnail_time = file.start_time + file.duration / 2
 
             children.append(

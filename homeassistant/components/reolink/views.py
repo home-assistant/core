@@ -374,7 +374,7 @@ class ThumbnailView(HomeAssistantView):
         return web.Response(
             body=image,
             content_type="image/jpeg",
-            headers={"Cache-Control": "private, max-age=86400"},
+            headers={"Cache-Control": "private, max-age=2592000"},
         )
 
     @staticmethod
