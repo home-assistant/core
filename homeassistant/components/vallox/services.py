@@ -14,10 +14,6 @@ from .coordinator import ValloxConfigEntry, ValloxDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_PROFILE_FAN_SPEED = "fan_speed"
-ATTR_PROFILE = "profile"
-ATTR_DURATION = "duration"
-
 
 class ValloxService(StrEnum):
     """Vallox service names."""
@@ -28,9 +24,17 @@ class ValloxService(StrEnum):
     SET_PROFILE = auto()
 
 
+class ValloxServiceArgument(StrEnum):
+    """Vallox service argument names."""
+
+    FAN_SPEED = auto()
+    PROFILE = auto()
+    DURATION = auto()
+
+
 SERVICE_SCHEMA_SET_PROFILE_FAN_SPEED = probatio.Schema(
     {
-        probatio.Required(ATTR_PROFILE_FAN_SPEED): probatio.All(
+        probatio.Required(ValloxServiceArgument.FAN_SPEED): probatio.All(
             probatio.Coerce(int), probatio.Clamp(min=0, max=100)
         )
     }
@@ -38,8 +42,10 @@ SERVICE_SCHEMA_SET_PROFILE_FAN_SPEED = probatio.Schema(
 
 SERVICE_SCHEMA_SET_PROFILE = probatio.Schema(
     {
-        probatio.Required(ATTR_PROFILE): probatio.In(PRESET_MODE_TO_VALLOX_PROFILE),
-        probatio.Optional(ATTR_DURATION): probatio.All(
+        probatio.Required(ValloxServiceArgument.PROFILE): probatio.In(
+            PRESET_MODE_TO_VALLOX_PROFILE
+        ),
+        probatio.Optional(ValloxServiceArgument.DURATION): probatio.All(
             probatio.Coerce(int), probatio.Clamp(min=1, max=PROFILE_DURATION_INDEFINITE)
         ),
     }
@@ -59,7 +65,7 @@ def _get_coordinator(
 
 async def _async_set_profile_fan_speed(call: ServiceCall, profile: Profile) -> None:
     """Set the fan speed in percent for the profile matching the called service."""
-    fan_speed: int = call.data[ATTR_PROFILE_FAN_SPEED]
+    fan_speed: int = call.data[ValloxServiceArgument.FAN_SPEED]
     _LOGGER.debug("Setting %s fan speed to: %d%%", profile.name, fan_speed)
 
     coordinator = _get_coordinator(call.hass)
@@ -95,8 +101,8 @@ async def _async_set_profile_fan_speed_home(call: ServiceCall) -> None:
 
 async def _async_set_profile(call: ServiceCall) -> None:
     """Activate the given profile for the given duration."""
-    profile_key: str = call.data[ATTR_PROFILE]
-    duration: int | None = call.data.get(ATTR_DURATION)
+    profile_key: str = call.data[ValloxServiceArgument.PROFILE]
+    duration: int | None = call.data.get(ValloxServiceArgument.DURATION)
     _LOGGER.debug("Activating profile %s for %s min", profile_key, duration)
 
     coordinator = _get_coordinator(call.hass)

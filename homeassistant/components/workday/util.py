@@ -16,9 +16,10 @@ from homeassistant.helpers.issue_registry import (
 from homeassistant.setup import SetupPhases, async_pause_setup
 from homeassistant.util import dt as dt_util, slugify
 
+from .const import DOMAIN, LOGGER
+
 if TYPE_CHECKING:
     from . import WorkdayConfigEntry
-from .const import DOMAIN, LOGGER
 
 
 async def async_validate_country_and_province(

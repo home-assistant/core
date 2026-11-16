@@ -5,7 +5,7 @@
       "sleep": {
         "interval": {
           "startTime": "2026-08-16T22:00:00Z",
-          "startUtcOffset": "-07:00"
+          "startUtcOffset": "-25200s"
         }
       }
     },
@@ -15,8 +15,8 @@
         "interval": {
           "startTime": "2026-08-15T22:00:00Z",
           "endTime": "2026-08-16T06:00:00Z",
-          "startUtcOffset": "-07:00",
-          "endUtcOffset": "-07:00"
+          "startUtcOffset": "-25200s",
+          "endUtcOffset": "-25200s"
         },
         "summary": {
           "minutesToFallAsleep": 15,

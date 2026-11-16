@@ -12,8 +12,8 @@ import zigpy.zcl.foundation as zcl_f
 
 from homeassistant.components.button import (
     DOMAIN as BUTTON_DOMAIN,
-    SERVICE_PRESS,
     ButtonDeviceClass,
+    ButtonService,
 )
 from homeassistant.components.zha.helpers import (
     ZHADeviceProxy,
@@ -23,8 +23,8 @@ from homeassistant.components.zha.helpers import (
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
-    ATTR_ENTITY_ID,
     STATE_UNKNOWN,
+    CommonServiceArgument,
     EntityCategory,
     Platform,
 )
@@ -111,8 +111,8 @@ async def test_button(
     ):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: entity_id},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
         await hass.async_block_till_done()

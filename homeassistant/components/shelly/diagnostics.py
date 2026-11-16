@@ -24,9 +24,7 @@ async def async_get_config_entry_diagnostics(
     bluetooth: str | dict = "not initialized"
     last_error: str = "not initialized"
 
-    if shelly_entry_data.block:
-        block_coordinator = shelly_entry_data.block
-        assert block_coordinator
+    if block_coordinator := shelly_entry_data.block:
         device_info = {
             "name": block_coordinator.name,
             "model": block_coordinator.model,

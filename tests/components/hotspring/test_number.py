@@ -2,17 +2,25 @@
 
 from unittest.mock import MagicMock
 
-from hotspring import HotSpringConnectionError, HotSpringError, Spa, TemperatureUnit
+from hotspring import (
+    HotSpringCommandError,
+    HotSpringConnectionError,
+    HotSpringConnectionTimeoutError,
+    HotSpringError,
+    HotSpringNotReadyError,
+    Spa,
+    TemperatureUnit,
+)
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -62,10 +70,10 @@ async def test_set_target_temperature(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_VALUE: 38,
+            CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+            NumberServiceArgument.VALUE: 38,
         },
         blocking=True,
     )
@@ -80,17 +88,44 @@ async def test_set_target_temperature(
 @pytest.mark.parametrize(
     ("exception", "match"),
     [
-        (
-            HotSpringConnectionError,
-            "An error occurred while communicating with the Hot Spring API",
+        pytest.param(
+            HotSpringConnectionTimeoutError(
+                "Timeout occurred while connecting to Hot Spring HNA at 192.168.1.50: "
+                "no response within 10.0s"
+            ),
+            "^Timed out while communicating with the Hot Spring API$",
+            id="timeout",
         ),
-        (HotSpringError, "Invalid response received from the Hot Spring API"),
+        pytest.param(
+            HotSpringConnectionError(
+                "Error occurred while communicating with Hot Spring HNA at "
+                "192.168.1.50: ServerDisconnectedError: Server disconnected"
+            ),
+            "^An error occurred while communicating with the Hot Spring API$",
+            id="connection_error",
+        ),
+        pytest.param(
+            HotSpringNotReadyError(
+                "Cannot send commands: SNA bridge is not connected. "
+                "The LoRA link between the HNA and the spa is down."
+            ),
+            "^The spa is not connected to its Hot Spring home network adapter$",
+            id="not_ready",
+        ),
+        pytest.param(
+            HotSpringCommandError(
+                "Command failed: {'heater': {'control': {'temperatureABS': '38'}}}: "
+                "Unexpected response type from /spaManager"
+            ),
+            "^Invalid response received from the Hot Spring API$",
+            id="command_failed",
+        ),
     ],
 )
 async def test_set_target_temperature_error(
     hass: HomeAssistant,
     mock_hotspring: MagicMock,
-    exception: type[Exception],
+    exception: Exception | type[Exception],
     match: str,
 ) -> None:
     """Test exception handling when setting target temperature."""
@@ -99,10 +134,10 @@ async def test_set_target_temperature_error(
     with pytest.raises(HomeAssistantError, match=match):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_VALUE: 38,
+                CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+                NumberServiceArgument.VALUE: 38,
             },
             blocking=True,
         )
@@ -130,10 +165,10 @@ async def test_set_target_temperature_celsius(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_VALUE: 37.5,
+            CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+            NumberServiceArgument.VALUE: 37.5,
         },
         blocking=True,
     )
@@ -170,10 +205,10 @@ async def test_set_salt_output_level(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: SALT_OUTPUT_LEVEL_ENTITY_ID,
-            ATTR_VALUE: value,
+            CommonServiceArgument.ENTITY_ID: SALT_OUTPUT_LEVEL_ENTITY_ID,
+            NumberServiceArgument.VALUE: value,
         },
         blocking=True,
     )
@@ -207,10 +242,10 @@ async def test_set_salt_output_level_error(
     with pytest.raises(HomeAssistantError, match=match):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: SALT_OUTPUT_LEVEL_ENTITY_ID,
-                ATTR_VALUE: 3.0,
+                CommonServiceArgument.ENTITY_ID: SALT_OUTPUT_LEVEL_ENTITY_ID,
+                NumberServiceArgument.VALUE: 3.0,
             },
             blocking=True,
         )
