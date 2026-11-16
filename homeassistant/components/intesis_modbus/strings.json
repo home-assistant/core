@@ -7,7 +7,7 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "device_in_use": "The serial port is already in use with other settings. Use the same baud rate as the other devices on this line.",
+      "device_in_use": "The serial port is already in use with other link settings. This gateway always uses 8 data bits, no parity and 2 stop bits, so the other devices on this line must use the same framing and baud rate.",
       "gateway_starting": "The gateway is still starting up and does not report its values yet. Wait a few minutes and try again."
     },
     "step": {
