@@ -1301,7 +1301,7 @@ harbor-python==1.5.0
 hass-nabucasa==2.8.1
 
 # homeassistant.components.splunk
-hass-splunk==0.1.4
+hass-splunk==0.2.0
 
 # homeassistant.components.assist_satellite
 # homeassistant.components.conversation
