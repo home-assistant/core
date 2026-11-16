@@ -45,8 +45,9 @@ async def async_setup_entry(
     )
 
     zeroconf_instance = await zeroconf.async_get_instance(hass)
-    entry.runtime_data, offline_gateways = await hass.async_add_executor_job(
-        connect_gateways, gateway_ids, mydevolo, zeroconf_instance
+    entry.runtime_data = []
+    offline_gateways = await hass.async_add_executor_job(
+        connect_gateways, entry.runtime_data, gateway_ids, mydevolo, zeroconf_instance
     )
     if len(gateway_ids) == offline_gateways:
         raise ConfigEntryNotReady(
@@ -109,12 +110,16 @@ def check_mydevolo_and_get_gateway_ids(mydevolo: Mydevolo) -> list[str]:
 
 
 def connect_gateways(
+    gateways: list[HomeControl],
     gateway_ids: list[str],
     mydevolo: Mydevolo,
     zeroconf_instance: zeroconf.HaZeroconf,
-) -> tuple[list[HomeControl], int]:
-    """Connect to the gateways and count the offline gateways."""
-    gateways: list[HomeControl] = []
+) -> int:
+    """Connect to the gateways and return the number of offline gateways.
+
+    Each connected gateway is added to *gateways* right away, so a shutdown
+    during setup can disconnect it.
+    """
     offline_gateways = 0
     for gateway_id in gateway_ids:
         try:
@@ -128,4 +133,4 @@ def connect_gateways(
         except GatewayOfflineError:
             offline_gateways += 1
             _LOGGER.info("Central unit %s cannot be reached locally", gateway_id)
-    return gateways, offline_gateways
+    return offline_gateways
