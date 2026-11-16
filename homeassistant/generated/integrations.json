@@ -3973,7 +3973,7 @@
         "cloud"
       ],
       "config_flow": false,
-      "iot_class": "local_polling"
+      "iot_class": "cloud_polling"
     },
     "epic_games_store": {
       "name": "Epic Games Store",
@@ -8944,14 +8944,14 @@
     },
     "meteoalarm": {
       "name": "MeteoAlarm",
-      "integration_type": "hub",
+      "integration_type": "service",
       "categories": [
         "weather_alerts.public_warnings"
       ],
       "connectivity": [
         "cloud"
       ],
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "meteoclimatic": {
@@ -15656,6 +15656,15 @@
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "trimlight": {
+      "name": "Trimlight",
+      "integration_type": "device",
+      "categories": [
+        "lighting.led_strips_controllers"
+      ],
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "trmnl": {
       "name": "TRMNL",

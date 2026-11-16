@@ -54,6 +54,7 @@ from .models import (
     HostAttributes,
     HostInfo,
     Interface,
+    LinkInfo,
 )
 
 FRITZ_DATA_KEY: HassKey[FritzData] = HassKey(DOMAIN)
@@ -65,6 +66,7 @@ type FritzConfigEntry = ConfigEntry[AvmWrapper]
 class FritzData:
     """Storage class for platform global data."""
 
+    link_sensors: dict[str, dict[str, set[str]]] = field(default_factory=dict)
     tracked: dict[str, set[str]] = field(default_factory=dict)
     profile_switches: dict[str, set[str]] = field(default_factory=dict)
     wol_buttons: dict[str, set[str]] = field(default_factory=dict)
@@ -190,9 +192,11 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         self._options = options
         await self.hass.async_add_executor_job(self.setup)
 
-        self.hass.data[FRITZ_DATA_KEY].tracked[self.unique_id] = set()
-        self.hass.data[FRITZ_DATA_KEY].profile_switches[self.unique_id] = set()
-        self.hass.data[FRITZ_DATA_KEY].wol_buttons[self.unique_id] = set()
+        fritz_data = self.hass.data[FRITZ_DATA_KEY]
+        fritz_data.link_sensors[self.unique_id] = {}
+        fritz_data.tracked[self.unique_id] = set()
+        fritz_data.profile_switches[self.unique_id] = set()
+        fritz_data.wol_buttons[self.unique_id] = set()
 
         device_registry = dr.async_get(self.hass)
         device_registry.async_get_or_create(
@@ -765,6 +769,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                         dev_info.connected_to = intf["device"]
                         dev_info.connection_type = intf["type"]
                         dev_info.ssid = intf.get("ssid")
+                        dev_info.link_info = LinkInfo.from_node_link(link)
 
                 if self.manage_device_info(dev_info, dev_mac, consider_home):
                     new_device = True
@@ -833,7 +838,10 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             ) and entry_mac not in device_hosts:
                 LOGGER.debug("Removing orphan entity entry %s", entity.entity_id)
                 entity_reg.async_remove(entity.entity_id)
-                self._devices.pop(entry_mac, None)
+
+        # Forget devices the FRITZ!Box dropped, so they count as new if they return
+        for mac in self._devices.keys() - device_hosts.keys():
+            self._devices.pop(mac)
 
         device_reg = dr.async_get(self.hass)
         valid_connections = {
@@ -847,6 +855,13 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 device_reg.async_remove_device(device.id)
 
         fritz_data = self.hass.data[FRITZ_DATA_KEY]
+
+        link_sensors = fritz_data.link_sensors.get(self.unique_id, {})
+        for mac in link_sensors.copy():
+            if mac in device_hosts:
+                continue
+            LOGGER.debug("Removing orphan mac address %s from link sensors", mac)
+            link_sensors.pop(mac)
 
         tracked = fritz_data.tracked.get(self.unique_id, set())
         for mac in tracked.copy():

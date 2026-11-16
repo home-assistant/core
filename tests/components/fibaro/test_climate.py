@@ -2,6 +2,7 @@
 
 from unittest.mock import Mock, patch
 
+import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.climate import ClimateEntityFeature, HVACMode
@@ -322,3 +323,84 @@ async def test_set_target_temperature(
 
         # Assert
         mock_thermostat_with_operating_mode.execute_action.assert_called_once()
+
+
+HVAC_SYSTEM_ENTITY_ID = "climate.test_climate_room_1_test_climate"
+
+
+@pytest.mark.parametrize(
+    ("thermostat_mode", "expected_current_temperature", "expected_target_temperature"),
+    [
+        pytest.param("Heat", 20.5, 21.5, id="heat"),
+        pytest.param("Cool", 25, 24, id="cool"),
+    ],
+)
+async def test_hvac_system_target_temperature(
+    hass: HomeAssistant,
+    mock_fibaro_client: Mock,
+    mock_config_entry: MockConfigEntry,
+    mock_thermostat_parent: Mock,
+    mock_hvac_system: Mock,
+    mock_room: Mock,
+    thermostat_mode: str,
+    expected_current_temperature: float,
+    expected_target_temperature: float,
+) -> None:
+    """Test that the target temperature follows the setpoint of the mode."""
+
+    # Arrange
+    mock_hvac_system.thermostat_mode = thermostat_mode
+    mock_fibaro_client.read_rooms.return_value = [mock_room]
+    mock_fibaro_client.read_devices.return_value = [
+        mock_thermostat_parent,
+        mock_hvac_system,
+    ]
+
+    with patch("homeassistant.components.fibaro.PLATFORMS", [Platform.CLIMATE]):
+        # Act
+        await init_integration(hass, mock_config_entry)
+        # Assert
+        state = hass.states.get(HVAC_SYSTEM_ENTITY_ID)
+        assert state.attributes["current_temperature"] == expected_current_temperature
+        assert state.attributes["temperature"] == expected_target_temperature
+
+
+@pytest.mark.parametrize(
+    ("thermostat_mode", "expected_action"),
+    [
+        pytest.param("Heat", "setHeatingThermostatSetpoint", id="heat"),
+        pytest.param("Cool", "setCoolingThermostatSetpoint", id="cool"),
+    ],
+)
+async def test_hvac_system_set_target_temperature(
+    hass: HomeAssistant,
+    mock_fibaro_client: Mock,
+    mock_config_entry: MockConfigEntry,
+    mock_thermostat_parent: Mock,
+    mock_hvac_system: Mock,
+    mock_room: Mock,
+    thermostat_mode: str,
+    expected_action: str,
+) -> None:
+    """Test that the setpoint of the current mode is set."""
+
+    # Arrange
+    mock_hvac_system.thermostat_mode = thermostat_mode
+    mock_fibaro_client.read_rooms.return_value = [mock_room]
+    mock_fibaro_client.read_devices.return_value = [
+        mock_thermostat_parent,
+        mock_hvac_system,
+    ]
+
+    with patch("homeassistant.components.fibaro.PLATFORMS", [Platform.CLIMATE]):
+        # Act
+        await init_integration(hass, mock_config_entry)
+        await hass.services.async_call(
+            "climate",
+            "set_temperature",
+            {"entity_id": HVAC_SYSTEM_ENTITY_ID, "temperature": 22},
+            blocking=True,
+        )
+
+        # Assert
+        mock_hvac_system.execute_action.assert_called_once_with(expected_action, [22])
