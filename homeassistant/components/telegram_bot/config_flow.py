@@ -636,7 +636,7 @@ class AllowedChatIdsSubEntryFlowHandler(ConfigSubentryFlow):
         """Return subentry title."""
         title = chat_info.effective_name or str(user_input[CONF_CHAT_ID])
         if (message_thread_id := user_input.get(CONF_MESSAGE_THREAD_ID)) is not None:
-            return f"{title} thread {message_thread_id}"
+            return f"{title} #{message_thread_id}"
         return title
 
     async def async_step_user(
@@ -654,12 +654,11 @@ class AllowedChatIdsSubEntryFlowHandler(ConfigSubentryFlow):
         description_placeholders = DESCRIPTION_PLACEHOLDERS.copy()
 
         if user_input is not None:
-            chat_info = await self._async_validate_chat(
-                user_input, errors, description_placeholders
-            )
-
-            if not errors:
-                assert chat_info is not None
+            if (
+                chat_info := await self._async_validate_chat(
+                    user_input, errors, description_placeholders
+                )
+            ) is not None:
                 return self.async_create_entry(
                     title=self._title(chat_info, user_input),
                     data=self._entry_data(user_input),
@@ -712,12 +711,11 @@ class AllowedChatIdsSubEntryFlowHandler(ConfigSubentryFlow):
         description_placeholders = DESCRIPTION_PLACEHOLDERS.copy()
 
         if user_input is not None:
-            chat_info = await self._async_validate_chat(
-                user_input, errors, description_placeholders
-            )
-
-            if not errors:
-                assert chat_info is not None
+            if (
+                chat_info := await self._async_validate_chat(
+                    user_input, errors, description_placeholders
+                )
+            ) is not None:
                 return self.async_update_and_abort(
                     self._get_entry(),
                     self._get_reconfigure_subentry(),

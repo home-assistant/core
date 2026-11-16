@@ -6,7 +6,7 @@ import probatio
 from telegram.constants import InputMediaType
 from telegram.error import TelegramError
 
-from homeassistant.config_entries import ConfigEntryState, ConfigSubentry
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, CommonServiceArgument
 from homeassistant.core import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
@@ -49,6 +49,8 @@ from .const import (
     CHAT_ACTION_UPLOAD_VIDEO,
     CHAT_ACTION_UPLOAD_VIDEO_NOTE,
     CHAT_ACTION_UPLOAD_VOICE,
+    CONF_CHAT_ID,
+    CONF_MESSAGE_THREAD_ID,
     DOMAIN,
     PARSER_HTML,
     PARSER_MD,
@@ -438,10 +440,15 @@ async def _async_send_telegram_message(service: ServiceCall) -> ServiceResponse:
     errors: list[tuple[Exception, str]] = []
 
     # invoke the service for each target
-    for target_config_entry, target_chat_id, target_notify_entity_id in targets:
+    for (
+        target_config_entry,
+        target_chat_id,
+        target_notify_entity_id,
+        thread_id,
+    ) in targets:
         try:
             service_response = await _call_service(
-                service, target_config_entry.runtime_data, target_chat_id
+                service, target_config_entry.runtime_data, target_chat_id, thread_id
             )
 
             if service.service == TelegramBotService.DOWNLOAD_FILE:
@@ -494,7 +501,10 @@ async def _async_send_telegram_message(service: ServiceCall) -> ServiceResponse:
 
 
 async def _call_service(
-    service: ServiceCall, notify_service: TelegramNotificationService, chat_id: int
+    service: ServiceCall,
+    notify_service: TelegramNotificationService,
+    chat_id: int,
+    message_thread_id: int | None = None,
 ) -> dict[str, JsonValueType] | None:
     """Calls a Telegram bot service using the specified bot and chat_id."""
 
@@ -502,6 +512,10 @@ async def _call_service(
 
     kwargs = dict(service.data)
     kwargs[TelegramBotServiceArgument.CHAT_ID] = chat_id
+    if message_thread_id is not None:
+        kwargs.setdefault(
+            TelegramBotServiceArgument.MESSAGE_THREAD_ID, message_thread_id
+        )
 
     messages: dict[str, JsonValueType] | None = None
     if service_name == TelegramBotService.SEND_MESSAGE:
@@ -557,15 +571,17 @@ async def _call_service(
 
 def _build_targets(
     service: ServiceCall,
-) -> list[tuple[TelegramBotConfigEntry, int, str]]:
+) -> list[tuple[TelegramBotConfigEntry, int, str, int | None]]:
     """Builds a list of targets from the service parameters.
 
-    Each target is a tuple of (config_entry, chat_id, notify_entity_id).
+    Each target is a tuple of (config_entry, chat_id, notify_entity_id,
+    message_thread_id).
     The config_entry identifies the bot to use for the service call.
     The chat_id or notify_entity_id identifies the recipient of the message.
+    The message_thread_id is the target's thread, if any.
     """
 
-    targets: list[tuple[TelegramBotConfigEntry, int, str]] = []
+    targets: list[tuple[TelegramBotConfigEntry, int, str, int | None]] = []
 
     # build target list from notify entities using service data: `entity_id`
 
@@ -595,9 +611,16 @@ def _build_targets(
         notify_config_subentry = notify_config_entry.subentries[
             entity_entry.config_subentry_id
         ]
-        notify_chat_id: int = notify_config_subentry.data[ATTR_CHAT_ID]
+        notify_chat_id: int = notify_config_subentry.data[CONF_CHAT_ID]
 
-        targets.append((notify_config_entry, notify_chat_id, notify_entity_id))
+        targets.append(
+            (
+                notify_config_entry,
+                notify_chat_id,
+                notify_entity_id,
+                notify_config_subentry.data.get(CONF_MESSAGE_THREAD_ID),
+            )
+        )
 
     # build target list using service data: `config_entry_id` and `chat_id`
 
@@ -648,7 +671,7 @@ def _build_targets(
                     },
                 )
 
-            default_chat_id: int = subentries[0].data[ATTR_CHAT_ID]
+            default_chat_id: int = subentries[0].data[CONF_CHAT_ID]
             _LOGGER.debug(
                 "Defaulting to chat ID %s for bot %s",
                 default_chat_id,
@@ -668,14 +691,28 @@ def _build_targets(
                 )
 
             message_thread_id = service.data.get(ATTR_MESSAGE_THREAD_ID)
-            target_config_subentry: ConfigSubentry | None = None
-            for subentry in config_entry.subentries.values():
-                if subentry.data[ATTR_CHAT_ID] != chat_id:
-                    continue
-                target_config_subentry = target_config_subentry or subentry
-                if subentry.data.get(ATTR_MESSAGE_THREAD_ID) == message_thread_id:
-                    target_config_subentry = subentry
-                    break
+            chat_subentries = [
+                subentry
+                for subentry in config_entry.subentries.values()
+                if subentry.data[CONF_CHAT_ID] == chat_id
+            ]
+            target_config_subentry = next(
+                (
+                    subentry
+                    for subentry in chat_subentries
+                    if subentry.data.get(CONF_MESSAGE_THREAD_ID) == message_thread_id
+                ),
+                None,
+            )
+            if target_config_subentry is None:
+                target_config_subentry = next(
+                    (
+                        subentry
+                        for subentry in chat_subentries
+                        if CONF_MESSAGE_THREAD_ID not in subentry.data
+                    ),
+                    chat_subentries[0] if chat_subentries else None,
+                )
 
             if target_config_subentry is None:
                 invalid_chat_ids.add(chat_id)
@@ -691,7 +728,14 @@ def _build_targets(
             if not entity_id:
                 invalid_chat_ids.add(chat_id)
             else:
-                targets.append((config_entry, chat_id, entity_id))
+                targets.append(
+                    (
+                        config_entry,
+                        chat_id,
+                        entity_id,
+                        target_config_subentry.data.get(CONF_MESSAGE_THREAD_ID),
+                    )
+                )
 
         if invalid_chat_ids:
             raise ServiceValidationError(

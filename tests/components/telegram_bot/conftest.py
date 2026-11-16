@@ -361,7 +361,7 @@ def _mock_webhooks_config_entry(
     if message_thread_id is not None:
         subentry_data[CONF_MESSAGE_THREAD_ID] = message_thread_id
         unique_id = f"12345678:{message_thread_id}"
-        title = f"mock chat thread {message_thread_id}"
+        title = f"mock chat #{message_thread_id}"
 
     return MockConfigEntry(
         unique_id="mock api key",

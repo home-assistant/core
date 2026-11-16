@@ -105,10 +105,11 @@ async def async_migrate_entry(
     entity_registry = er.async_get(hass)
     devices = dr.async_entries_for_config_entry(device_registry, config_entry.entry_id)
 
-    bot_device = None
+    bot_device = next(
+        (device for device in devices if device.via_device_id is None), None
+    )
     bot_id = None
-    if devices:
-        bot_device = devices[0]
+    if bot_device is not None:
         bot_id = next(
             identifier
             for domain, identifier in bot_device.identifiers
