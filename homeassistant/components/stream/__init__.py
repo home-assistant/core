@@ -527,6 +527,10 @@ class Stream:
                 redact_credentials(str(self.source)),
             )
 
+        # A stop removed the outputs before asking the worker to quit: any output
+        # present now was added since, for the start() waiting on this stop.
+        stopped = self._thread_quit.is_set()
+
         async def worker_finished() -> None:
             # The worker is no longer checking availability
             # of the stream and can no longer track it so
@@ -534,6 +538,8 @@ class Stream:
             # may not be able to interact with the stream.
             if not self.available:
                 self._async_update_state(True)
+            if stopped:
+                return
             # We can call remove_provider() sequentially as the wrapped _stop() function
             # which blocks internally is only called when the last provider is removed.
             for provider in self.outputs().values():
