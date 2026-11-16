@@ -11,12 +11,12 @@ from pytest_homeassistant.components.bluetooth import (
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
-    ATTR_OPTION,
     ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -87,8 +87,11 @@ async def test_select_power_mode(
     """Test choosing a power mode sends the matching power command."""
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: POWER_MODE, ATTR_OPTION: option},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: POWER_MODE,
+            SelectServiceArgument.OPTION: option,
+        },
         blocking=True,
     )
     mock_set_power.assert_awaited_once_with(ANY, target)
@@ -99,8 +102,8 @@ async def test_select_channel(hass: HomeAssistant, mock_set_channel: AsyncMock) 
     """Test choosing a channel moves the station to it."""
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: CHANNEL, ATTR_OPTION: "5"},
+        SelectService.SELECT_OPTION,
+        {CommonServiceArgument.ENTITY_ID: CHANNEL, SelectServiceArgument.OPTION: "5"},
         blocking=True,
     )
     mock_set_channel.assert_awaited_once_with(ANY, 5)
@@ -126,8 +129,11 @@ async def test_standby_not_supported(
     with pytest.raises(HomeAssistantError) as raised:
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: POWER_MODE, ATTR_OPTION: "standby"},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: POWER_MODE,
+                SelectServiceArgument.OPTION: "standby",
+            },
             blocking=True,
         )
     assert raised.value.translation_key == "not_supported"

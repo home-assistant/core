@@ -12,8 +12,8 @@ from pytest_homeassistant.common import (
 from syrupy.assertion import SnapshotAssertion
 from watergate_local_api import WatergateApiException, WatergateIndeterminateError
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -46,7 +46,10 @@ async def test_reboot_press(
     await init_integration(hass, mock_entry)
 
     await hass.services.async_call(
-        BUTTON_DOMAIN, SERVICE_PRESS, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        BUTTON_DOMAIN,
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
 
     mock_watergate_client.async_reboot.assert_awaited_once_with()
@@ -64,7 +67,10 @@ async def test_reboot_outcome_unknown_is_not_an_error(
     )
 
     await hass.services.async_call(
-        BUTTON_DOMAIN, SERVICE_PRESS, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        BUTTON_DOMAIN,
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
 
     mock_watergate_client.async_reboot.assert_awaited_once_with()
@@ -81,7 +87,10 @@ async def test_reboot_failure(
 
     with pytest.raises(HomeAssistantError, match="Failed to reboot the device"):
         await hass.services.async_call(
-            BUTTON_DOMAIN, SERVICE_PRESS, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+            BUTTON_DOMAIN,
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
+            blocking=True,
         )
 
     mock_watergate_client.async_reboot.assert_awaited_once_with()

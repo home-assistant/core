@@ -207,11 +207,16 @@ class EcovacsController:
             unsubscribe()
         for device in self._devices:
             await device.teardown()
-        for legacy_device in self._legacy_devices:
-            await self._hass.async_add_executor_job(legacy_device.disconnect)
+        if self._legacy_devices:
+            await self._hass.async_add_executor_job(self._disconnect_legacy_devices)
         if self._mqtt_client is not None:
             await self._mqtt_client.disconnect()
         await self._authenticator.teardown()
+
+    def _disconnect_legacy_devices(self) -> None:
+        """Disconnect the legacy devices."""
+        for legacy_device in self._legacy_devices:
+            legacy_device.disconnect()
 
     def add_legacy_entity(self, device: VacBot, component: str) -> None:
         """Add legacy entity."""

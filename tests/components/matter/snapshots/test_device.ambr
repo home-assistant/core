@@ -264,7 +264,7 @@
 # ---
 # name: test_multi_endpoint_device_topology[fritz_bridge]
   dict({
-    '00000000000004D2-0000000000000001-42': dict({
+    '00000000000004D2-00000000000003E9-42': dict({
       'children': dict({
       }),
       'entities': dict({
@@ -272,9 +272,9 @@
         'switch.my_device': None,
       }),
       'name': 'my_device',
-      'via_device': '00000000000004D2-0000000000000001-MatterNodeDevice',
+      'via_device': '00000000000004D2-00000000000003E9-MatterNodeDevice',
     }),
-    '00000000000004D2-0000000000000001-MatterNodeDevice': dict({
+    '00000000000004D2-00000000000003E9-MatterNodeDevice': dict({
       'children': dict({
       }),
       'entities': dict({

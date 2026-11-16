@@ -1,5 +1,6 @@
 """Constants for the homematic component."""
 
+from enum import StrEnum
 from typing import TYPE_CHECKING
 
 from homeassistant.util.hass_dict import HassKey
@@ -24,14 +25,10 @@ ATTR_CHANNEL = "channel"
 ATTR_ADDRESS = "address"
 ATTR_DEVICE_TYPE = "device_type"
 ATTR_VALUE = "value"
-ATTR_VALUE_TYPE = "value_type"
 ATTR_INTERFACE = "interface"
 ATTR_ERRORCODE = "error"
 ATTR_MESSAGE = "message"
 ATTR_UNIQUE_ID = "unique_id"
-ATTR_PARAMSET_KEY = "paramset_key"
-ATTR_PARAMSET = "paramset"
-ATTR_RX_MODE = "rx_mode"
 ATTR_DISCOVERY_TYPE = "discovery_type"
 ATTR_LOW_BAT = "LOW_BAT"
 ATTR_LOWBAT = "LOWBAT"
@@ -40,12 +37,6 @@ EVENT_KEYPRESS = "homematic.keypress"
 EVENT_IMPULSE = "homematic.impulse"
 EVENT_ERROR = "homematic.error"
 
-SERVICE_VIRTUALKEY = "virtualkey"
-SERVICE_RECONNECT = "reconnect"
-SERVICE_SET_VARIABLE_VALUE = "set_variable_value"
-SERVICE_SET_DEVICE_VALUE = "set_device_value"
-SERVICE_SET_INSTALL_MODE = "set_install_mode"
-SERVICE_PUT_PARAMSET = "put_paramset"
 
 HM_DEVICE_TYPES = {
     DISCOVER_SWITCHES: [
@@ -273,3 +264,31 @@ CONF_CALLBACK_IP = "callback_ip"
 CONF_CALLBACK_PORT = "callback_port"
 CONF_RESOLVENAMES = "resolvenames"
 CONF_JSONPORT = "jsonport"
+
+
+class HomematicService(StrEnum):
+    """Store keys for Homematic services."""
+
+    VIRTUALKEY = "virtualkey"
+    SET_VARIABLE_VALUE = "set_variable_value"
+    SET_DEVICE_VALUE = "set_device_value"
+    RECONNECT = "reconnect"
+    SET_INSTALL_MODE = "set_install_mode"
+    PUT_PARAMSET = "put_paramset"
+
+
+class HomematicServiceArgument(StrEnum):
+    """Store keys for Homematic service arguments."""
+
+    ADDRESS = "address"
+    CHANNEL = "channel"
+    PARAM = "param"
+    INTERFACE = "interface"
+    NAME = "name"
+    VALUE = "value"
+    VALUE_TYPE = "value_type"
+    MODE = "mode"
+    TIME = "time"
+    PARAMSET_KEY = "paramset_key"
+    PARAMSET = "paramset"
+    RX_MODE = "rx_mode"
