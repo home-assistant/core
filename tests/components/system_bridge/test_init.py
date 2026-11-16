@@ -17,6 +17,7 @@ from systembridgeconnector.exceptions import (
     DataMissingException,
 )
 from systembridgeconnector.models.fixtures.modules.system import FIXTURE_SYSTEM
+from systembridgeconnector.models.keys import KeyClient, NewKey
 from systembridgeconnector.models.modules import GetData, Module, ModulesData
 from systembridgeconnector.models.system_control import PowerState, PowerStateEvent
 
@@ -37,7 +38,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from . import FIXTURE_USER_INPUT, FIXTURE_UUID
+from . import FIXTURE_KEY, FIXTURE_OLD_TOKEN, FIXTURE_USER_INPUT, FIXTURE_UUID
 
 
 @pytest.mark.usefixtures("mock_version")
@@ -60,6 +61,73 @@ async def test_entry_setup_unload(
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
     mock_websocket_client.close.assert_awaited_once()
+
+
+async def _setup_with_old_token(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Set up an entry that still holds the token from before keys."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={**mock_config_entry.data, CONF_TOKEN: FIXTURE_OLD_TOKEN},
+    )
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("mock_version", "mock_websocket_client")
+async def test_setup_exchanges_old_token(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test an entry with the token from before keys trades it for a key."""
+    with patch(
+        "homeassistant.components.system_bridge.HTTPClient.exchange_key",
+        return_value=NewKey(
+            key=FIXTURE_KEY,
+            client=KeyClient(id="ha", name="Home", kind="home-assistant"),
+        ),
+    ) as mock_exchange:
+        await _setup_with_old_token(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.data[CONF_TOKEN] == FIXTURE_KEY
+    assert mock_exchange.call_args.args[0].kind == "home-assistant"
+
+
+@pytest.mark.usefixtures("mock_version", "mock_websocket_client")
+async def test_setup_exchange_refused(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test a token System Bridge turns away asks to sign in again."""
+    with patch(
+        "homeassistant.components.system_bridge.HTTPClient.exchange_key",
+        side_effect=AuthenticationException,
+    ):
+        await _setup_with_old_token(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert [
+        flow["context"]["source"] for flow in hass.config_entries.flow.async_progress()
+    ] == [SOURCE_REAUTH]
+
+
+@pytest.mark.parametrize("side_effect", [ConnectionErrorException, TimeoutError])
+@pytest.mark.usefixtures("mock_version", "mock_websocket_client")
+async def test_setup_exchange_retried(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    side_effect: type[Exception],
+) -> None:
+    """Test an exchange that can't reach System Bridge is tried again."""
+    with patch(
+        "homeassistant.components.system_bridge.HTTPClient.exchange_key",
+        side_effect=side_effect,
+    ):
+        await _setup_with_old_token(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.data[CONF_TOKEN] == FIXTURE_OLD_TOKEN
 
 
 @pytest.mark.parametrize(

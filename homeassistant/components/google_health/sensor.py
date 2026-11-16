@@ -33,7 +33,6 @@ from homeassistant.helpers.device_registry import (
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM, UnitSystem
 
 from . import GoogleHealthConfigEntry
@@ -246,21 +245,13 @@ SLEEP_SENSORS: list[
         key="sleep_start_time",
         translation_key="sleep_start_time",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda data: (
-            dt_util.parse_datetime(data.sleep.start_time)
-            if data and data.sleep and data.sleep.start_time
-            else None
-        ),
+        value_fn=lambda data: data.sleep.start_time if data and data.sleep else None,
     ),
     GoogleHealthSensorEntityDescription[GoogleHealthSleepCoordinator, datetime | None](
         key="sleep_end_time",
         translation_key="sleep_end_time",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda data: (
-            dt_util.parse_datetime(data.sleep.end_time)
-            if data and data.sleep and data.sleep.end_time
-            else None
-        ),
+        value_fn=lambda data: data.sleep.end_time if data and data.sleep else None,
     ),
     GoogleHealthSensorEntityDescription[GoogleHealthSleepCoordinator, int | None](
         key="sleep_rem",
@@ -347,11 +338,7 @@ DEVICE_SENSORS: list[GoogleHealthDeviceSensorEntityDescription] = [
         key="last_sync_time",
         translation_key="last_sync_time",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda device: (
-            dt_util.parse_datetime(device.last_sync_time)
-            if device.last_sync_time
-            else None
-        ),
+        value_fn=lambda device: device.last_sync_time,
     ),
 ]
 
