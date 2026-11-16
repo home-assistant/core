@@ -334,7 +334,6 @@ class ThumbnailView(HomeAssistantView):
 
         try:
             ch = int(channel)
-            # time_id is in camera local time, as snapshot_past expects.
             time = datetime.strptime(time_id, "%Y%m%d%H%M%S")
         except ValueError:
             err_str = f"Reolink thumbnail invalid channel {channel} or time {time_id}"
