@@ -617,29 +617,59 @@ def test_sqlite_wal_bytes_in_memory() -> None:
     engine.dispose()
 
 
+def _add_orphan_attributes(instance: Recorder) -> None:
+    """Add an attributes row without a state."""
+    with session_scope(session=instance.get_session()) as session:
+        session.add(StateAttributes(shared_attrs='{"orphan":true}', hash=1))
+
+
+@pytest.mark.parametrize(
+    ("orphan", "unattributed"),
+    [
+        pytest.param(False, set(), id="no_orphan"),
+        pytest.param(True, {(None, 0, None, None)}, id="orphan"),
+    ],
+)
 @pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
 @pytest.mark.usefixtures("skip_by_db_engine")
 async def test_database_usage_without_dbstat(
-    recorder_mock: Recorder, hass: HomeAssistant
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    orphan: bool,
+    unattributed: set[tuple[None, int, None, None]],
 ) -> None:
     """Test SQLite without dbstat reports row counts without table sizes."""
     await _record_data(hass)
+    if orphan:
+        await recorder_mock.async_add_executor_job(
+            _add_orphan_attributes, recorder_mock
+        )
 
-    with patch(
-        "homeassistant.components.recorder.database_usage.SQLITE_DBSTAT_QUERY",
-        "SELECT * FROM no_such_table",
+    with (
+        patch(
+            "homeassistant.components.recorder.database_usage.SQLITE_DBSTAT_QUERY",
+            "SELECT * FROM no_such_table",
+        ),
+        patch(
+            "homeassistant.components.recorder.database_usage._attribute_lengths"
+        ) as mock_attribute_lengths,
     ):
         usage = await recorder_mock.async_add_executor_job(
             get_database_usage, recorder_mock
         )
 
+    # Attribute sizes are only spread over table bytes
+    mock_attribute_lengths.assert_not_called()
     assert usage["tables"] is None
     assert usage["total_bytes"] > 0
     assert usage["free_bytes"] is not None
     assert {
         (row["entity_id"], row["states"], row["states_bytes"], row["attributes_bytes"])
         for row in usage["entities"]
-    } == {("sensor.busy", 10, None, None), ("sensor.quiet", 1, None, None)}
+    } == {
+        ("sensor.busy", 10, None, None),
+        ("sensor.quiet", 1, None, None),
+    } | unattributed
     assert {
         (row["statistic_id"], row["statistics_bytes"]) for row in usage["statistics"]
     } == {("sensor.busy", None), ("test:external", None)}
@@ -849,12 +879,15 @@ async def test_database_usage_error_not_cached(
 
 
 async def test_database_usage_during_migration(
-    recorder_mock: Recorder, hass_ws_client: WebSocketGenerator
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
-    """Test a refresh is refused while the database is migrated."""
+    """Test a refresh is refused without waiting for an offline migration."""
     client = await hass_ws_client()
 
-    with patch.object(recorder_mock, "migration_in_progress", True):
+    with (
+        patch.object(recorder_mock, "migration_in_progress", True),
+        patch.object(recorder_mock, "async_db_ready", hass.loop.create_future()),
+    ):
         await client.send_json_auto_id(
             {"type": "recorder/database_usage", "refresh": True}
         )
@@ -862,6 +895,35 @@ async def test_database_usage_during_migration(
 
     assert not response["success"]
     assert response["error"]["code"] == "migration_in_progress"
+
+
+@pytest.mark.parametrize("future", ["async_db_connected", "async_db_ready"])
+async def test_database_usage_cancelled_during_startup(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    future: str,
+) -> None:
+    """Test a request cancelled during startup does not cancel recorder setup."""
+    client = await hass_ws_client()
+    pending: asyncio.Future[bool] = hass.loop.create_future()
+
+    with patch.object(recorder_mock, future, pending):
+        await client.send_json_auto_id(
+            {"type": "recorder/database_usage", "refresh": True}
+        )
+        await client.send_json_auto_id({"type": "ping"})
+        assert (await client.receive_json())["type"] == "pong"
+        (task,) = (
+            task
+            for task in asyncio.all_tasks()
+            if task.get_name() == "websocket_api.async:ws_database_usage"
+        )
+        task.cancel()
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert task.cancelled()
+    assert not pending.done()
 
 
 @pytest.mark.usefixtures("recorder_mock")

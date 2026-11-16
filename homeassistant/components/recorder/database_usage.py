@@ -9,7 +9,7 @@ import os
 from typing import TYPE_CHECKING, Any, Final, TypedDict
 
 import probatio
-from sqlalchemy import LargeBinary, cast, func, literal_column, select, text
+from sqlalchemy import LargeBinary, cast, exists, func, literal_column, select, text
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm.session import Session
 
@@ -260,6 +260,20 @@ def _attribute_lengths(
     }
 
 
+def _has_orphan_attributes(session: Session) -> bool:
+    """Return if an attributes row has no state."""
+    return (
+        session.execute(
+            select(StateAttributes.attributes_id)
+            .where(
+                ~exists().where(States.attributes_id == StateAttributes.attributes_id)
+            )
+            .limit(1)
+        ).first()
+        is not None
+    )
+
+
 def _group[KeyT, ValueT: (int, float)](
     values: dict[int | None, ValueT], keys: Mapping[int | None, KeyT]
 ) -> dict[KeyT | None, ValueT]:
@@ -302,7 +316,6 @@ def get_database_usage(instance: Recorder) -> DatabaseUsage:
     with session_scope(session=instance.get_session(), read_only=True) as session:
         _begin_snapshot(session, dialect)
         states = _counts(session, States.metadata_id)
-        attributes = _attribute_lengths(session, dialect)
         statistics = _counts(session, Statistics.metadata_id)
         short_term = _counts(session, StatisticsShortTerm.metadata_id)
         table_bytes: dict[str, int] | None
@@ -315,6 +328,13 @@ def get_database_usage(instance: Recorder) -> DatabaseUsage:
             case _:
                 table_bytes, total_bytes, free_bytes = _sqlite_table_bytes(session)
                 wal_bytes = _sqlite_wal_bytes(session)
+        attributes: dict[int | None, float]
+        if table_bytes is not None:
+            attributes = _attribute_lengths(session, dialect)
+        elif _has_orphan_attributes(session):
+            attributes = {None: 0}
+        else:
+            attributes = {}
         entity_ids: dict[int | None, str | None] = dict(
             session.execute(select(StatesMeta.metadata_id, StatesMeta.entity_id)).all()
         )
@@ -453,17 +473,21 @@ async def ws_database_usage(
         connection.send_result(msg["id"], cache.usage)
         return
     instance = get_instance(hass)
-    # Offline migrations finish and the recorder executor starts once ready
-    if not await instance.async_db_ready:
-        connection.send_error(
-            msg["id"], "recorder_not_ready", "The recorder database is not available"
-        )
-        return
-    if instance.migration_in_progress:
+    # Shielded, as cancelling these shared futures would break recorder startup
+    if (
+        await asyncio.shield(instance.async_db_connected)
+        and instance.migration_in_progress
+    ):
         connection.send_error(
             msg["id"],
             "migration_in_progress",
             "The recorder database is being migrated",
+        )
+        return
+    # The recorder executor starts once the database is ready
+    if not await asyncio.shield(instance.async_db_ready):
+        connection.send_error(
+            msg["id"], "recorder_not_ready", "The recorder database is not available"
         )
         return
     connection.send_result(msg["id"], await cache.async_refresh(instance))
