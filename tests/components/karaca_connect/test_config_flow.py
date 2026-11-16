@@ -12,6 +12,63 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.components.karaca_connect.const import DOMAIN
 
 
+async def test_invalid_login(hass: HomeAssistant) -> None:
+    """Reject invalid credentials before creating an entry."""
+    from karaca_connect_client import KaracaAuthError
+
+    with patch(
+        "homeassistant.components.karaca_connect.config_flow.KaracaClient",
+        autospec=True,
+    ) as client_class:
+        client_class.return_value.login = AsyncMock(
+            side_effect=KaracaAuthError()
+        )
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                "email": "example@example.invalid",
+                "password": "wrong-password",
+            },
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"]["base"] == "invalid_auth"
+
+
+async def test_duplicate_device(hass: HomeAssistant) -> None:
+    """Do not allow a device to be configured twice."""
+    from pytest_homeassistant.common import MockConfigEntry
+
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id="karaca_device-123",
+        title="Existing tea maker", data={},
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.karaca_connect.config_flow.KaracaClient",
+        autospec=True,
+    ) as client_class:
+        client_class.return_value.login = AsyncMock()
+        client_class.return_value.get_devices = AsyncMock(
+            return_value=[{"id": "device-123", "label": "Kitchen"}]
+        )
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                "email": "example@example.invalid",
+                "password": "placeholder",
+            },
+        )
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "already_configured"
+
+
 async def test_single_device_flow(hass: HomeAssistant) -> None:
     """A single available device can be selected without an extra form."""
     with patch(
