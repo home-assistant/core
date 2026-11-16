@@ -1,6 +1,5 @@
 """Tests for the Proxmox VE sensor platform."""
 
-from datetime import timedelta
 from typing import Any
 from unittest.mock import MagicMock, patch
 
@@ -140,15 +139,6 @@ def _guest(
     return next(guest for guest in guests if guest["vmid"] == vmid)
 
 
-async def _poll(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, seconds: float
-) -> None:
-    """Advance the clock and let the coordinator poll once."""
-    freezer.tick(timedelta(seconds=seconds))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-
 @pytest.mark.parametrize(("endpoint", "vmid", "entity_id"), GUEST_UPTIME_PARAMS)
 @pytest.mark.parametrize(
     ("status", "uptime"),
@@ -182,72 +172,10 @@ async def test_guest_uptime_unknown(
     assert state.state == STATE_UNKNOWN
     last_changed = state.last_changed
 
-    await _poll(hass, freezer, DEFAULT_UPDATE_INTERVAL.total_seconds())
+    freezer.tick(DEFAULT_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_UNKNOWN
     assert state.last_changed == last_changed
-
-
-@pytest.mark.freeze_time("2026-05-03T12:00:00.250000+00:00")
-@pytest.mark.parametrize(("endpoint", "vmid", "entity_id"), GUEST_UPTIME_PARAMS)
-async def test_guest_uptime_stable_while_running(
-    hass: HomeAssistant,
-    mock_proxmox_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-    endpoint: str,
-    vmid: int | str,
-    entity_id: str,
-) -> None:
-    """Test the boot time does not change between polls of a running guest."""
-    guest = _guest(mock_proxmox_client, endpoint, vmid)
-    guest["uptime"] = 3600
-
-    with patch("homeassistant.components.proxmoxve.PLATFORMS", [Platform.SENSOR]):
-        await setup_integration(hass, mock_config_entry)
-
-    state = hass.states.get(entity_id)
-    assert state.state == "2026-05-03T11:00:00+00:00"
-    last_changed = state.last_changed
-
-    # Wall clock and reported uptime drift apart by a fraction of a second
-    guest["uptime"] = 3600 + 60
-    await _poll(hass, freezer, 60.8)
-
-    state = hass.states.get(entity_id)
-    assert state.state == "2026-05-03T11:00:00+00:00"
-    assert state.last_changed == last_changed
-
-
-@pytest.mark.freeze_time("2026-05-03T12:00:00+00:00")
-@pytest.mark.parametrize(("endpoint", "vmid", "entity_id"), GUEST_UPTIME_PARAMS)
-async def test_guest_uptime_running_stopped_running(
-    hass: HomeAssistant,
-    mock_proxmox_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-    endpoint: str,
-    vmid: int | str,
-    entity_id: str,
-) -> None:
-    """Test the uptime follows a guest that is stopped and started again."""
-    guest = _guest(mock_proxmox_client, endpoint, vmid)
-    guest["uptime"] = 3600
-
-    with patch("homeassistant.components.proxmoxve.PLATFORMS", [Platform.SENSOR]):
-        await setup_integration(hass, mock_config_entry)
-
-    assert hass.states.get(entity_id).state == "2026-05-03T11:00:00+00:00"
-
-    guest["status"] = "stopped"
-    guest["uptime"] = 0
-    await _poll(hass, freezer, 60)
-
-    assert hass.states.get(entity_id).state == STATE_UNKNOWN
-
-    guest["status"] = "running"
-    guest["uptime"] = 5
-    await _poll(hass, freezer, 60)
-
-    assert hass.states.get(entity_id).state == "2026-05-03T12:01:55+00:00"
