@@ -62,10 +62,13 @@ async def test_onboarding_flow(hass: HomeAssistant) -> None:
     assert result["result"].unique_id is None
 
 
+@pytest.mark.parametrize("unique_id", [None, DOMAIN])
 @pytest.mark.parametrize("source", [SOURCE_USER, SOURCE_IMPORT, "onboarding"])
-async def test_single_instance_allowed(hass: HomeAssistant, source: str) -> None:
+async def test_single_instance_allowed(
+    hass: HomeAssistant, source: str, unique_id: str | None
+) -> None:
     """Test a second config entry is not allowed."""
-    MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
+    MockConfigEntry(domain=DOMAIN, unique_id=unique_id).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": source}, data={}
@@ -73,3 +76,4 @@ async def test_single_instance_allowed(hass: HomeAssistant, source: str) -> None
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
