@@ -1219,12 +1219,6 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.MEASUREMENT,
             suggested_unit_of_measurement=UnitOfElectricPotential.VOLT,
         ),
-        TuyaSensorEntityDescription(
-            key=DPCode.CHARGE_TIME,
-            translation_key="charging_time",
-            device_class=SensorDeviceClass.DURATION,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
     ),
     DeviceCategory.QN: (
         TuyaSensorEntityDescription(
