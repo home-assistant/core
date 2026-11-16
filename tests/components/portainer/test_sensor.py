@@ -18,6 +18,7 @@ from pytest_homeassistant.common import (
 )
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant import config_entries
 from homeassistant.components.portainer.const import DOMAIN
 from homeassistant.components.portainer.coordinator import (
     DEFAULT_DF_SCAN_INTERVAL,
@@ -150,8 +151,11 @@ async def test_disk_space_only_fetched_for_enabled_entities(
         assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
     mock_portainer_client.docker_system_df.assert_not_called()
 
+    # Enabling the entity reloads the config entry after a delay. Waiting for that
+    # reload keeps it from firing during the disk space poll below.
     entity_registry.async_update_entity(entity_id, disabled_by=None)
-    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    freezer.tick(config_entries.RELOAD_AFTER_UPDATE_DELAY)
+    async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done(wait_background_tasks=True)
 
     mock_portainer_client.docker_system_df.assert_called_once_with(1, verbose=True)

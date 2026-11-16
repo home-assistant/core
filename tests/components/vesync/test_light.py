@@ -12,12 +12,10 @@ from pyvesync.const import ProductTypes
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP_KELVIN,
-    ATTR_RGB_COLOR,
     DOMAIN as LIGHT_DOMAIN,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
+    LightEntityStateAttribute,
+    LightService,
+    LightServiceArgument,
 )
 from homeassistant.components.vesync.const import DOMAIN
 from homeassistant.components.vesync.services import VeSyncService
@@ -127,11 +125,11 @@ async def test_tunable_light_turn_on(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
             ATTR_ENTITY_ID: entity_id,
-            ATTR_COLOR_TEMP_KELVIN: 6500,
-            ATTR_BRIGHTNESS: 128,
+            LightServiceArgument.COLOR_TEMP_KELVIN: 6500,
+            LightServiceArgument.BRIGHTNESS: 128,
         },
         blocking=True,
     )
@@ -173,19 +171,19 @@ async def test_dimmable_light_turn_on_and_off(
 
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.attributes[ATTR_BRIGHTNESS] == 0
+    assert state.attributes[LightEntityStateAttribute.BRIGHTNESS] == 0
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 1},
+        LightService.TURN_ON,
+        {ATTR_ENTITY_ID: entity_id, LightServiceArgument.BRIGHTNESS: 1},
         blocking=True,
     )
     bulb.set_brightness.assert_awaited_once_with(1)
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
@@ -193,7 +191,7 @@ async def test_dimmable_light_turn_on_and_off(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
+        LightService.TURN_OFF,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
@@ -233,7 +231,7 @@ async def test_rgb_nightlight_state(
     assert (state := hass.states.get(entity_id)) is not None
     assert state.state == STATE_ON
     assert state.attributes[ATTR_FRIENDLY_NAME] == "OasisMist Night light"
-    assert state.attributes[ATTR_RGB_COLOR] == (255, 0, 64)
+    assert state.attributes[LightEntityStateAttribute.RGB_COLOR] == (255, 0, 64)
     entry = entity_registry.async_get(entity_id)
     assert entry is not None
     assert entry.unique_id == "rgb-humidifier-nightlight"
@@ -265,23 +263,37 @@ async def test_rgb_nightlight_brightness(
     )
     assert (state := hass.states.get(entity_id)) is not None
     assert state.state == STATE_ON
-    assert state.attributes.get(ATTR_BRIGHTNESS) == expected_brightness
+    assert (
+        state.attributes.get(LightEntityStateAttribute.BRIGHTNESS)
+        == expected_brightness
+    )
 
 
 @pytest.mark.parametrize(
     ("data", "expected"),
     [
         pytest.param({}, (None, None, None, None), id="restore"),
-        pytest.param({ATTR_BRIGHTNESS: 1}, (40, None, None, None), id="minimum"),
-        pytest.param({ATTR_BRIGHTNESS: 128}, (70, None, None, None), id="middle"),
-        pytest.param({ATTR_BRIGHTNESS: 255}, (100, None, None, None), id="maximum"),
         pytest.param(
-            {ATTR_RGB_COLOR: (0, 255, 64)},
+            {LightServiceArgument.BRIGHTNESS: 1}, (40, None, None, None), id="minimum"
+        ),
+        pytest.param(
+            {LightServiceArgument.BRIGHTNESS: 128}, (70, None, None, None), id="middle"
+        ),
+        pytest.param(
+            {LightServiceArgument.BRIGHTNESS: 255},
+            (100, None, None, None),
+            id="maximum",
+        ),
+        pytest.param(
+            {LightServiceArgument.RGB_COLOR: (0, 255, 64)},
             (None, 0, 255, 64),
             id="color",
         ),
         pytest.param(
-            {ATTR_BRIGHTNESS: 128, ATTR_RGB_COLOR: (0, 255, 64)},
+            {
+                LightServiceArgument.BRIGHTNESS: 128,
+                LightServiceArgument.RGB_COLOR: (0, 255, 64),
+            },
             (70, 0, 255, 64),
             id="brightness-and-color",
         ),
@@ -302,7 +314,7 @@ async def test_rgb_nightlight_turn_on(
     )
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {ATTR_ENTITY_ID: entity_id, **data},
         blocking=True,
     )
@@ -325,7 +337,7 @@ async def test_rgb_nightlight_turn_off(
         hass, config_entry, manager, entity_registry, rgb_humidifier
     )
     await hass.services.async_call(
-        LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        LIGHT_DOMAIN, LightService.TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
     rgb_humidifier.set_rgb_nightlight.assert_awaited_once_with(power=False)
     rgb_humidifier.turn_off.assert_not_called()
@@ -335,14 +347,26 @@ async def test_rgb_nightlight_turn_off(
     ("data", "expected_brightness", "expected_color"),
     [
         pytest.param({}, 255, (255, 0, 64), id="power-only"),
-        pytest.param({ATTR_BRIGHTNESS: 1}, 4, (255, 0, 64), id="minimum"),
-        pytest.param({ATTR_BRIGHTNESS: 128}, 130, (255, 0, 64), id="middle"),
-        pytest.param({ATTR_BRIGHTNESS: 255}, 255, (255, 0, 64), id="maximum"),
         pytest.param(
-            {ATTR_RGB_COLOR: (0, 255, 64)}, 255, (0, 255, 64), id="color-only"
+            {LightServiceArgument.BRIGHTNESS: 1}, 4, (255, 0, 64), id="minimum"
         ),
         pytest.param(
-            {ATTR_BRIGHTNESS: 128, ATTR_RGB_COLOR: (0, 255, 64)},
+            {LightServiceArgument.BRIGHTNESS: 128}, 130, (255, 0, 64), id="middle"
+        ),
+        pytest.param(
+            {LightServiceArgument.BRIGHTNESS: 255}, 255, (255, 0, 64), id="maximum"
+        ),
+        pytest.param(
+            {LightServiceArgument.RGB_COLOR: (0, 255, 64)},
+            255,
+            (0, 255, 64),
+            id="color-only",
+        ),
+        pytest.param(
+            {
+                LightServiceArgument.BRIGHTNESS: 128,
+                LightServiceArgument.RGB_COLOR: (0, 255, 64),
+            },
             130,
             (0, 255, 64),
             id="brightness-and-color",
@@ -373,28 +397,28 @@ async def test_rgb_nightlight_commands_update_state(
     )
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {ATTR_ENTITY_ID: entity_id, **data},
         blocking=True,
     )
     assert (state := hass.states.get(entity_id)) is not None
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_BRIGHTNESS] == expected_brightness
-    assert state.attributes[ATTR_RGB_COLOR] == expected_color
+    assert state.attributes[LightEntityStateAttribute.BRIGHTNESS] == expected_brightness
+    assert state.attributes[LightEntityStateAttribute.RGB_COLOR] == expected_color
 
     await hass.services.async_call(
-        LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        LIGHT_DOMAIN, LightService.TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
     assert (state := hass.states.get(entity_id)) is not None
     assert state.state == STATE_OFF
 
     await hass.services.async_call(
-        LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        LIGHT_DOMAIN, LightService.TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
     assert (state := hass.states.get(entity_id)) is not None
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_BRIGHTNESS] == expected_brightness
-    assert state.attributes[ATTR_RGB_COLOR] == expected_color
+    assert state.attributes[LightEntityStateAttribute.BRIGHTNESS] == expected_brightness
+    assert state.attributes[LightEntityStateAttribute.RGB_COLOR] == expected_color
     device = rgb_humidifier_config_entry.runtime_data.manager.devices.humidifiers[0]
     assert device.state.device_status == STATE_OFF
 
@@ -416,8 +440,13 @@ async def test_rgb_nightlight_restore_brightness(
     assert (state := hass.states.get(entity_id)) is not None
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: state.attributes[ATTR_BRIGHTNESS]},
+        LightService.TURN_ON,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            LightServiceArgument.BRIGHTNESS: state.attributes[
+                LightEntityStateAttribute.BRIGHTNESS
+            ],
+        },
         blocking=True,
     )
     rgb_humidifier.set_rgb_nightlight.assert_awaited_once_with(
@@ -425,7 +454,7 @@ async def test_rgb_nightlight_restore_brightness(
     )
 
 
-@pytest.mark.parametrize("service", [SERVICE_TURN_ON, SERVICE_TURN_OFF])
+@pytest.mark.parametrize("service", [LightService.TURN_ON, LightService.TURN_OFF])
 async def test_rgb_nightlight_command_failure(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
