@@ -20,6 +20,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, service
+from homeassistant.helpers.os_error import os_read_error
 
 from .const import CONF_DELETE_PERMANENTLY, DOMAIN
 from .coordinator import OneDriveConfigEntry
@@ -149,7 +150,10 @@ def _read_file_contents(
     results = []
     for full_path, relative_path in files:
         path = Path(full_path)
-        file_size = path.stat().st_size
+        try:
+            file_size = path.stat().st_size
+        except OSError as err:
+            raise os_read_error(err, full_path) from err
         if file_size > CONTENT_SIZE_LIMIT:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -160,7 +164,11 @@ def _read_file_contents(
                     "limit": str(CONTENT_SIZE_LIMIT),
                 },
             )
-        results.append((relative_path, path.read_bytes()))
+        try:
+            content = path.read_bytes()
+        except OSError as err:
+            raise os_read_error(err, full_path) from err
+        results.append((relative_path, content))
     return results
 
 

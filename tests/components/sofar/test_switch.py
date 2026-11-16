@@ -1,21 +1,28 @@
 """Tests for the Sofar switch platform."""
 
+from datetime import timedelta
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 from modbus_connection import ModbusError
 from modbus_connection.mock import MockModbusConnection
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.sofar.const import DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.sofar.const import DOMAIN, PACKS_SCAN_INTERVAL
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -53,11 +60,16 @@ async def _setup_pv(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_pv_entities(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test the switch entities a PV-only inverter serves."""
-    entry, _ = await _setup_pv(hass)
+    """Test the switch entities a PV-only inverter serves after a poll."""
+    entry, connection = await _setup_pv(hass)
+    connection.for_unit(1).holding[0x1104] = 1  # remote switch on
+    freezer.tick(timedelta(seconds=PACKS_SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
     await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
 
@@ -109,7 +121,7 @@ async def test_turn_on_modbus_error(
     with pytest.raises(ModbusError, match="busy"):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_id},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )

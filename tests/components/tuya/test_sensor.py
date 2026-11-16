@@ -64,6 +64,23 @@ async def test_meter_channel_child_devices(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize("mock_device_code", ["sp_8zrzjldq07tlxnlv"])
+async def test_camera_pet_feeder(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test pet feeder sensors on a camera (sp) device."""
+    # The feeder datapoints are only provided by a quirk
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
 @pytest.mark.parametrize(
     ("mock_device_code", "expected_children", "expected_parent_phase_entities"),
     [

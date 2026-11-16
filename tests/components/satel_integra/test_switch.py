@@ -22,18 +22,14 @@ from satel_integra.exceptions import SatelCommandExpiredError, SatelNotConnected
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.satel_integra.const import DOMAIN
-from homeassistant.components.switch import (
-    DOMAIN as SWITCH_DOMAIN,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-)
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_CODE,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -143,8 +139,8 @@ async def test_switch_change_state(
     # Test turn on
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.switchable_output"},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: "switch.switchable_output"},
         blocking=True,
     )
 
@@ -158,8 +154,8 @@ async def test_switch_change_state(
     # Test turn off
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.switchable_output"},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: "switch.switchable_output"},
         blocking=True,
     )
 
@@ -197,8 +193,8 @@ async def test_switch_command_validation_error(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.switchable_output"},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: "switch.switchable_output"},
             blocking=True,
         )
 
@@ -257,8 +253,8 @@ async def test_switch_command_error(
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.switchable_output"},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: "switch.switchable_output"},
             blocking=True,
         )
 
@@ -315,16 +311,16 @@ async def test_switch_actions_require_code(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.switchable_output"},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: "switch.switchable_output"},
             blocking=True,
         )
 
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "switch.switchable_output"},
+            SwitchService.TURN_OFF,
+            {CommonServiceArgument.ENTITY_ID: "switch.switchable_output"},
             blocking=True,
         )
 

@@ -29,7 +29,7 @@ from homeassistant.components.sonos.switch import (
     ATTR_VOLUME,
 )
 from homeassistant.components.ssdp import SsdpChange
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -39,6 +39,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    CommonServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -203,8 +204,8 @@ async def test_switch_speech_enhancement(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert getattr(soco, attribute) is True
@@ -385,8 +386,8 @@ async def test_tv_autoplay_switch(
     # Turn off: should call SetAutoplayRoomUUID with empty RoomUUID
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
     soco.deviceProperties.SetAutoplayRoomUUID.assert_called_once_with(
@@ -397,8 +398,8 @@ async def test_tv_autoplay_switch(
     # Turn on: should call SetAutoplayRoomUUID with speaker's own UID
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
     soco.deviceProperties.SetAutoplayRoomUUID.assert_called_once_with(
@@ -523,8 +524,8 @@ async def test_tv_autoplay_toggle_failure_raises(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_id},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -559,8 +560,8 @@ async def test_tv_ungroup_autoplay_switch(
     # Turn off: should send IncludeLinkedZones=1 (include group = stop ungrouping)
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
     soco.deviceProperties.SetAutoplayLinkedZones.assert_called_once_with(
@@ -571,8 +572,8 @@ async def test_tv_ungroup_autoplay_switch(
     # Turn on: should send IncludeLinkedZones=0 (don't include group = ungroup)
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
     soco.deviceProperties.SetAutoplayLinkedZones.assert_called_once_with(
@@ -684,8 +685,8 @@ async def test_tv_ungroup_autoplay_toggle_failure_raises(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: entity_id},
+            SwitchService.TURN_OFF,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
 
