@@ -1573,6 +1573,10 @@ async def test_get_history_service_max_records_exceeded(
 
     with (
         patch("homeassistant.util.dt.utcnow", return_value=now),
+        patch(
+            "homeassistant.components.recorder.services.state_changes_during_period",
+            wraps=history.state_changes_during_period,
+        ) as mock_state_changes,
         pytest.raises(ServiceValidationError) as exc_info,
     ):
         await hass.services.async_call(
@@ -1580,12 +1584,13 @@ async def test_get_history_service_max_records_exceeded(
             "get_history",
             {
                 "start_time": start_time,
-                "entity_id": ["sensor.sensor"],
+                "entity_id": ["sensor.sensor", "sensor.second"],
             },
             return_response=True,
             blocking=True,
         )
 
+    assert mock_state_changes.call_count == 1
     assert exc_info.value.translation_key == "max_records_exceeded"
     assert exc_info.value.translation_placeholders == {
         "entity_id": "sensor.sensor",
