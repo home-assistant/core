@@ -6,12 +6,15 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import BrowseError
 from homeassistant.components.tts import TtsAudioType
+from homeassistant.components.tts.const import DEFAULT_TIME_MEMORY
 from homeassistant.components.tts.media_source import (
     generate_media_source_id,
     parse_media_source_id,
@@ -482,6 +485,37 @@ async def test_resolving_pregenerate(
 
     await hass.async_block_till_done(wait_background_tasks=True)
     assert len(list(mock_tts_cache_dir.iterdir())) == expected_files
+
+
+async def test_resolving_pregenerate_outlasting_memory_cache(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the media URL works when generation outlasts the memory cache age."""
+    entity = SlowMSEntity(DEFAULT_LANG)
+    await mock_config_entry_setup(hass, entity)
+
+    resolve_task = hass.async_create_task(
+        media_source.async_resolve_media(
+            hass,
+            "media-source://tts/tts.test?message=Hello%20World&pregenerate=true",
+            None,
+        )
+    )
+    await entity.started.wait()
+
+    # Let the stream cleanup run while the audio is still being generated.
+    freezer.tick(DEFAULT_TIME_MEMORY + 2)
+    async_fire_time_changed(hass)
+
+    entity.release.set()
+    media = await resolve_task
+
+    client = await hass_client()
+    response = await client.get(media.url)
+    assert response.status == HTTPStatus.OK
+    assert await response.read() == b"slow audio"
 
 
 async def test_resolving_pregenerate_error(hass: HomeAssistant) -> None:

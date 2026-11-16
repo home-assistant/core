@@ -866,6 +866,8 @@ class ResultStream:
         """
         async for _ in self.async_stream_result():
             pass
+        # Cleanup may have dropped the token during a long synthesis.
+        self._async_mark_used()
 
     def async_override_result(self, media_path: str | Path) -> None:
         """Override the TTS stream with a different media path."""
