@@ -112,6 +112,14 @@
       }
     },
     "select": {
+      "auto_preference": {
+        "name": "Auto mode preference",
+        "state": {
+          "default": "Default",
+          "efficient": "Efficient",
+          "quiet": "Quiet"
+        }
+      },
       "night_light_level": {
         "name": "Night light level",
         "state": {
@@ -238,6 +246,9 @@
   "exceptions": {
     "api_response_error": {
       "message": "Invalid response from the VeSync API"
+    },
+    "auto_preference_not_supported": {
+      "message": "This device does not support auto mode preferences"
     },
     "invalid_auth": {
       "message": "[%key:common::config_flow::error::invalid_auth%]"
