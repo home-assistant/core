@@ -3,7 +3,8 @@
 from typing import TYPE_CHECKING, Final, override
 
 from music_assistant_client.client import MusicAssistantClient
-from music_assistant_models.enums import MediaType
+from music_assistant_models.enums import EventType, MediaType
+from music_assistant_models.event import MassEvent
 from music_assistant_models.player import PlayerOption, PlayerOptionType
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
@@ -139,6 +140,19 @@ class MusicAssistantQueuePlaybackSpeed(MusicAssistantEntity, NumberEntity):
         native_step=0.05,
         entity_registry_enabled_default=False,
     )
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Register callbacks, also for the queue the server adds after the player."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self.mass.subscribe(
+                self._on_queue_added, EventType.QUEUE_ADDED, self.player_id
+            )
+        )
+
+    def _on_queue_added(self, event: MassEvent) -> None:
+        self.async_write_ha_state()
 
     @property
     @override
