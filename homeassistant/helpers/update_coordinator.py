@@ -130,6 +130,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         # to make sure the first update was successful.
         # Set type to just T to remove annoying checks that data is not None
         # when it was already checked during setup.
+        # Use data_or_none where data can be read before the first update.
         self.data: _DataT = None  # type: ignore[assignment]
 
         # Pick a random microsecond in range 0.05..0.50 to stagger the refreshes
