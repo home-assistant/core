@@ -163,8 +163,6 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
             auth_status = await self._perform_auth_and_get_details()
 
             if auth_status is None:
-                await self.async_set_unique_id(device_id)
-                self._abort_if_unique_id_configured()
                 return await self.async_step_directives()
 
             if auth_status == "needs_claim":
