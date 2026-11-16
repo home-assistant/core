@@ -184,7 +184,7 @@ async def test_bad_credentials_v1(
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: config})
         await hass.async_block_till_done()
 
-    assert hass.data[EVOHOME_DATA].coordinator.client_v1 is None
+    assert hass.data[EVOHOME_DATA].account.client_v1 is None
     assert "The feature will be disabled until next restart" in caplog.text
 
 
