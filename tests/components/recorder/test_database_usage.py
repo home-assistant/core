@@ -31,12 +31,13 @@ from syrupy.matchers import path_type
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder import Recorder
+from homeassistant.components.recorder.const import SupportedDialect
 from homeassistant.components.recorder.database_usage import (
     CACHE_TIME,
     REFRESH_INTERVAL,
     DatabaseUsage,
+    _begin_snapshot,
     _mysql_table_bytes,
-    _sqlite_table_bytes,
     _sqlite_wal_bytes,
     get_database_usage,
 )
@@ -482,13 +483,15 @@ async def test_database_usage_snapshot(
     """Test a purge during the report does not change what it reads."""
     await _record_data(hass)
 
-    def purge_during_report(*args: Any) -> tuple[dict[str, int] | None, int, int]:
-        result = _sqlite_table_bytes(*args)
+    def purge_during_report(session: Session, dialect: SupportedDialect) -> None:
+        _begin_snapshot(session, dialect)
+        # Anchor the snapshot before the purge; pysqlite defers BEGIN to the
+        # first read
+        session.execute(select(States.state_id).limit(1))
         _purge_entity(recorder_mock, "sensor.busy")
-        return result
 
     with patch(
-        "homeassistant.components.recorder.database_usage._sqlite_table_bytes",
+        "homeassistant.components.recorder.database_usage._begin_snapshot",
         side_effect=purge_during_report,
     ):
         usage = await recorder_mock.async_add_executor_job(
@@ -764,14 +767,13 @@ async def test_database_usage_slow_run(
     freezer.move_to(START)
     slow = timedelta(minutes=10)
 
-    def slow_table_bytes(*args: Any) -> tuple[dict[str, int] | None, int, int]:
-        result = _sqlite_table_bytes(*args)
+    def slow_begin_snapshot(session: Session, dialect: SupportedDialect) -> None:
+        _begin_snapshot(session, dialect)
         freezer.tick(slow)
-        return result
 
     with patch(
-        "homeassistant.components.recorder.database_usage._sqlite_table_bytes",
-        side_effect=slow_table_bytes,
+        "homeassistant.components.recorder.database_usage._begin_snapshot",
+        side_effect=slow_begin_snapshot,
     ):
         report = await _async_usage(client, refresh=True)
 
