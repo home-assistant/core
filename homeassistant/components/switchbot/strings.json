@@ -413,6 +413,12 @@
       "bluetooth_signal": {
         "name": "Bluetooth signal"
       },
+      "current_production": {
+        "name": "Current production"
+      },
+      "energy_production": {
+        "name": "Energy production"
+      },
       "filter_usage": {
         "name": "Filter usage"
       },
@@ -421,6 +427,9 @@
       },
       "pir_triggered_level": {
         "name": "PIR triggered level"
+      },
+      "power_production": {
+        "name": "Power production"
       },
       "radar_triggered_distance": {
         "name": "Radar triggered distance"

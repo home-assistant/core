@@ -48,6 +48,7 @@ from . import (
     KEYPAD_VISION_INFO,
     KEYPAD_VISION_PRO_INFO,
     LEAK_SERVICE_INFO,
+    OUTDOOR_PLUG_EU_SERVICE_INFO,
     PLUG_MINI_EU_SERVICE_INFO,
     PRESENCE_SENSOR_SERVICE_INFO,
     RELAY_SWITCH_2PM_SERVICE_INFO,
@@ -680,6 +681,94 @@ async def test_plug_mini_eu_sensor(hass: HomeAssistant) -> None:
     assert rssi_sensor_attrs[ATTR_FRIENDLY_NAME] == "test-name Bluetooth signal"
     assert rssi_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "dBm"
     assert rssi_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_outdoor_plug_eu_sensor(hass: HomeAssistant) -> None:
+    """Test setting up creates the outdoor plug eu sensors."""
+    await async_setup_component(hass, DOMAIN, {})
+    inject_bluetooth_service_info(hass, OUTDOOR_PLUG_EU_SERVICE_INFO)
+
+    with patch(
+        "homeassistant.components.switchbot.switch.switchbot.SwitchbotOutdoorPlug.get_basic_info",
+        new=AsyncMock(
+            return_value={
+                "power": 500,
+                "current": 0.5,
+                "voltage": 230,
+                "energy": 0.4,
+                "power_production": 100,
+                "energy_production": 0.2,
+                "current_production": 0.3,
+            }
+        ),
+    ):
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            data={
+                CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
+                CONF_NAME: "test-name",
+                CONF_SENSOR_TYPE: "outdoor_plug_eu",
+                CONF_KEY_ID: "ff",
+                CONF_ENCRYPTION_KEY: "ffffffffffffffffffffffffffffffff",
+            },
+            unique_id="aabbccddeeaa",
+        )
+        entry.add_to_hass(hass)
+
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert len(hass.states.async_all("sensor")) == 8
+
+    power_sensor = hass.states.get("sensor.test_name_power")
+    power_sensor_attrs = power_sensor.attributes
+    assert power_sensor.state == "500"
+    assert power_sensor_attrs[ATTR_FRIENDLY_NAME] == "test-name Power"
+    assert power_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "W"
+    assert power_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
+
+    voltage_sensor = hass.states.get("sensor.test_name_voltage")
+    voltage_sensor_attrs = voltage_sensor.attributes
+    assert voltage_sensor.state == "230"
+    assert voltage_sensor_attrs[ATTR_FRIENDLY_NAME] == "test-name Voltage"
+    assert voltage_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "V"
+    assert voltage_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
+
+    current_sensor = hass.states.get("sensor.test_name_current")
+    current_sensor_attrs = current_sensor.attributes
+    assert current_sensor.state == "0.5"
+    assert current_sensor_attrs[ATTR_FRIENDLY_NAME] == "test-name Current"
+    assert current_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "A"
+    assert current_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
+
+    energy_sensor = hass.states.get("sensor.test_name_energy")
+    energy_sensor_attrs = energy_sensor.attributes
+    assert energy_sensor.state == "0.4"
+    assert energy_sensor_attrs[ATTR_FRIENDLY_NAME] == "test-name Energy"
+    assert energy_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "kWh"
+    assert energy_sensor_attrs[ATTR_STATE_CLASS] == "total_increasing"
+
+    rssi_sensor = hass.states.get("sensor.test_name_bluetooth_signal")
+    rssi_sensor_attrs = rssi_sensor.attributes
+    assert rssi_sensor.state == "-60"
+    assert rssi_sensor_attrs[ATTR_FRIENDLY_NAME] == "test-name Bluetooth signal"
+    assert rssi_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "dBm"
+    assert rssi_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
+
+    power_production = hass.states.get("sensor.test_name_power_production")
+    assert power_production.state == "100"
+    assert power_production.attributes[ATTR_UNIT_OF_MEASUREMENT] == "W"
+    energy_production = hass.states.get("sensor.test_name_energy_production")
+    assert energy_production.state == "0.2"
+    assert energy_production.attributes[ATTR_UNIT_OF_MEASUREMENT] == "kWh"
+    assert energy_production.attributes[ATTR_STATE_CLASS] == "total_increasing"
+    current_production = hass.states.get("sensor.test_name_current_production")
+    assert current_production.state == "0.3"
+    assert current_production.attributes[ATTR_UNIT_OF_MEASUREMENT] == "A"
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()

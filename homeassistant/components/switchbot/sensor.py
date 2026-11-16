@@ -106,6 +106,27 @@ SENSOR_TYPES: dict[str, SwitchBotSensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
     ),
+    "power_production": SwitchBotSensorEntityDescription(
+        key="power_production",
+        translation_key="power_production",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+    ),
+    "energy_production": SwitchBotSensorEntityDescription(
+        key="energy_production",
+        translation_key="energy_production",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        device_class=SensorDeviceClass.ENERGY,
+    ),
+    "current_production": SwitchBotSensorEntityDescription(
+        key="current_production",
+        translation_key="current_production",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.CURRENT,
+    ),
     "current": SwitchBotSensorEntityDescription(
         key="current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,

@@ -1414,6 +1414,34 @@ PLUG_MINI_EU_SERVICE_INFO = BluetoothServiceInfoBleak(
     tx_power=-127,
 )
 
+OUTDOOR_PLUG_EU_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="Outdoor Plug (EU)",
+    manufacturer_data={
+        2409: b"\x94\xa9\x90T\x85^?\xa1\x00\x00\x04\xe6\x00\x00\x00\x00",
+    },
+    service_data={
+        "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00\x00\x00\x12\x18\xd0\x15"
+    },
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="Outdoor Plug (EU)",
+        manufacturer_data={
+            2409: b"\x94\xa9\x90T\x85^?\xa1\x00\x00\x04\xe6\x00\x00\x00\x00",
+        },
+        service_data={
+            "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00\x00\x00\x12\x18\xd0\x15"
+        },
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Outdoor Plug (EU)"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
 
 RELAY_SWITCH_2PM_SERVICE_INFO = BluetoothServiceInfoBleak(
     name="Relay Switch 2PM",
