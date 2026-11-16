@@ -21,7 +21,6 @@ class JewishCalendarEntity(CoordinatorEntity[JewishCalendarUpdateCoordinator]):
     """An HA implementation for Jewish Calendar entity."""
 
     _attr_has_entity_name = True
-    _attr_should_poll = False
     _update_unsub: CALLBACK_TYPE | None = None
 
     def __init__(

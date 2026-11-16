@@ -4,10 +4,11 @@
   "categories": ["computers_network.printers"],
   "codeowners": ["@ctalkington", "@brianegge"],
   "config_flow": true,
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/ipp",
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["deepmerge", "pyipp"],
-  "requirements": ["aioipp==0.20.0"],
+  "requirements": ["aioipp==0.21.1"],
   "zeroconf": ["_ipps._tcp.local.", "_ipp._tcp.local."]
 }

@@ -38,12 +38,15 @@ from ..const import (
     ATTR_PROPERTY_NAME,
     DOMAIN,
     EVENT_VALUE_UPDATED,
+    LOGGER,
 )
 from ..helpers import (
     async_bypass_dynamic_config_validation,
     async_get_config_entry_from_node,
+    async_get_node_from_device_id,
     async_get_nodes_from_targets,
     get_device_id,
+    get_endpoint_indices_from_child_device,
 )
 
 # Relative platform type should be <SUBMODULE_NAME>
@@ -96,6 +99,35 @@ async def async_validate_trigger_config(
         raise probatio.Invalid(
             f"No nodes found for given {ATTR_DEVICE_ID}s or {ATTR_ENTITY_ID}s."
         )
+
+    # A child device still resolves to its node, so a child target whose endpoint is
+    # missing or not covered is dropped when attaching (it must not listen on an
+    # unrelated endpoint of the node). Mirror that filtering here and reject the config
+    # only when it would leave no target to attach, so the trigger can't silently do
+    # nothing. Mixed configs where another target still attaches stay valid.
+    endpoint = options.get(ATTR_ENDPOINT)
+    dev_reg = dr.async_get(hass)
+    targets_a_child = False
+    kept_device_ids: list[str] = []
+    for device_id in options.get(ATTR_DEVICE_ID, []):
+        if not isinstance(
+            device_entry := dev_reg.async_get(device_id), dr.ChildDeviceEntry
+        ):
+            kept_device_ids.append(device_id)
+            continue
+        targets_a_child = True
+        try:
+            node = async_get_node_from_device_id(hass, device_id)
+        except ValueError:
+            continue
+        if endpoint in get_endpoint_indices_from_child_device(device_entry, node):
+            kept_device_ids.append(device_id)
+    if targets_a_child and not async_get_nodes_from_targets(
+        hass, {**options, ATTR_DEVICE_ID: kept_device_ids}
+    ):
+        raise probatio.Invalid(
+            f"Endpoint {endpoint} is not covered by any targeted endpoint child device"
+        )
     return config
 
 
@@ -119,7 +151,7 @@ async def async_attach_trigger(
 
     @callback
     def async_on_value_updated(
-        value_id: str, device: dr.DeviceEntry, event: dict
+        value_id: str, device: dr.AnyDeviceEntry, event: dict
     ) -> None:
         """Handle value update."""
         event_value: Value = event["value"]
@@ -178,18 +210,62 @@ async def async_attach_trigger(
     def _create_zwave_listeners() -> None:
         """Create Z-Wave JS listeners."""
         async_remove()
+        # When the trigger explicitly targets an endpoint child device, report that
+        # child device in the payload. Node-, entity- and area-based targets keep
+        # reporting the node (parent) device, so automations that targeted a value
+        # before it moved to a child device are not broken. Child targets whose node
+        # can't currently be resolved are skipped (like async_get_nodes_from_targets)
+        # so reachable targets still attach. A node collapses to a single listener, so
+        # only the child device that covers the configured endpoint is mapped; a child
+        # that doesn't cover the configured endpoint is dropped entirely so it doesn't
+        # attach a parent listener on an unrelated endpoint. The mapping is keyed by the
+        # network-scoped node identifier (home id plus node id), since node ids repeat
+        # across networks.
+        device_ids: list[str] = []
+        child_device_by_node: dict[tuple[str, str], dr.AnyDeviceEntry] = {}
+        for device_id in options.get(ATTR_DEVICE_ID, []):
+            if not isinstance(
+                device_entry := dev_reg.async_get(device_id), dr.ChildDeviceEntry
+            ):
+                device_ids.append(device_id)
+                continue
+            try:
+                target_node = async_get_node_from_device_id(hass, device_id)
+            except ValueError:
+                continue
+            if endpoint not in get_endpoint_indices_from_child_device(
+                device_entry, target_node
+            ):
+                # Normally rejected by async_validate_trigger_config; this is a fallback
+                # for bypassed validation or a child whose endpoints changed since.
+                LOGGER.warning(
+                    "Z-Wave value updated trigger target %s is an endpoint child "
+                    "device that does not cover endpoint %s; dropping this target",
+                    device_id,
+                    endpoint,
+                )
+                continue
+            assert target_node.client.driver is not None
+            child_device_by_node[
+                get_device_id(target_node.client.driver, target_node)
+            ] = device_entry
+            device_ids.append(device_id)
+        # Resolve listener nodes from the filtered device targets, keeping the entity and
+        # area targets untouched so mixed configurations are not broken.
+        targets = {**options, ATTR_DEVICE_ID: device_ids}
         # Nodes list can come from different drivers and we will need to listen to
         # server connections for all of them.
         drivers: set[Driver] = set()
-        for node in async_get_nodes_from_targets(hass, options, dev_reg=dev_reg):
+        for node in async_get_nodes_from_targets(hass, targets, dev_reg=dev_reg):
             driver = node.client.driver
             assert driver is not None  # The node comes from the driver.
             drivers.add(driver)
-            entry = async_get_config_entry_from_node(hass, node)
             device_identifier = get_device_id(driver, node)
-            device = dev_reg.async_get_device_by_identifier(
-                device_identifier, entry.entry_id
-            )
+            if (device := child_device_by_node.get(device_identifier)) is None:
+                entry = async_get_config_entry_from_node(hass, node)
+                device = dev_reg.async_get_device_by_identifier(
+                    device_identifier, entry.entry_id
+                )
             assert device
             value_id = get_value_id_str(
                 node, command_class, property_, endpoint, property_key

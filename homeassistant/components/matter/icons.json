@@ -43,6 +43,9 @@
       "cook_time": {
         "default": "mdi:microwave"
       },
+      "music_sync_sensitivity": {
+        "default": "mdi:microphone-settings"
+      },
       "speaker_setpoint": {
         "default": "mdi:speaker"
       }
@@ -50,6 +53,14 @@
     "select": {
       "laundry_washer_spin_speed": {
         "default": "mdi:reload"
+      },
+      "night_vision": {
+        "default": "mdi:weather-night",
+        "state": {
+          "auto": "mdi:weather-night-partly-cloudy",
+          "off": "mdi:weather-sunny",
+          "on": "mdi:weather-night"
+        }
       },
       "power_level": {
         "default": "mdi:power-settings"
@@ -166,6 +177,12 @@
       },
       "evse_charging_switch": {
         "default": "mdi:ev-station"
+      },
+      "music_sync": {
+        "default": "mdi:music",
+        "state": {
+          "off": "mdi:music-off"
+        }
       },
       "one_touch_locking": {
         "default": "mdi:gesture-tap-button"

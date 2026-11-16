@@ -10,9 +10,8 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant.components.homeassistant import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.components.volvo.const import DOMAIN
 from homeassistant.components.volvo.services import (
-    CONF_CONFIG_ENTRY_ID,
-    CONF_IMAGE_TYPES,
-    SERVICE_GET_IMAGE_URL,
+    VolvoService,
+    VolvoServiceArgument,
     _async_image_exists,
     _parse_exterior_image_url,
 )
@@ -30,7 +29,7 @@ async def test_setup_services(
 
     services = hass.services.async_services_for_domain(DOMAIN)
     assert services
-    assert SERVICE_GET_IMAGE_URL in services
+    assert VolvoService.GET_IMAGE_URL in services
 
 
 @pytest.mark.usefixtures("mock_api")
@@ -48,10 +47,10 @@ async def test_get_image_url_all(
     ):
         images = await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_IMAGE_URL,
+            VolvoService.GET_IMAGE_URL,
             {
-                CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                CONF_IMAGE_TYPES: [],
+                VolvoServiceArgument.ENTRY: mock_config_entry.entry_id,
+                VolvoServiceArgument.IMAGES: [],
             },
             blocking=True,
             return_response=True,
@@ -93,10 +92,10 @@ async def test_get_image_url_selected(
     ):
         images = await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_IMAGE_URL,
+            VolvoService.GET_IMAGE_URL,
             {
-                CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                CONF_IMAGE_TYPES: [image_type],
+                VolvoServiceArgument.ENTRY: mock_config_entry.entry_id,
+                VolvoServiceArgument.IMAGES: [image_type],
             },
             blocking=True,
             return_response=True,
@@ -132,10 +131,10 @@ async def test_invalid_config_entry(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_IMAGE_URL,
+            VolvoService.GET_IMAGE_URL,
             {
-                CONF_CONFIG_ENTRY_ID: entry_id,
-                CONF_IMAGE_TYPES: [],
+                VolvoServiceArgument.ENTRY: entry_id,
+                VolvoServiceArgument.IMAGES: [],
             },
             blocking=True,
             return_response=True,
@@ -157,10 +156,10 @@ async def test_invalid_image_type(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_IMAGE_URL,
+            VolvoService.GET_IMAGE_URL,
             {
-                CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                CONF_IMAGE_TYPES: ["top"],
+                VolvoServiceArgument.ENTRY: mock_config_entry.entry_id,
+                VolvoServiceArgument.IMAGES: ["top"],
             },
             blocking=True,
             return_response=True,

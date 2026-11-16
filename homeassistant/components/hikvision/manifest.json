@@ -4,6 +4,7 @@
   "categories": ["security_safety.cameras"],
   "codeowners": ["@mezz64", "@ptarjan"],
   "config_flow": true,
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/hikvision",
   "integration_type": "device",
   "iot_class": "local_push",

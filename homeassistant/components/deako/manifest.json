@@ -4,6 +4,7 @@
   "categories": ["plugs_switches"],
   "codeowners": ["@sebirdman", "@balake", "@deakolights"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["zeroconf"],
   "documentation": "https://www.home-assistant.io/integrations/deako",
   "iot_class": "local_polling",

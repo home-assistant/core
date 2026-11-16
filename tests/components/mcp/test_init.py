@@ -11,6 +11,7 @@ from unittest.mock import Mock, patch
 import httpx2
 from mcp.types import (
     CallToolResult,
+    ErrorData,
     Implementation,
     InitializeResult,
     ListToolsResult,
@@ -26,10 +27,14 @@ from pytest_homeassistant.common import MockConfigEntry
 import respx
 
 from homeassistant.components.mcp.const import CONF_SLUG, DOMAIN
-from homeassistant.components.mcp.coordinator import create_mcp_httpx_client
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_URL
+from homeassistant.components.mcp.coordinator import (
+    META_USER_ID,
+    create_mcp_httpx_client,
+)
+from homeassistant.config_entries import SOURCE_HASSIO, SOURCE_USER, ConfigEntryState
+from homeassistant.const import CONF_API_TOKEN, CONF_TOKEN, CONF_URL
 from homeassistant.core import Context, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     HomeAssistantError,
@@ -41,8 +46,9 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
 from homeassistant.helpers.httpx_client import SERVER_SOFTWARE
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
-from .conftest import MCP_SERVER_URL, TEST_API_NAME
+from .conftest import API_TOKEN, MCP_SERVER_URL, TEST_API_NAME
 
 SEARCH_MEMORY_TOOL = Tool(
     name="search_memory",
@@ -114,23 +120,24 @@ class FakeMcpServer:
         self.call_tool_result: CallToolResult = CallToolResult(
             content=[TextContent(type="text", text="OK")]
         )
-        self.streamable_http_error: httpx2.Response | Exception | None = None
-        self.sse_error: httpx2.Response | Exception | None = None
-        self.list_tools_error: httpx2.Response | Exception | None = None
-        self.call_tool_error: httpx2.Response | Exception | None = None
+        self.streamable_http_error: httpx2.Response | Exception | ErrorData | None = (
+            None
+        )
+        self.sse_error: httpx2.Response | Exception | ErrorData | None = None
+        self.list_tools_error: httpx2.Response | Exception | ErrorData | None = None
+        self.call_tool_error: httpx2.Response | Exception | ErrorData | None = None
+        self.call_tool_params: dict[str, Any] | None = None
         self._sse_queue: asyncio.Queue[bytes] = asyncio.Queue()
 
     def handle_request(self, request: httpx2.Request) -> httpx2.Response:
         """Handle an incoming MCP Streamable HTTP POST request."""
         if self.streamable_http_error is not None:
-            if isinstance(self.streamable_http_error, Exception):
-                raise self.streamable_http_error
-            return self.streamable_http_error
+            return self._resolve_error(request, self.streamable_http_error)
         return self._dispatch_jsonrpc(request)
 
     def handle_sse(self, request: httpx2.Request) -> httpx2.Response:
         """Handle an incoming MCP SSE GET connection."""
-        if self.sse_error is not None:
+        if self.sse_error is not None and not isinstance(self.sse_error, ErrorData):
             if isinstance(self.sse_error, Exception):
                 raise self.sse_error
             return self.sse_error
@@ -142,7 +149,10 @@ class FakeMcpServer:
 
     def handle_sse_message(self, request: httpx2.Request) -> httpx2.Response:
         """Handle an incoming MCP SSE POST message and push response to SSE stream."""
-        response = self._dispatch_jsonrpc(request)
+        if isinstance(self.sse_error, ErrorData):
+            response = self._resolve_error(request, self.sse_error)
+        else:
+            response = self._dispatch_jsonrpc(request)
         if response.status_code == 200:
             self._sse_queue.put_nowait(
                 f"event: message\ndata: {response.text}\n\n".encode()
@@ -169,19 +179,29 @@ class FakeMcpServer:
 
         if method == "tools/list":
             if self.list_tools_error is not None:
-                if isinstance(self.list_tools_error, Exception):
-                    raise self.list_tools_error
-                return self.list_tools_error
+                return self._resolve_error(request, self.list_tools_error)
             return self._jsonrpc_result(request_id, ListToolsResult(tools=self.tools))
 
         if method == "tools/call":
+            self.call_tool_params = body["params"]
             if self.call_tool_error is not None:
-                if isinstance(self.call_tool_error, Exception):
-                    raise self.call_tool_error
-                return self.call_tool_error
+                return self._resolve_error(request, self.call_tool_error)
             return self._jsonrpc_result(request_id, self.call_tool_result)
 
         return httpx2.Response(400)
+
+    def _resolve_error(
+        self,
+        request: httpx2.Request,
+        error: httpx2.Response | Exception | ErrorData,
+    ) -> httpx2.Response:
+        """Resolve an error setting into a raised exception or HTTP response."""
+        if isinstance(error, Exception):
+            raise error
+        if isinstance(error, ErrorData):
+            body = json.loads(request.content)
+            return self._jsonrpc_error(body.get("id"), error)
+        return error
 
     @staticmethod
     def _jsonrpc_result(request_id: Any, result: Any) -> httpx2.Response:
@@ -193,6 +213,21 @@ class FakeMcpServer:
                 "jsonrpc": "2.0",
                 "id": request_id,
                 "result": result.model_dump(
+                    by_alias=True, exclude_none=True, exclude_unset=True
+                ),
+            },
+        )
+
+    @staticmethod
+    def _jsonrpc_error(request_id: Any, error: ErrorData) -> httpx2.Response:
+        """Format an MCP ErrorData model as a JSON-RPC 2.0 HTTP response."""
+        return httpx2.Response(
+            200,
+            headers={"Content-Type": "application/json"},
+            json={
+                "jsonrpc": "2.0",
+                "id": request_id,
+                "error": error.model_dump(
                     by_alias=True, exclude_none=True, exclude_unset=True
                 ),
             },
@@ -234,25 +269,26 @@ async def test_init(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-@respx.mock
 @pytest.mark.parametrize(
-    "side_effect",
+    "error",
     [
         httpx2.TimeoutException("Some timeout"),
         httpx2.Response(500),
         httpx2.HTTPError("Some HTTP error"),
+        ErrorData(code=-32603, message="Internal error"),
     ],
 )
 async def test_mcp_server_failure(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    side_effect: httpx2.Response | Exception,
+    fake_mcp_server: FakeMcpServer,
+    error: httpx2.Response | Exception | ErrorData,
 ) -> None:
     """Test the integration fails to setup if the server fails initialization.
 
     This tests generic failure types that are independent of transport.
     """
-    respx.post(config_entry.data[CONF_URL]).mock(side_effect=side_effect)
+    fake_mcp_server.streamable_http_error = error
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
@@ -314,17 +350,25 @@ async def test_mcp_server_http_transport_failure(
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+@pytest.mark.parametrize(
+    "error",
+    [
+        httpx2.ConnectError("Connection failed"),
+        ErrorData(code=-32603, message="Internal error"),
+    ],
+)
 async def test_mcp_server_sse_transport_failure(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     fake_sse_mcp_server: FakeMcpServer,
+    error: Exception | ErrorData,
 ) -> None:
     """Test the integration fails to setup if the SSE transport fails.
 
     This exercises the case where the HTTP transport fails with method not
     allowed, indicating an SSE server, then also fails with SSE.
     """
-    fake_sse_mcp_server.sse_error = httpx2.ConnectError("Connection failed")
+    fake_sse_mcp_server.sse_error = error
     await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
@@ -367,13 +411,126 @@ async def test_mcp_server_authentication_failure(
     assert flows[0]["step_id"] == "reauth_confirm"
 
 
+@pytest.mark.usefixtures("fake_mcp_server")
+async def test_api_token(
+    hass: HomeAssistant, config_entry_with_api_token: MockConfigEntry
+) -> None:
+    """Test the token provided by the app discovery is sent on every request."""
+    await hass.config_entries.async_setup(config_entry_with_api_token.entry_id)
+    assert config_entry_with_api_token.state is ConfigEntryState.LOADED
+
+    api = next(
+        iter(api for api in llm.async_get_apis(hass) if api.name == TEST_API_NAME)
+    )
+    api_instance = await api.async_get_api_instance(create_llm_context())
+    await api_instance.tools[0].async_call(
+        hass,
+        llm.ToolInput(tool_name="search_memory", tool_args={"query": "frogs"}),
+        create_llm_context(),
+    )
+
+    assert {call.request.headers.get("Authorization") for call in respx.calls} == {
+        f"Bearer {API_TOKEN}"
+    }
+
+
+@pytest.mark.usefixtures("fake_mcp_server")
+async def test_api_token_changed(
+    hass: HomeAssistant, config_entry_with_api_token: MockConfigEntry
+) -> None:
+    """Test tools held by an ongoing conversation use a new app token."""
+    await hass.config_entries.async_setup(config_entry_with_api_token.entry_id)
+    assert config_entry_with_api_token.state is ConfigEntryState.LOADED
+
+    api = next(
+        iter(api for api in llm.async_get_apis(hass) if api.name == TEST_API_NAME)
+    )
+    api_instance = await api.async_get_api_instance(create_llm_context())
+    hass.config_entries.async_update_entry(
+        config_entry_with_api_token,
+        data={**config_entry_with_api_token.data, CONF_API_TOKEN: "new-api-token"},
+    )
+    await api_instance.tools[0].async_call(
+        hass,
+        llm.ToolInput(tool_name="search_memory", tool_args={"query": "frogs"}),
+        create_llm_context(),
+    )
+
+    assert respx.calls.last.request.headers["Authorization"] == "Bearer new-api-token"
+
+
+@pytest.mark.usefixtures("credential", "fake_mcp_server")
+async def test_oauth_preferred_over_api_token(
+    hass: HomeAssistant, config_entry_with_auth: MockConfigEntry
+) -> None:
+    """Test OAuth is used when the entry also has a token from the app discovery."""
+    hass.config_entries.async_update_entry(
+        config_entry_with_auth,
+        data={**config_entry_with_auth.data, CONF_API_TOKEN: API_TOKEN},
+    )
+
+    await hass.config_entries.async_setup(config_entry_with_auth.entry_id)
+    assert config_entry_with_auth.state is ConfigEntryState.LOADED
+
+    assert {call.request.headers.get("Authorization") for call in respx.calls} == {
+        "Bearer test-access-token"
+    }
+
+
+async def test_api_token_rejected(
+    hass: HomeAssistant,
+    fake_mcp_server: FakeMcpServer,
+    config_entry_with_api_token: MockConfigEntry,
+) -> None:
+    """Test a rejected app token starts reauth until the app announces a new one."""
+    fake_mcp_server.streamable_http_error = httpx2.Response(401)
+
+    await hass.config_entries.async_setup(config_entry_with_api_token.entry_id)
+    assert config_entry_with_api_token.state is ConfigEntryState.SETUP_ERROR
+    assert respx.calls.last.request.headers["Authorization"] == f"Bearer {API_TOKEN}"
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
+
+    fake_mcp_server.streamable_http_error = None
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_HASSIO},
+        data=HassioServiceInfo(
+            config={CONF_URL: MCP_SERVER_URL, CONF_TOKEN: "new-api-token"},
+            name="Example MCP Server",
+            slug="example_mcp_server",
+            uuid="1234",
+        ),
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert config_entry_with_api_token.state is ConfigEntryState.LOADED
+    assert config_entry_with_api_token.data[CONF_API_TOKEN] == "new-api-token"
+    assert respx.calls.last.request.headers["Authorization"] == "Bearer new-api-token"
+    # The reload aborts the reauth flow
+    assert not hass.config_entries.flow.async_progress()
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        httpx2.Response(500),
+        httpx2.Response(404),
+        httpx2.Response(405),
+        ErrorData(code=-32603, message="Internal error"),
+    ],
+)
 async def test_list_tools_failure(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     fake_mcp_server: FakeMcpServer,
+    error: httpx2.Response | ErrorData,
 ) -> None:
     """Test the integration fails to load if the first data fetch returns an error."""
-    fake_mcp_server.list_tools_error = httpx2.Response(500)
+    fake_mcp_server.list_tools_error = error
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
@@ -527,10 +684,81 @@ async def test_call_tool(
     assert result == expected_result
 
 
+@pytest.mark.parametrize(
+    ("source", "context", "expected_meta"),
+    [
+        pytest.param(
+            SOURCE_HASSIO,
+            Context(user_id="test-user-id"),
+            {META_USER_ID: "test-user-id"},
+            id="app_user",
+        ),
+        pytest.param(SOURCE_HASSIO, Context(), None, id="app_no_user"),
+        pytest.param(SOURCE_HASSIO, None, None, id="app_no_context"),
+        pytest.param(
+            SOURCE_USER, Context(user_id="test-user-id"), None, id="remote_server"
+        ),
+    ],
+)
+async def test_call_tool_user_meta(
+    hass: HomeAssistant,
+    fake_mcp_server: FakeMcpServer,
+    source: str,
+    context: Context | None,
+    expected_meta: dict[str, str] | None,
+) -> None:
+    """Test the Home Assistant user is only passed to MCP servers from apps."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=source,
+        data={CONF_URL: MCP_SERVER_URL},
+        title=TEST_API_NAME,
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    api = next(
+        iter(api for api in llm.async_get_apis(hass) if api.name == TEST_API_NAME)
+    )
+    api_instance = await api.async_get_api_instance(create_llm_context())
+    await api_instance.tools[0].async_call(
+        hass,
+        llm.ToolInput(tool_name="search_memory", tool_args={"query": "frogs"}),
+        llm.LLMContext(
+            platform="test_platform",
+            context=context,
+            language="*",
+            assistant="conversation",
+            device_id=None,
+        ),
+    )
+
+    assert fake_mcp_server.call_tool_params is not None
+    assert fake_mcp_server.call_tool_params.get("_meta") == expected_meta
+
+
+@pytest.mark.parametrize(
+    ("error", "expected_message"),
+    [
+        (httpx2.Response(500), "Error when calling tool: Server error"),
+        (httpx2.Response(404), "Error when calling tool: Client error '404 Not Found'"),
+        (
+            httpx2.Response(405),
+            "Error when calling tool: Client error '405 Method Not Allowed'",
+        ),
+        (
+            ErrorData(code=-32603, message="Tool execution error"),
+            "Error communicating with MCP server when calling tool: Tool execution error",
+        ),
+    ],
+)
 async def test_call_tool_fails(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     fake_mcp_server: FakeMcpServer,
+    error: httpx2.Response | ErrorData,
+    expected_message: str,
 ) -> None:
     """Test handling an MCP Tool call failure."""
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -545,10 +773,8 @@ async def test_call_tool_fails(
     tool = api_instance.tools[0]
     assert tool.name == "search_memory"
 
-    fake_mcp_server.call_tool_error = httpx2.Response(500)
-    with pytest.raises(
-        HomeAssistantError, match="Error when calling tool: Server error"
-    ):
+    fake_mcp_server.call_tool_error = error
+    with pytest.raises(HomeAssistantError, match=expected_message):
         await tool.async_call(
             hass,
             llm.ToolInput(
@@ -737,14 +963,10 @@ async def test_list_tools_timeout(
 
 
 @pytest.mark.parametrize(
-    ("error", "expected_message"),
+    "error",
     [
-        (TimeoutError("Call timed out"), "Timeout when calling tool"),
-        # Note: this is not the correct response and will be fixed in a future PR.
-        (
-            httpx2.TimeoutException("Call timed out"),
-            "Error communicating with MCP server when calling tool",
-        ),
+        TimeoutError("Call timed out"),
+        httpx2.TimeoutException("Call timed out"),
     ],
 )
 async def test_tool_call_timeout(
@@ -752,7 +974,6 @@ async def test_tool_call_timeout(
     config_entry: MockConfigEntry,
     fake_mcp_server: FakeMcpServer,
     error: Exception,
-    expected_message: str,
 ) -> None:
     """Test tool call timing out raises HomeAssistantError."""
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -765,7 +986,7 @@ async def test_tool_call_timeout(
 
     fake_mcp_server.call_tool_error = error
 
-    with pytest.raises(HomeAssistantError, match=expected_message):
+    with pytest.raises(HomeAssistantError, match="Timeout when calling tool"):
         await tool.async_call(
             hass,
             llm.ToolInput(

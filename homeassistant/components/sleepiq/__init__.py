@@ -13,11 +13,16 @@ from asyncsleepiq import (
 )
 import probatio
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, PRESSURE, Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.typing import ConfigType
 
@@ -31,6 +36,8 @@ from .coordinator import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+INTEGRATION_TITLE = "SleepIQ"
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -56,13 +63,51 @@ CONFIG_SCHEMA = probatio.Schema(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up sleepiq component."""
     if DOMAIN in config:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=config[DOMAIN]
-            )
-        )
+        hass.async_create_task(_async_import_yaml(hass, config[DOMAIN]))
 
     return True
+
+
+async def _async_import_yaml(hass: HomeAssistant, import_data: dict[str, Any]) -> None:
+    """Import the YAML account into a config entry and raise a repair issue."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=import_data
+    )
+
+    if (
+        result["type"] is FlowResultType.ABORT
+        and result["reason"] != "already_configured"
+    ):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{result['reason']}",
+            breaks_in_ha_version="2027.6.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=f"deprecated_yaml_import_issue_{result['reason']}",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": INTEGRATION_TITLE,
+            },
+        )
+        return
+
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2027.6.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": INTEGRATION_TITLE,
+        },
+    )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SleepIQConfigEntry) -> None:
@@ -178,7 +223,7 @@ def _deduplicate_sleepers(gateway: AsyncSleepIQ) -> None:
 
 
 async def _async_migrate_unique_ids(
-    hass: HomeAssistant, entry: ConfigEntry, gateway: AsyncSleepIQ
+    hass: HomeAssistant, entry: SleepIQConfigEntry, gateway: AsyncSleepIQ
 ) -> None:
     """Migrate old unique ids."""
     names_to_ids = {

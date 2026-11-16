@@ -45,6 +45,10 @@ def client_fixture():
             hello={"deviceUUID": FAKE_UUID},
             system={"modelName": TV_MODEL, "serialNumber": "1234567890"},
             software={"major_ver": "major", "minor_ver": "minor"},
+            connection={
+                "wiredInfo": {"macAddress": "AA:BB:CC:DD:EE:01"},
+                "wifiInfo": {"macAddress": "AA:BB:CC:DD:EE:02"},
+            },
         )
         client.client_key = CLIENT_KEY
         client.tv_state = WebOsTvState(

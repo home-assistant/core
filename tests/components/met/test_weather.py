@@ -5,14 +5,8 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant.components.met.const import DOMAIN
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLOUDY,
-    ATTR_WEATHER_DEW_POINT,
-    ATTR_WEATHER_HUMIDITY,
-    ATTR_WEATHER_PRESSURE,
-    ATTR_WEATHER_TEMPERATURE,
-    ATTR_WEATHER_UV_INDEX,
-    ATTR_WEATHER_WIND_BEARING,
-    ATTR_WEATHER_WIND_SPEED,
     DOMAIN as WEATHER_DOMAIN,
+    WeatherEntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -59,13 +53,13 @@ async def test_weather(hass: HomeAssistant, mock_weather) -> None:
     state = hass.states.get(entity_id)
     assert state
     assert state.state == ATTR_CONDITION_CLOUDY
-    assert state.attributes[ATTR_WEATHER_TEMPERATURE] == 15
-    assert state.attributes[ATTR_WEATHER_PRESSURE] == 100
-    assert state.attributes[ATTR_WEATHER_HUMIDITY] == 50
-    assert state.attributes[ATTR_WEATHER_WIND_SPEED] == 10
-    assert state.attributes[ATTR_WEATHER_WIND_BEARING] == 90
-    assert state.attributes[ATTR_WEATHER_DEW_POINT] == 12.1
-    assert state.attributes[ATTR_WEATHER_UV_INDEX] == 1.1
+    assert state.attributes[WeatherEntityStateAttribute.TEMPERATURE] == 15
+    assert state.attributes[WeatherEntityStateAttribute.PRESSURE] == 100
+    assert state.attributes[WeatherEntityStateAttribute.HUMIDITY] == 50
+    assert state.attributes[WeatherEntityStateAttribute.WIND_SPEED] == 10
+    assert state.attributes[WeatherEntityStateAttribute.WIND_BEARING] == 90
+    assert state.attributes[WeatherEntityStateAttribute.DEW_POINT] == 12.1
+    assert state.attributes[WeatherEntityStateAttribute.UV_INDEX] == 1.1
 
 
 async def test_tracking_home(hass: HomeAssistant, mock_weather) -> None:

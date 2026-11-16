@@ -116,7 +116,7 @@ class FGLairConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=STEP_REAUTH_DATA_SCHEMA,
             description_placeholders={
-                CONF_USERNAME: reauth_entry.data[CONF_USERNAME],
+                "username": reauth_entry.data[CONF_USERNAME],
                 **self.context["title_placeholders"],
             },
             errors=errors,

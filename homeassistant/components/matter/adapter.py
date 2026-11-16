@@ -10,7 +10,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
+from homeassistant.helpers.typing import Undefined
 
 from .const import DOMAIN, ID_TYPE_DEVICE_ID, ID_TYPE_SERIAL, LOGGER
 from .discovery import async_discover_entities
@@ -204,7 +204,7 @@ class MatterAdapter:
         device_registry = dr.async_get(self.hass)
 
         # handle bridged devices
-        via_device_id: str | UndefinedType = UNDEFINED
+        via_device_id: str | Undefined = Undefined
         if endpoint.is_bridged_device and endpoint.node.endpoints[0] != endpoint:
             bridge_device_id = get_device_id(
                 server_info,
@@ -242,7 +242,7 @@ class MatterAdapter:
         # the bridge's device entry keeps every identifier that was ever merged onto
         # it, so a bridged device can still resolve to it through one left behind
         if (
-            via_device_id is not UNDEFINED
+            via_device_id is not Undefined
             and (via_device := device_registry.async_get(via_device_id))
             and (stale_identifiers := via_device.identifiers & identifiers)
         ):

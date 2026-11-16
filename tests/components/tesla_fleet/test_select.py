@@ -10,12 +10,12 @@ from tesla_fleet_api.const import EnergyExportMode, EnergyOperationMode
 from tesla_fleet_api.exceptions import VehicleOffline
 
 from homeassistant.components.select import (
-    ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.components.tesla_fleet.select import HIGH, LOW
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
+from homeassistant.components.tesla_fleet.select import HIGH, LOW, OFF
+from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -108,8 +108,11 @@ async def test_select_services(
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: LOW},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: entity_id,
+                SelectServiceArgument.OPTION: LOW,
+            },
             blocking=True,
         )
         state = hass.states.get(entity_id)
@@ -130,8 +133,11 @@ async def test_select_services(
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: LOW},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: entity_id,
+                SelectServiceArgument.OPTION: LOW,
+            },
             blocking=True,
         )
         state = hass.states.get(entity_id)
@@ -146,10 +152,10 @@ async def test_select_services(
     ) as call:
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: entity_id,
-                ATTR_OPTION: EnergyOperationMode.AUTONOMOUS.value,
+                CommonServiceArgument.ENTITY_ID: entity_id,
+                SelectServiceArgument.OPTION: EnergyOperationMode.AUTONOMOUS.value,
             },
             blocking=True,
         )
@@ -164,10 +170,56 @@ async def test_select_services(
     ) as call:
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: EnergyExportMode.BATTERY_OK.value},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: entity_id,
+                SelectServiceArgument.OPTION: EnergyExportMode.BATTERY_OK.value,
+            },
             blocking=True,
         )
         state = hass.states.get(entity_id)
         assert state.state == EnergyExportMode.BATTERY_OK.value
         call.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("option", "level"),
+    [
+        pytest.param(OFF, 0, id="off"),
+        pytest.param(LOW, 1, id="low"),
+        pytest.param(HIGH, 3, id="high"),
+    ],
+)
+async def test_select_steering_wheel_heat_level(
+    hass: HomeAssistant,
+    mock_vehicle_data: AsyncMock,
+    normal_config_entry: MockConfigEntry,
+    option: str,
+    level: int,
+) -> None:
+    """Tests that the steering wheel heater sends the levels Tesla expects."""
+    mock_vehicle_data.return_value = VEHICLE_DATA_ALT
+    await setup_platform(hass, normal_config_entry, [Platform.SELECT])
+
+    entity_id = "select.test_steering_wheel_heater"
+    with (
+        patch(
+            "tesla_fleet_api.tesla.VehicleFleet.remote_steering_wheel_heat_level_request",
+            return_value=COMMAND_OK,
+        ) as remote_steering_wheel_heat_level_request,
+        patch(
+            "tesla_fleet_api.tesla.VehicleFleet.auto_conditioning_start",
+            return_value=COMMAND_OK,
+        ),
+    ):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: entity_id,
+                SelectServiceArgument.OPTION: option,
+            },
+            blocking=True,
+        )
+    remote_steering_wheel_heat_level_request.assert_called_once_with(level)
+    assert hass.states.get(entity_id).state == option

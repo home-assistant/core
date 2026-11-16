@@ -8,13 +8,13 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.myuplink.const import DOMAIN
-from homeassistant.components.select import ATTR_OPTIONS, DOMAIN as SELECT_DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_OPTION,
-    SERVICE_SELECT_OPTION,
-    Platform,
+from homeassistant.components.select import (
+    ATTR_OPTIONS,
+    DOMAIN as SELECT_DOMAIN,
+    SelectService,
+    SelectServiceArgument,
 )
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -36,8 +36,11 @@ async def test_selecting(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_OPTION: "Economy"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+            SelectServiceArgument.OPTION: "Economy",
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -49,8 +52,11 @@ async def test_selecting(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_OPTION: "Economy"},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+                SelectServiceArgument.OPTION: "Economy",
+            },
             blocking=True,
         )
     assert mock_myuplink_client.async_set_device_points.call_count == 2
@@ -99,8 +105,11 @@ async def test_decimal_enum_values(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: upper_heater, ATTR_OPTION: "0.3"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: upper_heater,
+            SelectServiceArgument.OPTION: "0.3",
+        },
         blocking=True,
     )
     mock_myuplink_client.async_set_device_points.assert_called_once_with(

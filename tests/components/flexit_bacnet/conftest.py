@@ -54,6 +54,7 @@ def mock_flexit_bacnet() -> Generator[AsyncMock]:
         flexit_bacnet.supply_air_temperature = 19.1
         flexit_bacnet.exhaust_air_temperature = -3.3
         flexit_bacnet.extract_air_temperature = 19.0
+        flexit_bacnet.extract_air_humidity = 38.5
         flexit_bacnet.fireplace_ventilation_remaining_duration = 10.0
         flexit_bacnet.rapid_ventilation_remaining_duration = 30.0
         flexit_bacnet.supply_air_fan_control_signal = 74

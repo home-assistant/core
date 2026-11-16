@@ -4,15 +4,21 @@ from asyncio import timeout
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, override
 
-from accuweather import AccuWeather, ApiError, InvalidApiKeyError, RequestsExceededError
+from accuweather import AccuWeather
+from accuweather.exceptions import ApiError, InvalidApiKeyError, RequestsExceededError
 from aiohttp import ClientError
 from aiohttp.client_exceptions import ClientConnectorError
 import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
-from homeassistant.helpers import config_validation as cv
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_LATITUDE,
+    CONF_LOCATION,
+    CONF_LONGITUDE,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import LocationSelector, LocationSelectorConfig
 
 from .const import DOMAIN
 
@@ -38,8 +44,8 @@ class AccuWeatherFlowHandler(ConfigFlow, domain=DOMAIN):
                     accuweather = AccuWeather(
                         user_input[CONF_API_KEY],
                         websession,
-                        latitude=user_input[CONF_LATITUDE],
-                        longitude=user_input[CONF_LONGITUDE],
+                        latitude=user_input[CONF_LOCATION][CONF_LATITUDE],
+                        longitude=user_input[CONF_LOCATION][CONF_LONGITUDE],
                     )
                     await accuweather.async_get_location()
             except ApiError, ClientConnectorError, TimeoutError, ClientError:
@@ -57,22 +63,29 @@ class AccuWeatherFlowHandler(ConfigFlow, domain=DOMAIN):
                 if TYPE_CHECKING:
                     assert accuweather.location_name is not None
 
+                location: dict[str, Any] = user_input.pop(CONF_LOCATION)
                 return self.async_create_entry(
-                    title=accuweather.location_name, data=user_input
+                    title=accuweather.location_name, data={**user_input, **location}
                 )
 
         return self.async_show_form(
             step_id="user",
-            data_schema=probatio.Schema(
-                {
-                    probatio.Required(probatio.Secret(CONF_API_KEY)): str,
-                    probatio.Optional(
-                        CONF_LATITUDE, default=self.hass.config.latitude
-                    ): cv.latitude,
-                    probatio.Optional(
-                        CONF_LONGITUDE, default=self.hass.config.longitude
-                    ): cv.longitude,
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema(
+                    {
+                        probatio.Required(probatio.Secret(CONF_API_KEY)): str,
+                        probatio.Required(CONF_LOCATION): LocationSelector(
+                            LocationSelectorConfig(radius=False)
+                        ),
+                    }
+                ),
+                user_input
+                or {
+                    CONF_LOCATION: {
+                        CONF_LATITUDE: self.hass.config.latitude,
+                        CONF_LONGITUDE: self.hass.config.longitude,
+                    }
+                },
             ),
             errors=errors,
         )
