@@ -128,6 +128,7 @@ PLATFORMS_BY_TYPE = {
     SupportedModels.K11_PLUS_VACUUM.value: [Platform.VACUUM, Platform.SENSOR],
     SupportedModels.K20_VACUUM.value: [Platform.VACUUM, Platform.SENSOR],
     SupportedModels.HUB3.value: [Platform.SENSOR, Platform.BINARY_SENSOR],
+    SupportedModels.HUB4.value: [Platform.SENSOR, Platform.BINARY_SENSOR],
     SupportedModels.LOCK_LITE.value: [
         Platform.BINARY_SENSOR,
         Platform.LOCK,
