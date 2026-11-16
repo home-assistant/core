@@ -21,7 +21,6 @@ def _zone(
         "zoneid": zoneid,
         "name": name,
         "deviceType": device_type,
-        "systemType": "EMBER-PS",
         "pointDataList": [
             {"pointIndex": index, "value": str(value)}
             for index, value in points.items()

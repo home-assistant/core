@@ -33,7 +33,6 @@ from homeassistant.const import (
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -150,8 +149,6 @@ async def async_setup_entry(
 class EphEmberThermostat(ClimateEntity):
     """Representation of a EphEmber thermostat."""
 
-    _attr_has_entity_name = True
-    _attr_name = None
     _attr_hvac_modes = OPERATION_LIST
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
@@ -161,15 +158,11 @@ class EphEmberThermostat(ClimateEntity):
         self._zone_name = zone_name(zone)
         self._zone = zone
         self._attr_unique_id = zone["zoneid"]
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, zone["zoneid"])},
-            manufacturer="EPH Controls",
-            model=zone.get("systemType"),
-            name=self._zone_name,
-        )
 
         # hot water = true, is immersive device without target temperature control.
         self._hot_water = zone_is_hotwater(zone)
+
+        self._attr_name = self._zone_name
 
         if self._hot_water:
             self._attr_target_temperature_step = None
