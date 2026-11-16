@@ -112,6 +112,7 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
         self._chunk_converter = AudioChunkConverter(rate=16000, width=2, channels=1)
         self._is_pipeline_running = False
         self._pipeline_error = False
+        self._wake_word_detected = False
         self._pipeline_ended_event = asyncio.Event()
         self._audio_queue: asyncio.Queue[bytes | None] = asyncio.Queue()
         self._pipeline_id: str | None = None
@@ -220,6 +221,7 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
             # Wake word detection
             # Inform client of wake word detection
             if event.data and (wake_word_output := event.data.get("wake_word_output")):
+                self._wake_word_detected = True
                 detection = Detection(
                     name=wake_word_output["wake_word_id"],
                     timestamp=wake_word_output.get("timestamp"),
@@ -318,9 +320,11 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
                     f"{self.entity_id} {event.type}",
                 )
         elif event.type == assist_pipeline.PipelineEventType.ERROR:
-            # Pipeline error. Prevents an "always on" satellite from restarting
-            # a failing pipeline in a tight loop (e.g. on a config error).
-            self._pipeline_error = True
+            # Prevents an "always on" satellite from restarting a failing
+            # pipeline in a tight loop (e.g. on a config error). After a wake
+            # word, the next run is gated by the user speaking it again.
+            if not self._wake_word_detected:
+                self._pipeline_error = True
             if event.data:
                 self.config_entry.async_create_background_task(
                     self.hass,
@@ -627,16 +631,6 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
                     # Clear last wake word detection
                     wake_word_phrase = None
 
-                    if (
-                        (run_pipeline is not None)
-                        and run_pipeline.restart_on_end
-                        and not self._pipeline_error
-                    ):
-                        # Automatically restart pipeline.
-                        # Used with "always on" streaming satellites.
-                        self._run_pipeline_once(run_pipeline)
-                        continue
-
                     if self._pipeline_error:
                         # Don't restart a failing pipeline in a tight loop; wait
                         # for the satellite to request a new run.
@@ -644,6 +638,10 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
                             "Not restarting pipeline after error; "
                             "waiting for next satellite request"
                         )
+                    elif (run_pipeline is not None) and run_pipeline.restart_on_end:
+                        # Automatically restart pipeline.
+                        # Used with "always on" streaming satellites.
+                        self._run_pipeline_once(run_pipeline)
 
                 if client_event_task not in done:
                     continue
@@ -753,6 +751,7 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
 
         self._is_pipeline_running = True
         self._pipeline_error = False
+        self._wake_word_detected = False
         self._pipeline_ended_event.clear()
         self.config_entry.async_create_background_task(
             self.hass,
