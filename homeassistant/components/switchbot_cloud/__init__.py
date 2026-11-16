@@ -154,22 +154,14 @@ async def make_device_data(
 
     if (
         isinstance(device, Device)
-        and (
-            device.device_type.startswith("Plug")
-            or device.device_type in ["Relay Switch 1PM", "Relay Switch 1"]
-        )
+        and device.device_type in ["Relay Switch 1PM", "Relay Switch 1"]
     ) or isinstance(device, Remote):
         coordinator = await coordinator_for_device(
             hass, entry, api, device, coordinators_by_id
         )
         devices_data.switches.append((device, coordinator))
 
-    if isinstance(device, Device) and device.device_type in [
-        "Relay Switch 1PM",
-        "Plug Mini (US)",
-        "Plug Mini (JP)",
-        "Plug Mini (EU)",
-    ]:
+    if isinstance(device, Device) and device.device_type == "Relay Switch 1PM":
         coordinator = await coordinator_for_device(
             hass, entry, api, device, coordinators_by_id
         )
