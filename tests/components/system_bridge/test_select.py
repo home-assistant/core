@@ -132,6 +132,11 @@ async def test_power_profile_added_later(
             "A connection error occurred",
             id="connection_closed",
         ),
+        pytest.param(
+            ConnectionResetError,
+            "A connection error occurred",
+            id="connection_reset",
+        ),
     ],
 )
 @pytest.mark.usefixtures("init_integration")

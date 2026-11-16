@@ -39,10 +39,10 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.selector import MediaSelector, MediaSelectorConfig
 
+from .const import CONF_ENCRYPTION_KEY, DOMAIN
+
 if TYPE_CHECKING:
     from . import OpenDisplayConfigEntry
-
-from .const import CONF_ENCRYPTION_KEY, DOMAIN
 
 
 class OpenDisplayService(StrEnum):
