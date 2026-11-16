@@ -1,5 +1,8 @@
 """Test config flow."""
 
+import pytest
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.shopping_list.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.core import HomeAssistant
@@ -57,3 +60,16 @@ async def test_onboarding_flow(hass: HomeAssistant) -> None:
     assert result["title"] == "Shopping list"
     assert result["data"] == {}
     assert result["result"].unique_id is None
+
+
+@pytest.mark.parametrize("source", [SOURCE_USER, SOURCE_IMPORT, "onboarding"])
+async def test_single_instance_allowed(hass: HomeAssistant, source: str) -> None:
+    """Test a second config entry is not allowed."""
+    MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": source}, data={}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "single_instance_allowed"
