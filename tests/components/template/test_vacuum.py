@@ -1750,6 +1750,14 @@ async def test_incomplete_fan_speed_issue_disabled_entity(
         template.DOMAIN, INCOMPLETE_FAN_SPEED_ISSUE_ID
     )
 
+    # The disabled entity is never removed, the config entry link cleans up its issue
+    assert await hass.config_entries.async_remove(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert not issue_registry.async_get_issue(
+        template.DOMAIN, INCOMPLETE_FAN_SPEED_ISSUE_ID
+    )
+
 
 async def test_incomplete_fan_speed_issue_kept_when_disabled(
     hass: HomeAssistant,

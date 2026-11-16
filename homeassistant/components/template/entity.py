@@ -386,6 +386,9 @@ class AbstractTemplateEntity(Entity):
                 DOMAIN,
                 issue_id,
                 breaks_in_ha_version="2027.6.0",
+                config_entry_id=(
+                    self.registry_entry.config_entry_id if self.registry_entry else None
+                ),
                 is_fixable=False,
                 severity=ir.IssueSeverity.WARNING,
                 translation_key="incomplete_option_group",
