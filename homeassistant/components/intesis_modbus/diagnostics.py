@@ -33,9 +33,10 @@ async def async_get_config_entry_diagnostics(
     if entry.state is not ConfigEntryState.LOADED:
         return diagnostics
     coordinator = entry.runtime_data
-    report = coordinator.data
-    diagnostics["updated"] = sorted(report.updated)
-    diagnostics["failed"] = {name: str(err) for name, err in report.failed.items()}
+    # The most recent poll, also when it failed; none if nothing answered
+    if (report := coordinator.last_report) is not None:
+        diagnostics["updated"] = sorted(report.updated)
+        diagnostics["failed"] = {name: str(err) for name, err in report.failed.items()}
     try:
         diagnostics["registers"] = await coordinator.device.async_read_raw()
     except ModbusError as err:
