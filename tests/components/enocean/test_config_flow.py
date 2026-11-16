@@ -70,7 +70,7 @@ async def test_detection_flow_with_valid_path(hass: HomeAssistant) -> None:
 
     with patch(
         GATEWAY_CLASS,
-        return_value=Mock(start=AsyncMock(), stop=Mock()),
+        return_value=Mock(start=AsyncMock(), stop=AsyncMock()),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "detect"}, data={CONF_DEVICE: USER_PROVIDED_PATH}
@@ -102,7 +102,8 @@ async def test_detection_flow_with_invalid_path(hass: HomeAssistant) -> None:
     with patch(
         GATEWAY_CLASS,
         return_value=Mock(
-            start=AsyncMock(side_effect=ConnectionError("invalid path")), stop=Mock()
+            start=AsyncMock(side_effect=ConnectionError("invalid path")),
+            stop=AsyncMock(),
         ),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -116,7 +117,7 @@ async def test_detection_flow_with_invalid_path(hass: HomeAssistant) -> None:
     assert CONF_DEVICE in result["errors"]
 
     with (
-        patch(GATEWAY_CLASS, return_value=Mock(start=AsyncMock(), stop=Mock())),
+        patch(GATEWAY_CLASS, return_value=Mock(start=AsyncMock(), stop=AsyncMock())),
         patch(SETUP_ENTRY_METHOD, AsyncMock(return_value=None)),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -132,7 +133,7 @@ async def test_manual_flow_with_valid_path(hass: HomeAssistant) -> None:
 
     with patch(
         GATEWAY_CLASS,
-        return_value=Mock(start=AsyncMock(), stop=Mock()),
+        return_value=Mock(start=AsyncMock(), stop=AsyncMock()),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "manual"}, data={CONF_DEVICE: USER_PROVIDED_PATH}
@@ -150,7 +151,8 @@ async def test_manual_flow_with_invalid_path(hass: HomeAssistant) -> None:
     with patch(
         GATEWAY_CLASS,
         return_value=Mock(
-            start=AsyncMock(side_effect=ConnectionError("invalid path")), stop=Mock()
+            start=AsyncMock(side_effect=ConnectionError("invalid path")),
+            stop=AsyncMock(),
         ),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -162,7 +164,7 @@ async def test_manual_flow_with_invalid_path(hass: HomeAssistant) -> None:
     assert CONF_DEVICE in result["errors"]
 
     with (
-        patch(GATEWAY_CLASS, return_value=Mock(start=AsyncMock(), stop=Mock())),
+        patch(GATEWAY_CLASS, return_value=Mock(start=AsyncMock(), stop=AsyncMock())),
         patch(SETUP_ENTRY_METHOD, AsyncMock(return_value=None)),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -178,7 +180,7 @@ async def test_import_flow_with_valid_path(hass: HomeAssistant) -> None:
 
     with patch(
         GATEWAY_CLASS,
-        return_value=Mock(start=AsyncMock(), stop=Mock()),
+        return_value=Mock(start=AsyncMock(), stop=AsyncMock()),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -198,7 +200,8 @@ async def test_import_flow_with_invalid_path(hass: HomeAssistant) -> None:
     with patch(
         GATEWAY_CLASS,
         return_value=Mock(
-            start=AsyncMock(side_effect=ConnectionError("invalid path")), stop=Mock()
+            start=AsyncMock(side_effect=ConnectionError("invalid path")),
+            stop=AsyncMock(),
         ),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -239,7 +242,7 @@ async def test_usb_discovery(
     with (
         patch(
             GATEWAY_CLASS,
-            return_value=Mock(start=AsyncMock(), stop=Mock()),
+            return_value=Mock(start=AsyncMock(), stop=AsyncMock()),
         ),
         patch(SETUP_ENTRY_METHOD, AsyncMock(return_value=None)),
         patch(

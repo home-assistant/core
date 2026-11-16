@@ -22,6 +22,10 @@ ALERT = {
     "instruction": "Be prepared.",
     "awareness_level": "2; yellow; Moderate",
     "awareness_type": "1; Wind",
+    "identifier": "2.49.0.0.528.0.TEST.20260101080000.1",
+    "message_type": "Alert",
+    "references": None,
+    "sent": "2026-01-01T08:00:00+00:00",
 }
 
 

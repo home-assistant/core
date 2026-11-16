@@ -125,21 +125,6 @@ from .typing import (
     WebSocketGenerator,
 )
 
-if TYPE_CHECKING:
-    # Local import to avoid processing recorder and SQLite modules when running a
-    # testcase which does not use the recorder.
-    from homeassistant.components import recorder
-
-    from .components.infrared.common import (
-        MockInfraredEmitterEntity,
-        MockInfraredReceiverEntity,
-    )
-    from .components.radio_frequency.common import (
-        MockRadioFrequencyEntity,
-        MockRadioFrequencyReceiverEntity,
-    )
-
-
 pytest.register_assert_rewrite("pytest_homeassistant.common")
 
 from .common import (  # noqa: E402, isort:skip
@@ -159,6 +144,20 @@ from .test_util.aiohttp import (  # noqa: E402, isort:skip
     AiohttpClientMocker,
     mock_aiohttp_client,
 )
+
+if TYPE_CHECKING:
+    # Local import to avoid processing recorder and SQLite modules when running a
+    # testcase which does not use the recorder.
+    from homeassistant.components import recorder
+
+    from .components.infrared.common import (
+        MockInfraredEmitterEntity,
+        MockInfraredReceiverEntity,
+    )
+    from .components.radio_frequency.common import (
+        MockRadioFrequencyEntity,
+        MockRadioFrequencyReceiverEntity,
+    )
 
 _LOGGER = logging.getLogger(__name__)
 
