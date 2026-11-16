@@ -22,6 +22,15 @@ class PalazzettiConfigFlow(ConfigFlow, domain=DOMAIN):
 
     _discovered_device: PalazzettiClient
 
+    async def _async_connect(self, host: str) -> PalazzettiClient:
+        """Connect to the CBox at the given host."""
+        client = PalazzettiClient(
+            hostname=host,
+            session=async_get_clientsession(self.hass),
+        )
+        await client.connect()
+        return client
+
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -29,13 +38,8 @@ class PalazzettiConfigFlow(ConfigFlow, domain=DOMAIN):
         """User configuration step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            host = user_input[CONF_HOST]
-            client = PalazzettiClient(
-                hostname=host,
-                session=async_get_clientsession(self.hass),
-            )
             try:
-                await client.connect()
+                client = await self._async_connect(user_input[CONF_HOST])
             except CommunicationError:
                 LOGGER.exception("Communication error")
                 errors["base"] = "cannot_connect"
@@ -67,13 +71,8 @@ class PalazzettiConfigFlow(ConfigFlow, domain=DOMAIN):
         reconfigure_entry = self._get_reconfigure_entry()
 
         if user_input is not None:
-            host = user_input[CONF_HOST]
-            client = PalazzettiClient(
-                hostname=host,
-                session=async_get_clientsession(self.hass),
-            )
             try:
-                await client.connect()
+                client = await self._async_connect(user_input[CONF_HOST])
             except CommunicationError:
                 errors["base"] = "cannot_connect"
             else:
