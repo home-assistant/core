@@ -16,11 +16,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
-from homeassistant.const import (
-    EVENT_HOMEASSISTANT_STARTED,
-    EVENT_HOMEASSISTANT_STOP,
-    MATCH_ALL,
-)
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, MATCH_ALL
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
@@ -37,7 +33,6 @@ from homeassistant.helpers.event import (
     async_track_time_interval,
 )
 from homeassistant.helpers.storage import Store
-from homeassistant.util import dt as dt_util
 from homeassistant.util.read_only_dict import ReadOnlyDict
 
 from .const import DATA_EXPOSED_ENTITIES, DOMAIN
@@ -117,9 +112,8 @@ class ExposedEntity:
 
     def to_json(self) -> dict[str, Any]:
         """Return a JSON serializable representation for storage."""
-        # orphaned_since lives in the top-level "orphaned" map, not on the
-        # record: older cores build records via ExposedEntity(**prefs) and would
-        # fail setup on an unknown key after a downgrade.
+        # orphaned_since is stored in the top-level "orphaned" map, since older
+        # cores fail on unknown record keys after a downgrade.
         return {"assistants": self.assistants}
 
 
@@ -128,9 +122,7 @@ class SerializedExposedEntities(TypedDict):
 
     assistants: dict[str, dict[str, Any]]
     exposed_entities: dict[str, dict[str, Any]]
-    # No minor-version bump for this key: older cores ignore it, and a version
-    # mismatch rewrites the whole store at load, which on affected installs is
-    # a multi-GB write before the sweep has removed anything.
+    # Optional, to avoid a version bump that rewrites the store at load.
     orphaned: NotRequired[dict[str, int]]
 
 
@@ -159,8 +151,7 @@ class ExposedEntities:
         websocket_api.async_register_command(self._hass, ws_expose_new_entities_set)
         websocket_api.async_register_command(self._hass, ws_list_exposed_entities)
         await self._async_load_data()
-        # Entities without a unique_id are never in the entity registry, so
-        # registry removal events can't be used to prune them.
+
         async_track_state_added_domain(
             self._hass, MATCH_ALL, self._async_state_added_listener
         )
@@ -175,26 +166,19 @@ class ExposedEntities:
         def _on_homeassistant_started(_event: Event) -> None:
             """Run one sweep at startup."""
             self._hass.async_create_background_task(
-                self._async_purge_stale_legacy_entities(dt_util.utcnow()),
+                self._async_purge_stale_legacy_entities(),
                 "exposed_entities_startup_sweep",
             )
 
         self._hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STARTED, _on_homeassistant_started
         )
-        cancel_purge = async_track_time_interval(
+
+        async_track_time_interval(
             self._hass,
             self._async_purge_stale_legacy_entities,
             LEGACY_ENTITY_SWEEP_INTERVAL,
-        )
-
-        @callback
-        def _on_homeassistant_stop(_event: Event) -> None:
-            """Cancel the periodic purge."""
-            cancel_purge()
-
-        self._hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, _on_homeassistant_stop
+            cancel_on_shutdown=True,
         )
 
     @callback
@@ -270,13 +254,15 @@ class ExposedEntities:
         entity_id = event.data["entity_id"]
         if (
             exposed_entity := self.entities.get(entity_id)
-        ) and exposed_entity.orphaned_since is not None:
+        ) is not None and exposed_entity.orphaned_since is not None:
             self.entities[entity_id] = dataclasses.replace(
                 exposed_entity, orphaned_since=None
             )
             self._async_schedule_save()
 
-    async def _async_purge_stale_legacy_entities(self, _now: datetime) -> None:
+    async def _async_purge_stale_legacy_entities(
+        self, _now: datetime | None = None
+    ) -> None:
         """Mark stateless legacy entries orphaned and purge long-orphaned ones."""
         now = int(time.time())
         purge_after = LEGACY_ENTITY_PURGE_INTERVAL.total_seconds()
@@ -314,10 +300,8 @@ class ExposedEntities:
 
             await asyncio.sleep(0)
 
-        # Cloud caches assistant settings and only syncs removals when notified.
-        # Once per pass, since listeners resync on every call. A shutdown before
-        # this point drops the notification; the stale remote device that leaves
-        # is the pre-purge status quo.
+        # Notify once per pass, since listeners resync on every call. A sweep
+        # cancelled at shutdown drops the notification.
         for assistant in purged_assistants:
             for listener in self._listeners.get(assistant, []):
                 listener()
@@ -536,7 +520,6 @@ class ExposedEntities:
         """Schedule saving the preferences."""
         self._store.async_delay_save(self._data_to_save, SAVE_DELAY)
 
-    @callback
     def _data_to_save(self) -> SerializedExposedEntities:
         """Return JSON-compatible date for storing to file."""
         # Intermediate lists: Store calls this from an executor thread.

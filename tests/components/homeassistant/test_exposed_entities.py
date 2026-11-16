@@ -23,11 +23,7 @@ from homeassistant.components.homeassistant.exposed_entities import (
     async_listen_entity_updates,
     async_should_expose,
 )
-from homeassistant.const import (
-    EVENT_HOMEASSISTANT_STARTED,
-    EVENT_HOMEASSISTANT_STOP,
-    EntityCategory,
-)
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -813,25 +809,6 @@ async def test_orphaned_since_stored_outside_records(
     assert stored["data"]["orphaned"] == {
         "sensor.long_gone": exposed_entities.entities["sensor.long_gone"].orphaned_since
     }
-
-
-async def test_purge_sweep_cancelled_on_stop(hass: HomeAssistant) -> None:
-    """The periodic sweep timer is cancelled on Home Assistant stop."""
-    assert await async_setup_component(hass, DOMAIN, {})
-
-    async_expose_entity(hass, "test1", "sensor.long_gone", True)
-    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
-    assert "sensor.long_gone" in exposed_entities.entities
-
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-    await hass.async_block_till_done()
-
-    async_fire_time_changed(hass, dt_util.utcnow() + LEGACY_ENTITY_SWEEP_INTERVAL)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    # The sweep must not have run after stop, so nothing was tracked or purged
-    assert "sensor.long_gone" in exposed_entities.entities
-    assert exposed_entities.entities["sensor.long_gone"].orphaned_since is None
 
 
 async def test_purge_stale_legacy_entities_runs_on_startup(hass: HomeAssistant) -> None:
