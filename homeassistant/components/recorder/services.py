@@ -249,24 +249,39 @@ def _get_history(
     start_time: datetime,
     end_time: datetime | None,
     entity_ids: list[str],
+    allow_truncation: bool,
 ) -> dict[str, list[State]]:
     """Fetch history states for entities in a single executor job."""
     result: dict[str, list[State]] = {}
+    start_ts = start_time.timestamp()
 
     for entity_id in entity_ids:
-        result.update(
-            state_changes_during_period(
-                hass,
-                start_time,
-                end_time,
-                entity_id=entity_id,
-                no_attributes=True,
-                descending=False,
-                # Request limit + 1 records to allow detection of SQL silently truncating the in-window states.
-                limit=MAX_GET_HISTORY_RECORDS_PER_ENTITY + 1,
-                include_start_time_state=True,
-            )
+        entity_states = state_changes_during_period(
+            hass,
+            start_time,
+            end_time,
+            entity_id=entity_id,
+            no_attributes=True,
+            descending=False,
+            # Request limit + 1 records to allow detection of SQL silently truncating the in-window states.
+            limit=MAX_GET_HISTORY_RECORDS_PER_ENTITY + 1,
+            include_start_time_state=True,
         )
+        if not allow_truncation and (states := entity_states.get(entity_id)):
+            # The start time state is clamped to start_time, in-window states are later
+            in_window_count = sum(
+                state.last_updated_timestamp > start_ts for state in states
+            )
+            if in_window_count > MAX_GET_HISTORY_RECORDS_PER_ENTITY:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="max_records_exceeded",
+                    translation_placeholders={
+                        "entity_id": entity_id,
+                        "max_records": str(MAX_GET_HISTORY_RECORDS_PER_ENTITY),
+                    },
+                )
+        result.update(entity_states)
 
     return result
 
@@ -313,6 +328,7 @@ async def _async_handle_get_history_service(
         start_time,
         end_time,
         entity_ids,
+        allow_truncation,
     )
 
     start_ts = start_time.timestamp()
@@ -325,15 +341,6 @@ async def _async_handle_get_history_service(
         )
         cutoff: datetime | None = None
         if in_window_count > MAX_GET_HISTORY_RECORDS_PER_ENTITY:
-            if not allow_truncation:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="max_records_exceeded",
-                    translation_placeholders={
-                        "entity_id": entity_id,
-                        "max_records": str(MAX_GET_HISTORY_RECORDS_PER_ENTITY),
-                    },
-                )
             truncated_entities.append(entity_id)
             # The extra state was only fetched to detect truncation
             cutoff = dt_util.utc_from_timestamp(states[-1].last_updated_timestamp)
