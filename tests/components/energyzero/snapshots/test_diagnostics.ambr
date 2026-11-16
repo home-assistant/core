@@ -27,6 +27,10 @@
       'current_hour_price': None,
       'next_hour_price': None,
     }),
+    'gas_all_in': dict({
+      'current_hour_price': None,
+      'next_hour_price': None,
+    }),
   })
 # ---
 # name: test_entry_diagnostics
@@ -54,6 +58,10 @@
       'periods_priced_equal_or_lower': 20,
     }),
     'gas': dict({
+      'current_hour_price': None,
+      'next_hour_price': None,
+    }),
+    'gas_all_in': dict({
       'current_hour_price': None,
       'next_hour_price': None,
     }),
