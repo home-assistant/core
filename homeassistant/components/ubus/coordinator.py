@@ -48,17 +48,20 @@ class UbusSharedState:
 
     ``reports`` maps a MAC address to the latest report of each router
     which still sees the client; ``owners`` maps a MAC address to the
-    config entry that owns its device tracker entity.
+    config entry that owns its device tracker entity; ``health`` maps a
+    router host to the success of its last update.
     """
 
     reports: dict[str, dict[str, RouterReport]]
     owners: dict[str, str]
+    health: dict[str, bool]
     seq: int
 
     def __init__(self) -> None:
         """Initialize the shared state."""
         self.reports = {}
         self.owners = {}
+        self.health = {}
         self.seq = 0
 
     def source(self, mac: str) -> str | None:
@@ -109,9 +112,16 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
     @callback
     @override
     def _async_refresh_finished(self) -> None:
-        """Release the clients claimed by a router we can no longer read."""
-        if not self.last_update_success:
+        """Release claimed clients and record this router's health."""
+        shared: UbusSharedState = self.hass.data[DOMAIN]
+        healthy = self.last_update_success
+        if not healthy:
             self.clear_clients()
+        if shared.health.get(self.host, True) != healthy:
+            shared.health[self.host] = healthy
+            # A health transition changes the availability of a tracker
+            # which no router reports, without any client list change.
+            async_dispatcher_send(self.hass, SIGNAL_CLIENTS_UPDATED)
 
     @callback
     def _async_publish_clients(self, clients: dict[str, str | None]) -> None:

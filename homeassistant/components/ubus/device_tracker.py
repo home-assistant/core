@@ -181,13 +181,16 @@ async def async_setup_entry(
         if TYPE_CHECKING:
             assert event.data["action"] == "remove"
         connections = set(event.data["device"]["connections"])
-        tracked.difference_update(
-            [
-                mac
-                for mac in tracked
-                if (dr.CONNECTION_NETWORK_MAC, dr.format_mac(mac)) in connections
-            ]
-        )
+        removed = {
+            mac
+            for mac in tracked
+            if (dr.CONNECTION_NETWORK_MAC, dr.format_mac(mac)) in connections
+        }
+        tracked.difference_update(removed)
+        for mac in removed:
+            # Release the claim so another entry can create the tracker if
+            # the client reconnects to a different router.
+            shared.owners.pop(mac, None)
 
     @callback
     def _is_own_device_removed(event_data: dr.EventDeviceRegistryUpdatedData) -> bool:
@@ -289,14 +292,19 @@ class UbusScannerEntity(CoordinatorEntity[UbusDataUpdateCoordinator], ScannerEnt
     @override
     def available(self) -> bool:
         """Return whether the device state is reported by any ubus router."""
-        if self._mac in self.hass.data[DOMAIN].reports:
+        shared: UbusSharedState = self.hass.data[DOMAIN]
+        if self._mac in shared.reports:
             return True
-        # An unreachable router may still be connected to the device.
+        # A router which can't be read may still be connected to the device.
         return all(
-            entry.state is ConfigEntryState.LOADED
-            and entry.runtime_data.last_update_success
+            shared.health.get(entry.data[CONF_HOST], True)
             for entry in self.hass.config_entries.async_entries(DOMAIN)
-            if entry.state in (ConfigEntryState.LOADED, ConfigEntryState.SETUP_RETRY)
+            if entry.state
+            in (
+                ConfigEntryState.LOADED,
+                ConfigEntryState.SETUP_IN_PROGRESS,
+                ConfigEntryState.SETUP_RETRY,
+            )
         )
 
     @property
