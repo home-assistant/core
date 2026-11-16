@@ -146,15 +146,14 @@ class TuyaEntity(Entity):
         except ApiRequestException as err:
             # error_code is typed as str, but is passed through from the JSON response
             code = str(err.error_code)
-            if translation_key := _API_ERROR_TRANSLATION_KEYS.get(
-                (code, err.error_message)
-            ) or _API_ERROR_TRANSLATION_KEYS.get((code, None)):
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN, translation_key=translation_key
-                ) from err
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="command_rejected_with_reason",
+                translation_key=_API_ERROR_TRANSLATION_KEYS.get(
+                    (code, err.error_message)
+                )
+                or _API_ERROR_TRANSLATION_KEYS.get(
+                    (code, None), "command_rejected_with_reason"
+                ),
                 translation_placeholders={"code": code},
             ) from err
         except TuyaSDKException as err:

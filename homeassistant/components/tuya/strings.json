@@ -1390,10 +1390,10 @@
       "message": "Unable to process action as the device does not provide a corresponding function code (expected one of {expected} in {available})."
     },
     "command_not_accepted": {
-      "message": "The Tuya cloud does not accept this command or value for this device (error 2008)."
+      "message": "The Tuya cloud does not accept this command or value for this device (error {code})."
     },
     "command_rate_limited": {
-      "message": "The Tuya cloud is limiting requests, try again later (API_QPS_LIMIT_OR_DEGRADE)."
+      "message": "The Tuya cloud is limiting requests, try again later."
     },
     "command_rejected": {
       "message": "The Tuya cloud rejected the command."
@@ -1402,7 +1402,7 @@
       "message": "The Tuya cloud rejected the command (error {code})."
     },
     "command_sign_invalid": {
-      "message": "The Tuya cloud rejected the command because the request signature is invalid (sign invalid)."
+      "message": "The Tuya cloud rejected the command because the request signature is invalid."
     },
     "device_not_found": {
       "message": "Feeder with ID {device_id} could not be found."

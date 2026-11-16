@@ -236,14 +236,14 @@ async def test_action(
         ),
         pytest.param(
             ApiRequestException(error_code="-9999999", error_message="sign invalid"),
-            "The Tuya cloud rejected the command because the request signature is invalid (sign invalid)",
+            "The Tuya cloud rejected the command because the request signature is invalid",
             id="sign_invalid",
         ),
         pytest.param(
             ApiRequestException(
                 error_code="-9999999", error_message="API_QPS_LIMIT_OR_DEGRADE"
             ),
-            "The Tuya cloud is limiting requests, try again later (API_QPS_LIMIT_OR_DEGRADE)",
+            "The Tuya cloud is limiting requests, try again later",
             id="rate_limited",
         ),
         pytest.param(
