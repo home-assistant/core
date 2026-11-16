@@ -35,6 +35,17 @@ from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, SCHEDULE_MAX_AGE
 
+# reasons with a message of their own; any other gets that of CALL_FAILED
+_API_CALL_ERROR_REASONS: Final = frozenset(
+    {
+        ec2.ApiCallErrorReason.COMM_TASK_FAILED,
+        ec2.ApiCallErrorReason.CONNECTION_FAILED,
+        ec2.ApiCallErrorReason.RATE_LIMITED,
+        ec2.ApiCallErrorReason.REQUEST_REJECTED,
+        ec2.ApiCallErrorReason.SERVER_ERROR,
+    }
+)
+
 type _Schedule = list[EvoDhwScheduleDayOfWeekT] | list[EvoZonScheduleDayOfWeekT]
 type _HighPrecisionTemps = dict[str, float | None]  # by DHW/zone id
 
@@ -253,10 +264,14 @@ class EvoLocationCoordinator(_EvoCoordinator[EvoLocStatusT]):
             raise
 
         except ec2.ApiCallFailedError as err:
+            self.logger.debug("The request to the vendor's API failed: %s", err)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="api_call_failed",
-                translation_placeholders={"error": str(err)},
+                translation_key=(
+                    err.reason
+                    if err.reason in _API_CALL_ERROR_REASONS
+                    else ec2.ApiCallErrorReason.CALL_FAILED
+                ),
             ) from err
 
         if request_refresh:  # wait a moment for system to quiesce before updating state

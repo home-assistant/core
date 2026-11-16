@@ -321,6 +321,71 @@ async def test_action_api_call_failed(
     assert exc_info.value.translation_key == "api_call_failed"
 
 
+@pytest.mark.parametrize("install", ["default"])
+@pytest.mark.parametrize(
+    ("reason", "translation_key"),
+    [
+        pytest.param(
+            evo_exc.ApiCallErrorReason.CALL_FAILED, "api_call_failed", id="call_failed"
+        ),
+        pytest.param(
+            evo_exc.ApiCallErrorReason.COMM_TASK_FAILED,
+            "api_comm_task_failed",
+            id="comm_task_failed",
+        ),
+        pytest.param(
+            evo_exc.ApiCallErrorReason.CONNECTION_FAILED,
+            "api_connection_failed",
+            id="connection_failed",
+        ),
+        pytest.param(
+            evo_exc.ApiCallErrorReason.RATE_LIMITED,
+            "api_rate_limited",
+            id="rate_limited",
+        ),
+        pytest.param(
+            evo_exc.ApiCallErrorReason.REQUEST_REJECTED,
+            "api_request_rejected",
+            id="request_rejected",
+        ),
+        pytest.param(
+            evo_exc.ApiCallErrorReason.SERVER_ERROR,
+            "api_server_error",
+            id="server_error",
+        ),
+        pytest.param(
+            evo_exc.ApiCallErrorReason.RESPONSE_NOT_JSON,
+            "api_call_failed",
+            id="fallback",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("evohome")
+async def test_action_api_call_failed_reason(
+    hass: HomeAssistant,
+    zone_id: str,
+    reason: evo_exc.ApiCallErrorReason,
+    translation_key: str,
+) -> None:
+    """Test the translation key of a failed action depends on the error's reason."""
+
+    with (
+        patch(
+            "evohomeasync2.zone.Zone.set_temperature",
+            side_effect=evo_exc.ApiCallFailedError("API call failed", reason=reason),
+        ),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_ENTITY_ID: zone_id, ATTR_TEMPERATURE: 19.1},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == translation_key
+
+
 async def test_no_schedule_fetch_at_setup(
     hass: HomeAssistant,
     config: dict[str, str],
