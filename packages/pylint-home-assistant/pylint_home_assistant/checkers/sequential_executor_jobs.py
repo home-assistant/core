@@ -7,7 +7,7 @@ back to the event loop between blocking calls.
 https://contributors.home-assistant.io/core/internals/asyncio/#move-blocking-work-to-the-executor
 """
 
-from collections.abc import Iterator
+from collections.abc import Collection, Iterator
 
 from astroid import nodes
 from pylint.checkers import BaseChecker
@@ -141,12 +141,14 @@ def _executor_job_key(node: nodes.NodeNG) -> str | None:
         return None
     # The rest of the statement runs in the event loop between this job and
     # its neighbors, so it must not use loop-only APIs or suspend.
-    if _suspends_implicitly(node) or _calls_loop_only_api(node, exclude=call):
+    if _suspends_implicitly(node) or _calls_loop_only_api(node, exclude=(call,)):
         return None
     return _executor_key(call)
 
 
-def _calls_loop_only_api(node: nodes.NodeNG, exclude: nodes.Call | None = None) -> bool:
+def _calls_loop_only_api(
+    node: nodes.NodeNG, exclude: Collection[nodes.Call] = ()
+) -> bool:
     """Return True if *node* calls a function that must run in the event loop.
 
     This covers functions named ``async_*`` and the asyncio loop APIs. Such
@@ -156,7 +158,7 @@ def _calls_loop_only_api(node: nodes.NodeNG, exclude: nodes.Call | None = None) 
     # Generator expression bodies are included, as sync code often consumes
     # them right away.
     for call in node.nodes_of_class(nodes.Call, skip_klass=_NEW_SCOPE_NODES):
-        if call is exclude:
+        if call in exclude:
             continue
         func = call.func
         name = func.attrname if isinstance(func, nodes.Attribute) else None
@@ -177,6 +179,54 @@ def _is_transparent(node: nodes.NodeNG) -> bool:
         and not _suspends_implicitly(node)
         and not _calls_loop_only_api(node)
     )
+
+
+def _loop_executor_key(loop: nodes.For | nodes.While) -> str | None:
+    """Return the executor key if every await in *loop* is a job on that executor.
+
+    Such a loop can move into a single executor job. Loops that suspend in any
+    other way, return or call loop-only APIs must stay in the event loop.
+    """
+    parts: list[nodes.NodeNG] = list(loop.body)
+    if isinstance(loop, nodes.While):
+        parts.append(loop.test)
+    keys: set[str] = set()
+    jobs: list[nodes.Call] = []
+    for part in parts:
+        for child in _eager_nodes(part):
+            if isinstance(
+                child,
+                (
+                    nodes.AsyncFor,
+                    nodes.AsyncWith,
+                    nodes.Return,
+                    nodes.Yield,
+                    nodes.YieldFrom,
+                ),
+            ) or (isinstance(child, nodes.Comprehension) and child.is_async):
+                return None
+            if not isinstance(child, nodes.Await):
+                continue
+            if (
+                not isinstance(call := child.value, nodes.Call)
+                or (key := _executor_key(call)) is None
+            ):
+                return None
+            keys.add(key)
+            jobs.append(call)
+    if len(keys) != 1 or any(_calls_loop_only_api(part, jobs) for part in parts):
+        return None
+    return keys.pop()
+
+
+def _in_executor_loop(node: nodes.NodeNG) -> bool:
+    """Return True if an enclosing loop of *node* can move into an executor job."""
+    parent = node.parent
+    while parent is not None and not isinstance(parent, _NEW_SCOPE_NODES):
+        if isinstance(parent, (nodes.For, nodes.While)) and _loop_executor_key(parent):
+            return True
+        parent = parent.parent
+    return False
 
 
 def _rebinds_executor(node: nodes.NodeNG, executor: str) -> bool:
@@ -213,6 +263,13 @@ class SequentialExecutorJobsChecker(BaseChecker):
             "hass.async_add_executor_job()) run in sequence without yielding "
             "to the event loop in between. Group the blocking operations into "
             "a single function and call async_add_executor_job once.",
+        ),
+        "W7444": (
+            "Executor job inside a loop should be moved into a single executor job",
+            "home-assistant-executor-job-in-loop",
+            "Used when a loop only awaits executor jobs on the same executor. "
+            "Every iteration switches back to the event loop. Move the loop "
+            "into a single function and call async_add_executor_job once.",
         ),
     }
     options = ()
@@ -264,6 +321,12 @@ class SequentialExecutorJobsChecker(BaseChecker):
             elif isinstance(stmt, (nodes.With, nodes.AsyncWith)):
                 self._check_body(stmt.body)
             elif isinstance(stmt, (nodes.For, nodes.AsyncFor, nodes.While)):
+                if (
+                    not isinstance(stmt, nodes.AsyncFor)
+                    and _loop_executor_key(stmt) is not None
+                    and not _in_executor_loop(stmt)
+                ):
+                    self.add_message("home-assistant-executor-job-in-loop", node=stmt)
                 self._check_body(stmt.body)
                 self._check_body(stmt.orelse)
             elif isinstance(stmt, nodes.Match):

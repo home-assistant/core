@@ -486,6 +486,158 @@ async def async_setup(hass, config):
     assert messages[0].msg_id == "home-assistant-sequential-executor-jobs"
 
 
+@pytest.mark.parametrize(
+    "code",
+    [
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    for item in items:
+        await hass.async_add_executor_job(call_a, item)
+""",
+            id="for_loop",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    while await hass.async_add_executor_job(has_more):
+        result = do_something()
+""",
+            id="while_test",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    for item in items:
+        if item:
+            results.append(await hass.async_add_executor_job(call_a, item))
+""",
+            id="nested_in_expression",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    for item in items:
+        for sub_item in item:
+            await hass.async_add_executor_job(call_a, sub_item)
+""",
+            id="nested_loops_flag_outer_only",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    for item in items:
+        try:
+            await hass.async_add_executor_job(call_a, item)
+        except ValueError:
+            break
+""",
+            id="try_and_break",
+        ),
+    ],
+)
+def test_executor_job_in_loop_flagged(
+    linter: UnittestLinter,
+    executor_checker: SequentialExecutorJobsChecker,
+    code: str,
+) -> None:
+    """Test loops that should trigger a single warning."""
+    root_node = astroid.parse(code, "homeassistant.components.test_integration")
+    walk_checker(linter, executor_checker, root_node)
+
+    messages = linter.release_messages()
+    assert len(messages) == 1
+    assert messages[0].msg_id == "home-assistant-executor-job-in-loop"
+
+
+@pytest.mark.parametrize(
+    "code",
+    [
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    async for item in items:
+        await hass.async_add_executor_job(call_a, item)
+""",
+            id="async_for",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    for item in items:
+        await hass.async_add_executor_job(call_a, item)
+        await fetch(item)
+""",
+            id="other_await",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    for item in items:
+        if await hass.async_add_executor_job(call_a, item):
+            return item
+""",
+            id="return",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    for item in items:
+        await hass.async_add_executor_job(call_a, item)
+        async_dispatcher_send(hass, "signal")
+""",
+            id="async_api_call",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    for item in items:
+        await hass.async_add_executor_job(call_a, item)
+        await get_instance(hass).async_add_executor_job(call_b, item)
+""",
+            id="different_executors",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    for item in items:
+        await hass.async_add_executor_job(call_a, item)
+        values = [value async for value in stream]
+""",
+            id="async_comprehension",
+        ),
+        pytest.param(
+            """
+async def async_gen(hass):
+    for item in items:
+        yield await hass.async_add_executor_job(call_a, item)
+""",
+            id="yield",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    for item in items:
+        def inner():
+            return await_me()
+        do_something(inner)
+""",
+            id="no_executor_job",
+        ),
+    ],
+)
+def test_executor_job_in_loop_not_flagged(
+    linter: UnittestLinter,
+    executor_checker: SequentialExecutorJobsChecker,
+    code: str,
+) -> None:
+    """Test loops that should not trigger a warning."""
+    root_node = astroid.parse(code, "homeassistant.components.test_integration")
+
+    with assert_no_messages(linter):
+        walk_checker(linter, executor_checker, root_node)
+
+
 def test_not_integration_module_ignored(
     linter: UnittestLinter,
     executor_checker: SequentialExecutorJobsChecker,

@@ -167,6 +167,7 @@ Every check has a code following the
 | `W7441` | [`home-assistant-tests-config-flow-error-recovery`](#w7441-home-assistant-tests-config-flow-error-recovery) | Config flow tests that show an error should finish the flow afterwards |
 | `W7442` | [`home-assistant-redundant-translation-key`](#w7442-home-assistant-redundant-translation-key) | `translation_key` only repeats the name the `device_class` already provides |
 | `W7443` | [`home-assistant-step_id-match-method`](#w7443-home-assistant-step_id-match-method) | Config flow should use `step_id` parameter value same as the method it's in |
+| `W7444` | [`home-assistant-executor-job-in-loop`](#w7444-home-assistant-executor-job-in-loop) | Executor job inside a loop should be moved into a single executor job |
 | `W7445` | [`home-assistant-test-flow-start-helper`](#w7445-home-assistant-test-flow-start-helper) | Use `MockConfigEntry` helpers to start reauth/reconfigure flows in tests |
 | `W7447` | [`home-assistant-coordinator-untyped-config-entry`](#w7447-home-assistant-coordinator-untyped-config-entry) | Coordinator should use the integration's typed config entry instead of `ConfigEntry` |
 | `W7448` | [`home-assistant-coordinator-redundant-config-entry`](#w7448-home-assistant-coordinator-redundant-config-entry) | Coordinator assigns `self.config_entry` that `DataUpdateCoordinator.__init__` already sets |
@@ -369,8 +370,7 @@ event loop, where it must not do blocking I/O:
 ```python
 class MyEntity(CoordinatorEntity[MyCoordinator]):
     @callback
-    def _handle_coordinator_update(self) -> None:
-        ...
+    def _handle_coordinator_update(self) -> None: ...
 ```
 
 
@@ -460,8 +460,7 @@ it for the `config_entry` class annotation and `__init__` argument, so
 class MyCoordinator(DataUpdateCoordinator[MyData]):
     config_entry: MyConfigEntry
 
-    def __init__(self, hass: HomeAssistant, config_entry: MyConfigEntry) -> None:
-        ...
+    def __init__(self, hass: HomeAssistant, config_entry: MyConfigEntry) -> None: ...
 ```
 
 When the alias lives in `__init__.py`, import it in the coordinator under
@@ -824,9 +823,7 @@ cause and finish the flow, so the test proves the flow recovers:
 assert result["errors"] == {"base": "cannot_connect"}
 
 mock_client.connect.side_effect = None
-result = await hass.config_entries.flow.async_configure(
-    result["flow_id"], USER_INPUT
-)
+result = await hass.config_entries.flow.async_configure(result["flow_id"], USER_INPUT)
 assert result["type"] is FlowResultType.CREATE_ENTRY
 ```
 
@@ -1183,10 +1180,10 @@ such as `CONF_USERNAME`. Integrations that need a constant can use a dedicated
 
 ```python
 # Bad
-description_placeholders={CONF_USERNAME: entry.data[CONF_USERNAME]}
+description_placeholders = {CONF_USERNAME: entry.data[CONF_USERNAME]}
 
 # Good
-description_placeholders={"username": entry.data[CONF_USERNAME]}
+description_placeholders = {"username": entry.data[CONF_USERNAME]}
 
 # Bad
 self.context["title_placeholders"] = {CONF_HOST: discovery_info.host}
@@ -1348,8 +1345,8 @@ Integration's `__init__.py` should implement `async_unload_entry`.
 
 ## `home_assistant_sequential_executor_jobs` checker
 
-Detects consecutive executor jobs in integration modules that could be
-grouped into a single executor job.
+Detects executor jobs in integration modules that could be grouped into a
+single executor job, either because they run in sequence or in a loop.
 
 ### `W7415`: `home-assistant-sequential-executor-jobs`
 
@@ -1373,6 +1370,18 @@ Plain statements between the jobs (assignments, expressions, `assert`,
 function named `async_*`, as those must run in the event loop. Control
 flow such as `if`/`try`/`with`/`for`/`match` breaks the sequence, but the
 checker also inspects the bodies of these blocks.
+
+### `W7444`: `home-assistant-executor-job-in-loop`
+
+A `for` or `while` loop that only awaits executor jobs switches back to the
+event loop on every iteration. Move the loop into a single function and run
+it in one executor job. The rule applies to integration modules only.
+
+The rule only fires when all awaits in the loop are executor jobs on the
+same executor. Loops that await other work, use `async for`, `async with`
+or async comprehensions, `return`, `yield` or call loop-only functions
+(`async_*`, `create_task` and similar) are not flagged. In nested loops,
+only the outermost loop that qualifies is flagged.
 
 
 ## `home_assistant_sequential_add_entities` checker
