@@ -982,15 +982,18 @@ class ZWaveListSensor(ZwaveSensor):
     @override
     def native_value(self) -> StateType:
         """Return state of the sensor."""
-        if self.info.primary_value.value is None:
+        value: StateType = self.info.primary_value.value
+        if value is None:
             return None
-        key = str(self.info.primary_value.value)
+        key = str(value)
         states = self.info.primary_value.metadata.states
         if not states or key not in states:
             if self.device_class is SensorDeviceClass.ENUM:
                 self._async_report_unmapped_value(key)
                 return None
-            return self.info.primary_value.value
+            # Rediscovery may drop the states, leaving a repair from the enum sensor.
+            self._async_clear_unmapped_value()
+            return value
         self._async_clear_unmapped_value()
         return str(states[key])
 
@@ -1012,6 +1015,7 @@ class ZWaveListSensor(ZwaveSensor):
             self.hass,
             DOMAIN,
             issue_id,
+            config_entry_id=self.config_entry.entry_id,
             data={
                 "device_id": device.id,
                 "device_name": device_name,
@@ -1033,11 +1037,15 @@ class ZWaveListSensor(ZwaveSensor):
     def _async_clear_unmapped_value(self) -> None:
         """Clear the repair once values resolve after re-interview.
 
-        Always attempts the delete (safe no-op when no issue exists) so a
+        Looks the issue up rather than tracking it on the entity, so a
         freshly rediscovered entity instance clears a stale issue left by
         the prior instance that was removed during metadata rediscovery.
+        An ignored issue is kept so the next unmapped reading stays hidden.
         """
-        if (issue_id := self._unmapped_issue_id) is not None:
+        if (issue_id := self._unmapped_issue_id) is None:
+            return
+        issue = ir.async_get(self.hass).async_get_issue(DOMAIN, issue_id)
+        if issue is not None and issue.dismissed_version is None:
             ir.async_delete_issue(self.hass, DOMAIN, issue_id)
 
     @callback

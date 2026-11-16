@@ -12,6 +12,7 @@ from zwave_js_server.exceptions import FailedZWaveCommand
 from zwave_js_server.model.node import Node
 
 from homeassistant.components.sensor import (
+    ATTR_OPTIONS,
     ATTR_STATE_CLASS,
     SensorDeviceClass,
     SensorStateClass,
@@ -1399,7 +1400,9 @@ async def test_unmapped_enum_value_creates_repair(
 
     # Enable the disabled config parameter sensor and reload
     entity_registry.async_update_entity(entity_id, disabled_by=None)
-    await hass.config_entries.async_reload(integration.entry_id)
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1)
+    )
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -1437,6 +1440,9 @@ async def test_unmapped_enum_value_creates_repair(
         if domain == DOMAIN and "unmapped_enum_value" in issue_id
     ]
     assert len(matching) == 1
+    issue = issue_registry.async_get_issue(*matching[0])
+    assert issue
+    assert issue.config_entry_id == integration.entry_id
 
 
 @pytest.mark.usefixtures("client", "lock_id_lock_as_id150")
@@ -1452,7 +1458,9 @@ async def test_unmapped_enum_value_cleared_after_mapped_update(
     node = climate_adc_t3000
 
     entity_registry.async_update_entity(entity_id, disabled_by=None)
-    await hass.config_entries.async_reload(integration.entry_id)
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1)
+    )
     await hass.async_block_till_done()
 
     # Trigger the repair with an unmapped value
@@ -1514,3 +1522,227 @@ async def test_unmapped_enum_value_cleared_after_mapped_update(
         if d == DOMAIN and iid.startswith("unmapped_enum_value.")
     ]
     assert len(matching) == 0
+
+
+@pytest.mark.usefixtures("client", "lock_id_lock_as_id150")
+async def test_unmapped_enum_value_cleared_after_metadata_rediscovery(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    climate_adc_t3000: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test that a re-interview mapping the raw value clears the repair."""
+    entity_id = "sensor.adc_t3000_power_source"
+    node = climate_adc_t3000
+
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1)
+    )
+    await hass.async_block_till_done()
+
+    node.receive_event(
+        Event(
+            "value updated",
+            {
+                "source": "node",
+                "event": "value updated",
+                "nodeId": node.node_id,
+                "args": {
+                    "commandClassName": "Configuration",
+                    "commandClass": 112,
+                    "endpoint": 0,
+                    "property": 26,
+                    "propertyName": "Power Source",
+                    "newValue": 2,
+                    "prevValue": 1,
+                },
+            },
+        )
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_UNKNOWN
+    assert [
+        iid
+        for (d, iid) in issue_registry.issues
+        if d == DOMAIN and iid.startswith("unmapped_enum_value.")
+    ]
+
+    # The re-interview learns the value; the raw value itself does not change.
+    node.receive_event(
+        Event(
+            "metadata updated",
+            {
+                "source": "node",
+                "event": "metadata updated",
+                "nodeId": node.node_id,
+                "args": {
+                    "commandClassName": "Configuration",
+                    "commandClass": 112,
+                    "endpoint": 0,
+                    "property": 26,
+                    "propertyName": "Power Source",
+                    "metadata": {
+                        "type": "number",
+                        "readable": True,
+                        "writeable": False,
+                        "description": "Which source of power is utilized.",
+                        "label": "Power Source",
+                        "default": 0,
+                        "min": 0,
+                        "max": 2,
+                        "states": {"0": "Battery", "1": "C-Wire", "2": "Solar"},
+                        "valueSize": 1,
+                        "format": 0,
+                        "allowManualEntry": False,
+                        "isFromConfig": True,
+                    },
+                },
+            },
+        )
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "Solar"
+    assert state.attributes[ATTR_OPTIONS] == ["Battery", "C-Wire", "Solar"]
+    assert not [
+        iid
+        for (d, iid) in issue_registry.issues
+        if d == DOMAIN and iid.startswith("unmapped_enum_value.")
+    ]
+
+
+def _power_source_value_event(node: Node, new_value: int, prev_value: int) -> Event:
+    """Return a value updated event for the ADC-T3000 power source parameter."""
+    return Event(
+        "value updated",
+        {
+            "source": "node",
+            "event": "value updated",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "Configuration",
+                "commandClass": 112,
+                "endpoint": 0,
+                "property": 26,
+                "propertyName": "Power Source",
+                "newValue": new_value,
+                "prevValue": prev_value,
+            },
+        },
+    )
+
+
+@pytest.mark.usefixtures("client", "lock_id_lock_as_id150")
+async def test_unmapped_enum_value_ignore_survives_mapped_value(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    climate_adc_t3000: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test that an ignored repair stays ignored when the value flips back."""
+    entity_id = "sensor.adc_t3000_power_source"
+    node = climate_adc_t3000
+
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1)
+    )
+    await hass.async_block_till_done()
+
+    node.receive_event(_power_source_value_event(node, 99, 1))
+    await hass.async_block_till_done()
+    [issue_id] = [
+        iid
+        for (d, iid) in issue_registry.issues
+        if d == DOMAIN and iid.startswith("unmapped_enum_value.")
+    ]
+    issue_registry.async_ignore(DOMAIN, issue_id, True)
+
+    node.receive_event(_power_source_value_event(node, 1, 99))
+    await hass.async_block_till_done()
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue
+    assert issue.dismissed_version is not None
+
+    node.receive_event(_power_source_value_event(node, 99, 1))
+    await hass.async_block_till_done()
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue
+    assert issue.dismissed_version is not None
+
+
+@pytest.mark.usefixtures("client", "lock_id_lock_as_id150")
+async def test_unmapped_enum_value_cleared_when_states_removed(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    climate_adc_t3000: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test that the repair clears when rediscovery drops the value's states."""
+    entity_id = "sensor.adc_t3000_power_source"
+    node = climate_adc_t3000
+
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1)
+    )
+    await hass.async_block_till_done()
+
+    node.receive_event(_power_source_value_event(node, 99, 1))
+    await hass.async_block_till_done()
+    assert [
+        iid
+        for (d, iid) in issue_registry.issues
+        if d == DOMAIN and iid.startswith("unmapped_enum_value.")
+    ]
+
+    node.receive_event(
+        Event(
+            "metadata updated",
+            {
+                "source": "node",
+                "event": "metadata updated",
+                "nodeId": node.node_id,
+                "args": {
+                    "commandClassName": "Configuration",
+                    "commandClass": 112,
+                    "endpoint": 0,
+                    "property": 26,
+                    "propertyName": "Power Source",
+                    "metadata": {
+                        "type": "number",
+                        "readable": True,
+                        "writeable": False,
+                        "description": "Which source of power is utilized.",
+                        "label": "Power Source",
+                        "default": 0,
+                        "min": 0,
+                        "max": 255,
+                        "valueSize": 1,
+                        "format": 0,
+                        "allowManualEntry": True,
+                        "isFromConfig": True,
+                    },
+                },
+            },
+        )
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "99"
+    assert not [
+        iid
+        for (d, iid) in issue_registry.issues
+        if d == DOMAIN and iid.startswith("unmapped_enum_value.")
+    ]
