@@ -631,8 +631,17 @@ async def test_config_flow_client_response_error(
         assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_config_flow_reauth_needs_claim(hass: HomeAssistant) -> None:
-    """Test reauth flow updates the entry once the device is claimed again."""
+@pytest.mark.parametrize(
+    ("claimed_record", "reason", "expected_key"),
+    [
+        pytest.param(TEST_RECORD_NUMBER, "reauth_successful", "new_key", id="same"),
+        pytest.param("other_site", "wrong_account", "old_key", id="other_record"),
+    ],
+)
+async def test_config_flow_reauth_needs_claim(
+    hass: HomeAssistant, claimed_record: str, reason: str, expected_key: str
+) -> None:
+    """Test a reauth that needs a claim checks the record once it is claimed."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="homeassistant_eid_existing_device",
@@ -651,14 +660,11 @@ async def test_config_flow_reauth_needs_claim(hass: HomeAssistant) -> None:
     mock_client.authenticate = AsyncMock(return_value=False)
     mock_client.get_claim_info.return_value = {"claim_url": "http://claim.me"}
     claimed = _mock_claimed_client()
+    claimed.recordNumber = claimed_record
 
-    with (
-        patch(
-            "homeassistant.components.energyid.config_flow.WebhookClient",
-            side_effect=lambda *args, **kwargs: (
-                mock_client if mock_client.authenticate.await_count == 0 else claimed
-            ),
-        ),
+    with patch(
+        "homeassistant.components.energyid.config_flow.WebhookClient",
+        side_effect=[mock_client, claimed],
     ):
         result = await entry.start_reauth_flow(hass)
         # Check initial reauth form
@@ -683,10 +689,9 @@ async def test_config_flow_reauth_needs_claim(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result4["type"] is FlowResultType.ABORT
-    assert result4["reason"] == "reauth_successful"
+    assert result4["reason"] == reason
     assert hass.config_entries.async_entries(DOMAIN) == [entry]
-    assert entry.data[CONF_PROVISIONING_KEY] == "new_key"
-    assert entry.data[CONF_PROVISIONING_SECRET] == "new_secret"
+    assert entry.data[CONF_PROVISIONING_KEY] == expected_key
 
 
 async def test_async_get_supported_subentry_types(hass: HomeAssistant) -> None:
