@@ -75,7 +75,6 @@ class PalazzettiConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 await client.connect()
             except CommunicationError:
-                LOGGER.exception("Communication error")
                 errors["base"] = "cannot_connect"
             else:
                 await self.async_set_unique_id(dr.format_mac(client.mac))
