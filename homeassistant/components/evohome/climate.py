@@ -404,7 +404,7 @@ class EvoController(EvoClimateEntity):
             await self.coordinator.call_client_api(
                 self._evo_device.set_mode(mode, until=until)
             )
-        except evo.InvalidModeRequestError as err:
+        except evo.InvalidSetModeError as err:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="invalid_system_mode",

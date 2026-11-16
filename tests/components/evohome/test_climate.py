@@ -200,7 +200,7 @@ async def test_ctl_invalid_system_mode(
     with (
         patch(
             "evohomeasync2.control_system.ControlSystem.set_mode",
-            side_effect=evo_exc.InvalidModeRequestError("Unsupported mode: xxx"),
+            side_effect=evo_exc.InvalidSetModeError("Unsupported mode: xxx"),
         ),
         pytest.raises(ServiceValidationError) as exc_info,
     ):
