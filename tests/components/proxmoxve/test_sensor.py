@@ -146,7 +146,7 @@ async def _poll(
     """Advance the clock and let the coordinator poll once."""
     freezer.tick(timedelta(seconds=seconds))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
 
 @pytest.mark.parametrize(("endpoint", "vmid", "entity_id"), GUEST_UPTIME_PARAMS)
@@ -213,7 +213,7 @@ async def test_guest_uptime_stable_while_running(
 
     # Wall clock and reported uptime drift apart by a fraction of a second
     guest["uptime"] = 3600 + 60
-    await _poll(hass, freezer, 60.7)
+    await _poll(hass, freezer, 60.8)
 
     state = hass.states.get(entity_id)
     assert state.state == "2026-05-03T11:00:00+00:00"
