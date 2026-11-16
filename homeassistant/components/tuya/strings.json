@@ -1073,6 +1073,9 @@
       "pv_channel_power": {
         "name": "PV channel {index} power"
       },
+      "reactive_power": {
+        "name": "[%key:component::sensor::entity_component::reactive_power::name%]"
+      },
       "remaining_time": {
         "name": "Remaining time"
       },

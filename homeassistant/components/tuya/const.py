@@ -875,6 +875,8 @@ class DPCode(StrEnum):
     PV_POWER_TOTAL = "pv_power_total"
     RAIN_24H = "rain_24h"  # Total daily rainfall in mm
     RAIN_RATE = "rain_rate"  # Rain intensity in mm/h
+    REACTIVE_POWER1 = "reactive_power1"
+    REACTIVE_POWER2 = "reactive_power2"
     RECORD_MODE = "record_mode"
     RECORD_SWITCH = "record_switch"  # Recording switch
     RELAY_STATUS = "relay_status"
@@ -884,6 +886,8 @@ class DPCode(StrEnum):
     RESET_FILTER = "reset_filter"
     RESET_MAP = "reset_map"
     RESET_ROLL_BRUSH = "reset_roll_brush"
+    REVERSE_ENERGY1 = "reverse_energy1"
+    REVERSE_ENERGY2 = "reverse_energy2"
     REVERSE_ENERGY_TOTAL = "reverse_energy_total"
     ROLL_BRUSH = "roll_brush"
     SEEK = "seek"
