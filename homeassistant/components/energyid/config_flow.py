@@ -11,6 +11,7 @@ import probatio
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
@@ -248,13 +249,24 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
         # The unique ID is the generated device ID, so the record is the identity.
         if self._flow_data["record_number"] != reauth_entry.data["record_number"]:
             return self.async_abort(reason="wrong_account")
-        return self.async_update_reload_and_abort(
+        key = self._flow_data[CONF_PROVISIONING_KEY]
+        secret = self._flow_data[CONF_PROVISIONING_SECRET]
+        # The update listener reloads a loaded entry whose credentials changed.
+        reload = reauth_entry.state is not ConfigEntryState.LOADED or (
+            key == reauth_entry.data[CONF_PROVISIONING_KEY]
+            and secret == reauth_entry.data[CONF_PROVISIONING_SECRET]
+        )
+        result = self.async_update_and_abort(
             reauth_entry,
             data_updates={
-                CONF_PROVISIONING_KEY: self._flow_data[CONF_PROVISIONING_KEY],
-                CONF_PROVISIONING_SECRET: self._flow_data[CONF_PROVISIONING_SECRET],
+                CONF_PROVISIONING_KEY: key,
+                CONF_PROVISIONING_SECRET: secret,
             },
         )
+        # The reload starts right away, so it must follow the update.
+        if reload:
+            self.hass.config_entries.async_schedule_reload(reauth_entry.entry_id)
+        return result
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
