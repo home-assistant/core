@@ -1,15 +1,7 @@
 """Checker for entity ``__init__`` methods that only forward to ``super()``.
 
-An ``__init__`` whose entire body is
-``super().__init__(<every parameter, unchanged>)`` adds nothing: deleting
-it leaves the class with the inherited constructor and identical runtime
-behaviour.
-
-Pylint's own ``useless-parent-delegation`` does not cover these, because
-it bails out as soon as the override's signature differs from the parent's
--- and narrowing the annotations (``coordinator: AriaQCoordinator``
-instead of the base's ``CoordinatorEntity`` type) is exactly what these
-constructors do.
+Pylint's ``useless-parent-delegation`` skips these when the override
+narrows the annotations, which is the usual reason they exist.
 """
 
 from collections import deque
@@ -24,12 +16,7 @@ from pylint_home_assistant.helpers.module_info import is_integration_module
 
 
 def _inherited_init(class_node: nodes.ClassDef) -> nodes.FunctionDef | None:
-    """Return the ``__init__`` the class would inherit without the override.
-
-    That is the first one along the MRO after the class itself -- which
-    is also the one ``super().__init__`` inside the override calls, so
-    removing the override cannot change *which* function runs.
-    """
+    """Return the ``__init__`` that ``super().__init__`` calls."""
     try:
         mro = class_node.mro()
     except astroid.exceptions.AstroidError:
@@ -43,13 +30,9 @@ def _inherited_init(class_node: nodes.ClassDef) -> nodes.FunctionDef | None:
 def _rerouted_by_descendant(
     class_node: nodes.ClassDef, inherited: nodes.FunctionDef
 ) -> bool:
-    """Return True if a subclass in the module puts another ``__init__`` next.
+    """Return True if a subclass makes ``super()`` reach another ``__init__``.
 
-    ``super()`` follows the MRO of the instance's class. With multiple
-    inheritance, a subclass can place a sibling ``__init__`` between the
-    class and the one it inherits. The override then adapts the call for
-    that sibling, and removing it can break the subclass. Subclasses in
-    other modules are out of reach.
+    Subclasses in other modules are not checked.
     """
     for other in class_node.root().nodes_of_class(nodes.ClassDef):
         if other is class_node:
@@ -69,11 +52,9 @@ def _rerouted_by_descendant(
 
 
 def _forwarded_call(node: nodes.FunctionDef) -> nodes.Call | None:
-    """Return the ``super().__init__(...)`` call that is the whole body.
+    """Return the ``super().__init__(...)`` call if it is the whole body.
 
-    ``None`` when the body does anything else. astroid keeps the
-    docstring out of ``body`` (in ``doc_node``), so a documented
-    constructor still has a single statement here.
+    astroid keeps the docstring out of ``body``.
     """
     if len(node.body) != 1:
         return None
@@ -100,8 +81,7 @@ def _is_name(node: nodes.NodeNG, name: str) -> bool:
 def _positional_names(args: nodes.Arguments) -> list[str]:
     """Return the positional parameter names, without ``self``.
 
-    The lists are optional on ``Arguments`` nodes that astroid
-    synthesizes, hence the ``or ()``.
+    astroid can leave these lists as None on synthesized nodes.
     """
     return [arg.name for arg in (*(args.posonlyargs or ()), *(args.args or ()))][1:]
 
@@ -116,19 +96,9 @@ def _exposes_same_signature(
 ) -> bool:
     """Return True if dropping the override keeps every call site valid.
 
-    Removing the override replaces its signature with the inherited one,
-    so the two must agree on where a caller's arguments land. Positional
-    parameters must line up by index -- a parent that declares the same
-    names in another order would silently receive swapped arguments.
-    Names matter for every parameter a caller may pass by keyword, and
-    for every one the override itself forwards by keyword: the parent must
-    declare each under that exact name, at that same index, and accept
-    it by keyword too, rather than absorbing it into ``**kwargs``.
-    Keyword-only parameters need only to exist in the parent, since they
-    could never be passed positionally to begin with. A parent taking
-    *more* parameters is fine -- the extra ones have defaults, or the
-    delegating call would already fail -- so dropping the override only
-    widens what callers may pass.
+    Each parameter that is passed by keyword must have the same name and
+    index in the parent, and the parent must accept it by keyword, not
+    absorb it into ``**kwargs``. Extra parent parameters are fine.
     """
     own_positional = _positional_names(args)
     inherited_positional = _positional_names(inherited)
@@ -152,13 +122,10 @@ def _exposes_same_signature(
 
 
 def _forwarded_by_keyword(args: nodes.Arguments, call: nodes.Call) -> set[str] | None:
-    """Return the parameters *call* forwards by keyword, or None.
+    """Return the parameters *call* forwards by keyword.
 
-    ``None`` means *call* is not a plain hand-through: every parameter
-    must reach the parent under its own name, either positionally in
-    declaration order or as ``name=name``. Anything else -- a
-    reordering, a renamed keyword, an expression, an extra or a missing
-    argument -- means the constructor is doing work of its own.
+    Return None unless every parameter is forwarded unchanged, either
+    positionally in order or as ``name=name``.
     """
     # A default may differ from the parent's, so deleting the override
     # would change behaviour. Out of scope.

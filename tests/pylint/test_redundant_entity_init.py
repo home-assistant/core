@@ -43,11 +43,7 @@ class MyDescription:
 
 
 def _base(signature: str) -> str:
-    """Return a parent entity whose ``__init__`` has *signature*.
-
-    A negative case needs a parent with a matching signature. Otherwise the
-    signature check rejects it, and the guard under test goes untested.
-    """
+    """Return a parent entity, so only the guard under test can reject a case."""
     return f"""
 {_ENTITY_IMPORT}
 
