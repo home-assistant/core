@@ -48,6 +48,8 @@ from . import (
     KEYPAD_VISION_INFO,
     KEYPAD_VISION_PRO_INFO,
     LEAK_SERVICE_INFO,
+    LOCK_ULTRA_QUICK_KEY_SETTINGS,
+    LOCK_ULTRA_SERVICE_INFO,
     PLUG_MINI_EU_SERVICE_INFO,
     PRESENCE_SENSOR_SERVICE_INFO,
     RELAY_SWITCH_2PM_SERVICE_INFO,
@@ -58,6 +60,7 @@ from . import (
     WOHUB2_SERVICE_INFO,
     WOMETERTHPC_SERVICE_INFO,
     WORELAY_SWITCH_1PM_SERVICE_INFO,
+    patch_lock_ultra_quick_key,
 )
 
 
@@ -1422,3 +1425,23 @@ async def test_weather_station_sensor(hass: HomeAssistant) -> None:
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_lock_ultra_quick_key_config_byte_sensor(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+) -> None:
+    """Test the diagnostic sensor shows the raw Quick Key config byte."""
+    inject_bluetooth_service_info(hass, LOCK_ULTRA_SERVICE_INFO)
+    entry = mock_entry_encrypted_factory("lock_ultra")
+    entry.add_to_hass(hass)
+
+    patcher, _ = patch_lock_ultra_quick_key(LOCK_ULTRA_QUICK_KEY_SETTINGS)
+    with patcher:
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("sensor.test_name_quick_key_config_byte")
+    assert state.state == "0x9a"
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "test-name Quick Key config byte"

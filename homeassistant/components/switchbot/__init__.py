@@ -137,7 +137,9 @@ PLATFORMS_BY_TYPE = {
         Platform.BINARY_SENSOR,
         Platform.BUTTON,
         Platform.LOCK,
+        Platform.SELECT,
         Platform.SENSOR,
+        Platform.SWITCH,
     ],
     SupportedModels.AIR_PURIFIER_JP.value: [
         Platform.FAN,

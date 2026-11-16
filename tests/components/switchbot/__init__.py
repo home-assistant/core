@@ -1,12 +1,14 @@
 """Tests for the switchbot integration."""
 
-from unittest.mock import patch
+from typing import Any
+from unittest.mock import AsyncMock, patch
 
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.components.bluetooth import (
     generate_advertisement_data,
     generate_ble_device,
 )
+from switchbot import QuickKeyFunction
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.const import CONF_ADDRESS
@@ -1762,3 +1764,41 @@ STANDING_FAN_SERVICE_INFO = BluetoothServiceInfoBleak(
     connectable=True,
     tx_power=-127,
 )
+
+
+LOCK_ULTRA_QUICK_KEY_SETTINGS: dict[str, Any] = {
+    "raw": 0x9A,
+    "light": True,
+    "sound": False,
+    "manual_unlock_linkage": True,
+    "enabled": True,
+    "double_press": False,
+    "function": QuickKeyFunction.LOCK_AND_UNLOCK,
+    "motor_speed": 1,
+}
+
+
+def patch_lock_ultra_quick_key(
+    settings: dict[str, Any], write_result: bool = True
+) -> tuple[Any, AsyncMock]:
+    """Patch a Lock Ultra whose Quick Key writes read back like on the device."""
+    current = dict(settings)
+
+    async def get_quick_key() -> dict[str, Any]:
+        return dict(current)
+
+    async def set_quick_key(**kwargs: Any) -> bool:
+        if write_result:
+            current.update(kwargs)
+        return write_result
+
+    mock_set_quick_key = AsyncMock(side_effect=set_quick_key)
+    return (
+        patch.multiple(
+            "switchbot.SwitchbotLockUltra",
+            update=AsyncMock(return_value=None),
+            get_quick_key=AsyncMock(side_effect=get_quick_key),
+            set_quick_key=mock_set_quick_key,
+        ),
+        mock_set_quick_key,
+    )

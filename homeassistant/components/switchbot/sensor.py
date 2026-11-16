@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import timedelta
 from typing import override
 
 import switchbot
@@ -33,9 +34,11 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import AIRPURIFIER_PM25_MODELS, DOMAIN
 from .coordinator import SwitchbotConfigEntry, SwitchbotDataUpdateCoordinator
-from .entity import SwitchbotEntity
+from .entity import SwitchbotConnectionPolledEntity, SwitchbotEntity
 
 PARALLEL_UPDATES = 0
+# Only connection-polled entities poll; all others are push updated.
+SCAN_INTERVAL = timedelta(days=7)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -222,6 +225,8 @@ async def async_setup_entry(
             SwitchBotSensor(coordinator, sensor) for sensor in sensors
         )
     sensor_entities.append(SwitchbotRSSISensor(coordinator, "rssi"))
+    if coordinator.model is SwitchbotModel.LOCK_ULTRA:
+        sensor_entities.append(SwitchBotLockQuickKeyConfigSensor(coordinator))
     async_add_entities(sensor_entities)
 
 
@@ -278,3 +283,25 @@ class SwitchbotRSSISensor(SwitchBotSensor):
         ):
             return service_info.rssi
         return None
+
+
+class SwitchBotLockQuickKeyConfigSensor(SwitchbotConnectionPolledEntity, SensorEntity):
+    """Diagnostic sensor with the raw Lock Ultra Quick Key config byte.
+
+    The byte also carries bits the library does not decode.
+    """
+
+    _device: switchbot.SwitchbotLockUltra
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_translation_key = "quick_key_config_byte"
+
+    def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
+        """Initialize the sensor entity."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.base_unique_id}_quick_key_config_byte"
+
+    @override
+    async def _async_read_value(self) -> None:
+        """Fetch the raw Quick Key config byte from the lock."""
+        if (settings := await self._device.get_quick_key()) is not None:
+            self._attr_native_value = f"0x{settings['raw']:02x}"
