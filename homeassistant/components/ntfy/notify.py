@@ -24,6 +24,7 @@ from homeassistant.components.notify import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.os_error import os_read_error
 
 from .const import DOMAIN, NtfyServiceArgument
 from .coordinator import NtfyConfigEntry
@@ -105,10 +106,12 @@ class NtfyNotifyEntity(NtfyBaseEntity, NotifyEntity):
                         translation_domain=DOMAIN,
                         translation_key="media_source_not_supported",
                     )
-
-                attachment = await self.hass.async_add_executor_job(
-                    media.path.read_bytes
-                )
+                try:
+                    attachment = await self.hass.async_add_executor_job(
+                        media.path.read_bytes
+                    )
+                except OSError as err:
+                    raise os_read_error(err, str(media.path)) from err
 
                 params.setdefault(NtfyServiceArgument.FILENAME, media.path.name)
 

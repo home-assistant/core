@@ -398,7 +398,11 @@ async def test_intent_script_action_validation(
     )
 
     # Verify that the invalid intent logged an error
-    assert "Failed to validate actions for intent InvalidIntent" in caplog.text
+    assert (
+        "Failed to validate actions for intent InvalidIntent: "
+        f"Unknown entity registry entry {non_existent_registry_id} "
+        "at 'action[0].choose[0].conditions[0]'"
+    ) in caplog.text
 
     # The invalid intent should not be registered
     with pytest.raises(intent.UnknownIntent):

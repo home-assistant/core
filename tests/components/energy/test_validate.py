@@ -56,7 +56,14 @@ async def test_validation(
     extra,
 ) -> None:
     """Test validating success."""
-    for key in ("device_cons", "battery_import", "battery_export", "solar_production"):
+    for key in (
+        "device_cons",
+        "battery_import",
+        "battery_export",
+        "battery_from_solar",
+        "battery_to_home",
+        "solar_production",
+    ):
         hass.states.async_set(
             f"sensor.{key}",
             "123",
@@ -76,13 +83,18 @@ async def test_validation(
                     "stat_energy_from": "sensor.battery_import",
                     "stat_energy_to": "sensor.battery_export",
                 },
+                {
+                    "type": "battery",
+                    "stat_energy_from_solar": "sensor.battery_from_solar",
+                    "stat_energy_to_home": "sensor.battery_to_home",
+                },
                 {"type": "solar", "stat_energy_from": "sensor.solar_production"},
             ],
             "device_consumption": [{"stat_consumption": "sensor.device_cons"}],
         }
     )
     assert (await validate.async_validate(hass)).as_dict() == {
-        "energy_sources": [[], []],
+        "energy_sources": [[], [], []],
         "device_consumption": [[]],
         "device_consumption_gas": [],
         "device_consumption_water": [],
@@ -415,6 +427,176 @@ async def test_validation_battery(
         "device_consumption_gas": [],
         "device_consumption_water": [],
     }
+
+
+BATTERY_DIRECTIONS = {
+    "type": "battery",
+    "stat_energy_from_grid": "sensor.battery_from_grid",
+    "stat_energy_from_solar": "sensor.battery_from_solar",
+    "stat_energy_to_home": "sensor.battery_to_home",
+    "stat_energy_to_grid": "sensor.battery_to_grid",
+}
+
+
+@pytest.mark.usefixtures("mock_get_metadata")
+async def test_validation_battery_directions(
+    hass: HomeAssistant, mock_energy_manager: EnergyManager
+) -> None:
+    """Test validating the energy statistics of a battery measured per direction."""
+    await mock_energy_manager.async_update(
+        {
+            "energy_sources": [
+                BATTERY_DIRECTIONS,
+                {
+                    "type": "grid",
+                    "stat_energy_from": "sensor.grid_import",
+                    "stat_energy_to": "sensor.grid_export",
+                    "cost_adjustment_day": 0.0,
+                },
+                {"type": "solar", "stat_energy_from": "sensor.solar_production"},
+            ]
+        }
+    )
+    for key in ("battery_from_grid", "battery_from_solar", "battery_to_home"):
+        hass.states.async_set(
+            f"sensor.{key}",
+            "10.10",
+            {
+                "device_class": "energy",
+                "unit_of_measurement": UnitOfEnergy.KILO_WATT_HOUR,
+                "state_class": "total_increasing",
+            },
+        )
+    hass.states.async_set(
+        "sensor.battery_to_grid",
+        "10.10",
+        {
+            "device_class": "energy",
+            "unit_of_measurement": "beers",
+            "state_class": "total_increasing",
+        },
+    )
+
+    result = (await validate.async_validate(hass)).as_dict()
+    assert result["energy_sources"][0] == [
+        {
+            "type": "entity_unexpected_unit_energy",
+            "affected_entities": {("sensor.battery_to_grid", "beers")},
+            "translation_placeholders": {"energy_units": ENERGY_UNITS_STRING},
+        },
+    ]
+
+
+@pytest.mark.usefixtures("mock_get_metadata")
+@pytest.mark.parametrize(
+    ("other_sources", "issues"),
+    [
+        pytest.param(
+            [],
+            [
+                {
+                    "type": "battery_from_grid_without_grid_import",
+                    "affected_entities": {("sensor.battery_from_grid", None)},
+                    "translation_placeholders": None,
+                },
+                {
+                    "type": "battery_to_grid_without_grid_export",
+                    "affected_entities": {("sensor.battery_to_grid", None)},
+                    "translation_placeholders": None,
+                },
+                {
+                    "type": "battery_from_solar_without_solar",
+                    "affected_entities": {("sensor.battery_from_solar", None)},
+                    "translation_placeholders": None,
+                },
+            ],
+            id="no_sources",
+        ),
+        pytest.param(
+            [
+                {
+                    "type": "grid",
+                    "stat_energy_from": "sensor.grid_import",
+                    "stat_energy_to": None,
+                    "cost_adjustment_day": 0.0,
+                },
+                {"type": "solar", "stat_energy_from": "sensor.solar_production"},
+            ],
+            [
+                {
+                    "type": "battery_to_grid_without_grid_export",
+                    "affected_entities": {("sensor.battery_to_grid", None)},
+                    "translation_placeholders": None,
+                },
+            ],
+            id="grid_import_only",
+        ),
+        pytest.param(
+            [
+                {
+                    "type": "grid",
+                    "stat_energy_from": None,
+                    "stat_energy_to": "sensor.grid_export",
+                    "cost_adjustment_day": 0.0,
+                },
+            ],
+            [
+                {
+                    "type": "battery_from_grid_without_grid_import",
+                    "affected_entities": {("sensor.battery_from_grid", None)},
+                    "translation_placeholders": None,
+                },
+                {
+                    "type": "battery_from_solar_without_solar",
+                    "affected_entities": {("sensor.battery_from_solar", None)},
+                    "translation_placeholders": None,
+                },
+            ],
+            id="grid_export_only",
+        ),
+        pytest.param(
+            [
+                {
+                    "type": "grid",
+                    "stat_energy_from": "sensor.grid_import",
+                    "stat_energy_to": "sensor.grid_export",
+                    "cost_adjustment_day": 0.0,
+                },
+                {"type": "solar", "stat_energy_from": "sensor.solar_production"},
+            ],
+            [],
+            id="all_sources",
+        ),
+    ],
+)
+async def test_validation_battery_directions_without_source(
+    hass: HomeAssistant,
+    mock_energy_manager: EnergyManager,
+    other_sources: list[dict[str, Any]],
+    issues: list[dict[str, Any]],
+) -> None:
+    """Test a battery direction without its source type is a warning."""
+    await mock_energy_manager.async_update(
+        {"energy_sources": [BATTERY_DIRECTIONS, *other_sources]}
+    )
+    for key in (
+        "battery_from_grid",
+        "battery_from_solar",
+        "battery_to_home",
+        "battery_to_grid",
+    ):
+        hass.states.async_set(
+            f"sensor.{key}",
+            "10.10",
+            {
+                "device_class": "energy",
+                "unit_of_measurement": UnitOfEnergy.KILO_WATT_HOUR,
+                "state_class": "total_increasing",
+            },
+        )
+
+    result = (await validate.async_validate(hass)).as_dict()
+    assert result["energy_sources"][0] == issues
 
 
 async def test_validation_grid(

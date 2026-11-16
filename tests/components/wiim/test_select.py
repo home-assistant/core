@@ -9,18 +9,19 @@ from wiim.exceptions import WiimRequestException
 
 from homeassistant.components.select import (
     ATTR_CYCLE,
-    ATTR_OPTION,
     ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_LAST,
     SERVICE_SELECT_NEXT,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
 from homeassistant.components.wiim.const import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    CommonServiceArgument,
     EntityCategory,
 )
 from homeassistant.core import HomeAssistant
@@ -134,8 +135,11 @@ async def test_select_option(
     await setup_integration(hass, mock_config_entry)
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_OPTION: "Optical Out"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+            SelectServiceArgument.OPTION: "Optical Out",
+        },
         blocking=True,
     )
     state = hass.states.get(ENTITY_ID)
@@ -154,8 +158,11 @@ async def test_non_selectable_output_rejected(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_OPTION: "other_out"},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+                SelectServiceArgument.OPTION: "other_out",
+            },
             blocking=True,
         )
     mock_wiim_device.async_set_output_mode.assert_not_awaited()
@@ -213,8 +220,11 @@ async def test_select_failure(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_OPTION: "Optical Out"},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+                SelectServiceArgument.OPTION: "Optical Out",
+            },
             blocking=True,
         )
     assert exc_info.value.translation_key == "command_failed"

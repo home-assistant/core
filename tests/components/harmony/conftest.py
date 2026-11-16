@@ -198,4 +198,5 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         unique_id="123",
         data={CONF_HOST: "192.0.2.0", CONF_NAME: HUB_NAME},
+        minor_version=2,
     )
