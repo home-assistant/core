@@ -62,8 +62,8 @@ class UpdateFailed(HomeAssistantError):
 class UpdateFailedUnreachable(UpdateFailed):
     """Raised when an update failed because the device or service is unreachable.
 
-    Use for expected unavailability, e.g. a device that was turned off,
-    the failure is logged at info level instead of error.
+    Use for any device or service that cannot be reached, e.g. a device that
+    was turned off. The failure is logged at info level instead of error.
     """
 
 

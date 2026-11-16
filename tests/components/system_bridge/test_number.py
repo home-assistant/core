@@ -225,15 +225,23 @@ async def test_set_brightness_error(
         )
 
 
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        pytest.param(
+            ConnectionClosedException("Connection is closed"), id="connection_closed"
+        ),
+        pytest.param(ConnectionResetError, id="connection_reset"),
+    ],
+)
 @pytest.mark.usefixtures("init_integration")
 async def test_set_brightness_connection_closed(
     hass: HomeAssistant,
     mock_websocket_client: MagicMock,
+    side_effect: Exception | type[Exception],
 ) -> None:
-    """Test a closed connection raises."""
-    mock_websocket_client.display_control.side_effect = ConnectionClosedException(
-        "Connection is closed"
-    )
+    """Test a lost connection raises."""
+    mock_websocket_client.display_control.side_effect = side_effect
 
     with pytest.raises(
         HomeAssistantError,
