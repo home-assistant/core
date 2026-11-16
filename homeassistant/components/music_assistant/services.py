@@ -179,9 +179,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
             ),
             probatio.Optional(MusicAssistantServiceArgument.ARTIST): cv.string,
             probatio.Optional(MusicAssistantServiceArgument.ALBUM): cv.string,
-            probatio.Optional(
-                MusicAssistantServiceArgument.RADIO_MODE
-            ): cv.boolean,
+            probatio.Optional(MusicAssistantServiceArgument.RADIO_MODE): cv.boolean,
             probatio.Optional(MusicAssistantServiceArgument.SHUFFLE): cv.boolean,
             probatio.Optional(MusicAssistantServiceArgument.START_ITEM): cv.string,
             probatio.Optional(MusicAssistantServiceArgument.USERNAME): cv.string,
