@@ -24,6 +24,28 @@ _LOGGER = logging.getLogger(__name__)
 IDLE_TIMEOUT = 600
 # Seconds to wait for a file to be downloaded, the HLS player gives up after 30 seconds
 FILE_TIMEOUT = 25
+# Folder in the temp dir holding the folders of the playbacks
+HLS_DIR = "reolink_hls"
+
+
+def _hls_root() -> Path:
+    """Return the folder holding the folders of the playbacks."""
+    return Path(tempfile.gettempdir()) / HLS_DIR
+
+
+def _make_playback_dir() -> Path:
+    """Create a new folder for the files of a playback."""
+    root = _hls_root()
+    root.mkdir(exist_ok=True)
+    return Path(tempfile.mkdtemp(dir=root))
+
+
+async def async_remove_leftover_hls_files(hass: HomeAssistant) -> None:
+    """Remove the files of playbacks which were not closed, e.g. due to a crash.
+
+    Only call this before any playback is started.
+    """
+    await hass.async_add_executor_job(shutil.rmtree, _hls_root(), True)
 
 
 class ReolinkHlsPlayback:
@@ -62,11 +84,7 @@ class ReolinkHlsPlayback:
 
     async def async_start(self) -> None:
         """Start downloading the recording to a temporary directory."""
-        self._dir = Path(
-            await self._hass.async_add_executor_job(
-                tempfile.mkdtemp, None, "reolink_hls_"
-            )
-        )
+        self._dir = await self._hass.async_add_executor_job(_make_playback_dir)
         # background task of the config entry: cancelled when the config entry unloads
         self._task = self._config_entry.async_create_background_task(
             self._hass,
