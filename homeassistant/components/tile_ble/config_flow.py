@@ -3,15 +3,15 @@
 from typing import Any, override
 
 import probatio
-from pytile import async_login
-from pytile.errors import InvalidAuthError, TileError
-from pytile.tile import Tile
 from tile_ble import (
     TILE_SERVICE_UUID,
     TileBleAuthenticationError,
     TileBleDevice,
     TileBleError,
+    TileCloudAuthenticationError,
+    TileCloudError,
     address_matches_tile_id,
+    async_get_tiles,
     async_read_tile_id,
 )
 
@@ -43,12 +43,6 @@ class UnknownTile(HomeAssistantError):
     """Error to indicate the Tile is not in the Tile account."""
 
 
-def _auth_key(tile: Tile) -> str | None:
-    """Return the key used to authenticate with the Tile over Bluetooth."""
-    # pytile does not expose the key yet.
-    return tile._tile_data["result"].get("auth_key")  # noqa: SLF001
-
-
 class TileBleConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Tile BLE."""
 
@@ -67,21 +61,20 @@ class TileBleConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             try:
-                client = await async_login(
+                tiles = await async_get_tiles(
+                    async_get_clientsession(self.hass),
                     user_input[CONF_USERNAME],
                     user_input[CONF_PASSWORD],
-                    session=async_get_clientsession(self.hass),
                 )
-                tiles = await client.async_get_tiles()
-            except InvalidAuthError:
+            except TileCloudAuthenticationError:
                 errors["base"] = "invalid_auth"
-            except TileError:
+            except TileCloudError:
                 errors["base"] = "cannot_connect"
             else:
                 self._tiles = {
-                    tile.uuid: (tile.name, auth_key)
-                    for tile in tiles.values()
-                    if (auth_key := _auth_key(tile))
+                    tile.tile_id: (tile.name, tile.auth_key)
+                    for tile in tiles
+                    if tile.auth_key
                 }
                 if not self._tiles:
                     return self.async_abort(reason="no_tiles")

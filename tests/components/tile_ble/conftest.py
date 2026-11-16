@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
+from tile_ble import TileCloudTile
 
 from homeassistant.components.tile_ble.const import CONF_AUTH_KEY, DOMAIN
 
@@ -36,28 +37,18 @@ def mock_config_entry() -> MockConfigEntry:
     )
 
 
-def _mock_tile(uuid: str, name: str, auth_key: str | None) -> MagicMock:
-    tile = MagicMock()
-    tile.uuid = uuid
-    tile.name = name
-    tile._tile_data = {"result": {"auth_key": auth_key}}
-    return tile
-
-
 @pytest.fixture
-def mock_pytile() -> Generator[AsyncMock]:
-    """Mock logging in to the Tile cloud."""
-    client = AsyncMock()
-    client.async_get_tiles.return_value = {
-        WALLET_TILE_ID: _mock_tile(WALLET_TILE_ID, "Wallet", AUTH_KEY),
-        KEYS_TILE_ID: _mock_tile(KEYS_TILE_ID, "Keys", OTHER_AUTH_KEY),
-        "phone": _mock_tile("phone", "Phone", None),
-    }
+def mock_get_tiles() -> Generator[AsyncMock]:
+    """Mock getting the Tiles of the account from the Tile cloud."""
     with patch(
-        "homeassistant.components.tile_ble.config_flow.async_login",
-        return_value=client,
-    ) as mock_login:
-        yield mock_login
+        "homeassistant.components.tile_ble.config_flow.async_get_tiles",
+        return_value=[
+            TileCloudTile(WALLET_TILE_ID, "Wallet", AUTH_KEY),
+            TileCloudTile(KEYS_TILE_ID, "Keys", OTHER_AUTH_KEY),
+            TileCloudTile("phone", "Phone", None),
+        ],
+    ) as mock_get_tiles:
+        yield mock_get_tiles
 
 
 @pytest.fixture

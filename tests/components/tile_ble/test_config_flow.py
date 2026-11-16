@@ -5,8 +5,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
-from pytile.errors import InvalidAuthError, TileError
-from tile_ble import TileBleAuthenticationError, TileBleConnectionError
+from tile_ble import (
+    TileBleAuthenticationError,
+    TileBleConnectionError,
+    TileCloudAuthenticationError,
+    TileCloudError,
+)
 
 from homeassistant.components.tile_ble.const import CONF_AUTH_KEY, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -43,7 +47,7 @@ async def _log_in(hass: HomeAssistant) -> FlowResult:
     return result
 
 
-@pytest.mark.usefixtures("mock_setup_entry", "mock_pytile")
+@pytest.mark.usefixtures("mock_setup_entry", "mock_get_tiles")
 async def test_user_flow(
     hass: HomeAssistant,
     mock_tile_ble_device: MagicMock,
@@ -79,7 +83,7 @@ async def test_user_flow(
     mock_read_tile_id.assert_not_called()
 
 
-@pytest.mark.usefixtures("mock_setup_entry", "mock_pytile")
+@pytest.mark.usefixtures("mock_setup_entry", "mock_get_tiles")
 async def test_user_flow_unmatched_tile(
     hass: HomeAssistant,
     mock_tile_ble_device: MagicMock,
@@ -104,14 +108,14 @@ async def test_user_flow_unmatched_tile(
 @pytest.mark.parametrize(
     ("exception", "error"),
     [
-        pytest.param(InvalidAuthError, "invalid_auth", id="invalid_auth"),
-        pytest.param(TileError, "cannot_connect", id="cannot_connect"),
+        pytest.param(TileCloudAuthenticationError, "invalid_auth", id="invalid_auth"),
+        pytest.param(TileCloudError, "cannot_connect", id="cannot_connect"),
     ],
 )
 @pytest.mark.usefixtures("mock_setup_entry", "mock_tile_ble_device")
 async def test_user_errors(
     hass: HomeAssistant,
-    mock_pytile: AsyncMock,
+    mock_get_tiles: AsyncMock,
     exception: type[Exception],
     error: str,
 ) -> None:
@@ -121,7 +125,7 @@ async def test_user_errors(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    mock_pytile.side_effect = exception
+    mock_get_tiles.side_effect = exception
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], ACCOUNT_INPUT
     )
@@ -129,7 +133,7 @@ async def test_user_errors(
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": error}
 
-    mock_pytile.side_effect = None
+    mock_get_tiles.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], ACCOUNT_INPUT
     )
@@ -143,10 +147,10 @@ async def test_user_errors(
 
 
 async def test_account_without_tiles(
-    hass: HomeAssistant, mock_pytile: AsyncMock
+    hass: HomeAssistant, mock_get_tiles: AsyncMock
 ) -> None:
     """Test the flow aborts when the account has no Tiles with a key."""
-    mock_pytile.return_value.async_get_tiles.return_value = {}
+    mock_get_tiles.return_value = []
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -164,7 +168,7 @@ async def test_account_without_tiles(
         pytest.param(TileBleConnectionError, "cannot_connect", id="cannot_connect"),
     ],
 )
-@pytest.mark.usefixtures("mock_setup_entry", "mock_pytile")
+@pytest.mark.usefixtures("mock_setup_entry", "mock_get_tiles")
 async def test_authenticate_errors(
     hass: HomeAssistant,
     mock_tile_ble_device: MagicMock,
@@ -197,7 +201,7 @@ async def test_authenticate_errors(
         pytest.param(["0000000000000000"], "unknown_tile", id="unknown_tile"),
     ],
 )
-@pytest.mark.usefixtures("mock_setup_entry", "mock_pytile", "mock_tile_ble_device")
+@pytest.mark.usefixtures("mock_setup_entry", "mock_get_tiles", "mock_tile_ble_device")
 async def test_read_tile_id_errors(
     hass: HomeAssistant,
     mock_read_tile_id: AsyncMock,
@@ -223,7 +227,7 @@ async def test_read_tile_id_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-@pytest.mark.usefixtures("mock_setup_entry", "mock_pytile")
+@pytest.mark.usefixtures("mock_setup_entry", "mock_get_tiles")
 async def test_tile_not_connectable(
     hass: HomeAssistant, mock_tile_ble_device: MagicMock
 ) -> None:
@@ -255,7 +259,7 @@ async def test_tile_not_connectable(
         pytest.param([NOT_TILE_SERVICE_INFO], id="no_tiles_seen"),
     ],
 )
-@pytest.mark.usefixtures("mock_pytile")
+@pytest.mark.usefixtures("mock_get_tiles")
 async def test_no_devices(
     hass: HomeAssistant, service_infos: list[BluetoothServiceInfo]
 ) -> None:
@@ -273,7 +277,7 @@ async def test_no_devices(
     assert result["reason"] == "no_devices_found"
 
 
-@pytest.mark.usefixtures("mock_pytile")
+@pytest.mark.usefixtures("mock_get_tiles")
 async def test_configured_tiles_skipped(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
@@ -291,7 +295,7 @@ async def test_configured_tiles_skipped(
     assert result["reason"] == "no_devices_found"
 
 
-@pytest.mark.usefixtures("mock_pytile")
+@pytest.mark.usefixtures("mock_get_tiles")
 async def test_already_configured(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
