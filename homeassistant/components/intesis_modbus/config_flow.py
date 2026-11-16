@@ -118,13 +118,17 @@ class IntesisModbusConfigFlow(ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match(match)
             # A loaded entry holds its port at the old baud rate, which refuses
             # a probe at another one, so it lets go of the port meanwhile.
-            released = (
-                reconfigure_entry.state is ConfigEntryState.LOADED
-                and user_input[CONF_DEVICE] == reconfigure_entry.data[CONF_DEVICE]
-                and user_input[CONF_BAUDRATE] != reconfigure_entry.data[CONF_BAUDRATE]
-            )
-            if released:
-                await self.hass.config_entries.async_unload(reconfigure_entry.entry_id)
+            released = False
+            if reconfigure_entry.state in (
+                ConfigEntryState.LOADED,
+                ConfigEntryState.SETUP_RETRY,
+            ):
+                current = create_modbus_params(reconfigure_entry.data)
+                new = create_modbus_params(user_input)
+                if new.endpoint == current.endpoint and new != current:
+                    released = await self.hass.config_entries.async_unload(
+                        reconfigure_entry.entry_id
+                    )
             saved = False
             try:
                 errors, probe = await self._async_validate(user_input)
