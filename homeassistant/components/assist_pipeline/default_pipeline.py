@@ -812,6 +812,16 @@ class _DefaultPipelineProcessor:
                     tts_input_stream.put_nowait(content)
                     last_assistant_content = content
 
+                # Streaming TTS holds back the last sentence until more text
+                # arrives, which would delay it until after the tool call
+                if (
+                    delta.get("tool_calls")
+                    and last_assistant_content
+                    and not last_assistant_content[-1].isspace()
+                ):
+                    tts_input_stream.put_nowait("\n\n")
+                    last_assistant_content = "\n\n"
+
                 if self._streamed_response_text:
                     return
 
