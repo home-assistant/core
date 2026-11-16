@@ -1,6 +1,6 @@
 """Test fixtures for the config integration."""
 
-from collections.abc import Generator, Iterable
+from collections.abc import Generator
 from contextlib import contextmanager
 from copy import deepcopy
 import json
@@ -13,8 +13,6 @@ import pytest
 from pytest_homeassistant.common import raise_contains_mocks
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import translation
-from homeassistant.loader import Integration
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,35 +77,3 @@ def hass_config_store() -> Generator[dict[str, Any]]:
     """Fixture to mock config yaml store."""
     with mock_config_store() as stored_data:
         yield stored_data
-
-
-@pytest.fixture
-def mock_translations(
-    hass: HomeAssistant, request: pytest.FixtureRequest
-) -> Generator[None]:
-    """Provide strings.json-shaped translations for mocked integrations."""
-    strings_by_domain: dict[str, dict[str, Any]] = getattr(request, "param", {})
-    cache = translation._async_get_translations_cache(hass)
-    domains = set(strings_by_domain)
-    cache.async_invalidate(domains)
-    real_get_strings = translation._async_get_component_strings
-
-    async def _get_component_strings(
-        hass_arg: HomeAssistant,
-        languages: Iterable[str],
-        components: set[str],
-        integrations: dict[str, Integration],
-    ) -> dict[str, dict[str, Any]]:
-        result = await real_get_strings(hass_arg, languages, components, integrations)
-        for lang in languages:
-            lang_strings = result.setdefault(lang, {})
-            for domain in components.intersection(domains):
-                lang_strings[domain] = deepcopy(strings_by_domain[domain])
-        return result
-
-    with patch(
-        "homeassistant.helpers.translation._async_get_component_strings",
-        side_effect=_get_component_strings,
-    ):
-        yield
-    cache.async_invalidate(domains)

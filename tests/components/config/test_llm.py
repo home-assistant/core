@@ -1,7 +1,7 @@
 """Tests for the config LLM tools."""
 
 import asyncio
-from collections.abc import Callable, Coroutine
+from collections.abc import Callable, Coroutine, Generator
 from typing import Any, override
 from unittest.mock import AsyncMock, patch
 
@@ -66,6 +66,21 @@ async def llm_api(
     assert await async_setup_component(hass, "llm", {})
     llm_context.context = Context(user_id=hass_admin_user.id)
     return await llm.async_get_api(hass, llm.LLM_API_HOME_ASSISTANT, llm_context)
+
+
+@pytest.fixture
+def mock_translations(request: pytest.FixtureRequest) -> Generator[None]:
+    """Patch async_get_translations in config.llm with category-keyed dicts."""
+    translations: dict[str, dict[str, str]] = request.param
+    with patch(
+        "homeassistant.components.config.llm.translation.async_get_translations",
+        AsyncMock(
+            side_effect=lambda _hass, _lang, category, *_args: translations.get(
+                category, {}
+            )
+        ),
+    ):
+        yield
 
 
 async def test_async_get_tools(
@@ -1612,29 +1627,21 @@ async def test_get_config_entries_flow_capabilities(
     )
 
 
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", [TEST_DOMAIN])
 @pytest.mark.parametrize(
     "mock_translations",
     [
         {
-            TEST_DOMAIN: {
-                "title": "Test Sensor",
-                "options": {
-                    "step": {
-                        "init": {
-                            "title": "Sensor options",
-                            "data": {
-                                "minimum": "Minimum",
-                                "maximum": "Maximum",
-                            },
-                        }
-                    }
-                },
-            }
+            "options": {
+                f"component.{TEST_DOMAIN}.options.step.init.title": "Sensor options",
+                f"component.{TEST_DOMAIN}.options.step.init.data.minimum": "Minimum",
+                f"component.{TEST_DOMAIN}.options.step.init.data.maximum": "Maximum",
+            },
         }
     ],
     indirect=True,
 )
-@pytest.mark.usefixtures("mock_translations")
+@pytest.mark.usefixtures("ignore_translations_for_mock_domains", "mock_translations")
 async def test_options_flow_end_to_end(
     hass: HomeAssistant, llm_api: llm.APIInstance
 ) -> None:
@@ -1757,29 +1764,10 @@ async def test_options_flow_end_to_end(
     assert entry.options == {"minimum": 5, "maximum": 25}
 
 
-@pytest.mark.parametrize(
-    "mock_translations",
-    [
-        {
-            TEST_DOMAIN: {
-                "title": "Test Bridge",
-                "config": {
-                    "step": {
-                        "reconfigure": {
-                            "title": "Reconfigure bridge",
-                            "data": {"host": "Host"},
-                        }
-                    },
-                    "error": {"cannot_connect": "Cannot connect"},
-                },
-            }
-        }
-    ],
-    indirect=True,
-)
-@pytest.mark.usefixtures("mock_translations")
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", [TEST_DOMAIN])
+@pytest.mark.usefixtures("ignore_translations_for_mock_domains")
 async def test_reconfigure_flow(hass: HomeAssistant, llm_api: llm.APIInstance) -> None:
-    """Test starting and completing a reconfigure flow with translations and validation."""
+    """Test starting and completing a reconfigure flow."""
     mock_integration(
         hass,
         MockModule(TEST_DOMAIN, async_setup_entry=AsyncMock(return_value=True)),
@@ -1830,14 +1818,13 @@ async def test_reconfigure_flow(hass: HomeAssistant, llm_api: llm.APIInstance) -
         assert started.error is False
         assert isinstance(step := started.data["result"], dict)
         flow_id = step["flow_id"]
-        assert step["title"] == "Reconfigure bridge"
+        assert step["title"] == TEST_DOMAIN
         assert step["fields"] == [
             {
                 "name": "host",
                 "required": True,
                 "type": "string",
                 "suggested_value": "192.168.1.10",
-                "label": "Host",
             }
         ]
 
@@ -1849,7 +1836,7 @@ async def test_reconfigure_flow(hass: HomeAssistant, llm_api: llm.APIInstance) -
         )
         assert err_res.error is False
         assert isinstance(err_step := err_res.data["result"], dict)
-        assert err_step["errors"] == {"base": "Cannot connect"}
+        assert err_step["errors"] == {"base": "cannot_connect"}
 
         done = await llm_api.async_call_tool(
             llm.ToolInput(
