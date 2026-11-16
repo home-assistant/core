@@ -145,6 +145,9 @@ class AmazonSelectServiceEntity(AmazonServiceEntity, SelectEntity):
     async def async_added_to_hass(self) -> None:
         """Load current option from the API."""
         await super().async_added_to_hass()
+        # No default device is resolved while all devices are offline
+        if not self.coordinator.data:
+            return
         default = await self.coordinator.api.get_default_device()
         self._attr_current_option = default.account_name
 
