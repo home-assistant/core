@@ -1688,7 +1688,7 @@ mill-local==0.5.0
 millheater==0.14.1
 
 # homeassistant.components.minio
-minio==7.1.12
+minio==7.2.20
 
 # homeassistant.components.mitsubishi_comfort
 mitsubishi-comfort==0.6.2
