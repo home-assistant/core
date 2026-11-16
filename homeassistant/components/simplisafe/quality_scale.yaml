@@ -1,27 +1,26 @@
 # Commented out rules still need to be checked
-### Triple comments need a link still
 rules:
   # Bronze
   action-setup: done  # https://github.com/home-assistant/core/blob/dev/homeassistant/components/simplisafe/services.py#L224
-  appropriate-polling: done
+  appropriate-polling: done  # https://github.com/home-assistant/core/blob/dev/homeassistant/components/simplisafe/coordinator.py#L14
   brands: done  # https://github.com/home-assistant/brands/tree/master/core_integrations/simplisafe
-  ### common-modules: done
-  # config-flow-test-coverage: todo
-  ### config-flow: done
+  common-modules: done  # https://github.com/home-assistant/core/blob/dev/homeassistant/components/simplisafe/coordinator.py and https://github.com/home-assistant/core/blob/dev/homeassistant/components/simplisafe/entity.py
+  # config-flow-test-coverage: todo  # Need to check this
+  config-flow: done  # https://github.com/home-assistant/core/blob/dev/homeassistant/components/simplisafe/config_flow.py
   dependency-transparency: done  # https://github.com/bachya/simplisafe-python
   docs-actions: done  #https://www.home-assistant.io/integrations/simplisafe/#list-of-actions
-  ### docs-conditions:
-  ###   status: exempt
-  ###   comment: The integration does not register any conditions.
-  docs-high-level-description: done  # # https://www.home-assistant.io/integrations/simplisafe/
-  ### docs-installation-instructions: done
+  docs-conditions:
+    status: exempt
+    comment: The integration does not register any conditions.
+  docs-high-level-description: done  # https://www.home-assistant.io/integrations/simplisafe/
+  docs-installation-instructions: done  # https://www.home-assistant.io/integrations/simplisafe/#configuration
   docs-removal-instructions: todo
   docs-triggers: todo
-  ### entity-event-setup: done
+  entity-event-setup: done  # https://github.com/home-assistant/core/blob/dev/homeassistant/components/simplisafe/entity.py#L221
   entity-unique-id: done  # https://github.com/home-assistant/core/blob/dev/homeassistant/components/simplisafe/entity.py#L116
-  ### has-entity-name: done
+  has-entity-name: done  # https://github.com/home-assistant/core/blob/dev/homeassistant/components/simplisafe/entity.py#L54
   runtime-data: done  # https://github.com/home-assistant/core/blob/dev/homeassistant/components/simplisafe/__init__.py#L222
-  # test-before-configure: todo
+  test-before-configure: done # https://github.com/home-assistant/core/blob/dev/homeassistant/components/simplisafe/config_flow.py#L106
   test-before-setup: done # https://github.com/home-assistant/core/blob/dev/homeassistant/components/simplisafe/__init__.py#L211
   unique-config-entry: done  # https://github.com/home-assistant/core/blob/dev/homeassistant/components/simplisafe/__init__.py#L186
 
@@ -32,35 +31,49 @@ rules:
   docs-installation-parameters: todo
   entity-unavailable: done  # https://github.com/home-assistant/core/blob/dev/homeassistant/components/simplisafe/entity.py#L132
   integration-owner: done  # https://github.com/home-assistant/core/blob/dev/homeassistant/components/simplisafe/manifest.json#L5
-  # log-when-unavailable: todo
+  log-when-unavailable: todo
   parallel-updates: todo
-  # reauthentication-flow: todo
-  # test-coverage: todo
+  reauthentication-flow: done  # https://github.com/home-assistant/core/blob/dev/homeassistant/components/simplisafe/config_flow.py#L70
+  # test-coverage: todo  # Need to check this
 
   # Gold
-  ### devices: done
-  # diagnostics: todo  # https://github.com/home-assistant/core/blob/dev/homeassistant/components/simplisafe/diagnostics.py
-  # discovery-update-info: todo
-  ### discovery: done
+  devices: done  # https://github.com/home-assistant/core/blob/dev/homeassistant/components/simplisafe/entity.py#L102
+  diagnostics: done  # https://github.com/home-assistant/core/blob/dev/homeassistant/components/simplisafe/diagnostics.py
+  discovery-update-info:
+    status: todo
+    comment: Same reason as discovery.
+  discovery:
+    status: todo
+    comment: The docs state that it can be auto-discovered, but the manifest.json and the config flow do not have the "zeroconf" items needed.
   docs-data-update: done  # https://www.home-assistant.io/integrations/simplisafe/
-  docs-examples: done  #https://www.home-assistant.io/integrations/simplisafe/#automation-example-detecting-secret-alert-events
-  # docs-known-limitations: todo
-  docs-supported-devices: done
-  # docs-supported-functions: todo
-  # docs-troubleshooting: todo
-  # docs-use-cases: todo
-  # dynamic-devices: todo
+  docs-examples: done  # https://www.home-assistant.io/integrations/simplisafe/#automation-example-detecting-secret-alert-events
+  docs-known-limitations: todo
+  docs-supported-devices: done  # https://www.home-assistant.io/integrations/simplisafe/
+  docs-supported-functions: done # https://www.home-assistant.io/integrations/simplisafe/
+  docs-troubleshooting: todo
+  docs-use-cases: done  # https://www.home-assistant.io/integrations/simplisafe/
+  dynamic-devices:
+    status: exempt
+    comment: The integration only registers one fixed device per config entry.  # Need to check this
   entity-category: done  # https://github.com/home-assistant/core/blob/dev/homeassistant/components/simplisafe/button.py#L65
-  ### entity-device-class: done
-  # entity-disabled-by-default: todo
-  # entity-translations: todo
-  # exception-translations: todo
-  # icon-translations: todo
-  # reconfiguration-flow: todo
-  # repair-issues: todo
-  # stale-devices: todo
+  entity-device-class: done  # https://github.com/home-assistant/core/blob/dev/homeassistant/components/simplisafe/sensor.py#L51
+  entity-disabled-by-default:
+    status: todo
+    comment: No entities are disabled by default.  Several could be, but that is a conversation probably best had during review.
+  entity-translations:
+    status: todo
+    comment: Some entities are translated, but not all.
+  exception-translations:
+    status: todo
+    comment: Some exceptions are translated, but not all.
+  icon-translations: done  # https://github.com/home-assistant/core/blob/dev/homeassistant/components/simplisafe/icons.json
+  reconfiguration-flow: todo
+  # repair-issues:
+  #   status: todo
+  #   comment: No repair issues currently raised, however it is possible that none need to be.
+  stale-devices: done  # https://contributors.home-assistant.io/core/quality-scale/stale-devices/
 
   # Platinum
-  # async-dependency: todo
+  async-dependency: done  # https://github.com/bachya/simplisafe-python/blob/dev/simplipy/api.py
   inject-websession: done  # https://github.com/home-assistant/core/blob/dev/homeassistant/components/simplisafe/__init__.py#L204
   strict-typing: done  # https://github.com/bachya/simplisafe-python/blob/dev/simplipy/py.typed
