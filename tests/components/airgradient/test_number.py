@@ -18,7 +18,7 @@ from homeassistant.components.number import (
     NumberService,
     NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -52,7 +52,7 @@ async def test_setting_value(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         service_data={NumberServiceArgument.VALUE: 50},
-        target={ATTR_ENTITY_ID: "number.airgradient_display_brightness"},
+        target={TargetKey.ENTITY_ID: "number.airgradient_display_brightness"},
         blocking=True,
     )
     mock_airgradient_client.set_display_brightness.assert_called_once()
@@ -61,7 +61,7 @@ async def test_setting_value(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         service_data={NumberServiceArgument.VALUE: 50},
-        target={ATTR_ENTITY_ID: "number.airgradient_led_bar_brightness"},
+        target={TargetKey.ENTITY_ID: "number.airgradient_led_bar_brightness"},
         blocking=True,
     )
     mock_airgradient_client.set_led_bar_brightness.assert_called_once()
@@ -96,7 +96,7 @@ async def test_v1_number_writes(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         service_data={NumberServiceArgument.VALUE: value},
-        target={ATTR_ENTITY_ID: entity_id},
+        target={TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -185,6 +185,6 @@ async def test_exception_handling(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             service_data={NumberServiceArgument.VALUE: 50},
-            target={ATTR_ENTITY_ID: "number.airgradient_display_brightness"},
+            target={TargetKey.ENTITY_ID: "number.airgradient_display_brightness"},
             blocking=True,
         )

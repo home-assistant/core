@@ -1452,6 +1452,9 @@ insteon-frontend-home-assistant==0.7.0
 # homeassistant.components.intellifire
 intellifire4py==4.5.6
 
+# homeassistant.components.intesis_modbus
+intesis-gw-modbus==0.3.0
+
 # homeassistant.components.iometer
 iometer==1.0.3
 
@@ -1685,7 +1688,7 @@ mill-local==0.5.0
 millheater==0.14.1
 
 # homeassistant.components.minio
-minio==7.1.12
+minio==7.2.20
 
 # homeassistant.components.mitsubishi_comfort
 mitsubishi-comfort==0.6.2
@@ -3192,7 +3195,7 @@ slack_sdk==3.33.4
 slixmpp==1.17.0
 
 # homeassistant.components.smart_meter_texas
-smart-meter-texas==0.5.6
+smart-meter-texas==0.6.0
 
 # homeassistant.components.snapcast
 snapcast==2.3.8
