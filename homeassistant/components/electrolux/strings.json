@@ -845,9 +845,6 @@
       "running_time": {
         "name": "Running time"
       },
-      "sound_volume": {
-        "name": "Sound volume"
-      },
       "start_at": {
         "name": "Start at"
       },

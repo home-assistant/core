@@ -38,7 +38,6 @@ from electrolux_group_developer_sdk.feature_constants import (
     PM_10,
     REMOTE_CONTROL,
     RUNNING_TIME,
-    SOUND_VOLUME,
     START_TIME,
     STOP_TIME,
     TARGET_TEMPERATURE_C,
@@ -562,12 +561,6 @@ FREEZER_FRIDGE_ICE_MAKER_EXTRA_CAVITY_ELECTROLUX_SENSORS: tuple[
 
 HOOD_ELECTROLUX_SENSORS: tuple[ElectroluxSensorDescription[HDAppliance], ...] = (
     _get_appliance_state_description(),
-    ElectroluxSensorDescription(
-        key="sound_volume",
-        translation_key="sound_volume",
-        exists_fn=lambda appliance: appliance.is_feature_supported(SOUND_VOLUME),
-        value_fn=lambda appliance: appliance.get_current_sound_volume(),
-    ),
     _get_remote_control_description(),
 )
 
