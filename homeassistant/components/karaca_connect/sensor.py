@@ -25,6 +25,7 @@ class KaracaStatusSensor(KaracaEntity, SensorEntity):
     _attr_icon = "mdi:kettle-steam"
 
     def __init__(self, entry: KaracaConfigEntry) -> None:
+        """Initialize the cloud status sensor."""
         super().__init__(entry.runtime_data.coordinator, entry)
         self._attr_unique_id = f"{entry.data[CONF_DEVICE_ID]}_status"
 

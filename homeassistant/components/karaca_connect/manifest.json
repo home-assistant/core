@@ -1,18 +1,12 @@
 {
-  "domain": "karaca_connect",
-  "name": "Karaca Connect",
-  "codeowners": [
-    "@Azadglr"
-  ],
+  "codeowners": ["@Azadglr"],
   "config_flow": true,
-  "connectivity": [
-    "cloud"
-  ],
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/karaca_connect",
+  "domain": "karaca_connect",
   "integration_type": "device",
   "iot_class": "cloud_polling",
-  "requirements": [
-    "karaca-connect-client==0.1.0a1"
-  ],
-  "quality_scale": "bronze"
+  "name": "Karaca Connect",
+  "quality_scale": "bronze",
+  "requirements": ["karaca-connect-client==0.1.0a1"]
 }

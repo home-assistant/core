@@ -24,6 +24,7 @@ class KaracaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     def __init__(self) -> None:
+        """Initialize account and device selection state."""
         self._email = ""
         self._password = ""
         self._devices: list[dict[str, Any]] = []
@@ -58,14 +59,16 @@ class KaracaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=probatio.Schema({
-                probatio.Required(CONF_EMAIL): TextSelector(
-                    TextSelectorConfig(type=TextSelectorType.EMAIL)
-                ),
-                probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
-                    TextSelectorConfig(type=TextSelectorType.PASSWORD)
-                ),
-            }),
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(CONF_EMAIL): TextSelector(
+                        TextSelectorConfig(type=TextSelectorType.EMAIL)
+                    ),
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
+                        TextSelectorConfig(type=TextSelectorType.PASSWORD)
+                    ),
+                }
+            ),
             errors=errors,
         )
 
@@ -75,7 +78,9 @@ class KaracaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Choose a device when multiple devices are present."""
         errors: dict[str, str] = {}
         choices = {
-            str(device["id"]): str(device.get("label") or f"Karaca device {device['id']}")
+            str(device["id"]): str(
+                device.get("label") or f"Karaca device {device['id']}"
+            )
             for device in self._devices
             if device.get("id") is not None
         }

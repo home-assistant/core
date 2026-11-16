@@ -12,7 +12,10 @@ class KaracaEntity(CoordinatorEntity[KaracaCoordinator]):
 
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator: KaracaCoordinator, entry: KaracaConfigEntry) -> None:
+    def __init__(
+        self, coordinator: KaracaCoordinator, entry: KaracaConfigEntry
+    ) -> None:
+        """Initialize the entity and associate it with a Karaca device."""
         super().__init__(coordinator)
         device_id = str(entry.data[CONF_DEVICE_ID])
         self._attr_device_info = {
