@@ -76,7 +76,6 @@ class EnergyIDDirectiveCoordinator(DataUpdateCoordinator[EnergyIDDirectivesData]
             name=f"{DOMAIN} directives",
             update_interval=DIRECTIVE_UPDATE_INTERVAL,
             config_entry=config_entry,
-            always_update=False,
         )
         self.client = client
         self.directives_enabled = async_directives_enabled(config_entry)

@@ -1,13 +1,13 @@
 """Helpers for AVM FRITZ!Box."""
 
-from collections.abc import ValuesView
+from collections.abc import Container, Iterable, ValuesView
 import re
 
 from .const import LOGGER
 from .models import FritzDevice
 
 
-def _is_tracked(mac: str, current_devices: ValuesView[set[str]]) -> bool:
+def _is_tracked(mac: str, current_devices: Iterable[Container[str]]) -> bool:
     """Check if device is already tracked."""
     return any(mac in tracked for tracked in current_devices)
 
