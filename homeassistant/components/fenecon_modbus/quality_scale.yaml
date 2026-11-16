@@ -36,7 +36,7 @@ rules:
     status: exempt
     comment: The integration does not register actions.
   config-entry-unloading: done
-  docs-configuration-parameters: todo
+  docs-configuration-parameters: done
   docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
@@ -53,10 +53,10 @@ rules:
   discovery-update-info: todo
   discovery: todo
   docs-data-update: todo
-  docs-examples: todo
+  docs-examples: done
   docs-known-limitations: todo
-  docs-supported-devices: todo
-  docs-supported-functions: todo
+  docs-supported-devices: done
+  docs-supported-functions: done
   docs-troubleshooting: todo
   docs-use-cases: todo
   dynamic-devices: todo
