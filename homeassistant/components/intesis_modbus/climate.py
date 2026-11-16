@@ -2,7 +2,7 @@
 
 from typing import Any, Final, override
 
-from intesis_gw_modbus import ErrorState, FanSpeed, Mode, VanePosition
+from intesis_gw_modbus import FanSpeed, Mode, VanePosition
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -53,7 +53,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the climate entity of the air conditioner behind the gateway."""
     async_add_entities(
-        [IntesisClimate(entry.runtime_data, has_vane=entry.data[CONF_HAS_VANE])]
+        [IntesisClimate(entry.runtime_data, has_vane=entry.options[CONF_HAS_VANE])]
     )
 
 
@@ -68,6 +68,13 @@ class IntesisClimate(IntesisEntity, ClimateEntity):
         """Bind to the air conditioner the gateway controls."""
         super().__init__(coordinator, "air_conditioner", "control")
         self._ac = coordinator.device
+        self._attr_hvac_modes = [
+            HVACMode.OFF,
+            *(MODE_TO_HVAC[m] for m in self._ac.available_modes),
+        ]
+        self._attr_swing_modes = [
+            VANE_TO_HA[p] for p in self._ac.available_vane_positions
+        ]
         self._attr_supported_features = (
             ClimateEntityFeature.TARGET_TEMPERATURE
             | ClimateEntityFeature.FAN_MODE
@@ -81,15 +88,7 @@ class IntesisClimate(IntesisEntity, ClimateEntity):
     @override
     def available(self) -> bool:
         """Whether the gateway answers and can reach the air conditioner."""
-        if not super().available:
-            return False
-        error = self._ac.error
-        return error is None or error.state is not ErrorState.COMMUNICATION_ERROR
-
-    @property
-    @override
-    def hvac_modes(self) -> list[HVACMode]:
-        return [HVACMode.OFF, *(MODE_TO_HVAC[m] for m in self._ac.available_modes)]
+        return super().available and not self.coordinator.unit_unreachable
 
     @property
     @override
@@ -112,11 +111,6 @@ class IntesisClimate(IntesisEntity, ClimateEntity):
     def fan_mode(self) -> str | None:
         speed = self._ac.fan_speed
         return None if speed is None else FAN_TO_HA[speed]
-
-    @property
-    @override
-    def swing_modes(self) -> list[str]:
-        return [VANE_TO_HA[p] for p in self._ac.available_vane_positions]
 
     @property
     @override

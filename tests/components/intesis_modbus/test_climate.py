@@ -22,6 +22,7 @@ from homeassistant.components.climate import (
     ATTR_MIN_TEMP,
     ATTR_SWING_MODE,
     ATTR_SWING_MODES,
+    ATTR_TARGET_TEMP_STEP,
     DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
@@ -47,7 +48,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
-from . import INIT_VALUE, INITIALISING_REGISTERS, MOCK_ENTRY_DATA
+from . import INIT_VALUE, INITIALISING_REGISTERS
 
 ENTITY_ID = "climate.inmbsmhi001r000"
 
@@ -427,7 +428,7 @@ async def test_turn_on_and_off(
     assert [(w.address, w.values[0]) for w in writes] == [(0, 0), (0, 1)]
 
 
-@pytest.mark.parametrize("entry_data", [{**MOCK_ENTRY_DATA, CONF_HAS_VANE: False}])
+@pytest.mark.parametrize("entry_options", [{CONF_HAS_VANE: False}])
 async def test_unit_without_vane_has_no_swing(
     hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
@@ -456,3 +457,51 @@ async def test_unreachable_indoor_unit_is_unavailable_then_recovers(
     unit.holding[11] = 0
     await _poll(hass, freezer)
     assert hass.states.get(ENTITY_ID).state == HVACMode.HEAT
+
+
+async def test_unreachable_indoor_unit_is_logged_once(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    init_integration: MockConfigEntry,
+    mock_connection: MockModbusConnection,
+) -> None:
+    """Losing the air conditioner and getting it back are each logged once."""
+    unit = mock_connection.for_unit(1)
+    unit.holding[11] = 65535
+    await _poll(hass, freezer)
+    await _poll(hass, freezer)
+    assert caplog.text.count("cannot reach the air conditioner") == 1
+    assert "reaches the air conditioner again" not in caplog.text
+    unit.holding[11] = 0
+    await _poll(hass, freezer)
+    await _poll(hass, freezer)
+    assert caplog.text.count("reaches the air conditioner again") == 1
+
+
+async def test_temperature_format_follows_the_dip_switches(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    init_integration: MockConfigEntry,
+    mock_connection: MockModbusConnection,
+) -> None:
+    """A gateway switched to whole degrees is read and written in whole degrees."""
+    unit = mock_connection.for_unit(1)
+    for address, value in {4: 22, 5: 20, 23: 22, 24: 30, 25: 16}.items():
+        unit.holding[address] = value
+    await _poll(hass, freezer)
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_TEMPERATURE] == 22
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 20
+    assert state.attributes[ATTR_MIN_TEMP] == 16
+    assert state.attributes[ATTR_MAX_TEMP] == 30
+    assert state.attributes[ATTR_TARGET_TEMP_STEP] == 1
+    writes: list[WriteEvent] = []
+    unit.on_write(writes.append)
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 24},
+        blocking=True,
+    )
+    assert [(w.address, w.values[0]) for w in writes] == [(4, 24)]

@@ -11,7 +11,7 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant.components.intesis_modbus.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
-from . import MOCK_ENTRY_DATA, SINGLE_UNIT_REGISTERS
+from . import MOCK_ENTRY_DATA, MOCK_ENTRY_OPTIONS, SINGLE_UNIT_REGISTERS
 
 
 @pytest.fixture
@@ -42,18 +42,19 @@ def mock_connection(registers: dict[int, int]) -> MockModbusConnection:
 
 
 @pytest.fixture
-def entry_data() -> dict[str, Any]:
-    """The data of the mock config entry."""
-    return MOCK_ENTRY_DATA
+def entry_options() -> dict[str, Any]:
+    """The options of the mock config entry."""
+    return MOCK_ENTRY_OPTIONS
 
 
 @pytest.fixture
-def mock_config_entry(entry_data: dict[str, Any]) -> MockConfigEntry:
+def mock_config_entry(entry_options: dict[str, Any]) -> MockConfigEntry:
     """Mock a single-unit gateway config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
         entry_id="01JTESTINTESISSINGLE000000",
-        data=entry_data,
+        data=MOCK_ENTRY_DATA,
+        options=entry_options,
         title="INMBSMHI001R000",
     )
 

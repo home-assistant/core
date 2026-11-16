@@ -134,7 +134,7 @@ class IntesisModbusConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             )
             return self.async_create_entry(
-                title=self._model.name, data={**self._data, **user_input}
+                title=self._model.name, data=self._data, options=user_input
             )
         return self.async_show_form(
             step_id="features",

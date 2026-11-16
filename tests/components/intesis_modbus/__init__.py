@@ -18,8 +18,8 @@ MOCK_ENTRY_DATA = {
     **MOCK_USER_INPUT,
     CONF_MODEL: "INMBSMHI001R000",
     CONF_TEMPERATURE_FORMAT: "decicelsius",
-    CONF_HAS_VANE: True,
 }
+MOCK_ENTRY_OPTIONS = {CONF_HAS_VANE: True}
 
 # A healthy MHI single-unit gateway, DIP switches on x10 °C.
 SINGLE_UNIT_REGISTERS: dict[int, int] = {

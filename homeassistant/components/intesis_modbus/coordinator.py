@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 from typing import override
 
-from intesis_gw_modbus import IntesisSingleUnitGateway, WrongGatewayError
+from intesis_gw_modbus import ErrorState, IntesisSingleUnitGateway, WrongGatewayError
 from modbus_connection import ModbusError
 from modbus_connection.model import UpdateReport
 
@@ -43,6 +43,7 @@ class IntesisCoordinator(DataUpdateCoordinator[UpdateReport]):
         )
         self.device = device
         self._failing: set[str] = set()
+        self.unit_unreachable = False
 
     @override
     async def _async_update_data(self) -> UpdateReport:
@@ -63,7 +64,39 @@ class IntesisCoordinator(DataUpdateCoordinator[UpdateReport]):
                 "every sub-system failed to refresh", list(report.failed.values())
             )
         self._log_component_changes(report)
+        self._follow_temperature_format()
+        self._check_unit_reachable()
         return report
+
+    def _follow_temperature_format(self) -> None:
+        """Read and write in the format the gateway's DIP switches select now.
+
+        The format saved at setup only serves until the gateway reports a
+        setpoint, which is what the format is detected from.
+        """
+        detected = self.device.detected_temperature_format
+        if detected is None or detected is self.device.temperature_format:
+            return
+        _LOGGER.info(
+            "%s: the gateway now reports temperatures as %s", self.name, detected
+        )
+        self.device.temperature_format = detected
+
+    def _check_unit_reachable(self) -> None:
+        """Note whether the gateway reaches its unit, and log when that changes."""
+        error = self.device.error
+        unreachable = (
+            error is not None and error.state is ErrorState.COMMUNICATION_ERROR
+        )
+        if unreachable and not self.unit_unreachable:
+            _LOGGER.info(
+                "%s: the gateway cannot reach the air conditioner, "
+                "which is unavailable",
+                self.name,
+            )
+        elif self.unit_unreachable and not unreachable:
+            _LOGGER.info("%s: the gateway reaches the air conditioner again", self.name)
+        self.unit_unreachable = unreachable
 
     def _log_component_changes(self, report: UpdateReport) -> None:
         """Log a sub-system's first failure and its recovery, once each."""

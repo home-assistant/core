@@ -26,6 +26,7 @@ from homeassistant.exceptions import HomeAssistantError
 
 from . import (
     MOCK_ENTRY_DATA,
+    MOCK_ENTRY_OPTIONS,
     MOCK_USER_INPUT,
     seed_initialising_single_unit,
     seed_single_unit,
@@ -110,6 +111,7 @@ async def test_full_flow(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "INMBSMHI001R000"
     assert result["data"] == MOCK_ENTRY_DATA
+    assert result["options"] == MOCK_ENTRY_OPTIONS
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -128,6 +130,7 @@ async def test_initialising_gateway_can_be_retried(hass: HomeAssistant) -> None:
     result = await _finish_features(hass, result)
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == MOCK_ENTRY_DATA
+    assert result["options"] == MOCK_ENTRY_OPTIONS
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -141,7 +144,8 @@ async def test_vane_at_init_value_defaults_to_no_vane(hass: HomeAssistant) -> No
         hass, result, expected_default=False, has_vane=False
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == {**MOCK_ENTRY_DATA, CONF_HAS_VANE: False}
+    assert result["data"] == MOCK_ENTRY_DATA
+    assert result["options"] == {CONF_HAS_VANE: False}
 
 
 @pytest.mark.parametrize(
@@ -205,6 +209,7 @@ async def test_busy_gateway_can_be_retried(hass: HomeAssistant) -> None:
     result = await _finish_features(hass, result)
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == MOCK_ENTRY_DATA
+    assert result["options"] == MOCK_ENTRY_OPTIONS
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -223,6 +228,7 @@ async def test_cannot_connect(hass: HomeAssistant) -> None:
     result = await _finish_features(hass, result)
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == MOCK_ENTRY_DATA
+    assert result["options"] == MOCK_ENTRY_OPTIONS
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -241,6 +247,7 @@ async def test_serial_port_in_use_with_other_settings(hass: HomeAssistant) -> No
     result = await _finish_features(hass, result)
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == MOCK_ENTRY_DATA
+    assert result["options"] == MOCK_ENTRY_OPTIONS
 
 
 async def test_duplicate_aborts(
@@ -286,3 +293,4 @@ async def test_second_gateway_on_same_port(
     result = await _finish_features(hass, result)
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {**MOCK_ENTRY_DATA, CONF_UNIT_ID: 2}
+    assert result["options"] == MOCK_ENTRY_OPTIONS
