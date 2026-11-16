@@ -1163,12 +1163,12 @@ async def test_remove_config_entry_device_allows_orphan_child_device(
     assert not device_registry.async_get(child_device.id)
 
 
+@pytest.mark.usefixtures("matter_node")
 @pytest.mark.parametrize("node_fixture", ["eve_energy_20ecn4101"])
 async def test_remove_config_entry_device_rejects_active_child_device(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
-    matter_node: MatterNode,
 ) -> None:
     """Test removing a child device whose endpoint still needs one is rejected."""
     assert await async_setup_component(hass, "config", {})

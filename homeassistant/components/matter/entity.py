@@ -27,7 +27,7 @@ from homeassistant.helpers.typing import Undefined
 from .const import DOMAIN, FEATUREMAP_ATTRIBUTE_ID, ID_TYPE_DEVICE_ID
 from .helpers import (
     MatterConfigEntry,
-    get_child_device_id,
+    get_child_device_identifier,
     get_child_device_owner,
     get_device_id,
     get_discovery_key,
@@ -130,25 +130,24 @@ class MatterEntity(Entity):
         self._attr_unique_id = get_entity_unique_id(
             node_device_id, endpoint, entity_info
         )
-        # An endpoint that represents an independent physical sub-unit (e.g. one
-        # socket of a multi-socket plug) gets its own child device, and all its
-        # entities are placed there with clean names instead of a numeric suffix.
-        # The entities of a measurement endpoint for such a sub-unit join it.
+        # Entities of a split endpoint, its parts and its Power Topology
+        # measurement endpoint go to the split endpoint's child device.
         self._child_device_endpoint = get_child_device_owner(endpoint)
         self._attr_available = (
             self._endpoint.node.available and self._get_bridged_reachable()
         )
-        # mark endpoint postfix if the device has the primary attribute on
-        # multiple endpoints (skipped for entities placed on a child device,
-        # which inherit the clean child device name instead)
+        # mark endpoint postfix if another endpoint on the same device has the
+        # primary attribute; a child device's own endpoint is named by the child
+        owner = self._child_device_endpoint
         if (
-            self._child_device_endpoint is None
-            and not self._endpoint.node.is_bridge_device
+            not self._endpoint.node.is_bridge_device
+            and owner != self._endpoint
             and any(
                 ep
                 for ep in self._endpoint.node.endpoints.values()
                 if ep != self._endpoint
                 and ep.has_attribute(None, entity_info.primary_attribute)
+                and get_child_device_owner(ep) == owner
             )
         ):
             self._name_postfix = str(self._endpoint.endpoint_id)
@@ -188,16 +187,16 @@ class MatterEntity(Entity):
             return DeviceInfo(identifiers={node_identifier})
         # The node device is pre-created in the adapter before entities are added,
         # so it resolves here for use as the child device's parent.
-        config_entry = self.platform.config_entry
-        assert config_entry is not None
+        config_entry = cast(MatterConfigEntry, self.platform.config_entry)
         parent_device_id = dr.async_get_device_id_by_identifier(
             self.hass,
             node_identifier,
             config_entry_id=config_entry.entry_id,
         )
-        child_device_id = get_child_device_id(server_info, child_device_endpoint)
         return ChildDeviceInfo(
-            identifiers={(DOMAIN, f"{ID_TYPE_DEVICE_ID}_{child_device_id}")},
+            identifiers={
+                get_child_device_identifier(server_info, child_device_endpoint)
+            },
             name=self._child_device_name
             or f"Endpoint {child_device_endpoint.endpoint_id}",
             parent_device_id=parent_device_id,
@@ -457,8 +456,7 @@ class MatterEntity(Entity):
         if not self._unsupported():
             return
         entry = cast(MatterConfigEntry, self.platform.config_entry)
-        # let discovery add the entity again if the device supports it later;
-        # discovered keys are grouped per (node_id, endpoint_id)
+        # let discovery add the entity again if the device supports it later
         entry.runtime_data.adapter.discovered_entities.get(
             (self._endpoint.node.node_id, self._endpoint.endpoint_id), set()
         ).discard(get_discovery_key(self._endpoint, self._entity_info))

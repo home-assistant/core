@@ -157,13 +157,18 @@ def get_child_device_id(
 ) -> str:
     """Return HA device_id for the child device of the given MatterEndpoint.
 
-    Only meaningful for endpoints that satisfy `endpoint_requires_child_device`,
-    which map to the node device, so `get_device_id` returns the node device id
-    (no endpoint suffix) and the child device id carries the endpoint index exactly
-    once. For any other endpoint it only ever serves as a guaranteed-miss lookup
-    key and never names a real device.
+    Only meaningful for endpoints that map to the node device, see
+    `endpoint_requires_child_device`.
     """
     return f"{get_device_id(server_info, endpoint)}-{endpoint.endpoint_id}"
+
+
+def get_child_device_identifier(
+    server_info: ServerInfoMessage,
+    endpoint: MatterEndpoint,
+) -> tuple[str, str]:
+    """Return the device registry identifier of the endpoint's child device."""
+    return (DOMAIN, f"{ID_TYPE_DEVICE_ID}_{get_child_device_id(server_info, endpoint)}")
 
 
 def _endpoint_maps_to_node_device(endpoint: MatterEndpoint) -> bool:
@@ -225,14 +230,16 @@ def get_power_topology_endpoint_id(endpoint: MatterEndpoint) -> int | None:
 def get_child_device_owner(endpoint: MatterEndpoint) -> MatterEndpoint | None:
     """Return the endpoint whose child device holds the endpoint's entities.
 
-    An endpoint split into its own child device owns it. A measurement endpoint
-    whose Power Topology covers exactly one split endpoint (e.g. the power
-    sensor of one socket of a power strip) goes to that endpoint's child device.
+    An endpoint split into its own child device owns it, and the parts of a
+    composed device go with their compose parent. A measurement endpoint whose
+    Power Topology covers exactly one split endpoint (e.g. the power sensor of
+    one socket of a power strip) goes to that endpoint's child device.
     Returns None when the entities stay on the node (or bridged) device.
     """
-    if endpoint_requires_child_device(endpoint):
-        return endpoint
-    if not _endpoint_maps_to_node_device(endpoint):
+    device_endpoint = get_device_endpoint(endpoint)
+    if endpoint_requires_child_device(device_endpoint):
+        return device_endpoint
+    if device_endpoint is not endpoint or not _endpoint_maps_to_node_device(endpoint):
         return None
     if (
         (measured_id := get_power_topology_endpoint_id(endpoint)) is not None

@@ -1,5 +1,6 @@
 """Test the Matter helpers."""
 
+from typing import Any
 from unittest.mock import MagicMock
 
 from matter_server.client.models.node import MatterNode
@@ -48,24 +49,47 @@ def test_endpoint_requires_child_device(
     assert endpoint_requires_child_device(node.endpoints[endpoint_id]) is expected
 
 
+EVE_ENERGY_COMPOSED_PART_ATTRIBUTES = {
+    "0/29/3": [1, 2, 3],
+    "1/29/3": [3],
+    "3/29/0": [{"0": 770, "1": 1}],
+    "3/29/1": [29, 1026],
+    "3/29/2": [],
+    "3/29/3": [],
+    "3/1026/0": 2100,
+}
+
+
 @pytest.mark.parametrize(
-    ("node_fixture", "endpoint_id", "expected_owner_id"),
+    ("node_fixture", "attributes", "endpoint_id", "expected_owner_id"),
     [
-        pytest.param("tapo_smart_wi_fi_power_strip", 7, 1, id="set_single_first"),
-        pytest.param("tapo_smart_wi_fi_power_strip", 12, 6, id="set_single_last"),
-        pytest.param("tapo_smart_wi_fi_power_strip", 1, 1, id="split_outlet"),
-        pytest.param("tapo_smart_wi_fi_power_strip", 0, None, id="root"),
-        pytest.param("tapo_smart_wi_fi_plug_265", 2, None, id="set_outlet_not_split"),
-        pytest.param("silabs_dishwasher", 2, None, id="set_several_endpoints"),
-        pytest.param("inovelli_vtm30", 7, None, id="node_topology"),
-        pytest.param("aqara_thermostat_w500", 0, None, id="node_topology_root"),
+        pytest.param("tapo_smart_wi_fi_power_strip", None, 7, 1, id="set_single_first"),
+        pytest.param("tapo_smart_wi_fi_power_strip", None, 12, 6, id="set_single_last"),
+        pytest.param("tapo_smart_wi_fi_power_strip", None, 1, 1, id="split_outlet"),
+        pytest.param("tapo_smart_wi_fi_power_strip", None, 0, None, id="root"),
+        pytest.param(
+            "tapo_smart_wi_fi_plug_265", None, 2, None, id="set_outlet_not_split"
+        ),
+        pytest.param("silabs_dishwasher", None, 2, None, id="set_several_endpoints"),
+        pytest.param("inovelli_vtm30", None, 7, None, id="node_topology"),
+        pytest.param("aqara_thermostat_w500", None, 0, None, id="node_topology_root"),
+        pytest.param(
+            "eve_energy_20ecn4101",
+            EVE_ENERGY_COMPOSED_PART_ATTRIBUTES,
+            3,
+            1,
+            id="composed_part_of_split_endpoint",
+        ),
     ],
 )
 def test_get_child_device_owner(
-    node_fixture: str, endpoint_id: int, expected_owner_id: int | None
+    node_fixture: str,
+    attributes: dict[str, Any] | None,
+    endpoint_id: int,
+    expected_owner_id: int | None,
 ) -> None:
     """Test which endpoint's child device holds an endpoint's entities."""
-    node = create_node_from_fixture(node_fixture)
+    node = create_node_from_fixture(node_fixture, attributes)
 
     owner = get_child_device_owner(node.endpoints[endpoint_id])
 

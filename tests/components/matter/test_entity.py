@@ -13,6 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .common import (
+    EVE_ENERGY_LIGHT_PART_ATTRIBUTES,
     _setup_integration_with_nodes,
     create_node_from_fixture,
     set_node_attribute,
@@ -132,6 +133,28 @@ async def test_label_modified_endpoint_child_devices(
     state_bottom = hass.states.get("switch.eve_energy_20ecn4101_bottom")
     assert state_bottom is not None
     assert state_bottom.name == "bottom"
+
+
+@pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize("node_fixture", ["eve_energy_20ecn4101"])
+@pytest.mark.parametrize("attributes", [EVE_ENERGY_LIGHT_PART_ATTRIBUTES])
+async def test_composed_part_on_child_device_keeps_postfix(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a part sharing the primary attribute with its child device's endpoint.
+
+    The part goes to the child device of its compose parent. Its entity keeps
+    the endpoint postfix, while the parent's entity is named by the child device.
+    """
+    top_entry = entity_registry.async_get("switch.eve_energy_20ecn4101_top")
+    assert top_entry is not None
+    assert hass.states.get("switch.eve_energy_20ecn4101_top").name == "top"
+
+    light_entry = entity_registry.async_get("light.eve_energy_20ecn4101_top_light_3")
+    assert light_entry is not None
+    assert light_entry.device_id == top_entry.device_id
+    assert hass.states.get(light_entry.entity_id).name == "top Light (3)"
 
 
 @pytest.mark.usefixtures("matter_node")

@@ -448,14 +448,8 @@ async def async_remove_config_entry_device(
 ) -> bool:
     """Remove a config entry from a device."""
     if isinstance(device_entry, dr.ChildDeviceEntry):
-        # Child devices are created for split endpoints (e.g. the sockets of a
-        # multi-socket plug) and are pruned automatically when their endpoint no
-        # longer needs one. Refuse removal while the endpoint still exists, as
-        # removing the device would drop its entities; allow removing an orphaned
-        # child device whose endpoint is gone.
-        if get_node_from_device_entry(hass, device_entry) is not None:
-            return False
-        return True
+        # Only an orphaned child device, whose endpoint is gone, can be removed.
+        return get_node_from_device_entry(hass, device_entry) is None
     node = get_node_from_device_entry(hass, device_entry)
 
     if node is None:
