@@ -1,5 +1,7 @@
 """Tests for the direct flow handler checker."""
 
+from collections.abc import Generator
+
 import astroid
 from astroid import nodes
 from pylint.testutils import MessageTest, UnittestLinter
@@ -10,34 +12,20 @@ import pytest
 
 from tests.pylint import assert_adds_messages, assert_no_messages, walk_checker
 
-TEST_MODULE = "tests.components.pylint_test.test_config_flow"
+astroid.MANAGER.ast_from_module_name("homeassistant.config_entries")
+
+TEST_MODULE = "tests.components.direct_flow_handler_test.test_config_flow"
+INTEGRATION_MODULE = "homeassistant.components.direct_flow_handler_test.config_flow"
 
 
-@pytest.fixture(name="checker")
-def checker_fixture(linter: UnittestLinter) -> DirectFlowHandlerChecker:
-    """Fixture to provide a direct flow handler checker."""
-    return DirectFlowHandlerChecker(linter)
-
-
-def _module(code: str, module: str = TEST_MODULE) -> nodes.Module:
-    """Parse *code* with a fake flow handler hierarchy available."""
-    astroid.parse(
-        """
-class FlowHandler:
-    pass
-""",
-        "homeassistant.data_entry_flow",
-    )
-    astroid.parse(
-        """
-from homeassistant.data_entry_flow import FlowHandler
-
-class ConfigFlow(FlowHandler):
-    pass
-""",
-        "homeassistant.config_entries",
-    )
-    astroid.parse(
+@pytest.fixture(autouse=True)
+def integration_module() -> Generator[None]:
+    """Make a fake integration config flow module importable for the test."""
+    # Other tests cache modules under shared names, and cache_module() never
+    # replaces an existing entry, so set and restore the entry explicitly.
+    cache = astroid.MANAGER.astroid_cache
+    previous = cache.get(INTEGRATION_MODULE)
+    cache[INTEGRATION_MODULE] = astroid.parse(
         """
 from homeassistant.config_entries import ConfigFlow
 
@@ -47,8 +35,23 @@ class PylintTestConfigFlow(ConfigFlow):
 class NotAFlow:
     pass
 """,
-        "homeassistant.components.pylint_test.config_flow",
+        INTEGRATION_MODULE,
     )
+    yield
+    if previous is None:
+        cache.pop(INTEGRATION_MODULE, None)
+    else:
+        cache[INTEGRATION_MODULE] = previous
+
+
+@pytest.fixture(name="checker")
+def checker_fixture(linter: UnittestLinter) -> DirectFlowHandlerChecker:
+    """Fixture to provide a direct flow handler checker."""
+    return DirectFlowHandlerChecker(linter)
+
+
+def _module(code: str, module: str = TEST_MODULE) -> nodes.Module:
+    """Parse *code* as the given module."""
     return astroid.parse(code, module)
 
 
@@ -80,7 +83,7 @@ result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         ),
         pytest.param(
             """
-from homeassistant.components.pylint_test.config_flow import NotAFlow
+from homeassistant.components.direct_flow_handler_test.config_flow import NotAFlow
 
 thing = NotAFlow()
 """,
@@ -89,7 +92,7 @@ thing = NotAFlow()
         ),
         pytest.param(
             """
-from homeassistant.components.pylint_test.config_flow import PylintTestConfigFlow
+from homeassistant.components.direct_flow_handler_test.config_flow import PylintTestConfigFlow
 
 flow = PylintTestConfigFlow()
 """,
@@ -98,7 +101,7 @@ flow = PylintTestConfigFlow()
         ),
         pytest.param(
             """
-from homeassistant.components.pylint_test.config_flow import PylintTestConfigFlow
+from homeassistant.components.direct_flow_handler_test.config_flow import PylintTestConfigFlow
 
 flow = PylintTestConfigFlow()
 """,
@@ -107,7 +110,7 @@ flow = PylintTestConfigFlow()
         ),
         pytest.param(
             """
-from homeassistant.components.pylint_test.config_flow import PylintTestConfigFlow
+from homeassistant.components.direct_flow_handler_test.config_flow import PylintTestConfigFlow
 
 patch.object(PylintTestConfigFlow, "async_step_user")
 """,
@@ -134,7 +137,7 @@ def test_no_warning(
     [
         pytest.param(
             """
-from homeassistant.components.pylint_test.config_flow import PylintTestConfigFlow
+from homeassistant.components.direct_flow_handler_test.config_flow import PylintTestConfigFlow
 
 flow = PylintTestConfigFlow()
 """,
@@ -142,7 +145,7 @@ flow = PylintTestConfigFlow()
         ),
         pytest.param(
             """
-import homeassistant.components.pylint_test.config_flow as config_flow
+import homeassistant.components.direct_flow_handler_test.config_flow as config_flow
 
 flow = config_flow.PylintTestConfigFlow()
 """,
