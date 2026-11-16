@@ -2,11 +2,11 @@
 
 from homeassistant.components.broadlink.const import DOMAIN
 from homeassistant.components.select import (
-    ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
@@ -49,10 +49,10 @@ async def test_select(
     # set value
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: select.entity_id,
-            ATTR_OPTION: "tuesday",
+            CommonServiceArgument.ENTITY_ID: select.entity_id,
+            SelectServiceArgument.OPTION: "tuesday",
         },
         blocking=True,
     )

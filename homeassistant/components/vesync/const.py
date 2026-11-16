@@ -2,7 +2,6 @@
 
 DOMAIN = "vesync"
 VS_DISCOVERY = "vesync_discovery_{}"
-SERVICE_UPDATE_DEVS = "update_devices"
 
 UPDATE_INTERVAL = 60
 UPDATE_INTERVAL_ENERGY = 60 * 60 * 6
@@ -68,6 +67,9 @@ AIR_FRYER_MODE_MAP = {
     "cooking": "cooking",
     "cookstop": "cooking_stop",
     "heating": "heating",
+    "ready": "ready",
+    "appointing": "appointing",
+    "hold": "hold",
     "preheatend": "preheat_end",
     "preheatstop": "preheat_stop",
     "pullout": "pull_out",

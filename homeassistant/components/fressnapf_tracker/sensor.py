@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import override
 
 from fressnapftracker import Tracker
@@ -15,6 +16,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .coordinator import FressnapfTrackerConfigEntry
 from .entity import FressnapfTrackerEntity
@@ -23,11 +25,22 @@ from .entity import FressnapfTrackerEntity
 PARALLEL_UPDATES = 0
 
 
+def _parse_timestamp(value: str | None) -> datetime | None:
+    """Parse an API timestamp, assuming UTC if it has no timezone."""
+    if value is None:
+        return None
+    try:
+        parsed = dt_util.parse_datetime(value, raise_on_error=True)
+    except ValueError:
+        return None
+    return parsed if parsed.tzinfo is not None else parsed.replace(tzinfo=UTC)
+
+
 @dataclass(frozen=True, kw_only=True)
 class FressnapfTrackerSensorDescription(SensorEntityDescription):
     """Class describing Fressnapf Tracker sensor entities."""
 
-    value_fn: Callable[[Tracker], int]
+    value_fn: Callable[[Tracker], int | datetime | None]
 
 
 SENSOR_ENTITY_DESCRIPTIONS: tuple[FressnapfTrackerSensorDescription, ...] = (
@@ -38,6 +51,24 @@ SENSOR_ENTITY_DESCRIPTIONS: tuple[FressnapfTrackerSensorDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.battery,
+    ),
+    FressnapfTrackerSensorDescription(
+        key="last_seen",
+        translation_key="last_seen",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: _parse_timestamp(data.last_seen_timestamp),
+    ),
+    FressnapfTrackerSensorDescription(
+        key="subscription_end",
+        translation_key="subscription_end",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: (
+            _parse_timestamp(data.servicebooking.servicebooking_until)
+            if data.servicebooking is not None
+            else None
+        ),
     ),
 )
 
@@ -63,6 +94,6 @@ class FressnapfTrackerSensor(FressnapfTrackerEntity, SensorEntity):
 
     @property
     @override
-    def native_value(self) -> int:
+    def native_value(self) -> int | datetime | None:
         """Return the state of the resources if it has been received yet."""
         return self.entity_description.value_fn(self.coordinator.data)

@@ -11,15 +11,15 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.netatmo.coordinator import HOME
 from homeassistant.components.select import (
-    ATTR_OPTION,
     ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
+    SelectService,
+    SelectServiceArgument,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_WEBHOOK_ID,
-    SERVICE_SELECT_OPTION,
     STATE_UNKNOWN,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -89,10 +89,10 @@ async def test_select_schedule_thermostats(
     with patch("pyatmo.home.Home.async_switch_schedule") as mock_switch_home_schedule:
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: SELECT_ENTITY,
-                ATTR_OPTION: "Default",
+                CommonServiceArgument.ENTITY_ID: SELECT_ENTITY,
+                SelectServiceArgument.OPTION: "Default",
             },
             blocking=True,
         )

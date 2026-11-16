@@ -60,7 +60,14 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'heat_recovery',
+        'cool_recovery',
+        'bypass',
+        'defrosting',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
@@ -79,7 +86,7 @@
     'object_id_base': 'Cell state',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Cell state',
     'platform': 'vallox',
@@ -94,14 +101,21 @@
 # name: test_all_entities[sensor.vallox_cell_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vallox Cell state',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'heat_recovery',
+        'cool_recovery',
+        'bypass',
+        'defrosting',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.vallox_cell_state',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'Heat Recovery',
+    'state': 'heat_recovery',
   })
 # ---
 # name: test_all_entities[sensor.vallox_current_profile-entry]
@@ -110,7 +124,16 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'home',
+        'away',
+        'boost',
+        'fireplace',
+        'extra',
+        'auto',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
@@ -129,7 +152,7 @@
     'object_id_base': 'Current profile',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Current profile',
     'platform': 'vallox',
@@ -144,14 +167,23 @@
 # name: test_all_entities[sensor.vallox_current_profile-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vallox Current profile',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'home',
+        'away',
+        'boost',
+        'fireplace',
+        'extra',
+        'auto',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.vallox_current_profile',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'Home',
+    'state': 'home',
   })
 # ---
 # name: test_all_entities[sensor.vallox_efficiency-entry]
