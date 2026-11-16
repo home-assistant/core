@@ -263,7 +263,8 @@ class ExposedEntities:
     async def _async_purge_stale_legacy_entities(
         self, _now: datetime | None = None
     ) -> None:
-        """Mark stateless legacy entries orphaned and purge long-orphaned ones."""
+        """Purge legacy entries that are long-orphaned or shadowed by the registry."""
+        entity_registry = er.async_get(self._hass)
         now = int(time.time())
         purge_after = LEGACY_ENTITY_PURGE_INTERVAL.total_seconds()
         entity_ids = list(self.entities)
@@ -273,6 +274,13 @@ class ExposedEntities:
             changed = False
             for entity_id in entity_ids[i : i + LEGACY_ENTITY_SWEEP_CHUNK_SIZE]:
                 if (exposed_entity := self.entities.get(entity_id)) is None:
+                    continue
+
+                # Registry options take precedence, so the legacy record is dead.
+                if entity_registry.async_is_registered(entity_id):
+                    del self.entities[entity_id]
+                    purged_assistants.update(exposed_entity.assistants)
+                    changed = True
                     continue
 
                 if self._hass.states.get(entity_id) is not None:

@@ -771,6 +771,29 @@ async def test_sweep_clears_tracking_for_live_entity(
     assert exposed_entities.entities["sensor.back_again"].orphaned_since is None
 
 
+async def test_sweep_purges_legacy_entity_shadowed_by_registry(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """A sweep purges a legacy record once its entity ID is in the registry."""
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    async_expose_entity(hass, "test1", "switch.test_unique1", True)
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
+    assert "switch.test_unique1" in exposed_entities.entities
+    listener = Mock()
+    exposed_entities.async_listen_entity_updates("test1", listener)
+
+    entry = entity_registry.async_get_or_create("switch", "test", "unique1")
+    assert entry.entity_id == "switch.test_unique1"
+    hass.states.async_set("switch.test_unique1", "on", {})
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "switch.test_unique1" not in exposed_entities.entities
+    listener.assert_called_once()
+
+
 async def test_legacy_orphaned_since_persists_across_restart(
     hass: HomeAssistant,
 ) -> None:
