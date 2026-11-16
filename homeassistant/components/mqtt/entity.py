@@ -1609,8 +1609,8 @@ def _resolve_via_device_id(
     if any(
         device.id == via_device.id
         for device in device_registry.async_get_devices(
-            identifiers=None if identifiers is Undefined else identifiers,
-            connections=None if connections is Undefined else connections,
+            identifiers=None if identifiers is UNDEFINED else identifiers,
+            connections=None if connections is UNDEFINED else connections,
             config_entry_id=config_entry.entry_id,
         )
     ):
