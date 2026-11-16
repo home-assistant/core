@@ -11,11 +11,11 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.music_assistant.const import DOMAIN
 from homeassistant.components.music_assistant.number import PLAYER_OPTIONS_NUMBER
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -69,10 +69,10 @@ async def test_number_set_action(
     # test within range
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_VALUE: option_value,
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            NumberServiceArgument.VALUE: option_value,
         },
         blocking=True,
     )
@@ -89,10 +89,10 @@ async def test_number_set_action(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: entity_id,
-                ATTR_VALUE: 20,
+                CommonServiceArgument.ENTITY_ID: entity_id,
+                NumberServiceArgument.VALUE: 20,
             },
             blocking=True,
         )
@@ -190,8 +190,8 @@ async def test_queue_playback_speed(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 1.5},
+        NumberService.SET_VALUE,
+        {CommonServiceArgument.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 1.5},
         blocking=True,
     )
     assert music_assistant_client.send_command.call_args == call(

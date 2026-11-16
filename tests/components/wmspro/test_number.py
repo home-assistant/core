@@ -8,12 +8,12 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
 from homeassistant.components.wmspro.number import SCAN_INTERVAL
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 
 from . import setup_config_entry, unload_config_entry
@@ -107,8 +107,11 @@ async def test_number_set_value(
 
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: entity.entity_id, ATTR_VALUE: float(target_value)},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: entity.entity_id,
+                NumberServiceArgument.VALUE: float(target_value),
+            },
             blocking=True,
         )
 
@@ -158,8 +161,11 @@ async def test_number_set_and_restore_value(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: entity.entity_id, ATTR_VALUE: float(target_value)},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: entity.entity_id,
+            NumberServiceArgument.VALUE: float(target_value),
+        },
         blocking=True,
     )
 
@@ -201,8 +207,11 @@ async def test_number_update_handles_zero_value(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: entity.entity_id, ATTR_VALUE: 0.0},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: entity.entity_id,
+            NumberServiceArgument.VALUE: 0.0,
+        },
         blocking=True,
     )
 

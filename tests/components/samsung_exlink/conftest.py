@@ -7,7 +7,7 @@ from pytest_homeassistant.common import MockConfigEntry
 from samsung_exlink import MODELS, InputSource, PowerState, SamsungTV, TVModel, TVState
 
 from homeassistant.components.samsung_exlink.const import DOMAIN
-from homeassistant.const import CONF_DEVICE, CONF_MODEL
+from homeassistant.const import CONF_DEVICE, CONF_MODEL, Platform
 from homeassistant.core import HomeAssistant
 
 from . import MOCK_DEVICE, MOCK_MODEL
@@ -31,6 +31,7 @@ class MockSamsungTV(SamsungTV):
         self.set_mute = AsyncMock()
         self.select_input_source = AsyncMock()
         self.set_art_mode = AsyncMock()
+        self.send_key = AsyncMock()
 
     def mock_state(self, state: TVState | None) -> None:
         """Push a state update through the TV."""
@@ -99,16 +100,29 @@ async def mock_usb_component(hass: HomeAssistant) -> None:
 
 
 @pytest.fixture
+def samsung_exlink_platforms() -> list[Platform]:
+    """Return the platforms loaded by a Samsung ExLink test."""
+    return [Platform.MEDIA_PLAYER, Platform.REMOTE]
+
+
+@pytest.fixture
 async def init_components(
     hass: HomeAssistant,
     mock_usb_component: None,
     mock_samsung_tv: MockSamsungTV,
     mock_config_entry: MockConfigEntry,
+    samsung_exlink_platforms: list[Platform],
 ) -> None:
     """Initialize the Samsung ExLink component."""
-    with patch(
-        "homeassistant.components.samsung_exlink.SamsungTV",
-        return_value=mock_samsung_tv,
+    with (
+        patch(
+            "homeassistant.components.samsung_exlink.PLATFORMS",
+            samsung_exlink_platforms,
+        ),
+        patch(
+            "homeassistant.components.samsung_exlink.SamsungTV",
+            return_value=mock_samsung_tv,
+        ),
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()

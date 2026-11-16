@@ -7,16 +7,10 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.components.wmspro.const import DOMAIN
 from homeassistant.components.wmspro.switch import SCAN_INTERVAL
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import STATE_OFF, STATE_ON, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -116,8 +110,8 @@ async def test_switch_turn_on_and_off(
 
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity.entity_id},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: entity.entity_id},
             blocking=True,
         )
 
@@ -136,8 +130,8 @@ async def test_switch_turn_on_and_off(
 
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: entity.entity_id},
+            SwitchService.TURN_OFF,
+            {CommonServiceArgument.ENTITY_ID: entity.entity_id},
             blocking=True,
         )
 

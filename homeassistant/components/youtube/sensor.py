@@ -9,12 +9,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import ATTR_ICON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import (
+    ATTR_ICON,
     ATTR_LATEST_SHORT,
     ATTR_LATEST_VIDEO,
     ATTR_LATEST_VIDEO_NON_SHORT,

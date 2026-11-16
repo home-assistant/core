@@ -9,11 +9,11 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -186,7 +186,9 @@ async def test_shadow_management_switch_action(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         service,
-        target={ATTR_ENTITY_ID: f"switch.scb_shadow_management_dc_string_{dc_string}"},
+        target={
+            TargetKey.ENTITY_ID: f"switch.scb_shadow_management_dc_string_{dc_string}"
+        },
         blocking=True,
     )
 
