@@ -113,6 +113,9 @@
     },
     "connection_error": {
       "message": "Error connecting to the Seerr instance: {error}"
+    },
+    "nothing_to_request": {
+      "message": "There is nothing left to request, the media has already been requested or is already available."
     }
   },
   "selector": {

@@ -1,6 +1,7 @@
 """Shared schemas for MQTT discovery and YAML config items."""
 
 from collections import Counter
+import logging
 from typing import Any
 
 import probatio
@@ -68,6 +69,8 @@ from .util import (
     valid_subscribe_topic,
 )
 
+_LOGGER = logging.getLogger(__name__)
+
 # Device discovery options that are also available at entity component level
 SHARED_OPTIONS = [
     CONF_AVAILABILITY,
@@ -82,7 +85,6 @@ SHARED_OPTIONS = [
     CONF_STATE_TOPIC,
     CONF_QOS,
 ]
-
 
 _MQTT_AVAILABILITY_SINGLE_SCHEMA = probatio.Schema(
     {
@@ -138,6 +140,26 @@ def validate_device_has_at_least_one_identifier(value: ConfigType) -> ConfigType
     )
 
 
+def remove_self_referencing_via_device(value: ConfigType) -> ConfigType:
+    """Remove a via_device that references one of the device's own identifiers.
+
+    A device can not be its own via device, the device registry rejects such a
+    link. The reference is ignored, so the device and its entities can still be set up.
+    """
+    if (via_device := value.get(CONF_VIA_DEVICE)) is None or via_device not in value[
+        CONF_IDENTIFIERS
+    ]:
+        return value
+    _LOGGER.warning(
+        "The device with identifiers %s has via_device '%s' that references the "
+        "device itself, the via_device is ignored. A device can not be its own via "
+        "device, update the device configuration to remove or correct via_device",
+        value[CONF_IDENTIFIERS],
+        via_device,
+    )
+    return {key: item for key, item in value.items() if key != CONF_VIA_DEVICE}
+
+
 MQTT_ENTITY_CHILD_DEVICE_INFO_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_IDENTIFIERS): probatio.All(
@@ -175,6 +197,7 @@ MQTT_ENTITY_DEVICE_INFO_SCHEMA = probatio.All(
         {probatio.Optional(CONF_CHILD_DEVICE): MQTT_ENTITY_CHILD_DEVICE_INFO_SCHEMA}
     ),
     validate_device_has_at_least_one_identifier,
+    remove_self_referencing_via_device,
 )
 
 # Without child device, as device triggers and tags do not support child devices,
@@ -184,6 +207,7 @@ MQTT_DEVICE_INFO_SCHEMA = probatio.All(
     cv.removed(CONF_DEPRECATED_VIA_HUB, raise_if_present=False),
     _MQTT_DEVICE_INFO_SCHEMA_BASE,
     validate_device_has_at_least_one_identifier,
+    remove_self_referencing_via_device,
 )
 
 MQTT_ORIGIN_INFO_SCHEMA = probatio.All(

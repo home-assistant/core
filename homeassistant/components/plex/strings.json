@@ -13,6 +13,7 @@
       "host_or_token": "Must provide at least one of host or token",
       "no_servers": "No servers linked to Plex account",
       "not_found": "Plex server not found",
+      "server_not_found": "Plex server for this entry not linked to this Plex account",
       "ssl_error": "SSL certificate issue",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },

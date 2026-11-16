@@ -10,11 +10,6 @@ from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 from urllib.parse import parse_qs, urlparse
 
 from aiohttp import ClientConnectionError, ClientError
-from aiopowerwall import (
-    PowerwallAuthenticationError,
-    PowerwallConnectionError,
-    PowerwallFaultError,
-)
 from bleak.backends.device import BLEDevice
 from bleak.exc import BleakDeviceNotFoundError, BleakError
 from bleak_retry_connector import (
@@ -59,6 +54,11 @@ from tesla_fleet_api.exceptions import (
 )
 from tesla_fleet_api.tesla import VehicleRouter
 from tesla_fleet_api.tesla.bluetooth import TeslaBluetooth
+from tesla_fleet_api.tesla.powerwall import (
+    PowerwallAuthenticationError,
+    PowerwallConnectionError,
+    PowerwallFaultError,
+)
 from tesla_fleet_api.teslemetry.energysite import AuthorizedClient, AuthorizedClients
 
 from homeassistant.components.application_credentials import (
@@ -2246,7 +2246,7 @@ GATEWAY_DIN = "ABC123"
 PUBLIC_KEY_DER = b"public-key-der"
 PUBLIC_KEY_B64 = "cHVibGljLWtleS1kZXI="
 
-# aiopowerwall's PowerwallClient parses the PEM at construction time, so tests
+# PowerwallClient parses the PEM at construction time, so tests
 # that build one need a real (if undersized, for speed) RSA key rather than
 # arbitrary bytes.
 _TEST_RSA_KEY_PEM = rsa.generate_private_key(
@@ -2296,7 +2296,7 @@ def mock_gateway_discovery() -> Generator[AsyncMock]:
 def mock_local_authorized_clients() -> Generator[AsyncMock]:
     """Default a paired gateway's local authorized-clients read to unreachable."""
     with patch(
-        "aiopowerwall.client.PowerwallClient.list_authorized_clients",
+        "tesla_fleet_api.tesla.powerwall.client.PowerwallClient.list_authorized_clients",
         new=AsyncMock(side_effect=PowerwallConnectionError),
     ) as mock_list:
         yield mock_list
@@ -2334,7 +2334,7 @@ def _mock_powerwall_client(
     din: str = GATEWAY_DIN,
     status_error: Exception | None = None,
 ) -> MagicMock:
-    """Return a mock aiopowerwall PowerwallClient async context manager."""
+    """Return a mock PowerwallClient async context manager."""
     client = MagicMock()
     client.__aenter__ = AsyncMock(return_value=client)
     client.__aexit__ = AsyncMock(return_value=False)
