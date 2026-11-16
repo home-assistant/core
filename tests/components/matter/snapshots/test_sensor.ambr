@@ -30975,7 +30975,7 @@
     'state': '2025-01-01T13:59:41+00:00',
   })
 # ---
-# name: test_sensors[mock_meter_identification][sensor.mock_meter_identification-entry]
+# name: test_sensors[mock_meter_identification][sensor.mock_meter_identification_meter_serial_number-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -30989,7 +30989,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.mock_meter_identification',
+    'entity_id': 'sensor.mock_meter_identification_meter_serial_number',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -30997,12 +30997,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Meter serial number',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Meter serial number',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -31012,13 +31012,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[mock_meter_identification][sensor.mock_meter_identification-state]
+# name: test_sensors[mock_meter_identification][sensor.mock_meter_identification_meter_serial_number-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Meter Identification',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Meter Identification Meter serial number',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.mock_meter_identification',
+    'entity_id': 'sensor.mock_meter_identification_meter_serial_number',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
