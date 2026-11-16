@@ -85,6 +85,13 @@ _BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(
     allowed_attributes=(SensorEntityCapabilityAttribute.OPTIONS,),
 )
 
+# Attributes that are not blocked yet, mapped to the option that replaces them
+DEPRECATED_ATTRIBUTES: dict[str, str] = {
+    CONF_DEVICE_CLASS: CONF_DEVICE_CLASS,
+    SensorEntityCapabilityAttribute.STATE_CLASS: CONF_STATE_CLASS,
+    SensorEntityStateAttribute.LAST_RESET: CONF_LAST_RESET,
+}
+
 SENSOR_YAML_SCHEMA = probatio.All(
     probatio.Schema(
         {

@@ -2,8 +2,10 @@
 
 from collections.abc import Callable
 from contextlib import suppress
+import hashlib
 import itertools
 import logging
+import os
 from typing import Any
 
 import probatio
@@ -49,7 +51,7 @@ from homeassistant.const import (
     CONF_VARIABLES,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.condition import async_validate_conditions_config
 from homeassistant.helpers.issue_registry import IssueSeverity
@@ -80,13 +82,28 @@ from . import (
     water_heater as water_heater_platform,
     weather as weather_platform,
 )
-from .const import CONF_TRIGGER_VARIABLES, DOMAIN, PLATFORMS, TemplateConfig
+from .const import (
+    CONF_ATTRIBUTES,
+    CONF_TRIGGER_VARIABLES,
+    DOMAIN,
+    PLATFORMS,
+    TemplateConfig,
+)
 from .helpers import async_get_blueprints
 from .validators import entity_config_identifier
 
 _LOGGER = logging.getLogger(__name__)
 
 PACKAGE_MERGE_HINT = "list"
+
+DEPRECATED_ATTRIBUTES_ISSUE_ID = "deprecated_attributes"
+DEPRECATED_ATTRIBUTES_BREAKS_IN = "2027.6.0"
+DEPRECATED_ATTRIBUTES: dict[Platform, dict[str, str]] = {
+    Platform.BINARY_SENSOR: binary_sensor_platform.DEPRECATED_ATTRIBUTES,
+    Platform.EVENT: event_platform.DEPRECATED_ATTRIBUTES,
+    Platform.SENSOR: sensor_platform.DEPRECATED_ATTRIBUTES,
+    Platform.VACUUM: vacuum_platform.DEPRECATED_ATTRIBUTES,
+}
 
 
 def _identify_entity_config_requires_trigger(
@@ -443,6 +460,7 @@ async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> Conf
             configs.append(probatio.EnsureList()(config[key]))
 
     if not configs:
+        async_update_deprecated_attributes_issues(hass, [])
         return config
 
     config_sections = []
@@ -465,9 +483,90 @@ async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> Conf
 
         config_sections.append(template_config)
 
+    async_update_deprecated_attributes_issues(hass, config_sections)
+
     # Create a copy of the configuration with all config for current
     # component removed and add validated config back in.
     config = config_without_domain(config, DOMAIN)
     config[DOMAIN] = config_sections
 
     return config
+
+
+@callback
+def async_update_deprecated_attributes_issues(
+    hass: HomeAssistant, config_sections: list[TemplateConfig]
+) -> None:
+    """Create an issue per entity that sets an option through its attributes."""
+    issue_ids: set[str] = set()
+    for platform, deprecated_attributes in DEPRECATED_ATTRIBUTES.items():
+        for section in config_sections:
+            for entity_config in section.get(platform, []):
+                # Attributes as a single template are blocked when rendered
+                attributes = entity_config.get(CONF_ATTRIBUTES)
+                if not isinstance(attributes, dict) or not (
+                    deprecated := [
+                        key for key in attributes if key in deprecated_attributes
+                    ]
+                ):
+                    continue
+
+                identifier = entity_config_identifier(platform, entity_config)
+                # The id only changes with the configuration, so a dismissed issue
+                # stays dismissed until the configuration changes
+                fingerprint = "\n".join(
+                    [
+                        platform,
+                        identifier,
+                        *(
+                            f"{key}={attributes[key].template}"
+                            for key in sorted(deprecated)
+                        ),
+                    ]
+                )
+                issue_id = (
+                    f"{DEPRECATED_ATTRIBUTES_ISSUE_ID}_"
+                    f"{hashlib.sha256(fingerprint.encode()).hexdigest()[:16]}"
+                )
+                issue_ids.add(issue_id)
+
+                changes: list[str] = []
+                for key in deprecated:
+                    change = (
+                        f"`{CONF_ATTRIBUTES}: {key}` → `{deprecated_attributes[key]}`"
+                    )
+                    # Keys loaded from YAML carry the file and line they were defined on
+                    if (
+                        config_file := getattr(key, "__config_file__", None)
+                    ) is not None:
+                        path = os.path.relpath(config_file, hass.config.config_dir)
+                        change = f"`{path}:{getattr(key, '__line__', '?')}`: {change}"
+                    changes.append(f"- {change}")
+
+                ir.async_create_issue(
+                    hass,
+                    DOMAIN,
+                    issue_id,
+                    breaks_in_ha_version=DEPRECATED_ATTRIBUTES_BREAKS_IN,
+                    is_fixable=False,
+                    severity=IssueSeverity.WARNING,
+                    translation_key=DEPRECATED_ATTRIBUTES_ISSUE_ID,
+                    translation_placeholders={
+                        "platform": platform.replace("_", " "),
+                        "identifier": identifier,
+                        "breaks_in_ha_version": DEPRECATED_ATTRIBUTES_BREAKS_IN,
+                        "options": "\n".join(changes),
+                    },
+                    learn_more_url=(
+                        "https://www.home-assistant.io/integrations/template/"
+                        f"#{platform.replace('_', '-')}"
+                    ),
+                )
+
+    for domain, issue_id in list(ir.async_get(hass).issues):
+        if (
+            domain == DOMAIN
+            and issue_id.startswith(f"{DEPRECATED_ATTRIBUTES_ISSUE_ID}_")
+            and issue_id not in issue_ids
+        ):
+            ir.async_delete_issue(hass, DOMAIN, issue_id)

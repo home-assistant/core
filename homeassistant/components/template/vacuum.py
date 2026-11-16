@@ -105,6 +105,12 @@ _BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(
     attributes=(VacuumEntityCapabilityAttribute, VacuumEntityStateAttribute)
 )
 
+# Attributes that are not blocked yet, mapped to the option that replaces them
+DEPRECATED_ATTRIBUTES: dict[str, str] = {
+    VacuumEntityStateAttribute.FAN_SPEED: CONF_FAN_SPEED,
+    VacuumEntityCapabilityAttribute.FAN_SPEED_LIST: CONF_FAN_SPEED_LIST,
+}
+
 VACUUM_YAML_SCHEMA = probatio.All(
     VACUUM_COMMON_SCHEMA.extend(TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA).extend(
         make_template_entity_common_schema(VACUUM_DOMAIN, DEFAULT_NAME).schema
