@@ -474,6 +474,11 @@ class DeviceCategory(StrEnum):
     """Single Phase power meter (undocumented)"""
     BZYD = "bzyd"
     """White noise machine (undocumented)"""
+    CDSXJ = "cdsxj"
+    """Security camera (undocumented)
+
+    see https://github.com/home-assistant/core/issues/177197
+    """
     CWJWQ = "cwjwq"
     """Smart Odor Eliminator-Pro (undocumented)
 
