@@ -86,6 +86,22 @@ def _should_poll_from_coordinator_entity(node: nodes.ClassDef) -> bool:
     return False
 
 
+def _sets_should_poll_on_self(
+    assign: nodes.AssignAttr, method: nodes.FunctionDef
+) -> bool:
+    """Return True if *assign* sets ``self._attr_should_poll`` of *method*."""
+    if assign.attrname != _ATTR_SHOULD_POLL:
+        return False
+    if not isinstance(assign.expr, nodes.Name) or assign.expr.name != "self":
+        return False
+    # An annotation without a value declares the attribute but doesn't set it.
+    if isinstance(assign.parent, nodes.AnnAssign) and assign.parent.value is None:
+        return False
+    # A nested function can take its own ``self`` that isn't the entity.
+    scope, _ = assign.expr.lookup("self")
+    return scope is method
+
+
 def _should_poll_assignments(node: nodes.ClassDef) -> list[nodes.NodeNG]:
     """Return the statements of the class that set ``_attr_should_poll``."""
     assignments: list[nodes.NodeNG] = []
@@ -107,9 +123,7 @@ def _should_poll_assignments(node: nodes.ClassDef) -> list[nodes.NodeNG]:
                     for assign in item.nodes_of_class(
                         nodes.AssignAttr, skip_klass=nodes.ClassDef
                     )
-                    if assign.attrname == _ATTR_SHOULD_POLL
-                    and isinstance(assign.expr, nodes.Name)
-                    and assign.expr.name == "self"
+                    if _sets_should_poll_on_self(assign, item)
                 )
     return assignments
 

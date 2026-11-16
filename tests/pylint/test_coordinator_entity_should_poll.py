@@ -80,6 +80,30 @@ class MyEntity(PollingMixin, CoordinatorEntity[MyCoordinator]):
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 class MyEntity(CoordinatorEntity[MyCoordinator]):
+    def __init__(self, coordinator: MyCoordinator) -> None:
+        super().__init__(coordinator)
+        self._attr_should_poll: bool
+""",
+            _MODULE,
+            id="instance_annotation_only",
+        ),
+        pytest.param(
+            """
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+class MyEntity(CoordinatorEntity[MyCoordinator]):
+    def setup(self) -> None:
+        def configure_other(self) -> None:
+            self._attr_should_poll = False
+""",
+            _MODULE,
+            id="nested_function_shadows_self",
+        ),
+        pytest.param(
+            """
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+class MyEntity(CoordinatorEntity[MyCoordinator]):
     _attr_should_poll = False
 """,
             "homeassistant.helpers.my_helper",
@@ -131,6 +155,17 @@ class MyEntity(CoordinatorEntity[MyCoordinator]):
         self._attr_should_poll = True
 """,
             id="instance_attribute",
+        ),
+        pytest.param(
+            """
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+class MyEntity(CoordinatorEntity[MyCoordinator]):
+    def setup(self) -> None:
+        def configure() -> None:
+            self._attr_should_poll = False
+""",
+            id="nested_function_uses_enclosing_self",
         ),
         pytest.param(
             """
