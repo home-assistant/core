@@ -353,6 +353,9 @@ class ThumbnailView(HomeAssistantView):
             except Unresolvable:
                 return self._unknown_config_entry(config_entry_id)
 
+            if not host.api.supported(ch, "sub"):
+                stream = stream.replace("sub", "main")
+
             try:
                 image = await host.api.baichuan.snapshot_past(
                     ch,

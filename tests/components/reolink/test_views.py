@@ -547,6 +547,41 @@ async def test_thumbnail(
 
 
 @pytest.mark.parametrize(
+    ("stream", "thumbnail_stream"),
+    [
+        ("main", "main"),
+        ("autotrack_main", "autotrack_main"),
+    ],
+)
+async def test_thumbnail_no_sub_stream(
+    hass: HomeAssistant,
+    reolink_host: MagicMock,
+    config_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+    stream: str,
+    thumbnail_stream: str,
+) -> None:
+    """Test the thumbnail of a camera without a sub stream uses the main stream."""
+    reolink_host.baichuan.snapshot_past = AsyncMock(return_value=TEST_IMAGE)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    reolink_host.supported.side_effect = lambda ch, key: key != "sub"
+
+    http_client = await hass_client()
+    response = await http_client.get(
+        async_generate_thumbnail_url(
+            config_entry.entry_id, int(TEST_CHANNEL), stream, TEST_START_TIME_ID
+        )
+    )
+
+    assert response.status == 200
+    assert await response.content.read() == TEST_IMAGE
+    assert reolink_host.baichuan.snapshot_past.call_args.args[2] == thumbnail_stream
+
+
+@pytest.mark.parametrize(
     (
         "config_entry_id",
         "channel",
