@@ -31,6 +31,17 @@
         "description": "If a METAR station code is not specified, the specified location will be used to find the closest station. For now, the API key can be anything. It is recommended to use a valid email address.",
         "title": "Set up a specific location"
       },
+      "reconfigure": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "location_entity": "[%key:component::nws::config::step::entity::data::location_entity%]",
+          "station": "[%key:component::nws::config::step::location::data::station%]"
+        },
+        "data_description": {
+          "location_entity": "[%key:component::nws::config::step::entity::data_description::location_entity%]",
+          "station": "If not specified, the closest station to the configured location will be used."
+        }
+      },
       "user": {
         "description": "Choose how to configure the weather location.",
         "menu_options": {
