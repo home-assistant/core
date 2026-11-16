@@ -39779,7 +39779,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000063-MatterNodeDevice'), ('matter', 'serial_serial_99')]>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000044B-MatterNodeDevice'), ('matter', 'serial_serial_1099')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -39802,7 +39802,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'boot_reason',
-    'unique_id': '00000000000004D2-0000000000000063-MatterNodeDevice-0-GeneralDiagnosticsBootReason-51-4',
+    'unique_id': '00000000000004D2-000000000000044B-MatterNodeDevice-0-GeneralDiagnosticsBootReason-51-4',
     'unit_of_measurement': None,
   })
 # ---
@@ -39841,7 +39841,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000063-MatterNodeDevice'), ('matter', 'serial_serial_99')]>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000044B-MatterNodeDevice'), ('matter', 'serial_serial_1099')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -39864,7 +39864,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'reboot_count',
-    'unique_id': '00000000000004D2-0000000000000063-MatterNodeDevice-0-GeneralDiagnosticsRebootCount-51-1',
+    'unique_id': '00000000000004D2-000000000000044B-MatterNodeDevice-0-GeneralDiagnosticsRebootCount-51-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -39892,7 +39892,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000063-MatterNodeDevice'), ('matter', 'serial_serial_99')]>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000044B-MatterNodeDevice'), ('matter', 'serial_serial_1099')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -39915,7 +39915,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'thread_channel',
-    'unique_id': '00000000000004D2-0000000000000063-MatterNodeDevice-0-ThreadDiagnosticsChannel-53-0',
+    'unique_id': '00000000000004D2-000000000000044B-MatterNodeDevice-0-ThreadDiagnosticsChannel-53-0',
     'unit_of_measurement': None,
   })
 # ---
@@ -39942,7 +39942,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000063-MatterNodeDevice'), ('matter', 'serial_serial_99')]>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000044B-MatterNodeDevice'), ('matter', 'serial_serial_1099')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -39965,7 +39965,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'thread_network_name',
-    'unique_id': '00000000000004D2-0000000000000063-MatterNodeDevice-0-ThreadDiagnosticsNetworkName-53-2',
+    'unique_id': '00000000000004D2-000000000000044B-MatterNodeDevice-0-ThreadDiagnosticsNetworkName-53-2',
     'unit_of_measurement': None,
   })
 # ---
@@ -40003,7 +40003,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000063-MatterNodeDevice'), ('matter', 'serial_serial_99')]>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000044B-MatterNodeDevice'), ('matter', 'serial_serial_1099')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -40026,7 +40026,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'thread_routing_role',
-    'unique_id': '00000000000004D2-0000000000000063-MatterNodeDevice-0-ThreadDiagnosticsRoutingRole-53-1',
+    'unique_id': '00000000000004D2-000000000000044B-MatterNodeDevice-0-ThreadDiagnosticsRoutingRole-53-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -40064,7 +40064,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000063-MatterNodeDevice'), ('matter', 'serial_serial_99')]>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000044B-MatterNodeDevice'), ('matter', 'serial_serial_1099')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -40087,7 +40087,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'uptime',
-    'unique_id': '00000000000004D2-0000000000000063-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
+    'unique_id': '00000000000004D2-000000000000044B-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
     'unit_of_measurement': None,
   })
 # ---
