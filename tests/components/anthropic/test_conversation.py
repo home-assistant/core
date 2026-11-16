@@ -1250,7 +1250,7 @@ async def test_function_call(
     assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert (
         result.response.speech["plain"]["speech"]
-        == "I have successfully called the function"
+        == "Certainly, calling it now!\n\nI have successfully called the function"
     )
     assert mock_create_stream.mock_calls[1][2]["messages"][2] == {
         "role": "user",
@@ -1326,7 +1326,7 @@ async def test_function_exception(
     assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert (
         result.response.speech["plain"]["speech"]
-        == "There was an error calling the function"
+        == "Certainly, calling it now!\n\nThere was an error calling the function"
     )
     assert mock_create_stream.mock_calls[1][2]["messages"][2] == {
         "role": "user",
@@ -2250,19 +2250,43 @@ async def test_web_search(
 
 @pytest.mark.usefixtures("mock_init_component")
 @pytest.mark.parametrize(
-    "preamble",
+    ("preamble", "final_events", "expected_speech", "expected_last_content"),
     [
-        pytest.param([], id="no-preamble"),
-        pytest.param(create_content_block(0, ["Searching"]), id="with-preamble"),
-    ],
-)
-@pytest.mark.parametrize(
-    ("final_events", "expected_speech"),
-    [
-        pytest.param([], "", id="no-final-text"),
-        pytest.param(create_content_block(3, [""]), "", id="empty-final-text"),
+        pytest.param([], [], "", "", id="no-final-text-no-preamble"),
         pytest.param(
-            create_content_block(3, ["Found it"]), "Found it", id="nonempty-final-text"
+            [],
+            create_content_block(3, [""]),
+            "",
+            "",
+            id="empty-final-text-no-preamble",
+        ),
+        pytest.param(
+            [],
+            create_content_block(3, ["Found it"]),
+            "Found it",
+            "Found it",
+            id="nonempty-final-text-no-preamble",
+        ),
+        pytest.param(
+            create_content_block(0, ["Searching"]),
+            [],
+            "Searching",
+            "",
+            id="no-final-text-with-preamble",
+        ),
+        pytest.param(
+            create_content_block(0, ["Searching"]),
+            create_content_block(3, [""]),
+            "Searching",
+            "",
+            id="empty-final-text-with-preamble",
+        ),
+        pytest.param(
+            create_content_block(0, ["Searching"]),
+            create_content_block(3, ["Found it"]),
+            "Searching\n\nFound it",
+            "Found it",
+            id="nonempty-final-text-with-preamble",
         ),
     ],
 )
@@ -2273,6 +2297,7 @@ async def test_web_search_final_response(
     preamble: list[RawMessageStreamEvent],
     final_events: list[RawMessageStreamEvent],
     expected_speech: str,
+    expected_last_content: str,
 ) -> None:
     """Test completed server tool results can be followed by a silent response."""
     hass.config_entries.async_update_subentry(
@@ -2318,7 +2343,7 @@ async def test_web_search_final_response(
     chat_log = hass.data[conversation.chat_log.DATA_CHAT_LOGS][result.conversation_id]
     assert not chat_log.unresponded_tool_results
     assert isinstance(chat_log.content[-1], conversation.AssistantContent)
-    assert chat_log.content[-1].content == expected_speech
+    assert chat_log.content[-1].content == expected_last_content
 
 
 @freeze_time("2025-10-31 12:00:00")

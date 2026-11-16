@@ -20,9 +20,10 @@ def async_get_result_from_chat_log(
     user_input: ConversationInput, chat_log: ChatLog
 ) -> ConversationResult:
     """Get the result from the chat log."""
+    turn_content = chat_log.content[chat_log.llm_input_provided_index :]
     tool_results = [
         content.result.data
-        for content in chat_log.content[chat_log.llm_input_provided_index :]
+        for content in turn_content
         if isinstance(content, ToolResultContent)
         and isinstance(content.result.data, llm.IntentResponseDict)
     ]
@@ -44,7 +45,16 @@ def async_get_result_from_chat_log(
             translation_key="no_response",
         )
 
-    intent_response.async_set_speech(last_content.content or "")
+    # The model may speak before and between tool calls, not only at the end
+    intent_response.async_set_speech(
+        "\n\n".join(
+            text
+            for content in turn_content
+            if isinstance(content, AssistantContent)
+            and content.content
+            and (text := content.content.strip())
+        )
+    )
 
     return ConversationResult(
         response=intent_response,
