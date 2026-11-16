@@ -83,3 +83,4 @@ FRITZ_AUTH_EXCEPTIONS = (FritzAuthorizationError, FritzSecurityError)
 
 
 CONNECTION_TYPE_LAN = "LAN"
+CONNECTION_TYPE_WLAN = "WLAN"

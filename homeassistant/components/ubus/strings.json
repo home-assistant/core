@@ -13,10 +13,14 @@
           "dhcp_software": "DHCP software",
           "host": "[%key:common::config_flow::data::host%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "username": "[%key:common::config_flow::data::username%]"
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
-          "dhcp_software": "The DHCP server running on the router, used to resolve device hostnames."
+          "dhcp_software": "The DHCP server running on the router, used to resolve device hostnames.",
+          "ssl": "Whether to connect to the router using SSL.",
+          "verify_ssl": "Whether to verify the router's SSL certificate."
         }
       }
     }
