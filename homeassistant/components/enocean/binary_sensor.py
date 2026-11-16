@@ -2,6 +2,7 @@
 
 from typing import override
 
+from enocean_async.address import Address
 from enocean_async.protocol.erp1.telegram import ERP1Telegram
 import probatio
 
@@ -11,13 +12,19 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_ID, CONF_NAME
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_ID, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from . import EnOceanConfigEntry
+from .const import CONF_DEVICE_TYPE_ID, DEVICE_TYPE_ROCKER_SWITCH, SUBENTRY_TYPE_DEVICE
 from .entity import EnOceanEntity, combine_hex
+from .yaml_import import async_import_yaml_device
 
 DEFAULT_NAME = "EnOcean binary sensor"
 DEPENDENCIES = ["enocean"]
@@ -34,18 +41,45 @@ PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Binary Sensor platform for EnOcean."""
-    dev_id: list[int] = config[CONF_ID]
-    dev_name: str = config[CONF_NAME]
-    device_class: BinarySensorDeviceClass | None = config.get(CONF_DEVICE_CLASS)
+    """Import a binary sensor configured in YAML into the config entry."""
+    async_import_yaml_device(
+        hass,
+        Platform.BINARY_SENSOR,
+        config[CONF_ID],
+        config[CONF_NAME],
+        DEVICE_TYPE_ROCKER_SWITCH,
+        {CONF_DEVICE_CLASS: config[CONF_DEVICE_CLASS].value}
+        if CONF_DEVICE_CLASS in config
+        else {},
+    )
 
-    add_entities([EnOceanBinarySensor(dev_id, dev_name, device_class)])
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: EnOceanConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the binary sensors of the configured devices."""
+    for subentry in config_entry.get_subentries_of_type(SUBENTRY_TYPE_DEVICE):
+        if subentry.data[CONF_DEVICE_TYPE_ID] != DEVICE_TYPE_ROCKER_SWITCH:
+            continue
+        device_class = subentry.data.get(CONF_DEVICE_CLASS)
+        async_add_entities(
+            [
+                EnOceanBinarySensor(
+                    Address(subentry.data[CONF_ID]).bytelist,
+                    subentry.title,
+                    BinarySensorDeviceClass(device_class) if device_class else None,
+                )
+            ],
+            config_subentry_id=subentry.subentry_id,
+        )
 
 
 class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):

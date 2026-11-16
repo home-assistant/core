@@ -39,16 +39,17 @@ def mock_gateway() -> Generator[Mock]:
 
 
 @pytest.fixture
-async def receive_telegram(
+def receive_telegram(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_gateway: Mock
 ) -> TelegramReceiver:
-    """Set up the integration and return a function simulating a received telegram."""
+    """Add the config entry and return a function simulating a received telegram.
+
+    As on startup, the entry is set up together with the first EnOcean platform.
+    """
     mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    callback = mock_gateway.add_erp1_received_callback.call_args.args[0]
 
     async def _receive(telegram: ERP1Telegram) -> None:
-        callback(telegram)
+        mock_gateway.add_erp1_received_callback.call_args.args[0](telegram)
         await hass.async_block_till_done()
 
     return _receive

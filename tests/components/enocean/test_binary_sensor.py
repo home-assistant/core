@@ -1,19 +1,58 @@
 """Tests for the EnOcean binary sensor platform."""
 
+from typing import Any
+from unittest.mock import Mock
+
 from enocean_async import EURID
 from enocean_async.protocol.erp1.rorg import RORG
 from enocean_async.protocol.erp1.telegram import ERP1Telegram
 import pytest
-from pytest_homeassistant.common import async_capture_events
+from pytest_homeassistant.common import MockConfigEntry, async_capture_events
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.enocean import DOMAIN
+from homeassistant.components.enocean.const import (
+    CONF_DEVICE_TYPE_ID,
+    DEVICE_TYPE_ROCKER_SWITCH,
+    SUBENTRY_TYPE_DEVICE,
+)
+from homeassistant.config_entries import ConfigSubentryData
+from homeassistant.const import ATTR_DEVICE_CLASS, CONF_DEVICE, CONF_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from . import TelegramReceiver
 
 DEVICE_ID = [0xDE, 0xAD, 0xBE, 0xEF]
+DEVICE_ADDRESS = "DE:AD:BE:EF"
+LEGACY_UNIQUE_ID = "3735928559-None"
+
+
+def _yaml_config(**options: Any) -> dict[str, Any]:
+    """Return the YAML configuration of one EnOcean binary sensor."""
+    return {
+        BINARY_SENSOR_DOMAIN: [
+            {"platform": DOMAIN, "id": DEVICE_ID, "name": "button", **options}
+        ]
+    }
+
+
+def _stored_device(device_type_id: str, title: str = "button") -> ConfigSubentryData:
+    """Return a device as it is stored in the config entry."""
+    return ConfigSubentryData(
+        data={CONF_ID: DEVICE_ADDRESS, CONF_DEVICE_TYPE_ID: device_type_id},
+        subentry_type=SUBENTRY_TYPE_DEVICE,
+        title=title,
+        unique_id=DEVICE_ADDRESS,
+    )
+
+
+def _config_entry(*devices: ConfigSubentryData) -> MockConfigEntry:
+    """Return a config entry with stored devices."""
+    return MockConfigEntry(
+        domain=DOMAIN, data={CONF_DEVICE: "/dev/ttyUSB0"}, subentries_data=devices
+    )
 
 
 @pytest.mark.parametrize(
@@ -56,3 +95,162 @@ async def test_button_event(
 
     assert len(events) == 1
     assert events[0].data == {"id": DEVICE_ID, **expected}
+
+
+@pytest.mark.parametrize(
+    ("yaml_options", "expected_unique_id"),
+    [
+        pytest.param({}, LEGACY_UNIQUE_ID, id="without_device_class"),
+        pytest.param(
+            {"device_class": "door"}, "3735928559-door", id="with_device_class"
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_gateway")
+async def test_yaml_binary_sensor_is_imported(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    mock_config_entry: MockConfigEntry,
+    yaml_options: dict[str, str],
+    expected_unique_id: str,
+) -> None:
+    """Test that a YAML binary sensor becomes a device of the config entry."""
+    mock_config_entry.add_to_hass(hass)
+
+    assert await async_setup_component(
+        hass, BINARY_SENSOR_DOMAIN, _yaml_config(**yaml_options)
+    )
+    await hass.async_block_till_done()
+
+    (subentry,) = mock_config_entry.subentries.values()
+    assert subentry.subentry_type == SUBENTRY_TYPE_DEVICE
+    assert subentry.title == "button"
+    assert subentry.unique_id == DEVICE_ADDRESS
+    assert subentry.data == {
+        CONF_ID: DEVICE_ADDRESS,
+        CONF_DEVICE_TYPE_ID: DEVICE_TYPE_ROCKER_SWITCH,
+        **yaml_options,
+    }
+
+    entity = entity_registry.async_get("binary_sensor.button")
+    assert entity is not None
+    assert entity.unique_id == expected_unique_id
+    assert entity.config_entry_id == mock_config_entry.entry_id
+    assert entity.config_subentry_id == subentry.subentry_id
+    state = hass.states.get("binary_sensor.button")
+    assert state is not None
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == yaml_options.get("device_class")
+
+    assert issue_registry.async_get_issue(DOMAIN, "deprecated_yaml_binary_sensor")
+
+
+@pytest.mark.usefixtures("mock_gateway")
+async def test_yaml_import_keeps_the_existing_entity(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that the entity of a YAML binary sensor keeps its entity ID."""
+    entity_registry.async_get_or_create(
+        BINARY_SENSOR_DOMAIN,
+        DOMAIN,
+        LEGACY_UNIQUE_ID,
+        suggested_object_id="hallway_switch",
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    assert await async_setup_component(hass, BINARY_SENSOR_DOMAIN, _yaml_config())
+    await hass.async_block_till_done()
+
+    entities = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    assert [entity.entity_id for entity in entities] == ["binary_sensor.hallway_switch"]
+    assert hass.states.get("binary_sensor.hallway_switch") is not None
+    assert len(hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)) == 1
+
+
+@pytest.mark.usefixtures("mock_gateway")
+async def test_yaml_import_is_not_repeated(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test that a device is left as it is when its YAML is still there."""
+    config_entry = _config_entry(_stored_device(DEVICE_TYPE_ROCKER_SWITCH, "renamed"))
+    config_entry.add_to_hass(hass)
+
+    assert await async_setup_component(hass, BINARY_SENSOR_DOMAIN, _yaml_config())
+    await hass.async_block_till_done()
+
+    (subentry,) = config_entry.subentries.values()
+    assert subentry.title == "renamed"
+    assert len(hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)) == 1
+    assert issue_registry.async_get_issue(DOMAIN, "deprecated_yaml_binary_sensor")
+
+
+async def test_yaml_import_without_gateway(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test that the user is told when there is no gateway to import devices into."""
+    assert await async_setup_component(hass, BINARY_SENSOR_DOMAIN, _yaml_config())
+    await hass.async_block_till_done()
+
+    assert not hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)
+    assert issue_registry.async_get_issue(
+        DOMAIN, "deprecated_yaml_import_issue_no_gateway_binary_sensor"
+    )
+    assert not issue_registry.async_get_issue(DOMAIN, "deprecated_yaml_binary_sensor")
+
+
+@pytest.mark.usefixtures("mock_gateway")
+async def test_yaml_import_with_invalid_id(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that a YAML binary sensor whose ID no device can have is not imported."""
+    mock_config_entry.add_to_hass(hass)
+
+    assert await async_setup_component(
+        hass, BINARY_SENSOR_DOMAIN, _yaml_config(id=[0x01, 0x02, 0x03])
+    )
+    await hass.async_block_till_done()
+
+    assert not mock_config_entry.subentries
+    assert not hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)
+    assert issue_registry.async_get_issue(
+        DOMAIN, "deprecated_yaml_import_issue_invalid_id_binary_sensor_button"
+    )
+
+
+@pytest.mark.parametrize(
+    ("device_type_id", "expected_entity_ids"),
+    [
+        pytest.param(
+            DEVICE_TYPE_ROCKER_SWITCH, ["binary_sensor.button"], id="rocker_switch"
+        ),
+        pytest.param("EEP/A5-02-05", [], id="other_device_type"),
+    ],
+)
+async def test_binary_sensor_of_stored_device(
+    hass: HomeAssistant,
+    mock_gateway: Mock,
+    device_type_id: str,
+    expected_entity_ids: list[str],
+) -> None:
+    """Test that a stored rocker switch gets a binary sensor without any YAML."""
+    config_entry = _config_entry(_stored_device(device_type_id))
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN) == expected_entity_ids
+
+    events = async_capture_events(hass, "button_pressed")
+    mock_gateway.add_erp1_received_callback.call_args.args[0](
+        ERP1Telegram(RORG.RORG_RPS, b"\x70", EURID(DEVICE_ADDRESS), 0x30)
+    )
+    await hass.async_block_till_done()
+
+    assert len(events) == len(expected_entity_ids)

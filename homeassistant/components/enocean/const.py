@@ -10,14 +10,17 @@ MANUFACTURER = "EnOcean"
 
 ERROR_INVALID_DONGLE_PATH = "invalid_dongle_path"
 
+CONF_DEVICE_TYPE_ID = "device_type_id"
+
+SUBENTRY_TYPE_DEVICE = "device"
+
+# Device types of the enocean-async library
+DEVICE_TYPE_ROCKER_SWITCH = "EEP/F6-02-01"
+
 SIGNAL_RECEIVE_MESSAGE = "enocean.receive_message"
 SIGNAL_SEND_MESSAGE = "enocean.send_message"
 
 LOGGER = logging.getLogger(__package__)
 
-PLATFORMS = [
-    Platform.BINARY_SENSOR,
-    Platform.LIGHT,
-    Platform.SENSOR,
-    Platform.SWITCH,
-]
+# Platforms set up from the config entry. The other platforms still read YAML.
+PLATFORMS = [Platform.BINARY_SENSOR]
