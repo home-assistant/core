@@ -10,6 +10,7 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
+      "invalid_mfa_code": "The verification code is invalid or has expired.",
       "mfa_required": "2FA enabled on account, please disable and retry",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
@@ -22,6 +23,16 @@
         },
         "description": "Enter RTSP credentials for EZVIZ camera {serial} with IP {ip_address}",
         "title": "Discovered EZVIZ Camera"
+      },
+      "mfa": {
+        "data": {
+          "code": "Verification code"
+        },
+        "data_description": {
+          "code": "The code EZVIZ sent to the phone number or email address of your account."
+        },
+        "description": "Two-factor authentication is enabled on your EZVIZ account. Enter the verification code you received.",
+        "title": "Verify your EZVIZ account"
       },
       "reauth_confirm": {
         "data": {

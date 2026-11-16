@@ -3973,7 +3973,7 @@
         "cloud"
       ],
       "config_flow": false,
-      "iot_class": "local_polling"
+      "iot_class": "cloud_polling"
     },
     "epic_games_store": {
       "name": "Epic Games Store",
@@ -15657,6 +15657,15 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "trimlight": {
+      "name": "Trimlight",
+      "integration_type": "device",
+      "categories": [
+        "lighting.led_strips_controllers"
+      ],
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "trmnl": {
       "name": "TRMNL",
       "integration_type": "hub",
@@ -16373,6 +16382,18 @@
       ],
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "voice_support": {
+      "name": "Voice support",
+      "integration_type": "service",
+      "categories": [
+        "ai_voice.voice_assistants"
+      ],
+      "connectivity": [
+        "network"
+      ],
+      "config_flow": true,
+      "iot_class": "local_push"
     },
     "voicerss": {
       "name": "VoiceRSS",

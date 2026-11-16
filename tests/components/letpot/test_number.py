@@ -8,11 +8,11 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -47,10 +47,10 @@ async def test_set_number(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: "number.garden_light_brightness",
-            ATTR_VALUE: 6,
+            CommonServiceArgument.ENTITY_ID: "number.garden_light_brightness",
+            NumberServiceArgument.VALUE: 6,
         },
         blocking=True,
     )
@@ -91,10 +91,10 @@ async def test_number_error(
     with pytest.raises(HomeAssistantError, match=user_error):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: "number.garden_plants_age",
-                ATTR_VALUE: 7,
+                CommonServiceArgument.ENTITY_ID: "number.garden_plants_age",
+                NumberServiceArgument.VALUE: 7,
             },
             blocking=True,
         )

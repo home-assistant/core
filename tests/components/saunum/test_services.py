@@ -9,12 +9,10 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.saunum.const import DOMAIN
 from homeassistant.components.saunum.services import (
-    ATTR_DURATION,
-    ATTR_FAN_DURATION,
-    ATTR_TARGET_TEMPERATURE,
-    SERVICE_START_SESSION,
+    LeilSaunaService,
+    LeilSaunaServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
@@ -33,12 +31,12 @@ async def test_start_session_success(
     """Test start_session service success."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_START_SESSION,
+        LeilSaunaService.START_SESSION,
         {
-            ATTR_ENTITY_ID: "climate.saunum_leil",
-            ATTR_DURATION: {"hours": 2, "minutes": 0, "seconds": 0},
-            ATTR_TARGET_TEMPERATURE: 80,
-            ATTR_FAN_DURATION: {"minutes": 10},
+            CommonServiceArgument.ENTITY_ID: "climate.saunum_leil",
+            LeilSaunaServiceArgument.DURATION: {"hours": 2, "minutes": 0, "seconds": 0},
+            LeilSaunaServiceArgument.TARGET_TEMPERATURE: 80,
+            LeilSaunaServiceArgument.FAN_DURATION: {"minutes": 10},
         },
         blocking=True,
     )
@@ -57,8 +55,8 @@ async def test_start_session_with_defaults(
     """Test start_session service uses defaults when optional fields omitted."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_START_SESSION,
-        {ATTR_ENTITY_ID: "climate.saunum_leil"},
+        LeilSaunaService.START_SESSION,
+        {CommonServiceArgument.ENTITY_ID: "climate.saunum_leil"},
         blocking=True,
     )
 
@@ -85,8 +83,8 @@ async def test_start_session_door_open(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_START_SESSION,
-            {ATTR_ENTITY_ID: "climate.saunum_leil"},
+            LeilSaunaService.START_SESSION,
+            {CommonServiceArgument.ENTITY_ID: "climate.saunum_leil"},
             blocking=True,
         )
 
@@ -106,8 +104,8 @@ async def test_start_session_communication_error(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_START_SESSION,
-            {ATTR_ENTITY_ID: "climate.saunum_leil"},
+            LeilSaunaService.START_SESSION,
+            {CommonServiceArgument.ENTITY_ID: "climate.saunum_leil"},
             blocking=True,
         )
 
