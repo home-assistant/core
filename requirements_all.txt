@@ -83,7 +83,7 @@ PyRMVtransport==0.3.3
 PySrDaliGateway==0.21.0
 
 # homeassistant.components.switchbot
-PySwitchbot==3.5.0
+PySwitchbot==3.8.2
 
 # homeassistant.components.switchmate
 PySwitchmate==0.5.1
@@ -1204,7 +1204,7 @@ google-cloud-texttospeech==2.37.0
 google-genai==2.25.0
 
 # homeassistant.components.google_health
-google-health-api==0.9.0
+google-health-api==1.0.0
 
 # homeassistant.components.nest
 google-nest-sdm==9.2.1
@@ -3282,7 +3282,7 @@ surepy==0.10.0
 swisshydrodata==0.1.0
 
 # homeassistant.components.switchbot_cloud
-switchbot-api==2.13.0
+switchbot-api==2.14.0
 
 # homeassistant.components.synology_srm
 synology-srm==0.2.0
