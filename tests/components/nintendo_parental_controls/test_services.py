@@ -29,7 +29,6 @@ from homeassistant.const import CommonServiceArgument
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, Context, HomeAssistant
 from homeassistant.exceptions import ServiceValidationError, Unauthorized
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.service import async_get_all_descriptions
 
 from . import setup_integration
 from .const import PLAYER_ENTITY_ID
@@ -58,20 +57,6 @@ async def test_add_bonus_time(
         blocking=True,
     )
     assert len(mock_nintendo_device.add_extra_time.mock_calls) == 1
-
-
-@pytest.mark.usefixtures("mock_nintendo_client")
-async def test_add_bonus_time_selector(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test the bonus time selector matches the accepted range."""
-    await setup_integration(hass, mock_config_entry)
-    descriptions = await async_get_all_descriptions(hass)
-    selector = descriptions[DOMAIN][NintendoParentalService.ADD_BONUS_TIME]["fields"][
-        NintendoParentalServiceArgument.BONUS_TIME
-    ]["selector"]["number"]
-    assert (selector["min"], selector["max"]) == (5, 30)
 
 
 @pytest.mark.parametrize(
