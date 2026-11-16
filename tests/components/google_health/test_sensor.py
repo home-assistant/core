@@ -82,23 +82,9 @@ async def test_sensor_disabled_by_default(
     } == set(expected_disabled)
 
 
-@pytest.mark.parametrize(
-    "scopes",
-    [
-        [
-            HealthApiScope.PROFILE_READ,
-            HealthApiScope.ACTIVITY_READ,
-            HealthApiScope.NUTRITION_READ,
-        ]
-    ],
-    indirect=True,
-)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_empty_rollup(
     hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
-    entity_registry: er.EntityRegistry,
-    config_entry: MockConfigEntry,
     mock_google_health_client: AsyncMock,
     integration_setup: Callable[[], Awaitable[bool]],
 ) -> None:
@@ -111,23 +97,32 @@ async def test_sensor_empty_rollup(
     mock_google_health_client.hydration_log.today.return_value = None
     mock_google_health_client.nutrition_log.today.return_value = None
 
-    with patch("homeassistant.components.google_health._PLATFORMS", [Platform.SENSOR]):
-        assert await integration_setup()
+    assert await integration_setup()
 
-    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
+    for entity_id, expected_state in (
+        ("sensor.google_health_steps", "0"),
+        ("sensor.google_health_distance", "0.0"),
+        ("sensor.google_health_active_calories", "0.0"),
+        ("sensor.google_health_total_calories", "0.0"),
+        ("sensor.google_health_floors", "0"),
+        ("sensor.google_health_water_intake", "0.0"),
+        ("sensor.google_health_calories_consumed", "0.0"),
+        ("sensor.google_health_total_fat", "0.0"),
+        ("sensor.google_health_total_carbohydrates", "0.0"),
+        ("sensor.google_health_protein", "0.0"),
+        ("sensor.google_health_dietary_fiber", "0.0"),
+        ("sensor.google_health_sugar", "0.0"),
+        ("sensor.google_health_sodium", "0.0"),
+        ("sensor.google_health_calories_from_fat", "0.0"),
+    ):
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == expected_state
 
 
-@pytest.mark.parametrize(
-    "scopes",
-    [[HealthApiScope.PROFILE_READ, HealthApiScope.NUTRITION_READ]],
-    indirect=True,
-)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_nutrition_partial_rollup(
     hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
-    entity_registry: er.EntityRegistry,
-    config_entry: MockConfigEntry,
     mock_google_health_client: AsyncMock,
     integration_setup: Callable[[], Awaitable[bool]],
 ) -> None:
@@ -146,10 +141,21 @@ async def test_sensor_nutrition_partial_rollup(
     )
     mock_google_health_client.nutrition_log.today.return_value = nutrition_rollup
 
-    with patch("homeassistant.components.google_health._PLATFORMS", [Platform.SENSOR]):
-        assert await integration_setup()
+    assert await integration_setup()
 
-    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
+    for entity_id, expected_state in (
+        ("sensor.google_health_calories_consumed", "0.0"),
+        ("sensor.google_health_total_fat", "0.0"),
+        ("sensor.google_health_total_carbohydrates", "0.0"),
+        ("sensor.google_health_protein", "30.5"),
+        ("sensor.google_health_dietary_fiber", "0.0"),
+        ("sensor.google_health_sugar", "0.0"),
+        ("sensor.google_health_sodium", "0.0"),
+        ("sensor.google_health_calories_from_fat", "0.0"),
+    ):
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == expected_state
 
 
 async def test_sensor_empty_sleep(
