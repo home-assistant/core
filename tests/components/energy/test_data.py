@@ -1268,7 +1268,6 @@ GRID = {
     "stat_compensation": None,
     "entity_energy_price_export": None,
     "number_energy_price_export": None,
-    "cost_adjustment_day": 0.0,
 }
 
 
