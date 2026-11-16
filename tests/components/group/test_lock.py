@@ -15,6 +15,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     CommonServiceArgument,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -476,8 +477,8 @@ async def test_service_call_all_exclude_nested_group(hass: HomeAssistant) -> Non
         LOCK_DOMAIN,
         LockService.LOCK,
         {
-            CommonServiceArgument.ENTITY_ID: "all",
-            CONF_EXCLUDE: {ATTR_ENTITY_ID: "lock.nested_group"},
+            TargetKey.ENTITY_ID: "all",
+            CONF_EXCLUDE: {TargetKey.ENTITY_ID: "lock.nested_group"},
         },
         blocking=True,
     )

@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 from aiohttp import ClientError, ClientResponseError
+from energyid_webhooks.exceptions import EnergyIDAuthenticationError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
@@ -513,19 +514,67 @@ async def test_initial_state_queued_for_new_mapping(
     sensor_mock.update.assert_called_with(42.5, ANY)
 
 
-async def test_synchronize_sensors_error_handling(
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(OSError("Connection failed"), id="os_error"),
+        pytest.param(RuntimeError("Sync error"), id="runtime_error"),
+        pytest.param(ClientError("Server disconnected"), id="client_error"),
+        pytest.param(
+            ClientResponseError(request_info=MagicMock(), history=(), status=500),
+            id="http_error",
+        ),
+    ],
+)
+async def test_periodic_sync_error_marks_unavailable(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_webhook_client: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+    error: Exception,
+) -> None:
+    """Test an upload error is logged once at info and keeps the entry loaded."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    mock_webhook_client.synchronize_sensors.side_effect = error
+
+    for interval in (1, 2):
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + timedelta(seconds=61 * interval)
+        )
+        await hass.async_block_till_done()
+
+    assert mock_webhook_client.synchronize_sensors.await_count == 2
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.runtime_data.unavailable_logged
+    assert [
+        record.levelname
+        for record in caplog.records
+        if record.message == f"EnergyID is unavailable: {error}"
+    ] == ["INFO"]
+
+
+async def test_periodic_sync_refused_credentials_start_reauth(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_webhook_client: MagicMock,
 ) -> None:
-    """Test that synchronize_sensors errors are handled gracefully."""
-    mock_webhook_client.synchronize_sensors.side_effect = OSError("Connection failed")
-
+    """Test credentials refused while uploading start one reauthentication."""
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
+    mock_webhook_client.synchronize_sensors.side_effect = EnergyIDAuthenticationError(
+        request_info=MagicMock(), history=(), status=401
+    )
 
-    # ASSERT: Integration should still load
-    assert mock_config_entry.state is ConfigEntryState.LOADED
+    for interval in (1, 2):
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + timedelta(seconds=61 * interval)
+        )
+        await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert [flow["context"]["source"] for flow in flows] == ["reauth"]
+    assert not mock_config_entry.runtime_data.unavailable_logged
 
 
 async def test_setup_timeout_during_authentication(hass: HomeAssistant) -> None:
@@ -556,7 +605,9 @@ async def test_setup_timeout_during_authentication(hass: HomeAssistant) -> None:
         assert entry.error_reason_translation_key == "auth_timeout"
 
 
-async def test_periodic_sync_error_and_recovery(hass: HomeAssistant) -> None:
+async def test_periodic_sync_error_and_recovery(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test periodic sync error handling and recovery."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -598,44 +649,22 @@ async def test_periodic_sync_error_and_recovery(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         assert call_count[0] == 1  # First periodic call with error
+        assert [
+            record.levelname
+            for record in caplog.records
+            if record.message == "EnergyID is unavailable: Connection lost"
+        ] == ["INFO"]
 
         # Trigger periodic sync again - second time, should succeed
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=120))
         await hass.async_block_till_done()
 
         assert call_count[0] == 2  # Second periodic call succeeds
-
-
-async def test_periodic_sync_runtime_error(hass: HomeAssistant) -> None:
-    """Test periodic sync handles RuntimeError."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_PROVISIONING_KEY: "test_key",
-            CONF_PROVISIONING_SECRET: "test_secret",
-            CONF_DEVICE_ID: "test_device",
-            CONF_DEVICE_NAME: "Test Device",
-        },
-    )
-    entry.add_to_hass(hass)
-
-    with patch("homeassistant.components.energyid.WebhookClient") as mock_client_class:
-        mock_client = MagicMock()
-        mock_client.authenticate = AsyncMock(return_value=True)
-        mock_client.recordNumber = "site_123"
-        mock_client.recordName = "Test Site"
-        mock_client.webhook_policy = {"uploadInterval": 60}
-        mock_client.synchronize_sensors = AsyncMock(
-            side_effect=RuntimeError("Sync error")
-        )
-        mock_client_class.return_value = mock_client
-
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-        # Trigger sync with RuntimeError
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=60))
-        await hass.async_block_till_done()
+        assert [
+            record.levelname
+            for record in caplog.records
+            if record.message == "Connection to EnergyID re-established"
+        ] == ["INFO"]
 
 
 async def test_config_entry_update_listener(
