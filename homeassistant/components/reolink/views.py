@@ -49,14 +49,14 @@ def async_generate_playback_proxy_url(
 
 @callback
 def async_generate_thumbnail_url(
-    config_entry_id: str, channel: int, stream: str, start_time_id: str
+    config_entry_id: str, channel: int, stream: str, time_id: str
 ) -> str:
     """Generate URL for the thumbnail of a recording."""
     return ThumbnailView.url.format(
         config_entry_id=config_entry_id,
         channel=channel,
         stream="telephoto_sub" if stream.startswith(TELEPHOTO_PREFIXES) else "sub",
-        start_time_id=start_time_id,
+        time_id=time_id,
     )
 
 
@@ -308,7 +308,7 @@ class ThumbnailView(HomeAssistantView):
     """View to get a thumbnail of a Reolink recording."""
 
     requires_auth = True
-    url = "/api/reolink/thumbnail/{config_entry_id}/{channel}/{stream}/{start_time_id}"
+    url = "/api/reolink/thumbnail/{config_entry_id}/{channel}/{stream}/{time_id}"
     name = "api:reolink_thumbnail"
 
     def __init__(self, hass: HomeAssistant) -> None:
@@ -324,7 +324,7 @@ class ThumbnailView(HomeAssistantView):
         config_entry_id: str,
         channel: str,
         stream: str,
-        start_time_id: str,
+        time_id: str,
     ) -> web.Response:
         """Get the key frame at the start of a recording as JPEG."""
         try:
@@ -334,13 +334,10 @@ class ThumbnailView(HomeAssistantView):
 
         try:
             ch = int(channel)
-            # start_time_id is in camera local time, as snapshot_past expects.
-            start_time = datetime.strptime(start_time_id, "%Y%m%d%H%M%S")
+            # time_id is in camera local time, as snapshot_past expects.
+            time = datetime.strptime(time_id, "%Y%m%d%H%M%S")
         except ValueError:
-            err_str = (
-                f"Reolink thumbnail invalid channel {channel}"
-                f" or start time {start_time_id}"
-            )
+            err_str = f"Reolink thumbnail invalid channel {channel} or time {time_id}"
             return web.Response(body=err_str, status=HTTPStatus.BAD_REQUEST)
 
         if stream not in THUMBNAIL_STREAMS:
@@ -360,7 +357,7 @@ class ThumbnailView(HomeAssistantView):
             try:
                 image = await host.api.baichuan.snapshot_past(
                     ch,
-                    start_time,
+                    time,
                     stream,
                     get_ffmpeg_manager(self.hass).binary,
                 )
@@ -368,7 +365,7 @@ class ThumbnailView(HomeAssistantView):
                 _LOGGER.debug(
                     "Error getting thumbnail of channel %s at %s: %s",
                     ch,
-                    start_time_id,
+                    time_id,
                     err,
                 )
                 return web.Response(body=str(err), status=HTTPStatus.BAD_REQUEST)

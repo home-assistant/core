@@ -43,7 +43,7 @@ TEST_NVR_START = "20231114131200"
 TEST_NVR_END = "20231114131700"
 TEST_NVR_FILE_NAME = f"{TEST_NVR_START}_{TEST_NVR_END}"
 TEST_NVR_VOD_TYPE = VodRequestType.NVR_DOWNLOAD.value
-TEST_START_TIME_ID = "20231114131200"
+TEST_TIME_ID = "20231114131200"
 TEST_IMAGE = b"jpeg"
 
 
@@ -532,7 +532,7 @@ async def test_thumbnail(
     await hass.async_block_till_done()
 
     thumbnail_url = async_generate_thumbnail_url(
-        config_entry.entry_id, int(TEST_CHANNEL), stream, TEST_START_TIME_ID
+        config_entry.entry_id, int(TEST_CHANNEL), stream, TEST_TIME_ID
     )
 
     http_client = await hass_client()
@@ -575,7 +575,7 @@ async def test_thumbnail_no_sub_stream(
     http_client = await hass_client()
     response = await http_client.get(
         async_generate_thumbnail_url(
-            config_entry.entry_id, int(TEST_CHANNEL), stream, TEST_START_TIME_ID
+            config_entry.entry_id, int(TEST_CHANNEL), stream, TEST_TIME_ID
         )
     )
 
@@ -589,7 +589,7 @@ async def test_thumbnail_no_sub_stream(
         "config_entry_id",
         "channel",
         "stream",
-        "start_time_id",
+        "time_id",
         "side_effect",
         "body",
     ),
@@ -598,7 +598,7 @@ async def test_thumbnail_no_sub_stream(
             "wrong_config_id",
             TEST_CHANNEL,
             TEST_STREAM,
-            TEST_START_TIME_ID,
+            TEST_TIME_ID,
             None,
             "Reolink thumbnail could not find config entry id: wrong_config_id",
             id="unknown_config_entry",
@@ -607,9 +607,9 @@ async def test_thumbnail_no_sub_stream(
             None,
             "abc",
             TEST_STREAM,
-            TEST_START_TIME_ID,
+            TEST_TIME_ID,
             None,
-            f"Reolink thumbnail invalid channel abc or start time {TEST_START_TIME_ID}",
+            f"Reolink thumbnail invalid channel abc or time {TEST_TIME_ID}",
             id="invalid_channel",
         ),
         pytest.param(
@@ -618,14 +618,14 @@ async def test_thumbnail_no_sub_stream(
             TEST_STREAM,
             "invalid",
             None,
-            f"Reolink thumbnail invalid channel {TEST_CHANNEL} or start time invalid",
-            id="invalid_start_time",
+            f"Reolink thumbnail invalid channel {TEST_CHANNEL} or time invalid",
+            id="invalid_time",
         ),
         pytest.param(
             None,
             TEST_CHANNEL,
             "main",
-            TEST_START_TIME_ID,
+            TEST_TIME_ID,
             None,
             "Reolink thumbnail invalid stream main",
             id="invalid_stream",
@@ -634,7 +634,7 @@ async def test_thumbnail_no_sub_stream(
             None,
             TEST_CHANNEL,
             TEST_STREAM,
-            TEST_START_TIME_ID,
+            TEST_TIME_ID,
             ReolinkError(TEST_ERROR),
             TEST_ERROR,
             id="camera_error",
@@ -649,7 +649,7 @@ async def test_thumbnail_errors(
     config_entry_id: str | None,
     channel: str,
     stream: str,
-    start_time_id: str,
+    time_id: str,
     side_effect: Exception | None,
     body: str,
 ) -> None:
@@ -664,7 +664,7 @@ async def test_thumbnail_errors(
     http_client = await hass_client()
     response = await http_client.get(
         f"/api/reolink/thumbnail/{config_entry_id or config_entry.entry_id}"
-        f"/{channel}/{stream}/{start_time_id}"
+        f"/{channel}/{stream}/{time_id}"
     )
 
     assert response.status == HTTPStatus.BAD_REQUEST
@@ -688,7 +688,7 @@ async def test_thumbnail_unloaded_config_entry(
     http_client = await hass_client()
     response = await http_client.get(
         async_generate_thumbnail_url(
-            config_entry.entry_id, int(TEST_CHANNEL), TEST_STREAM, TEST_START_TIME_ID
+            config_entry.entry_id, int(TEST_CHANNEL), TEST_STREAM, TEST_TIME_ID
         )
     )
 
@@ -716,7 +716,7 @@ async def test_thumbnail_unloaded_while_queued(
 
     http_client = await hass_client()
     thumbnail_url = async_generate_thumbnail_url(
-        config_entry.entry_id, int(TEST_CHANNEL), TEST_STREAM, TEST_START_TIME_ID
+        config_entry.entry_id, int(TEST_CHANNEL), TEST_STREAM, TEST_TIME_ID
     )
     with patch(
         "homeassistant.components.reolink.views.get_host", wraps=get_host
