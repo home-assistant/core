@@ -7,7 +7,7 @@ from modbus_connection import ModbusError
 import probatio
 
 from homeassistant.components.modbus import async_get_temporary_unit
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigEntryState, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
@@ -111,17 +111,35 @@ class IntesisModbusConfigFlow(ConfigFlow, domain=DOMAIN):
         reconfigure_entry = self._get_reconfigure_entry()
         errors: dict[str, str] = {}
         if user_input is not None:
-            self._async_abort_entries_match(
-                {
-                    CONF_DEVICE: user_input[CONF_DEVICE],
-                    CONF_UNIT_ID: user_input[CONF_UNIT_ID],
-                }
+            match = {
+                CONF_DEVICE: user_input[CONF_DEVICE],
+                CONF_UNIT_ID: user_input[CONF_UNIT_ID],
+            }
+            self._async_abort_entries_match(match)
+            # A loaded entry holds its port at the old baud rate, which refuses
+            # a probe at another one, so it lets go of the port meanwhile.
+            released = (
+                reconfigure_entry.state is ConfigEntryState.LOADED
+                and user_input[CONF_DEVICE] == reconfigure_entry.data[CONF_DEVICE]
+                and user_input[CONF_BAUDRATE] != reconfigure_entry.data[CONF_BAUDRATE]
             )
-            errors, probe = await self._async_validate(user_input)
-            if probe is not None:
-                return self.async_update_reload_and_abort(
-                    reconfigure_entry, data_updates=_entry_data(user_input, probe)
-                )
+            if released:
+                await self.hass.config_entries.async_unload(reconfigure_entry.entry_id)
+            saved = False
+            try:
+                errors, probe = await self._async_validate(user_input)
+                if probe is not None:
+                    # Another flow may have claimed the gateway meanwhile
+                    self._async_abort_entries_match(match)
+                    saved = True
+                    return self.async_update_reload_and_abort(
+                        reconfigure_entry, data_updates=_entry_data(user_input, probe)
+                    )
+            finally:
+                if released and not saved:
+                    await self.hass.config_entries.async_setup(
+                        reconfigure_entry.entry_id
+                    )
 
         return self.async_show_form(
             step_id="reconfigure",
