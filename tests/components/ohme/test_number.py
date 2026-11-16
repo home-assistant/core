@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
+import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
@@ -17,6 +18,7 @@ from homeassistant.helpers import entity_registry as er
 from . import setup_integration
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_numbers(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -27,16 +29,6 @@ async def test_numbers(
     """Test the Ohme numbers."""
     with patch("homeassistant.components.ohme.PLATFORMS", [Platform.NUMBER]):
         await setup_integration(hass, mock_config_entry)
-
-    entity_registry.async_update_entity(
-        "number.ohme_home_pro_state_of_charge_input",
-        disabled_by=None,
-    )
-
-    with patch("homeassistant.components.ohme.PLATFORMS", [Platform.NUMBER]):
-        await hass.config_entries.async_reload(mock_config_entry.entry_id)
-
-    await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
