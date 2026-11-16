@@ -27,6 +27,7 @@ from .views import async_generate_playback_proxy_url, async_generate_thumbnail_u
 _LOGGER = logging.getLogger(__name__)
 
 VOD_SPLIT_TIME = dt.timedelta(minutes=5)
+THUMBNAIL_OFFSET = dt.timedelta(seconds=5)
 
 
 async def async_get_media_source(hass: HomeAssistant) -> ReolinkVODMediaSource:
@@ -408,13 +409,20 @@ class ReolinkVODMediaSource(MediaSource):
                 for trigger in triggers
             )
 
+        # A battery camera starts recording at the event, without pre-recording.
+        thumbnail_offset = (
+            dt.timedelta()
+            if host.api.supported(channel, "battery")
+            else THUMBNAIL_OFFSET
+        )
+
         for file in vod_files:
             file_name = f"{file.start_time.time()} {file.duration}"
             if file.triggers != file.triggers.NONE:
                 file_name += " " + " ".join(
                     str(trigger.name).title() for trigger in file.triggers
                 )
-            thumbnail_time = file.start_time + file.duration / 2
+            thumbnail_time = file.start_time + min(thumbnail_offset, file.duration / 2)
 
             children.append(
                 BrowseMediaSource(

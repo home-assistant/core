@@ -56,7 +56,8 @@ TEST_END = f"{TEST_YEAR}{TEST_MONTH}{TEST_DAY}{TEST_HOUR}{TEST_MINUTE + 5}"
 TEST_START_TIME = datetime(TEST_YEAR, TEST_MONTH, TEST_DAY, 0, 0)
 TEST_END_TIME = datetime(TEST_YEAR, TEST_MONTH, TEST_DAY, 23, 59, 59)
 TEST_FILE_NAME = f"{TEST_START}00"
-TEST_THUMBNAIL_TIME = f"{TEST_YEAR}{TEST_MONTH}{TEST_DAY}000230"
+TEST_THUMBNAIL_TIME = f"{TEST_YEAR}{TEST_MONTH}{TEST_DAY}000005"
+TEST_THUMBNAIL_TIME_BATTERY = f"{TEST_YEAR}{TEST_MONTH}{TEST_DAY}000000"
 TEST_FILE_NAME_MP4 = f"{TEST_START}00.mp4"
 TEST_STREAM = "main"
 TEST_CHANNEL = "0"
@@ -251,7 +252,7 @@ async def test_browsing(
     assert browse.identifier == browse_files_id
     assert browse.children[0].identifier == browse_file_id
     assert browse.children[0].thumbnail == (
-        f"/api/reolink/thumbnail/{entry_id}/{TEST_CHANNEL}/sub/{TEST_THUMBNAIL_TIME}"
+        f"/api/reolink/thumbnail/{entry_id}/{TEST_CHANNEL}/sub/{TEST_THUMBNAIL_TIME_BATTERY}"
     )
     reolink_host.request_vod_files.assert_called_with(
         int(TEST_CHANNEL),
@@ -297,12 +298,30 @@ async def test_browsing(
     )
 
 
-@pytest.mark.parametrize("stream", ["autotrack_sub", "autotrack_main"])
+@pytest.mark.parametrize(
+    ("stream", "duration", "battery", "thumbnail_time"),
+    [
+        ("autotrack_sub", timedelta(minutes=5), False, TEST_THUMBNAIL_TIME),
+        ("autotrack_main", timedelta(minutes=5), False, TEST_THUMBNAIL_TIME),
+        # a short recording uses the middle of the recording
+        (
+            "autotrack_sub",
+            timedelta(seconds=6),
+            False,
+            f"{TEST_YEAR}{TEST_MONTH}{TEST_DAY}000003",
+        ),
+        # a battery camera uses the start of the recording
+        ("autotrack_sub", timedelta(minutes=5), True, TEST_THUMBNAIL_TIME_BATTERY),
+    ],
+)
 async def test_browsing_autotrack_thumbnail(
     hass: HomeAssistant,
     reolink_host: MagicMock,
     config_entry: MockConfigEntry,
     stream: str,
+    duration: timedelta,
+    battery: bool,
+    thumbnail_time: str,
 ) -> None:
     """Test recordings of an autotrack stream have a telephoto thumbnail."""
     entry_id = config_entry.entry_id
@@ -316,10 +335,11 @@ async def test_browsing_autotrack_thumbnail(
     mock_vod_file.start_time = TEST_START_TIME
     mock_vod_file.start_time_id = TEST_START
     mock_vod_file.end_time_id = TEST_END
-    mock_vod_file.duration = timedelta(minutes=5)
+    mock_vod_file.duration = duration
     mock_vod_file.file_name = TEST_FILE_NAME
     mock_vod_file.triggers = VOD_trigger.PERSON
     reolink_host.request_vod_files.return_value = ([], [mock_vod_file])
+    reolink_host.supported.side_effect = lambda ch, key: battery or key != "battery"
 
     browse_day_id = (
         f"DAY|{entry_id}|{TEST_CHANNEL}|{stream}|{TEST_YEAR}|{TEST_MONTH}|{TEST_DAY}"
@@ -328,7 +348,7 @@ async def test_browsing_autotrack_thumbnail(
 
     assert browse.children[0].thumbnail == (
         f"/api/reolink/thumbnail/{entry_id}/{TEST_CHANNEL}"
-        f"/telephoto_sub/{TEST_THUMBNAIL_TIME}"
+        f"/telephoto_sub/{thumbnail_time}"
     )
 
 
