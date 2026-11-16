@@ -62,10 +62,11 @@ class TileBleConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             # The Tile cloud identifies the login by a cookie, so each login
             # gets its own session.
-            session = async_create_clientsession(self.hass, auto_cleanup=False)
             try:
                 tiles = await async_get_tiles(
-                    session, user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
+                    async_create_clientsession(self.hass),
+                    user_input[CONF_USERNAME],
+                    user_input[CONF_PASSWORD],
                 )
             except TileCloudAuthenticationError:
                 errors["base"] = "invalid_auth"
@@ -80,8 +81,6 @@ class TileBleConfigFlow(ConfigFlow, domain=DOMAIN):
                 if not self._tiles:
                     return self.async_abort(reason="no_tiles")
                 return await self.async_step_device()
-            finally:
-                session.detach()
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_SCHEMA, errors=errors
