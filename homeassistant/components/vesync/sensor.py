@@ -8,7 +8,12 @@ from typing import override
 
 from pyvesync.base_devices.fryer_base import FryerState
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
-from pyvesync.const import RUNNING_STATUSES, AirFryerFeatures, TemperatureUnits
+from pyvesync.const import (
+    RUNNING_STATUSES,
+    AirFryerFeatures,
+    TemperatureUnits,
+    TimeUnits,
+)
 from pyvesync.device_container import DeviceContainer
 
 from homeassistant.components.sensor import (
@@ -32,6 +37,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
+from homeassistant.util.variance import ignore_variance
 
 from .common import is_air_fryer, is_humidifier, is_outlet, is_purifier, rgetattr
 from .const import AIR_FRYER_MODE_MAP, VS_DEVICES, VS_DISCOVERY
@@ -50,8 +56,10 @@ class VeSyncSensorEntityDescription(SensorEntityDescription):
     exists_fn: Callable[[VeSyncBaseDevice], bool]
 
     value_fn: Callable[[VeSyncBaseDevice], StateType] | None = None
-    state_value_fn: Callable[[FryerState], StateType | datetime] | None = None
+    state_value_fn: Callable[[FryerState], StateType] | None = None
     use_device_temperature_unit: bool = False
+    # The state value is a remaining time in seconds, shown as the time it ends.
+    end_time_from_remaining: bool = False
 
 
 def _get_cook_status(state: FryerState) -> str | None:
@@ -63,17 +71,26 @@ def _get_cook_status(state: FryerState) -> str | None:
     return AIR_FRYER_MODE_MAP.get(cook_status, cook_status)
 
 
-def _get_cook_end_time(state: FryerState) -> datetime | None:
-    """Return when the cook finishes, while the remaining time counts down.
+def _get_cook_time_remaining(state: FryerState) -> int | None:
+    """Return the seconds until the cook finishes, while they count down.
 
-    Unknown when paused or stopped, and in a Sync hold that is not counting
-    down yet (no last timestamp), as the end time keeps moving then.
+    None when paused or stopped, and in a Sync hold that is not counting down
+    yet (no last timestamp), as the end time keeps moving then.
     """
     if state.cook_status not in RUNNING_STATUSES or state.last_timestamp is None:
         return None
-    if (remaining := state.total_time_remaining) is None:
-        return None
+    return state.total_time_remaining
+
+
+def _end_time(remaining: int) -> datetime:
+    """Return the time a remaining time in seconds ends."""
     return dt_util.utcnow() + timedelta(seconds=remaining)
+
+
+# Variance of the end time ignored between updates: the poll time jitters, and
+# a fryer reporting minutes steps a whole minute when polled near its boundary.
+END_TIME_VARIANCE_SECONDS = timedelta(seconds=5)
+END_TIME_VARIANCE_MINUTES = timedelta(seconds=90)
 
 
 SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
@@ -255,7 +272,8 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         key="cook_end_time",
         translation_key="cook_end_time",
         device_class=SensorDeviceClass.TIMESTAMP,
-        state_value_fn=_get_cook_end_time,
+        state_value_fn=_get_cook_time_remaining,
+        end_time_from_remaining=True,
         exists_fn=is_air_fryer,
     ),
     VeSyncSensorEntityDescription(
@@ -347,6 +365,14 @@ class VeSyncSensorEntity(VeSyncBaseEntity, SensorEntity):
                 self._attr_translation_placeholders = {"basket": str(chamber)}
             if chamber == 2:
                 self._attr_unique_id += "-chamber_2"
+        self._get_end_time: Callable[[int], datetime] | None = None
+        if description.end_time_from_remaining:
+            self._get_end_time = ignore_variance(
+                _end_time,
+                END_TIME_VARIANCE_SECONDS
+                if rgetattr(device, "time_units") == TimeUnits.SECONDS
+                else END_TIME_VARIANCE_MINUTES,
+            )
 
     @property
     @override
@@ -355,7 +381,10 @@ class VeSyncSensorEntity(VeSyncBaseEntity, SensorEntity):
         if self.entity_description.state_value_fn is not None:
             if self._fryer_state is None:
                 return None
-            return self.entity_description.state_value_fn(self._fryer_state)
+            value = self.entity_description.state_value_fn(self._fryer_state)
+            if self._get_end_time is not None and value is not None:
+                return self._get_end_time(int(value))
+            return value
         if self.entity_description.value_fn is None:
             return None
         return self.entity_description.value_fn(self.device)

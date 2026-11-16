@@ -167,16 +167,20 @@ async def test_cook_end_time_across_updates(
         await hass.async_block_till_done()
         return hass.states.get(entity_id)
 
-    # A minute later, a minute less: the same end time, no new state.
-    state = await refresh(9)
+    # Each poll 60.5 s later, a minute less: the 0.5 s drift is ignored.
+    for minutes_left in (9, 8, 7, 6):
+        state = await refresh(minutes_left)
+        assert state is not None
+        assert state.state == "2026-11-16T12:10:00+00:00"
+        assert state.last_changed == last_changed
+
+    # The countdown slips by a minute, then by two: the end time moves.
+    state = await refresh(6)
     assert state is not None
     assert state.state == "2026-11-16T12:10:00+00:00"
-    assert state.last_changed == last_changed
-
-    # Paused for a minute: the countdown slipped, the end time moves.
-    state = await refresh(9)
+    state = await refresh(6)
     assert state is not None
-    assert state.state == "2026-11-16T12:11:01+00:00"
+    assert state.state == "2026-11-16T12:12:03+00:00"
 
     # Paused: unknown, as the end time keeps moving while paused.
     state = await refresh(8, "cookStop")
