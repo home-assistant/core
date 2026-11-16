@@ -22,7 +22,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
-from .const import NODE_ONLINE, ProxmoxPermission
+from .const import NODE_ONLINE, VM_CONTAINER_RUNNING, ProxmoxPermission
 from .coordinator import ProxmoxConfigEntry, ProxmoxNodeData
 from .entity import (
     ProxmoxContainerEntity,
@@ -33,6 +33,13 @@ from .entity import (
 from .helpers import is_granted
 
 PARALLEL_UPDATES = 0
+
+
+def _boot_time(uptime: int | None) -> datetime | None:
+    """Return the boot time for an uptime in seconds."""
+    if not uptime:
+        return None
+    return dt_util.utcnow() - timedelta(seconds=uptime)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -142,13 +149,7 @@ NODE_SENSORS: tuple[ProxmoxNodeSensorEntityDescription, ...] = (
     ),
     ProxmoxNodeSensorEntityDescription(
         key="node_uptime",
-        value_fn=(
-            lambda data: (
-                (dt_util.utcnow() - timedelta(seconds=data.node["uptime"]))
-                if data.node["uptime"] is not None
-                else None
-            )
-        ),
+        value_fn=lambda data: _boot_time(data.node["uptime"]),
         device_class=SensorDeviceClass.UPTIME,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -243,12 +244,10 @@ VM_SENSORS: tuple[ProxmoxVMSensorEntityDescription, ...] = (
     ),
     ProxmoxVMSensorEntityDescription(
         key="vm_uptime",
-        value_fn=(
-            lambda data: (
-                (dt_util.utcnow() - timedelta(seconds=data["uptime"]))
-                if data.get("uptime") is not None
-                else None
-            )
+        value_fn=lambda data: (
+            _boot_time(data.get("uptime"))
+            if data["status"] == VM_CONTAINER_RUNNING
+            else None
         ),
         device_class=SensorDeviceClass.UPTIME,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -362,12 +361,10 @@ CONTAINER_SENSORS: tuple[ProxmoxContainerSensorEntityDescription, ...] = (
     ),
     ProxmoxContainerSensorEntityDescription(
         key="container_uptime",
-        value_fn=(
-            lambda data: (
-                (dt_util.utcnow() - timedelta(seconds=data["uptime"]))
-                if data.get("uptime") is not None
-                else None
-            )
+        value_fn=lambda data: (
+            _boot_time(data.get("uptime"))
+            if data["status"] == VM_CONTAINER_RUNNING
+            else None
         ),
         device_class=SensorDeviceClass.UPTIME,
         entity_category=EntityCategory.DIAGNOSTIC,
