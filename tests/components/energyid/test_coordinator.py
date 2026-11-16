@@ -267,6 +267,33 @@ async def test_signal_change_updates_listeners_without_polling(
     assert state.current is None
 
 
+async def test_unchanged_poll_updates_listeners(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_webhook_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a poll that fetches the same schedules still updates listeners.
+
+    A poll that finishes after a signal change was due, but before its timer ran,
+    replaces that timer, so the poll itself has to update the entities.
+    """
+    resource, schedule = _directive_fixture()
+    mock_webhook_client.api_access_token = "device-token"
+    mock_webhook_client.get_directives = AsyncMock(return_value=[resource])
+    mock_webhook_client.get_directive_data = AsyncMock(return_value=schedule)
+    coordinator = await _setup_with_directives(hass, mock_config_entry)
+    listener = MagicMock()
+    coordinator.async_add_listener(listener)
+
+    freezer.tick(DIRECTIVE_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_webhook_client.get_directive_data.await_count == 2
+    listener.assert_called_once()
+
+
 async def test_failing_schedule_keeps_directive_granted(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
