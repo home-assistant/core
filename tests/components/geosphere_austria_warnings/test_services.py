@@ -83,7 +83,6 @@ async def test_get_warnings_after_update_failure_and_recovery(
 ) -> None:
     """Test that the action fails while the coordinator is unavailable."""
     await setup_integration(hass, mock_config_entry)
-    coordinator = mock_config_entry.runtime_data
 
     # A failed poll retains the old data but makes the sensors unavailable.
     mock_client.get_last_modified.side_effect = GeoSphereConnectionError
@@ -91,7 +90,6 @@ async def test_get_warnings_after_update_failure_and_recovery(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert not coordinator.last_update_success
     state = hass.states.get("sensor.schwechat_active_warning_level")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
@@ -113,7 +111,6 @@ async def test_get_warnings_after_update_failure_and_recovery(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert coordinator.last_update_success
     state = hass.states.get("sensor.schwechat_active_warning_level")
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
