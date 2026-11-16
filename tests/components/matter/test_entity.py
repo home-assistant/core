@@ -2,7 +2,7 @@
 
 import copy
 from typing import Any
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from matter_server.client.models.node import MatterNode
 from matter_server.common.models import EventType
@@ -12,8 +12,7 @@ from homeassistant.components.matter.const import DOMAIN, ID_TYPE_DEVICE_ID
 from homeassistant.components.matter.helpers import get_device_id
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import ChildDeviceInfo, DeviceInfo
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .common import (
     EVE_ENERGY_LIGHT_PART_ATTRIBUTES,
@@ -104,30 +103,39 @@ async def test_multi_endpoint_entity_translation_key(
     assert state_6.name == "Inovelli Light (6)"
 
 
-@pytest.mark.parametrize("node_fixture", ["eve_energy_20ecn4101"])
 async def test_child_device_info_falls_back_to_node_device(
     hass: HomeAssistant,
     matter_client: MagicMock,
-    matter_node: MatterNode,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test device info of a split endpoint that is no longer named.
+    """Test a split endpoint that is no longer named when its entity is added.
 
     If the node changes after the entity was created so that its endpoint is no
-    longer named, the entity declares the node device instead of a child device.
+    longer named, the entity is placed on the node device instead of a child device.
     """
-    entity = hass.data["switch"].get_entity("switch.eve_energy_20ecn4101_top")
-    assert entity is not None
-    assert isinstance(entity.device_info, ChildDeviceInfo)
+    with patch(
+        "homeassistant.components.matter.entity.get_child_device_names",
+        return_value={},
+    ):
+        node = await setup_integration_with_node_fixture(
+            hass, "eve_energy_20ecn4101", matter_client
+        )
 
-    # Label both sockets "top", so their names are no longer distinct.
-    set_node_attribute(
-        matter_node, 2, 64, 0, [{"0": "id", "1": "2"}, {"0": "orientation", "1": "top"}]
+    node_device_id = get_device_id(matter_client.server_info, node.endpoints[0])
+    node_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{ID_TYPE_DEVICE_ID}_{node_device_id}"),
+        hass.config_entries.async_entries(DOMAIN)[0].entry_id,
     )
-
-    node_device_id = get_device_id(matter_client.server_info, matter_node.endpoints[1])
-    assert entity.device_info == DeviceInfo(
-        identifiers={(DOMAIN, f"{ID_TYPE_DEVICE_ID}_{node_device_id}")}
+    assert node_device is not None
+    assert not dr.async_entries_for_parent_device(device_registry, node_device.id)
+    entity_id = entity_registry.async_get_entity_id(
+        "switch", DOMAIN, f"{node_device_id}-1-MatterPlug-6-0"
     )
+    assert entity_id is not None
+    switch_entry = entity_registry.async_get(entity_id)
+    assert switch_entry is not None
+    assert switch_entry.device_id == node_device.id
 
 
 @pytest.mark.usefixtures("matter_node")
