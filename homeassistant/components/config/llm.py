@@ -3,16 +3,21 @@
 from collections import defaultdict
 from collections.abc import Iterable, Iterator, Mapping
 from contextlib import suppress
-from dataclasses import dataclass
 import heapq
 import re
-from typing import TYPE_CHECKING, Any, Literal, override
+from typing import TYPE_CHECKING, Any, Literal, cast, override
 
 import probatio
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.llm import LLMTools
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigEntryState,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import DependencyError, HomeAssistantError
 from homeassistant.helpers import config_validation as cv, translation
@@ -420,32 +425,17 @@ def _interpolate_placeholders(
     )
 
 
-@dataclass(slots=True, frozen=True)
-class _ActiveFlow:
-    """Resolved in-progress config or options flow."""
-
-    flow_mgr: data_entry_flow.FlowManager[Any, Any, Any]
-    flow_handler: data_entry_flow.FlowHandler[Any, Any, Any]
-    domain: str
-    flow_category: _FlowCategory
-    is_new_entry: bool
-
-
-def _resolve_active_flow(hass: HomeAssistant, flow_id: str) -> _ActiveFlow:
+def _resolve_short_flow_id(
+    hass: HomeAssistant, flow_id: str
+) -> ConfigFlow | OptionsFlow:
     """Resolve an active config or options flow from a '<domain>:<suffix>' short ID."""
     domain, sep, suffix = flow_id.partition(":")
     if not sep or not domain or len(suffix) < _MIN_SHORT_ID_LEN:
         raise HomeAssistantError(f"Flow '{flow_id}' not found.")
 
     flow_mgr = hass.config_entries.flow
-    matches: list[_ActiveFlow] = [
-        _ActiveFlow(
-            flow_mgr=flow_mgr,
-            flow_handler=flow_mgr._progress[flw["flow_id"]],  # noqa: SLF001
-            domain=domain,
-            flow_category="config",
-            is_new_entry=flw["context"].get("source") == config_entries.SOURCE_USER,
-        )
+    matches: list[ConfigFlow | OptionsFlow] = [
+        cast(ConfigFlow, flow_mgr._progress[flw["flow_id"]])  # noqa: SLF001
         for flw in flow_mgr.async_progress_by_handler(domain)
         if flw["flow_id"].endswith(suffix)
     ]
@@ -453,13 +443,7 @@ def _resolve_active_flow(hass: HomeAssistant, flow_id: str) -> _ActiveFlow:
     options_mgr = hass.config_entries.options
     for entry in hass.config_entries.async_entries(domain):
         matches.extend(
-            _ActiveFlow(
-                flow_mgr=options_mgr,
-                flow_handler=options_mgr._progress[flw["flow_id"]],  # noqa: SLF001
-                domain=domain,
-                flow_category="options",
-                is_new_entry=False,
-            )
+            cast(OptionsFlow, options_mgr._progress[flw["flow_id"]])  # noqa: SLF001
             for flw in options_mgr.async_progress_by_handler(entry.entry_id)
             if flw["flow_id"].endswith(suffix)
         )
@@ -867,12 +851,25 @@ class ConfigureFlowTool(Tool):
             )
 
         try:
-            active_flow = _resolve_active_flow(hass, short_flow_id)
+            flow_handler = _resolve_short_flow_id(hass, short_flow_id)
         except HomeAssistantError as err:
             return _error_result(str(err))
 
-        flow_mgr = active_flow.flow_mgr
-        flow_handler = active_flow.flow_handler
+        if isinstance(flow_handler, OptionsFlow):
+            flow_mgr: data_entry_flow.FlowManager[Any, Any] = (
+                hass.config_entries.options
+            )
+            domain = flow_handler.config_entry.domain
+            flow_category: _FlowCategory = "options"
+            is_new_entry = False
+        else:
+            flow_mgr = hass.config_entries.flow
+            domain = flow_handler.handler
+            flow_category = "config"
+            is_new_entry = (
+                flow_handler.context.get("source") == config_entries.SOURCE_USER
+            )
+
         flow_id = flow_handler.flow_id
         cur_step = flow_handler.cur_step
         if TYPE_CHECKING:
@@ -929,18 +926,16 @@ class ConfigureFlowTool(Tool):
                 if str(err) not in _OAUTH_RUNTIME_ERRORS:
                     raise
                 flow_mgr.async_abort(flow_id)
-                return _build_external_step_error(
-                    active_flow.domain, is_new_entry=active_flow.is_new_entry
-                )
+                return _build_external_step_error(domain, is_new_entry=is_new_entry)
 
         return await _async_finalize_flow_step(
             hass,
             flow_mgr,
             result,
-            active_flow.domain,
+            domain,
             llm_context.language,
-            flow_category=active_flow.flow_category,
-            is_new_entry=active_flow.is_new_entry,
+            flow_category=flow_category,
+            is_new_entry=is_new_entry,
         )
 
 
