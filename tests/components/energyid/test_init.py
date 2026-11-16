@@ -526,6 +526,35 @@ async def test_synchronize_sensors_error_handling(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(
+            ClientResponseError(request_info=MagicMock(), history=(), status=500),
+            id="http_error",
+        ),
+        pytest.param(ClientError("Server disconnected"), id="client_error"),
+    ],
+)
+async def test_periodic_sync_http_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_webhook_client: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+    error: Exception,
+) -> None:
+    """Test an HTTP error while uploading marks EnergyID unavailable."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    mock_webhook_client.synchronize_sensors.side_effect = error
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=61))
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.runtime_data.unavailable_logged
+    assert "Error doing job" not in caplog.text
+
+
 async def test_setup_timeout_during_authentication(hass: HomeAssistant) -> None:
     """Test ConfigEntryNotReady raised on TimeoutError during authentication."""
     entry = MockConfigEntry(
@@ -554,7 +583,9 @@ async def test_setup_timeout_during_authentication(hass: HomeAssistant) -> None:
         assert entry.error_reason_translation_key == "auth_timeout"
 
 
-async def test_periodic_sync_error_and_recovery(hass: HomeAssistant) -> None:
+async def test_periodic_sync_error_and_recovery(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test periodic sync error handling and recovery."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -596,12 +627,22 @@ async def test_periodic_sync_error_and_recovery(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         assert call_count[0] == 1  # First periodic call with error
+        assert [
+            record.levelname
+            for record in caplog.records
+            if record.message == "EnergyID is unavailable: Connection lost"
+        ] == ["INFO"]
 
         # Trigger periodic sync again - second time, should succeed
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=120))
         await hass.async_block_till_done()
 
         assert call_count[0] == 2  # Second periodic call succeeds
+        assert [
+            record.levelname
+            for record in caplog.records
+            if record.message == "Connection to EnergyID re-established"
+        ] == ["INFO"]
 
 
 async def test_periodic_sync_runtime_error(hass: HomeAssistant) -> None:

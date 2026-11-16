@@ -123,11 +123,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> 
         try:
             await client.synchronize_sensors()
             if entry.runtime_data.unavailable_logged:
-                _LOGGER.debug("Connection to EnergyID re-established")
+                _LOGGER.info("Connection to EnergyID re-established")
                 entry.runtime_data.unavailable_logged = False
-        except (OSError, RuntimeError) as err:
+        except (ClientError, OSError, RuntimeError) as err:
             if not entry.runtime_data.unavailable_logged:
-                _LOGGER.debug("EnergyID is unavailable: %s", err)
+                _LOGGER.info("EnergyID is unavailable: %s", err)
                 entry.runtime_data.unavailable_logged = True
 
     upload_interval = DEFAULT_UPLOAD_INTERVAL_SECONDS
