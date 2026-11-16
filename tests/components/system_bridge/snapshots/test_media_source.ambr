@@ -31,14 +31,14 @@
   dict({
     'mime_type': 'image/jpeg',
     'path': None,
-    'url': 'http://127.0.0.1:9170/api/media/file/data?token=abc-123-def-456-ghi&base=documents&path=testimage.jpg',
+    'url': 'http://127.0.0.1:9170/api/media/file/data?base=documents&path=testimage.jpg&expires=1794771735&sig=signed',
   })
 # ---
 # name: test_file[system_bridge_media_source_file_text]
   dict({
     'mime_type': 'text/plain',
     'path': None,
-    'url': 'http://127.0.0.1:9170/api/media/file/data?token=abc-123-def-456-ghi&base=documents&path=testfile.txt',
+    'url': 'http://127.0.0.1:9170/api/media/file/data?base=documents&path=testfile.txt&expires=1794771735&sig=signed',
   })
 # ---
 # name: test_root[system_bridge_media_source_root]

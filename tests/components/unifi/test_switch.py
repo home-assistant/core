@@ -16,11 +16,7 @@ from pytest_homeassistant.common import (
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.switch import (
-    DOMAIN as SWITCH_DOMAIN,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-)
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.components.unifi.const import (
     CONF_BLOCK_CLIENT,
     CONF_DPI_RESTRICTIONS,
@@ -36,6 +32,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -1534,7 +1531,7 @@ async def test_outlet_switches(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
+        SwitchService.TURN_OFF,
         {ATTR_ENTITY_ID: f"switch.{entity_id}"},
         blocking=True,
     )
@@ -1550,7 +1547,7 @@ async def test_outlet_switches(
     # Turn on outlet
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
+        SwitchService.TURN_ON,
         {ATTR_ENTITY_ID: f"switch.{entity_id}"},
         blocking=True,
     )
@@ -2033,8 +2030,8 @@ async def test_switch_turn_on_request_failed(
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.block_client_1_blocked"},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: "switch.block_client_1_blocked"},
             blocking=True,
         )
     assert exc_info.value.translation_domain == DOMAIN
@@ -2060,8 +2057,8 @@ async def test_switch_turn_off_request_failed(
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "switch.block_client_1_blocked"},
+            SwitchService.TURN_OFF,
+            {CommonServiceArgument.ENTITY_ID: "switch.block_client_1_blocked"},
             blocking=True,
         )
     assert exc_info.value.translation_domain == DOMAIN

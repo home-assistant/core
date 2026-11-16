@@ -1,18 +1,21 @@
 """Test the backups for OneDrive for Business."""
 
 import asyncio
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, AsyncIterator
 from dataclasses import replace
 from io import StringIO
 from json import dumps
+from typing import Any
 from unittest.mock import Mock, patch
 
 from onedrive_personal_sdk.exceptions import (
     AuthenticationError,
     HashMismatchError,
     OneDriveException,
+    UploadSessionExpired,
 )
 from onedrive_personal_sdk.models.items import File
+from onedrive_personal_sdk.models.upload import FileInfo
 import pytest
 from pytest_homeassistant.common import AsyncMock, MockConfigEntry
 from pytest_homeassistant.typing import (
@@ -21,7 +24,11 @@ from pytest_homeassistant.typing import (
     WebSocketGenerator,
 )
 
-from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, AgentBackup
+from homeassistant.components.backup import (
+    DOMAIN as BACKUP_DOMAIN,
+    AgentBackup,
+    async_get_manager,
+)
 from homeassistant.components.onedrive_for_business.backup import (
     METADATA_DOWNLOAD_CONCURRENCY,
     async_register_backup_agents_listener,
@@ -348,6 +355,90 @@ async def test_agents_upload_corrupt_upload(
     )
     assert mock_onedrive_client.update_drive_item.call_count == 0
     assert "Hash validation failed, backup file might be corrupt" in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "metadata_uploads", "error_logged"),
+    [
+        pytest.param([UploadSessionExpired(), None], 1, False, id="retry_succeeds"),
+        pytest.param(UploadSessionExpired(), 0, True, id="retry_fails"),
+    ],
+)
+async def test_agents_upload_session_expired(
+    hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+    mock_onedrive_client: MagicMock,
+    mock_large_file_upload_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    side_effect: list[Exception | None] | Exception,
+    metadata_uploads: int,
+    error_logged: bool,
+) -> None:
+    """Test the upload is retried once with a new session when it expires."""
+    mock_large_file_upload_client.side_effect = side_effect
+    client = await hass_client()
+    test_backup = AgentBackup.from_dict(BACKUP_METADATA)
+
+    with (
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
+        ) as fetch_backup,
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            return_value=test_backup,
+        ),
+        patch("pathlib.Path.open") as mocked_open,
+    ):
+        mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
+        fetch_backup.return_value = test_backup
+        resp = await client.post(
+            f"/api/backup/upload?agent_id={DOMAIN}.{mock_config_entry.unique_id}",
+            data={"file": StringIO("test")},
+        )
+
+    assert resp.status == 201
+    assert mock_large_file_upload_client.call_count == 2
+    assert mock_onedrive_client.upload_file.call_count == metadata_uploads
+    assert (
+        "Error during backup in async_upload_backup: UploadSessionExpired"
+        in caplog.text
+    ) is error_logged
+
+
+async def test_agents_upload_retry_reopens_stream(
+    hass: HomeAssistant,
+    mock_large_file_upload_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the retry after an expired session uploads the full backup again."""
+    content = [b"chunk1", b"chunk2", b"chunk3"]
+    received: list[bytes] = []
+
+    async def open_stream() -> AsyncIterator[bytes]:
+        async def stream() -> AsyncIterator[bytes]:
+            for chunk in content:
+                yield chunk
+
+        return stream()
+
+    async def upload(_token_function: Any, file: FileInfo, **kwargs: Any) -> None:
+        if not received:
+            received.append(await anext(file.content_stream))
+            raise UploadSessionExpired
+        received.append(b"".join([chunk async for chunk in file.content_stream]))
+
+    mock_large_file_upload_client.side_effect = upload
+    agent = async_get_manager(hass).backup_agents[
+        f"{DOMAIN}.{mock_config_entry.unique_id}"
+    ]
+
+    await agent.async_upload_backup(
+        open_stream=open_stream,
+        backup=AgentBackup.from_dict(BACKUP_METADATA),
+        on_progress=Mock(),
+    )
+
+    assert received == [b"chunk1", b"chunk1chunk2chunk3"]
 
 
 async def test_agents_upload_metadata_upload_failed(

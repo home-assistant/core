@@ -1,5 +1,6 @@
 """Services for the SQL integration."""
 
+from enum import StrEnum
 import logging
 
 import probatio
@@ -7,7 +8,7 @@ from sqlalchemy.engine import Result
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
-from homeassistant.components.recorder import CONF_DB_URL, get_instance
+from homeassistant.components.recorder import get_instance
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -20,7 +21,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.trigger_template_entity import ValueTemplate
 from homeassistant.util.json import JsonValueType
 
-from .const import CONF_QUERY, DOMAIN
+from .const import DOMAIN
 from .util import (
     async_create_sessionmaker,
     check_and_render_sql_query,
@@ -34,13 +35,26 @@ from .util import (
 
 _LOGGER = logging.getLogger(__name__)
 
-SERVICE_QUERY = "query"
+
+class SQLService(StrEnum):
+    """Store keys for SQL services."""
+
+    QUERY = "query"
+
+
+class SQLServiceArgument(StrEnum):
+    """Store keys for SQL service arguments."""
+
+    QUERY = "query"
+    DB_URL = "db_url"
+
+
 SERVICE_QUERY_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_QUERY): probatio.All(
+        probatio.Required(SQLServiceArgument.QUERY): probatio.All(
             cv.template, ValueTemplate.from_template, validate_sql_select
         ),
-        probatio.Optional(CONF_DB_URL): cv.string,
+        probatio.Optional(SQLServiceArgument.DB_URL): cv.string,
     }
 )
 
@@ -49,8 +63,8 @@ async def _async_query_service(
     call: ServiceCall,
 ) -> ServiceResponse:
     """Execute a SQL query service and return the result."""
-    db_url = resolve_db_url(call.hass, call.data.get(CONF_DB_URL))
-    query_str = call.data[CONF_QUERY]
+    db_url = resolve_db_url(call.hass, call.data.get(SQLServiceArgument.DB_URL))
+    query_str = call.data[SQLServiceArgument.QUERY]
     (
         sessmaker,
         uses_recorder_db,
@@ -119,7 +133,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_QUERY,
+        SQLService.QUERY,
         _async_query_service,
         schema=SERVICE_QUERY_SCHEMA,
         supports_response=SupportsResponse.ONLY,

@@ -3,41 +3,38 @@
 import probatio
 
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
-from homeassistant.const import ATTR_COMMAND
 from homeassistant.core import HomeAssistant, SupportsResponse, callback
 from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.typing import VolDictType
 
-from .const import ATTR_PAYLOAD, ATTR_SOUND_OUTPUT, DOMAIN
+from .const import DOMAIN, WebOsTvService, WebOsTvServiceArgument
 
-ATTR_BUTTON = "button"
-
-SERVICE_BUTTON = "button"
-SERVICE_COMMAND = "command"
-SERVICE_SELECT_SOUND_OUTPUT = "select_sound_output"
-
-BUTTON_SCHEMA: VolDictType = {probatio.Required(ATTR_BUTTON): cv.string}
-COMMAND_SCHEMA: VolDictType = {
-    probatio.Required(ATTR_COMMAND): cv.string,
-    probatio.Optional(ATTR_PAYLOAD): dict,
+BUTTON_SCHEMA: VolDictType = {
+    probatio.Required(WebOsTvServiceArgument.BUTTON): cv.string
 }
-SOUND_OUTPUT_SCHEMA: VolDictType = {probatio.Required(ATTR_SOUND_OUTPUT): cv.string}
+COMMAND_SCHEMA: VolDictType = {
+    probatio.Required(WebOsTvServiceArgument.COMMAND): cv.string,
+    probatio.Optional(WebOsTvServiceArgument.PAYLOAD): dict,
+}
+SOUND_OUTPUT_SCHEMA: VolDictType = {
+    probatio.Required(WebOsTvServiceArgument.SOUND_OUTPUT): cv.string
+}
 
 SERVICES = (
     (
-        SERVICE_BUTTON,
+        WebOsTvService.BUTTON,
         BUTTON_SCHEMA,
         "async_button",
         SupportsResponse.NONE,
     ),
     (
-        SERVICE_COMMAND,
+        WebOsTvService.COMMAND,
         COMMAND_SCHEMA,
         "async_command",
         SupportsResponse.OPTIONAL,
     ),
     (
-        SERVICE_SELECT_SOUND_OUTPUT,
+        WebOsTvService.SELECT_SOUND_OUTPUT,
         SOUND_OUTPUT_SCHEMA,
         "async_select_sound_output",
         SupportsResponse.OPTIONAL,

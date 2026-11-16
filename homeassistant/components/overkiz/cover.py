@@ -37,7 +37,7 @@ from homeassistant.helpers.issue_registry import (
 from homeassistant.helpers.start import async_at_started
 
 from . import OverkizDataConfigEntry
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER, OverkizServiceArgument
 from .coordinator import OverkizDataUpdateCoordinator, OverkizDeviceCommand
 from .entity import OverkizDescriptiveEntity
 
@@ -939,8 +939,8 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
                 translation_key="unsupported_set_position_and_tilt",
             )
 
-        position = kwargs[ATTR_POSITION]
-        tilt_position = kwargs[ATTR_TILT_POSITION]
+        position = kwargs[OverkizServiceArgument.POSITION]
+        tilt_position = kwargs[OverkizServiceArgument.TILT_POSITION]
 
         if self.entity_description.invert_position:
             position = 100 - position
