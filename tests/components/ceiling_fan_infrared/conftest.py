@@ -44,7 +44,7 @@ def mock_infrared_code_to_command() -> Generator[None]:
     rather than the raw NEC timings.
     """
     with patch(
-        "infrared_protocols.codes.generic.ceiling_fan.GenericCeilingFanCode.to_command",
+        "infrared_protocols.codes.generic.e27_fan_light.E27FanLightCode.to_command",
         autospec=True,
         side_effect=lambda self, **kwargs: self,
     ):

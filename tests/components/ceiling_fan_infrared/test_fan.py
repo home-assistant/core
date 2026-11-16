@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import patch
 
-from infrared_protocols.codes.generic.ceiling_fan import GenericCeilingFanCode
+from infrared_protocols.codes.generic.e27_fan_light import E27FanLightCode
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from pytest_homeassistant.components.infrared.common import MockInfraredEmitterEntity
@@ -55,46 +55,44 @@ async def test_setup(
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
-_FAN_ACTIONS: list[
-    tuple[str, dict[str, int], GenericCeilingFanCode, str, int | None]
-] = [
-    (SERVICE_TURN_ON, {}, GenericCeilingFanCode.FAN_TOGGLE, STATE_ON, None),
+_FAN_ACTIONS: list[tuple[str, dict[str, int], E27FanLightCode, str, int | None]] = [
+    (SERVICE_TURN_ON, {}, E27FanLightCode.FAN_TOGGLE, STATE_ON, None),
     (
         SERVICE_TURN_ON,
         {ATTR_PERCENTAGE: 0},
-        GenericCeilingFanCode.FAN_TOGGLE,
+        E27FanLightCode.FAN_TOGGLE,
         STATE_OFF,
         0,
     ),
     (
         SERVICE_SET_PERCENTAGE,
         {ATTR_PERCENTAGE: 1},
-        GenericCeilingFanCode.FAN_LOW,
+        E27FanLightCode.FAN_LOW,
         STATE_ON,
         33,
     ),
     (
         SERVICE_SET_PERCENTAGE,
         {ATTR_PERCENTAGE: 50},
-        GenericCeilingFanCode.FAN_MEDIUM,
+        E27FanLightCode.FAN_MEDIUM,
         STATE_ON,
         66,
     ),
     (
         SERVICE_SET_PERCENTAGE,
         {ATTR_PERCENTAGE: 100},
-        GenericCeilingFanCode.FAN_HIGH,
+        E27FanLightCode.FAN_HIGH,
         STATE_ON,
         100,
     ),
     (
         SERVICE_SET_PERCENTAGE,
         {ATTR_PERCENTAGE: 0},
-        GenericCeilingFanCode.FAN_TOGGLE,
+        E27FanLightCode.FAN_TOGGLE,
         STATE_OFF,
         0,
     ),
-    (SERVICE_TURN_OFF, {}, GenericCeilingFanCode.FAN_TOGGLE, STATE_OFF, 0),
+    (SERVICE_TURN_OFF, {}, E27FanLightCode.FAN_TOGGLE, STATE_OFF, 0),
 ]
 
 
@@ -115,7 +113,7 @@ async def test_fan_actions(
     entity_registry: er.EntityRegistry,
     service: str,
     service_data: dict[str, int],
-    expected_code: GenericCeilingFanCode,
+    expected_code: E27FanLightCode,
     expected_state: str,
     expected_percentage: int | None,
 ) -> None:
@@ -180,7 +178,7 @@ async def test_fan_toggle_is_only_sent_when_the_state_changes(
             blocking=True,
         )
     assert mock_infrared_emitter_entity.send_command_calls == [
-        GenericCeilingFanCode.FAN_TOGGLE
+        E27FanLightCode.FAN_TOGGLE
     ]
 
     for _ in range(2):
@@ -191,8 +189,8 @@ async def test_fan_toggle_is_only_sent_when_the_state_changes(
             blocking=True,
         )
     assert mock_infrared_emitter_entity.send_command_calls == [
-        GenericCeilingFanCode.FAN_TOGGLE,
-        GenericCeilingFanCode.FAN_TOGGLE,
+        E27FanLightCode.FAN_TOGGLE,
+        E27FanLightCode.FAN_TOGGLE,
     ]
 
     # Setting the percentage to 0 turns the fan off, which is a no-op here.
@@ -203,8 +201,8 @@ async def test_fan_toggle_is_only_sent_when_the_state_changes(
         blocking=True,
     )
     assert mock_infrared_emitter_entity.send_command_calls == [
-        GenericCeilingFanCode.FAN_TOGGLE,
-        GenericCeilingFanCode.FAN_TOGGLE,
+        E27FanLightCode.FAN_TOGGLE,
+        E27FanLightCode.FAN_TOGGLE,
     ]
 
 

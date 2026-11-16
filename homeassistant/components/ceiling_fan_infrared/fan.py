@@ -3,7 +3,7 @@
 import math
 from typing import Any, override
 
-from infrared_protocols.codes.generic.ceiling_fan import GenericCeilingFanCode
+from infrared_protocols.codes.generic.e27_fan_light import E27FanLightCode
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.components.infrared import InfraredEmitterConsumerEntity
@@ -23,9 +23,9 @@ PARALLEL_UPDATES = 1
 SPEED_COUNT = 3
 SPEED_RANGE = (1, SPEED_COUNT)
 SPEED_CODES = {
-    1: GenericCeilingFanCode.FAN_LOW,
-    2: GenericCeilingFanCode.FAN_MEDIUM,
-    3: GenericCeilingFanCode.FAN_HIGH,
+    1: E27FanLightCode.FAN_LOW,
+    2: E27FanLightCode.FAN_MEDIUM,
+    3: E27FanLightCode.FAN_HIGH,
 }
 
 
@@ -86,7 +86,7 @@ class CeilingFanIrFanEntity(
             # The remote only has a toggle key, so sending it again would turn
             # the fan off while the entity keeps reporting it as on.
             return
-        await self._send_command(GenericCeilingFanCode.FAN_TOGGLE.to_command())
+        await self._send_command(E27FanLightCode.FAN_TOGGLE.to_command())
         self._attr_is_on = True
         if not self._attr_percentage:
             # The speed is unknown until a speed key is pressed. Report it as
@@ -101,7 +101,7 @@ class CeilingFanIrFanEntity(
         if self._attr_is_on is False:
             # Already off, toggling again would turn the fan on.
             return
-        await self._send_command(GenericCeilingFanCode.FAN_TOGGLE.to_command())
+        await self._send_command(E27FanLightCode.FAN_TOGGLE.to_command())
         self._attr_is_on = False
         self._attr_percentage = 0
         self.async_write_ha_state()
