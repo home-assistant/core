@@ -170,8 +170,8 @@ async def test_set_agent_not_entity_deprecated(
 
     assert (
         "Detected that integration 'legacy_agent' sets a conversation agent that "
-        "is not a conversation entity. This will stop working in Home Assistant "
-        "2027.5.0"
+        "is not a conversation entity. Convert the conversation platform to use "
+        "ConversationEntity. This will stop working in Home Assistant 2027.6.0"
     ) in caplog.text
 
 

@@ -110,8 +110,9 @@ def async_set_agent(
     """Set the agent to handle the conversations."""
     if not isinstance(agent, ConversationEntity):
         frame.report_usage(
-            "sets a conversation agent that is not a conversation entity",
-            breaks_in_ha_version="2027.5.0",
+            "sets a conversation agent that is not a conversation entity. Convert "
+            "the conversation platform to use ConversationEntity",
+            breaks_in_ha_version="2027.6.0",
             # Test agents use config entries of domains that are not loaded
             core_behavior=frame.ReportBehavior.LOG,
             integration_domain=config_entry.domain,
