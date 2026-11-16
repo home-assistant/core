@@ -47,4 +47,4 @@ async def async_setup_entry(hass: HomeAssistant, entry: KaracaConfigEntry) -> No
 
 async def async_unload_entry(hass: HomeAssistant, entry: KaracaConfigEntry) -> None:
     """Unload the integration platforms."""
-    await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
