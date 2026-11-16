@@ -452,14 +452,7 @@ async def test_failed_login_messages(
     mock_real_ip(app)("200.201.202.204")
     client = await aiohttp_client(app)
 
-    if isinstance(body, dict):
-        resp = await client.post(
-            "/login", json=body, headers={"User-Agent": "test-agent"}
-        )
-    else:
-        resp = await client.post(
-            "/login", data=body, headers={"User-Agent": "test-agent"}
-        )
+    resp = await client.post("/login", data=body, headers={"User-Agent": "test-agent"})
 
     assert resp.status == HTTPStatus.BAD_REQUEST
     assert app[KEY_FAILED_LOGIN_ATTEMPTS][ip_address("200.201.202.204")] == 1
