@@ -4,7 +4,6 @@ from copy import deepcopy
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
-from aiopowerwall import PowerwallConnectionError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import (
@@ -13,6 +12,7 @@ from pytest_homeassistant.common import (
     mock_restore_cache_with_extra_data,
 )
 from syrupy.assertion import SnapshotAssertion
+from tesla_fleet_api.tesla.powerwall import PowerwallConnectionError
 from teslemetry_stream import Signal
 from teslemetry_stream.const import EnergyHistoryTotals
 

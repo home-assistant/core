@@ -881,6 +881,7 @@ FLOWS = {
         "trane",
         "transmission",
         "triggercmd",
+        "trimlight",
         "trmnl",
         "tuya",
         "twentemilieu",
