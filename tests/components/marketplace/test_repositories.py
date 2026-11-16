@@ -3648,7 +3648,7 @@ def _serve_plugin_zip_release(
             {"content": _zip_bytes(members)},
         ),
     ):
-        response_mocker.add(url, mocked_response(url, **response))
+        response_mocker.add(url, mocked_response(url, **response), keep=True)
 
 
 @pytest.mark.parametrize("github_token", [None])
@@ -3665,9 +3665,33 @@ async def test_install_plugin_zip_release_from_the_catalog_commit(
     repository.data.last_version = None
     repository.data.last_commit = "abc1234"
     _serve_plugin_zip_release(response_mocker, "card.zip", {"card.js": "card"})
+    url = f"https://api.github.com/repos/{REPOSITORY_PLUGIN}/releases"
+    response_mocker.add(
+        url,
+        mocked_response(
+            url,
+            json_content=[
+                {
+                    "tag_name": "1.0.0",
+                    "prerelease": False,
+                    "assets": [
+                        {"name": "plugin-basic.js", "download_count": 100},
+                        {"name": "card.js", "download_count": 200},
+                        {"name": "card.zip", "download_count": 300},
+                    ],
+                }
+            ],
+        ),
+        keep=True,
+    )
     aioclient_mock.mock_calls.clear()
 
     assert (await _install(hass, hass_ws_client, repository.data.id))["success"]
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "marketplace/repository/refresh", "repository": repository.data.id}
+    )
+    assert (await client.receive_json())["success"]
 
     assert github_api_calls(aioclient_mock)
     # Only a release has the ZIP, the archive of the commit is not downloaded
@@ -3677,6 +3701,8 @@ async def test_install_plugin_zip_release_from_the_catalog_commit(
     )
     assert _installed_files(config_dir) == ["www/community/plugin-basic/card.js"]
     assert repository.data.file_name == "card.js"
+    # Installs download the ZIP, not the resource that has the same name as an asset
+    assert repository.data.downloads == 300
 
 
 @pytest.mark.parametrize("github_token", [None])

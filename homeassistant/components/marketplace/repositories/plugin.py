@@ -28,6 +28,8 @@ from ..utils.url import github_release_asset, ref_version
 from .base import FileInformation, Repository
 
 if TYPE_CHECKING:
+    from aiogithubapi.models.release import GitHubReleaseAssetModel
+
     from ..base import MarketplaceManager
 
 
@@ -69,6 +71,18 @@ class PluginRepository(Repository):
             f"{self.data.name}-bundle.js",
             f"{self.data.name}.umd.js",
         )
+
+    @override
+    def _find_target_asset(
+        self, assets: list[GitHubReleaseAssetModel] | None
+    ) -> GitHubReleaseAssetModel | None:
+        """Find the asset that is downloaded, for a ZIP release the archive."""
+        # The file name is the resource extracted from the archive, not an asset
+        if self._zip_release:
+            for asset in assets or []:
+                if asset.name == self.repository_manifest.filename:
+                    return asset
+        return super()._find_target_asset(assets)
 
     @override
     def gather_tree_files_to_download(self) -> list[FileInformation]:
