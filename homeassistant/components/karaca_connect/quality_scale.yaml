@@ -3,10 +3,10 @@ rules:
   action-setup:
     status: exempt
     comment: This sensor-only integration does not register actions.
-  appropriate-polling: todo
-  brands: todo
+  appropriate-polling: done
+  brands: done
   common-modules: done
-  config-flow-test-coverage: todo
+  config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
   docs-actions:
@@ -15,9 +15,9 @@ rules:
   docs-conditions:
     status: exempt
     comment: No custom conditions are registered.
-  docs-high-level-description: todo
-  docs-installation-instructions: todo
-  docs-removal-instructions: todo
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
   docs-triggers:
     status: exempt
     comment: No custom triggers are registered.

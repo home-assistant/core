@@ -1,6 +1,6 @@
 """Config flow for Karaca Connect."""
 
-from typing import Any
+from typing import Any, override
 
 from karaca_connect_client import KaracaAuthError, KaracaClient, KaracaError
 import probatio
@@ -29,6 +29,7 @@ class KaracaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._password = ""
         self._devices: list[dict[str, Any]] = []
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -44,7 +45,8 @@ class KaracaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
             try:
                 await client.login()
-                self._devices = await client.get_devices()
+                devices = await client.get_devices()
+                self._devices = [device for device in devices if device.get("id") is not None]
             except KaracaAuthError:
                 errors["base"] = "invalid_auth"
             except KaracaError:

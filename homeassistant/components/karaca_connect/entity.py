@@ -1,5 +1,8 @@
-"""Shared entity implementation for Karaca Connect."""
+""Shared entity implementation for Karaca Connect."""
 
+from typing import override
+
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import KaracaConfigEntry
@@ -18,13 +21,14 @@ class KaracaEntity(CoordinatorEntity[KaracaCoordinator]):
         """Initialize the entity and associate it with a Karaca device."""
         super().__init__(coordinator)
         device_id = str(entry.data[CONF_DEVICE_ID])
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, device_id)},
-            "name": entry.title,
-            "manufacturer": "Karaca",
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, device_id)},
+            name=entry.title,
+            manufacturer="Karaca",
+        )
 
     @property
+    @override
     def available(self) -> bool:
         """Avoid showing a stale reading when the cloud reports disconnection."""
         if not super().available:
