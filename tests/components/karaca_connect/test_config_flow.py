@@ -1,37 +1,32 @@
-"""Config flow tests for Karaca Connect.
-
-These tests are to be executed in Home Assistant Core's own test environment.
-"""
+"""Tests for the Karaca Connect config flow."""
 
 from unittest.mock import AsyncMock, patch
 
+from karaca_connect_client import KaracaAuthError
+import pytest
+from pytest_homeassistant.common import MockConfigEntry
+
+from homeassistant.components.karaca_connect.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from homeassistant.components.karaca_connect.const import DOMAIN
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
 async def test_invalid_login(hass: HomeAssistant) -> None:
     """Reject invalid credentials before creating an entry."""
-    from karaca_connect_client import KaracaAuthError
-
     with patch(
         "homeassistant.components.karaca_connect.config_flow.KaracaClient",
         autospec=True,
     ) as client_class:
-        client_class.return_value.login = AsyncMock(
-            side_effect=KaracaAuthError()
-        )
+        client_class.return_value.login = AsyncMock(side_effect=KaracaAuthError())
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={
-                "email": "example@example.invalid",
-                "password": "wrong-password",
-            },
+            user_input={"email": "example@example.invalid", "password": "wrong"},
         )
         assert result["type"] is FlowResultType.FORM
         assert result["errors"]["base"] == "invalid_auth"
@@ -39,14 +34,11 @@ async def test_invalid_login(hass: HomeAssistant) -> None:
 
 async def test_duplicate_device(hass: HomeAssistant) -> None:
     """Do not allow a device to be configured twice."""
-    from pytest_homeassistant.common import MockConfigEntry
-
     entry = MockConfigEntry(
         domain=DOMAIN, unique_id="karaca_device-123",
         title="Existing tea maker", data={},
     )
     entry.add_to_hass(hass)
-
     with patch(
         "homeassistant.components.karaca_connect.config_flow.KaracaClient",
         autospec=True,
@@ -60,10 +52,7 @@ async def test_duplicate_device(hass: HomeAssistant) -> None:
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={
-                "email": "example@example.invalid",
-                "password": "placeholder",
-            },
+            user_input={"email": "example@example.invalid", "password": "placeholder"},
         )
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "already_configured"

@@ -20,3 +20,11 @@ class KaracaEntity(CoordinatorEntity[KaracaCoordinator]):
             "name": entry.title,
             "manufacturer": "Karaca",
         }
+
+    @property
+    def available(self) -> bool:
+        """Avoid showing a stale reading when the cloud reports disconnection."""
+        if not super().available:
+            return False
+        meta = self.coordinator.data.get("meta")
+        return not (isinstance(meta, dict) and meta.get("connected") is False)
