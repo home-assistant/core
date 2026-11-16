@@ -490,7 +490,6 @@ FLOWS = {
         "lutron_caseta",
         "lyngdorf",
         "lyric",
-        "madvr",
         "mailgun",
         "marantz_infrared",
         "marantz_rs232",
