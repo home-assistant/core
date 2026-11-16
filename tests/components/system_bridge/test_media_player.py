@@ -599,6 +599,15 @@ async def test_control_error(
         ),
     ],
 )
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        pytest.param(
+            ConnectionClosedException("Connection is closed"), id="connection_closed"
+        ),
+        pytest.param(ConnectionResetError, id="connection_reset"),
+    ],
+)
 @pytest.mark.usefixtures("init_integration")
 async def test_control_connection_closed(
     hass: HomeAssistant,
@@ -607,11 +616,10 @@ async def test_control_connection_closed(
     service: str,
     service_data: dict[str, Any],
     client_method: str,
+    side_effect: Exception | type[Exception],
 ) -> None:
-    """Test a closed connection raises."""
-    getattr(
-        mock_websocket_client, client_method
-    ).side_effect = ConnectionClosedException("Connection is closed")
+    """Test a lost connection raises."""
+    getattr(mock_websocket_client, client_method).side_effect = side_effect
 
     with pytest.raises(
         HomeAssistantError,
