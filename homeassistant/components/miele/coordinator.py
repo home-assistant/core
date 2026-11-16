@@ -86,9 +86,18 @@ class MieleDataUpdateCoordinator(DataUpdateCoordinator[MieleCoordinatorData]):
         self.devices = devices
         # Device actions are independent of each other, so fetch them
         # concurrently instead of one appliance at a time.
-        actions = await asyncio.gather(
-            *(self._async_fetch_actions(device_id) for device_id in devices)
-        )
+        actions_tasks = [
+            self.hass.async_create_task(self._async_fetch_actions(device_id))
+            for device_id in devices
+        ]
+        try:
+            actions = await asyncio.gather(*actions_tasks)
+        except BaseException:
+            # Cancel the remaining requests so they do not outlive the update.
+            for task in actions_tasks:
+                task.cancel()
+            await asyncio.gather(*actions_tasks, return_exceptions=True)
+            raise
         return MieleCoordinatorData(
             devices=devices,
             actions=dict(zip(devices, actions, strict=True)),
