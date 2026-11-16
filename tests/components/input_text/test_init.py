@@ -202,13 +202,25 @@ async def test_restore_state(hass: HomeAssistant) -> None:
     """Ensure states are restored on startup."""
     mock_restore_cache(
         hass,
-        (State("input_text.b1", "test"), State("input_text.b2", "testing too long")),
+        (
+            State("input_text.b1", "test"),
+            State("input_text.b2", "testing too long"),
+            State("input_text.b3", "letters"),
+        ),
     )
 
     hass.set_state(CoreState.starting)
 
     assert await async_setup_component(
-        hass, DOMAIN, {DOMAIN: {"b1": None, "b2": {"min": 0, "max": 10}}}
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                "b1": None,
+                "b2": {"min": 0, "max": 10},
+                "b3": {"pattern": "^[0-9]*$"},
+            }
+        },
     )
 
     state = hass.states.get("input_text.b1")
@@ -218,6 +230,45 @@ async def test_restore_state(hass: HomeAssistant) -> None:
     state = hass.states.get("input_text.b2")
     assert state
     assert str(state.state) == "unknown"
+
+    state = hass.states.get("input_text.b3")
+    assert state
+    assert str(state.state) == "unknown"
+
+
+async def test_initial_state_not_matching_pattern(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test an initial value that does not match the pattern is ignored."""
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {DOMAIN: {"test_1": {"initial": "letters", "pattern": "^[0-9]*$"}}},
+    )
+
+    state = hass.states.get("input_text.test_1")
+    assert state
+    assert state.state == "unknown"
+    assert "Ignoring invalid initial value of input_text.test_1: letters" in caplog.text
+
+
+async def test_malformed_pattern(hass: HomeAssistant) -> None:
+    """Test a malformed pattern only fails the affected helper."""
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                "test_1": {"initial": "test", "pattern": "["},
+                "test_2": {"initial": "test"},
+            }
+        },
+    )
+
+    assert hass.states.get("input_text.test_1") is None
+    state = hass.states.get("input_text.test_2")
+    assert state
+    assert state.state == "test"
 
 
 async def test_initial_state_overrules_restore_state(hass: HomeAssistant) -> None:
@@ -330,7 +381,7 @@ async def test_reload(
         autospec=True,
         return_value={
             DOMAIN: {
-                "test_2": {"initial": "test reloaded", CONF_MIN: 6},
+                "test_2": {"initial": "test reloaded", CONF_MIN: 12},
                 "test_3": {"initial": "test 3", CONF_MAX: 21},
             }
         },
@@ -359,8 +410,54 @@ async def test_reload(
     assert state_1 is None
     assert state_2 is not None
     assert state_3 is not None
-    assert state_2.attributes[TextEntityCapabilityAttribute.MIN] == 6
+    assert state_2.state == "test reloaded"
+    assert state_2.attributes[TextEntityCapabilityAttribute.MIN] == 12
     assert state_3.attributes[TextEntityCapabilityAttribute.MAX] == 21
+
+
+@pytest.mark.parametrize(
+    ("reloaded_config", "expected_state"),
+    [
+        pytest.param({"pattern": "^[0-9]*$"}, "1234", id="value_still_valid"),
+        pytest.param(
+            {"initial": "12:00", "pattern": "^[0-9]{2}:[0-9]{2}$"},
+            "12:00",
+            id="value_invalid_initial_valid",
+        ),
+        pytest.param(
+            {"initial": "1200", "pattern": "^[0-9]{2}:[0-9]{2}$"},
+            "unknown",
+            id="value_and_initial_invalid",
+        ),
+        pytest.param({CONF_MIN: 5}, "unknown", id="value_too_short_no_initial"),
+    ],
+)
+async def test_reload_invalid_value(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+    reloaded_config: dict[str, Any],
+    expected_state: str,
+) -> None:
+    """Test a reload resets a value that no longer fits the config."""
+    assert await async_setup_component(
+        hass, DOMAIN, {DOMAIN: {"test_1": {"initial": "1234"}}}
+    )
+
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value={DOMAIN: {"test_1": reloaded_config}},
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            InputTextService.RELOAD,
+            blocking=True,
+            context=Context(user_id=hass_admin_user.id),
+        )
+
+    state = hass.states.get("input_text.test_1")
+    assert state
+    assert state.state == expected_state
 
 
 async def test_load_from_storage(hass: HomeAssistant, storage_setup) -> None:

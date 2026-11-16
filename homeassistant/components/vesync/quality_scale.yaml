@@ -60,7 +60,7 @@ rules:
   docs-troubleshooting: todo
   docs-use-cases: todo
   dynamic-devices: todo
-  entity-category: todo
+  entity-category: done
   entity-device-class: todo
   entity-disabled-by-default: done
   entity-translations: done
