@@ -11,7 +11,14 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_USERS, DOMAIN, ERROR_CODE_LOGIN_REQUIRED, LOGGER
+from .const import (
+    CONF_API_SECRET,
+    CONF_SESSION_KEYS,
+    CONF_USERS,
+    DOMAIN,
+    ERROR_CODE_LOGIN_REQUIRED,
+    LOGGER,
+)
 
 type LastFMConfigEntry = ConfigEntry[LastFMDataUpdateCoordinator]
 
