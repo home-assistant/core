@@ -132,6 +132,23 @@ async def test_restricted_device(
 
 
 @pytest.mark.usefixtures("setup_credentials")
+async def test_device_without_volume_support(
+    hass: HomeAssistant,
+    mock_spotify: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test volume set is not supported when the device doesn't support volume."""
+    mock_spotify.return_value.get_playback.return_value.device.supports_volume = False
+    await setup_integration(hass, mock_config_entry)
+    state = hass.states.get("media_player.spotify_spotify_1")
+    assert state
+    assert (
+        state.attributes["supported_features"]
+        == SUPPORT_SPOTIFY & ~MediaPlayerEntityFeature.VOLUME_SET
+    )
+
+
+@pytest.mark.usefixtures("setup_credentials")
 @pytest.mark.parametrize(
     ("product", "supported_features", "model"),
     [

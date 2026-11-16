@@ -137,17 +137,29 @@
       "link_attenuation_sent": {
         "name": "Link upload power attenuation"
       },
+      "link_download_rate": {
+        "name": "Download link rate"
+      },
       "link_kb_s_received": {
         "name": "Link download throughput"
       },
       "link_kb_s_sent": {
         "name": "Link upload throughput"
       },
+      "link_max_download_rate": {
+        "name": "Max download link rate"
+      },
+      "link_max_upload_rate": {
+        "name": "Max upload link rate"
+      },
       "link_noise_margin_received": {
         "name": "Link download noise margin"
       },
       "link_noise_margin_sent": {
         "name": "Link upload noise margin"
+      },
+      "link_upload_rate": {
+        "name": "Upload link rate"
       },
       "max_kb_s_received": {
         "name": "Max connection download throughput"

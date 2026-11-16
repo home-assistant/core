@@ -45,15 +45,37 @@ from .coordinator import (
     GoogleHealthDeviceCoordinator,
     GoogleHealthNutritionCoordinator,
     GoogleHealthSleepCoordinator,
+    GoogleHealthSleepData,
 )
 
 PARALLEL_UPDATES = 0
 
 
+def _sleep_stage_minutes(
+    data: GoogleHealthSleepData | None, stage_type: str
+) -> int | None:
+    """Return duration in minutes for a sleep stage type."""
+    if (
+        not data
+        or not data.sleep
+        or not data.sleep.summary
+        or not data.sleep.summary.stages_summary
+    ):
+        return None
+    return next(
+        (
+            stage.minutes
+            for stage in data.sleep.summary.stages_summary
+            if stage.type == stage_type
+        ),
+        None,
+    )
+
+
 @dataclass(frozen=True, kw_only=True)
 class GoogleHealthSensorEntityDescription[
     _CoordinatorT: GoogleHealthDataUpdateCoordinator[Any],
-    _ValueT: StateType,
+    _ValueT: datetime | StateType,
 ](SensorEntityDescription):
     """Class describing Google Health sensor entities."""
 
@@ -219,6 +241,56 @@ SLEEP_SENSORS: list[
             if data and data.sleep and data.sleep.summary
             else None
         ),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthSleepCoordinator, datetime | None](
+        key="sleep_start_time",
+        translation_key="sleep_start_time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda data: (
+            dt_util.parse_datetime(data.sleep.start_time)
+            if data and data.sleep and data.sleep.start_time
+            else None
+        ),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthSleepCoordinator, datetime | None](
+        key="sleep_end_time",
+        translation_key="sleep_end_time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda data: (
+            dt_util.parse_datetime(data.sleep.end_time)
+            if data and data.sleep and data.sleep.end_time
+            else None
+        ),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthSleepCoordinator, int | None](
+        key="sleep_rem",
+        translation_key="sleep_rem",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        suggested_display_precision=2,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: _sleep_stage_minutes(data, "REM"),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthSleepCoordinator, int | None](
+        key="sleep_deep",
+        translation_key="sleep_deep",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        suggested_display_precision=2,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: _sleep_stage_minutes(data, "DEEP"),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthSleepCoordinator, int | None](
+        key="sleep_light",
+        translation_key="sleep_light",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        suggested_display_precision=2,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: _sleep_stage_minutes(data, "LIGHT"),
     ),
 ]
 
@@ -387,9 +459,12 @@ class GoogleHealthSensor[_CoordinatorT: GoogleHealthDataUpdateCoordinator[Any]](
 
     @property
     @override
-    def native_value(self) -> StateType:
+    def native_value(self) -> datetime | StateType:
         """Return the state of the sensor."""
-        return cast(StateType, self.entity_description.value_fn(self.coordinator.data))
+        return cast(
+            datetime | StateType,
+            self.entity_description.value_fn(self.coordinator.data),
+        )
 
     @property
     @override

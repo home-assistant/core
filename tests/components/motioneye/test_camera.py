@@ -42,11 +42,12 @@ from homeassistant.components.motioneye.const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     MOTIONEYE_MANUFACTURER,
-    SERVICE_ACTION,
-    SERVICE_SET_TEXT_OVERLAY,
-    SERVICE_SNAPSHOT,
 )
-from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, CONF_ACTION, CONF_URL
+from homeassistant.components.motioneye.services import (
+    MotionEyeService,
+    MotionEyeServiceArgument,
+)
+from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -516,7 +517,7 @@ async def test_set_text_overlay_bad_extra_key(hass: HomeAssistant) -> None:
 
     data = {ATTR_ENTITY_ID: TEST_CAMERA_ENTITY_ID, "extra_key": "foo"}
     with pytest.raises(probatio.error.MultipleInvalid):
-        await hass.services.async_call(DOMAIN, SERVICE_SET_TEXT_OVERLAY, data)
+        await hass.services.async_call(DOMAIN, MotionEyeService.SET_TEXT_OVERLAY, data)
 
 
 async def test_set_text_overlay_bad_entity_identifier(hass: HomeAssistant) -> None:
@@ -526,12 +527,12 @@ async def test_set_text_overlay_bad_entity_identifier(hass: HomeAssistant) -> No
 
     data = {
         ATTR_ENTITY_ID: "some random string",
-        KEY_TEXT_OVERLAY_LEFT: KEY_TEXT_OVERLAY_TIMESTAMP,
+        MotionEyeServiceArgument.LEFT_TEXT: KEY_TEXT_OVERLAY_TIMESTAMP,
     }
 
     client.reset_mock()
     with pytest.raises(probatio.error.MultipleInvalid):
-        await hass.services.async_call(DOMAIN, SERVICE_SET_TEXT_OVERLAY, data)
+        await hass.services.async_call(DOMAIN, MotionEyeService.SET_TEXT_OVERLAY, data)
 
 
 async def test_set_text_overlay_bad_empty(hass: HomeAssistant) -> None:
@@ -539,7 +540,7 @@ async def test_set_text_overlay_bad_empty(hass: HomeAssistant) -> None:
     client = create_mock_motioneye_client()
     await setup_mock_motioneye_config_entry(hass, client=client)
     with pytest.raises(probatio.error.MultipleInvalid):
-        await hass.services.async_call(DOMAIN, SERVICE_SET_TEXT_OVERLAY, {})
+        await hass.services.async_call(DOMAIN, MotionEyeService.SET_TEXT_OVERLAY, {})
 
 
 async def test_set_text_overlay_bad_no_left_or_right(hass: HomeAssistant) -> None:
@@ -549,7 +550,7 @@ async def test_set_text_overlay_bad_no_left_or_right(hass: HomeAssistant) -> Non
 
     data = {ATTR_ENTITY_ID: TEST_CAMERA_ENTITY_ID}
     with pytest.raises(probatio.error.MultipleInvalid):
-        await hass.services.async_call(DOMAIN, SERVICE_SET_TEXT_OVERLAY, data)
+        await hass.services.async_call(DOMAIN, MotionEyeService.SET_TEXT_OVERLAY, data)
 
 
 async def test_set_text_overlay_good(hass: HomeAssistant) -> None:
@@ -561,14 +562,14 @@ async def test_set_text_overlay_good(hass: HomeAssistant) -> None:
     custom_right_text = "four\nfive\nsix"
     data = {
         ATTR_ENTITY_ID: TEST_CAMERA_ENTITY_ID,
-        KEY_TEXT_OVERLAY_LEFT: KEY_TEXT_OVERLAY_CUSTOM_TEXT,
-        KEY_TEXT_OVERLAY_RIGHT: KEY_TEXT_OVERLAY_CUSTOM_TEXT,
-        KEY_TEXT_OVERLAY_CUSTOM_TEXT_LEFT: custom_left_text,
-        KEY_TEXT_OVERLAY_CUSTOM_TEXT_RIGHT: custom_right_text,
+        MotionEyeServiceArgument.LEFT_TEXT: KEY_TEXT_OVERLAY_CUSTOM_TEXT,
+        MotionEyeServiceArgument.RIGHT_TEXT: KEY_TEXT_OVERLAY_CUSTOM_TEXT,
+        MotionEyeServiceArgument.CUSTOM_LEFT_TEXT: custom_left_text,
+        MotionEyeServiceArgument.CUSTOM_RIGHT_TEXT: custom_right_text,
     }
     client.async_get_camera = AsyncMock(return_value=copy.deepcopy(TEST_CAMERA))
 
-    await hass.services.async_call(DOMAIN, SERVICE_SET_TEXT_OVERLAY, data)
+    await hass.services.async_call(DOMAIN, MotionEyeService.SET_TEXT_OVERLAY, data)
     await hass.async_block_till_done()
     assert client.async_get_camera.called
 
@@ -587,10 +588,10 @@ async def test_set_text_overlay_good_entity_id(hass: HomeAssistant) -> None:
 
     data = {
         ATTR_ENTITY_ID: TEST_CAMERA_ENTITY_ID,
-        KEY_TEXT_OVERLAY_LEFT: KEY_TEXT_OVERLAY_TIMESTAMP,
+        MotionEyeServiceArgument.LEFT_TEXT: KEY_TEXT_OVERLAY_TIMESTAMP,
     }
     client.async_get_camera = AsyncMock(return_value=copy.deepcopy(TEST_CAMERA))
-    await hass.services.async_call(DOMAIN, SERVICE_SET_TEXT_OVERLAY, data)
+    await hass.services.async_call(DOMAIN, MotionEyeService.SET_TEXT_OVERLAY, data)
     await hass.async_block_till_done()
     assert client.async_get_camera.called
 
@@ -606,11 +607,11 @@ async def test_set_text_overlay_bad_device(hass: HomeAssistant) -> None:
 
     data = {
         ATTR_DEVICE_ID: "not a device",
-        KEY_TEXT_OVERLAY_LEFT: KEY_TEXT_OVERLAY_TIMESTAMP,
+        MotionEyeServiceArgument.LEFT_TEXT: KEY_TEXT_OVERLAY_TIMESTAMP,
     }
     client.reset_mock()
     client.async_get_camera = AsyncMock(return_value=copy.deepcopy(TEST_CAMERA))
-    await hass.services.async_call(DOMAIN, SERVICE_SET_TEXT_OVERLAY, data)
+    await hass.services.async_call(DOMAIN, MotionEyeService.SET_TEXT_OVERLAY, data)
     await hass.async_block_till_done()
     assert not client.async_get_camera.called
     assert not client.async_set_camera.called
@@ -623,11 +624,11 @@ async def test_set_text_overlay_no_such_camera(hass: HomeAssistant) -> None:
 
     data = {
         ATTR_ENTITY_ID: TEST_CAMERA_ENTITY_ID,
-        KEY_TEXT_OVERLAY_LEFT: KEY_TEXT_OVERLAY_TIMESTAMP,
+        MotionEyeServiceArgument.LEFT_TEXT: KEY_TEXT_OVERLAY_TIMESTAMP,
     }
     client.reset_mock()
     client.async_get_camera = AsyncMock(return_value={})
-    await hass.services.async_call(DOMAIN, SERVICE_SET_TEXT_OVERLAY, data)
+    await hass.services.async_call(DOMAIN, MotionEyeService.SET_TEXT_OVERLAY, data)
     await hass.async_block_till_done()
     assert not client.async_set_camera.called
 
@@ -639,11 +640,13 @@ async def test_request_action(hass: HomeAssistant) -> None:
 
     data = {
         ATTR_ENTITY_ID: TEST_CAMERA_ENTITY_ID,
-        CONF_ACTION: "foo",
+        MotionEyeServiceArgument.ACTION: "foo",
     }
-    await hass.services.async_call(DOMAIN, SERVICE_ACTION, data)
+    await hass.services.async_call(DOMAIN, MotionEyeService.ACTION, data)
     await hass.async_block_till_done()
-    assert client.async_action.call_args == call(TEST_CAMERA_ID, data[CONF_ACTION])
+    assert client.async_action.call_args == call(
+        TEST_CAMERA_ID, data[MotionEyeServiceArgument.ACTION]
+    )
 
 
 async def test_request_snapshot(hass: HomeAssistant) -> None:
@@ -653,6 +656,6 @@ async def test_request_snapshot(hass: HomeAssistant) -> None:
 
     data = {ATTR_ENTITY_ID: TEST_CAMERA_ENTITY_ID}
 
-    await hass.services.async_call(DOMAIN, SERVICE_SNAPSHOT, data)
+    await hass.services.async_call(DOMAIN, MotionEyeService.SNAPSHOT, data)
     await hass.async_block_till_done()
     assert client.async_action.call_args == call(TEST_CAMERA_ID, "snapshot")
