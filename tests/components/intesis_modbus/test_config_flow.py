@@ -480,10 +480,20 @@ async def test_reconfigure_puts_a_loaded_entry_back_when_the_probe_fails(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], FASTER_INPUT
         )
-    assert states == [ConfigEntryState.NOT_LOADED]
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
-    assert init_integration.data == MOCK_ENTRY_DATA
+        assert states == [ConfigEntryState.NOT_LOADED]
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "cannot_connect"}
+        assert init_integration.data == MOCK_ENTRY_DATA
+        assert init_integration.state is ConfigEntryState.LOADED
+
+        connection.for_unit(1).fail_requests(None)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FASTER_INPUT
+        )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert init_integration.data == {**MOCK_ENTRY_DATA, CONF_BAUDRATE: 19200}
     assert init_integration.state is ConfigEntryState.LOADED
 
 
