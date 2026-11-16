@@ -1,0 +1,71 @@
+{
+  "endpoint": "https://apigw.tuyacn.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Test Breaker Temperature Zones",
+  "category": "dlq",
+  "product_id": "test_temp_zone",
+  "product_name": "Test Breaker Temperature Zones",
+  "online": true,
+  "sub": false,
+  "time_zone": "+08:00",
+  "active_time": "2026-11-16T00:00:00+00:00",
+  "create_time": "2026-11-16T00:00:00+00:00",
+  "update_time": "2026-11-16T00:00:00+00:00",
+  "function": {},
+  "status_range": {
+    "temp_zone_1": {
+      "type": "Integer",
+      "value": {
+        "unit": "℃",
+        "min": -99999,
+        "max": 99999,
+        "scale": 1,
+        "step": 1
+      },
+      "report_type": null
+    },
+    "temp_zone_2": {
+      "type": "Integer",
+      "value": {
+        "unit": "℃",
+        "min": -99999,
+        "max": 99999,
+        "scale": 1,
+        "step": 1
+      },
+      "report_type": null
+    },
+    "temp_zone_3": {
+      "type": "Integer",
+      "value": {
+        "unit": "℃",
+        "min": -99999,
+        "max": 99999,
+        "scale": 1,
+        "step": 1
+      },
+      "report_type": null
+    },
+    "temp_zone_4": {
+      "type": "Integer",
+      "value": {
+        "unit": "℃",
+        "min": -99999,
+        "max": 99999,
+        "scale": 1,
+        "step": 1
+      },
+      "report_type": null
+    }
+  },
+  "status": {
+    "temp_zone_1": 398,
+    "temp_zone_2": 402,
+    "temp_zone_3": 397,
+    "temp_zone_4": 395
+  },
+  "set_up": true,
+  "support_local": true
+}

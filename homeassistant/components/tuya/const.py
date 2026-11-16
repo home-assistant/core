@@ -991,6 +991,10 @@ class DPCode(StrEnum):
     TEMP_VALUE = "temp_value"  # Color temperature
     TEMP_VALUE_V2 = "temp_value_v2"
     TEMP_VENTING = "temp_venting"  # Current heat plate temperature
+    TEMP_ZONE_1 = "temp_zone_1"
+    TEMP_ZONE_2 = "temp_zone_2"
+    TEMP_ZONE_3 = "temp_zone_3"
+    TEMP_ZONE_4 = "temp_zone_4"
     TEMPER_ALARM = "temper_alarm"  # Tamper alarm
     TIME_TOTAL = "time_total"
     TIME_USE = "time_use"  # Total seconds of irrigation

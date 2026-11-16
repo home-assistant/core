@@ -3779,6 +3779,36 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[enozpmettsetqld]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'enozpmettsetqld',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Test Breaker Temperature Zones',
+    'model_id': 'test_temp_zone',
+    'name': 'Test Breaker Temperature Zones',
+    'name_by_user': None,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[eway2kw92ncuecarzc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,

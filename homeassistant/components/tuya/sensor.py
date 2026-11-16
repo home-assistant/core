@@ -697,6 +697,21 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
         ),
+        *(
+            TuyaSensorEntityDescription(
+                key=zone,
+                translation_key="temperature_zone",
+                translation_placeholders={"phase": phase},
+                device_class=SensorDeviceClass.TEMPERATURE,
+                state_class=SensorStateClass.MEASUREMENT,
+            )
+            for zone, phase in (
+                (DPCode.TEMP_ZONE_1, "A"),
+                (DPCode.TEMP_ZONE_2, "B"),
+                (DPCode.TEMP_ZONE_3, "C"),
+                (DPCode.TEMP_ZONE_4, "N"),
+            )
+        ),
         *_electricity_data(DPCode.PHASE_A),
         *_electricity_data(DPCode.PHASE_B),
         *_electricity_data(DPCode.PHASE_C),

@@ -1108,6 +1108,9 @@
       "temperature_external": {
         "name": "Probe temperature"
       },
+      "temperature_zone": {
+        "name": "{phase} phase temperature"
+      },
       "total_absorption_particles": {
         "name": "Total absorption of particles"
       },
