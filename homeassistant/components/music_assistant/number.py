@@ -42,6 +42,9 @@ async def async_setup_entry(
         if player is None:
             return
         entities: list[MusicAssistantPlayerConfigNumber] = []
+        known_option_keys = entry.runtime_data.player_option_entity_keys.setdefault(
+            player_id, set()
+        )
         for player_option in player.options:
             if (
                 not player_option.read_only
@@ -53,8 +56,12 @@ async def async_setup_entry(
                 and not player_option.options  # these we map to select
             ):
                 # we ignore entities with unknown translation keys.
-                if player_option.translation_key not in PLAYER_OPTIONS_NUMBER:
+                if (
+                    player_option.translation_key not in PLAYER_OPTIONS_NUMBER
+                    or player_option.key in known_option_keys
+                ):
                     continue
+                known_option_keys.add(player_option.key)
 
                 entities.append(
                     MusicAssistantPlayerConfigNumber(

@@ -1,5 +1,6 @@
 """Test Music Assistant switch entities."""
 
+from dataclasses import replace
 from unittest.mock import MagicMock, call
 
 from music_assistant_models.enums import EventType
@@ -103,6 +104,36 @@ async def test_external_update(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_ON
+
+
+async def test_option_added_after_player(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test that an option the player reports after it was added gets an entity."""
+    mass_player_id = "00:00:00:00:00:01"
+    entity_id = "switch.test_player_1_pure_direct"
+
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    assert hass.states.get(entity_id) is None
+
+    player = music_assistant_client.players._players[mass_player_id]
+    enhancer_option = next(
+        option for option in player.options if option.key == "enhancer"
+    )
+    player.options.append(
+        replace(enhancer_option, key="pure_direct", translation_key="pure_direct")
+    )
+    for _ in range(2):
+        await trigger_subscription_callback(
+            hass,
+            music_assistant_client,
+            EventType.PLAYER_OPTIONS_UPDATED,
+            mass_player_id,
+        )
+
+    assert hass.states.get(entity_id) is not None
+    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2
 
 
 async def test_ignored(

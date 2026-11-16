@@ -57,6 +57,12 @@ PLATFORMS = [
     Platform.TEXT,
     Platform.TIME,
 ]
+PLAYER_OPTION_PLATFORMS = (
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SWITCH,
+    Platform.TEXT,
+)
 
 CONNECT_TIMEOUT = 10
 LISTEN_READY_TIMEOUT = 30
@@ -75,6 +81,8 @@ class MusicAssistantEntryData:
     listen_task: asyncio.Task
     discovered_players: set[str] = field(default_factory=set)
     platform_handlers: dict[Platform, PlayerAddCallback] = field(default_factory=dict)
+    # player_id -> keys of the player options that got an entity
+    player_option_entity_keys: dict[str, set[str]] = field(default_factory=dict)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -211,6 +219,7 @@ async def async_setup_entry(  # noqa: C901
         """Handle removing Player from MA as HA device + entities."""
         if player_id in entry.runtime_data.discovered_players:
             entry.runtime_data.discovered_players.remove(player_id)
+        entry.runtime_data.player_option_entity_keys.pop(player_id, None)
         dev_reg = dr.async_get(hass)
         if hass_device := dev_reg.async_get_device_by_identifier(
             (DOMAIN, player_id), entry.entry_id
@@ -238,6 +247,22 @@ async def async_setup_entry(  # noqa: C901
         if not (player.enabled and player.expose_to_ha):
             continue
         add_player(player)
+
+    # a player can be added before its options are known
+    def handle_player_options_updated(event: MassEvent) -> None:
+        """Handle Mass Player Options Updated event."""
+        if (
+            event.object_id is None
+            or event.object_id not in entry.runtime_data.discovered_players
+        ):
+            return
+        for platform in PLAYER_OPTION_PLATFORMS:
+            if callback := entry.runtime_data.platform_handlers.get(platform):
+                callback(event.object_id)
+
+    entry.async_on_unload(
+        mass.subscribe(handle_player_options_updated, EventType.PLAYER_OPTIONS_UPDATED)
+    )
 
     # register listener for removed players
     def handle_player_removed(event: MassEvent) -> None:

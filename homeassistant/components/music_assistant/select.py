@@ -41,6 +41,9 @@ async def async_setup_entry(
         if player is None:
             return
         entities: list[MusicAssistantPlayerConfigSelect] = []
+        known_option_keys = entry.runtime_data.player_option_entity_keys.setdefault(
+            player_id, set()
+        )
         for player_option in player.options:
             if (
                 not player_option.read_only
@@ -58,8 +61,12 @@ async def async_setup_entry(
                 # the provider developer. In that case, the
                 # frontend falls back to showing the state's
                 # bare translation key.
-                if player_option.translation_key not in PLAYER_OPTIONS_SELECT:
+                if (
+                    player_option.translation_key not in PLAYER_OPTIONS_SELECT
+                    or player_option.key in known_option_keys
+                ):
                     continue
+                known_option_keys.add(player_option.key)
 
                 entities.append(
                     MusicAssistantPlayerConfigSelect(
