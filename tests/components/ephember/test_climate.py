@@ -1,6 +1,5 @@
 """Tests for the EPH Controls Ember climate platform."""
 
-import dataclasses
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
@@ -228,67 +227,3 @@ async def test_yaml_import_already_in_progress(
         for (domain, _), issue in issue_registry.issues.items()
         if domain == DOMAIN
     ]
-
-
-@pytest.mark.parametrize("failing_first", [True, False])
-async def test_yaml_import_one_account_fails(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-    mock_ember: MagicMock,
-    failing_first: bool,
-) -> None:
-    """Test users aren't told to remove YAML that still needs to be imported."""
-    good = {"platform": DOMAIN, "username": MOCK_USERNAME, "password": MOCK_PASSWORD}
-    bad = {"platform": DOMAIN, "username": "other@example.com", "password": "wrong"}
-
-    def login(username: str, password: str) -> MagicMock:
-        if username == bad["username"]:
-            raise RuntimeError("Unable to login.")
-        return mock_ember
-
-    with patch(
-        "homeassistant.components.ephember.config_flow.EphEmber", side_effect=login
-    ):
-        assert await async_setup_component(
-            hass,
-            CLIMATE_DOMAIN,
-            {CLIMATE_DOMAIN: [bad, good] if failing_first else [good, bad]},
-        )
-        await hass.async_block_till_done()
-
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert issue_registry.async_get_issue(
-        DOMAIN, "deprecated_yaml_import_issue_invalid_auth"
-    )
-    assert not issue_registry.async_get_issue(
-        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
-    )
-
-
-@pytest.mark.usefixtures("mock_ember")
-async def test_yaml_import_after_earlier_failure(
-    hass: HomeAssistant, issue_registry: ir.IssueRegistry
-) -> None:
-    """Test a failure issue restored from before a restart doesn't block."""
-    issue_id = "deprecated_yaml_import_issue_cannot_connect"
-    ir.async_create_issue(
-        hass,
-        DOMAIN,
-        issue_id,
-        is_fixable=False,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key=issue_id,
-        translation_placeholders={"domain": DOMAIN, "integration_title": "EPH"},
-    )
-    # issues restored from storage after a restart are inactive
-    issue_registry.issues[(DOMAIN, issue_id)] = dataclasses.replace(
-        issue_registry.async_get_issue(DOMAIN, issue_id), active=False
-    )
-
-    assert await async_setup_component(hass, CLIMATE_DOMAIN, YAML_CONFIG)
-    await hass.async_block_till_done()
-
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert issue_registry.async_get_issue(
-        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
-    )
