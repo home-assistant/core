@@ -88,6 +88,9 @@ class VoiceCommandSegmenter:
     reset_seconds: float = 1.0
     """Seconds before reset start/stop time counters."""
 
+    short_command_seconds: float = 0.03
+    """Seconds of speech, too short to start a command, that end one on silence."""
+
     in_command: bool = False
     """True if inside voice command."""
 
@@ -170,6 +173,14 @@ class VoiceCommandSegmenter:
                 # Reset if enough silence
                 self._reset_seconds_left -= chunk_seconds
                 if self._reset_seconds_left <= 0:
+                    speech_heard = self.speech_seconds - self._speech_seconds_left
+                    if speech_heard >= self.short_command_seconds:
+                        # microVAD often scores short words like "no" too
+                        # briefly to start a command
+                        self.reset()
+                        _LOGGER.debug("Short voice command finished")
+                        return False
+
                     self._speech_seconds_left = self.speech_seconds
                     self._reset_seconds_left = self.reset_seconds
         else:
