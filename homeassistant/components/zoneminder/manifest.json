@@ -8,5 +8,5 @@
   "iot_class": "local_polling",
   "loggers": ["zoneminder"],
   "quality_scale": "legacy",
-  "requirements": ["zm-py==0.5.9"]
+  "requirements": ["zm-py==0.5.12"]
 }

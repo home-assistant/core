@@ -56,8 +56,23 @@
       "sleep_awake": {
         "name": "Time awake"
       },
+      "sleep_deep": {
+        "name": "Deep sleep"
+      },
+      "sleep_end_time": {
+        "name": "Sleep end time"
+      },
       "sleep_in_bed": {
         "name": "Time in bed"
+      },
+      "sleep_light": {
+        "name": "Light sleep"
+      },
+      "sleep_rem": {
+        "name": "REM sleep"
+      },
+      "sleep_start_time": {
+        "name": "Sleep start time"
       },
       "sleep_to_fall_asleep": {
         "name": "Time to fall asleep"

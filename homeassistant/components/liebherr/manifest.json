@@ -10,7 +10,7 @@
   "iot_class": "cloud_push",
   "loggers": ["pyliebherrhomeapi"],
   "quality_scale": "platinum",
-  "requirements": ["pyliebherrhomeapi==0.5.1"],
+  "requirements": ["pyliebherrhomeapi==0.5.2"],
   "zeroconf": [
     {
       "name": "liebherr*",

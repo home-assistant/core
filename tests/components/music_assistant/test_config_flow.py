@@ -6,7 +6,7 @@ from copy import deepcopy
 from ipaddress import ip_address
 from typing import Any
 from unittest import mock
-from unittest.mock import AsyncMock, MagicMock, call, patch
+from unittest.mock import ANY, AsyncMock, MagicMock, call, patch
 from uuid import uuid4
 
 from aiohasupervisor import SupervisorError
@@ -20,11 +20,11 @@ from music_assistant_models.api import ServerInfoMessage
 from music_assistant_models.errors import AuthenticationFailed, InvalidToken
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_load_fixture
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.music_assistant.config_flow import (
     CONF_URL,
     CONF_USE_APP,
-    MusicAssistantConfigFlow,
     _get_server_info,
     _test_connection,
 )
@@ -37,18 +37,20 @@ from homeassistant.components.music_assistant.const import (
 from homeassistant.config_entries import (
     SOURCE_HASSIO,
     SOURCE_IGNORE,
-    SOURCE_REAUTH,
     SOURCE_USER,
     SOURCE_ZEROCONF,
     ConfigEntryState,
+    ConfigFlowResult,
 )
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.config_entry_oauth2_flow import _encode_jwt
 from homeassistant.helpers.network import NoURLAvailableError
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
+from homeassistant.setup import async_setup_component
 
 SERVER_INFO = {
     "server_id": "1234",
@@ -801,43 +803,6 @@ async def test_auth_flow_success(
     assert result["result"].unique_id == "1234"
 
 
-async def test_finish_auth_token_exchange(
-    hass: HomeAssistant,
-    mock_get_server_info: AsyncMock,
-) -> None:
-    """Test that finish_auth exchanges short-lived token for long-lived token."""
-    # Create flow instance
-    flow = MusicAssistantConfigFlow()
-    flow.hass = hass
-    flow.url = "http://localhost:8095"
-    flow.token = "short_lived_session_token"
-    flow.server_info = mock_get_server_info.return_value
-
-    # Mock the token exchange
-    with patch(
-        "homeassistant.components.music_assistant.config_flow.create_long_lived_token",
-        return_value="long_lived_token_12345",
-    ) as mock_create_token:
-        # Call async_step_finish_auth to test token exchange
-        result = await flow.async_step_finish_auth()
-
-    # Verify token was exchanged
-    mock_create_token.assert_called_once()
-    call_args = mock_create_token.call_args
-    assert call_args[0][0] == "http://localhost:8095"
-    assert call_args[0][1] == "short_lived_session_token"
-    assert call_args[0][2] == "Home Assistant"
-    assert call_args[1]["aiohttp_session"] is not None
-
-    # Verify entry was created with long-lived token
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == {
-        CONF_URL: "http://localhost:8095",
-        CONF_TOKEN: "long_lived_token_12345",
-    }
-
-
 async def test_reauth_flow(
     hass: HomeAssistant,
     mock_get_server_info: AsyncMock,
@@ -983,25 +948,49 @@ async def test_auth_manual_connection_errors(
     assert result["reason"] == abort_reason
 
 
+async def _async_start_external_auth(hass: HomeAssistant) -> ConfigFlowResult:
+    """Start a user flow and continue it to the external auth step."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: "http://localhost:8095"},
+    )
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    assert result["step_id"] == "auth"
+    return result
+
+
+@pytest.mark.usefixtures(
+    "current_request_with_host", "mock_get_server_info", "mock_setup_entry"
+)
 async def test_finish_auth_reauth_source(
     hass: HomeAssistant,
-    mock_get_server_info: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test finish_auth updates entry when source is reauth."""
     mock_config_entry.add_to_hass(hass)
 
-    flow = MusicAssistantConfigFlow()
-    flow.hass = hass
-    flow.context = {"source": SOURCE_REAUTH, "entry_id": mock_config_entry.entry_id}
-    flow.url = "http://localhost:8095"
-    flow.token = "session_token"
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    assert result["step_id"] == "auth"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"code": "session_token"}
+    )
+    assert result["type"] is FlowResultType.EXTERNAL_STEP_DONE
+    assert result["step_id"] == "finish_auth"
 
     with patch(
         "homeassistant.components.music_assistant.config_flow.create_long_lived_token",
         return_value="new_long_lived_token",
     ):
-        result = await flow.async_step_finish_auth()
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
@@ -1019,56 +1008,55 @@ async def test_finish_auth_reauth_source(
         (MusicAssistantClientException("unknown"), "unknown"),
     ],
 )
+@pytest.mark.usefixtures("current_request_with_host", "mock_get_server_info")
 async def test_finish_auth_errors(
     hass: HomeAssistant,
-    mock_get_server_info: AsyncMock,
     exception: Exception,
     abort_reason: str,
 ) -> None:
     """Test finish_auth handles errors during token exchange."""
-    flow = MusicAssistantConfigFlow()
-    flow.hass = hass
-    flow.url = "http://localhost:8095"
-    flow.token = "session_token"
+    result = await _async_start_external_auth(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"code": "session_token"}
+    )
+    assert result["type"] is FlowResultType.EXTERNAL_STEP_DONE
 
     with patch(
         "homeassistant.components.music_assistant.config_flow.create_long_lived_token",
         side_effect=exception,
     ):
-        result = await flow.async_step_finish_auth()
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == abort_reason
 
 
-async def test_auth_step_with_oauth2_callback(
-    hass: HomeAssistant,
-    mock_get_server_info: AsyncMock,
-) -> None:
-    """Test auth step receiving OAuth2 callback with code parameter."""
-    flow = MusicAssistantConfigFlow()
-    flow.hass = hass
-    flow.url = "http://localhost:8095"
-    flow.server_info = mock_get_server_info.return_value
-
-    result = await flow.async_step_auth(user_input={"code": "test_session_token"})
-
-    assert result["type"] is FlowResultType.EXTERNAL_STEP_DONE
-    assert result["step_id"] == "finish_auth"
-    assert flow.token == "test_session_token"
-
-
+@pytest.mark.usefixtures("current_request_with_host", "mock_get_server_info")
 async def test_auth_step_with_error(
     hass: HomeAssistant,
-    mock_get_server_info: AsyncMock,
+    hass_client_no_auth: ClientSessionGenerator,
 ) -> None:
-    """Test auth step receiving error from OAuth2 callback."""
-    flow = MusicAssistantConfigFlow()
-    flow.hass = hass
-    flow.url = "http://localhost:8095"
-    flow.server_info = mock_get_server_info.return_value
+    """Test the flow aborts when the OAuth2 callback returns an error."""
+    # Set up auth to register the OAuth2 callback view
+    assert await async_setup_component(hass, "auth", {})
 
-    result = await flow.async_step_auth(user_input={"error": "access_denied"})
+    result = await _async_start_external_auth(hass)
+
+    state = _encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+    client = await hass_client_no_auth()
+    resp = await client.get(
+        f"/auth/external/callback?error=access_denied&state={state}"
+    )
+    assert resp.status == 200
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "auth_error"
@@ -1108,37 +1096,58 @@ async def test_test_connection_helper(
         mock_instance.send_command.assert_called_once_with("info")
 
 
+@pytest.mark.usefixtures(
+    "current_request_with_host", "mock_get_server_info", "mock_setup_entry"
+)
 async def test_auth_with_redirect_uri(
     hass: HomeAssistant,
-    mock_get_server_info: AsyncMock,
+    hass_client_no_auth: ClientSessionGenerator,
 ) -> None:
-    """Test auth step with redirect URI available."""
-    flow = MusicAssistantConfigFlow()
-    flow.hass = hass
-    flow.url = "http://localhost:8095"
-    flow.flow_id = "test_flow_id"
-    flow.server_info = mock_get_server_info.return_value
+    """Test auth with redirect URI exchanges the session token from the callback."""
+    # Set up auth to register the OAuth2 callback view
+    assert await async_setup_component(hass, "auth", {})
 
-    with (
-        patch(
-            "homeassistant.components.music_assistant.config_flow.async_get_redirect_uri",
-            return_value="http://localhost:8123/auth/external/callback",
-        ),
-        patch(
-            "homeassistant.components.music_assistant.config_flow._encode_jwt",
-            return_value="test_jwt_state",
-        ),
-    ):
-        result = await flow.async_step_auth()
+    result = await _async_start_external_auth(hass)
 
-    assert result["type"] is FlowResultType.EXTERNAL_STEP
-    assert result["step_id"] == "auth"
+    state = _encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
     assert "http://localhost:8095/login" in result["url"]
     assert (
-        "return_url=http%3A%2F%2Flocalhost%3A8123%2Fauth%2Fexternal%2Fcallback%3Fstate%3Dtest_jwt_state"
-        in result["url"]
+        "return_url=https%3A%2F%2Fexample.com%2Fauth%2Fexternal%2Fcallback"
+        f"%3Fstate%3D{state}" in result["url"]
     )
     assert "device_name=Home+Assistant" in result["url"]
+
+    client = await hass_client_no_auth()
+    resp = await client.get(
+        f"/auth/external/callback?code=short_lived_session_token&state={state}"
+    )
+    assert resp.status == 200
+
+    with patch(
+        "homeassistant.components.music_assistant.config_flow.create_long_lived_token",
+        return_value="long_lived_token_12345",
+    ) as mock_create_token:
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    mock_create_token.assert_called_once_with(
+        "http://localhost:8095",
+        "short_lived_session_token",
+        "Home Assistant",
+        aiohttp_session=ANY,
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == DEFAULT_NAME
+    assert result["data"] == {
+        CONF_URL: "http://localhost:8095",
+        CONF_TOKEN: "long_lived_token_12345",
+    }
+    assert result["result"].unique_id == "1234"
 
 
 APP_DISCOVERY_INFO = {

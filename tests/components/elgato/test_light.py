@@ -7,7 +7,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.elgato.const import DOMAIN
-from homeassistant.components.elgato.services import SERVICE_IDENTIFY
+from homeassistant.components.elgato.services import ElgatoService
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,
@@ -20,6 +20,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
     STATE_UNAVAILABLE,
+    CommonServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -149,9 +150,9 @@ async def test_light_identify(hass: HomeAssistant, mock_elgato: MagicMock) -> No
     """Test identifying an Elgato Light."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_IDENTIFY,
+        ElgatoService.IDENTIFY,
         {
-            ATTR_ENTITY_ID: "light.frenck",
+            CommonServiceArgument.ENTITY_ID: "light.frenck",
         },
         blocking=True,
     )
@@ -166,9 +167,9 @@ async def test_light_identify(hass: HomeAssistant, mock_elgato: MagicMock) -> No
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_IDENTIFY,
+            ElgatoService.IDENTIFY,
             {
-                ATTR_ENTITY_ID: "light.frenck",
+                CommonServiceArgument.ENTITY_ID: "light.frenck",
             },
             blocking=True,
         )

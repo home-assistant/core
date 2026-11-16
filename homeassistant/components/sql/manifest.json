@@ -8,5 +8,5 @@
   "connectivity": ["host", "network"],
   "documentation": "https://www.home-assistant.io/integrations/sql",
   "iot_class": "local_polling",
-  "requirements": ["SQLAlchemy==2.1.6", "sqlparse==0.6.0"]
+  "requirements": ["SQLAlchemy==2.1.8", "sqlparse==0.6.0"]
 }

@@ -47,12 +47,16 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: AxisConfigEntry) 
     )
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: AxisConfigEntry
+) -> None:
     """Unload Axis device config entry."""
     await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: AxisConfigEntry
+) -> None:
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 

@@ -23,7 +23,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import UnitOfEnergy, UnitOfVolume
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import (
     DeviceEntry,
     DeviceEntryType,
@@ -219,6 +219,7 @@ class IstaSensor(CoordinatorEntity[IstaCoordinator], SensorEntity):
         await self.update_statistics()
         await super().async_added_to_hass()
 
+    @callback
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle coordinator update."""
