@@ -62,7 +62,7 @@ class KaracaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 probatio.Required(CONF_EMAIL): TextSelector(
                     TextSelectorConfig(type=TextSelectorType.EMAIL)
                 ),
-                probatio.Required(CONF_PASSWORD): TextSelector(
+                probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
                     TextSelectorConfig(type=TextSelectorType.PASSWORD)
                 ),
             }),
