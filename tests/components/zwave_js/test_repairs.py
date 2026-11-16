@@ -588,41 +588,6 @@ async def test_migrate_unique_id_non_integer_ids(
     assert len(msg["result"]["issues"]) == 0
 
 
-async def _create_unmapped_enum_issue(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    climate_adc_t3000: Node,
-    integration: MockConfigEntry,
-) -> str:
-    """Enable the power source sensor, reload, and send an unmapped value."""
-    entity_id = "sensor.adc_t3000_power_source"
-    entity_registry.async_update_entity(entity_id, disabled_by=None)
-    await hass.config_entries.async_reload(integration.entry_id)
-    await hass.async_block_till_done()
-
-    event = Event(
-        "value updated",
-        {
-            "source": "node",
-            "event": "value updated",
-            "nodeId": climate_adc_t3000.node_id,
-            "args": {
-                "commandClassName": "Configuration",
-                "commandClass": 112,
-                "endpoint": 0,
-                "property": 26,
-                "propertyName": "Power Source",
-                "newValue": 99,
-                "prevValue": 1,
-            },
-        },
-    )
-    climate_adc_t3000.receive_event(event)
-    await hass.async_block_till_done()
-
-    return entity_id
-
-
 async def test_unmapped_enum_value_confirm_step(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -630,19 +595,15 @@ async def test_unmapped_enum_value_confirm_step(
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     client: Client,
-    climate_adc_t3000: Node,
-    lock_id_lock_as_id150: Node,
+    unmapped_motion_sensor: Node,
     integration: MockConfigEntry,
 ) -> None:
     """Test the unmapped_enum_value confirm step triggers re-interview."""
-    await _create_unmapped_enum_issue(
-        hass, entity_registry, climate_adc_t3000, integration
-    )
 
     client.async_send_command_no_wait.reset_mock()
 
     device = device_registry.async_get_device_by_identifier(
-        get_device_id(client.driver, climate_adc_t3000), integration.entry_id
+        get_device_id(client.driver, unmapped_motion_sensor), integration.entry_id
     )
     assert device
 
@@ -663,9 +624,10 @@ async def test_unmapped_enum_value_confirm_step(
     assert data["step_id"] == "init"
     assert data["description_placeholders"]["device_name"] == device.name
     assert (
-        data["description_placeholders"]["entity_id"] == "sensor.adc_t3000_power_source"
+        data["description_placeholders"]["entity_id"]
+        == "sensor.multisensor_6_motion_sensor_status"
     )
-    assert data["description_placeholders"]["raw_value"] == "99"
+    assert data["description_placeholders"]["raw_value"] == "8"
 
     data = await process_repair_fix_flow(http_client, flow_id)
     assert data["type"] == "menu"
@@ -680,7 +642,7 @@ async def test_unmapped_enum_value_confirm_step(
     assert len(client.async_send_command_no_wait.call_args_list) == 1
     assert client.async_send_command_no_wait.call_args[0][0] == {
         "command": "node.refresh_info",
-        "nodeId": climate_adc_t3000.node_id,
+        "nodeId": unmapped_motion_sensor.node_id,
     }
 
 
@@ -691,19 +653,15 @@ async def test_unmapped_enum_value_ignore_step(
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     client: Client,
-    climate_adc_t3000: Node,
-    lock_id_lock_as_id150: Node,
+    unmapped_motion_sensor: Node,
     integration: MockConfigEntry,
 ) -> None:
     """Test the unmapped_enum_value ignore step."""
-    await _create_unmapped_enum_issue(
-        hass, entity_registry, climate_adc_t3000, integration
-    )
 
     client.async_send_command_no_wait.reset_mock()
 
     device = device_registry.async_get_device_by_identifier(
-        get_device_id(client.driver, climate_adc_t3000), integration.entry_id
+        get_device_id(client.driver, unmapped_motion_sensor), integration.entry_id
     )
     assert device
 
@@ -743,14 +701,10 @@ async def test_unmapped_enum_value_abort_confirm(
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     client: Client,
-    climate_adc_t3000: Node,
-    lock_id_lock_as_id150: Node,
+    unmapped_motion_sensor: Node,
     integration: MockConfigEntry,
 ) -> None:
     """Test aborting unmapped_enum_value confirm when node is disconnected."""
-    await _create_unmapped_enum_issue(
-        hass, entity_registry, climate_adc_t3000, integration
-    )
 
     ws_client = await hass_ws_client(hass)
     http_client = await hass_client()

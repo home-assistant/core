@@ -73,7 +73,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType, Undefined
@@ -113,6 +113,7 @@ from .discovery_data_template import (
     NumericSensorDataTemplateData,
 )
 from .entity import NewZwaveDiscoveryInfo, ZWaveBaseEntity, ZWaveNodeBaseEntity
+from .helpers import get_device_id
 from .migrate import async_migrate_statistics_sensors
 from .models import (
     NewZWaveDiscoverySchema,
@@ -978,6 +979,18 @@ class ZWaveListSensor(ZwaveSensor):
             self._attr_device_class = SensorDeviceClass.ENUM
             self._attr_options = list(info.primary_value.metadata.states.values())
 
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Call when entity is added."""
+        await super().async_added_to_hass()
+        self._async_update_unmapped_issue()
+
+    @callback
+    @override
+    def on_value_update(self) -> None:
+        """Raise or clear the unmapped value repair."""
+        self._async_update_unmapped_issue()
+
     @property
     @override
     def native_value(self) -> StateType:
@@ -985,62 +998,85 @@ class ZWaveListSensor(ZwaveSensor):
         value: StateType = self.info.primary_value.value
         if value is None:
             return None
-        key = str(value)
         states = self.info.primary_value.metadata.states
-        if not states or key not in states:
-            if self.device_class is SensorDeviceClass.ENUM:
-                self._async_report_unmapped_value(key)
-                return None
-            # Rediscovery may drop the states, leaving a repair from the enum sensor.
-            self._async_clear_unmapped_value()
-            return value
-        self._async_clear_unmapped_value()
-        return str(states[key])
+        if states and (key := str(value)) in states:
+            return str(states[key])
+        if self.device_class is SensorDeviceClass.ENUM:
+            return None
+        return value
+
+    @property
+    def _node_device(self) -> dr.DeviceEntry | None:
+        """Return the node's device, which stays put when endpoints regroup."""
+        return dr.async_get(self.hass).async_get_device_by_identifier(
+            get_device_id(self.driver, self.info.node), self.config_entry.entry_id
+        )
 
     @property
     def _unmapped_issue_id(self) -> str | None:
         """Return the issue ID for this entity's unmapped value repair."""
-        if self.device_entry is None:
+        if (device := self._node_device) is None:
             return None
-        return f"unmapped_enum_value.{self.device_entry.id}.{self.info.primary_value.value_id}"
+        return f"unmapped_enum_value.{device.id}.{self.info.primary_value.value_id}"
+
+    @callback
+    def _async_update_unmapped_issue(self) -> None:
+        """Raise the repair for an unmapped value, or clear it once mapped.
+
+        A None value is no reading at all, so it leaves the repair as it is.
+        Rediscovery may drop the states, which also clears the repair.
+        """
+        if (value := self.info.primary_value.value) is None:
+            return
+        if self.device_class is SensorDeviceClass.ENUM and str(value) not in (
+            self.info.primary_value.metadata.states
+        ):
+            self._async_report_unmapped_value(str(value))
+        else:
+            self._async_clear_unmapped_value()
 
     @callback
     def _async_report_unmapped_value(self, raw_value: str) -> None:
-        """Raise a repair when the device reports a value not in its interview metadata."""
-        if (device := self.device_entry) is None:
+        """Raise a repair when the device reports a value not in its metadata.
+
+        Only notification values get their states from the interview, so only
+        those get the re-interview fix. Config parameter and battery states
+        come from the device config file and zwave-js itself.
+        """
+        if (device := self._node_device) is None or (
+            issue_id := self._unmapped_issue_id
+        ) is None:
             return
-        issue_id = f"unmapped_enum_value.{device.id}.{self.info.primary_value.value_id}"
         device_name = device.name_by_user or device.name or "Unknown device"
+        placeholders = {
+            "device_name": device_name,
+            "entity_id": self.entity_id,
+            "raw_value": raw_value,
+        }
+        fixable = self.info.primary_value.command_class == CommandClass.NOTIFICATION
         ir.async_create_issue(
             self.hass,
             DOMAIN,
             issue_id,
             config_entry_id=self.config_entry.entry_id,
-            data={
-                "device_id": device.id,
-                "device_name": device_name,
-                "entity_id": self.entity_id,
-                "raw_value": raw_value,
-            },
-            is_fixable=True,
+            data={"device_id": device.id, **placeholders},
+            is_fixable=fixable,
             is_persistent=False,
-            translation_key="unmapped_enum_value",
-            translation_placeholders={
-                "device_name": device_name,
-                "entity_id": self.entity_id,
-                "raw_value": raw_value,
-            },
+            translation_key=(
+                "unmapped_enum_value" if fixable else "unmapped_enum_value_no_fix"
+            ),
+            translation_placeholders=placeholders,
             severity=ir.IssueSeverity.WARNING,
         )
 
     @callback
     def _async_clear_unmapped_value(self) -> None:
-        """Clear the repair once values resolve after re-interview.
+        """Clear the repair, keeping it if the user ignored it.
 
         Looks the issue up rather than tracking it on the entity, so a
         freshly rediscovered entity instance clears a stale issue left by
-        the prior instance that was removed during metadata rediscovery.
-        An ignored issue is kept so the next unmapped reading stays hidden.
+        the prior one. An ignored issue is kept so the next unmapped
+        reading stays hidden.
         """
         if (issue_id := self._unmapped_issue_id) is None:
             return
@@ -1056,18 +1092,14 @@ class ZWaveListSensor(ZwaveSensor):
 
     @override
     async def async_will_remove_from_hass(self) -> None:
-        """Drop the repair when the entity is disabled.
+        """Clear the repair when the entity goes away.
 
-        Rediscovery and reloads remove the entity with its registry entry
-        still enabled, so the repair survives those.
+        A re-interview or metadata update may bring the value back on another
+        platform, so nothing would clear it later. If the value is still
+        unmapped, the next entity raises the repair again.
         """
         await super().async_will_remove_from_hass()
-        if (
-            self.registry_entry is not None
-            and self.registry_entry.disabled
-            and (issue_id := self._unmapped_issue_id) is not None
-        ):
-            ir.async_delete_issue(self.hass, DOMAIN, issue_id)
+        self._async_clear_unmapped_value()
 
     @callback
     @override

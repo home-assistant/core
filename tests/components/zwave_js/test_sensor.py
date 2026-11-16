@@ -9,7 +9,7 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from zwave_js_server.const.command_class.meter import MeterType
 from zwave_js_server.event import Event
 from zwave_js_server.exceptions import FailedZWaveCommand
-from zwave_js_server.model.node import Node
+from zwave_js_server.model.node import Node, NodeDataType
 
 from homeassistant.components.sensor import (
     ATTR_OPTIONS,
@@ -20,6 +20,7 @@ from homeassistant.components.sensor import (
 from homeassistant.components.zwave_js.const import (
     ATTR_METER_TYPE,
     ATTR_METER_TYPE_NAME,
+    ATTR_VALUE,
     DOMAIN,
     ZWaveJSService,
     ZWaveJSServiceArgument,
@@ -1443,6 +1444,10 @@ async def test_unmapped_enum_value_creates_repair(
     issue = issue_registry.async_get_issue(*matching[0])
     assert issue
     assert issue.config_entry_id == integration.entry_id
+    # Config parameter states come from the device config file, so a
+    # re-interview would not help.
+    assert not issue.is_fixable
+    assert issue.translation_key == "unmapped_enum_value_no_fix"
 
 
 @pytest.mark.usefixtures("client", "lock_id_lock_as_id150")
@@ -1779,31 +1784,108 @@ async def test_unmapped_enum_value_repair_follows_entity(
     node.receive_event(_power_source_value_event(node, 99, 1))
     await hass.async_block_till_done()
     [issue_id] = unmapped_issues()
-    issue_registry.async_ignore(DOMAIN, issue_id, True)
 
-    # A reload removes the entity temporarily; the ignored repair stays.
+    async def set_disabled(disabled_by: er.RegistryEntryDisabler | None) -> None:
+        entity_registry.async_update_entity(entity_id, disabled_by=disabled_by)
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1)
+        )
+        await hass.async_block_till_done()
+
+    # A reload clears the repair and the new entity raises it again.
     await hass.config_entries.async_reload(integration.entry_id)
     await hass.async_block_till_done()
+    assert unmapped_issues() == [issue_id]
+
+    await set_disabled(er.RegistryEntryDisabler.USER)
+    assert not unmapped_issues()
+
+    await set_disabled(None)
+    assert unmapped_issues() == [issue_id]
+
+    # An ignored repair stays ignored across disable and re-enable.
+    issue_registry.async_ignore(DOMAIN, issue_id, True)
+    await set_disabled(er.RegistryEntryDisabler.USER)
+    await set_disabled(None)
     issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert issue
     assert issue.dismissed_version is not None
 
-    entity_registry.async_update_entity(
-        entity_id, disabled_by=er.RegistryEntryDisabler.USER
-    )
-    async_fire_time_changed(
-        hass, dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1)
-    )
+    entity_registry.async_remove(entity_id)
     await hass.async_block_till_done()
     assert not unmapped_issues()
 
-    entity_registry.async_update_entity(entity_id, disabled_by=None)
-    async_fire_time_changed(
-        hass, dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1)
-    )
-    await hass.async_block_till_done()
+
+async def test_unmapped_notification_value_at_startup(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    unmapped_motion_sensor: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test a notification value that is already unmapped when the entity is added."""
+    state = hass.states.get("sensor.multisensor_6_motion_sensor_status")
+    assert state
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes[ATTR_VALUE] == 8
+
+    [issue] = [
+        issue
+        for (domain, issue_id), issue in issue_registry.issues.items()
+        if domain == DOMAIN and issue_id.startswith("unmapped_enum_value.")
+    ]
+    assert issue.is_fixable
+    assert issue.translation_key == "unmapped_enum_value"
+    assert issue.translation_placeholders == {
+        "device_name": "Multisensor 6",
+        "entity_id": "sensor.multisensor_6_motion_sensor_status",
+        "raw_value": "8",
+    }
+
+
+@pytest.mark.parametrize("platforms", [[Platform.BINARY_SENSOR, Platform.SENSOR]])
+async def test_unmapped_notification_value_cleared_by_reinterview(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    unmapped_motion_sensor: Node,
+    multisensor_6_state: NodeDataType,
+    integration: MockConfigEntry,
+) -> None:
+    """Test a re-interview that maps the value onto a binary sensor clears the repair."""
+    node = unmapped_motion_sensor
+
+    def unmapped_issues() -> list[str]:
+        return [
+            iid
+            for (d, iid) in issue_registry.issues
+            if d == DOMAIN and iid.startswith("unmapped_enum_value.")
+        ]
+
     assert unmapped_issues()
 
-    entity_registry.async_remove(entity_id)
+    node.receive_event(
+        Event(
+            "interview started",
+            {"source": "node", "event": "interview started", "nodeId": node.node_id},
+        )
+    )
     await hass.async_block_till_done()
+
+    # The interview restores the "Motion detection" state.
+    new_state = copy.deepcopy(multisensor_6_state)
+    new_state["name"] = new_state.get("name") or ""
+    new_state["location"] = new_state.get("location") or ""
+    node.receive_event(
+        Event(
+            "ready",
+            {
+                "source": "node",
+                "event": "ready",
+                "nodeId": node.node_id,
+                "nodeState": new_state,
+            },
+        )
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("binary_sensor.multisensor_6_motion_detection")
     assert not unmapped_issues()
