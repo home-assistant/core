@@ -38,7 +38,7 @@
     'children_media_class': None,
     'domain': 'jellyfin',
     'identifier': 'ALBUM-UUID',
-    'media_class': <MediaClass.ARTIST: 'artist'>,
+    'media_class': <MediaClass.ALBUM: 'album'>,
     'media_content_id': 'media-source://jellyfin/ALBUM-UUID',
     'media_content_type': '',
     'not_shown': 0,

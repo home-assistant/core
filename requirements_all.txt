@@ -229,6 +229,7 @@ aioazuredevops==2.2.2
 # homeassistant.components.baf
 aiobafi6==0.9.0
 
+# homeassistant.components.amazon_polly
 # homeassistant.components.aws
 # homeassistant.components.aws_s3
 # homeassistant.components.cloudflare_r2
@@ -285,7 +286,7 @@ aiofiles==25.1.0
 aioflo==2026.9.4
 
 # homeassistant.components.yi
-aioftp==0.21.3
+aioftp==0.28.3
 
 # homeassistant.components.ghost
 aioghost==0.4.16
@@ -492,6 +493,9 @@ aiothreema==0.3.0
 # homeassistant.components.tractive
 aiotractive==2.1.0
 
+# homeassistant.components.trimlight
+aiotrimlight==0.4.0
+
 # homeassistant.components.unifi
 aiounifi==99
 
@@ -532,7 +536,7 @@ airgradient==0.11.0
 airly==1.1.0
 
 # homeassistant.components.airos
-airos==0.6.13
+airos==0.6.14
 
 # homeassistant.components.airpatrol
 airpatrol==0.1.0
@@ -760,7 +764,6 @@ bosch-shc-camera-client==0.7.0
 # homeassistant.components.bosch_shc
 boschshcpy==0.6.27
 
-# homeassistant.components.amazon_polly
 # homeassistant.components.route53
 boto3==1.43.117
 
@@ -990,7 +993,7 @@ energyid-webhooks==0.0.17
 energyzero==5.1.1
 
 # homeassistant.components.enocean
-enocean-async==0.4.2
+enocean-async==0.16.0
 
 # homeassistant.components.entur_public_transport
 enturclient==0.2.4
@@ -1238,7 +1241,7 @@ gps3==0.33.3
 grandstream-home-api==0.1.7
 
 # homeassistant.components.gree
-greeclimate==3.6.5
+greeclimate==4.3.1
 
 # homeassistant.components.greencell
 greencell_client==1.0.3
@@ -1514,7 +1517,7 @@ knocki==0.4.2
 knx-frontend==2026.11.8.11926
 
 # homeassistant.components.knx
-knx-telegram-store[sqlite,postgres]==0.15.2
+knx-telegram-store[sqlite,postgres]==0.16.0
 
 # homeassistant.components.kraken
 krakenex==2.2.2
@@ -2282,7 +2285,7 @@ pyenvertechevt800==0.2.4
 pyenvisalink==4.9
 
 # homeassistant.components.ephember
-pyephember2==0.4.13
+pyephember2==0.4.14
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
@@ -2737,7 +2740,7 @@ pyspeex-noise==1.0.2
 pysqueezebox==0.14.0
 
 # homeassistant.components.stiebel_eltron
-pystiebeleltron==0.10.1
+pystiebeleltron==0.11.0
 
 # homeassistant.components.suez_water
 pysuezV2==2.0.8
@@ -3285,7 +3288,7 @@ switchbot-api==2.13.0
 synology-srm==0.2.0
 
 # homeassistant.components.system_bridge
-systembridgeconnector==5.27.0
+systembridgeconnector==5.29.0
 
 # homeassistant.components.tailscale
 tailscale==1.0.0
