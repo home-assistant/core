@@ -54,15 +54,10 @@ def mock_get_tiles() -> Generator[AsyncMock]:
 @pytest.fixture
 def mock_tile_ble_device() -> Generator[MagicMock]:
     """Mock talking to a Tile over Bluetooth."""
-    with (
-        patch(
-            "homeassistant.components.tile_ble.config_flow.TileBleDevice",
-            autospec=True,
-        ) as mock_device,
-        patch(
-            "homeassistant.components.tile_ble.button.TileBleDevice", new=mock_device
-        ),
-    ):
+    with patch(
+        "homeassistant.components.tile_ble.config_flow.TileBleDevice",
+        autospec=True,
+    ) as mock_device:
         yield mock_device
 
 

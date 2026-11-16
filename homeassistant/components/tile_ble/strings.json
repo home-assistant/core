@@ -33,20 +33,5 @@
         "description": "Log in to your Tile account to get the names of your Tiles and the keys needed to ring them. Only the key of the Tile you set up is stored, not your credentials."
       }
     }
-  },
-  "entity": {
-    "button": {
-      "ring": {
-        "name": "Ring"
-      }
-    }
-  },
-  "exceptions": {
-    "device_not_found": {
-      "message": "The Tile cannot be reached over Bluetooth: {reason}"
-    },
-    "ring_failed": {
-      "message": "Could not ring the Tile: {error}"
-    }
   }
 }

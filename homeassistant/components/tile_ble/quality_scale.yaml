@@ -34,17 +34,17 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions: done
+  action-exceptions:
+    status: exempt
+    comment: This integration does not provide actions.
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
     comment: This integration does not have an options flow.
   docs-installation-parameters: todo
   entity-unavailable:
-    status: done
-    comment: |
-      The ring button is unavailable while the Tile is out of range; the device
-      tracker reports it as away instead.
+    status: exempt
+    comment: A Tile out of range is reported as away instead of unavailable.
   integration-owner: done
   log-when-unavailable:
     status: exempt
@@ -77,13 +77,19 @@ rules:
   entity-category: done
   entity-device-class:
     status: exempt
-    comment: Neither the device tracker nor the ring button has a fitting device class.
+    comment: The device tracker has no device class.
   entity-disabled-by-default:
     status: exempt
     comment: All entities are useful for every Tile.
-  entity-translations: done
-  exception-translations: done
-  icon-translations: done
+  entity-translations:
+    status: exempt
+    comment: The device tracker uses the device name.
+  exception-translations:
+    status: exempt
+    comment: This integration does not raise exceptions.
+  icon-translations:
+    status: exempt
+    comment: The device tracker has no custom icon.
   reconfiguration-flow:
     status: exempt
     comment: There is nothing to reconfigure.

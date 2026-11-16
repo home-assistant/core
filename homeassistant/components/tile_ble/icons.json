@@ -1,9 +1,0 @@
-{
-  "entity": {
-    "button": {
-      "ring": {
-        "default": "mdi:bell-ring"
-      }
-    }
-  }
-}
