@@ -6,11 +6,6 @@ from pymiele import MieleAPI
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryError,
-    ConfigEntryNotReady,
-)
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
@@ -64,22 +59,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: MieleConfigEntry) -> Non
     _api = MieleAPI(auth)
     _coordinator = MieleDataUpdateCoordinator(hass, entry, _api)
     _aux_coordinator = MieleAuxDataUpdateCoordinator(hass, entry, _api)
+
+    async def _first_refresh(
+        coordinator: MieleDataUpdateCoordinator | MieleAuxDataUpdateCoordinator,
+    ) -> None:
+        """Refresh a coordinator for the first time."""
+        await coordinator.async_config_entry_first_refresh()
+
     refresh_tasks = [
-        hass.async_create_task(_coordinator.async_config_entry_first_refresh()),
-        hass.async_create_task(_aux_coordinator.async_config_entry_first_refresh()),
+        hass.async_create_task(_first_refresh(_coordinator)),
+        hass.async_create_task(_first_refresh(_aux_coordinator)),
     ]
     try:
         await asyncio.gather(*refresh_tasks)
-    except BaseException as err:
+    except BaseException:
         # A failed refresh must not leave its sibling running.
         for task in refresh_tasks:
             task.cancel()
         await asyncio.gather(*refresh_tasks, return_exceptions=True)
-        if isinstance(
-            err, asyncio.CancelledError | ConfigEntryAuthFailed | ConfigEntryError
-        ):
-            raise
-        raise ConfigEntryNotReady(str(err)) from err
+        raise
 
     entry.runtime_data = MieleRuntimeData(_api, _coordinator, _aux_coordinator)
 
