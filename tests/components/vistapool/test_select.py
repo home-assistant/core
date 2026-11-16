@@ -11,11 +11,11 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
-    ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -147,8 +147,11 @@ async def test_select_option_writes_index(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: option},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            SelectServiceArgument.OPTION: option,
+        },
         blocking=True,
     )
 
@@ -210,8 +213,11 @@ async def test_select_option_raises_on_api_error(
     with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: "select.my_pool_pump_mode", ATTR_OPTION: "heat"},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: "select.my_pool_pump_mode",
+                SelectServiceArgument.OPTION: "heat",
+            },
             blocking=True,
         )
     assert excinfo.value.translation_key == "set_failed"
@@ -326,8 +332,11 @@ async def test_light_mode_select_writes_one_command(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.my_pool_light_mode", ATTR_OPTION: option},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: "select.my_pool_light_mode",
+            SelectServiceArgument.OPTION: option,
+        },
         blocking=True,
     )
 
@@ -378,10 +387,10 @@ async def test_light_schedule_frequency_writes_raw_value(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: "select.my_pool_light_schedule_frequency",
-            ATTR_OPTION: "weekly",
+            CommonServiceArgument.ENTITY_ID: "select.my_pool_light_schedule_frequency",
+            SelectServiceArgument.OPTION: "weekly",
         },
         blocking=True,
     )
@@ -406,8 +415,11 @@ async def test_select_reflects_choice_before_push(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.my_pool_pump_speed", ATTR_OPTION: "high"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: "select.my_pool_pump_speed",
+            SelectServiceArgument.OPTION: "high",
+        },
         blocking=True,
     )
 
@@ -431,8 +443,11 @@ async def test_light_mode_raises_on_api_error(
     with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: "select.my_pool_light_mode", ATTR_OPTION: "on"},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: "select.my_pool_light_mode",
+                SelectServiceArgument.OPTION: "on",
+            },
             blocking=True,
         )
     assert excinfo.value.translation_key == "set_failed"

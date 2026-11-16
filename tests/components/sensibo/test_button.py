@@ -8,13 +8,13 @@ import pytest
 from pytest_homeassistant.common import async_fire_time_changed, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -74,9 +74,9 @@ async def test_button_update(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
+        ButtonService.PRESS,
         {
-            ATTR_ENTITY_ID: state_button.entity_id,
+            CommonServiceArgument.ENTITY_ID: state_button.entity_id,
         },
         blocking=True,
     )
@@ -120,9 +120,9 @@ async def test_button_failure(
     ):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
+            ButtonService.PRESS,
             {
-                ATTR_ENTITY_ID: state.entity_id,
+                CommonServiceArgument.ENTITY_ID: state.entity_id,
             },
             blocking=True,
         )

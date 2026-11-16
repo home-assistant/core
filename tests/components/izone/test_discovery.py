@@ -328,11 +328,11 @@ async def test_endpoint_discovered_starts_config_flow(
     assert progress[0]["step_id"] == "confirm"
 
 
-async def test_endpoint_discovered_skips_yaml_excluded(
+async def test_endpoint_discovered_ignores_yaml_exclude(
     hass: HomeAssistant,
     mock_pizone_create_discovery: tuple[AsyncMock, Mock],
 ) -> None:
-    """YAML exclude suppresses integration discovery for that UID."""
+    """YAML exclude no longer suppresses integration discovery."""
     await async_load_yaml_exclude(hass, "000000009")
     mock_create, _mock_service = mock_pizone_create_discovery
 
@@ -343,7 +343,7 @@ async def test_endpoint_discovered_skips_yaml_excluded(
         )
         await hass.async_block_till_done(wait_background_tasks=True)
 
-    mock_flow.assert_not_called()
+    mock_flow.assert_called_once()
 
 
 async def test_maybe_stop_keeps_discovery_for_loaded_entry(

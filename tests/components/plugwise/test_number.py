@@ -7,12 +7,12 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
 from homeassistant.components.plugwise.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
@@ -40,10 +40,10 @@ async def test_adam_temperature_offset_change(
     """Test changing an Adam temperature_offset number."""
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: "number.zone_thermostat_jessie_temperature_offset",
-            ATTR_VALUE: 1.0,
+            CommonServiceArgument.ENTITY_ID: "number.zone_thermostat_jessie_temperature_offset",
+            NumberServiceArgument.VALUE: 1.0,
         },
         blocking=True,
     )
@@ -62,10 +62,10 @@ async def test_adam_temperature_offset_out_of_bounds_change(
     with pytest.raises(ServiceValidationError, match="valid range"):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: "number.zone_thermostat_jessie_temperature_offset",
-                ATTR_VALUE: 3.0,
+                CommonServiceArgument.ENTITY_ID: "number.zone_thermostat_jessie_temperature_offset",
+                NumberServiceArgument.VALUE: 3.0,
             },
             blocking=True,
         )
@@ -77,10 +77,10 @@ async def test_adam_preset_temperature_change(
     """Test changing of a preset temperature number."""
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: "number.badkamer_home_preset_temperature",
-            ATTR_VALUE: 20.5,
+            CommonServiceArgument.ENTITY_ID: "number.badkamer_home_preset_temperature",
+            NumberServiceArgument.VALUE: 20.5,
         },
         blocking=True,
     )
@@ -102,10 +102,10 @@ async def test_adam_preset_temperature_out_of_bounds_change(
     with pytest.raises(ServiceValidationError, match="valid range"):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: "number.badkamer_home_preset_temperature",
-                ATTR_VALUE: 31.0,
+                CommonServiceArgument.ENTITY_ID: "number.badkamer_home_preset_temperature",
+                NumberServiceArgument.VALUE: 31.0,
             },
             blocking=True,
         )
@@ -136,10 +136,10 @@ async def test_adam_preset_cooling_temperature_change(
     """Test changing of an Adam preset cooling temperature number."""
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: "number.living_room_away_preset_cooling_temperature",
-            ATTR_VALUE: 24.0,
+            CommonServiceArgument.ENTITY_ID: "number.living_room_away_preset_cooling_temperature",
+            NumberServiceArgument.VALUE: 24.0,
         },
         blocking=True,
     )
@@ -184,10 +184,10 @@ async def test_adam_dhw_setpoint_change(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: "number.opentherm_domestic_hot_water_setpoint",
-            ATTR_VALUE: 55,
+            CommonServiceArgument.ENTITY_ID: "number.opentherm_domestic_hot_water_setpoint",
+            NumberServiceArgument.VALUE: 55,
         },
         blocking=True,
     )
@@ -245,10 +245,10 @@ async def test_anna_boiler_temperature_change(
     """Test changing an Anna maximum_boiler_temperature_setpoint number."""
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: "number.opentherm_maximum_boiler_temperature_setpoint",
-            ATTR_VALUE: 65,
+            CommonServiceArgument.ENTITY_ID: "number.opentherm_maximum_boiler_temperature_setpoint",
+            NumberServiceArgument.VALUE: 65,
         },
         blocking=True,
     )
@@ -267,10 +267,10 @@ async def test_anna_preset_temperature_change(
     """Test changing of an Anna preset temperature number."""
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: "number.anna_home_preset_temperature",
-            ATTR_VALUE: 20.5,
+            CommonServiceArgument.ENTITY_ID: "number.anna_home_preset_temperature",
+            NumberServiceArgument.VALUE: 20.5,
         },
         blocking=True,
     )
@@ -292,10 +292,10 @@ async def test_anna_preset_cooling_temperature_change(
     """Test changing of an Anna preset cooling temperature number."""
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: "number.anna_away_preset_cooling_temperature",
-            ATTR_VALUE: 26.0,
+            CommonServiceArgument.ENTITY_ID: "number.anna_away_preset_cooling_temperature",
+            NumberServiceArgument.VALUE: 26.0,
         },
         blocking=True,
     )
