@@ -902,13 +902,26 @@ async def test_smart_tcl_portable_ac(
     assert state.state == HVACMode.DRY
     assert state.attributes["temperature"] == 25
 
-    # regression guard: if kAutoMode is set on this device (allowlist entry), the elif
-    # in _calculate_features must prevent HEAT_COOL from being appended twice
+    # regression guard: if this device reports kAutoMode, HEAT_COOL must not be
+    # listed twice and heat_cool must keep the single cooling setpoint
     set_node_attribute(matter_node, 1, 513, 65532, 34)  # kCooling (2) | kAutoMode (32)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get("climate.smart_tcl_portable_ac")
     assert state
     assert state.attributes["hvac_modes"].count(HVACMode.HEAT_COOL) == 1
+
+    set_node_attribute(matter_node, 1, 513, 28, 1)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("climate.smart_tcl_portable_ac")
+    assert state
+    assert state.state == HVACMode.HEAT_COOL
+    assert not (
+        state.attributes["supported_features"]
+        & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+    )
+    assert state.attributes["temperature"] == 25
+    assert state.attributes.get("target_temp_high") is None
+    assert state.attributes.get("target_temp_low") is None
 
 
 @pytest.mark.parametrize("node_fixture", ["longan_link_thermostat"])

@@ -92,6 +92,7 @@ SINGLE_SETPOINT_DEVICES: set[tuple[int, int]] = {
     (0x1209, 0x8027),
     (0x1209, 0x8028),
     (0x1209, 0x8029),
+    (0x1334, 0x0A84),
 }
 
 SUPPORT_DRY_MODE_DEVICES: set[tuple[int, int]] = {
