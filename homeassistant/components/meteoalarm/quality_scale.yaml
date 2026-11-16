@@ -78,7 +78,5 @@ rules:
 
   # Platinum
   async-dependency: todo
-  inject-websession:
-    status: exempt
-    comment: The meteoalarmapi library uses requests and does not accept an injected websession.
+  inject-websession: todo
   strict-typing: todo
