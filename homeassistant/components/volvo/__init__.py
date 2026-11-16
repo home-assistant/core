@@ -86,11 +86,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: VolvoConfigEntry) -> No
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
-async def async_remove_entry(hass: HomeAssistant, entry: VolvoConfigEntry) -> None:
-    """Remove a config entry."""
-    ir.async_delete_issue(hass, DOMAIN, _volvoid_migration_issue_id(entry))
-
-
 async def _async_auth_and_create_api(
     hass: HomeAssistant, entry: VolvoConfigEntry
 ) -> VolvoCarsApi:
@@ -152,17 +147,13 @@ async def _async_load_supported_commands(api: VolvoCarsApi) -> list[str]:
     return [c.command for c in commands if c is not None]
 
 
-def _volvoid_migration_issue_id(entry: VolvoConfigEntry) -> str:
-    return f"volvoid_migration_{entry.entry_id}"
-
-
 @callback
 def _async_check_volvoid_migration(
     hass: HomeAssistant,
     entry: VolvoConfigEntry,
     implementation: AbstractOAuth2Implementation,
 ) -> None:
-    issue_id = _volvoid_migration_issue_id(entry)
+    issue_id = f"volvoid_migration_{entry.entry_id}"
 
     if isinstance(implementation, LocalOAuth2Implementation) and is_legacy_client(
         implementation.client_id
@@ -171,6 +162,7 @@ def _async_check_volvoid_migration(
             hass,
             DOMAIN,
             issue_id,
+            config_entry_id=entry.entry_id,
             is_fixable=True,
             is_persistent=False,
             severity=ir.IssueSeverity.WARNING,

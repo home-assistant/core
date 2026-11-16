@@ -378,6 +378,9 @@
   "issues": {
     "volvoid_migration": {
       "fix_flow": {
+        "abort": {
+          "reauth_started": "Re-authentication started. Sign in with the new credentials to finish the migration."
+        },
         "error": {
           "no_new_credential": "No new Volvo application credentials found. Add the credentials of your new Volvo API application, with a client ID starting with `vid-dc-`, first."
         },

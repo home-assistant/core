@@ -4,7 +4,8 @@ from typing import TYPE_CHECKING, Any
 
 from volvocarsapi.auth import is_legacy_client
 
-from homeassistant.components.repairs import RepairsFlow, RepairsFlowResult
+from homeassistant.components.repairs import FlowType, RepairsFlow, RepairsFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_oauth2_flow import (
     LocalOAuth2Implementation,
@@ -36,8 +37,12 @@ class VolvoIdMigrationRepairFlow(RepairsFlow):
 
         if user_input is not None:
             if await self._async_has_new_credential():
-                self._entry.async_start_reauth(self.hass)
-                return self.async_create_entry(data={})
+                # Aborting keeps the issue until the reload after a successful
+                # reauth removes it
+                return self.async_abort(
+                    reason="reauth_started",
+                    next_flow=(FlowType.CONFIG_FLOW, await self._async_reauth()),
+                )
 
             errors["base"] = "no_new_credential"
 
@@ -49,6 +54,23 @@ class VolvoIdMigrationRepairFlow(RepairsFlow):
                 "volvo_dev_portal": VOLVO_DEV_PORTAL_URL,
             },
         )
+
+    async def _async_reauth(self) -> str:
+        """Return the ID of the reauth flow of the entry, starting one if needed."""
+        for flow in self._entry.async_get_active_flows(self.hass, {SOURCE_REAUTH}):
+            return flow["flow_id"]
+
+        result = await self.hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": SOURCE_REAUTH,
+                "entry_id": self._entry.entry_id,
+                "title_placeholders": {"name": self._entry.title},
+                "unique_id": self._entry.unique_id,
+            },
+            data=self._entry.data,
+        )
+        return result["flow_id"]
 
     async def _async_has_new_credential(self) -> bool:
         implementations = await async_get_implementations(self.hass, DOMAIN)
