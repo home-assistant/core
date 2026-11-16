@@ -3,7 +3,6 @@
 from typing import Any, override
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -40,7 +39,7 @@ class ResponseBinarySensor(
         self,
         coordinator: FireServiceUpdateCoordinator,
         client: FireServiceRotaClient,
-        entry: ConfigEntry,
+        entry: FireServiceConfigEntry,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)

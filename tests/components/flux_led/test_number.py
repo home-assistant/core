@@ -10,16 +10,16 @@ from homeassistant.components import flux_led
 from homeassistant.components.flux_led import number as flux_number
 from homeassistant.components.flux_led.const import DOMAIN
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_HOST,
     CONF_NAME,
     STATE_ON,
     STATE_UNAVAILABLE,
+    CommonServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -102,8 +102,11 @@ async def test_rgb_light_effect_speed(hass: HomeAssistant) -> None:
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: number_entity_id, ATTR_VALUE: 100},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: number_entity_id,
+                NumberServiceArgument.VALUE: 100,
+            },
             blocking=True,
         )
 
@@ -118,8 +121,11 @@ async def test_rgb_light_effect_speed(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: number_entity_id, ATTR_VALUE: 100},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: number_entity_id,
+            NumberServiceArgument.VALUE: 100,
+        },
         blocking=True,
     )
     bulb.async_set_effect.assert_called_with("colorloop", 100, 50)
@@ -128,8 +134,11 @@ async def test_rgb_light_effect_speed(hass: HomeAssistant) -> None:
     await async_mock_effect_speed(hass, bulb, "red_fade", 50)
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: number_entity_id, ATTR_VALUE: 50},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: number_entity_id,
+            NumberServiceArgument.VALUE: 50,
+        },
         blocking=True,
     )
     bulb.async_set_effect.assert_called_with("red_fade", 50, 50)
@@ -176,16 +185,22 @@ async def test_original_addressable_light_effect_speed(hass: HomeAssistant) -> N
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: number_entity_id, ATTR_VALUE: 100},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: number_entity_id,
+                NumberServiceArgument.VALUE: 100,
+            },
             blocking=True,
         )
 
     await async_mock_device_turn_on(hass, bulb)
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: number_entity_id, ATTR_VALUE: 100},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: number_entity_id,
+            NumberServiceArgument.VALUE: 100,
+        },
         blocking=True,
     )
     bulb.async_set_effect.assert_called_with("7 colors change gradually", 100, 50)
@@ -232,8 +247,11 @@ async def test_addressable_light_effect_speed(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: number_entity_id, ATTR_VALUE: 100},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: number_entity_id,
+            NumberServiceArgument.VALUE: 100,
+        },
         blocking=True,
     )
     bulb.async_set_effect.assert_called_with("RBM 1", 100, 50)
@@ -242,8 +260,11 @@ async def test_addressable_light_effect_speed(hass: HomeAssistant) -> None:
     await async_mock_device_turn_on(hass, bulb)
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: number_entity_id, ATTR_VALUE: 100},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: number_entity_id,
+            NumberServiceArgument.VALUE: 100,
+        },
         blocking=True,
     )
     bulb.async_set_effect.assert_called_with("RBM 1", 100, 50)
@@ -294,15 +315,21 @@ async def test_addressable_light_pixel_config(hass: HomeAssistant) -> None:
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: pixels_per_segment_entity_id, ATTR_VALUE: 5000},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: pixels_per_segment_entity_id,
+                NumberServiceArgument.VALUE: 5000,
+            },
             blocking=True,
         )
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: pixels_per_segment_entity_id, ATTR_VALUE: 100},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: pixels_per_segment_entity_id,
+            NumberServiceArgument.VALUE: 100,
+        },
         blocking=True,
     )
     async_fire_time_changed(
@@ -316,15 +343,21 @@ async def test_addressable_light_pixel_config(hass: HomeAssistant) -> None:
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: music_pixels_per_segment_entity_id, ATTR_VALUE: 5000},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: music_pixels_per_segment_entity_id,
+                NumberServiceArgument.VALUE: 5000,
+            },
             blocking=True,
         )
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: music_pixels_per_segment_entity_id, ATTR_VALUE: 100},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: music_pixels_per_segment_entity_id,
+            NumberServiceArgument.VALUE: 100,
+        },
         blocking=True,
     )
     async_fire_time_changed(
@@ -337,15 +370,21 @@ async def test_addressable_light_pixel_config(hass: HomeAssistant) -> None:
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: segments_entity_id, ATTR_VALUE: 50},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: segments_entity_id,
+                NumberServiceArgument.VALUE: 50,
+            },
             blocking=True,
         )
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: segments_entity_id, ATTR_VALUE: 5},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: segments_entity_id,
+            NumberServiceArgument.VALUE: 5,
+        },
         blocking=True,
     )
     async_fire_time_changed(
@@ -358,15 +397,21 @@ async def test_addressable_light_pixel_config(hass: HomeAssistant) -> None:
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: music_segments_entity_id, ATTR_VALUE: 50},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: music_segments_entity_id,
+                NumberServiceArgument.VALUE: 50,
+            },
             blocking=True,
         )
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: music_segments_entity_id, ATTR_VALUE: 5},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: music_segments_entity_id,
+            NumberServiceArgument.VALUE: 5,
+        },
         blocking=True,
     )
     async_fire_time_changed(

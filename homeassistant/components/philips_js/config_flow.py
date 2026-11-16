@@ -13,12 +13,7 @@ from haphilipsjs import (
 )
 import probatio
 
-from homeassistant.config_entries import (
-    SOURCE_REAUTH,
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-)
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_API_VERSION,
     CONF_HOST,
@@ -37,6 +32,7 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import LOGGER
 from .const import CONF_ALLOW_NOTIFY, CONF_SYSTEM, CONST_APP_ID, CONST_APP_NAME, DOMAIN
+from .coordinator import PhilipsTVConfigEntry
 
 USER_SCHEMA = probatio.Schema(
     {
@@ -89,7 +85,7 @@ class PhilipsJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self._current[CONF_HOST] = host
         self._current[CONF_SYSTEM] = hub.system
         self._current[CONF_API_VERSION] = hub.api_version
-        self.context.update({"title_placeholders": {CONF_NAME: hub.name}})
+        self.context.update({"title_placeholders": {"name": hub.name}})
 
         if serialnumber := hub.system.get("serialnumber"):
             await self.async_set_unique_id(serialnumber)
@@ -214,7 +210,7 @@ class PhilipsJSConfigFlow(ConfigFlow, domain=DOMAIN):
         ]
         return self.async_show_form(
             step_id="zeroconf_confirm",
-            description_placeholders={CONF_NAME: name},
+            description_placeholders={"name": name},
         )
 
     @override
@@ -242,7 +238,7 @@ class PhilipsJSConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: PhilipsTVConfigEntry,
     ) -> SchemaOptionsFlowHandler:
         """Get the options flow for this handler."""
         return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)

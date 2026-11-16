@@ -51,6 +51,7 @@ async def test_all_entities(
         Fixture(
             {"type:fhtChannel"}, "vicare/FHTChannel.json", gateway_id="fht_gateway"
         ),
+        Fixture({"type:virtual;smartRoomControl"}, "vicare/RoomControl.json"),
     ]
     with (
         patch(
@@ -96,3 +97,36 @@ async def test_holiday(
     # the device reports 2000-01-01 for a holiday at home that is not scheduled
     assert hass.states.get("binary_sensor.model0_holiday_at_home").state == STATE_OFF
     assert hass.states.get("sensor.model0_holiday_at_home_start").state == STATE_UNKNOWN
+
+
+async def test_room_window_and_condensation_risk(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the open window and condensation risk of each room."""
+    vicare = MockPyViCare(
+        [Fixture({"type:virtual;smartRoomControl"}, "vicare/RoomControl.json")]
+    )
+    for feature in vicare.services["gateway0"]._features["deviceId0"]:
+        if feature["feature"] in (
+            "rooms.1.sensors.openWindow",
+            "rooms.0.condensationRisk",
+        ):
+            feature["properties"]["value"]["value"] = True
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(f"{MODULE}.PyViCare", return_value=vicare),
+        patch(f"{MODULE}.PLATFORMS", [Platform.BINARY_SENSOR]),
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    for entity_id, state in (
+        ("binary_sensor.model0_room_0_window", STATE_OFF),
+        ("binary_sensor.model0_room_0_condensation_risk", STATE_ON),
+        ("binary_sensor.model0_room_1_window", STATE_ON),
+        ("binary_sensor.model0_room_1_condensation_risk", STATE_OFF),
+    ):
+        await async_update_entity(hass, entity_id)
+        assert hass.states.get(entity_id).state == state

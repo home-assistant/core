@@ -73,7 +73,15 @@ class SW16FlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle import."""
-        return await self.async_step_user(import_data)
+        self._async_abort_entries_match(
+            {CONF_HOST: import_data[CONF_HOST], CONF_PORT: import_data[CONF_PORT]}
+        )
+        try:
+            await validate_input(self.hass, import_data)
+        except CannotConnect:
+            return self.async_abort(reason="cannot_connect")
+        address = f"{import_data[CONF_HOST]}:{import_data[CONF_PORT]}"
+        return self.async_create_entry(title=address, data=import_data)
 
     @override
     async def async_step_user(

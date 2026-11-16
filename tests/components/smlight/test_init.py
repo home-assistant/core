@@ -1,11 +1,12 @@
 "Test SMLIGHT SLZB device integration initialization."
 
+import asyncio
 from datetime import timedelta
 from unittest.mock import MagicMock, call
 
 from aiohttp import ClientResponseError, RequestInfo
 from freezegun.api import FrozenDateTimeFactory
-from pysmlight import Info
+from pysmlight import Firmware, Info
 from pysmlight.exceptions import SmlightAuthError, SmlightConnectionError, SmlightError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
@@ -203,7 +204,7 @@ async def test_async_setup_no_internet(
 
     freezer.tick(SCAN_FIRMWARE_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     entity = hass.states.get("update.mock_title_core_firmware")
     assert entity is not None
@@ -213,12 +214,76 @@ async def test_async_setup_no_internet(
 
     freezer.tick(SCAN_FIRMWARE_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     entity = hass.states.get("update.mock_title_core_firmware")
     assert entity is not None
     assert entity.state == STATE_ON
     assert entity.attributes[ATTR_INSTALLED_VERSION] == "v2.3.6"
+
+
+async def test_slow_firmware_catalog_does_not_block_setup(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+) -> None:
+    """Test local entities load while the firmware catalog is pending."""
+    catalog_ready = asyncio.Event()
+    get_firmware = mock_smlight_client.get_firmware_version.side_effect
+
+    async def slow_catalog(*args: object, **kwargs: object) -> list[Firmware]:
+        await catalog_ready.wait()
+        return get_firmware(*args, **kwargs)
+
+    mock_smlight_client.get_firmware_version.side_effect = slow_catalog
+    entry = await setup_integration(hass, mock_config_entry, wait_for_background=False)
+
+    assert entry.state is ConfigEntryState.LOADED
+    state = hass.states.get("sensor.mock_title_core_chip_temp")
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+    state = hass.states.get("update.mock_title_core_firmware")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "v2.3.6"
+
+    catalog_ready.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("update.mock_title_core_firmware")
+    assert state is not None
+    assert state.state == STATE_ON
+
+
+async def test_unload_cancels_firmware_catalog(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+) -> None:
+    """Test unloading cancels a pending background firmware refresh."""
+    catalog_started = asyncio.Event()
+    catalog_cancelled = asyncio.Event()
+
+    async def pending_catalog(*args: object, **kwargs: object) -> list[Firmware]:
+        catalog_started.set()
+        try:
+            await asyncio.Future()
+        except asyncio.CancelledError:
+            catalog_cancelled.set()
+            raise
+        return []
+
+    mock_smlight_client.get_firmware_version.side_effect = pending_catalog
+    entry = await setup_integration(hass, mock_config_entry, wait_for_background=False)
+    await catalog_started.wait()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.NOT_LOADED
+    assert catalog_cancelled.is_set()
+    mock_smlight_client.get_firmware_version.assert_awaited_once()
 
 
 @pytest.mark.parametrize("error", [SmlightConnectionError, SmlightAuthError])
@@ -286,11 +351,73 @@ async def test_device_legacy_firmware(
     assert LEGACY_VERSION in device_entry.sw_version
 
     issue = issue_registry.async_get_issue(
-        domain=DOMAIN, issue_id="unsupported_firmware"
+        domain=DOMAIN, issue_id=f"unsupported_firmware_{entry.entry_id}"
     )
     assert issue is not None
     assert issue.domain == DOMAIN
-    assert issue.issue_id == "unsupported_firmware"
+    assert issue.translation_key == "unsupported_firmware"
+    assert issue.config_entry_id == entry.entry_id
+    assert issue.translation_placeholders == {"name": entry.title}
+
+
+async def test_legacy_firmware_issue_per_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+    issue_registry: IssueRegistry,
+) -> None:
+    """Test each entry gets its own legacy firmware issue, removed with the entry."""
+    mock_smlight_client.get_info.side_effect = None
+    mock_smlight_client.get_info.return_value = Info(
+        legacy_api=2, sw_version="v0.9.9", MAC="AA:BB:CC:DD:EE:FF"
+    )
+    other_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Other SLZB",
+        data=mock_config_entry.data,
+        unique_id="aa:bb:cc:dd:ee:00",
+    )
+    other_entry.add_to_hass(hass)
+    await setup_integration(hass, mock_config_entry)
+
+    for entry in (mock_config_entry, other_entry):
+        issue = issue_registry.async_get_issue(
+            DOMAIN, f"unsupported_firmware_{entry.entry_id}"
+        )
+        assert issue is not None
+        assert issue.config_entry_id == entry.entry_id
+        assert issue.translation_placeholders == {"name": entry.title}
+
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert {
+        issue_id for domain, issue_id in issue_registry.issues if domain == DOMAIN
+    } == {f"unsupported_firmware_{other_entry.entry_id}"}
+
+
+async def test_legacy_firmware_issue_deleted_after_update(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+    issue_registry: IssueRegistry,
+) -> None:
+    """Test the legacy firmware issue is deleted once the firmware is updated."""
+    default_get_info = mock_smlight_client.get_info.side_effect
+    mock_smlight_client.get_info.side_effect = None
+    mock_smlight_client.get_info.return_value = Info(
+        legacy_api=2, sw_version="v0.9.9", MAC="AA:BB:CC:DD:EE:FF"
+    )
+    await setup_integration(hass, mock_config_entry)
+    issue_id = f"unsupported_firmware_{mock_config_entry.entry_id}"
+    assert (DOMAIN, issue_id) in issue_registry.issues
+
+    mock_smlight_client.get_info.side_effect = default_get_info
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert (DOMAIN, issue_id) not in issue_registry.issues
 
 
 async def test_async_execute_command_auth_failed(

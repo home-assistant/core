@@ -5,9 +5,11 @@ from typing import Any, override
 
 import pybotvac
 
-from homeassistant import config_entries, core
+from homeassistant import core
 from homeassistant.components.application_credentials import AuthImplementation
 from homeassistant.helpers import config_entry_oauth2_flow
+
+from .hub import NeatoConfigEntry
 
 
 class ConfigEntryAuth(pybotvac.OAuthSession):  # type: ignore[misc]
@@ -16,7 +18,7 @@ class ConfigEntryAuth(pybotvac.OAuthSession):  # type: ignore[misc]
     def __init__(
         self,
         hass: core.HomeAssistant,
-        config_entry: config_entries.ConfigEntry,
+        config_entry: NeatoConfigEntry,
         implementation: config_entry_oauth2_flow.AbstractOAuth2Implementation,
     ) -> None:
         """Initialize Neato Botvac Auth."""

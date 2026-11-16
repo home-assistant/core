@@ -15,6 +15,16 @@
         "description": "Please enter a new API key for Pi-hole at {host}/{location}",
         "title": "Reauthenticate Pi-hole"
       },
+      "reconfigure": {
+        "data": {
+          "api_key": "[%key:component::pi_hole::config::step::user::data::api_key%]",
+          "host": "[%key:common::config_flow::data::host%]",
+          "location": "[%key:common::config_flow::data::location%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        }
+      },
       "user": {
         "data": {
           "api_key": "App password or API key",

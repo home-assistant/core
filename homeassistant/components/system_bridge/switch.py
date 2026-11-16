@@ -1,16 +1,23 @@
 """Support for System Bridge switches."""
 
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 from systembridgeconnector.models.modules.displays import DisplayPowerState
+from systembridgeconnector.models.system_control import KeepAwakeRequest
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import AUDIO_INPUT
 from .coordinator import SystemBridgeConfigEntry
-from .entity import SystemBridgeDisplayEntity
+from .entity import (
+    SystemBridgeAudioDeviceEntity,
+    SystemBridgeDisplayEntity,
+    SystemBridgeEntity,
+    async_add_new_audio_devices,
+)
 
 PARALLEL_UPDATES = 0
 
@@ -46,6 +53,86 @@ async def async_setup_entry(
     _async_add_new_displays()
     entry.async_on_unload(coordinator.async_add_listener(_async_add_new_displays))
 
+    async_add_new_audio_devices(
+        entry,
+        AUDIO_INPUT,
+        lambda devices: async_add_entities(
+            SystemBridgeAudioInputMuteSwitch(
+                coordinator,
+                entry.data[CONF_PORT],
+                f"audio_input_{device.id}_mute",
+                AUDIO_INPUT,
+                device,
+            )
+            for device in devices
+        ),
+        lambda device: device.muted is not None,
+    )
+
+    keep_awake_added = False
+
+    # Only systems that can be kept awake report whether they are
+    @callback
+    def _async_add_keep_awake() -> None:
+        nonlocal keep_awake_added
+        if keep_awake_added or (system := coordinator.data.system) is None:
+            return
+        if system.keep_awake is None:
+            return
+        keep_awake_added = True
+        async_add_entities(
+            [
+                SystemBridgeKeepAwakeSwitch(
+                    coordinator, entry.data[CONF_PORT], "keep_awake"
+                )
+            ]
+        )
+
+    _async_add_keep_awake()
+    entry.async_on_unload(coordinator.async_add_listener(_async_add_keep_awake))
+
+
+class SystemBridgeKeepAwakeSwitch(SystemBridgeEntity, SwitchEntity):
+    """Define a System Bridge switch that keeps the system from idling."""
+
+    _attr_translation_key = "keep_awake"
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return True if the system reports whether it's kept awake."""
+        return (
+            super().available
+            and (system := self.coordinator.data.system) is not None
+            and system.keep_awake is not None
+        )
+
+    @property
+    @override
+    def is_on(self) -> bool | None:
+        """Return if the system is kept awake."""
+        if (system := self.coordinator.data.system) is None:
+            return None
+        return system.keep_awake
+
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Keep the system awake until turned off."""
+        await self._async_system_control(
+            self.coordinator.websocket_client.set_keep_awake(
+                KeepAwakeRequest(enabled=True)
+            )
+        )
+
+    @override
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Let the system idle again."""
+        await self._async_system_control(
+            self.coordinator.websocket_client.set_keep_awake(
+                KeepAwakeRequest(enabled=False)
+            )
+        )
+
 
 class SystemBridgeDisplayPowerSwitch(SystemBridgeDisplayEntity, SwitchEntity):
     """Define a System Bridge display power switch."""
@@ -69,3 +156,34 @@ class SystemBridgeDisplayPowerSwitch(SystemBridgeDisplayEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the display off."""
         await self._async_display_control(power_state=DisplayPowerState.OFF)
+
+
+class SystemBridgeAudioInputMuteSwitch(SystemBridgeAudioDeviceEntity, SwitchEntity):
+    """Define a System Bridge audio input mute switch."""
+
+    _attr_translation_key = "audio_input_mute"
+
+    @property
+    @override
+    def is_on(self) -> bool | None:
+        """Return if the input is muted."""
+        if (device := self._device) is None:
+            return None
+        return device.muted
+
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Mute the input."""
+        await self._async_set_muted(True)
+
+    @override
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Unmute the input."""
+        await self._async_set_muted(False)
+
+    async def _async_set_muted(self, muted: bool) -> None:
+        """Set the input's mute state."""
+        device = self._device
+        if TYPE_CHECKING:
+            assert device is not None
+        await self._async_audio_control(device, muted=muted)

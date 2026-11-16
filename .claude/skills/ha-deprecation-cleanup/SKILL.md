@@ -83,12 +83,16 @@ new worktree, so one deprecation's changes never end up on another's branch.
    of the commit message.
 4. Write a ready-to-paste PR description following `.github/PULL_REQUEST_TEMPLATE.md`,
    leaving unchecked boxes in place and putting the task issue (if one was found) on the
-   "fixes #" line. When users have to change something, check "Breaking change" and fill
-   in the breaking change section: what breaks, how to fix it and why. Removing a YAML
-   import whose deprecation period has ended is not a breaking change, because the
-   deprecation already announced it: check "Code quality improvements" and remove the
-   breaking change section, as the template allows. Don't commit the description. It goes
-   in the report.
+   "fixes #" line. Pick the type of change with [When it is backward-incompatible](https://contributors.home-assistant.io/releases/guides/backward-incompatible-changes/#when-it-is-backward-incompatible):
+   - Removing something from an integration, including a YAML import, is a breaking
+     change, because users who did not act on the repair are still affected. Check
+     "Breaking change" and fill in the breaking change section: what breaks, how to fix
+     it and why.
+   - Removing a deprecated core API, like a helper or a constant, that nothing in Home
+     Assistant Core uses anymore is not. Check "Code quality improvements" and remove the
+     breaking change section, as the template allows.
+
+   Don't commit the description. It goes in the report.
 5. Push only if the user (or the routine prompt) asked for it, to the remote they named,
    for example the user's fork, or `origin` for maintainers who keep branches upstream.
    Use a plain `git push <remote> <branch>`, and give the compare link to `dev` of

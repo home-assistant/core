@@ -14,6 +14,7 @@
   "categories": ["buttons_remotes"],
   "codeowners": ["@50ButtonsEach"],
   "config_flow": true,
+  "connectivity": ["bluetooth"],
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/flic_button",
   "integration_type": "device",

@@ -665,7 +665,9 @@ async def test_issue_registry_invalid_version(
 
     entry_state = entry.state
     assert entry_state is ConfigEntryState.SETUP_RETRY
-    assert issue_registry.async_get_issue(DOMAIN, issue_raised)
+    issue = issue_registry.async_get_issue(DOMAIN, issue_raised)
+    assert issue
+    assert issue.config_entry_id == entry.entry_id
 
     matter_client.connect.side_effect = original_connect_side_effect
 
@@ -673,6 +675,48 @@ async def test_issue_registry_invalid_version(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
+    assert not issue_registry.async_get_issue(DOMAIN, issue_raised)
+
+
+@pytest.mark.parametrize(
+    ("connect_side_effect", "issue_raised"),
+    [
+        (
+            ServerVersionTooOld("Invalid version"),
+            "server_version_version_too_old",
+        ),
+        (
+            ServerVersionTooNew("Invalid version"),
+            "server_version_version_too_new",
+        ),
+    ],
+)
+async def test_invalid_version_issue_removed_with_entry(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    issue_registry: ir.IssueRegistry,
+    connect_side_effect: Exception,
+    issue_raised: str,
+) -> None:
+    """Test the invalid version issue is deleted when the entry is removed."""
+    matter_client.connect.side_effect = connect_side_effect
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Matter",
+        data={
+            "url": "ws://host1:5581/ws",
+            "use_addon": False,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, issue_raised)
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+
     assert not issue_registry.async_get_issue(DOMAIN, issue_raised)
 
 

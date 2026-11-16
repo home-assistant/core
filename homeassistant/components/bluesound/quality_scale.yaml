@@ -43,7 +43,7 @@ rules:
   reauthentication-flow:
     status: exempt
     comment: The integration connects to devices locally without authentication.
-  test-coverage: todo
+  test-coverage: done
 
   # Gold
   devices: done
@@ -63,10 +63,10 @@ rules:
   entity-category:
     status: exempt
     comment: All entities control normal speaker operation and use the default category.
-  entity-device-class: todo
+  entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
-  exception-translations: todo
+  exception-translations: done
   icon-translations:
     status: exempt
     comment: The integration does not define custom entity icons.
@@ -81,6 +81,4 @@ rules:
   # Platinum
   async-dependency: done
   inject-websession: done
-  strict-typing:
-    status: todo
-    comment: The unload callback does not use the typed config entry alias.
+  strict-typing: done

@@ -3,6 +3,7 @@
 import asyncio
 from ipaddress import IPv4Address, IPv4Network
 import os
+from pathlib import Path
 from unittest.mock import Mock, patch
 
 from aiohasupervisor.models import (
@@ -23,7 +24,7 @@ from aiohasupervisor.models import (
     SupervisorState,
     UpdateChannel,
 )
-from aiohttp import ClientError, hdrs
+from aiohttp import ClientError, hdrs, web
 from multidict import CIMultiDict, CIMultiDictProxy
 import pytest
 from pytest_homeassistant.common import get_system_health_info
@@ -50,7 +51,8 @@ from .test_init import MOCK_ENVIRON
     "supervisor_root_info", "host_info", "os_info", "supervisor_info"
 )
 async def test_hassio_system_health(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test hassio system health."""
     aioclient_mock.get("http://127.0.0.1/supervisor/ping", text="")
@@ -242,7 +244,8 @@ async def test_hassio_system_health(
     "supervisor_root_info", "host_info", "os_info", "supervisor_info"
 )
 async def test_hassio_system_health_with_issues(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test hassio system health."""
     aioclient_mock.get("http://127.0.0.1/supervisor/ping", text="")
@@ -356,6 +359,32 @@ async def test_hassio_system_health_with_issues(
         "error": "unreachable",
         "type": "failed",
     }
+
+
+@pytest.mark.usefixtures("hassio_unix_socket_env")
+async def test_hassio_system_health_unix_socket(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    supervisor_unix_socket: tuple[Path, list[web.Request]],
+) -> None:
+    """Test Supervisor is pinged over its Unix socket when one is used."""
+    aioclient_mock.get("https://version.home-assistant.io/None.json", text="")
+    _, requests = supervisor_unix_socket
+
+    hass.config.components.add("hassio")
+    assert await async_setup_component(hass, "system_health", {})
+    await hass.async_block_till_done()
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        info = await get_system_health_info(hass, "hassio")
+
+    for key, val in info.items():
+        if asyncio.iscoroutine(val):
+            info[key] = await val
+
+    assert info["supervisor_api"] == "ok"
+    assert len(requests) == 1
+    assert requests[0].path == "/supervisor/ping"
 
 
 def _mock_request(host: str, url_host: str) -> Mock:

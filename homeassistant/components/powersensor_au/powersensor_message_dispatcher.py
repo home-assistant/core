@@ -61,12 +61,11 @@ permanently dead.
 """
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from powersensor_local import VirtualHousehold
 from powersensor_local.zeroconf_devices import PowersensorZeroconfDevices
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -79,6 +78,9 @@ from .const import (
     ROLE_UNKNOWN,
     ROLE_UPDATE_SIGNAL,
 )
+
+if TYPE_CHECKING:
+    from .models import PowersensorConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -94,7 +96,7 @@ class PowersensorMessageDispatcher:
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: PowersensorConfigEntry,
         vhh: VirtualHousehold,
         devices: PowersensorZeroconfDevices,
     ) -> None:

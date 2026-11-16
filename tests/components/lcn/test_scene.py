@@ -6,13 +6,8 @@ from pypck.lcn_defs import OutputPort, RelayPort
 from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_ON,
-    STATE_UNAVAILABLE,
-    Platform,
-)
+from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN, SceneService
+from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -41,8 +36,8 @@ async def test_scene_activate(
     with patch.object(MockDeviceConnection, "activate_scene") as activate_scene:
         await hass.services.async_call(
             SCENE_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "scene.testmodule_romantic"},
+            SceneService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: "scene.testmodule_romantic"},
             blocking=True,
         )
 

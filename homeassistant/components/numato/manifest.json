@@ -3,6 +3,7 @@
   "name": "Numato USB GPIO Expander",
   "categories": ["diy_makers.boards_hardware"],
   "codeowners": ["@clssn"],
+  "connectivity": ["serial"],
   "documentation": "https://www.home-assistant.io/integrations/numato",
   "integration_type": "hub",
   "iot_class": "local_push",

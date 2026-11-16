@@ -18,6 +18,7 @@
   "categories": ["climate.thermostats_heating"],
   "codeowners": ["@eulemitkeule", "@dbuezas"],
   "config_flow": true,
+  "connectivity": ["bluetooth"],
   "dependencies": ["bluetooth", "bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/eq3btsmart",
   "integration_type": "device",
