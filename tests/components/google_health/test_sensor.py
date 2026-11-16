@@ -25,7 +25,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.google_health.const import DOMAIN
 from homeassistant.components.google_health.coordinator import DEVICE_POLLING_INTERVAL
-from homeassistant.const import STATE_UNKNOWN, Platform
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util.unit_system import (
@@ -313,7 +313,7 @@ async def test_sensor_unit_conversions(
         state = hass.states.get(entity_id)
         assert state is not None
         assert float(state.state) == expected_state
-        assert state.attributes.get("unit_of_measurement") == expected_unit
+        assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == expected_unit
 
 
 @pytest.mark.parametrize(
