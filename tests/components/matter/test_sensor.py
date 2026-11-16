@@ -1367,7 +1367,7 @@ async def test_meter_serial_number(
     """Test meter serial number."""
     state = hass.states.get("sensor.mock_meter_identification")
     assert state
-    assert state.state == "TEST_METER_001"
+    assert state.state == "METER_001"
 
     set_node_attribute(matter_node, 1, 2822, 2, "987654321")
     await trigger_subscription_callback(hass, matter_client)
