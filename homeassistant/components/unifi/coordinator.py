@@ -179,7 +179,7 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
                 )
 
 
-class UnifiDevicesUpdateCoordinator(UnifiDataUpdateCoordinator[Devices]):
+class UnifiDeviceDataUpdateCoordinator(UnifiDataUpdateCoordinator[Devices]):
     """Synchronize device firmware metadata independently of entities."""
 
     def __init__(self, hub: UnifiHub) -> None:
