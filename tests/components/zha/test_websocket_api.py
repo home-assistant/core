@@ -26,6 +26,7 @@ from zha.application.const import (
     ATTR_TYPE,
     CLUSTER_TYPE_IN,
 )
+from zha.application.platforms.sensor import RSSISensor
 from zha.zigbee.device import (
     ClusterBindEvent,
     ClusterConfigureReportingEvent,
@@ -79,7 +80,7 @@ from homeassistant.components.zha.websocket_api import (
 )
 from homeassistant.const import ATTR_AREA_ID, ATTR_NAME, Platform
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import FIXTURE_GRP_ID, FIXTURE_GRP_NAME
 from .data import BASE_CUSTOM_CONFIGURATION, CONFIG_WITH_ALARM_OPTIONS
@@ -513,6 +514,53 @@ async def test_list_groupable_devices(
 
     device_endpoints = msg["result"]
     assert len(device_endpoints) == 0
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_list_groupable_devices_device_bound_entities(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    zha_client: MockHAClientWebSocket,
+) -> None:
+    """Test entities without an endpoint are left out of the groupable devices."""
+    entity_refs = get_zha_gateway_proxy(hass).ha_entity_refs[
+        EUI64.convert(IEEE_GROUPABLE_DEVICE)
+    ]
+    device_bound = {
+        entity_ref.ha_entity_id
+        for entity_ref in entity_refs
+        if isinstance(entity_ref.entity_data.entity, RSSISensor)
+    }
+    assert len(device_bound) == 2  # RSSI and LQI
+    original_names = {
+        entity_ref.ha_entity_id: entity_registry.async_get(
+            entity_ref.ha_entity_id
+        ).original_name
+        for entity_ref in entity_refs
+    }
+
+    def _no_endpoint(entity: RSSISensor) -> None:
+        raise AttributeError("device-bound entities have no endpoint")
+
+    # Device-bound entities have no endpoint once the library's compat property is gone
+    with patch.object(RSSISensor, "endpoint", property(_no_endpoint)):
+        await zha_client.send_json({ID: 10, TYPE: "zha/devices/groupable"})
+        msg = await zha_client.receive_json()
+
+    assert msg["success"]
+    [endpoint] = [
+        endpoint
+        for endpoint in msg["result"]
+        if endpoint["device"][ATTR_IEEE] == IEEE_GROUPABLE_DEVICE
+    ]
+    assert endpoint["endpoint_id"] == 1
+    assert sorted(entity["original_name"] or "" for entity in endpoint["entities"]) == (
+        sorted(
+            original_name or ""
+            for entity_id, original_name in original_names.items()
+            if entity_id not in device_bound
+        )
+    )
 
 
 async def _async_add_green_power_device(
