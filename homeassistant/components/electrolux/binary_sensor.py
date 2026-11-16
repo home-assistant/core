@@ -27,6 +27,7 @@ from electrolux_group_developer_sdk.client.appliances.wm_appliance import WMAppl
 from electrolux_group_developer_sdk.feature_constants import (
     DOOR_STATE,
     DRAWER_STATUS,
+    FOOD_PROBE_STATE,
     HOOD_AUTO_SWITCH_OFF_EVENT,
     HOOD_FILTER_CHARC_ENABLE,
     UI_LOCK_MODE,
@@ -173,6 +174,13 @@ OVEN_ELECTROLUX_SENSORS: tuple[ElectroluxBinarySensorDescription[OVAppliance], .
         value_fn=lambda appliance: appliance.get_current_door_state(),
         mapping={"closed": False, "open": True},
     ),
+    ElectroluxBinarySensorDescription(
+        key="food_probe_state",
+        translation_key="food_probe_state",
+        exists_fn=lambda appliance: appliance.is_feature_supported(FOOD_PROBE_STATE),
+        value_fn=lambda appliance: appliance.get_current_food_probe_insertion_state(),
+        mapping={"inserted": True, "not_inserted": False},
+    ),
 )
 
 STRUCTURED_OVEN_CAVITY_ELECTROLUX_SENSORS: tuple[
@@ -189,6 +197,17 @@ STRUCTURED_OVEN_CAVITY_ELECTROLUX_SENSORS: tuple[
             cavity
         ),
         mapping={"closed": False, "open": True},
+    ),
+    ElectroluxSubmoduleBinarySensorDescription(
+        key="food_probe_state",
+        translation_key="food_probe_state",
+        exists_fn=lambda appliance, cavity: appliance.is_cavity_feature_supported(
+            cavity, FOOD_PROBE_STATE
+        ),
+        value_fn=lambda appliance, cavity: (
+            appliance.get_current_cavity_food_probe_insertion_state(cavity)
+        ),
+        mapping={"inserted": True, "not_inserted": False},
     ),
 )
 

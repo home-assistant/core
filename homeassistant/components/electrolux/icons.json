@@ -51,6 +51,18 @@
       "appliance_state": {
         "default": "mdi:information-outline"
       },
+      "bottomoven_appliance_state": {
+        "default": "mdi:information-outline"
+      },
+      "bottomoven_display_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "bottomoven_food_probe_state": {
+        "default": "mdi:thermometer-probe"
+      },
+      "bottomoven_food_probe_temperature": {
+        "default": "mdi:thermometer-probe"
+      },
       "bottomoven_running_time": {
         "default": "mdi:timer-outline"
       },
@@ -60,8 +72,26 @@
       "bottomoven_time_left": {
         "default": "mdi:timer-outline"
       },
+      "cycle_phase": {
+        "default": "mdi:animation-play"
+      },
+      "display_temperature": {
+        "default": "mdi:thermometer"
+      },
       "end_at": {
         "default": "mdi:timer-pause-outline"
+      },
+      "extracavity_appliance_state": {
+        "default": "mdi:information-outline"
+      },
+      "extracavity_target_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "filter_state_air": {
+        "default": "mdi:air-filter"
+      },
+      "filter_state_water": {
+        "default": "mdi:filter"
       },
       "food_probe_state": {
         "default": "mdi:thermometer-probe"
@@ -69,17 +99,41 @@
       "food_probe_temperature": {
         "default": "mdi:thermometer-probe"
       },
+      "freezer_appliance_state": {
+        "default": "mdi:information-outline"
+      },
+      "fridge_appliance_state": {
+        "default": "mdi:information-outline"
+      },
+      "hob_hood_window_notification": {
+        "default": "mdi:window-open-variant"
+      },
       "remote_control": {
         "default": "mdi:remote"
       },
       "running_time": {
         "default": "mdi:timer-outline"
       },
+      "sound_volume": {
+        "default": "mdi:volume-high"
+      },
       "start_at": {
         "default": "mdi:timer-play-outline"
       },
       "time_left": {
         "default": "mdi:timer-outline"
+      },
+      "upperoven_appliance_state": {
+        "default": "mdi:information-outline"
+      },
+      "upperoven_display_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "upperoven_food_probe_state": {
+        "default": "mdi:thermometer-probe"
+      },
+      "upperoven_food_probe_temperature": {
+        "default": "mdi:thermometer-probe"
       },
       "upperoven_running_time": {
         "default": "mdi:timer-outline"
