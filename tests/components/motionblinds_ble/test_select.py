@@ -13,9 +13,10 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant.components.motionblinds_ble.const import ATTR_SPEED
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
@@ -36,10 +37,10 @@ async def test_select(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: f"select.{name}_{select}",
-            ATTR_OPTION: MotionSpeedLevel.HIGH.value,
+            CommonServiceArgument.ENTITY_ID: f"select.{name}_{select}",
+            SelectServiceArgument.OPTION: MotionSpeedLevel.HIGH.value,
         },
         blocking=True,
     )

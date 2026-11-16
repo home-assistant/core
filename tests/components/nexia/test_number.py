@@ -3,9 +3,9 @@
 from nexia.home import NexiaHome
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 
@@ -59,8 +59,8 @@ async def test_set_fan_speed(hass: HomeAssistant, patch_nexia_home: NexiaHome) -
     assert state_before.state == "35.0"
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        service_data={ATTR_VALUE: 50},
+        NumberService.SET_VALUE,
+        service_data={NumberServiceArgument.VALUE: 50},
         blocking=True,
         target={"entity_id": "number.master_suite_fan_speed"},
     )

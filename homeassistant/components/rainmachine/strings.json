@@ -82,6 +82,11 @@
       }
     }
   },
+  "exceptions": {
+    "action_failed": {
+      "message": "An error occurred while running the RainMachine action {action}."
+    }
+  },
   "options": {
     "step": {
       "init": {

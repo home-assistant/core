@@ -11,7 +11,7 @@ import pytest
 from pytest_homeassistant.common import async_capture_events, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.event import ATTR_EVENT_TYPE, ButtonEventType
+from homeassistant.components.event import ButtonEventType, EventEntityStateAttribute
 from homeassistant.components.lutron_caseta.const import BUTTON_STATUS_LONG_HOLD
 from homeassistant.const import EVENT_STATE_CHANGED, Platform
 from homeassistant.core import HomeAssistant
@@ -105,7 +105,7 @@ async def test_button_event_mapping(
     await hass.async_block_till_done()
 
     assert [
-        event.data["new_state"].attributes[ATTR_EVENT_TYPE]
+        event.data["new_state"].attributes[EventEntityStateAttribute.EVENT_TYPE]
         for event in state_changes
         if event.data["entity_id"] == entity_id
     ] == expected_event_types

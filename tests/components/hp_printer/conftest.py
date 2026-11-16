@@ -5,8 +5,10 @@ from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
 from aiohpprinter import (
+    HpAdapter,
     HpConsumable,
     HpCopyUsage,
+    HpEPrint,
     HpFaxUsage,
     HpJob,
     HpPrinterData,
@@ -164,6 +166,19 @@ def mock_data(mock_device: HpPrinterDevice) -> HpPrinterData:
             flatbed_images=0,
             images_received_from_pc=0,
         ),
+        adapters=[
+            HpAdapter(
+                name="Eth0", connectivity_port_type="ethernet", is_connected=False
+            ),
+            HpAdapter(
+                name="Wifi0", connectivity_port_type="wifiEmbedded", is_connected=True
+            ),
+            HpAdapter(
+                name="Wifi1", connectivity_port_type="wifiEmbedded", is_connected=False
+            ),
+            HpAdapter(name="Usb0", connectivity_port_type="usb", is_connected=False),
+        ],
+        eprint=HpEPrint(is_registered=True, cloud_services_enabled=True),
         logs=HpProductLogs(
             jobs=[
                 HpJob(

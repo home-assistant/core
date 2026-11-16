@@ -32,6 +32,13 @@
           "Size": 67108864,
           "RefCount": 1
         }
+      },
+      {
+        "Name": "dashy_config",
+        "UsageData": {
+          "Size": -1,
+          "RefCount": 1
+        }
       }
     ]
   },

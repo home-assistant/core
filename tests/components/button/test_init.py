@@ -18,17 +18,17 @@ from pytest_homeassistant.common import (
 
 from homeassistant.components.button import (
     DOMAIN,
-    SERVICE_PRESS,
     ButtonDeviceClass,
     ButtonEntity,
     ButtonEntityDescription,
+    ButtonService,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_PLATFORM,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant, State
@@ -70,8 +70,8 @@ async def test_custom_integration(
     now = dt_util.utcnow()
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.button_1"},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: "button.button_1"},
         blocking=True,
     )
 
@@ -85,8 +85,8 @@ async def test_custom_integration(
     freezer.move_to(new_time)
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.button_1"},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: "button.button_1"},
         blocking=True,
     )
 
