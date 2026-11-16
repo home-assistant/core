@@ -998,6 +998,7 @@ class Repository:
         """
         treefiles = self.treefiles
         installed = self.data.installed_version or self.data.installed_commit
+        version = installed if self.data.installed else self.tree_ref
         # An installed repository shows the README of the installed version,
         # which can name its translations differently than the version of the tree
         if (
@@ -1017,8 +1018,6 @@ class Repository:
             return ""
 
         filename = readmes[languages[0]]
-        # The file comes from the version whose files named it
-        version = installed if self.data.installed else self.tree_ref
         try:
             return (
                 await self.get_documentation(filename=filename, version=version) or ""
