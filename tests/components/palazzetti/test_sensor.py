@@ -23,4 +23,24 @@ async def test_all_entities(
     with patch("homeassistant.components.palazzetti.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
 
-    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+        disabled_entries = [
+            entry
+            for entry in er.async_entries_for_config_entry(
+                entity_registry, mock_config_entry.entry_id
+            )
+            if entry.disabled_by
+        ]
+        assert disabled_entries
+        assert all(
+            entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
+            for entry in disabled_entries
+        )
+        for entry in disabled_entries:
+            entity_registry.async_update_entity(entry.entity_id, disabled_by=None)
+
+        await hass.config_entries.async_reload(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        await snapshot_platform(
+            hass, entity_registry, snapshot, mock_config_entry.entry_id
+        )
