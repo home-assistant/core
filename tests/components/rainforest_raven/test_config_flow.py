@@ -78,7 +78,7 @@ async def _async_finish_flow(hass: HomeAssistant, flow_id: str) -> None:
     """Finish the user flow by selecting the device and the first meter."""
     with patch(
         "homeassistant.components.rainforest_raven.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
             flow_id, user_input={CONF_DEVICE: DEVICE_NAME}

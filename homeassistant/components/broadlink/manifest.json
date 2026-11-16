@@ -4,6 +4,7 @@
   "categories": ["buttons_remotes", "plugs_switches"],
   "codeowners": ["@danielhiversen", "@felipediel", "@L-I-Am", "@DAB-LABS"],
   "config_flow": true,
+  "connectivity": ["infrared", "network", "rf"],
   "dhcp": [
     {
       "registered_devices": true
@@ -40,5 +41,5 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["broadlink_async"],
-  "requirements": ["broadlink-async==1.1.1"]
+  "requirements": ["broadlink-async==1.2.1"]
 }

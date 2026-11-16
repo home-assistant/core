@@ -31,14 +31,6 @@
     },
     "step": {
       "bluetooth_confirm": {
-        "data": {
-          "disable_ap": "Disable Wi-Fi access point after provisioning",
-          "disable_ble_rpc": "Disable Bluetooth RPC after provisioning"
-        },
-        "data_description": {
-          "disable_ap": "For improved security, disable the Wi-Fi access point after successfully connecting to your network.",
-          "disable_ble_rpc": "For improved security, disable Bluetooth RPC access after Wi-Fi is configured. Bluetooth will remain enabled for BLE sensors and buttons."
-        },
         "description": "The Shelly device {name} has been discovered via Bluetooth but is not connected to Wi-Fi.\n\nDo you want to provision Wi-Fi credentials to this device?",
         "title": "Provision Wi-Fi via Bluetooth"
       },
@@ -178,6 +170,9 @@
       "input_with_number": {
         "name": "Input {input_number}"
       },
+      "motion_with_channel_name": {
+        "name": "{channel_name} motion"
+      },
       "mute": {
         "name": "Mute"
       },
@@ -234,6 +229,9 @@
       },
       "tilt": {
         "name": "Tilt"
+      },
+      "zone_motion_with_number": {
+        "name": "Zone {zone_number} motion"
       }
     },
     "button": {
@@ -299,6 +297,18 @@
               "single_push": "Single push",
               "triple": "[%key:component::shelly::entity::event::input::state_attributes::event_type::state::triple_push%]",
               "triple_push": "Triple push"
+            }
+          }
+        }
+      }
+    },
+    "fan": {
+      "fan": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "auto": "[%key:common::state::auto%]",
+              "manual": "[%key:common::state::manual%]"
             }
           }
         }
@@ -376,6 +386,28 @@
           "none": "None",
           "reception": "Reception",
           "workplace": "Workplace"
+        }
+      },
+      "effect_palette": {
+        "name": "Effect palette",
+        "state": {
+          "complementary": "Complementary",
+          "contrast": "Contrast",
+          "fire": "Fire",
+          "forest": "Forest",
+          "harmony": "Harmony",
+          "monochrome": "Monochrome",
+          "ocean": "Ocean",
+          "pastel": "Pastel",
+          "rainbow": "Rainbow"
+        }
+      },
+      "led_mode": {
+        "name": "LED mode",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "power": "Power consumption",
+          "switch": "Switch state"
         }
       }
     },
@@ -471,6 +503,24 @@
           }
         }
       },
+      "humidity_level": {
+        "name": "Humidity level",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "very_high": "[%key:common::state::very_high%]"
+        }
+      },
+      "humidity_level_with_channel_name": {
+        "name": "{channel_name} humidity level",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "very_high": "[%key:common::state::very_high%]"
+        }
+      },
       "humidity_with_channel_name": {
         "name": "{channel_name} humidity"
       },
@@ -480,6 +530,14 @@
           "bright": "Bright",
           "dark": "Dark",
           "twilight": "Twilight"
+        }
+      },
+      "illuminance_level_with_channel_name": {
+        "name": "{channel_name} illuminance level",
+        "state": {
+          "bright": "[%key:component::shelly::entity::sensor::illuminance_level::state::bright%]",
+          "dark": "[%key:component::shelly::entity::sensor::illuminance_level::state::dark%]",
+          "twilight": "[%key:component::shelly::entity::sensor::illuminance_level::state::twilight%]"
         }
       },
       "lamp_life": {
@@ -647,6 +705,12 @@
       "right_slot_vial": {
         "name": "Right slot vial"
       },
+      "runtime_above_power_threshold": {
+        "name": "Runtime above power threshold"
+      },
+      "runtime_above_power_threshold_with_channel_name": {
+        "name": "{channel_name} runtime above power threshold"
+      },
       "self_test": {
         "name": "Self-test",
         "state": {
@@ -675,11 +739,23 @@
       "storage_free_space": {
         "name": "Free storage space"
       },
+      "switching_cycles": {
+        "name": "Switching cycles"
+      },
+      "switching_cycles_with_channel_name": {
+        "name": "{channel_name} switching cycles"
+      },
       "temperature_with_channel_name": {
         "name": "{channel_name} temperature"
       },
       "tilt": {
         "name": "Tilt"
+      },
+      "total_runtime": {
+        "name": "Total runtime"
+      },
+      "total_runtime_with_channel_name": {
+        "name": "{channel_name} total runtime"
       },
       "valve_position": {
         "name": "Valve position"
@@ -727,6 +803,9 @@
       }
     },
     "switch": {
+      "boost": {
+        "name": "Boost"
+      },
       "camera_privacy": {
         "name": "Privacy"
       },
@@ -806,9 +885,6 @@
     "device_not_initialized": {
       "message": "{device} not initialized"
     },
-    "firmware_unsupported": {
-      "message": "{device} is running an unsupported firmware, please update the firmware"
-    },
     "http_call_error": {
       "message": "HTTP call error occurred for {device}"
     },
@@ -842,14 +918,20 @@
     "update_error": {
       "message": "An error occurred while retrieving data from {device}"
     },
-    "update_error_device_disconnected": {
-      "message": "An error occurred while retrieving data from {device} because it is disconnected"
+    "update_error_disconnected": {
+      "message": "The device is disconnected"
     },
-    "update_error_reconnect_error": {
-      "message": "An error occurred while reconnecting to {device}"
+    "update_error_mac_mismatch": {
+      "message": "A different device responded at {host}"
+    },
+    "update_error_reconnect": {
+      "message": "The device could not be reconnected"
     },
     "update_error_sleeping_device": {
       "message": "Sleeping device {device} did not update within {period} seconds interval"
+    },
+    "update_error_unreachable": {
+      "message": "The device cannot be reached"
     }
   },
   "issues": {
@@ -985,6 +1067,21 @@
     "unsupported_firmware": {
       "description": "Your Shelly device {device_name} with IP address {ip_address} is running an unsupported firmware. Please update the firmware.\n\nIf the device does not offer an update, check internet connectivity (gateway, DNS, time) and restart the device.",
       "title": "Unsupported firmware for device {device_name}"
+    },
+    "unsupported_firmware_fixable": {
+      "fix_flow": {
+        "abort": {
+          "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+          "update_not_available": "[%key:component::shelly::issues::ble_scanner_firmware_unsupported::fix_flow::abort::update_not_available%]"
+        },
+        "step": {
+          "confirm": {
+            "description": "Your Shelly device {device_name} with IP address {ip_address} is running an unsupported firmware. Until the firmware is updated, only the firmware update entity is available for this device.\n\nSelect **Submit** button to start the OTA update to the latest stable firmware version.",
+            "title": "[%key:component::shelly::issues::unsupported_firmware::title%]"
+          }
+        }
+      },
+      "title": "[%key:component::shelly::issues::unsupported_firmware::title%]"
     }
   },
   "options": {

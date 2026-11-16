@@ -1,6 +1,6 @@
 """Support for Imou binary sensor entities."""
 
-from typing import override
+from typing import cast, override
 
 from pyimouapi.const import PARAM_STATE
 from pyimouapi.ha_device import ImouHaDevice
@@ -68,4 +68,7 @@ class ImouBinarySensor(ImouEntity, BinarySensorEntity):
     @override
     def is_on(self) -> bool | None:
         """Return True when the sensor is active."""
-        return self.device.binary_sensors[self._entity_type][PARAM_STATE]
+        return cast(
+            bool | None,
+            self.device.binary_sensors[self._entity_type][PARAM_STATE],
+        )

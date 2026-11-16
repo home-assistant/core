@@ -5,11 +5,16 @@ from datetime import timedelta
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.select import (
-    ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import (
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    CommonServiceArgument,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.util import utcnow
 
@@ -96,10 +101,10 @@ async def _select_option_and_wait(
 ) -> None:
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: entity,
-            ATTR_OPTION: option,
+            CommonServiceArgument.ENTITY_ID: entity,
+            SelectServiceArgument.OPTION: option,
         },
         blocking=True,
     )

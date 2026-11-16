@@ -1,10 +1,11 @@
 {
   "domain": "esphome",
   "name": "ESPHome",
-  "after_dependencies": ["hassio", "tag", "usb", "zeroconf"],
+  "after_dependencies": ["hassio", "tag", "usb", "voice_support", "zeroconf"],
   "categories": ["diy_makers.boards_hardware"],
   "codeowners": ["@jesserockz", "@kbx81", "@bdraco", "@arturpragacz"],
   "config_flow": true,
+  "connectivity": ["esphome"],
   "dependencies": ["assist_pipeline", "bluetooth", "intent", "ffmpeg", "http"],
   "dhcp": [
     {
@@ -18,7 +19,7 @@
   "mqtt": ["esphome/discover/#"],
   "quality_scale": "platinum",
   "requirements": [
-    "aioesphomeapi==46.12.0",
+    "aioesphomeapi==46.30.0",
     "esphome-dashboard-api==1.4.0",
     "bleak-esphome==4.0.0"
   ],

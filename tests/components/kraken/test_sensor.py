@@ -68,6 +68,7 @@ async def test_sensor(
         xbt_usd_sensor = hass.states.get("sensor.xbt_usd_ask")
         assert xbt_usd_sensor.state == "0.0003494"
         assert xbt_usd_sensor.attributes["icon"] == "mdi:currency-usd"
+        assert xbt_usd_sensor.attributes["unit_of_measurement"] == "USD"
 
         xbt_eur_sensor = hass.states.get("sensor.xbt_eur_ask")
         assert xbt_eur_sensor.state == "0.0003494"
@@ -100,24 +101,38 @@ async def test_sensor(
 
         xbt_usd_volume_today = hass.states.get("sensor.xbt_usd_volume_today")
         assert xbt_usd_volume_today.state == "146300.24906838"
+        assert xbt_usd_volume_today.attributes["unit_of_measurement"] == "XBT"
 
         xbt_usd_volume_last_24h = hass.states.get("sensor.xbt_usd_volume_last_24h")
         assert xbt_usd_volume_last_24h.state == "253478.04715403"
+        assert xbt_usd_volume_last_24h.attributes["unit_of_measurement"] == "XBT"
+
+        ada_xbt_volume_last_24h = hass.states.get("sensor.ada_xbt_volume_last_24h")
+        assert ada_xbt_volume_last_24h.attributes["unit_of_measurement"] == "ADA"
 
         xbt_usd_volume_weighted_average_today = hass.states.get(
             "sensor.xbt_usd_volume_weighted_average_today"
         )
         assert xbt_usd_volume_weighted_average_today.state == "0.000348573"
+        assert (
+            xbt_usd_volume_weighted_average_today.attributes["unit_of_measurement"]
+            == "USD"
+        )
 
         xbt_usd_volume_weighted_average_last_24h = hass.states.get(
             "sensor.xbt_usd_volume_weighted_average_last_24h"
         )
         assert xbt_usd_volume_weighted_average_last_24h.state == "0.000344881"
+        assert (
+            xbt_usd_volume_weighted_average_last_24h.attributes["unit_of_measurement"]
+            == "USD"
+        )
 
         xbt_usd_number_of_trades_today = hass.states.get(
             "sensor.xbt_usd_number_of_trades_today"
         )
         assert xbt_usd_number_of_trades_today.state == "82"
+        assert "unit_of_measurement" not in xbt_usd_number_of_trades_today.attributes
 
         xbt_usd_number_of_trades_last_24h = hass.states.get(
             "sensor.xbt_usd_number_of_trades_last_24h"

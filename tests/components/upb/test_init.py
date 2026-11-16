@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 
 async def test_migrate_entry_minor_version_1_3(hass: HomeAssistant) -> None:
     """Test migrating a 1.1 config entry to 1.3."""
-    with patch("homeassistant.components.upb.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.upb.async_setup_entry", return_value=None):
         entry = MockConfigEntry(
             domain=DOMAIN,
             data={"host": "tcp://1.2.3.4", "file_path": "upb.upe"},
@@ -28,7 +28,7 @@ async def test_migrate_entry_minor_version_1_3(hass: HomeAssistant) -> None:
 
 async def test_migrate_entry_minor_version_2_3(hass: HomeAssistant) -> None:
     """Test migrating a 1.2 config entry to 1.3."""
-    with patch("homeassistant.components.upb.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.upb.async_setup_entry", return_value=None):
         entry = MockConfigEntry(
             domain=DOMAIN,
             data={"host": "serial:///dev/ttyS0", "file_path": "upb.upe"},

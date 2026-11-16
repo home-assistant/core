@@ -107,6 +107,6 @@ async def init_integration(
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock config entry setup."""
     with patch(
-        "homeassistant.components.wsdot.async_setup_entry", return_value=True
+        "homeassistant.components.wsdot.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup

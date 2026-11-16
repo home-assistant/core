@@ -4,9 +4,10 @@
   "categories": ["energy.energy_prices"],
   "codeowners": ["@DaanVervacke"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/engie_be",
   "integration_type": "service",
   "iot_class": "cloud_polling",
-  "quality_scale": "bronze",
-  "requirements": ["aioengiebelgium==0.8.1"]
+  "quality_scale": "silver",
+  "requirements": ["aioengiebelgium==0.14.0"]
 }

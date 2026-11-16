@@ -9,6 +9,7 @@
   "categories": ["health_wellbeing"],
   "codeowners": ["@bdraco", "@Lash-L"],
   "config_flow": true,
+  "connectivity": ["bluetooth"],
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/oralb",
   "integration_type": "device",

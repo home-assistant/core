@@ -48,6 +48,6 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_setup_entry():
     """Override async_setup_entry for config flow tests."""
     with patch(
-        "homeassistant.components.orvibo.async_setup_entry", return_value=True
+        "homeassistant.components.orvibo.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup

@@ -2,10 +2,12 @@
 
 from dataclasses import replace
 from ipaddress import ip_address
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 from python_qube_heatpump import QubeDeviceInfo
 
 from homeassistant.components.hr_energy_qube.const import DOMAIN, MDNS_LOOKUP_TIMEOUT
@@ -13,19 +15,19 @@ from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from . import DEVICE_INFO
+from . import DEVICE_INFO, async_shared_connections, setup_integration
 
 
 def patch_answering_hosts(*hosts: str):
     """Patch the config flow's Modbus client so only ``hosts`` answer."""
 
-    def client(host: str, port: int) -> MagicMock:
+    def client(host: str, *args: Any, **kwargs: Any) -> MagicMock:
         mock = MagicMock()
-        mock.connect = AsyncMock(return_value=host in hosts)
-        mock.async_verify_device = AsyncMock(return_value=True)
-        mock.close = AsyncMock()
+        mock.async_verify_device = AsyncMock(return_value=host in hosts)
+        mock.is_connected = host in hosts
         return mock
 
     return patch(
@@ -74,27 +76,22 @@ async def test_full_flow(
 
 
 @pytest.mark.parametrize(
-    ("connect_side_effect", "connect_result", "verified", "error"),
+    ("connected", "error"),
     [
-        (None, False, True, "cannot_connect"),
-        (OSError, None, True, "cannot_connect"),
-        (None, True, False, "not_qube_device"),
+        pytest.param(False, "cannot_connect", id="cannot_connect"),
+        pytest.param(True, "not_qube_device", id="not_qube_device"),
     ],
 )
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_flow_errors(
     hass: HomeAssistant,
     mock_qube_client: MagicMock,
-    connect_side_effect: type[Exception] | None,
-    connect_result: bool | None,
-    verified: bool,
+    connected: bool,
     error: str,
 ) -> None:
     """Test flow error handling with recovery."""
-    mock_qube_client.connect = AsyncMock(
-        side_effect=connect_side_effect, return_value=connect_result
-    )
-    mock_qube_client.async_verify_device = AsyncMock(return_value=verified)
+    mock_qube_client.async_verify_device = AsyncMock(return_value=False)
+    mock_qube_client.is_connected = connected
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -109,12 +106,36 @@ async def test_flow_errors(
     assert result["errors"] == {"base": error}
 
     # Reset mocks for successful retry
-    mock_qube_client.connect = AsyncMock(return_value=True)
+    mock_qube_client.is_connected = True
     mock_qube_client.async_verify_device = AsyncMock(return_value=True)
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_HOST: "1.2.3.4"},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("mock_setup_entry", "mock_qube_client")
+async def test_flow_link_settings_in_use(hass: HomeAssistant) -> None:
+    """Test the flow reports the device in use over other link settings."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    with patch(
+        "homeassistant.components.hr_energy_qube.config_flow.async_get_temporary_unit",
+        side_effect=HomeAssistantError,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "1.2.3.4"}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "1.2.3.4"}
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -195,6 +216,56 @@ async def test_second_qube_with_the_same_uuid(
     assert entry.data == {CONF_HOST: "192.168.5.100", CONF_PORT: 502}
 
 
+async def test_validation_reuses_the_entry_connection(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_qube_client_cls: MagicMock,
+    mock_qube_client: MagicMock,
+    mock_device_info: AsyncMock,
+) -> None:
+    """Test checking a loaded entry's host reuses its connection and keeps it open."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "1.2.3.4", CONF_PORT: 502},
+        unique_id=DEVICE_INFO.uuid,
+    )
+    await setup_integration(hass, entry)
+    held = [(["tcp", "1.2.3.4", 502], {entry.entry_id: [1]})]
+    assert await async_shared_connections(hass_ws_client) == held
+
+    # A second Qube reporting the entry's uuid makes the flow check that the
+    # entry's heat pump still answers, over the connection the entry holds
+    seen: list[list[tuple[list[str | int], dict[str, list[int]]]]] = []
+
+    async def verify() -> bool:
+        seen.append(await async_shared_connections(hass_ws_client))
+        return True
+
+    mock_qube_client.async_verify_device.side_effect = verify
+    mock_device_info.return_value = DEVICE_INFO
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    with patch(
+        "homeassistant.components.hr_energy_qube.async_setup_entry", return_value=None
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "192.168.5.208"}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id is None
+    assert len(seen) == 2
+    assert seen[1] == held
+    # Setup and both checks build the client on a borrowed unit
+    assert len(mock_qube_client_cls.call_args_list) == 3
+    assert all(
+        call.kwargs["unit"] is not None for call in mock_qube_client_cls.call_args_list
+    )
+    assert await async_shared_connections(hass_ws_client) == held
+
+
 ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
     ip_address=ip_address("192.168.5.208"),
     ip_addresses=[ip_address("192.168.5.208")],
@@ -222,8 +293,6 @@ async def test_zeroconf_flow(hass: HomeAssistant, mock_qube_client: MagicMock) -
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "zeroconf_confirm"
     assert result["description_placeholders"] == {"host": "192.168.5.208"}
-    progress = hass.config_entries.flow.async_progress()
-    assert progress[0]["context"]["confirm_only"] is True
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
@@ -234,23 +303,22 @@ async def test_zeroconf_flow(hass: HomeAssistant, mock_qube_client: MagicMock) -
 
 
 @pytest.mark.parametrize(
-    ("connect_result", "verified", "error"),
+    ("connected", "error"),
     [
-        pytest.param(False, True, "cannot_connect", id="cannot_connect"),
-        pytest.param(True, False, "not_qube_device", id="not_qube_device"),
+        pytest.param(False, "cannot_connect", id="cannot_connect"),
+        pytest.param(True, "not_qube_device", id="not_qube_device"),
     ],
 )
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_zeroconf_confirm_errors(
     hass: HomeAssistant,
     mock_qube_client: MagicMock,
-    connect_result: bool,
-    verified: bool,
+    connected: bool,
     error: str,
 ) -> None:
     """Test the confirm step reports Modbus errors and can be retried."""
-    mock_qube_client.connect = AsyncMock(return_value=connect_result)
-    mock_qube_client.async_verify_device = AsyncMock(return_value=verified)
+    mock_qube_client.async_verify_device = AsyncMock(return_value=False)
+    mock_qube_client.is_connected = connected
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=ZEROCONF_DISCOVERY
@@ -260,7 +328,7 @@ async def test_zeroconf_confirm_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
-    mock_qube_client.connect = AsyncMock(return_value=True)
+    mock_qube_client.is_connected = True
     mock_qube_client.async_verify_device = AsyncMock(return_value=True)
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
@@ -469,17 +537,16 @@ async def test_reconfigure_host_of_other_entry(
 
 
 @pytest.mark.parametrize(
-    ("connect_result", "verified", "error"),
+    ("connected", "error"),
     [
-        pytest.param(False, True, "cannot_connect", id="cannot_connect"),
-        pytest.param(True, False, "not_qube_device", id="not_qube_device"),
+        pytest.param(False, "cannot_connect", id="cannot_connect"),
+        pytest.param(True, "not_qube_device", id="not_qube_device"),
     ],
 )
 async def test_reconfigure_errors(
     hass: HomeAssistant,
     mock_qube_client: MagicMock,
-    connect_result: bool,
-    verified: bool,
+    connected: bool,
     error: str,
 ) -> None:
     """Test reconfigure reports Modbus errors and can be retried."""
@@ -487,8 +554,8 @@ async def test_reconfigure_errors(
         domain=DOMAIN, data={CONF_HOST: "192.168.5.100", CONF_PORT: 502}
     )
     entry.add_to_hass(hass)
-    mock_qube_client.connect = AsyncMock(return_value=connect_result)
-    mock_qube_client.async_verify_device = AsyncMock(return_value=verified)
+    mock_qube_client.async_verify_device = AsyncMock(return_value=False)
+    mock_qube_client.is_connected = connected
 
     result = await entry.start_reconfigure_flow(hass)
     result = await hass.config_entries.flow.async_configure(
@@ -498,7 +565,7 @@ async def test_reconfigure_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
-    mock_qube_client.connect = AsyncMock(return_value=True)
+    mock_qube_client.is_connected = True
     mock_qube_client.async_verify_device = AsyncMock(return_value=True)
 
     result = await hass.config_entries.flow.async_configure(

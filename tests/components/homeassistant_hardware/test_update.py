@@ -18,6 +18,7 @@ from pytest_homeassistant.common import (
     mock_platform,
     mock_restore_cache_with_extra_data,
 )
+from pytest_homeassistant.typing import WebSocketGenerator
 from universal_silabs_flasher.flasher import DeviceSpecificFlasher
 
 from homeassistant.components.homeassistant import (
@@ -151,12 +152,11 @@ def _mock_async_create_update_entity(
 
 async def mock_async_setup_entry(
     hass: HomeAssistant, config_entry: ConfigEntry
-) -> bool:
+) -> None:
     """Set up test config entry."""
     await hass.config_entries.async_forward_entry_setups(
         config_entry, [Platform.UPDATE]
     )
-    return True
 
 
 async def mock_async_setup_update_entities(
@@ -511,7 +511,9 @@ async def test_update_entity_state_restoration(
 
 
 async def test_update_entity_firmware_missing_from_manifest(
-    hass: HomeAssistant, update_config_entry: ConfigEntry
+    hass: HomeAssistant,
+    update_config_entry: ConfigEntry,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test the Hardware firmware update entity handles missing firmware."""
 
@@ -540,6 +542,69 @@ async def test_update_entity_firmware_missing_from_manifest(
     assert state.attributes["latest_version"] is None
     assert state.attributes["release_summary"] is None
     assert state.attributes["release_url"] is None
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json_auto_id(
+        {"type": "update/release_notes", "entity_id": TEST_UPDATE_ENTITY_ID}
+    )
+    result = await ws_client.receive_json()
+    assert result["result"] is None
+
+
+@pytest.mark.parametrize(
+    ("firmware_type", "firmware_version", "release_notes"),
+    [
+        # Every version since the installed one, newest first
+        (
+            "ezsp",
+            "7.3.1.0 build 0",
+            "## 7.4.4.0\n\nSome release notes go here\n\n- Detailed notes for 7.4.4.0"
+            "\n\n## 7.3.2.0\n\nSummary for 7.3.2.0",
+        ),
+        # The raw OpenThread version is matched, not the parsed installed version
+        (
+            "spinel",
+            "SL-OPENTHREAD/2.4.0.0_GitHub-91fa1f455; EFR32; Oct 21 2024 14:40:57",
+            "## SL-OPENTHREAD/2.4.4.0_GitHub-7074a43e4\n\nSummary for 2.4.4.0"
+            "\n\n## SL-OPENTHREAD/2.4.2.0_GitHub-a9a2ca8c5\n\nSummary for 2.4.2.0",
+        ),
+        # Unknown versions only get the latest firmware's notes
+        (
+            "ezsp",
+            "7.0.0.0 build 0",
+            "## 7.4.4.0\n\nSome release notes go here\n\n- Detailed notes for 7.4.4.0",
+        ),
+        # Up to date
+        ("ezsp", "7.4.4.0 build 0", None),
+    ],
+)
+async def test_update_entity_release_notes(
+    hass: HomeAssistant,
+    update_config_entry: ConfigEntry,
+    hass_ws_client: WebSocketGenerator,
+    firmware_type: str,
+    firmware_version: str,
+    release_notes: str | None,
+) -> None:
+    """Test the release notes span every version since the installed one."""
+    hass.config_entries.async_update_entry(
+        update_config_entry,
+        data={
+            **update_config_entry.data,
+            "firmware": firmware_type,
+            "firmware_version": firmware_version,
+        },
+    )
+
+    assert await hass.config_entries.async_setup(update_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json_auto_id(
+        {"type": "update/release_notes", "entity_id": TEST_UPDATE_ENTITY_ID}
+    )
+    result = await ws_client.receive_json()
+    assert result["result"] == release_notes
 
 
 async def test_update_entity_graceful_firmware_type_callback_errors(

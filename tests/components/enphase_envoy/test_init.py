@@ -48,6 +48,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
@@ -166,7 +167,6 @@ async def test_not_expired_token_with_manual_token(
         token=config_entry.data[CONF_TOKEN],
         envoy_serial="1234",
     )
-    caplog.set_level(logging.DEBUG)
 
     await setup_integration(hass, config_entry)
 
@@ -192,7 +192,6 @@ async def test_almost_expired_token_with_manual_token(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test coordinator with token within warning time in config and manual token option on."""
-    caplog.set_level(logging.DEBUG)
     events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
 
     # Make sure to mock pyenphase.auth.EnvoyTokenAuth._obtain_token
@@ -656,7 +655,6 @@ async def test_coordinator_interface_information(
     """Test coordinator interface mac verification."""
     await setup_integration(hass, config_entry)
 
-    caplog.set_level(logging.DEBUG)
     logging.getLogger("homeassistant.components.enphase_envoy.coordinator").setLevel(
         logging.DEBUG
     )
@@ -704,7 +702,6 @@ async def test_coordinator_interface_information_no_device(
     """Test coordinator interface mac verification full code cov."""
     await setup_integration(hass, config_entry)
 
-    caplog.set_level(logging.DEBUG)
     logging.getLogger("homeassistant.components.enphase_envoy.coordinator").setLevel(
         logging.DEBUG
     )
@@ -740,7 +737,6 @@ async def test_coordinator_interface_information_mac_also_in_other_device(
     """Test coordinator interface mac verification with other device."""
     await setup_integration(hass, config_entry)
 
-    caplog.set_level(logging.DEBUG)
     logging.getLogger("homeassistant.components.enphase_envoy.coordinator").setLevel(
         logging.DEBUG
     )
@@ -830,7 +826,6 @@ async def test_background_task_cancel_at_unload(
 ) -> None:
     """Test coordinator background tasks cancel at unload."""
     await setup_integration(hass, config_entry)
-    caplog.set_level(logging.DEBUG)
     logging.getLogger("homeassistant.components.enphase_envoy.coordinator").setLevel(
         logging.DEBUG
     )
@@ -958,7 +953,6 @@ async def test_coordinator_background_tasks_session_is_closed(
     logging.getLogger("homeassistant.components.enphase_envoy.coordinator").setLevel(
         logging.DEBUG
     )
-    caplog.set_level(logging.DEBUG)
 
     def raise_error() -> None:
         raise exc
@@ -1013,7 +1007,6 @@ async def test_coordinator_background_tasks_session_is_closed_not_loaded(
     logging.getLogger("homeassistant.components.enphase_envoy.coordinator").setLevel(
         logging.DEBUG
     )
-    caplog.set_level(logging.DEBUG)
 
     def raise_error() -> None:
         raise exc
@@ -1026,7 +1019,7 @@ async def test_coordinator_background_tasks_session_is_closed_not_loaded(
         ),
         patch(
             "homeassistant.components.enphase_envoy.async_unload_entry",
-            return_value=False,
+            side_effect=ConfigEntryError,
         ) as mock_unload,
     ):
         await hass.config_entries.async_unload(config_entry.entry_id)
@@ -1050,7 +1043,6 @@ async def test_coordinator_background_task_start(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test coordinator startup sequence and background task starting."""
-    caplog.set_level(logging.DEBUG)
     await setup_integration(hass, config_entry)
 
     # verify regular start sequence with resulting background task starting on loaded event

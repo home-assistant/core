@@ -26,14 +26,14 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_setup_entry() -> Generator[None]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.luftdaten.async_setup_entry", return_value=True
+        "homeassistant.components.luftdaten.async_setup_entry", return_value=None
     ):
         yield
 
 
 @pytest.fixture
-def mock_luftdaten() -> Generator[MagicMock]:
-    """Return a mocked Luftdaten client."""
+def mock_luftdaten_class() -> Generator[MagicMock]:
+    """Return a mocked Luftdaten class."""
     with (
         patch(
             "homeassistant.components.luftdaten.Luftdaten", autospec=True
@@ -43,24 +43,30 @@ def mock_luftdaten() -> Generator[MagicMock]:
             new=luftdaten_mock,
         ),
     ):
-        luftdaten = luftdaten_mock.return_value
-        luftdaten.validate_sensor.return_value = True
-        luftdaten.sensor_id = 12345
-        luftdaten.meta = {
-            "altitude": 123.456,
-            "latitude": 56.789,
-            "longitude": 12.345,
-            "sensor_id": 12345,
-        }
-        luftdaten.values = {
-            "humidity": 34.70,
-            "P1": 8.5,
-            "P2": 4.07,
-            "pressure_at_sealevel": 103102.13,
-            "pressure": 98545.00,
-            "temperature": 22.30,
-        }
-        yield luftdaten
+        yield luftdaten_mock
+
+
+@pytest.fixture
+def mock_luftdaten(mock_luftdaten_class: MagicMock) -> MagicMock:
+    """Return a mocked Luftdaten client."""
+    luftdaten = mock_luftdaten_class.return_value
+    luftdaten.validate_sensor.return_value = True
+    luftdaten.sensor_id = 12345
+    luftdaten.meta = {
+        "altitude": 123.456,
+        "latitude": 56.789,
+        "longitude": 12.345,
+        "sensor_id": 12345,
+    }
+    luftdaten.values = {
+        "humidity": 34.70,
+        "P1": 8.5,
+        "P2": 4.07,
+        "pressure_at_sealevel": 103102.13,
+        "pressure": 98545.00,
+        "temperature": 22.30,
+    }
+    return luftdaten
 
 
 @pytest.fixture

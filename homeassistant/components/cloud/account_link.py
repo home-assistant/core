@@ -99,7 +99,7 @@ class CloudOAuth2Implementation(config_entry_oauth2_flow.AbstractOAuth2Implement
     @override
     def name(self) -> str:
         """Name of the implementation."""
-        return "Home Assistant Cloud"
+        return "Home Assistant Link"
 
     @property
     @override

@@ -4,10 +4,11 @@
   "categories": ["security_safety.alarm_systems"],
   "codeowners": ["@Tommatheussen"],
   "config_flow": true,
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/satel_integra",
   "integration_type": "device",
   "iot_class": "local_push",
   "loggers": ["satel_integra"],
   "quality_scale": "bronze",
-  "requirements": ["satel-integra==1.5.0"]
+  "requirements": ["satel-integra==1.7.0"]
 }

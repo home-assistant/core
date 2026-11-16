@@ -19,6 +19,8 @@ from .const import (
     CONF_INITIAL,
     DATA_INPUT_DATETIME,
     DOMAIN,
+    InputDatetimeService,
+    InputDatetimeServiceArgument,
 )
 from .entity import InputDatetime, parse_initial_datetime
 from .services import async_setup_services
@@ -45,6 +47,8 @@ __all__ = [
     "SERVICE_RELOAD",
     "STORAGE_FIELDS",
     "InputDatetime",
+    "InputDatetimeService",
+    "InputDatetimeServiceArgument",
     "valid_initial",
 ]
 

@@ -42,9 +42,22 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "heating": {
+        "name": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::heating%]"
+      }
+    },
     "infrared": {
       "infrared_emitter": {
         "name": "IR emitter"
+      }
+    },
+    "number": {
+      "max_temp": {
+        "name": "Maximum setpoint"
+      },
+      "min_temp": {
+        "name": "Minimum setpoint"
       }
     },
     "radio_frequency": {
@@ -97,14 +110,23 @@
     "frequency_not_supported": {
       "message": "Broadlink devices cannot transmit on {frequency} MHz"
     },
+    "invalid_command": {
+      "message": "Invalid command: {error}"
+    },
     "learn_command_failed": {
       "message": "Failed to learn command {command}: {error}"
     },
     "learn_commands_failed": {
       "message": "Failed to learn commands {commands}: {error}"
     },
+    "rf_not_supported": {
+      "message": "{entity_id} doesn't support RF commands"
+    },
     "send_command_failed": {
       "message": "Failed to send command: {error}"
+    },
+    "setpoint_limits_inverted": {
+      "message": "The minimum setpoint ({min_temp} °C) cannot be higher than the maximum setpoint ({max_temp} °C)"
     },
     "setup_failed": {
       "message": "Failed to set up the device at {host}"
@@ -114,6 +136,9 @@
     },
     "unload_failed": {
       "message": "Failed to unload the device"
+    },
+    "update_failed": {
+      "message": "Failed to update the device"
     }
   }
 }

@@ -53,7 +53,7 @@ class NexiaThermostatEntity(NexiaEntity):
         thermostat_id = thermostat.thermostat_id
         self._attr_device_info = DeviceInfo(
             configuration_url=self.coordinator.nexia_home.root_url,
-            identifiers={(DOMAIN, thermostat_id)},  # type: ignore[arg-type] # until fix issue #139773
+            identifiers={(DOMAIN, str(thermostat_id))},
             manufacturer=MANUFACTURER,
             model=thermostat.get_model(),
             name=thermostat.get_name(),
@@ -108,14 +108,14 @@ class NexiaThermostatZoneEntity(NexiaThermostatEntity):
             thermostat = zone.thermostat
             dev_info = DeviceInfo(
                 configuration_url=coordinator.nexia_home.root_url,
-                identifiers={(DOMAIN, zone.zone_id)},  # type: ignore[arg-type] # until fix issue #139773
+                identifiers={(DOMAIN, str(zone.zone_id))},
                 manufacturer=MANUFACTURER,
                 model=thermostat.get_model(),
                 name=zone.get_name(),
                 sw_version=thermostat.get_firmware(),
                 via_device_id=dr.async_get_device_id_by_identifier(
                     coordinator.hass,
-                    (DOMAIN, thermostat.thermostat_id),  # type: ignore[arg-type] # until fix issue #139773
+                    (DOMAIN, str(thermostat.thermostat_id)),
                     config_entry_id=coordinator.config_entry.entry_id,
                 ),
             )
@@ -169,7 +169,7 @@ class NexiaRoomIQEntity(NexiaThermostatZoneEntity):
                 sw_version=None,  # not reported
                 via_device_id=dr.async_get_device_id_by_identifier(
                     coordinator.hass,
-                    (DOMAIN, zone.zone_id),  # type: ignore[arg-type] # until fix issue #139773
+                    (DOMAIN, str(zone.zone_id)),
                     config_entry_id=coordinator.config_entry.entry_id,
                 ),
             )

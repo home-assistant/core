@@ -25,7 +25,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.storage import Store
 from homeassistant.util.ulid import ulid_now
 
-from ..const import DOMAIN, KNX_MODULE_KEY
+from ..const import DOMAIN, KNX_MODULE_KEY, KnxEntityIdentifier
 from ..repairs import (
     async_create_entity_validation_issue,
     async_create_expose_validation_issue,
@@ -78,9 +78,17 @@ class KNXConfigStoreModel(TypedDict):
 
 
 def to_storage_dict(data: KnxEntityData[Any]) -> dict[str, Any]:
-    """Render validated entity data to its JSON serializable storage form."""
+    """Render validated entity data to its JSON serializable storage form.
+
+    Optional fields left unset are omitted - the frontend sends them that way,
+    and it is how the dict schemas stored them before the typed configs.
+    """
     return {
-        CONF_ENTITY: dataclasses.asdict(data.entity),
+        CONF_ENTITY: {
+            name: value
+            for name, value in dataclasses.asdict(data.entity).items()
+            if value is not None
+        },
         DOMAIN: _knx_to_storage(data.knx),
     }
 
@@ -105,12 +113,13 @@ def time_server_to_storage(config: TimeServerConfig) -> KNXTimeServerStoreModel:
 def _knx_to_storage(config: Any, *, sparse: bool = False) -> dict[str, Any]:
     """Render a typed config to its storage form.
 
-    `sparse` omits fields left at their default.
+    Unset optional fields (`None`) are omitted. `sparse` also omits fields left
+    at their default.
     """
     data: dict[str, Any] = {}
     for name, default, encode in _storage_encoders(type(config), sparse):
         value = getattr(config, name)
-        if sparse and value == default:
+        if value is None or (sparse and value == default):
             continue
         data[name] = encode(value)
     return data
@@ -118,10 +127,6 @@ def _knx_to_storage(config: Any, *, sparse: bool = False) -> dict[str, Any]:
 
 def _unchanged(value: Any) -> Any:
     return value
-
-
-def _group_select_to_storage(value: Any, *, sparse: bool) -> dict[str, Any] | None:
-    return None if value is None else _knx_to_storage(value, sparse=sparse)
 
 
 def _list_to_storage(value: list[Any], *, sparse: bool) -> list[dict[str, Any]]:
@@ -159,7 +164,7 @@ def _storage_encoders(config_type: type, sparse: bool) -> _StorageEncoders:
         ):
             encode = field_selector.to_storage
         elif isinstance(field_selector, GroupSelect):
-            encode = partial(_group_select_to_storage, sparse=sparse)
+            encode = partial(_knx_to_storage, sparse=sparse)
         elif get_origin(field_type) is list and dataclasses.is_dataclass(
             get_args(field_type)[0]
         ):
@@ -351,6 +356,14 @@ class KNXConfigStore:
                 f"Entity not found in {entry.domain}: {entry.unique_id}"
             ) from err
         entity_registry.async_remove(entity_id)
+        # A disabled entity has no entity object to unregister itself. Not guarded
+        # by `entry.disabled`: an entity enabled again stays tracked as disabled
+        # until the config entry is reloaded.
+        self.hass.data[KNX_MODULE_KEY].remove_disabled_entity(
+            KnxEntityIdentifier(
+                platform=entry.domain, unique_id=entry.unique_id, ui=True
+            )
+        )
         await self._store.async_save(self.data)
 
     def get_entity_uids(self) -> set[str]:
@@ -455,8 +468,7 @@ class KNXConfigStore:
         """Update time server configuration."""
         self.data["time_server"] = time_server_to_storage(config)
         knx_module = self.hass.data[KNX_MODULE_KEY]
-        if knx_module:
-            knx_module.ui_time_server_controller.start(knx_module.xknx, config)
+        knx_module.ui_time_server_controller.start(knx_module.xknx, config)
         await self._store.async_save(self.data)
 
 

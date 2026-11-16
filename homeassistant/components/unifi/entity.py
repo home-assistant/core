@@ -15,6 +15,7 @@ from aiounifi.interfaces.api_handlers import (
 from aiounifi.models.api import ApiItem
 from aiounifi.models.event import Event, EventKey
 
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.core import callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import (
@@ -50,6 +51,34 @@ def async_device_available_fn(hub: UnifiHub, obj_id: str) -> bool:
 
 
 @callback
+def async_device_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
+    """Check if device is adopted by the controller.
+
+    The controller also lists devices that are only pending adoption,
+    like a neighbour's access point. Those are not part of the site.
+    """
+    if "_" in obj_id:  # Sub device (outlet or port)
+        obj_id = obj_id.partition("_")[0]
+
+    return hub.api.devices[obj_id].raw.get("adopted", True)
+
+
+@callback
+def async_port_poe_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
+    """Check if port supports PoE."""
+    return async_device_supported_fn(hub, obj_id) and bool(
+        hub.api.ports[obj_id].port_poe
+    )
+
+
+@callback
+def async_firewall_policy_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
+    """Check if firewall policy can be controlled."""
+    policy = hub.api.firewall_policies[obj_id]
+    return not policy.predefined and policy.name != ""
+
+
+@callback
 def async_wlan_available_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Check if WLAN is available."""
     wlan = hub.api.wlans[obj_id]
@@ -67,7 +96,7 @@ def async_device_device_info_fn(hub: UnifiHub, obj_id: str) -> DeviceInfo:
         connections={(CONNECTION_NETWORK_MAC, device.mac)},
         manufacturer=ATTR_MANUFACTURER,
         model=device.model,
-        name=device.name or None,
+        name=device.name or device.model,
         sw_version=device.version,
         hw_version=str(device.board_revision),
     )
@@ -94,6 +123,20 @@ def async_client_device_info_fn(hub: UnifiHub, obj_id: str) -> DeviceInfo:
         connections={(CONNECTION_NETWORK_MAC, obj_id)},
         manufacturer=client.oui,
         name=client.name or client.hostname,
+    )
+
+
+@callback
+def async_unifi_network_device_info_fn(hub: UnifiHub, obj_id: str) -> DeviceInfo:
+    """Create device registry entry for the UniFi Network application."""
+    unique_id = hub.config.entry.unique_id
+    assert unique_id is not None
+    return DeviceInfo(
+        entry_type=DeviceEntryType.SERVICE,
+        identifiers={(SWITCH_DOMAIN, unique_id)},
+        manufacturer=ATTR_MANUFACTURER,
+        model="UniFi Network",
+        name="UniFi Network",
     )
 
 
@@ -223,6 +266,23 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
             )
 
     @callback
+    @override
+    def add_to_platform_abort(self) -> None:
+        """Keep the object of a disabled entity known, forget any other.
+
+        A disabled entity is not added but keeps its registry entry, so its
+        object stays known until that entry is removed. Any other entity
+        that is not added is tried again on the next scan.
+        """
+        super().add_to_platform_abort()
+        loader = self.hub.entity_loader
+        obj = (self.entity_description.key, self._obj_id)
+        if (entry := self.registry_entry) and entry.disabled:
+            loader.known_but_disabled[entry.entity_id] = obj
+        else:
+            loader.known_objects.discard(obj)
+
+    @callback
     def _async_coordinator_updated(self) -> None:
         """Skip coordinator updates that changed a different object."""
         coordinator_data = self.coordinator.data
@@ -250,6 +310,7 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
 
         description = self.entity_description
         if not description.supported_fn(self.hub, self._obj_id):
+            self.hub.adoption.async_follow_if_unadopted(self._obj_id)
             self.hass.async_create_task(self.remove_item({self._obj_id}))
             return
 

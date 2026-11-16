@@ -63,6 +63,12 @@ DHW_HEAT_PUMP_OPERATING_TIME = FixtureDevice(
     "io://1234-5678-5643/6713703#1",
     "sensor.my_home_water_heater_heat_pump_operating_time",
 )
+# Atlantic heater exposing core:ErrorCodeState (0 means no fault)
+COZYTOUCH_ERROR_CODE = FixtureDevice(
+    "setup/cloud_atlantic_cozytouch.json",
+    "modbuslink://1234-5678-5643/1#1",
+    "sensor.living_room_heater_error_code",
+)
 # Hitachi Yutaki heat pump exposing energy and temperature sensors
 YUTAKI = FixtureDevice(
     "setup/cloud_hi_kumo_europe.json",
@@ -296,6 +302,42 @@ async def test_sensor_dynamic_unit_with_zero_value(
     assert state
     assert state.state == "0"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfEnergy.KILO_WATT_HOUR
+
+
+async def test_sensor_error_code_state_update(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test error code reports a fault and its clearing (0 → 370 → 0)."""
+    await setup_overkiz_integration(fixture=COZYTOUCH_ERROR_CODE.fixture)
+
+    state = hass.states.get(COZYTOUCH_ERROR_CODE.entity_id)
+    assert state
+    assert state.state == "0"
+
+    for value in (370, 0):
+        await async_deliver_events(
+            hass,
+            freezer,
+            mock_client,
+            [
+                device_state_changed_event(
+                    device_url=COZYTOUCH_ERROR_CODE.device_url,
+                    device_states=[
+                        {
+                            "name": OverkizState.CORE_ERROR_CODE.value,
+                            "type": 1,
+                            "value": value,
+                        },
+                    ],
+                )
+            ],
+        )
+
+        state = hass.states.get(COZYTOUCH_ERROR_CODE.entity_id)
+        assert state.state == str(value)
 
 
 async def test_sensor_unavailability(

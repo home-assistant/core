@@ -21,9 +21,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import TPLinkConfigEntry, legacy_device_id
+from . import legacy_device_id
 from .const import DOMAIN
-from .coordinator import TPLinkDataUpdateCoordinator
+from .coordinator import TPLinkConfigEntry, TPLinkDataUpdateCoordinator
 from .entity import (
     CoordinatedTPLinkModuleEntity,
     TPLinkModuleEntityDescription,

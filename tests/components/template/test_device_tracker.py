@@ -635,6 +635,36 @@ async def test_flow_preview(
 
 
 @pytest.mark.parametrize(
+    "config",
+    [
+        pytest.param(
+            {
+                "latitude": "{{ state_attr('zone.home', 'latitude') }}",
+                "longitude": "{{ state_attr('zone.home', 'longitude') }}",
+            },
+            id="coordinates",
+        ),
+        pytest.param({"in_zones": "{{ ['zone.home'] }}"}, id="in_zones"),
+    ],
+)
+async def test_flow_preview_home_zone(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    config: ConfigType,
+) -> None:
+    """Preview calculates the home zone from coordinates or explicit zones."""
+    assert await async_setup_component(hass, "zone", {})
+    state = await async_get_flow_preview_state(
+        hass,
+        hass_ws_client,
+        device_tracker.DOMAIN,
+        {"name": "My template", **config},
+    )
+    assert state["state"] == STATE_HOME
+    assert state["attributes"]["in_zones"] == ["zone.home"]
+
+
+@pytest.mark.parametrize(
     "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
 )
 @pytest.mark.parametrize(

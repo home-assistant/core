@@ -41,7 +41,7 @@ from .pipeline import (
     async_setup_pipeline_store,
     async_update_pipeline,
 )
-from .select import AssistPipelineSelect, VadSensitivitySelect
+from .select import AssistPipelineSelect, VadSensitivitySelect, indexed_select_key
 from .vad import VadSensitivity
 from .websocket_api import async_register_websocket_api
 
@@ -59,13 +59,17 @@ __all__ = (
     "PipelineEvent",
     "PipelineEventType",
     "PipelineNotFound",
+    "PipelineStage",
     "VadSensitivity",
     "VadSensitivitySelect",
     "WakeWordSettings",
     "async_create_default_pipeline",
+    "async_get_pipeline",
     "async_get_pipelines",
     "async_pipeline_from_audio_stream",
+    "async_setup_pipeline_store",
     "async_update_pipeline",
+    "indexed_select_key",
 )
 
 CONFIG_SCHEMA = probatio.Schema(
@@ -101,6 +105,7 @@ async def async_pipeline_from_audio_stream(
     stt_metadata: stt.SpeechMetadata,
     stt_stream: AsyncIterable[bytes],
     wake_word_phrase: str | None = None,
+    wake_word_audio_ms: int | None = None,
     pipeline_id: str | None = None,
     conversation_id: str | None = None,
     tts_audio_output: str | dict[str, Any] | None = None,
@@ -116,7 +121,10 @@ async def async_pipeline_from_audio_stream(
 
     Raises PipelineNotFound if no pipeline is found.
     """
-    with chat_session.async_get_chat_session(hass, conversation_id) as session:
+    # The intent stage checks the owner with the input of the user.
+    with chat_session.async_get_chat_session(
+        hass, conversation_id, context=None
+    ) as session:
         pipeline_input = PipelineInput(
             session=session,
             device_id=device_id,
@@ -124,6 +132,7 @@ async def async_pipeline_from_audio_stream(
             stt_metadata=stt_metadata,
             stt_stream=stt_stream,
             wake_word_phrase=wake_word_phrase,
+            wake_word_audio_ms=wake_word_audio_ms,
             conversation_extra_system_prompt=conversation_extra_system_prompt,
             run=PipelineRun(
                 hass,

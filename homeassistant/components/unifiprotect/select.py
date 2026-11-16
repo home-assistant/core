@@ -14,8 +14,7 @@ from uiprotect.data import (
     DoorbellMessageType,
     IRLEDMode,
     Light,
-    LightModeEnableType,
-    LightModeType,
+    LightModePreset,
     ModelType,
     MountType,
     ProtectAdoptableDeviceModel,
@@ -28,7 +27,6 @@ from uiprotect.data import (
 from uiprotect.data.public_devices import (
     PublicCamera,
     PublicDeviceModel,
-    PublicLight,
     SensorFeatureCapability,
 )
 from uiprotect.exceptions import GlobalAlarmManagerError
@@ -53,14 +51,9 @@ from .entity import (
     async_all_device_entities,
     async_remove_unsupported_sense_entities,
 )
-from .utils import (
-    async_get_doorbell_settings_public,
-    async_get_light_motion_current_public,
-    async_ufp_instance_command,
-)
+from .utils import async_get_doorbell_settings_public, async_ufp_instance_command
 
 _LOGGER = logging.getLogger(__name__)
-_KEY_LIGHT_MOTION = "light_motion"
 PARALLEL_UPDATES = 0
 
 HDR_MODES = [
@@ -97,23 +90,12 @@ LIGHT_MODE_MOTION = "motion"
 LIGHT_MODE_MOTION_DARK = "motion_dark"
 LIGHT_MODE_DARK = "when_dark"
 LIGHT_MODE_OFF = "manual"
-LIGHT_MODES = [LIGHT_MODE_MOTION, LIGHT_MODE_DARK, LIGHT_MODE_OFF]
-
-LIGHT_MODE_TO_SETTINGS = {
-    LIGHT_MODE_MOTION: (LightModeType.MOTION.value, LightModeEnableType.ALWAYS.value),
-    LIGHT_MODE_MOTION_DARK: (
-        LightModeType.MOTION.value,
-        LightModeEnableType.DARK.value,
-    ),
-    LIGHT_MODE_DARK: (LightModeType.WHEN_DARK.value, LightModeEnableType.DARK.value),
-    LIGHT_MODE_OFF: (LightModeType.MANUAL.value, None),
-}
 
 MOTION_MODE_TO_LIGHT_MODE = [
-    {"id": LightModeType.MOTION.value, "name": LIGHT_MODE_MOTION},
-    {"id": f"{LightModeType.MOTION.value}_dark", "name": LIGHT_MODE_MOTION_DARK},
-    {"id": LightModeType.WHEN_DARK.value, "name": LIGHT_MODE_DARK},
-    {"id": LightModeType.MANUAL.value, "name": LIGHT_MODE_OFF},
+    {"id": LightModePreset.MOTION.value, "name": LIGHT_MODE_MOTION},
+    {"id": LightModePreset.MOTION_DARK.value, "name": LIGHT_MODE_MOTION_DARK},
+    {"id": LightModePreset.WHEN_DARK.value, "name": LIGHT_MODE_DARK},
+    {"id": LightModePreset.OFF.value, "name": LIGHT_MODE_OFF},
 ]
 
 PTZ_PATROL_STOP = "stop"
@@ -172,14 +154,6 @@ def _get_paired_camera_options(api: ProtectApiClient) -> list[dict[str, Any]]:
 
 def _get_viewer_current(obj: Viewer) -> str:
     return obj.liveview_id
-
-
-async def _set_light_mode(obj: PublicLight, mode: str) -> None:
-    lightmode, timing = LIGHT_MODE_TO_SETTINGS[mode]
-    await obj.set_light_mode(
-        LightModeType(lightmode),
-        enable_at=None if timing is None else LightModeEnableType(timing),
-    )
 
 
 async def _set_paired_camera(obj: Light | Sensor, camera_id: str) -> None:
@@ -270,7 +244,6 @@ CAMERA_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         ufp_public_value="lcd_message_text",
         ufp_options_fn=_get_doorbell_options,
         ufp_set_method_fn=_set_doorbell_message,
-        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSelectEntityDescription(
         key="chime_type",
@@ -291,18 +264,18 @@ CAMERA_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         ufp_options=HDR_MODES,
         ufp_public_value="hdr_mode_display",
         ufp_set_method_fn=_set_hdr_mode,
-        ufp_perm=PermRequired.WRITE,
     ),
 )
 
 LIGHT_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
     ProtectSelectEntityDescription[Light](
-        key=_KEY_LIGHT_MOTION,
+        key="light_motion",
         translation_key="light_mode",
         entity_category=EntityCategory.CONFIG,
         ufp_options=MOTION_MODE_TO_LIGHT_MODE,
-        ufp_public_value_fn=async_get_light_motion_current_public,
-        ufp_set_method_fn=_set_light_mode,
+        ufp_enum_type=LightModePreset,
+        ufp_public_value="light_mode_preset",
+        ufp_set_method="set_light_mode_preset",
     ),
     ProtectSelectEntityDescription[Light](
         key="paired_camera",
@@ -483,15 +456,6 @@ class ProtectSelects(ProtectDeviceEntity, SelectEntity):
     @override
     async def async_select_option(self, option: str) -> None:
         """Change the Select Entity Option."""
-
-        # Light Motion is a bit different
-        if self.entity_description.key == _KEY_LIGHT_MOTION:
-            assert self.entity_description.ufp_set_method_fn is not None
-            await self.entity_description.ufp_set_method_fn(
-                self._ufp_set_target(), option
-            )
-            return
-
         unifi_value = self._hass_to_unifi_options[option]
         if self.entity_description.ufp_enum_type is not None:
             unifi_value = self.entity_description.ufp_enum_type(unifi_value)

@@ -7,9 +7,10 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
+from switchbot import SwitchbotOperationError
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.switchbot.const import (
     CONF_ENCRYPTION_KEY,
     CONF_KEY_ID,
@@ -18,12 +19,15 @@ from homeassistant.components.switchbot.const import (
     DEFAULT_RETRY_COUNT,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_ADDRESS,
     CONF_NAME,
     CONF_SENSOR_TYPE,
+    CommonServiceArgument,
+    EntityCategory,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import (
@@ -42,8 +46,9 @@ from . import (
 @pytest.mark.parametrize(
     ("service", "mock_method", "entity_id"),
     [
-        (SERVICE_PRESS, "next_image", "button.test_name_next_image"),
-        (SERVICE_PRESS, "prev_image", "button.test_name_previous_image"),
+        (ButtonService.PRESS, "next_image", "button.test_name_next_image"),
+        (ButtonService.PRESS, "prev_image", "button.test_name_previous_image"),
+        (ButtonService.PRESS, "random_image", "button.test_name_random_image"),
     ],
 )
 async def test_art_frame_button_press(
@@ -79,7 +84,7 @@ async def test_art_frame_button_press(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             service,
-            {ATTR_ENTITY_ID: entity_id},
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -132,8 +137,8 @@ async def test_meter_pro_sync_datetime_button(
 
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.test_name_sync_date_and_time"},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: "button.test_name_sync_date_and_time"},
             blocking=True,
         )
 
@@ -189,8 +194,8 @@ async def test_meter_pro_co2_sync_datetime_button_with_timezone(
 
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.test_name_sync_date_and_time"},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: "button.test_name_sync_date_and_time"},
             blocking=True,
         )
 
@@ -236,11 +241,108 @@ async def test_air_purifier_buttons(
 
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: entity_id},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
         mock_instance.assert_awaited_once()
+
+
+@pytest.mark.parametrize(
+    ("service_info", "sensor_type"),
+    [
+        pytest.param(AIR_PURIFIER_US_SERVICE_INFO, "air_purifier_us", id="us"),
+        pytest.param(AIR_PURIFIER_JP_SERVICE_INFO, "air_purifier_jp", id="jp"),
+        pytest.param(
+            AIR_PURIFIER_TABLE_US_SERVICE_INFO, "air_purifier_table_us", id="table_us"
+        ),
+        pytest.param(
+            AIR_PURIFIER_TABLE_JP_SERVICE_INFO, "air_purifier_table_jp", id="table_jp"
+        ),
+    ],
+)
+async def test_air_purifier_reset_filter_usage(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+    service_info: BluetoothServiceInfoBleak,
+    sensor_type: str,
+) -> None:
+    """Test the configuration button calls the public API for each purifier."""
+    inject_bluetooth_service_info(hass, service_info)
+    entry = mock_entry_encrypted_factory(sensor_type)
+    entry.add_to_hass(hass)
+    reset_filter_usage = AsyncMock(return_value=True)
+    with patch.multiple(
+        "switchbot.SwitchbotAirPurifier",
+        get_basic_info=AsyncMock(return_value=None),
+        reset_filter_usage=reset_filter_usage,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        entity_id = "button.test_name_reset_filter_usage"
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.attributes["friendly_name"] == "test-name Reset filter usage"
+        registry_entry = entity_registry.async_get(entity_id)
+        assert registry_entry is not None
+        assert registry_entry.entity_category is EntityCategory.CONFIG
+        assert registry_entry.unique_id == "aabbccddeeff_reset_filter_usage"
+        reset_filter_usage.assert_not_awaited()
+
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
+            blocking=True,
+        )
+        reset_filter_usage.assert_awaited_once_with()
+        assert hass.states.get(entity_id).attributes["last_run_success"] is True
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+
+
+async def test_air_purifier_reset_filter_usage_failure(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+) -> None:
+    """Propagate reset errors without retaining a previous successful result."""
+    inject_bluetooth_service_info(hass, AIR_PURIFIER_US_SERVICE_INFO)
+    entry = mock_entry_encrypted_factory("air_purifier_us")
+    entry.add_to_hass(hass)
+    reset_filter_usage = AsyncMock(
+        side_effect=[True, SwitchbotOperationError("Filter usage read was rejected")]
+    )
+    with patch.multiple(
+        "switchbot.SwitchbotAirPurifier",
+        get_basic_info=AsyncMock(return_value=None),
+        reset_filter_usage=reset_filter_usage,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        entity_id = "button.test_name_reset_filter_usage"
+        initial_usage = hass.states.get("sensor.test_name_filter_usage").state
+
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
+            blocking=True,
+        )
+        assert hass.states.get(entity_id).attributes["last_run_success"] is True
+
+        with pytest.raises(HomeAssistantError, match="Filter usage read was rejected"):
+            await hass.services.async_call(
+                BUTTON_DOMAIN,
+                ButtonService.PRESS,
+                {CommonServiceArgument.ENTITY_ID: entity_id},
+                blocking=True,
+            )
+        assert reset_filter_usage.await_count == 2
+        assert hass.states.get("sensor.test_name_filter_usage").state == initial_usage
+        assert hass.states.get(entity_id).attributes["last_run_success"] is False
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
 
 
 async def test_lock_ultra_half_lock_button(
@@ -282,8 +384,8 @@ async def test_lock_ultra_half_lock_button(
 
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.test_name_half_lock"},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: "button.test_name_half_lock"},
             blocking=True,
         )
 

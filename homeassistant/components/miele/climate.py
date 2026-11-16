@@ -174,12 +174,6 @@ class MieleClimate(MieleEntity, ClimateEntity):
     _attr_hvac_mode = HVACMode.COOL
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
 
-    @property
-    @override
-    def native_current_temperature(self) -> float | None:
-        """Return the current temperature."""
-        return cast(float, self.entity_description.value_fn(self.device))
-
     def __init__(
         self,
         coordinator: MieleDataUpdateCoordinator,
@@ -214,6 +208,12 @@ class MieleClimate(MieleEntity, ClimateEntity):
 
         self._attr_translation_key = t_key
         self._attr_unique_id = f"{device_id}-{description.key}-{description.zone}"
+
+    @property
+    @override
+    def native_current_temperature(self) -> float | None:
+        """Return the current temperature."""
+        return cast(float, self.entity_description.value_fn(self.device))
 
     @property
     @override

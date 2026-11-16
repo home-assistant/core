@@ -6,6 +6,7 @@
     "security_safety.doorbells_intercoms"
   ],
   "codeowners": ["@flacjacket"],
+  "connectivity": ["network"],
   "dependencies": ["ffmpeg"],
   "documentation": "https://www.home-assistant.io/integrations/amcrest",
   "iot_class": "local_polling",

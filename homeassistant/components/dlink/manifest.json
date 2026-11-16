@@ -4,6 +4,7 @@
   "categories": ["plugs_switches"],
   "codeowners": ["@tkdrob"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dhcp": [
     {
       "hostname": "dsp-w215"

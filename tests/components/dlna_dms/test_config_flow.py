@@ -75,7 +75,7 @@ def mock_setup_entry() -> Generator[Mock]:
     """Avoid setting up the entire integration."""
     with patch(
         "homeassistant.components.dlna_dms.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock:
         yield mock
 

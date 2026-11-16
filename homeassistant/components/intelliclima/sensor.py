@@ -30,27 +30,33 @@ class IntelliClimaSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[IntelliClimaECO2], int | float | str | None]
 
 
+def _reading(raw: str, sentinel: float) -> float | None:
+    """Return the reading, or None when the device reports its no-reading sentinel."""
+    value = float(raw)
+    return None if value == sentinel else value
+
+
 INTELLICLIMA_SENSORS: tuple[IntelliClimaSensorEntityDescription, ...] = (
     IntelliClimaSensorEntityDescription(
         key="temperature",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        value_fn=lambda device_data: float(device_data.tamb),
+        value_fn=lambda device_data: _reading(device_data.tamb, 327.67),
     ),
     IntelliClimaSensorEntityDescription(
         key="humidity",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
-        value_fn=lambda device_data: float(device_data.rh),
+        value_fn=lambda device_data: _reading(device_data.rh, 143),
     ),
     IntelliClimaSensorEntityDescription(
         key="voc",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
         native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
-        value_fn=lambda device_data: float(device_data.voc_state),
+        value_fn=lambda device_data: _reading(device_data.voc_state, 65535),
     ),
 )
 

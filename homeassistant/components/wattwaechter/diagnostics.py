@@ -1,4 +1,4 @@
-"""Diagnostics support for the WattWächter Plus integration."""
+"""Diagnostics support for the WattWächter integration."""
 
 from dataclasses import asdict
 from typing import Any

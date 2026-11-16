@@ -11,7 +11,7 @@ import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_API_KEY, CONF_MODEL
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.selector import (
     SelectOptionDict,
@@ -87,10 +87,14 @@ class ElevenLabsConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
             return {}, errors
         except ApiError as exc:
-            errors["base"] = "unknown"
             details = getattr(exc, "body", {}).get("detail", {})
-            if details.get("status") == "invalid_api_key":
+            if details.get("status") == "api_key_id_used_as_api_key":
+                errors["base"] = "api_key_id_used"
+            elif "invalid_api_key" in (details.get("status"), details.get("code")):
                 errors["base"] = "invalid_api_key"
+            else:
+                _LOGGER.exception("Unexpected error validating ElevenLabs API key")
+                errors["base"] = "unknown"
             return {}, errors
         return voices, errors
 
@@ -140,6 +144,7 @@ class ElevenLabsConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     @staticmethod
+    @callback
     @override
     def async_get_options_flow(
         config_entry: ElevenLabsConfigEntry,

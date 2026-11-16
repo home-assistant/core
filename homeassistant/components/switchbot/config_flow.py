@@ -19,12 +19,7 @@ from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
 )
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_PASSWORD,
@@ -55,6 +50,7 @@ from .const import (
     SUPPORTED_MODEL_TYPES,
     SupportedModels,
 )
+from .coordinator import SwitchbotConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,7 +81,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: SwitchbotConfigEntry,
     ) -> SwitchbotOptionsFlowHandler:
         """Get the options flow for this handler."""
         return SwitchbotOptionsFlowHandler()
@@ -163,7 +159,6 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return await self._async_create_entry_from_discovery(user_input)
 
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="confirm",
             data_schema=probatio.Schema({}),

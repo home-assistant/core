@@ -22,7 +22,7 @@ from . import HA_SENSOR_DATA, MOCK_USER_INPUT
 @pytest.fixture(autouse=True)
 def glances_setup_fixture():
     """Mock Glances entry setup."""
-    with patch("homeassistant.components.glances.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.glances.async_setup_entry", return_value=None):
         yield
 
 

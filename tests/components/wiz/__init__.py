@@ -326,7 +326,8 @@ async def async_setup_integration(
     bulb = wizlight or _mocked_wizlight(device, extended_white_range, bulb_type)
     with _patch_discovery(), _patch_wizlight(device=bulb):
         await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
-        await hass.async_block_till_done()
+        # Let the discovery started by async_setup finish while it is patched.
+        await hass.async_block_till_done(wait_background_tasks=True)
     return bulb, entry
 
 

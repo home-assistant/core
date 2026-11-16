@@ -2,10 +2,12 @@
 
 from collections.abc import AsyncGenerator, Generator
 import json
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
 from google.genai._api_client import HttpRequest, HttpResponse
 from google.genai.types import HttpOptionsOrDict
+from google.genai.voices import VoiceListResponse
+import httpx
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -185,3 +187,39 @@ def mock_genai_transport() -> Generator[AsyncMock]:
     mock.side_effect = request
     with patch("google.genai._api_client.BaseApiClient._async_request", mock):
         yield mock
+
+
+@pytest.fixture
+def mock_genai_interactions_transport() -> Generator[Mock]:
+    """Capture real SDK Interactions request construction, without HTTP requests."""
+    mock = Mock()
+
+    async def send(
+        self: httpx.AsyncClient, request: httpx.Request, **kwargs: object
+    ) -> httpx.Response:
+        mock(request)
+        return httpx.Response(
+            200,
+            json={
+                "id": "interaction-id",
+                "status": "completed",
+                "steps": [
+                    {
+                        "type": "model_output",
+                        "content": [{"type": "text", "text": "Done"}],
+                    }
+                ],
+            },
+            request=request,
+        )
+
+    with patch("httpx.AsyncClient.send", send):
+        yield mock
+
+
+@pytest.fixture(autouse=True)
+def mock_genai_voices() -> Generator[Mock]:
+    """Avoid loading the voice library from the real API."""
+    with patch("google.genai.Client.voices", new_callable=PropertyMock) as mock:
+        mock.return_value.list.return_value = VoiceListResponse(voices=[])
+        yield mock.return_value.list

@@ -3,6 +3,7 @@
   "name": "Netdata",
   "categories": ["computers_network.monitoring"],
   "codeowners": ["@fabaff"],
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/netdata",
   "iot_class": "local_polling",
   "loggers": ["netdata"],

@@ -15,28 +15,28 @@ from sqlalchemy.orm import Session
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.filters import Filters
 from homeassistant.components.recorder.models import (
+    bytes_to_ulid_or_none,
     bytes_to_uuid_hex_or_none,
     decode_attributes_from_source,
     extract_event_type_ids,
     extract_metadata_ids,
     process_timestamp_to_utc_isoformat,
 )
-from homeassistant.components.recorder.util import (
-    execute_stmt_lambda_element,
-    session_scope,
-)
+from homeassistant.components.recorder.util import execute_stmt_lambda_element
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_ENTITY_ID,
     ATTR_NAME,
     ATTR_SERVICE,
+    ATTR_SERVICE_DATA,
     EVENT_CALL_SERVICE,
     EVENT_LOGBOOK_ENTRY,
     EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.recorder import session_scope
 from homeassistant.util import dt as dt_util
 from homeassistant.util.collection import chunked_or_all
 from homeassistant.util.event_type import EventType
@@ -56,11 +56,14 @@ from .const import (
     DOMAIN,
     EXPOSED_STATE_ATTRIBUTES,
     LOGBOOK_ENTRY_ATTRIBUTES,
+    LOGBOOK_ENTRY_CONTEXT_ID,
     LOGBOOK_ENTRY_DOMAIN,
     LOGBOOK_ENTRY_ENTITY_ID,
     LOGBOOK_ENTRY_ICON,
     LOGBOOK_ENTRY_MESSAGE,
     LOGBOOK_ENTRY_NAME,
+    LOGBOOK_ENTRY_SERVICE,
+    LOGBOOK_ENTRY_SERVICE_DATA,
     LOGBOOK_ENTRY_SOURCE,
     LOGBOOK_ENTRY_STATE,
     LOGBOOK_ENTRY_WHEN,
@@ -85,6 +88,7 @@ from .models import (
     async_event_to_row,
 )
 from .queries import statement_for_request
+from .queries.action_calls import action_calls_stmt
 from .queries.common import (
     PSEUDO_EVENT_STATE_CHANGED,
     select_context_user_ids_for_context_ids,
@@ -111,6 +115,8 @@ class LogbookRun:
     entity_name_cache: EntityNameCache
     include_entity_name: bool
     timestamp: bool
+    # True to output action calls, which are otherwise only used to link contexts.
+    action_calls: bool = False
     memoize_new_contexts: bool = True
     # True when this run will switch to a live stream; gates population of
     # context_user_ids (wasted work for one-shot REST/get_events callers).
@@ -135,10 +141,14 @@ class EventProcessor:
         timestamp: bool = False,
         include_entity_name: bool = True,
         for_live_stream: bool = False,
+        action_calls: bool = False,
     ) -> None:
         """Init the event stream."""
         assert not (context_id and (entity_ids or device_ids)), (
             "can't pass in both context_id and (entity_ids or device_ids)"
+        )
+        assert not (action_calls and (context_id or entity_ids or device_ids)), (
+            "can't pass in both action_calls and (context_id or entity_ids or device_ids)"
         )
         self.hass = hass
         self.ent_reg = er.async_get(hass)
@@ -146,6 +156,7 @@ class EventProcessor:
         self.entity_ids = entity_ids
         self.device_ids = device_ids
         self.context_id = context_id
+        self.action_calls = action_calls
         logbook_config: LogbookConfig = hass.data[DOMAIN]
         self.filters: Filters | None = logbook_config.sqlalchemy_filter
         self.logbook_run = LogbookRun(
@@ -155,6 +166,7 @@ class EventProcessor:
             entity_name_cache=EntityNameCache(self.hass),
             include_entity_name=include_entity_name,
             timestamp=timestamp,
+            action_calls=action_calls,
             for_live_stream=for_live_stream,
         )
         self.context_augmenter = ContextAugmenter(self.logbook_run)
@@ -193,16 +205,21 @@ class EventProcessor:
                     instance.event_type_manager.get_many(self.event_types, session)
                 )
             )
-            stmt = statement_for_request(
-                start_day,
-                end_day,
-                event_type_ids,
-                self.entity_ids,
-                metadata_ids,
-                self.device_ids,
-                self.filters,
-                self.context_id,
-            )
+            if self.action_calls:
+                stmt = action_calls_stmt(
+                    start_day.timestamp(), end_day.timestamp(), event_type_ids
+                )
+            else:
+                stmt = statement_for_request(
+                    start_day,
+                    end_day,
+                    event_type_ids,
+                    self.entity_ids,
+                    metadata_ids,
+                    self.device_ids,
+                    self.filters,
+                    self.context_id,
+                )
             rows = execute_stmt_lambda_element(session, stmt, orm_rows=False)
             query_parent_user_ids: dict[bytes, bytes] | None = None
             if self.entity_ids or self.device_ids:
@@ -295,7 +312,7 @@ def _exposed_state_attributes(
     }
 
 
-def _humanify(
+def _humanify(  # noqa: C901
     hass: HomeAssistant,
     rows: Generator[EventAsRow] | Sequence[Row] | Result,
     ent_reg: er.EntityRegistry,
@@ -312,6 +329,7 @@ def _humanify(
     entity_name_cache_get = logbook_run.entity_name_cache.get
     include_entity_name = logbook_run.include_entity_name
     timestamp = logbook_run.timestamp
+    action_calls = logbook_run.action_calls
     memoize_new_contexts = logbook_run.memoize_new_contexts
     get_context = context_augmenter.get_context
     context_id_bin: bytes
@@ -338,9 +356,17 @@ def _humanify(
             continue
         event_type = row[EVENT_TYPE_POS]
         if event_type == EVENT_CALL_SERVICE:
-            continue
+            if not action_calls:
+                continue
+            event_data = event_cache_get(row).data
+            data = {
+                LOGBOOK_ENTRY_DOMAIN: event_data.get(ATTR_DOMAIN),
+                LOGBOOK_ENTRY_SERVICE: event_data.get(ATTR_SERVICE),
+                LOGBOOK_ENTRY_SERVICE_DATA: event_data.get(ATTR_SERVICE_DATA, {}),
+                LOGBOOK_ENTRY_CONTEXT_ID: bytes_to_ulid_or_none(context_id_bin),
+            }
 
-        if event_type is PSEUDO_EVENT_STATE_CHANGED:
+        elif event_type is PSEUDO_EVENT_STATE_CHANGED:
             entity_id = row[ENTITY_ID_POS]
             if TYPE_CHECKING:
                 assert entity_id is not None

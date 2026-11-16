@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock
 
+from guntamatic.heater import NoSerialException
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 import requests
@@ -25,12 +26,19 @@ async def test_setup_entry(
 
 
 @pytest.mark.parametrize(
-    ("side_effect", "expected_state"),
+    ("side_effect", "translation_key", "placeholders"),
     [
         (
             requests.exceptions.ConnectionError("Cannot connect"),
-            ConfigEntryState.SETUP_RETRY,
+            "communication_error",
+            {"error": "Cannot connect"},
         ),
+        (
+            requests.exceptions.ReadTimeout("Timed out"),
+            "communication_error",
+            {"error": "Timed out"},
+        ),
+        (NoSerialException, "no_serial", None),
     ],
 )
 async def test_setup_entry_fails(
@@ -38,9 +46,12 @@ async def test_setup_entry_fails(
     mock_config_entry: MockConfigEntry,
     mock_heater: MagicMock,
     side_effect: Exception,
-    expected_state: ConfigEntryState,
+    translation_key: str,
+    placeholders: dict[str, str] | None,
 ) -> None:
     """Test setup fails correctly for different error types."""
     mock_heater.parse_data.side_effect = side_effect
     await setup_integration(hass, mock_config_entry)
-    assert mock_config_entry.state is expected_state
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == translation_key
+    assert mock_config_entry.error_reason_translation_placeholders == placeholders

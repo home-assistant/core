@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
-from boschshcpy import RoomClimateControlService
+from boschshcpy import HeatingCircuitService, RoomClimateControlService
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -31,7 +31,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
-from .conftest import climate_control_device, setup_integration
+from .conftest import climate_control_device, heating_circuit_device, setup_integration
 
 ENTITY_ID = "climate.living_room"
 AUTOMATIC = RoomClimateControlService.OperationMode.AUTOMATIC
@@ -386,3 +386,162 @@ async def test_turn_on_off(
     )
     assert device.summer_mode is False
     assert device.operation_mode == AUTOMATIC
+
+
+HC_ENTITY_ID = "climate.floor_heating"
+HC_AUTOMATIC = HeatingCircuitService.OperationMode.AUTOMATIC
+HC_MANUAL = HeatingCircuitService.OperationMode.MANUAL
+
+
+@pytest.mark.parametrize(
+    ("device_kwargs", "hvac_mode", "hvac_action"),
+    [
+        ({}, HVACMode.AUTO, HVACAction.IDLE),
+        ({"on": True}, HVACMode.AUTO, HVACAction.HEATING),
+        ({"operation_mode": HC_MANUAL}, HVACMode.HEAT, HVACAction.IDLE),
+    ],
+    ids=["auto", "heating", "manual"],
+)
+async def test_heating_circuit_states(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
+    device_kwargs: dict,
+    hvac_mode: HVACMode,
+    hvac_action: HVACAction,
+) -> None:
+    """The heating circuit state maps onto HVAC mode and action."""
+    mock_session.device_helper.heating_circuits = [
+        heating_circuit_device(**device_kwargs)
+    ]
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(HC_ENTITY_ID)
+    assert state is not None
+    assert state.state == hvac_mode
+    assert state.attributes[ATTR_HVAC_ACTION] == hvac_action
+    assert state.attributes[ATTR_TEMPERATURE] == 22.0
+    assert state.attributes["current_temperature"] is None
+
+
+@pytest.mark.parametrize(
+    ("temperature_range", "min_temp", "max_temp"),
+    [((5.0, 30.0), 5.0, 30.0), ((15.0, 28.0), 15.0, 28.0), (None, 5.0, 30.0)],
+    ids=["default", "raised-minimum", "unreported"],
+)
+async def test_heating_circuit_temperature_range(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
+    temperature_range: tuple[float, float] | None,
+    min_temp: float,
+    max_temp: float,
+) -> None:
+    """The setpoint range follows the device and falls back to 5-30 °C."""
+    mock_session.device_helper.heating_circuits = [
+        heating_circuit_device(setpoint_temperature_range=temperature_range)
+    ]
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(HC_ENTITY_ID)
+    assert state is not None
+    assert state.attributes["min_temp"] == min_temp
+    assert state.attributes["max_temp"] == max_temp
+
+
+@pytest.mark.parametrize(
+    ("hvac_mode", "value"),
+    [(HVACMode.AUTO, HC_AUTOMATIC), (HVACMode.HEAT, HC_MANUAL)],
+)
+async def test_heating_circuit_set_hvac_mode(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
+    hvac_mode: HVACMode,
+    value: HeatingCircuitService.OperationMode,
+) -> None:
+    """Setting an HVAC mode writes the operation mode."""
+    device = heating_circuit_device()
+    mock_session.device_helper.heating_circuits = [device]
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: HC_ENTITY_ID, "hvac_mode": hvac_mode},
+        blocking=True,
+    )
+
+    assert device.operation_mode == value
+
+
+async def test_heating_circuit_set_temperature(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
+) -> None:
+    """Setting the temperature writes the setpoint."""
+    device = heating_circuit_device()
+    mock_session.device_helper.heating_circuits = [device]
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: HC_ENTITY_ID, ATTR_TEMPERATURE: 24.0},
+        blocking=True,
+    )
+
+    assert device.setpoint_temperature == 24.0
+
+
+async def test_heating_circuit_set_temperature_with_hvac_mode(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
+) -> None:
+    """A combined call applies the mode and the setpoint."""
+    device = heating_circuit_device(operation_mode=HC_AUTOMATIC)
+    mock_session.device_helper.heating_circuits = [device]
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: HC_ENTITY_ID,
+            ATTR_TEMPERATURE: 24.0,
+            "hvac_mode": HVACMode.HEAT,
+        },
+        blocking=True,
+    )
+
+    assert device.operation_mode == HC_MANUAL
+    assert device.setpoint_temperature == 24.0
+
+
+async def test_heating_circuit_set_temperature_unsupported_hvac_mode(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
+) -> None:
+    """An unsupported mode in a combined call changes nothing."""
+    device = heating_circuit_device(operation_mode=HC_AUTOMATIC)
+    mock_session.device_helper.heating_circuits = [device]
+    await setup_integration(hass, mock_config_entry)
+    setpoint = device.setpoint_temperature
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                ATTR_ENTITY_ID: HC_ENTITY_ID,
+                ATTR_TEMPERATURE: 24.0,
+                "hvac_mode": HVACMode.COOL,
+            },
+            blocking=True,
+        )
+
+    assert device.operation_mode == HC_AUTOMATIC
+    assert device.setpoint_temperature == setpoint

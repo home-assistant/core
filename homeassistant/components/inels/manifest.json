@@ -4,6 +4,7 @@
   "categories": ["hubs_protocols.building_automation"],
   "codeowners": ["@epdevlab"],
   "config_flow": true,
+  "connectivity": ["mqtt"],
   "dependencies": ["mqtt"],
   "documentation": "https://www.home-assistant.io/integrations/inels",
   "integration_type": "hub",

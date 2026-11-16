@@ -1,4 +1,4 @@
-"""Common fixtures for WattWächter Plus tests."""
+"""Common fixtures for WattWächter tests."""
 
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -40,7 +40,10 @@ MOCK_CONFIG_DATA = {
     CONF_MAC: MOCK_MAC,
 }
 
+MOCK_MQTT_CLIENT_ID = f"wattwaechter-{MOCK_DEVICE_ID.lower()}"
+
 MOCK_SETTINGS = MagicMock(device_name=MOCK_DEVICE_NAME)
+MOCK_SETTINGS.mqtt.client_id = MOCK_MQTT_CLIENT_ID
 
 MOCK_ALIVE_RESPONSE = AliveResponse(alive=True, version=MOCK_FW_VERSION)
 
@@ -52,6 +55,22 @@ MOCK_METER_DATA = _parse_meter_data(load_json_object_fixture("meter_data.json", 
 
 MOCK_METER_DATA_MINIMAL = _parse_meter_data(
     load_json_object_fixture("meter_data_minimal.json", DOMAIN)
+)
+
+MOCK_SYSTEM_INFO_GAS = _parse_system_info(
+    load_json_object_fixture("system_info_gas.json", DOMAIN)
+)
+
+MOCK_SYSTEM_INFO_WATER = _parse_system_info(
+    load_json_object_fixture("system_info_water.json", DOMAIN)
+)
+
+MOCK_METER_DATA_GAS = _parse_meter_data(
+    load_json_object_fixture("meter_data_gas.json", DOMAIN)
+)
+
+MOCK_METER_DATA_WATER = _parse_meter_data(
+    load_json_object_fixture("meter_data_water.json", DOMAIN)
 )
 
 MOCK_OTA_CHECK = OtaCheckResponse(
@@ -74,7 +93,7 @@ MOCK_OTA_CHECK = OtaCheckResponse(
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.wattwaechter.async_setup_entry", return_value=True
+        "homeassistant.components.wattwaechter.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -111,6 +130,7 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
         title=MOCK_DEVICE_NAME,
         data=MOCK_CONFIG_DATA,
         unique_id=MOCK_DEVICE_ID,
+        minor_version=2,
     )
     entry.add_to_hass(hass)
     return entry

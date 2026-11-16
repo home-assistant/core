@@ -16,11 +16,11 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
-    ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -95,8 +95,11 @@ async def test_select_option(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: option},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            SelectServiceArgument.OPTION: option,
+        },
         blocking=True,
     )
 
@@ -129,8 +132,11 @@ async def test_select_option_error(
     with pytest.raises(HomeAssistantError, match=match):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: JET_1_ENTITY_ID, ATTR_OPTION: "high"},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: JET_1_ENTITY_ID,
+                SelectServiceArgument.OPTION: "high",
+            },
             blocking=True,
         )
 
@@ -146,7 +152,7 @@ async def test_unsupported_entities_not_added(
     device_fixture.jets = {
         1: Jet(jet_id=1, speed=JetSpeed.OFF, is_enabled=False, on_seconds=0),
     }
-    device_fixture.heater.heating_mode = HeatingMode.INVALID
+    device_fixture.heater.heating_mode = HeatingMode.UNKNOWN
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.SELECT])
 
     assert not entity_registry.async_is_registered(JET_1_ENTITY_ID)
