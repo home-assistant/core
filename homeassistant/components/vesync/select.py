@@ -6,6 +6,7 @@ import logging
 from typing import override
 
 from pyvesync.base_devices import VeSyncBaseDevice
+from pyvesync.const import PurifierAutoPreference
 from pyvesync.device_container import DeviceContainer
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
@@ -17,6 +18,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import is_humidifier, is_outlet, is_purifier, rgetattr
 from .const import (
+    DOMAIN,
     HUMIDIFIER_NIGHT_LIGHT_LEVEL_BRIGHT,
     HUMIDIFIER_NIGHT_LIGHT_LEVEL_DIM,
     HUMIDIFIER_NIGHT_LIGHT_LEVEL_OFF,
@@ -77,7 +79,9 @@ def _set_purifier_auto_preference(
         if room_size := device.state.auto_room_size:
             return device.set_auto_preference(preference, room_size)
         return device.set_auto_preference(preference)
-    raise HomeAssistantError("Device does not support auto mode preferences.")
+    raise HomeAssistantError(
+        translation_domain=DOMAIN, translation_key="auto_preference_not_supported"
+    )
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -126,7 +130,11 @@ SELECT_DESCRIPTIONS: list[VeSyncSelectEntityDescription] = [
     VeSyncSelectEntityDescription(
         key="auto_preference",
         translation_key="auto_preference",
-        options=["default", "efficient", "quiet"],
+        options=[
+            PurifierAutoPreference.DEFAULT,
+            PurifierAutoPreference.EFFICIENT,
+            PurifierAutoPreference.QUIET,
+        ],
         entity_category=EntityCategory.CONFIG,
         exists_fn=(
             lambda device: (

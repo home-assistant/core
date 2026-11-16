@@ -11,6 +11,7 @@ from pyvesync.base_devices.outlet_base import VeSyncOutlet
 from pyvesync.base_devices.purifier_base import VeSyncPurifier
 from pyvesync.const import DeviceStatus, ProductTypes
 from pyvesync.utils.errors import ResponseInfo
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
@@ -34,8 +35,13 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .common import ENTITY_HUMIDIFIER_300S_NIGHT_LIGHT_SELECT, mock_devices_response
+from .common import (
+    ALL_DEVICE_NAMES,
+    ENTITY_HUMIDIFIER_300S_NIGHT_LIGHT_SELECT,
+    mock_devices_response,
+)
 
 ENTITY_PURIFIER_NIGHT_LIGHT_SELECT = "select.test_purifier_night_light_level"
 ENTITY_OUTLET_NIGHT_LIGHT_SELECT = "select.test_outlet_night_light_level"
@@ -78,6 +84,38 @@ def outlet_with_nightlight_fixture() -> Mock:
         current_firm_version="1.0.0",
         state=Mock(connection_status="online", nightlight_status="off"),
     )
+
+
+@pytest.mark.parametrize("device_name", ALL_DEVICE_NAMES)
+async def test_select_state(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    aioclient_mock: AiohttpClientMocker,
+    device_name: str,
+) -> None:
+    """Test the resulting setup state is as expected for the platform."""
+    mock_devices_response(aioclient_mock, device_name)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    devices = dr.async_entries_for_config_entry(device_registry, config_entry.entry_id)
+    assert devices == snapshot(name="devices")
+
+    entities = [
+        entity
+        for entity in er.async_entries_for_config_entry(
+            entity_registry, config_entry.entry_id
+        )
+        if entity.domain == SELECT_DOMAIN
+    ]
+    assert entities == snapshot(name="entities")
+
+    for entity in entities:
+        assert hass.states.get(entity.entity_id) == snapshot(name=entity.entity_id)
 
 
 @pytest.mark.parametrize(
@@ -362,10 +400,10 @@ async def test_discover_new_device(
 
 
 @pytest.mark.parametrize(
-    ("room_size", "expected_args"),
+    ("room_size", "expected_room_size"),
     [
-        pytest.param(400, ("quiet", 400), id="room_size"),
-        pytest.param(0, ("quiet",), id="no_room_size"),
+        pytest.param(400, 400, id="room_size"),
+        pytest.param(0, 600, id="library_default"),
     ],
 )
 async def test_purifier_auto_preference(
@@ -373,7 +411,7 @@ async def test_purifier_auto_preference(
     config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
     room_size: int,
-    expected_args: tuple[str | int, ...],
+    expected_room_size: int,
 ) -> None:
     """Test the purifier auto mode preference select."""
     mock_devices_response(aioclient_mock, "Air Purifier Vital 200S")
@@ -386,40 +424,31 @@ async def test_purifier_auto_preference(
 
     device = config_entry.runtime_data.manager.devices.air_purifiers[0]
     device.state.auto_room_size = room_size
+    aioclient_mock.mock_calls.clear()
 
-    with patch(
-        "pyvesync.devices.vesyncpurifier.VeSyncAirBaseV2.set_auto_preference",
-        return_value=True,
-    ) as method_mock:
-        await hass.services.async_call(
-            SELECT_DOMAIN,
-            SelectService.SELECT_OPTION,
-            {
-                CommonServiceArgument.ENTITY_ID: entity_id,
-                SelectServiceArgument.OPTION: "quiet",
-            },
-            blocking=True,
-        )
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            SelectServiceArgument.OPTION: "quiet",
+        },
+        blocking=True,
+    )
 
-    method_mock.assert_awaited_once_with(*expected_args)
-
-
-async def test_no_auto_preference_without_support(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    aioclient_mock: AiohttpClientMocker,
-) -> None:
-    """Test a purifier that reports no auto preference gets no select."""
-    mock_devices_response(aioclient_mock, "Air Purifier 200s")
-
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert hass.states.get("select.air_purifier_200s_night_light_level") is not None
-    assert hass.states.get("select.air_purifier_200s_auto_mode_preference") is None
+    assert hass.states.get(entity_id).state == "quiet"
+    assert len(aioclient_mock.mock_calls) == 1
+    payload = aioclient_mock.mock_calls[0][2]["payload"]
+    assert payload["method"] == "setAutoPreference"
+    assert payload["data"] == {
+        "autoPreference": "quiet",
+        "roomSize": expected_room_size,
+    }
 
 
 def test_auto_preference_unsupported_device() -> None:
     """Test setting an auto preference on a device without one raises."""
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as exc_info:
         _set_purifier_auto_preference(Mock(spec=[]), "quiet")
+
+    assert exc_info.value.translation_key == "auto_preference_not_supported"
