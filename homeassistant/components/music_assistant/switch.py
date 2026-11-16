@@ -5,11 +5,13 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Final, override
 
 from music_assistant_client.client import MusicAssistantClient
+from music_assistant_models.enums import EventType
+from music_assistant_models.event import MassEvent
 from music_assistant_models.player import PlayerOption, PlayerOptionType
 from music_assistant_models.player_queue import PlayerQueue
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.const import Platform
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -152,6 +154,7 @@ class MusicAssistantPlayerConfigSwitch(MusicAssistantPlayerOptionEntity, SwitchE
 class MusicAssistantQueueSwitch(MusicAssistantEntity, SwitchEntity):
     """Switch for a setting of the player's own queue."""
 
+    _attr_entity_category = EntityCategory.CONFIG
     entity_description: MusicAssistantQueueSwitchDescription
 
     def __init__(
@@ -163,6 +166,19 @@ class MusicAssistantQueueSwitch(MusicAssistantEntity, SwitchEntity):
         """Initialize MusicAssistantQueueSwitch."""
         super().__init__(mass, player_id)
         self.entity_description = entity_description
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Register callbacks, also for the queue the server adds after the player."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self.mass.subscribe(
+                self._on_queue_added, EventType.QUEUE_ADDED, self.player_id
+            )
+        )
+
+    def _on_queue_added(self, event: MassEvent) -> None:
+        self.async_write_ha_state()
 
     @property
     @override

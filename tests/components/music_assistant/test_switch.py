@@ -1,6 +1,6 @@
 """Test Music Assistant switch entities."""
 
-from unittest.mock import MagicMock, call
+from unittest.mock import MagicMock, call, patch
 
 from music_assistant_models.enums import EventType
 import pytest
@@ -11,6 +11,8 @@ from homeassistant.components.music_assistant.switch import PLAYER_OPTIONS_SWITC
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SERVICE_TOGGLE
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -21,19 +23,23 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.translation import LOCALE_EN, async_get_translations
 
 from .common import (
+    create_player_queues_from_fixture,
     setup_integration_from_fixtures,
     snapshot_music_assistant_entities,
     trigger_subscription_callback,
 )
 
 
+@pytest.mark.parametrize("schema_version", [1, 101])
 async def test_switch_entities(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
     music_assistant_client: MagicMock,
+    schema_version: int,
 ) -> None:
-    """Test switch entities."""
+    """Test switch entities, with the queue switches on servers that support them."""
+    music_assistant_client.server_info.schema_version = schema_version
     await setup_integration_from_fixtures(hass, music_assistant_client)
     snapshot_music_assistant_entities(hass, entity_registry, snapshot, Platform.SWITCH)
 
@@ -153,55 +159,53 @@ async def test_name_translation_availability(
         ),
     ],
 )
+@pytest.mark.parametrize(
+    ("service", "enabled"), [(SERVICE_TURN_ON, True), (SERVICE_TURN_OFF, False)]
+)
 async def test_queue_switch_action(
     hass: HomeAssistant,
     music_assistant_client: MagicMock,
     entity_id: str,
     command: str,
     argument: str,
+    service: str,
+    enabled: bool,
 ) -> None:
     """Test a queue switch sets the setting of the player's own queue."""
     music_assistant_client.server_info.schema_version = 101
     await setup_integration_from_fixtures(hass, music_assistant_client)
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == STATE_OFF
-
     await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        SWITCH_DOMAIN, service, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
     assert music_assistant_client.send_command.call_args == call(
-        command, queue_id="00:00:00:00:00:01", **{argument: True}, require_schema=101
+        command, queue_id="00:00:00:00:00:01", **{argument: enabled}, require_schema=101
     )
 
 
-async def test_queue_switch_follows_queue(
+async def test_queue_switch_follows_added_queue(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
     music_assistant_client: MagicMock,
 ) -> None:
-    """Test a queue switch follows its queue, and is unavailable while it is missing."""
+    """Test a queue switch becomes available when the server adds the queue."""
     music_assistant_client.server_info.schema_version = 101
-    await setup_integration_from_fixtures(hass, music_assistant_client)
+    # the server registers the player before its queue
+    with patch(
+        "tests.components.music_assistant.common.create_player_queues_from_fixture",
+        return_value=[],
+    ):
+        await setup_integration_from_fixtures(hass, music_assistant_client)
     entity_id = "switch.test_player_1_crossfade"
-    entry = entity_registry.async_get(entity_id)
-    assert entry
-    assert entry.unique_id == "00:00:00:00:00:01_queue_crossfade"
-    queues = music_assistant_client.player_queues._queues
-
-    # the server adds the queue after the player
-    queue = queues.pop("00:00:00:00:00:01")
-    await trigger_subscription_callback(
-        hass, music_assistant_client, EventType.QUEUE_UPDATED, "00:00:00:00:00:01"
-    )
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_UNAVAILABLE
 
+    queue = {queue.queue_id: queue for queue in create_player_queues_from_fixture()}[
+        "00:00:00:00:00:01"
+    ]
     queue.crossfade_enabled = True
-    queues["00:00:00:00:00:01"] = queue
+    music_assistant_client.player_queues._queues[queue.queue_id] = queue
     await trigger_subscription_callback(
-        hass, music_assistant_client, EventType.QUEUE_UPDATED, "00:00:00:00:00:01"
+        hass, music_assistant_client, EventType.QUEUE_ADDED, queue.queue_id
     )
     state = hass.states.get(entity_id)
     assert state
