@@ -934,7 +934,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_quantity',
-    'unique_id': '00000000000004D2-000000000000005B-MatterNodeDevice-2-PowerSourceBatBatQuantity-47-25',
+    'unique_id': '00000000000004D2-000000000000005B-MatterNodeDevice-2-PowerSourceBatQuantity-47-25',
     'unit_of_measurement': None,
   })
 # ---
@@ -3681,7 +3681,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_quantity',
-    'unique_id': '00000000000004D2-0000000000000053-MatterNodeDevice-3-PowerSourceBatBatQuantity-47-25',
+    'unique_id': '00000000000004D2-0000000000000053-MatterNodeDevice-3-PowerSourceBatQuantity-47-25',
     'unit_of_measurement': None,
   })
 # ---
@@ -4126,7 +4126,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_quantity',
-    'unique_id': '00000000000004D2-000000000000016C-MatterNodeDevice-2-PowerSourceBatBatQuantity-47-25',
+    'unique_id': '00000000000004D2-000000000000016C-MatterNodeDevice-2-PowerSourceBatQuantity-47-25',
     'unit_of_measurement': None,
   })
 # ---
@@ -4688,7 +4688,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_quantity',
-    'unique_id': '00000000000004D2-00000000000000CD-MatterNodeDevice-5-PowerSourceBatBatQuantity-47-25',
+    'unique_id': '00000000000004D2-00000000000000CD-MatterNodeDevice-5-PowerSourceBatQuantity-47-25',
     'unit_of_measurement': None,
   })
 # ---
@@ -5418,7 +5418,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_quantity',
-    'unique_id': '00000000000004D2-000000000000004B-MatterNodeDevice-6-PowerSourceBatBatQuantity-47-25',
+    'unique_id': '00000000000004D2-000000000000004B-MatterNodeDevice-6-PowerSourceBatQuantity-47-25',
     'unit_of_measurement': None,
   })
 # ---
@@ -11679,7 +11679,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_quantity',
-    'unique_id': '00000000000004D2-0000000000000009-MatterNodeDevice-1-PowerSourceBatBatQuantity-47-25',
+    'unique_id': '00000000000004D2-0000000000000009-MatterNodeDevice-1-PowerSourceBatQuantity-47-25',
     'unit_of_measurement': None,
   })
 # ---
@@ -13984,7 +13984,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_quantity',
-    'unique_id': '00000000000004D2-0000000000000021-MatterNodeDevice-0-PowerSourceBatBatQuantity-47-25',
+    'unique_id': '00000000000004D2-0000000000000021-MatterNodeDevice-0-PowerSourceBatQuantity-47-25',
     'unit_of_measurement': None,
   })
 # ---
@@ -14535,7 +14535,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_quantity',
-    'unique_id': '00000000000004D2-000000000000000C-MatterNodeDevice-0-PowerSourceBatBatQuantity-47-25',
+    'unique_id': '00000000000004D2-000000000000000C-MatterNodeDevice-0-PowerSourceBatQuantity-47-25',
     'unit_of_measurement': None,
   })
 # ---
@@ -15025,7 +15025,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_quantity',
-    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-0-PowerSourceBatBatQuantity-47-25',
+    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-0-PowerSourceBatQuantity-47-25',
     'unit_of_measurement': None,
   })
 # ---
@@ -16623,56 +16623,6 @@
     'state': '100',
   })
 # ---
-# name: test_sensors[heiman_co_sensor][sensor.smart_co_sensor_battery_quantity-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000006-MatterNodeDevice'), ('matter', 'serial_serial_6')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.smart_co_sensor_battery_quantity',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Battery quantity',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Battery quantity',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'battery_quantity',
-    'unique_id': '00000000000004D2-0000000000000006-MatterNodeDevice-1-PowerSourceBatBatQuantity-47-25',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[heiman_co_sensor][sensor.smart_co_sensor_battery_quantity-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart CO sensor Battery quantity',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.smart_co_sensor_battery_quantity',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
-  })
-# ---
 # name: test_sensors[heiman_co_sensor][sensor.smart_co_sensor_battery_type-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -17229,56 +17179,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
-  })
-# ---
-# name: test_sensors[heiman_motion_sensor_m1][sensor.smart_motion_sensor_battery_quantity-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000058-MatterNodeDevice'), ('matter', 'serial_serial_88')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.smart_motion_sensor_battery_quantity',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Battery quantity',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Battery quantity',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'battery_quantity',
-    'unique_id': '00000000000004D2-0000000000000058-MatterNodeDevice-1-PowerSourceBatBatQuantity-47-25',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[heiman_motion_sensor_m1][sensor.smart_motion_sensor_battery_quantity-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart motion sensor Battery quantity',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.smart_motion_sensor_battery_quantity',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
   })
 # ---
 # name: test_sensors[heiman_motion_sensor_m1][sensor.smart_motion_sensor_battery_type-entry]
@@ -17839,7 +17739,7 @@
     'state': '100',
   })
 # ---
-# name: test_sensors[heiman_motion_sensor_m1_m][sensor.smart_motion_sensor_battery_quantity_2-entry]
+# name: test_sensors[heiman_motion_sensor_m1_m][sensor.smart_motion_sensor_battery_quantity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -17853,7 +17753,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.smart_motion_sensor_battery_quantity_2',
+    'entity_id': 'sensor.smart_motion_sensor_battery_quantity',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -17872,17 +17772,17 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_quantity',
-    'unique_id': '00000000000004D2-0000000000000044-MatterNodeDevice-1-PowerSourceBatBatQuantity-47-25',
+    'unique_id': '00000000000004D2-0000000000000044-MatterNodeDevice-1-PowerSourceBatQuantity-47-25',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[heiman_motion_sensor_m1_m][sensor.smart_motion_sensor_battery_quantity_2-state]
+# name: test_sensors[heiman_motion_sensor_m1_m][sensor.smart_motion_sensor_battery_quantity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart motion sensor Battery quantity',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.smart_motion_sensor_battery_quantity_2',
+    'entity_id': 'sensor.smart_motion_sensor_battery_quantity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -18445,56 +18345,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '94',
-  })
-# ---
-# name: test_sensors[heiman_smoke_detector][sensor.smoke_sensor_battery_quantity-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000000B-MatterNodeDevice'), ('matter', 'serial_serial_11')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.smoke_sensor_battery_quantity',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Battery quantity',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Battery quantity',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'battery_quantity',
-    'unique_id': '00000000000004D2-000000000000000B-MatterNodeDevice-1-PowerSourceBatBatQuantity-47-25',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[heiman_smoke_detector][sensor.smoke_sensor_battery_quantity-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smoke sensor Battery quantity',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.smoke_sensor_battery_quantity',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
   })
 # ---
 # name: test_sensors[heiman_smoke_detector][sensor.smoke_sensor_battery_type-entry]
@@ -19507,7 +19357,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_quantity',
-    'unique_id': '00000000000004D2-0000000000000089-MatterNodeDevice-0-PowerSourceBatBatQuantity-47-25',
+    'unique_id': '00000000000004D2-0000000000000089-MatterNodeDevice-0-PowerSourceBatQuantity-47-25',
     'unit_of_measurement': None,
   })
 # ---
@@ -20105,7 +19955,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_quantity',
-    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-0-PowerSourceBatBatQuantity-47-25',
+    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-0-PowerSourceBatQuantity-47-25',
     'unit_of_measurement': None,
   })
 # ---
@@ -26946,56 +26796,6 @@
     'state': 'charging',
   })
 # ---
-# name: test_sensors[mock_battery_storage][sensor.mock_battery_storage_battery_quantity-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000019-MatterNodeDevice')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.mock_battery_storage_battery_quantity',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Battery quantity',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Battery quantity',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'battery_quantity',
-    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-1-PowerSourceBatBatQuantity-47-25',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[mock_battery_storage][sensor.mock_battery_storage_battery_quantity-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Battery Storage Battery quantity',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_battery_storage_battery_quantity',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2',
-  })
-# ---
 # name: test_sensors[mock_battery_storage][sensor.mock_battery_storage_battery_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -30878,7 +30678,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_quantity',
-    'unique_id': '00000000000004D2-0000000000000097-MatterNodeDevice-1-PowerSourceBatBatQuantity-47-25',
+    'unique_id': '00000000000004D2-0000000000000097-MatterNodeDevice-1-PowerSourceBatQuantity-47-25',
     'unit_of_measurement': None,
   })
 # ---
