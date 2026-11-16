@@ -100,7 +100,6 @@ async def test_cost_sensor_no_states(
                     "number_energy_price": None,
                 }
             ],
-            "cost_adjustment_day": 0,
         }
     )
 
@@ -133,7 +132,6 @@ async def test_cost_sensor_attributes(
                 }
             ],
             "flow_to": [],
-            "cost_adjustment_day": 0,
         }
     )
 
@@ -168,7 +166,6 @@ async def test_cost_sensor_names(
             "number_energy_price": 0.3,
             "entity_energy_price_export": None,
             "number_energy_price_export": 0.1,
-            "cost_adjustment_day": 0,
         }
     )
     hass_storage[data.STORAGE_KEY] = {"version": 1, "data": energy_data}
@@ -212,7 +209,6 @@ async def test_cost_sensor_names(
             {
                 "type": "grid",
                 "stat_energy_from": "sensor.energy_consumption",
-                "cost_adjustment_day": 0,
             },
             "number_energy_price",
         ),
@@ -223,7 +219,6 @@ async def test_cost_sensor_names(
             {
                 "type": "grid",
                 "stat_energy_to": "sensor.energy_production",
-                "cost_adjustment_day": 0,
             },
             "number_energy_price_export",
         ),
@@ -430,7 +425,6 @@ async def test_cost_sensor_price_entity_total_increasing(
             {
                 "type": "grid",
                 "stat_energy_from": "sensor.energy_consumption",
-                "cost_adjustment_day": 0,
             },
             "number_energy_price",
         ),
@@ -441,7 +435,6 @@ async def test_cost_sensor_price_entity_total_increasing(
             {
                 "type": "grid",
                 "stat_energy_to": "sensor.energy_production",
-                "cost_adjustment_day": 0,
             },
             "number_energy_price_export",
         ),
@@ -652,7 +645,6 @@ async def test_cost_sensor_price_entity_total(
             {
                 "type": "grid",
                 "stat_energy_from": "sensor.energy_consumption",
-                "cost_adjustment_day": 0,
             },
             "number_energy_price",
         ),
@@ -663,7 +655,6 @@ async def test_cost_sensor_price_entity_total(
             {
                 "type": "grid",
                 "stat_energy_to": "sensor.energy_production",
-                "cost_adjustment_day": 0,
             },
             "number_energy_price_export",
         ),
@@ -861,7 +852,6 @@ async def test_cost_sensor_handle_energy_units(
                 }
             ],
             "flow_to": [],
-            "cost_adjustment_day": 0,
         }
     )
 
@@ -933,7 +923,6 @@ async def test_cost_sensor_handle_price_units(
                 }
             ],
             "flow_to": [],
-            "cost_adjustment_day": 0,
         }
     )
 
@@ -994,7 +983,6 @@ async def test_cost_sensor_handle_late_price_sensor(
                 }
             ],
             "flow_to": [],
-            "cost_adjustment_day": 0,
         }
     )
 
@@ -1345,7 +1333,6 @@ async def test_cost_sensor_wrong_state_class(
                 }
             ],
             "flow_to": [],
-            "cost_adjustment_day": 0,
         }
     )
 
@@ -1407,7 +1394,6 @@ async def test_cost_sensor_state_class_measurement_no_reset(
                 }
             ],
             "flow_to": [],
-            "cost_adjustment_day": 0,
         }
     )
 
@@ -1539,7 +1525,6 @@ FIXED_PRICE_GRID_SOURCE = {
     "stat_cost": None,
     "entity_energy_price": None,
     "number_energy_price": 2,
-    "cost_adjustment_day": 0,
 }
 ENERGY_TOTAL_INCREASING_ATTRIBUTES = {
     ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR,
@@ -1798,7 +1783,6 @@ async def test_cost_sensor_meter_unit_change(
             "stat_cost": None,
             "entity_energy_price": None,
             "number_energy_price": 2,
-            "cost_adjustment_day": 0,
         }
     )
     hass_storage[data.STORAGE_KEY] = {"version": 1, "data": energy_data}
@@ -2080,7 +2064,6 @@ async def test_power_sensor_grid_combined(
                         "stat_rate_from": "sensor.grid_import",
                         "stat_rate_to": "sensor.grid_export",
                     },
-                    "cost_adjustment_day": 0,
                 }
             ],
         }
@@ -2535,7 +2518,6 @@ async def test_energy_data_removal(
                 }
             ],
             "flow_to": [],
-            "cost_adjustment_day": 0,
         }
     )
 
@@ -2589,7 +2571,6 @@ async def test_stat_cost_already_configured(
                 }
             ],
             "flow_to": [],
-            "cost_adjustment_day": 0,
         }
     )
 
@@ -2632,7 +2613,6 @@ async def test_invalid_energy_state(
                 }
             ],
             "flow_to": [],
-            "cost_adjustment_day": 0,
         }
     )
 
@@ -2692,7 +2672,6 @@ async def test_invalid_energy_unit(
                 }
             ],
             "flow_to": [],
-            "cost_adjustment_day": 0,
         }
     )
 
@@ -2768,7 +2747,6 @@ async def test_no_energy_unit(
                 }
             ],
             "flow_to": [],
-            "cost_adjustment_day": 0,
         }
     )
 
@@ -3158,7 +3136,6 @@ async def test_invalid_price_entity_value(
                 }
             ],
             "flow_to": [],
-            "cost_adjustment_day": 0,
         }
     )
 
@@ -3266,7 +3243,6 @@ async def test_missing_price_entity(
                 }
             ],
             "flow_to": [],
-            "cost_adjustment_day": 0,
         }
     )
 
@@ -3462,7 +3438,6 @@ async def test_disabled_sensor_removed_from_config(
                     "stat_rate_from": "sensor.grid_import",
                     "stat_rate_to": "sensor.grid_export",
                 },
-                "cost_adjustment_day": 0,
             },
             "sensor.energy_grid_grid_import_grid_export_net_power",
             id="grid_combined",
