@@ -269,11 +269,28 @@ def _meter_channel_sensors(channel: int) -> tuple[TuyaSensorEntityDescription, .
             channel_condition=_has_multiple_meter_channels,
         ),
         TuyaSensorEntityDescription(
+            key=DPCode(f"reverse_energy{channel}"),
+            translation_key="total_production",
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+            channel_index=channel,
+            channel_condition=_has_multiple_meter_channels,
+        ),
+        TuyaSensorEntityDescription(
             key=DPCode(f"today_acc_energy{channel}"),
             translation_key="energy_today",
             device_class=SensorDeviceClass.ENERGY,
             state_class=SensorStateClass.TOTAL_INCREASING,
             suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+            channel_index=channel,
+            channel_condition=_has_multiple_meter_channels,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode(f"reactive_power{channel}"),
+            translation_key="reactive_power",
+            device_class=SensorDeviceClass.REACTIVE_POWER,
+            state_class=SensorStateClass.MEASUREMENT,
             channel_index=channel,
             channel_condition=_has_multiple_meter_channels,
         ),
@@ -684,6 +701,20 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             entity_category=EntityCategory.DIAGNOSTIC,
             state_class=SensorStateClass.MEASUREMENT,
         ),
+        TuyaSensorEntityDescription(
+            key=DPCode.LEAKAGE_CURRENT,
+            translation_key="leakage_current",
+            device_class=SensorDeviceClass.CURRENT,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.TEMP_VALUE,
+            translation_key="temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
         *_electricity_data(DPCode.PHASE_A),
         *_electricity_data(DPCode.PHASE_B),
         *_electricity_data(DPCode.PHASE_C),
@@ -780,6 +811,11 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         TuyaSensorEntityDescription(
             key=DPCode.SPEED_CURRENT,
             translation_key="pump_speed",
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.FLOW_RATE,
+            device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
@@ -1032,6 +1068,20 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             key=DPCode.REMAIN_TIME,
             translation_key="remaining_time",
             native_unit_of_measurement=UnitOfTime.MINUTES,
+        ),
+    ),
+    DeviceCategory.NTQ: (
+        TuyaSensorEntityDescription(
+            key=DPCode.INLET_TEMP,
+            translation_key="inlet_temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.OUTLET_TEMP,
+            translation_key="outlet_temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
     ),
     DeviceCategory.PC: (
@@ -1435,6 +1485,17 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.BATTERY,
             entity_category=EntityCategory.DIAGNOSTIC,
             state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            # Pet feeders with a camera are reported as "sp"
+            key=DPCode.FEED_REPORT,
+            translation_key="last_amount",
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            # Pet feeders with a camera are reported as "sp"
+            key=DPCode.FOOD_STORAGE_STATUS,
+            translation_key="food_level",
         ),
     ),
     DeviceCategory.SWTZ: (
@@ -1842,6 +1903,22 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             entity_category=EntityCategory.DIAGNOSTIC,
             state_class=SensorStateClass.MEASUREMENT,
         ),
+        TuyaSensorEntityDescription(
+            key=DPCode.CUR_CURRENT,
+            translation_key="current",
+            device_class=SensorDeviceClass.CURRENT,
+            state_class=SensorStateClass.MEASUREMENT,
+            suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.CUR_VOLTAGE,
+            translation_key="voltage",
+            device_class=SensorDeviceClass.VOLTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
+            suggested_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        ),
+        *_meter_channel_sensors(1),
+        *_meter_channel_sensors(2),
         *_electricity_data(DPCode.PHASE_A),
         *_electricity_data(DPCode.PHASE_B),
         *_electricity_data(DPCode.PHASE_C),

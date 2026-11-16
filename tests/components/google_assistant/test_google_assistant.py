@@ -11,15 +11,15 @@ from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant import const, core, setup
 from homeassistant.components import (
+    climate,
     google_assistant as ga,
     humidifier,
     light,
     media_player,
 )
 from homeassistant.components.google_assistant import DOMAIN
-from homeassistant.const import EntityCategory, Platform
+from homeassistant.const import EntityCategory, Platform, UnitOfTemperature
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import DEMO_DEVICES
 
@@ -261,10 +261,12 @@ async def test_query_climate_request_f(
 ) -> None:
     """Test a query request."""
     # Mock demo devices as fahrenheit to see if we convert to celsius
-    hass_fixture.config.units = US_CUSTOMARY_SYSTEM
     for entity_id in ("climate.hvac", "climate.heatpump", "climate.ecobee"):
         state = hass_fixture.states.get(entity_id)
         attr = dict(state.attributes)
+        attr[climate.ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT] = (
+            UnitOfTemperature.FAHRENHEIT
+        )
         hass_fixture.states.async_set(entity_id, state.state, attr)
 
     reqid = "5711642932632160984"

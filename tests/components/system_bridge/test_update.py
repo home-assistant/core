@@ -8,11 +8,15 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 from systembridgeconnector.models.fixtures.modules.system import FIXTURE_SYSTEM
-from systembridgeconnector.models.modules import ModulesData
+from systembridgeconnector.models.modules import Module, ModulesData
 
-from homeassistant.components.update import ATTR_LATEST_VERSION, ATTR_RELEASE_URL
+from homeassistant.components.update import (
+    ATTR_INSTALLED_VERSION,
+    ATTR_LATEST_VERSION,
+    ATTR_RELEASE_URL,
+)
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -66,5 +70,26 @@ async def test_update_no_latest_version(
 
     state = hass.states.get("update.hostname")
     assert state
+    assert state.attributes[ATTR_LATEST_VERSION] is None
+    assert state.attributes[ATTR_RELEASE_URL] is None
+
+
+@pytest.mark.usefixtures("mock_version", "mock_websocket_client")
+async def test_update_no_system_data(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the versions are unknown when the system module has no data."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await mock_config_entry.runtime_data.async_handle_module(Module.SYSTEM, None)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.hostname")
+    assert state
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes[ATTR_INSTALLED_VERSION] is None
     assert state.attributes[ATTR_LATEST_VERSION] is None
     assert state.attributes[ATTR_RELEASE_URL] is None

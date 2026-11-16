@@ -6,7 +6,6 @@ from typing import override
 from regenmaschine.errors import RainMachineError
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -109,7 +108,7 @@ class FreezeProtectionTemperatureSelect(RainMachineEntity, SelectEntity):
 
     def __init__(
         self,
-        entry: ConfigEntry,
+        entry: RainMachineConfigEntry,
         data: RainMachineData,
         description: FreezeProtectionSelectDescription,
         unit_system: UnitSystem,

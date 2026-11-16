@@ -21,7 +21,14 @@
     "name": "OpenTherm",
     "select_dhw_mode": "eco",
     "sensors": {
+      "burner_operation_time": 11576,
+      "burner_starts": 50221,
+      "dhw_burner_operation_time": 913,
+      "failed_burner_flame_ignitions": 34,
+      "failed_burner_starts": 6,
       "intended_boiler_temperature": 17.5,
+      "fault_flags": 0,
+      "oem_fault_code": 255,
       "water_temperature": 19.0
     },
     "switches": {
@@ -90,6 +97,7 @@
     "model_id": "143.1",
     "name": "Anna",
     "sensors": {
+      "maximum_modulation_level": 100,
       "setpoint": 23.5,
       "temperature": 24.0
     },
@@ -206,6 +214,13 @@
   },
   "f2bf9048bef64cc5b6d5110154e33c81": {
     "active_preset": "home",
+    "asleep_preset_temperature": {
+      "lower_bound": 4.0,
+      "resolution": 0.5,
+      "setpoint_high": 24.0,
+      "setpoint_low": 17.0,
+      "upper_bound": 30.0
+    },
     "available_schedules": [
       "off",
       "Badkamer",
@@ -213,11 +228,32 @@
       "Weekschema",
       "Test"
     ],
+    "away_preset_temperature": {
+      "lower_bound": 4.0,
+      "resolution": 0.5,
+      "setpoint_high": 25.0,
+      "setpoint_low": 17.0,
+      "upper_bound": 30.0
+    },
     "climate_mode": "cool",
     "control_state": "cooling",
     "dev_class": "climate",
+    "home_preset_temperature": {
+      "lower_bound": 4.0,
+      "resolution": 0.5,
+      "setpoint_high": 22.0,
+      "setpoint_low": 19.0,
+      "upper_bound": 30.0
+    },
     "model": "ThermoZone",
     "name": "Living room",
+    "no_frost_preset_temperature": {
+      "lower_bound": 4.0,
+      "resolution": 0.5,
+      "setpoint_high": 30.0,
+      "setpoint_low": 10.0,
+      "upper_bound": 30.0
+    },
     "preset_modes": ["vacation", "no_frost", "asleep", "home", "away"],
     "select_schedule": "off",
     "select_zone_profile": "active",
@@ -240,11 +276,25 @@
       ],
       "secondary": []
     },
+    "vacation_preset_temperature": {
+      "lower_bound": 4.0,
+      "resolution": 0.5,
+      "setpoint_high": 28.0,
+      "setpoint_low": 15.0,
+      "upper_bound": 30.0
+    },
     "vendor": "Plugwise",
     "zone_profiles": ["active", "off", "passive"]
   },
   "f871b8c4d63549319221e294e4f88074": {
     "active_preset": "vacation",
+    "asleep_preset_temperature": {
+      "lower_bound": 4.0,
+      "resolution": 0.5,
+      "setpoint_high": 24.0,
+      "setpoint_low": 12.0,
+      "upper_bound": 30.0
+    },
     "available_schedules": [
       "off",
       "Badkamer",
@@ -252,12 +302,33 @@
       "Weekschema",
       "Test"
     ],
+    "away_preset_temperature": {
+      "lower_bound": 4.0,
+      "resolution": 0.5,
+      "setpoint_high": 25.0,
+      "setpoint_low": 15.0,
+      "upper_bound": 30.0
+    },
     "climate_mode": "auto",
     "control_state": "cooling",
     "dev_class": "climate",
+    "home_preset_temperature": {
+      "lower_bound": 4.0,
+      "resolution": 0.5,
+      "setpoint_high": 22.0,
+      "setpoint_low": 18.0,
+      "upper_bound": 30.0
+    },
     "model": "ThermoZone",
     "name": "Bathroom",
-    "preset_modes": ["vacation", "no_frost", "asleep", "home", "away"],
+    "no_frost_preset_temperature": {
+      "lower_bound": 4.0,
+      "resolution": 0.5,
+      "setpoint_high": 30.0,
+      "setpoint_low": 10.0,
+      "upper_bound": 30.0
+    },
+    "preset_modes": ["no_frost", "asleep", "vacation", "home", "away"],
     "select_schedule": "off",
     "select_zone_profile": "passive",
     "sensors": {
@@ -274,6 +345,13 @@
     "thermostats": {
       "primary": ["e2f4322d57924fa090fbbc48b3a140dc"],
       "secondary": ["1772a4ea304041adb83f357b751341ff"]
+    },
+    "vacation_preset_temperature": {
+      "lower_bound": 4.0,
+      "resolution": 0.5,
+      "setpoint_high": 28.0,
+      "setpoint_low": 12.0,
+      "upper_bound": 30.0
     },
     "vendor": "Plugwise",
     "zone_profiles": ["active", "off", "passive"]

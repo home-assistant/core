@@ -53,6 +53,7 @@ from .migration import (
     async_remove_duplicate_entries,
     async_remove_legacy_files,
 )
+from .profiles import async_withdraw_profile_suggestions
 from .utils.backup import restore_interrupted_backups
 from .utils.file_system import async_exists
 from .utils.logger import LOGGER
@@ -184,6 +185,8 @@ async def async_setup_entry(
     """Set up the Marketplace from its config entry."""
     async_adopt_legacy_install(hass, config_entry)
     await async_migrate_dashboard_resources(hass)
+    # Suggested again when the catalog is still out of reach with this profile
+    async_withdraw_profile_suggestions(hass)
 
     config_entry.runtime_data = marketplace = MarketplaceManager(hass, config_entry)
     LOGGER.info("Starting the Marketplace")

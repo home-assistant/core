@@ -9,7 +9,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONFIG_LIGHT, CONFIG_STEAMER_AND_LIGHT
 from .coordinator import HuumConfigEntry, HuumDataUpdateCoordinator
-from .entity import HuumBaseEntity
+from .entity import HuumBaseEntity, huum_exception_handler
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,6 +60,7 @@ class HuumLight(HuumBaseEntity, LightEntity):
         if self.is_on:
             await self._toggle_light()
 
+    @huum_exception_handler
     async def _toggle_light(self) -> None:
         await self.coordinator.huum.toggle_light()
         await self.coordinator.async_refresh()

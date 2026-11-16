@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 from aioseafile import (
     SeafileAuthenticationError,
     SeafileError,
+    SeafileNotFoundError,
     SeafilePermissionError,
     SeafileTimeoutError,
 )
@@ -24,6 +25,11 @@ async def handle_seafile_errors() -> AsyncGenerator[None]:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="invalid_auth",
+        ) from err
+    except SeafileNotFoundError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="library_not_found",
         ) from err
     except SeafilePermissionError as err:
         raise HomeAssistantError(

@@ -39,7 +39,7 @@ class SwitchbotDataUpdateCoordinator(ActiveBluetoothDataUpdateCoordinator[None])
         device_name: str,
         connectable: bool,
         model: SwitchbotModel,
-        config_entry: ConfigEntry,
+        config_entry: SwitchbotConfigEntry,
     ) -> None:
         """Initialize global switchbot data updater."""
         super().__init__(

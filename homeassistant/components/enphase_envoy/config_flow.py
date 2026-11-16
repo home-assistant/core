@@ -276,8 +276,8 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
 
         serial = reauth_entry.unique_id or "-"
         self.context["title_placeholders"] = {
-            CONF_SERIAL: serial,
-            CONF_HOST: reauth_entry.data[CONF_HOST],
+            "serial": serial,
+            "host": reauth_entry.data[CONF_HOST],
         }
         description_placeholders.update(descriptions(serial, token_days_left))
         return self.async_show_form(
@@ -358,8 +358,8 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if self.unique_id:
             self.context["title_placeholders"] = {
-                CONF_SERIAL: self.unique_id,
-                CONF_HOST: host,
+                "serial": self.unique_id,
+                "host": host,
             }
         description_placeholders.update(descriptions("", token_days_left))
         return self.async_show_form(
@@ -423,8 +423,8 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
 
         serial = reconfigure_entry.unique_id or "-"
         self.context["title_placeholders"] = {
-            CONF_SERIAL: serial,
-            CONF_HOST: reconfigure_entry.data[CONF_HOST],
+            "serial": serial,
+            "host": reconfigure_entry.data[CONF_HOST],
         }
         description_placeholders.update(descriptions(serial, token_days_left))
         return self.async_show_form(
@@ -472,7 +472,7 @@ class EnvoyOptionsFlowHandler(OptionsFlowWithReload):
                 }
             ),
             description_placeholders={
-                CONF_SERIAL: self.config_entry.unique_id,
-                CONF_HOST: self.config_entry.data[CONF_HOST],
+                "serial": self.config_entry.unique_id,
+                "host": self.config_entry.data[CONF_HOST],
             },
         )

@@ -7,17 +7,13 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.opentherm_gw import DOMAIN
 from homeassistant.components.opentherm_gw.const import OpenThermDeviceIdentifier
-from homeassistant.components.switch import (
-    DOMAIN as SWITCH_DOMAIN,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-)
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_ID,
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
+    CommonServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -87,9 +83,9 @@ async def test_ch_override_switch(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
+        SwitchService.TURN_OFF,
         {
-            ATTR_ENTITY_ID: switch_entity_id,
+            CommonServiceArgument.ENTITY_ID: switch_entity_id,
         },
         blocking=True,
     )
@@ -97,9 +93,9 @@ async def test_ch_override_switch(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
+        SwitchService.TURN_ON,
         {
-            ATTR_ENTITY_ID: switch_entity_id,
+            CommonServiceArgument.ENTITY_ID: switch_entity_id,
         },
         blocking=True,
     )

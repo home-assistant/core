@@ -49,6 +49,7 @@ from homeassistant.components.assist_pipeline.pipeline import (
 )
 from homeassistant.components.assist_pipeline.run import _PipelineProcessorRequest
 from homeassistant.components.llm import LLMTools
+from homeassistant.components.tts import TextToSpeechCommonOption
 from homeassistant.const import ATTR_FRIENDLY_NAME, MATCH_ALL
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import (
@@ -940,9 +941,20 @@ async def test_tts_audio_output(
     assert isinstance(processor, _DefaultPipelineProcessor)
     assert processor.tts_stream is not None
     assert processor.tts_stream.options is not None
-    assert processor.tts_stream.options.get(tts.ATTR_PREFERRED_FORMAT) == "wav"
-    assert processor.tts_stream.options.get(tts.ATTR_PREFERRED_SAMPLE_RATE) == 16000
-    assert processor.tts_stream.options.get(tts.ATTR_PREFERRED_SAMPLE_CHANNELS) == 1
+    assert (
+        processor.tts_stream.options.get(TextToSpeechCommonOption.PREFERRED_FORMAT)
+        == "wav"
+    )
+    assert (
+        processor.tts_stream.options.get(TextToSpeechCommonOption.PREFERRED_SAMPLE_RATE)
+        == 16000
+    )
+    assert (
+        processor.tts_stream.options.get(
+            TextToSpeechCommonOption.PREFERRED_SAMPLE_CHANNELS
+        )
+        == 1
+    )
 
     with patch.object(mock_tts_entity, "get_tts_audio") as mock_get_tts_audio:
         await pipeline_input.execute()
@@ -998,10 +1010,10 @@ async def test_tts_wav_preferred_format(
     supported_options = list(mock_tts_entity.supported_options or [])
     supported_options.extend(
         [
-            tts.ATTR_PREFERRED_FORMAT,
-            tts.ATTR_PREFERRED_SAMPLE_RATE,
-            tts.ATTR_PREFERRED_SAMPLE_CHANNELS,
-            tts.ATTR_PREFERRED_SAMPLE_BYTES,
+            TextToSpeechCommonOption.PREFERRED_FORMAT,
+            TextToSpeechCommonOption.PREFERRED_SAMPLE_RATE,
+            TextToSpeechCommonOption.PREFERRED_SAMPLE_CHANNELS,
+            TextToSpeechCommonOption.PREFERRED_SAMPLE_BYTES,
         ]
     )
 
@@ -1021,10 +1033,10 @@ async def test_tts_wav_preferred_format(
         options = mock_get_tts_audio.call_args_list[0].kwargs["options"]
 
         # We should have received preferred format options in get_tts_audio
-        assert options.get(tts.ATTR_PREFERRED_FORMAT) == "wav"
-        assert int(options.get(tts.ATTR_PREFERRED_SAMPLE_RATE)) == 16000
-        assert int(options.get(tts.ATTR_PREFERRED_SAMPLE_CHANNELS)) == 1
-        assert int(options.get(tts.ATTR_PREFERRED_SAMPLE_BYTES)) == 2
+        assert options.get(TextToSpeechCommonOption.PREFERRED_FORMAT) == "wav"
+        assert int(options.get(TextToSpeechCommonOption.PREFERRED_SAMPLE_RATE)) == 16000
+        assert int(options.get(TextToSpeechCommonOption.PREFERRED_SAMPLE_CHANNELS)) == 1
+        assert int(options.get(TextToSpeechCommonOption.PREFERRED_SAMPLE_BYTES)) == 2
 
 
 async def test_tts_dict_preferred_format(
@@ -1057,10 +1069,10 @@ async def test_tts_dict_preferred_format(
             end_stage=assist_pipeline.PipelineStage.TTS,
             event_callback=events.append,
             tts_audio_output={
-                tts.ATTR_PREFERRED_FORMAT: "flac",
-                tts.ATTR_PREFERRED_SAMPLE_RATE: 48000,
-                tts.ATTR_PREFERRED_SAMPLE_CHANNELS: 2,
-                tts.ATTR_PREFERRED_SAMPLE_BYTES: 2,
+                TextToSpeechCommonOption.PREFERRED_FORMAT: "flac",
+                TextToSpeechCommonOption.PREFERRED_SAMPLE_RATE: 48000,
+                TextToSpeechCommonOption.PREFERRED_SAMPLE_CHANNELS: 2,
+                TextToSpeechCommonOption.PREFERRED_SAMPLE_BYTES: 2,
             },
         ),
     )
@@ -1070,10 +1082,10 @@ async def test_tts_dict_preferred_format(
     supported_options = list(mock_tts_entity.supported_options or [])
     supported_options.extend(
         [
-            tts.ATTR_PREFERRED_FORMAT,
-            tts.ATTR_PREFERRED_SAMPLE_RATE,
-            tts.ATTR_PREFERRED_SAMPLE_CHANNELS,
-            tts.ATTR_PREFERRED_SAMPLE_BYTES,
+            TextToSpeechCommonOption.PREFERRED_FORMAT,
+            TextToSpeechCommonOption.PREFERRED_SAMPLE_RATE,
+            TextToSpeechCommonOption.PREFERRED_SAMPLE_CHANNELS,
+            TextToSpeechCommonOption.PREFERRED_SAMPLE_BYTES,
         ]
     )
 
@@ -1093,10 +1105,10 @@ async def test_tts_dict_preferred_format(
         options = mock_get_tts_audio.call_args_list[0].kwargs["options"]
 
         # We should have received preferred format options in get_tts_audio
-        assert options.get(tts.ATTR_PREFERRED_FORMAT) == "flac"
-        assert int(options.get(tts.ATTR_PREFERRED_SAMPLE_RATE)) == 48000
-        assert int(options.get(tts.ATTR_PREFERRED_SAMPLE_CHANNELS)) == 2
-        assert int(options.get(tts.ATTR_PREFERRED_SAMPLE_BYTES)) == 2
+        assert options.get(TextToSpeechCommonOption.PREFERRED_FORMAT) == "flac"
+        assert int(options.get(TextToSpeechCommonOption.PREFERRED_SAMPLE_RATE)) == 48000
+        assert int(options.get(TextToSpeechCommonOption.PREFERRED_SAMPLE_CHANNELS)) == 2
+        assert int(options.get(TextToSpeechCommonOption.PREFERRED_SAMPLE_BYTES)) == 2
 
 
 async def test_sentence_trigger_overrides_conversation_agent(

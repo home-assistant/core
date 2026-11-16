@@ -109,6 +109,9 @@
       }
     },
     "light": {
+      "gradient_segment": {
+        "name": "Segment {segment}"
+      },
       "hue_light": {
         "state_attributes": {
           "effect": {

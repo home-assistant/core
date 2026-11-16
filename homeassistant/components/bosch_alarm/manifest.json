@@ -4,6 +4,7 @@
   "categories": ["security_safety.alarm_systems"],
   "codeowners": ["@mag1024", "@sanjay900"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dhcp": [
     {
       "macaddress": "000463*"

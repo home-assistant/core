@@ -24,7 +24,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import ViCareEntity
 from .types import ViCareConfigEntry, ViCareDevice, ViCareRequiredKeysMixin
-from .utils import get_burners, get_circuits, get_compressors, is_supported
+from .utils import get_burners, get_circuits, get_compressors, get_rooms, is_supported
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,6 +67,20 @@ COMPRESSOR_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
         translation_key="compressor",
         device_class=BinarySensorDeviceClass.RUNNING,
         value_getter=lambda api: api.getActive(),
+    ),
+)
+
+ROOM_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
+    ViCareBinarySensorEntityDescription(
+        key="room_window_open",
+        device_class=BinarySensorDeviceClass.WINDOW,
+        value_getter=lambda api: api.room_control.getRoomWindowOpen(api.id),
+    ),
+    ViCareBinarySensorEntityDescription(
+        key="room_condensation_risk",
+        translation_key="condensation_risk",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        value_getter=lambda api: api.getCondensationRisk(),
     ),
 )
 
@@ -173,6 +187,7 @@ def _build_entities(
             (get_circuits(device.api), CIRCUIT_SENSORS),
             (get_burners(device.api), BURNER_SENSORS),
             (get_compressors(device.api), COMPRESSOR_SENSORS),
+            (get_rooms(device.api), ROOM_SENSORS),
         ):
             entities.extend(
                 ViCareBinarySensor(

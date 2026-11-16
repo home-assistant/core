@@ -4,6 +4,7 @@
   "categories": ["climate.thermostats_heating"],
   "codeowners": ["@lazdavila"],
   "config_flow": true,
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/escea",
   "homekit": {
     "models": ["Escea"]

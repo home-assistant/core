@@ -201,6 +201,20 @@ def filter_turn_on_params(light: LightEntity, params: dict[str, Any]) -> dict[st
     return params
 
 
+def _color_xy_to_temperature_kelvin(
+    light: LightEntity, xy_color: tuple[float, float]
+) -> int:
+    """Convert an xy color to a color temperature within the light's range."""
+    try:
+        color_temp = color_util.color_xy_to_temperature(*xy_color)
+    except ZeroDivisionError:
+        # McCamy's approximation is undefined at y = 0.1858, far from any white
+        color_temp = light.max_color_temp_kelvin
+    return max(
+        light.min_color_temp_kelvin, min(light.max_color_temp_kelvin, color_temp)
+    )
+
+
 def process_turn_on_params(  # noqa: C901
     hass: HomeAssistant, light: LightEntity, params: dict[str, Any]
 ) -> dict[str, Any]:
@@ -289,7 +303,7 @@ def process_turn_on_params(  # noqa: C901
         elif ColorMode.COLOR_TEMP in supported_color_modes:
             xy_color = color_util.color_hs_to_xy(*hs_color)
             params[LightServiceArgument.COLOR_TEMP_KELVIN] = (
-                color_util.color_xy_to_temperature(*xy_color)
+                _color_xy_to_temperature_kelvin(light, xy_color)
             )
     elif (
         LightServiceArgument.RGB_COLOR in params
@@ -320,7 +334,7 @@ def process_turn_on_params(  # noqa: C901
         elif ColorMode.COLOR_TEMP in supported_color_modes:
             xy_color = color_util.color_RGB_to_xy(*rgb_color)
             params[LightServiceArgument.COLOR_TEMP_KELVIN] = (
-                color_util.color_xy_to_temperature(*xy_color)
+                _color_xy_to_temperature_kelvin(light, xy_color)
             )
     elif (
         LightServiceArgument.XY_COLOR in params
@@ -345,7 +359,7 @@ def process_turn_on_params(  # noqa: C901
             )
         elif ColorMode.COLOR_TEMP in supported_color_modes:
             params[LightServiceArgument.COLOR_TEMP_KELVIN] = (
-                color_util.color_xy_to_temperature(*xy_color)
+                _color_xy_to_temperature_kelvin(light, xy_color)
             )
     elif (
         LightServiceArgument.RGBW_COLOR in params
@@ -370,7 +384,7 @@ def process_turn_on_params(  # noqa: C901
         elif ColorMode.COLOR_TEMP in supported_color_modes:
             xy_color = color_util.color_RGB_to_xy(*rgb_color)
             params[LightServiceArgument.COLOR_TEMP_KELVIN] = (
-                color_util.color_xy_to_temperature(*xy_color)
+                _color_xy_to_temperature_kelvin(light, xy_color)
             )
     elif (
         LightServiceArgument.RGBWW_COLOR in params
@@ -400,7 +414,7 @@ def process_turn_on_params(  # noqa: C901
         elif ColorMode.COLOR_TEMP in supported_color_modes:
             xy_color = color_util.color_RGB_to_xy(*rgb_color)
             params[LightServiceArgument.COLOR_TEMP_KELVIN] = (
-                color_util.color_xy_to_temperature(*xy_color)
+                _color_xy_to_temperature_kelvin(light, xy_color)
             )
 
     # If white is set to True, set it to the light's brightness

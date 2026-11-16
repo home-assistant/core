@@ -4,6 +4,7 @@
   "categories": ["security_safety.alarm_systems", "sensors"],
   "codeowners": ["@fredrike"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["application_credentials", "http", "webhook"],
   "documentation": "https://www.home-assistant.io/integrations/point",
   "integration_type": "hub",

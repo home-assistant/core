@@ -9,8 +9,8 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import NeatoConfigEntry
 from .entity import NeatoEntity
+from .hub import NeatoConfigEntry
 
 
 async def async_setup_entry(

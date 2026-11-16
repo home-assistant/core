@@ -336,11 +336,16 @@ def async_prepare_call_from_config(
             render = template.render_complex(config[conf], variables)
             if not isinstance(render, dict):
                 raise HomeAssistantError(
-                    "Error rendering data template: Result is not a Dictionary"
+                    translation_domain=HOMEASSISTANT_DOMAIN,
+                    translation_key="service_data_template_not_dict",
                 )
             service_data.update(render)
         except TemplateError as ex:
-            raise HomeAssistantError(f"Error rendering data template: {ex}") from ex
+            raise HomeAssistantError(
+                translation_domain=HOMEASSISTANT_DOMAIN,
+                translation_key="service_data_template_error",
+                translation_placeholders={"error": str(ex)},
+            ) from ex
 
     if CONF_SERVICE_ENTITY_ID in config:
         if target:

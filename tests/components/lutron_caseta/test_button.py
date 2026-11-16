@@ -1,7 +1,7 @@
 """Tests for the Lutron Caseta integration."""
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
+from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -52,8 +52,8 @@ async def test_button_press(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: ra3_button_entity_id},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: ra3_button_entity_id},
         blocking=False,
     )
     await hass.async_block_till_done()

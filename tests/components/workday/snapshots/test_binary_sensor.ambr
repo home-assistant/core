@@ -8,6 +8,7 @@
       'active': True,
       'breaks_in_ha_version': None,
       'config_entry_id': '1',
+      'config_subentry_id': None,
       'created': <ANY>,
       'data': dict({
         'country': 'DE',
@@ -36,6 +37,7 @@
       'active': True,
       'breaks_in_ha_version': None,
       'config_entry_id': '1',
+      'config_subentry_id': None,
       'created': <ANY>,
       'data': dict({
         'country': 'DE',
