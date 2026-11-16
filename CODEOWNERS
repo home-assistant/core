@@ -122,6 +122,7 @@ AGENTS.md @home-assistant/core
 /homeassistant/components/altruist/ @airalab @LoSk-p
 /tests/components/altruist/ @airalab @LoSk-p
 /homeassistant/components/amazon_polly/ @jschlyter
+/tests/components/amazon_polly/ @jschlyter
 /homeassistant/components/amberelectric/ @madpilot
 /tests/components/amberelectric/ @madpilot
 /homeassistant/components/ambient_network/ @thomaskistler
@@ -550,6 +551,7 @@ AGENTS.md @home-assistant/core
 /homeassistant/components/environment_canada/ @gwww @michaeldavie
 /tests/components/environment_canada/ @gwww @michaeldavie
 /homeassistant/components/ephember/ @ttroy50 @roberty99
+/tests/components/ephember/ @ttroy50 @roberty99
 /homeassistant/components/epic_games_store/ @Quentame
 /tests/components/epic_games_store/ @Quentame
 /homeassistant/components/epion/ @lhgravendeel
@@ -2055,6 +2057,8 @@ AGENTS.md @home-assistant/core
 /tests/components/trend/ @jpbede
 /homeassistant/components/triggercmd/ @rvmey
 /tests/components/triggercmd/ @rvmey
+/homeassistant/components/trimlight/ @spdevpro @bsholy
+/tests/components/trimlight/ @spdevpro @bsholy
 /homeassistant/components/trmnl/ @joostlek
 /tests/components/trmnl/ @joostlek
 /homeassistant/components/tts/ @home-assistant/core

@@ -26,6 +26,7 @@ SERVICES = (
     LIFXService.EFFECT_SKY,
     LIFXService.EFFECT_STOP,
     LIFXService.PAINT_THEME,
+    LIFXService.SET_MOOD,
 )
 
 
@@ -35,7 +36,12 @@ async def test_services_registered_without_entry(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()
 
-    for service in (*SERVICES, "set_state", "set_hev_cycle_state"):
+    for service in (
+        *SERVICES,
+        LIFXService.SET_MOOD,
+        "set_state",
+        "set_hev_cycle_state",
+    ):
         assert hass.services.has_service(DOMAIN, service)
 
 

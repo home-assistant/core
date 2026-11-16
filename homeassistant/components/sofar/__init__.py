@@ -1,11 +1,10 @@
 """Integrate Sofar devices into Home Assistant."""
 
 from datetime import timedelta
-from functools import partial
 import logging
 from typing import TYPE_CHECKING
 
-from sofar_modbus.modern.device import (
+from sofar_modbus import (
     BATTERY_PACKS,
     BATTERY_STRING_COMPONENTS,
     PV_STRING_COMPONENTS,
@@ -157,7 +156,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> Non
         entry,
         entry.title,
         device,
-        partial(device.async_update_readings, raise_when_silent=True),
+        device.async_update_readings,
         timedelta(seconds=SCAN_INTERVAL),
     )
     settings = SofarDataUpdateCoordinator(
@@ -165,7 +164,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> Non
         entry,
         entry.title,
         device,
-        partial(device.async_update_settings, raise_when_silent=True),
+        device.async_update_settings,
         timedelta(seconds=SETTINGS_SCAN_INTERVAL),
     )
     packs = SofarDataUpdateCoordinator(
@@ -173,7 +172,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> Non
         entry,
         f"{entry.title} battery packs",
         device,
-        partial(device.async_update_packs, raise_when_silent=True),
+        device.async_update_packs,
         timedelta(seconds=PACKS_SCAN_INTERVAL),
     )
     try:

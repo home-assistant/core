@@ -35,6 +35,7 @@ FANS: dict[DeviceCategory, TuyaFanEntityDescription] = {
     DeviceCategory.FSKG: TuyaFanEntityDescription(key=""),
     DeviceCategory.KJ: TuyaFanEntityDescription(key=""),
     DeviceCategory.KS: TuyaFanEntityDescription(key=""),
+    DeviceCategory.NTQ: TuyaFanEntityDescription(key=""),
 }
 
 _TUYA_TO_HA_DIRECTION_MAPPINGS = {

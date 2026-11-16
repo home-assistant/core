@@ -1213,3 +1213,351 @@ async def test_water_allows_price_with_stat_cost_for_external_stat() -> None:
     )
     assert result["stat_cost"] == "external:water_cost"
     assert result["number_energy_price"] == 0.005
+
+
+BATTERY_DIRECTIONS_ENERGY = {
+    "stat_energy_from_grid": "sensor.battery_from_grid",
+    "stat_energy_from_solar": "sensor.battery_from_solar",
+    "stat_energy_to_home": "sensor.battery_to_home",
+    "stat_energy_to_grid": "sensor.battery_to_grid",
+}
+BATTERY_DIRECTIONS_POWER = {
+    "stat_rate_from_grid": "sensor.battery_from_grid_power",
+    "stat_rate_from_solar": "sensor.battery_from_solar_power",
+    "stat_rate_to_home": "sensor.battery_to_home_power",
+    "stat_rate_to_grid": "sensor.battery_to_grid_power",
+}
+BATTERY_TOTALS = {
+    "type": "battery",
+    "stat_energy_from": "sensor.battery_energy_from",
+    "stat_energy_to": "sensor.battery_energy_to",
+}
+GRID = {
+    "type": "grid",
+    "stat_energy_from": "sensor.grid_import",
+    "stat_energy_to": "sensor.grid_export",
+    "stat_cost": None,
+    "entity_energy_price": None,
+    "number_energy_price": None,
+    "stat_compensation": None,
+    "entity_energy_price_export": None,
+    "number_energy_price_export": None,
+    "cost_adjustment_day": 0.0,
+}
+
+
+@pytest.mark.parametrize(
+    "sources",
+    [
+        pytest.param(
+            [{"type": "battery", **BATTERY_DIRECTIONS_ENERGY}], id="all_directions"
+        ),
+        pytest.param(
+            [
+                {
+                    "type": "battery",
+                    "stat_energy_from_grid": "sensor.battery_from_grid",
+                    "stat_energy_to_home": "sensor.battery_to_home",
+                }
+            ],
+            id="one_charge_one_discharge",
+        ),
+        pytest.param(
+            [
+                {
+                    "type": "battery",
+                    **BATTERY_DIRECTIONS_ENERGY,
+                    "power_config": BATTERY_DIRECTIONS_POWER,
+                    "stat_rate": "sensor.energy_battery_net_power",
+                }
+            ],
+            id="all_power_directions_with_generated_stat_rate",
+        ),
+        pytest.param(
+            [
+                {
+                    "type": "battery",
+                    **BATTERY_DIRECTIONS_ENERGY,
+                    "power_config": {
+                        "stat_rate_to_home": "sensor.battery_to_home_power"
+                    },
+                }
+            ],
+            id="power_direction_subset",
+        ),
+        pytest.param(
+            [
+                {
+                    "type": "battery",
+                    "stat_energy_from": "sensor.battery_energy",
+                    "stat_energy_to": "sensor.battery_energy",
+                    "power_config": {"stat_rate": "sensor.battery_power"},
+                    "stat_rate": "sensor.battery_power",
+                }
+            ],
+            id="totals_with_one_statistic_twice",
+        ),
+        pytest.param(
+            [
+                BATTERY_TOTALS,
+                {**BATTERY_TOTALS, "stat_energy_to": "sensor.other_energy_to"},
+            ],
+            id="totals_batteries_sharing_a_statistic",
+        ),
+        pytest.param(
+            [
+                GRID,
+                {
+                    "type": "battery",
+                    **BATTERY_DIRECTIONS_ENERGY,
+                    "stat_energy_to_grid": "sensor.grid_export",
+                },
+            ],
+            id="battery_to_grid_is_grid_export",
+        ),
+        pytest.param(
+            [
+                {
+                    "type": "battery",
+                    "stat_energy_from_grid": "external:battery_from_grid",
+                    "stat_energy_to_home": "sensor.battery_to_home",
+                }
+            ],
+            id="external_direction_energy",
+        ),
+        pytest.param(
+            [
+                BATTERY_TOTALS,
+                {"type": "battery", **BATTERY_DIRECTIONS_ENERGY},
+            ],
+            id="totals_and_directions_batteries",
+        ),
+    ],
+)
+async def test_battery_measurement_schema_valid(sources: list[dict[str, Any]]) -> None:
+    """Test valid battery measurements pass validation unchanged."""
+    assert ENERGY_SOURCE_SCHEMA(sources) == sources
+
+
+@pytest.mark.parametrize(
+    ("sources", "message"),
+    [
+        pytest.param(
+            [{**BATTERY_TOTALS, "stat_energy_to_home": "sensor.battery_to_home"}],
+            "either in total or per direction",
+            id="totals_and_directions",
+        ),
+        pytest.param(
+            [{"type": "battery", "stat_energy_from": "sensor.battery_energy_from"}],
+            "group of inclusion 'total_energy'",
+            id="one_total",
+        ),
+        pytest.param(
+            [{"type": "battery"}],
+            "or at least one charge and one discharge direction",
+            id="no_energy",
+        ),
+        pytest.param(
+            [
+                {
+                    "type": "battery",
+                    "stat_energy_from_grid": "sensor.battery_from_grid",
+                    "stat_energy_from_solar": "sensor.battery_from_solar",
+                }
+            ],
+            "or at least one charge and one discharge direction",
+            id="no_discharge_direction",
+        ),
+        pytest.param(
+            [
+                {
+                    "type": "battery",
+                    "stat_energy_to_home": "sensor.battery_to_home",
+                    "stat_energy_to_grid": "sensor.battery_to_grid",
+                }
+            ],
+            "or at least one charge and one discharge direction",
+            id="no_charge_direction",
+        ),
+        pytest.param(
+            [{**BATTERY_TOTALS, "power_config": BATTERY_DIRECTIONS_POWER}],
+            "direction power sensors need energy per direction",
+            id="direction_power_with_totals",
+        ),
+        pytest.param(
+            [
+                {
+                    "type": "battery",
+                    **BATTERY_DIRECTIONS_ENERGY,
+                    "power_config": {"stat_rate_inverted": "sensor.battery_power"},
+                }
+            ],
+            "per direction needs direction power",
+            id="signed_power_with_directions",
+        ),
+        pytest.param(
+            [
+                {
+                    "type": "battery",
+                    **BATTERY_DIRECTIONS_ENERGY,
+                    "stat_rate": "sensor.battery_power",
+                }
+            ],
+            "needs its power sensors in power_config",
+            id="bare_stat_rate_with_directions",
+        ),
+        pytest.param(
+            [
+                {
+                    "type": "battery",
+                    "stat_energy_from_grid": "sensor.battery_from_grid",
+                    "stat_energy_to_home": "sensor.battery_to_home",
+                    "power_config": BATTERY_DIRECTIONS_POWER,
+                }
+            ],
+            "stat_rate_from_solar needs stat_energy_from_solar",
+            id="power_direction_without_energy",
+        ),
+        pytest.param(
+            [
+                {
+                    "type": "battery",
+                    **BATTERY_DIRECTIONS_ENERGY,
+                    "stat_energy_to_grid": "sensor.battery_to_home",
+                }
+            ],
+            "can only be used once in a battery",
+            id="energy_statistic_twice",
+        ),
+        pytest.param(
+            [
+                {
+                    "type": "battery",
+                    **BATTERY_DIRECTIONS_ENERGY,
+                    "power_config": {"stat_rate_to_home": "sensor.battery_to_home"},
+                }
+            ],
+            "can only be used once in a battery",
+            id="energy_and_power_statistic_shared",
+        ),
+        pytest.param(
+            [
+                {
+                    "type": "battery",
+                    **BATTERY_DIRECTIONS_ENERGY,
+                    "power_config": {
+                        **BATTERY_DIRECTIONS_POWER,
+                        "stat_rate_inverted": "sensor.battery_power",
+                    },
+                }
+            ],
+            "only one configuration method",
+            id="direction_and_inverted_power",
+        ),
+        pytest.param(
+            [
+                {
+                    "type": "battery",
+                    **BATTERY_DIRECTIONS_ENERGY,
+                    "power_config": {"stat_rate_to_home": "external:battery_power"},
+                }
+            ],
+            "Battery direction power must be an entity",
+            id="external_direction_power",
+        ),
+        pytest.param(
+            [{**GRID, "power_config": {"stat_rate_to_home": "sensor.power"}}],
+            "not a valid option",
+            id="grid_with_direction_power",
+        ),
+        pytest.param(
+            [
+                BATTERY_TOTALS,
+                {
+                    "type": "battery",
+                    **BATTERY_DIRECTIONS_ENERGY,
+                    "stat_energy_to_home": "sensor.battery_energy_from",
+                },
+            ],
+            "sensor.battery_energy_from is used in multiple batteries",
+            id="direction_is_other_battery_total",
+        ),
+        pytest.param(
+            [
+                {"type": "battery", **BATTERY_DIRECTIONS_ENERGY},
+                {"type": "battery", **BATTERY_DIRECTIONS_ENERGY},
+            ],
+            "sensor.battery_from_grid is used in multiple batteries",
+            id="directions_shared_by_batteries",
+        ),
+        pytest.param(
+            [
+                {
+                    **BATTERY_TOTALS,
+                    "power_config": {
+                        "stat_rate_from": "sensor.battery_discharge",
+                        "stat_rate_to": "sensor.battery_charge",
+                    },
+                },
+                {
+                    "type": "battery",
+                    "stat_energy_from_grid": "sensor.other_from_grid",
+                    "stat_energy_to_home": "sensor.other_to_home",
+                    "power_config": {"stat_rate_to_home": "sensor.battery_discharge"},
+                },
+            ],
+            "sensor.battery_discharge is used in multiple batteries",
+            id="direction_power_is_other_battery_power",
+        ),
+    ],
+)
+async def test_battery_measurement_schema_invalid(
+    sources: list[dict[str, Any]], message: str
+) -> None:
+    """Test invalid battery measurements are rejected."""
+    with pytest.raises(probatio.Invalid, match=message):
+        ENERGY_SOURCE_SCHEMA(sources)
+
+
+@pytest.mark.parametrize(
+    ("power_config", "stat_rate"),
+    [
+        pytest.param(
+            BATTERY_DIRECTIONS_POWER,
+            "sensor.energy_battery_battery_from_grid_power_battery_from_solar_power"
+            "_battery_to_home_power_battery_to_grid_power_net_power",
+            id="all_directions",
+        ),
+        pytest.param(
+            {
+                "stat_rate_to_grid": "sensor.battery_to_grid_power",
+                "stat_rate_from_solar": "sensor.battery_from_solar_power",
+            },
+            "sensor.energy_battery_battery_from_solar_power_battery_to_grid_power"
+            "_net_power",
+            id="subset_in_slot_order",
+        ),
+    ],
+)
+async def test_battery_power_config_directions_sets_stat_rate(
+    hass: HomeAssistant, power_config: dict[str, str], stat_rate: str
+) -> None:
+    """Test a battery with direction power sensors gets the generated net power."""
+    manager = EnergyManager(hass)
+    await manager.async_initialize()
+    manager.data = manager.default_preferences()
+
+    await manager.async_update(
+        {
+            "energy_sources": [
+                {
+                    "type": "battery",
+                    **BATTERY_DIRECTIONS_ENERGY,
+                    "power_config": power_config,
+                }
+            ],
+        }
+    )
+
+    assert manager.data is not None
+    assert manager.data["energy_sources"][0]["stat_rate"] == stat_rate
