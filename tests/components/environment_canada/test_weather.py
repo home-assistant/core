@@ -9,10 +9,7 @@ from homeassistant.components.environment_canada.const import DOMAIN
 from homeassistant.components.environment_canada.services import (
     EnvironmentCanadaService,
 )
-from homeassistant.components.weather import (
-    DOMAIN as WEATHER_DOMAIN,
-    SERVICE_GET_FORECASTS,
-)
+from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN, WeatherService
 from homeassistant.core import HomeAssistant
 
 from . import init_integration
@@ -31,7 +28,7 @@ async def test_forecast_daily(
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECASTS,
+        WeatherService.GET_FORECASTS,
         {
             "entity_id": "weather.home_forecast",
             "type": "daily",
@@ -51,7 +48,7 @@ async def test_forecast_daily_with_some_previous_days_data(
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECASTS,
+        WeatherService.GET_FORECASTS,
         {
             "entity_id": "weather.home_forecast",
             "type": "daily",

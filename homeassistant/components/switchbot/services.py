@@ -1,8 +1,10 @@
 """Services for the SwitchBot integration."""
 
+from enum import StrEnum
+
 import probatio
 
-from homeassistant.const import ATTR_DEVICE_ID, CONF_SENSOR_TYPE
+from homeassistant.const import CONF_SENSOR_TYPE, CommonServiceArgument
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, service
@@ -10,16 +12,25 @@ from homeassistant.helpers import config_validation as cv, service
 from .const import DOMAIN, SupportedModels
 from .coordinator import SwitchbotConfigEntry, SwitchbotDataUpdateCoordinator
 
-SERVICE_ADD_PASSWORD = "add_password"
 
-ATTR_PASSWORD = "password"
+class SwitchbotService(StrEnum):
+    """Store keys for SwitchBot services."""
+
+    ADD_PASSWORD = "add_password"
+
+
+class SwitchbotServiceArgument(StrEnum):
+    """Store keys for SwitchBot service arguments."""
+
+    PASSWORD = "password"
+
 
 _PASSWORD_VALIDATOR = probatio.All(cv.string, cv.matches_regex(r"^\d{6,12}$"))
 
 SCHEMA_ADD_PASSWORD_SERVICE = probatio.Schema(
     {
-        probatio.Required(ATTR_DEVICE_ID): cv.string,
-        probatio.Required(ATTR_PASSWORD): _PASSWORD_VALIDATOR,
+        probatio.Required(CommonServiceArgument.DEVICE_ID): cv.string,
+        probatio.Required(SwitchbotServiceArgument.PASSWORD): _PASSWORD_VALIDATOR,
     },
     extra=probatio.ALLOW_EXTRA,
 )
@@ -61,8 +72,8 @@ def _async_target(
 
 async def async_add_password(call: ServiceCall) -> None:
     """Add a password to a SwitchBot keypad device."""
-    password: str = call.data[ATTR_PASSWORD]
-    device_id = call.data[ATTR_DEVICE_ID]
+    password: str = call.data[SwitchbotServiceArgument.PASSWORD]
+    device_id = call.data[CommonServiceArgument.DEVICE_ID]
 
     coordinator = _async_target(call.hass, device_id)
 
@@ -74,7 +85,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the services for the SwitchBot integration."""
     hass.services.async_register(
         DOMAIN,
-        SERVICE_ADD_PASSWORD,
+        SwitchbotService.ADD_PASSWORD,
         async_add_password,
         schema=SCHEMA_ADD_PASSWORD_SERVICE,
     )

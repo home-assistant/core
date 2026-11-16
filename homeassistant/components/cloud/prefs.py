@@ -415,10 +415,14 @@ class CloudPreferences:
         user = await self._load_cloud_user()
 
         if user:
+            if user.name == "Home Assistant Cloud":
+                await self._hass.auth.async_update_user(
+                    user, name="Home Assistant Link"
+                )
             return user.id
 
         user = await self._hass.auth.async_create_system_user(
-            "Home Assistant Cloud", group_ids=[GROUP_ID_ADMIN], local_only=True
+            "Home Assistant Link", group_ids=[GROUP_ID_ADMIN], local_only=True
         )
         assert user is not None
         await self.async_update(cloud_user=user.id)

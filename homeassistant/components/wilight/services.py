@@ -1,5 +1,6 @@
 """Services for the WiLight integration."""
 
+from enum import StrEnum
 from typing import Any
 
 import probatio
@@ -8,16 +9,27 @@ from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import service
 
-from .const import ATTR_PAUSE_TIME, ATTR_WATERING_TIME, DOMAIN
+from .const import DOMAIN
 from .support import wilight_trigger as wl_trigger
 from .switch import WiLightValvePauseSwitch, WiLightValveSwitch
 
-ATTR_TRIGGER = "trigger"
-ATTR_TRIGGER_INDEX = "trigger_index"
 
-SERVICE_SET_WATERING_TIME = "set_watering_time"
-SERVICE_SET_PAUSE_TIME = "set_pause_time"
-SERVICE_SET_TRIGGER = "set_trigger"
+class WiLightService(StrEnum):
+    """Store keys for WiLight services."""
+
+    SET_WATERING_TIME = "set_watering_time"
+    SET_PAUSE_TIME = "set_pause_time"
+    SET_TRIGGER = "set_trigger"
+
+
+class WiLightServiceArgument(StrEnum):
+    """Store keys for WiLight service arguments."""
+
+    WATERING_TIME = "watering_time"
+    PAUSE_TIME = "pause_time"
+    TRIGGER_INDEX = "trigger_index"
+    TRIGGER = "trigger"
+
 
 RANGE_WATERING_TIME = 1800
 RANGE_PAUSE_TIME = 24
@@ -37,22 +49,22 @@ VALID_TRIGGER_INDEX = probatio.All(
 async def _async_set_watering_time(entity, service_call: Any) -> None:
     if not isinstance(entity, WiLightValveSwitch):
         raise TypeError("Entity is not a WiLight valve switch")
-    watering_time = service_call.data[ATTR_WATERING_TIME]
+    watering_time = service_call.data[WiLightServiceArgument.WATERING_TIME]
     await entity.async_set_watering_time(watering_time=watering_time)
 
 
 async def _async_set_trigger(entity, service_call: Any) -> None:
     if not isinstance(entity, WiLightValveSwitch):
         raise TypeError("Entity is not a WiLight valve switch")
-    trigger_index = service_call.data[ATTR_TRIGGER_INDEX]
-    trigger = service_call.data[ATTR_TRIGGER]
+    trigger_index = service_call.data[WiLightServiceArgument.TRIGGER_INDEX]
+    trigger = service_call.data[WiLightServiceArgument.TRIGGER]
     await entity.async_set_trigger(trigger_index=trigger_index, trigger=trigger)
 
 
 async def _async_set_pause_time(entity, service_call: Any) -> None:
     if not isinstance(entity, WiLightValvePauseSwitch):
         raise TypeError("Entity is not a WiLight valve pause switch")
-    pause_time = service_call.data[ATTR_PAUSE_TIME]
+    pause_time = service_call.data[WiLightServiceArgument.PAUSE_TIME]
     await entity.async_set_pause_time(pause_time=pause_time)
 
 
@@ -63,10 +75,12 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_SET_WATERING_TIME,
+        WiLightService.SET_WATERING_TIME,
         entity_domain=SWITCH_DOMAIN,
         schema={
-            probatio.Required(ATTR_WATERING_TIME): VALID_WATERING_TIME,
+            probatio.Required(
+                WiLightServiceArgument.WATERING_TIME
+            ): VALID_WATERING_TIME,
         },
         func=_async_set_watering_time,
     )
@@ -74,11 +88,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_SET_TRIGGER,
+        WiLightService.SET_TRIGGER,
         entity_domain=SWITCH_DOMAIN,
         schema={
-            probatio.Required(ATTR_TRIGGER_INDEX): VALID_TRIGGER_INDEX,
-            probatio.Required(ATTR_TRIGGER): wl_trigger,
+            probatio.Required(
+                WiLightServiceArgument.TRIGGER_INDEX
+            ): VALID_TRIGGER_INDEX,
+            probatio.Required(WiLightServiceArgument.TRIGGER): wl_trigger,
         },
         func=_async_set_trigger,
     )
@@ -86,10 +102,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_SET_PAUSE_TIME,
+        WiLightService.SET_PAUSE_TIME,
         entity_domain=SWITCH_DOMAIN,
         schema={
-            probatio.Required(ATTR_PAUSE_TIME): VALID_PAUSE_TIME,
+            probatio.Required(WiLightServiceArgument.PAUSE_TIME): VALID_PAUSE_TIME,
         },
         func=_async_set_pause_time,
     )

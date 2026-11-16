@@ -14,6 +14,7 @@ from homeassistant.auth.permissions.const import POLICY_READ
 from homeassistant.auth.permissions.events import SUBSCRIBE_ALLOWLIST
 from homeassistant.const import (
     CONF_EXTERNAL_URL,
+    CONF_TRIGGERS,
     EVENT_STATE_CHANGED,
     MATCH_ALL,
     SIGNAL_BOOTSTRAP_INTEGRATIONS,
@@ -1113,6 +1114,7 @@ async def handle_subscribe_trigger(
     try:
         trigger_config = await async_validate_trigger_config(hass, msg["trigger"])
     except probatio.Invalid as err:
+        err.prepend(["trigger"])
         connection.send_error(msg["id"], const.ERR_INVALID_FORMAT, str(err))
         return
     except HomeAssistantError as err:
@@ -1179,6 +1181,7 @@ async def handle_test_condition(
         config = await async_validate_condition_config(hass, msg["condition"])
         condition = await async_condition_from_config(hass, config)
     except probatio.Invalid as err:
+        err.prepend(["condition"])
         connection.send_error(msg["id"], const.ERR_INVALID_FORMAT, str(err))
         return
     except HomeAssistantError as err:
@@ -1237,6 +1240,7 @@ async def handle_subscribe_condition(
         condition_config = await async_validate_condition_config(hass, msg["condition"])
         condition = await async_condition_from_config(hass, condition_config)
     except probatio.Invalid as err:
+        err.prepend(["condition"])
         connection.send_error(msg["id"], const.ERR_INVALID_FORMAT, str(err))
         return
     except HomeAssistantError as err:
@@ -1319,7 +1323,11 @@ async def handle_execute_script(
     # Circular dep
     from homeassistant.helpers.script import Script, async_validate_actions_config  # noqa: PLC0415
 
-    script_config = await async_validate_actions_config(hass, msg["sequence"])
+    try:
+        script_config = await async_validate_actions_config(hass, msg["sequence"])
+    except probatio.Invalid as err:
+        err.prepend(["sequence"])
+        raise
 
     context = connection.context(msg)
     script_obj = Script(hass, script_config, f"{const.DOMAIN} script", const.DOMAIN)
@@ -1369,6 +1377,23 @@ def handle_fire_event(
     connection.send_result(msg["id"], {"context": context})
 
 
+def _is_single_item(key: str, value: Any) -> bool:
+    """Return if a value of validate_config is a single item, not a list of items."""
+    if isinstance(value, list):
+        return False
+    # A dict with only a triggers key is a list of triggers
+    return key != CONF_TRIGGERS or value.keys() != {CONF_TRIGGERS}
+
+
+def _drop_list_index(err: probatio.Invalid) -> None:
+    """Drop the leading list index from the path of a validation error."""
+    if isinstance(err, probatio.MultipleInvalid):
+        for error in err.errors:
+            _drop_list_index(error)
+        return
+    del err.path[0]
+
+
 @decorators.websocket_command(
     {
         probatio.Required("type"): "validate_config",
@@ -1399,8 +1424,16 @@ async def handle_validate_config(
         if key not in msg:
             continue
 
+        value = msg[key]
         try:
-            await validator(hass, schema(msg[key]))
+            validated = schema(value)
+            try:
+                await validator(hass, validated)
+            except probatio.Invalid as err:
+                if _is_single_item(key, value):
+                    # The schema wrapped the item in a list
+                    _drop_list_index(err)
+                raise
         except (
             probatio.Invalid,
             HomeAssistantError,

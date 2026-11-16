@@ -118,7 +118,7 @@ def thermostat_fixture(data, hass: HomeAssistant):
 
 async def test_name(thermostat) -> None:
     """Test name property."""
-    assert thermostat.device_info["name"] == "Ecobee"
+    assert thermostat.device_info.name == "Ecobee"
 
 
 async def test_aux_heat_not_supported_by_default(hass: HomeAssistant) -> None:

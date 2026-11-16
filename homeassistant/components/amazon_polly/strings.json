@@ -1,0 +1,16 @@
+{
+  "exceptions": {
+    "engine_not_supported": {
+      "message": "Voice {voice} does not support the {engine} engine."
+    },
+    "language_not_supported": {
+      "message": "Voice {voice} does not support the {language} language."
+    },
+    "synthesis_failed": {
+      "message": "Amazon Polly could not synthesize speech: {error}"
+    },
+    "unknown_voice": {
+      "message": "Voice {voice} is not available."
+    }
+  }
+}

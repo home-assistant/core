@@ -363,7 +363,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000063-MatterNodeDevice'), ('matter', 'serial_serial_99')]>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000044B-MatterNodeDevice'), ('matter', 'serial_serial_1099')]>,
     'disabled_by': None,
     'domain': 'fan',
     'entity_category': None,
@@ -386,7 +386,7 @@
     'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 63>,
     'translation_key': 'fan',
-    'unique_id': '00000000000004D2-0000000000000063-MatterNodeDevice-1-MatterFan-514-0',
+    'unique_id': '00000000000004D2-000000000000044B-MatterNodeDevice-1-MatterFan-514-0',
     'unit_of_measurement': None,
   })
 # ---

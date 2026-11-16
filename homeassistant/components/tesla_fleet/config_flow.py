@@ -230,8 +230,7 @@ class OAuth2FlowHandler(
         if user_input is not None and self.uid and self.data:
             return self.async_create_entry(title=self.uid, data=self.data)
 
-        if not self.domain:
-            return await self.async_step_domain_input()
+        assert self.domain
 
         virtual_key_url = f"https://www.tesla.com/_ak/{self.domain}"
         data_schema = probatio.Schema({}).extend(

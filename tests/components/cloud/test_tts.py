@@ -79,7 +79,7 @@ def test_default_voice_is_valid(language: str, voice: str) -> None:
     "engine_id",
     [
         DOMAIN,
-        "tts.home_assistant_cloud",
+        "tts.home_assistant_link",
     ],
 )
 async def test_prefs_default_voice(
@@ -136,7 +136,7 @@ async def test_yaml_platform_config_not_supported(
     "engine_id",
     [
         DOMAIN,
-        "tts.home_assistant_cloud",
+        "tts.home_assistant_link",
     ],
 )
 async def test_provider_properties(
@@ -168,7 +168,7 @@ async def test_provider_properties(
     [
         ({"platform": DOMAIN}, DOMAIN),
         ({"engine_id": DOMAIN}, DOMAIN),
-        ({"engine_id": "tts.home_assistant_cloud"}, "tts.home_assistant_cloud"),
+        ({"engine_id": "tts.home_assistant_link"}, "tts.home_assistant_link"),
     ],
 )
 @pytest.mark.parametrize(
@@ -317,7 +317,7 @@ async def test_tts_entity(
     on_start_callback = cloud.register_on_start.call_args[0][0]
     await on_start_callback()
     client = await hass_client()
-    entity_id = "tts.home_assistant_cloud"
+    entity_id = "tts.home_assistant_link"
 
     state = hass.states.get(entity_id)
     assert state
@@ -369,7 +369,7 @@ async def test_migrating_pipelines(
     hass_storage: dict[str, Any],
 ) -> None:
     """Test migrating pipelines when cloud tts entity is added."""
-    entity_id = "tts.home_assistant_cloud"
+    entity_id = "tts.home_assistant_link"
     mock_process_tts = AsyncMock(
         return_value=b"",
     )
@@ -395,7 +395,7 @@ async def test_migrating_pipelines(
     # The stt/tts engines should have been updated to the new cloud engine ids.
     assert (
         hass_storage[STORAGE_KEY]["data"]["items"][0]["stt_engine"]
-        == "stt.home_assistant_cloud"
+        == "stt.home_assistant_link"
     )
     assert hass_storage[STORAGE_KEY]["data"]["items"][0]["tts_engine"] == entity_id
 
@@ -414,7 +414,7 @@ async def test_migrating_pipelines(
     )
     assert hass_storage[STORAGE_KEY]["data"]["items"][0]["language"] == "language_1"
     assert (
-        hass_storage[STORAGE_KEY]["data"]["items"][0]["name"] == "Home Assistant Cloud"
+        hass_storage[STORAGE_KEY]["data"]["items"][0]["name"] == "Home Assistant Link"
     )
     assert hass_storage[STORAGE_KEY]["data"]["items"][0]["stt_language"] == "language_1"
     assert hass_storage[STORAGE_KEY]["data"]["items"][0]["tts_language"] == "language_1"
@@ -427,6 +427,13 @@ async def test_migrating_pipelines(
     assert hass_storage[STORAGE_KEY]["data"]["items"][1] == PIPELINE_DATA["items"][1]
     assert hass_storage[STORAGE_KEY]["data"]["items"][2] == PIPELINE_DATA["items"][2]
 
+    # A cloud pipeline with a custom name gets its engines migrated but keeps its name.
+    assert hass_storage[STORAGE_KEY]["data"]["items"][3] == {
+        **PIPELINE_DATA["items"][3],
+        "stt_engine": "stt.home_assistant_link",
+        "tts_engine": entity_id,
+    }
+
 
 @pytest.mark.parametrize(
     ("service", "service_data"),
@@ -434,7 +441,7 @@ async def test_migrating_pipelines(
         (
             "speak",
             {
-                ATTR_ENTITY_ID: "tts.home_assistant_cloud",
+                ATTR_ENTITY_ID: "tts.home_assistant_link",
                 ATTR_LANGUAGE: "id-ID",
                 ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
                 ATTR_MESSAGE: "There is someone at the door.",
