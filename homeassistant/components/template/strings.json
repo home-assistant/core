@@ -770,7 +770,7 @@
       "title": "Incomplete template configuration"
     },
     "deprecated_attributes": {
-      "description": "The template {platform} with `{identifier}` sets options in `attributes` that have a dedicated option. Setting these options in `attributes` is deprecated and will stop working in Home Assistant Core {breaks_in_ha_version}.\n\nUpdate your YAML configuration by moving the following attributes to their option:\n\n{options}\n\nAfter updating the configuration, reload the template entities or restart Home Assistant to fix this issue.",
+      "description": "The template {platform} with `{identifier}` sets options in `attributes` that have a dedicated option. Setting these options in `attributes` is deprecated and will stop working in Home Assistant Core {breaks_in_ha_version}.\n\nUpdate your YAML configuration to use the following dedicated options:\n\n{options}\n\nThe `device_class`, `state_class`, and `fan_speeds` options do not support templates. Use literal supported values for `device_class` and `state_class`, and a literal YAML list of speeds for `fan_speeds`; dynamically changing values are not supported for these options.\n\nAfter updating the configuration, reload the template entities or restart Home Assistant to fix this issue.",
       "title": "Template {platform} sets options in attributes ({identifier})"
     }
   },
