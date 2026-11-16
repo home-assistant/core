@@ -1223,6 +1223,13 @@ class EnergyFixedCostSensor(RestoreSensor):
             state := self.hass.states.get(cast(str, self._config["entity_amount"]))
         ) is None:
             return None
+        currency = self.hass.config.currency
+        # The amount is added as is, so it is not charged in any other unit
+        if state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT) not in (
+            currency,
+            f"{currency}/{self._config['period']}",
+        ):
+            return None
         try:
             amount = float(state.state)
         except ValueError:

@@ -3861,6 +3861,7 @@ FIXED_COST = {
     "period": "day",
 }
 FIXED_COST_ENTITY_ID = "sensor.standing_charge_fixed_cost"
+FIXED_COST_AMOUNT_ATTRIBUTES = {ATTR_UNIT_OF_MEASUREMENT: "EUR"}
 # The start of the day of the frozen time, in Europe/Amsterdam
 FIXED_COST_TODAY = "2022-04-19T00:00:00+02:00"
 
@@ -4140,16 +4141,16 @@ async def test_fixed_cost_sensor_entity_amount(
     )
     assert _fixed_cost_total(hass) == 0
 
-    hass.states.async_set("sensor.amount", "unavailable")
+    hass.states.async_set("sensor.amount", "unavailable", FIXED_COST_AMOUNT_ATTRIBUTES)
     await hass.async_block_till_done()
     assert _fixed_cost_total(hass) == 0
 
-    hass.states.async_set("sensor.amount", "0.5")
+    hass.states.async_set("sensor.amount", "0.5", FIXED_COST_AMOUNT_ATTRIBUTES)
     await hass.async_block_till_done()
     assert _fixed_cost_total(hass) == pytest.approx(0.5)
 
     # A new amount is charged from the next period
-    hass.states.async_set("sensor.amount", "0.7")
+    hass.states.async_set("sensor.amount", "0.7", FIXED_COST_AMOUNT_ATTRIBUTES)
     await hass.async_block_till_done()
     assert _fixed_cost_total(hass) == pytest.approx(0.5)
 
@@ -4157,13 +4158,35 @@ async def test_fixed_cost_sensor_entity_amount(
     assert _fixed_cost_total(hass) == pytest.approx(1.2)
 
     # Unknown at the period start, so charged once the amount is known
-    hass.states.async_set("sensor.amount", "nan")
+    hass.states.async_set("sensor.amount", "nan", FIXED_COST_AMOUNT_ATTRIBUTES)
     await _move_to(hass, frozen_time, "2022-04-20 22:00:00+00:00")
     assert _fixed_cost_total(hass) == pytest.approx(1.2)
 
-    hass.states.async_set("sensor.amount", "0.8")
+    hass.states.async_set("sensor.amount", "0.8", FIXED_COST_AMOUNT_ATTRIBUTES)
     await hass.async_block_till_done()
     assert _fixed_cost_total(hass) == pytest.approx(2.0)
+
+
+async def test_fixed_cost_sensor_entity_amount_unit(
+    setup_integration: Callable[[HomeAssistant], Coroutine[Any, Any, None]],
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test an amount in another unit is charged once the unit is corrected."""
+    hass.states.async_set(
+        "sensor.amount", "30", {ATTR_UNIT_OF_MEASUREMENT: "EUR/month"}
+    )
+    await _setup_fixed_costs(
+        hass,
+        setup_integration,
+        hass_storage,
+        {**FIXED_COST, "number_amount": None, "entity_amount": "sensor.amount"},
+    )
+    assert _fixed_cost_total(hass) == 0
+
+    hass.states.async_set("sensor.amount", "1", {ATTR_UNIT_OF_MEASUREMENT: "EUR/day"})
+    await hass.async_block_till_done()
+    assert _fixed_cost_total(hass) == pytest.approx(1)
 
 
 async def test_fixed_cost_sensor_entity_amount_unknown_for_days(
@@ -4182,7 +4205,7 @@ async def test_fixed_cost_sensor_entity_amount_unknown_for_days(
     await _move_to(hass, frozen_time, "2022-04-20 22:00:00+00:00")
     assert _fixed_cost_total(hass) == 0
 
-    hass.states.async_set("sensor.amount", "0.5")
+    hass.states.async_set("sensor.amount", "0.5", FIXED_COST_AMOUNT_ATTRIBUTES)
     await hass.async_block_till_done()
     assert _fixed_cost_total(hass) == pytest.approx(1.5)
 
@@ -4245,7 +4268,7 @@ async def test_fixed_cost_sensor_period_change_while_amount_unknown(
     await hass.async_block_till_done()
     assert _fixed_cost_total(hass) == 0
 
-    hass.states.async_set("sensor.amount", "5")
+    hass.states.async_set("sensor.amount", "5", FIXED_COST_AMOUNT_ATTRIBUTES)
     await hass.async_block_till_done()
     assert _fixed_cost_total(hass) == pytest.approx(5)
 
@@ -4292,7 +4315,7 @@ async def test_fixed_cost_sensor_amount_entity_replaced(
     await hass.async_block_till_done()
     assert _fixed_cost_total(hass) == pytest.approx(0.62)
 
-    hass.states.async_set("sensor.amount", "0.5")
+    hass.states.async_set("sensor.amount", "0.5", FIXED_COST_AMOUNT_ATTRIBUTES)
     await hass.async_block_till_done()
     assert _fixed_cost_total(hass) == pytest.approx(0.62)
 
