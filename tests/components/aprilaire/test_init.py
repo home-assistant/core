@@ -71,12 +71,12 @@ async def test_device_registry_update(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test the device registry entry follows a change of the device info."""
-    config_entry, client = await _async_setup_integration(hass)
+    """Test the device registry entry follows a partial update of the device info."""
+    config_entry, _ = await _async_setup_integration(hass)
 
+    # The thermostat sends each attribute group in its own packet
     config_entry.runtime_data.async_set_updated_data(
-        client.data
-        | {
+        {
             Attribute.MODEL_NUMBER: 1,
             Attribute.FIRMWARE_MAJOR_REVISION: 2,
             Attribute.FIRMWARE_MINOR_REVISION: 7,
@@ -90,6 +90,7 @@ async def test_device_registry_update(
     assert device_entry is not None
     assert device_entry.model == "8810"
     assert device_entry.sw_version == "2.07"
+    assert device_entry.hw_version == "Rev. B"
 
 
 def _mock_client(mac_address: str) -> AsyncMock:

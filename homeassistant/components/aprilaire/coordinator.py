@@ -86,7 +86,7 @@ class AprilaireCoordinator(BaseDataUpdateCoordinatorProtocol):
 
         self.async_update_listeners()
 
-        new_device_info = self.create_device_info(data)
+        new_device_info = self.create_device_info(self.data)
 
         if (
             self.config_entry is not None
