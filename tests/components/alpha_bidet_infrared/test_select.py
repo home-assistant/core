@@ -16,14 +16,14 @@ from pytest_homeassistant.components.infrared.common import MockInfraredEmitterE
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
-    ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant, State
@@ -75,8 +75,11 @@ async def test_select_option_sends_absolute_level(
     """Test selecting a level sends that level, not a step from the current one."""
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: option},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            SelectServiceArgument.OPTION: option,
+        },
         blocking=True,
     )
 
@@ -132,8 +135,11 @@ async def test_option_stored_while_unavailable(hass: HomeAssistant) -> None:
     """Test the last level sent is stored while the emitter is unavailable."""
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: WATER_TEMPERATURE_ENTITY_ID, ATTR_OPTION: "medium"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: WATER_TEMPERATURE_ENTITY_ID,
+            SelectServiceArgument.OPTION: "medium",
+        },
         blocking=True,
     )
     hass.states.async_set(MOCK_INFRARED_EMITTER_ENTITY_ID, STATE_UNAVAILABLE)
