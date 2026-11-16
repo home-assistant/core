@@ -4,6 +4,7 @@ import asyncio
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from chip.clusters import Objects as clusters
 from matter_server.client.models.device_types import OnOffPlugInUnit
 
 from homeassistant.config_entries import ConfigEntry
@@ -200,6 +201,47 @@ def endpoint_requires_child_device(endpoint: MatterEndpoint) -> bool:
         and _endpoint_maps_to_node_device(other)
         for other in endpoint.node.endpoints.values()
     )
+
+
+def get_power_topology_endpoint_id(endpoint: MatterEndpoint) -> int | None:
+    """Return the single endpoint the endpoint's Power Topology SET lists, if any."""
+    feature_map = endpoint.get_attribute_value(
+        None, clusters.PowerTopology.Attributes.FeatureMap
+    )
+    if not (
+        feature_map
+        and feature_map & clusters.PowerTopology.Bitmaps.Feature.kSetTopology
+    ):
+        return None
+    # AvailableEndpoints is fixed, unlike ActiveEndpoints.
+    available_endpoints: list[int] | None = endpoint.get_attribute_value(
+        None, clusters.PowerTopology.Attributes.AvailableEndpoints
+    )
+    if not available_endpoints or len(available_endpoints) != 1:
+        return None
+    return available_endpoints[0]
+
+
+def get_child_device_owner(endpoint: MatterEndpoint) -> MatterEndpoint | None:
+    """Return the endpoint whose child device holds the endpoint's entities.
+
+    An endpoint split into its own child device owns it. A measurement endpoint
+    whose Power Topology covers exactly one split endpoint (e.g. the power
+    sensor of one socket of a power strip) goes to that endpoint's child device.
+    Returns None when the entities stay on the node (or bridged) device.
+    """
+    if endpoint_requires_child_device(endpoint):
+        return endpoint
+    if not _endpoint_maps_to_node_device(endpoint):
+        return None
+    if (
+        (measured_id := get_power_topology_endpoint_id(endpoint)) is not None
+        and measured_id != endpoint.endpoint_id
+        and (measured := endpoint.node.endpoints.get(measured_id)) is not None
+        and endpoint_requires_child_device(measured)
+    ):
+        return measured
+    return None
 
 
 def get_node_device_identifier(

@@ -301,6 +301,128 @@ async def test_endpoint_child_device_readded_after_removal(
     assert entity_registry.async_get("switch.eve_energy_20ecn4101_top") is not None
 
 
+TAPO_STRIP_SWITCH_1 = "switch.smart_wi_fi_power_strip_endpoint_1"
+TAPO_STRIP_POWER_1 = "sensor.smart_wi_fi_power_strip_endpoint_1_power"
+
+
+@pytest.mark.parametrize("node_fixture", ["tapo_smart_wi_fi_power_strip"])
+async def test_power_topology_entities_on_measured_child_device(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a measurement endpoint's entities join the child of the outlet it measures.
+
+    Each outlet (endpoints 1 to 6) of the power strip has an Electrical Sensor
+    endpoint (7 to 12) whose Power Topology lists only that outlet.
+    """
+    switch_entry = entity_registry.async_get(TAPO_STRIP_SWITCH_1)
+    assert switch_entry is not None
+    child = device_registry.async_get(switch_entry.device_id)
+    assert isinstance(child, dr.ChildDeviceEntry)
+    child_device_id = get_child_device_id(
+        matter_client.server_info, matter_node.endpoints[1]
+    )
+    assert (DOMAIN, f"{ID_TYPE_DEVICE_ID}_{child_device_id}") in child.identifiers
+
+    power_entry = entity_registry.async_get(TAPO_STRIP_POWER_1)
+    assert power_entry is not None
+    assert power_entry.device_id == child.id
+    # The unique ID still refers to the measurement endpoint.
+    assert power_entry.unique_id.startswith(
+        f"{get_device_id(matter_client.server_info, matter_node.endpoints[7])}-7-"
+    )
+    # No endpoint suffix, as the child device names the outlet.
+    assert power_entry.original_name == "Power"
+
+
+@pytest.mark.parametrize("node_fixture", ["tapo_smart_wi_fi_power_strip"])
+async def test_power_topology_endpoint_removed_and_readded(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test removing a measurement endpoint removes only its own entities."""
+    entry_id = hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    parent = device_registry.async_get_device_by_identifier(
+        identifier_for(matter_client, matter_node, 0), entry_id
+    )
+    assert parent is not None
+
+    fire_endpoint_event(matter_client, EventType.ENDPOINT_REMOVED, matter_node, 7)
+
+    assert entity_registry.async_get(TAPO_STRIP_POWER_1) is None
+    # The outlet, its child device and the node device are untouched.
+    switch_entry = entity_registry.async_get(TAPO_STRIP_SWITCH_1)
+    assert switch_entry is not None
+    assert device_registry.async_get(switch_entry.device_id) is not None
+    assert device_registry.async_get(parent.id) is not None
+    assert len(dr.async_entries_for_parent_device(device_registry, parent.id)) == 6
+
+    fire_endpoint_event(matter_client, EventType.ENDPOINT_ADDED, matter_node, 7)
+    await hass.async_block_till_done()
+
+    power_entry = entity_registry.async_get(TAPO_STRIP_POWER_1)
+    assert power_entry is not None
+    assert power_entry.device_id == switch_entry.device_id
+
+
+@pytest.mark.parametrize("node_fixture", ["tapo_smart_wi_fi_power_strip"])
+async def test_power_topology_measured_endpoint_removed_and_readded(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the measurement entities are rediscovered after their outlet returns."""
+    # Removing the outlet removes its child device with the measurement entities.
+    fire_endpoint_event(matter_client, EventType.ENDPOINT_REMOVED, matter_node, 1)
+    assert entity_registry.async_get(TAPO_STRIP_SWITCH_1) is None
+    assert entity_registry.async_get(TAPO_STRIP_POWER_1) is None
+
+    fire_endpoint_event(matter_client, EventType.ENDPOINT_ADDED, matter_node, 1)
+    fire_endpoint_event(matter_client, EventType.ENDPOINT_ADDED, matter_node, 7)
+    await hass.async_block_till_done()
+
+    switch_entry = entity_registry.async_get(TAPO_STRIP_SWITCH_1)
+    assert switch_entry is not None
+    power_entry = entity_registry.async_get(TAPO_STRIP_POWER_1)
+    assert power_entry is not None
+    assert power_entry.device_id == switch_entry.device_id
+
+
+@pytest.mark.parametrize("node_fixture", ["tapo_smart_wi_fi_power_strip"])
+async def test_power_topology_entities_follow_collapsed_child(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test measurement entities move back to the node device with their outlet."""
+    entry_id = hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    parent = device_registry.async_get_device_by_identifier(
+        identifier_for(matter_client, matter_node, 0), entry_id
+    )
+    assert parent is not None
+
+    # Drop the other outlets so outlet 1 no longer splits.
+    for endpoint_id in range(2, 7):
+        matter_node.endpoints.pop(endpoint_id)
+    fire_node_updated_event(matter_client, matter_node)
+    await hass.async_block_till_done()
+
+    assert not dr.async_entries_for_parent_device(device_registry, parent.id)
+    for entity_id in (TAPO_STRIP_SWITCH_1, TAPO_STRIP_POWER_1):
+        entity_entry = entity_registry.async_get(entity_id)
+        assert entity_entry is not None
+        assert entity_entry.device_id == parent.id
+
+
 @pytest.mark.usefixtures("matter_node")
 @pytest.mark.skip("Waiting for a new test fixture")
 @pytest.mark.parametrize("node_fixture", ["fake_bridge_two_light"])

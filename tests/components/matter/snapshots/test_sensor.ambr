@@ -44939,7 +44939,7 @@
     'state': 'unspecified',
   })
 # ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_effective_current_10-entry]
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_1_effective_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -44951,11 +44951,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice'), ('matter', 'serial_serial_1079')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice-1')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_effective_current_10',
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_1_effective_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -44963,7 +44963,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Effective current (10)',
+    'object_id_base': 'Effective current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -44974,190 +44974,7 @@
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': 'Effective current (10)',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'rms_current',
-    'unique_id': '00000000000004D2-0000000000000437-MatterNodeDevice-10-ElectricalPowerMeasurementRMSCurrent-144-12',
-    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
-  })
-# ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_effective_current_10-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Wi-Fi Power Strip Effective current (10)',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_effective_current_10',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_effective_current_11-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice'), ('matter', 'serial_serial_1079')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_effective_current_11',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Effective current (11)',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
-    'original_icon': None,
-    'original_name': 'Effective current (11)',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'rms_current',
-    'unique_id': '00000000000004D2-0000000000000437-MatterNodeDevice-11-ElectricalPowerMeasurementRMSCurrent-144-12',
-    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
-  })
-# ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_effective_current_11-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Wi-Fi Power Strip Effective current (11)',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_effective_current_11',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_effective_current_12-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice'), ('matter', 'serial_serial_1079')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_effective_current_12',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Effective current (12)',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
-    'original_icon': None,
-    'original_name': 'Effective current (12)',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'rms_current',
-    'unique_id': '00000000000004D2-0000000000000437-MatterNodeDevice-12-ElectricalPowerMeasurementRMSCurrent-144-12',
-    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
-  })
-# ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_effective_current_12-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Wi-Fi Power Strip Effective current (12)',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_effective_current_12',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_effective_current_7-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice'), ('matter', 'serial_serial_1079')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_effective_current_7',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Effective current (7)',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
-    'original_icon': None,
-    'original_name': 'Effective current (7)',
+    'original_name': 'Effective current',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -45167,23 +44984,23 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_effective_current_7-state]
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_1_effective_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Wi-Fi Power Strip Effective current (7)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 1 Effective current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_effective_current_7',
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_1_effective_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_effective_current_8-entry]
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_1_effective_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -45195,11 +45012,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice'), ('matter', 'serial_serial_1079')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice-1')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_effective_current_8',
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_1_effective_voltage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -45207,129 +45024,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Effective current (8)',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
-    'original_icon': None,
-    'original_name': 'Effective current (8)',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'rms_current',
-    'unique_id': '00000000000004D2-0000000000000437-MatterNodeDevice-8-ElectricalPowerMeasurementRMSCurrent-144-12',
-    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
-  })
-# ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_effective_current_8-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Wi-Fi Power Strip Effective current (8)',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_effective_current_8',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_effective_current_9-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice'), ('matter', 'serial_serial_1079')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_effective_current_9',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Effective current (9)',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
-    'original_icon': None,
-    'original_name': 'Effective current (9)',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'rms_current',
-    'unique_id': '00000000000004D2-0000000000000437-MatterNodeDevice-9-ElectricalPowerMeasurementRMSCurrent-144-12',
-    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
-  })
-# ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_effective_current_9-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Wi-Fi Power Strip Effective current (9)',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_effective_current_9',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_effective_voltage_10-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice'), ('matter', 'serial_serial_1079')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_effective_voltage_10',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Effective voltage (10)',
+    'object_id_base': 'Effective voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -45340,190 +45035,7 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': 'Effective voltage (10)',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'rms_voltage',
-    'unique_id': '00000000000004D2-0000000000000437-MatterNodeDevice-10-ElectricalPowerMeasurementRMSVoltage-144-11',
-    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
-  })
-# ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_effective_voltage_10-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Wi-Fi Power Strip Effective voltage (10)',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_effective_voltage_10',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '121.807',
-  })
-# ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_effective_voltage_11-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice'), ('matter', 'serial_serial_1079')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_effective_voltage_11',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Effective voltage (11)',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
-    'original_icon': None,
-    'original_name': 'Effective voltage (11)',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'rms_voltage',
-    'unique_id': '00000000000004D2-0000000000000437-MatterNodeDevice-11-ElectricalPowerMeasurementRMSVoltage-144-11',
-    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
-  })
-# ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_effective_voltage_11-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Wi-Fi Power Strip Effective voltage (11)',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_effective_voltage_11',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '121.839',
-  })
-# ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_effective_voltage_12-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice'), ('matter', 'serial_serial_1079')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_effective_voltage_12',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Effective voltage (12)',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
-    'original_icon': None,
-    'original_name': 'Effective voltage (12)',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'rms_voltage',
-    'unique_id': '00000000000004D2-0000000000000437-MatterNodeDevice-12-ElectricalPowerMeasurementRMSVoltage-144-11',
-    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
-  })
-# ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_effective_voltage_12-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Wi-Fi Power Strip Effective voltage (12)',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_effective_voltage_12',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '121.827',
-  })
-# ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_effective_voltage_7-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice'), ('matter', 'serial_serial_1079')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_effective_voltage_7',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Effective voltage (7)',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
-    'original_icon': None,
-    'original_name': 'Effective voltage (7)',
+    'original_name': 'Effective voltage',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -45533,145 +45045,23 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_effective_voltage_7-state]
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_1_effective_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Wi-Fi Power Strip Effective voltage (7)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 1 Effective voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_effective_voltage_7',
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_1_effective_voltage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '121.599',
   })
 # ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_effective_voltage_8-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice'), ('matter', 'serial_serial_1079')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_effective_voltage_8',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Effective voltage (8)',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
-    'original_icon': None,
-    'original_name': 'Effective voltage (8)',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'rms_voltage',
-    'unique_id': '00000000000004D2-0000000000000437-MatterNodeDevice-8-ElectricalPowerMeasurementRMSVoltage-144-11',
-    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
-  })
-# ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_effective_voltage_8-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Wi-Fi Power Strip Effective voltage (8)',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_effective_voltage_8',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '121.763',
-  })
-# ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_effective_voltage_9-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice'), ('matter', 'serial_serial_1079')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_effective_voltage_9',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Effective voltage (9)',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
-    'original_icon': None,
-    'original_name': 'Effective voltage (9)',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'rms_voltage',
-    'unique_id': '00000000000004D2-0000000000000437-MatterNodeDevice-9-ElectricalPowerMeasurementRMSVoltage-144-11',
-    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
-  })
-# ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_effective_voltage_9-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Wi-Fi Power Strip Effective voltage (9)',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_effective_voltage_9',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '121.94',
-  })
-# ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_energy_10-entry]
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_1_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -45683,11 +45073,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice'), ('matter', 'serial_serial_1079')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice-1')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_energy_10',
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_1_energy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -45695,7 +45085,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Energy (10)',
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -45706,190 +45096,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Energy (10)',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000437-MatterNodeDevice-10-ElectricalEnergyMeasurementCumulativeEnergyImported-145-1',
-    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-  })
-# ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_energy_10-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Wi-Fi Power Strip Energy (10)',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_energy_10',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.003',
-  })
-# ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_energy_11-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice'), ('matter', 'serial_serial_1079')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_energy_11',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Energy (11)',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 3,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Energy (11)',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000437-MatterNodeDevice-11-ElectricalEnergyMeasurementCumulativeEnergyImported-145-1',
-    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-  })
-# ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_energy_11-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Wi-Fi Power Strip Energy (11)',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_energy_11',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.002',
-  })
-# ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_energy_12-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice'), ('matter', 'serial_serial_1079')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_energy_12',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Energy (12)',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 3,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Energy (12)',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000437-MatterNodeDevice-12-ElectricalEnergyMeasurementCumulativeEnergyImported-145-1',
-    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-  })
-# ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_energy_12-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Wi-Fi Power Strip Energy (12)',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_energy_12',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.002',
-  })
-# ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_energy_7-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice'), ('matter', 'serial_serial_1079')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_energy_7',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Energy (7)',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 3,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Energy (7)',
+    'original_name': 'Energy',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -45899,23 +45106,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_energy_7-state]
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_1_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Wi-Fi Power Strip Energy (7)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 1 Energy',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_energy_7',
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_1_energy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.002',
   })
 # ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_energy_8-entry]
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_1_energy_exported-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -45927,11 +45134,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice'), ('matter', 'serial_serial_1079')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice-1')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_energy_8',
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_1_energy_exported',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -45939,7 +45146,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Energy (8)',
+    'object_id_base': 'Energy exported',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -45950,312 +45157,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Energy (8)',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000437-MatterNodeDevice-8-ElectricalEnergyMeasurementCumulativeEnergyImported-145-1',
-    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-  })
-# ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_energy_8-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Wi-Fi Power Strip Energy (8)',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_energy_8',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.003',
-  })
-# ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_energy_9-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice'), ('matter', 'serial_serial_1079')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_energy_9',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Energy (9)',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 3,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Energy (9)',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000437-MatterNodeDevice-9-ElectricalEnergyMeasurementCumulativeEnergyImported-145-1',
-    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-  })
-# ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_energy_9-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Wi-Fi Power Strip Energy (9)',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_energy_9',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.003',
-  })
-# ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_energy_exported_10-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice'), ('matter', 'serial_serial_1079')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_energy_exported_10',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Energy exported (10)',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 3,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Energy exported (10)',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'energy_exported',
-    'unique_id': '00000000000004D2-0000000000000437-MatterNodeDevice-10-ElectricalEnergyMeasurementCumulativeEnergyExported-145-2',
-    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-  })
-# ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_energy_exported_10-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Wi-Fi Power Strip Energy exported (10)',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_energy_exported_10',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '1.112',
-  })
-# ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_energy_exported_11-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice'), ('matter', 'serial_serial_1079')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_energy_exported_11',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Energy exported (11)',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 3,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Energy exported (11)',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'energy_exported',
-    'unique_id': '00000000000004D2-0000000000000437-MatterNodeDevice-11-ElectricalEnergyMeasurementCumulativeEnergyExported-145-2',
-    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-  })
-# ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_energy_exported_11-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Wi-Fi Power Strip Energy exported (11)',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_energy_exported_11',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.243',
-  })
-# ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_energy_exported_12-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice'), ('matter', 'serial_serial_1079')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_energy_exported_12',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Energy exported (12)',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 3,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Energy exported (12)',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'energy_exported',
-    'unique_id': '00000000000004D2-0000000000000437-MatterNodeDevice-12-ElectricalEnergyMeasurementCumulativeEnergyExported-145-2',
-    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-  })
-# ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_energy_exported_12-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Wi-Fi Power Strip Energy exported (12)',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_energy_exported_12',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.796',
-  })
-# ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_energy_exported_7-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice'), ('matter', 'serial_serial_1079')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_energy_exported_7',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Energy exported (7)',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 3,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Energy exported (7)',
+    'original_name': 'Energy exported',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -46265,145 +45167,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_energy_exported_7-state]
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_1_energy_exported-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Wi-Fi Power Strip Energy exported (7)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 1 Energy exported',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_energy_exported_7',
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_1_energy_exported',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.46',
   })
 # ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_energy_exported_8-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice'), ('matter', 'serial_serial_1079')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_energy_exported_8',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Energy exported (8)',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 3,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Energy exported (8)',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'energy_exported',
-    'unique_id': '00000000000004D2-0000000000000437-MatterNodeDevice-8-ElectricalEnergyMeasurementCumulativeEnergyExported-145-2',
-    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-  })
-# ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_energy_exported_8-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Wi-Fi Power Strip Energy exported (8)',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_energy_exported_8',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.033',
-  })
-# ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_energy_exported_9-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice'), ('matter', 'serial_serial_1079')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_energy_exported_9',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Energy exported (9)',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 3,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Energy exported (9)',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'energy_exported',
-    'unique_id': '00000000000004D2-0000000000000437-MatterNodeDevice-9-ElectricalEnergyMeasurementCumulativeEnergyExported-145-2',
-    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-  })
-# ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_energy_exported_9-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Wi-Fi Power Strip Energy exported (9)',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_energy_exported_9',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.002',
-  })
-# ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_power_10-entry]
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_1_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -46415,11 +45195,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice'), ('matter', 'serial_serial_1079')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice-1')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_power_10',
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_1_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -46427,7 +45207,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Power (10)',
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -46438,190 +45218,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Power (10)',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000437-MatterNodeDevice-10-ElectricalPowerMeasurementWatt-144-8',
-    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-  })
-# ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_power_10-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Wi-Fi Power Strip Power (10)',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_power_10',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_power_11-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice'), ('matter', 'serial_serial_1079')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_power_11',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Power (11)',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': None,
-    'original_name': 'Power (11)',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000437-MatterNodeDevice-11-ElectricalPowerMeasurementWatt-144-8',
-    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-  })
-# ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_power_11-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Wi-Fi Power Strip Power (11)',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_power_11',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_power_12-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice'), ('matter', 'serial_serial_1079')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_power_12',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Power (12)',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': None,
-    'original_name': 'Power (12)',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000437-MatterNodeDevice-12-ElectricalPowerMeasurementWatt-144-8',
-    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-  })
-# ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_power_12-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Wi-Fi Power Strip Power (12)',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_power_12',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_power_7-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice'), ('matter', 'serial_serial_1079')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_power_7',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Power (7)',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': None,
-    'original_name': 'Power (7)',
+    'original_name': 'Power',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -46631,23 +45228,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_power_7-state]
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_1_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Wi-Fi Power Strip Power (7)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 1 Power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_power_7',
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_1_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_power_8-entry]
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_2_effective_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -46659,11 +45256,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice'), ('matter', 'serial_serial_1079')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice-2')]>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_power_8',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_2_effective_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -46671,7 +45268,251 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Power (8)',
+    'object_id_base': 'Effective current',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Effective current',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rms_current',
+    'unique_id': '00000000000004D2-0000000000000437-MatterNodeDevice-8-ElectricalPowerMeasurementRMSCurrent-144-12',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_2_effective_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 2 Effective current',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_2_effective_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_2_effective_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice-2')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_2_effective_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Effective voltage',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Effective voltage',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rms_voltage',
+    'unique_id': '00000000000004D2-0000000000000437-MatterNodeDevice-8-ElectricalPowerMeasurementRMSVoltage-144-11',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_2_effective_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 2 Effective voltage',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_2_effective_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '121.763',
+  })
+# ---
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_2_energy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice-2')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_2_energy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Energy',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000437-MatterNodeDevice-8-ElectricalEnergyMeasurementCumulativeEnergyImported-145-1',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_2_energy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 2 Energy',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_2_energy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.003',
+  })
+# ---
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_2_energy_exported-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice-2')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_2_energy_exported',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Energy exported',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy exported',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_exported',
+    'unique_id': '00000000000004D2-0000000000000437-MatterNodeDevice-8-ElectricalEnergyMeasurementCumulativeEnergyExported-145-2',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_2_energy_exported-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 2 Energy exported',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_2_energy_exported',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.033',
+  })
+# ---
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_2_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice-2')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_2_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -46682,7 +45523,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Power (8)',
+    'original_name': 'Power',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -46692,23 +45533,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_power_8-state]
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_2_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Wi-Fi Power Strip Power (8)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 2 Power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_power_8',
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_2_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_power_9-entry]
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_3_effective_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -46720,11 +45561,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice'), ('matter', 'serial_serial_1079')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice-3')]>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_power_9',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_3_effective_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -46732,7 +45573,251 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Power (9)',
+    'object_id_base': 'Effective current',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Effective current',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rms_current',
+    'unique_id': '00000000000004D2-0000000000000437-MatterNodeDevice-9-ElectricalPowerMeasurementRMSCurrent-144-12',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_3_effective_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 3 Effective current',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_3_effective_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_3_effective_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice-3')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_3_effective_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Effective voltage',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Effective voltage',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rms_voltage',
+    'unique_id': '00000000000004D2-0000000000000437-MatterNodeDevice-9-ElectricalPowerMeasurementRMSVoltage-144-11',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_3_effective_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 3 Effective voltage',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_3_effective_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '121.94',
+  })
+# ---
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_3_energy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice-3')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_3_energy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Energy',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000437-MatterNodeDevice-9-ElectricalEnergyMeasurementCumulativeEnergyImported-145-1',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_3_energy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 3 Energy',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_3_energy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.003',
+  })
+# ---
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_3_energy_exported-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice-3')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_3_energy_exported',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Energy exported',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy exported',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_exported',
+    'unique_id': '00000000000004D2-0000000000000437-MatterNodeDevice-9-ElectricalEnergyMeasurementCumulativeEnergyExported-145-2',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_3_energy_exported-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 3 Energy exported',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_3_energy_exported',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.002',
+  })
+# ---
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_3_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice-3')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_3_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -46743,7 +45828,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Power (9)',
+    'original_name': 'Power',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -46753,16 +45838,931 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_power_9-state]
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_3_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Wi-Fi Power Strip Power (9)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 3 Power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.smart_wi_fi_power_strip_power_9',
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_3_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_4_effective_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice-4')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_4_effective_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Effective current',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Effective current',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rms_current',
+    'unique_id': '00000000000004D2-0000000000000437-MatterNodeDevice-10-ElectricalPowerMeasurementRMSCurrent-144-12',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_4_effective_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 4 Effective current',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_4_effective_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_4_effective_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice-4')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_4_effective_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Effective voltage',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Effective voltage',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rms_voltage',
+    'unique_id': '00000000000004D2-0000000000000437-MatterNodeDevice-10-ElectricalPowerMeasurementRMSVoltage-144-11',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_4_effective_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 4 Effective voltage',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_4_effective_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '121.807',
+  })
+# ---
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_4_energy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice-4')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_4_energy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Energy',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000437-MatterNodeDevice-10-ElectricalEnergyMeasurementCumulativeEnergyImported-145-1',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_4_energy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 4 Energy',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_4_energy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.003',
+  })
+# ---
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_4_energy_exported-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice-4')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_4_energy_exported',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Energy exported',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy exported',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_exported',
+    'unique_id': '00000000000004D2-0000000000000437-MatterNodeDevice-10-ElectricalEnergyMeasurementCumulativeEnergyExported-145-2',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_4_energy_exported-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 4 Energy exported',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_4_energy_exported',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.112',
+  })
+# ---
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_4_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice-4')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_4_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000437-MatterNodeDevice-10-ElectricalPowerMeasurementWatt-144-8',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_4_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 4 Power',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_4_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_5_effective_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice-5')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_5_effective_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Effective current',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Effective current',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rms_current',
+    'unique_id': '00000000000004D2-0000000000000437-MatterNodeDevice-11-ElectricalPowerMeasurementRMSCurrent-144-12',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_5_effective_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 5 Effective current',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_5_effective_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_5_effective_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice-5')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_5_effective_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Effective voltage',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Effective voltage',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rms_voltage',
+    'unique_id': '00000000000004D2-0000000000000437-MatterNodeDevice-11-ElectricalPowerMeasurementRMSVoltage-144-11',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_5_effective_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 5 Effective voltage',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_5_effective_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '121.839',
+  })
+# ---
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_5_energy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice-5')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_5_energy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Energy',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000437-MatterNodeDevice-11-ElectricalEnergyMeasurementCumulativeEnergyImported-145-1',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_5_energy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 5 Energy',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_5_energy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.002',
+  })
+# ---
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_5_energy_exported-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice-5')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_5_energy_exported',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Energy exported',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy exported',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_exported',
+    'unique_id': '00000000000004D2-0000000000000437-MatterNodeDevice-11-ElectricalEnergyMeasurementCumulativeEnergyExported-145-2',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_5_energy_exported-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 5 Energy exported',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_5_energy_exported',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.243',
+  })
+# ---
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_5_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice-5')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_5_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000437-MatterNodeDevice-11-ElectricalPowerMeasurementWatt-144-8',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_5_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 5 Power',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_5_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_6_effective_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice-6')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_6_effective_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Effective current',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Effective current',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rms_current',
+    'unique_id': '00000000000004D2-0000000000000437-MatterNodeDevice-12-ElectricalPowerMeasurementRMSCurrent-144-12',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_6_effective_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 6 Effective current',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_6_effective_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_6_effective_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice-6')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_6_effective_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Effective voltage',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Effective voltage',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rms_voltage',
+    'unique_id': '00000000000004D2-0000000000000437-MatterNodeDevice-12-ElectricalPowerMeasurementRMSVoltage-144-11',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_6_effective_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 6 Effective voltage',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_6_effective_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '121.827',
+  })
+# ---
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_6_energy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice-6')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_6_energy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Energy',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000437-MatterNodeDevice-12-ElectricalEnergyMeasurementCumulativeEnergyImported-145-1',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_6_energy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 6 Energy',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_6_energy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.002',
+  })
+# ---
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_6_energy_exported-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice-6')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_6_energy_exported',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Energy exported',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy exported',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_exported',
+    'unique_id': '00000000000004D2-0000000000000437-MatterNodeDevice-12-ElectricalEnergyMeasurementCumulativeEnergyExported-145-2',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_6_energy_exported-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 6 Energy exported',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_6_energy_exported',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.796',
+  })
+# ---
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_6_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice-6')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_6_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000437-MatterNodeDevice-12-ElectricalPowerMeasurementWatt-144-8',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_sensors[tapo_smart_wi_fi_power_strip][sensor.smart_wi_fi_power_strip_endpoint_6_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 6 Power',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.smart_wi_fi_power_strip_endpoint_6_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

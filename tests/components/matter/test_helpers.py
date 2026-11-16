@@ -9,6 +9,7 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant.components.matter.const import DOMAIN
 from homeassistant.components.matter.helpers import (
     endpoint_requires_child_device,
+    get_child_device_owner,
     get_device_id,
     get_node_from_device_entry,
 )
@@ -45,6 +46,30 @@ def test_endpoint_requires_child_device(
     node = create_node_from_fixture(node_fixture)
 
     assert endpoint_requires_child_device(node.endpoints[endpoint_id]) is expected
+
+
+@pytest.mark.parametrize(
+    ("node_fixture", "endpoint_id", "expected_owner_id"),
+    [
+        pytest.param("tapo_smart_wi_fi_power_strip", 7, 1, id="set_single_first"),
+        pytest.param("tapo_smart_wi_fi_power_strip", 12, 6, id="set_single_last"),
+        pytest.param("tapo_smart_wi_fi_power_strip", 1, 1, id="split_outlet"),
+        pytest.param("tapo_smart_wi_fi_power_strip", 0, None, id="root"),
+        pytest.param("tapo_smart_wi_fi_plug_265", 2, None, id="set_outlet_not_split"),
+        pytest.param("silabs_dishwasher", 2, None, id="set_several_endpoints"),
+        pytest.param("inovelli_vtm30", 7, None, id="node_topology"),
+        pytest.param("aqara_thermostat_w500", 0, None, id="node_topology_root"),
+    ],
+)
+def test_get_child_device_owner(
+    node_fixture: str, endpoint_id: int, expected_owner_id: int | None
+) -> None:
+    """Test which endpoint's child device holds an endpoint's entities."""
+    node = create_node_from_fixture(node_fixture)
+
+    owner = get_child_device_owner(node.endpoints[endpoint_id])
+
+    assert owner is node.endpoints.get(expected_owner_id)
 
 
 @pytest.mark.parametrize("node_fixture", ["device_diagnostics"])

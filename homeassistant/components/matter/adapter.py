@@ -18,11 +18,13 @@ from .helpers import (
     MatterConfigEntry,
     endpoint_requires_child_device,
     get_child_device_id,
+    get_child_device_owner,
     get_device_endpoint,
     get_device_id,
     get_discovery_key,
     get_entity_unique_id,
     get_legacy_device_id,
+    get_power_topology_endpoint_id,
 )
 
 if TYPE_CHECKING:
@@ -122,6 +124,21 @@ class MatterAdapter:
                 # A composed device is represented by a single HA device, which is
                 # only removed once its compose parent endpoint is removed.
                 return
+            owner = get_child_device_owner(endpoint)
+            if owner is not None and owner.endpoint_id != endpoint.endpoint_id:
+                # A measurement endpoint's entities sit on the child device of the
+                # endpoint it measures, which stays; remove only its own entities.
+                unique_id_prefix = (
+                    f"{get_device_id(server_info, endpoint)}-{endpoint.endpoint_id}-"
+                )
+                entity_registry = er.async_get(self.hass)
+                for entity_entry in er.async_entries_for_config_entry(
+                    entity_registry, self.config_entry.entry_id
+                ):
+                    if entity_entry.unique_id.startswith(unique_id_prefix):
+                        entity_registry.async_remove(entity_entry.entity_id)
+                self._forget_endpoint_entities(node, endpoint.endpoint_id)
+                return
             # An endpoint split into its own child device is removed on its own,
             # without touching the node (parent) device.
             child_identifier = (
@@ -132,7 +149,7 @@ class MatterAdapter:
                 child_identifier, self.config_entry.entry_id
             ):
                 device_registry.async_remove_device(child_device.id)
-                self._forget_endpoint_entities(node.node_id, endpoint.endpoint_id)
+                self._forget_endpoint_entities(node, endpoint.endpoint_id)
                 return
             node_device_id = get_device_id(server_info, endpoint)
             identifier = (DOMAIN, f"{ID_TYPE_DEVICE_ID}_{node_device_id}")
@@ -251,13 +268,20 @@ class MatterAdapter:
             elif (endpoint_id := _child_device_endpoint_id(child_device)) is not None:
                 # Endpoint is gone: its entities are removed with the child device,
                 # so drop their discovery keys to allow rediscovery if it returns.
-                self._forget_endpoint_entities(node.node_id, endpoint_id)
+                self._forget_endpoint_entities(node, endpoint_id)
             # A child whose endpoint is gone is removed with its orphaned entities.
             device_registry.async_remove_device(child_device.id)
 
-    def _forget_endpoint_entities(self, node_id: int, endpoint_id: int) -> None:
-        """Drop an endpoint's discovery keys so its entities can be rediscovered."""
-        self.discovered_entities.pop((node_id, endpoint_id), None)
+    def _forget_endpoint_entities(self, node: MatterNode, endpoint_id: int) -> None:
+        """Drop an endpoint's discovery keys so its entities can be rediscovered.
+
+        This includes the measurement endpoints whose entities share the
+        endpoint's child device, as they are removed together with it.
+        """
+        self.discovered_entities.pop((node.node_id, endpoint_id), None)
+        for endpoint in node.endpoints.values():
+            if get_power_topology_endpoint_id(endpoint) == endpoint_id:
+                self.discovered_entities.pop((node.node_id, endpoint.endpoint_id), None)
 
     def _create_device_registry(
         self,
