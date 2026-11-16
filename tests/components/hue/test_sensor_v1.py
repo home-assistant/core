@@ -296,6 +296,8 @@ async def test_sensors_with_multiple_bridges(
 ) -> None:
     """Test the update_items function with some sensors."""
     mock_bridge_2 = create_mock_bridge(hass, api_version=1)
+    mock_bridge_2.api.config.bridge_id = "ff:ff:ff:ff:ff:fe"
+    mock_bridge_2.api.config.bridgeid = "ff:ff:ff:ff:ff:fe"
     mock_bridge_2.mock_sensor_responses.append(
         {
             "1": PRESENCE_SENSOR_3_PRESENT,

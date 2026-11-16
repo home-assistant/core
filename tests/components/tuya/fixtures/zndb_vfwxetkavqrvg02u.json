@@ -1,0 +1,437 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Single-Phase Power Clamp /w 2 CTs",
+  "category": "zndb",
+  "product_id": "vfwxetkavqrvg02u",
+  "product_name": "PC311_W_TY",
+  "online": true,
+  "sub": false,
+  "time_zone": "+02:00",
+  "active_time": "2026-10-08T01:06:02+00:00",
+  "create_time": "2026-10-08T01:06:02+00:00",
+  "update_time": "2026-10-08T01:06:02+00:00",
+  "function": {
+    "forward_energy_total": {
+      "type": "Integer",
+      "value": "{\"unit\":\"kW·h\",\"min\":0,\"max\":99999999,\"scale\":2,\"step\":1}"
+    },
+    "reverse_energy_total": {
+      "type": "Integer",
+      "value": "{\"unit\":\"kW·h\",\"min\":0,\"max\":99999999,\"scale\":2,\"step\":1}"
+    }
+  },
+  "local_strategy": {
+    "1": {
+      "value_convert": "default",
+      "status_code": "forward_energy_total",
+      "config_item": {
+        "statusFormat": "{\"forward_energy_total\":\"$\"}",
+        "valueDesc": "{\"unit\":\"kW·h\",\"min\":0,\"max\":99999999,\"scale\":2,\"step\":1}",
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "vfwxetkavqrvg02u"
+      }
+    },
+    "2": {
+      "value_convert": "default",
+      "status_code": "reverse_energy_total",
+      "config_item": {
+        "statusFormat": "{\"reverse_energy_total\":\"$\"}",
+        "valueDesc": "{\"unit\":\"kW·h\",\"min\":0,\"max\":99999999,\"scale\":2,\"step\":1}",
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "vfwxetkavqrvg02u"
+      }
+    },
+    "9": {
+      "value_convert": "default",
+      "status_code": "power_total",
+      "config_item": {
+        "statusFormat": "{\"power_total\":\"$\"}",
+        "valueDesc": "{\"unit\":\"kW\",\"min\":-999999999,\"max\":999999999,\"scale\":3,\"step\":1}",
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "vfwxetkavqrvg02u"
+      }
+    },
+    "101": {
+      "value_convert": "default",
+      "status_code": "total_energy1",
+      "config_item": {
+        "statusFormat": "{\"total_energy1\": \"$\"}",
+        "valueDesc": "{\"unit\": \"kWh\", \"min\": 0, \"max\": 999999999, \"scale\": 2, \"step\": 1}",
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "vfwxetkavqrvg02u"
+      }
+    },
+    "102": {
+      "value_convert": "default",
+      "status_code": "reverse_energy1",
+      "config_item": {
+        "statusFormat": "{\"reverse_energy1\": \"$\"}",
+        "valueDesc": "{\"unit\": \"kWh\", \"min\": 0, \"max\": 999999999, \"scale\": 2, \"step\": 1}",
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "vfwxetkavqrvg02u"
+      }
+    },
+    "103": {
+      "value_convert": "default",
+      "status_code": "total_energy2",
+      "config_item": {
+        "statusFormat": "{\"total_energy2\": \"$\"}",
+        "valueDesc": "{\"unit\": \"kWh\", \"min\": 0, \"max\": 999999999, \"scale\": 2, \"step\": 1}",
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "vfwxetkavqrvg02u"
+      }
+    },
+    "104": {
+      "value_convert": "default",
+      "status_code": "reverse_energy2",
+      "config_item": {
+        "statusFormat": "{\"reverse_energy2\": \"$\"}",
+        "valueDesc": "{\"unit\": \"kWh\", \"min\": 0, \"max\": 999999999, \"scale\": 2, \"step\": 1}",
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "vfwxetkavqrvg02u"
+      }
+    },
+    "105": {
+      "value_convert": "default",
+      "status_code": "cur_current",
+      "config_item": {
+        "statusFormat": "{\"cur_current\": \"$\"}",
+        "valueDesc": "{\"unit\": \"A\", \"min\": 0, \"max\": 1000000000, \"scale\": 3, \"step\": 1}",
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "vfwxetkavqrvg02u"
+      }
+    },
+    "106": {
+      "value_convert": "default",
+      "status_code": "cur_voltage",
+      "config_item": {
+        "statusFormat": "{\"cur_voltage\": \"$\"}",
+        "valueDesc": "{\"unit\": \"V\", \"min\": 0, \"max\": 1000000, \"scale\": 1, \"step\": 1}",
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "vfwxetkavqrvg02u"
+      }
+    },
+    "107": {
+      "value_convert": "default",
+      "status_code": "cur_current1",
+      "config_item": {
+        "statusFormat": "{\"cur_current1\": \"$\"}",
+        "valueDesc": "{\"unit\": \"A\", \"min\": 0, \"max\": 1000000, \"scale\": 3, \"step\": 1}",
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "vfwxetkavqrvg02u"
+      }
+    },
+    "108": {
+      "value_convert": "default",
+      "status_code": "cur_power1",
+      "config_item": {
+        "statusFormat": "{\"cur_power1\": \"$\"}",
+        "valueDesc": "{\"unit\": \"W\", \"min\": -1000000000, \"max\": 1000000000, \"scale\": 0, \"step\": 1}",
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "vfwxetkavqrvg02u"
+      }
+    },
+    "109": {
+      "value_convert": "default",
+      "status_code": "power_factor1",
+      "config_item": {
+        "statusFormat": "{\"power_factor1\": \"$\"}",
+        "valueDesc": "{\"unit\": \"\", \"min\": 0, \"max\": 100, \"scale\": 2, \"step\": 1}",
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "vfwxetkavqrvg02u"
+      }
+    },
+    "110": {
+      "value_convert": "default",
+      "status_code": "cur_current2",
+      "config_item": {
+        "statusFormat": "{\"cur_current2\": \"$\"}",
+        "valueDesc": "{\"unit\": \"A\", \"min\": 0, \"max\": 1000000, \"scale\": 3, \"step\": 1}",
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "vfwxetkavqrvg02u"
+      }
+    },
+    "111": {
+      "value_convert": "default",
+      "status_code": "cur_power2",
+      "config_item": {
+        "statusFormat": "{\"cur_power2\": \"$\"}",
+        "valueDesc": "{\"unit\": \"W\", \"min\": -1000000000, \"max\": 1000000000, \"scale\": 0, \"step\": 1}",
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "vfwxetkavqrvg02u"
+      }
+    },
+    "112": {
+      "value_convert": "default",
+      "status_code": "power_factor2",
+      "config_item": {
+        "statusFormat": "{\"power_factor2\": \"$\"}",
+        "valueDesc": "{\"unit\": \"\", \"min\": 0, \"max\": 100, \"scale\": 2, \"step\": 1}",
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "vfwxetkavqrvg02u"
+      }
+    },
+    "113": {
+      "value_convert": "default",
+      "status_code": "ct_direction1",
+      "config_item": {
+        "statusFormat": "{\"ct_direction1\": \"$\"}",
+        "valueDesc": "{}",
+        "valueType": "Boolean",
+        "enumMappingMap": {},
+        "pid": "vfwxetkavqrvg02u"
+      }
+    },
+    "114": {
+      "value_convert": "default",
+      "status_code": "ct_direction2",
+      "config_item": {
+        "statusFormat": "{\"ct_direction2\": \"$\"}",
+        "valueDesc": "{}",
+        "valueType": "Boolean",
+        "enumMappingMap": {},
+        "pid": "vfwxetkavqrvg02u"
+      }
+    },
+    "115": {
+      "value_convert": "default",
+      "status_code": "reactive_power1",
+      "config_item": {
+        "statusFormat": "{\"reactive_power1\": \"$\"}",
+        "valueDesc": "{\"unit\": \"var\", \"min\": -1000000000, \"max\": 1000000000, \"scale\": 0, \"step\": 1}",
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "vfwxetkavqrvg02u"
+      }
+    },
+    "116": {
+      "value_convert": "default",
+      "status_code": "reactive_power2",
+      "config_item": {
+        "statusFormat": "{\"reactive_power2\": \"$\"}",
+        "valueDesc": "{\"unit\": \"var\", \"min\": -1000000000, \"max\": 1000000000, \"scale\": 0, \"step\": 1}",
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "vfwxetkavqrvg02u"
+      }
+    },
+    "117": {
+      "value_convert": "default",
+      "status_code": "supply_frequency",
+      "config_item": {
+        "statusFormat": "{\"supply_frequency\": \"$\"}",
+        "valueDesc": "{\"unit\": \"Hz\", \"min\": 0, \"max\": 10000, \"scale\": 0, \"step\": 1}",
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "vfwxetkavqrvg02u"
+      }
+    }
+  },
+  "status_range": {
+    "forward_energy_total": {
+      "type": "Integer",
+      "value": "{\"unit\":\"kW·h\",\"min\":0,\"max\":99999999,\"scale\":2,\"step\":1}",
+      "report_type": "minux"
+    },
+    "reverse_energy_total": {
+      "type": "Integer",
+      "value": "{\"unit\":\"kW·h\",\"min\":0,\"max\":99999999,\"scale\":2,\"step\":1}",
+      "report_type": "minux"
+    },
+    "power_total": {
+      "type": "Integer",
+      "value": "{\"unit\":\"kW\",\"min\":-999999999,\"max\":999999999,\"scale\":3,\"step\":1}",
+      "report_type": null
+    },
+    "total_energy1": {
+      "type": "Integer",
+      "value": "{\"unit\": \"kWh\", \"min\": 0, \"max\": 999999999, \"scale\": 2, \"step\": 1}",
+      "report_type": null
+    },
+    "reverse_energy1": {
+      "type": "Integer",
+      "value": "{\"unit\": \"kWh\", \"min\": 0, \"max\": 999999999, \"scale\": 2, \"step\": 1}",
+      "report_type": null
+    },
+    "total_energy2": {
+      "type": "Integer",
+      "value": "{\"unit\": \"kWh\", \"min\": 0, \"max\": 999999999, \"scale\": 2, \"step\": 1}",
+      "report_type": null
+    },
+    "reverse_energy2": {
+      "type": "Integer",
+      "value": "{\"unit\": \"kWh\", \"min\": 0, \"max\": 999999999, \"scale\": 2, \"step\": 1}",
+      "report_type": null
+    },
+    "cur_current": {
+      "type": "Integer",
+      "value": "{\"unit\": \"A\", \"min\": 0, \"max\": 1000000000, \"scale\": 3, \"step\": 1}",
+      "report_type": null
+    },
+    "cur_voltage": {
+      "type": "Integer",
+      "value": "{\"unit\": \"V\", \"min\": 0, \"max\": 1000000, \"scale\": 1, \"step\": 1}",
+      "report_type": null
+    },
+    "cur_current1": {
+      "type": "Integer",
+      "value": "{\"unit\": \"A\", \"min\": 0, \"max\": 1000000, \"scale\": 3, \"step\": 1}",
+      "report_type": null
+    },
+    "cur_power1": {
+      "type": "Integer",
+      "value": "{\"unit\": \"W\", \"min\": -1000000000, \"max\": 1000000000, \"scale\": 0, \"step\": 1}",
+      "report_type": null
+    },
+    "power_factor1": {
+      "type": "Integer",
+      "value": "{\"unit\": \"\", \"min\": 0, \"max\": 100, \"scale\": 2, \"step\": 1}",
+      "report_type": null
+    },
+    "cur_current2": {
+      "type": "Integer",
+      "value": "{\"unit\": \"A\", \"min\": 0, \"max\": 1000000, \"scale\": 3, \"step\": 1}",
+      "report_type": null
+    },
+    "cur_power2": {
+      "type": "Integer",
+      "value": "{\"unit\": \"W\", \"min\": -1000000000, \"max\": 1000000000, \"scale\": 0, \"step\": 1}",
+      "report_type": null
+    },
+    "power_factor2": {
+      "type": "Integer",
+      "value": "{\"unit\": \"\", \"min\": 0, \"max\": 100, \"scale\": 2, \"step\": 1}",
+      "report_type": null
+    },
+    "ct_direction1": {
+      "type": "Boolean",
+      "value": "{}",
+      "report_type": null
+    },
+    "ct_direction2": {
+      "type": "Boolean",
+      "value": "{}",
+      "report_type": null
+    },
+    "reactive_power1": {
+      "type": "Integer",
+      "value": "{\"unit\": \"var\", \"min\": -1000000000, \"max\": 1000000000, \"scale\": 0, \"step\": 1}",
+      "report_type": null
+    },
+    "reactive_power2": {
+      "type": "Integer",
+      "value": "{\"unit\": \"var\", \"min\": -1000000000, \"max\": 1000000000, \"scale\": 0, \"step\": 1}",
+      "report_type": null
+    },
+    "supply_frequency": {
+      "type": "Integer",
+      "value": "{\"unit\": \"Hz\", \"min\": 0, \"max\": 10000, \"scale\": 0, \"step\": 1}",
+      "report_type": null
+    }
+  },
+  "status": {
+    "forward_energy_total": 1100,
+    "reverse_energy_total": 0,
+    "power_total": 11,
+    "cur_current2": 169,
+    "cur_power2": 11,
+    "power_factor2": 28,
+    "cur_current": 169,
+    "cur_voltage": 2344,
+    "reactive_power2": -38,
+    "total_energy1": 866,
+    "reverse_energy1": 0,
+    "total_energy2": 234,
+    "reverse_energy2": 0,
+    "reactive_power1": 0,
+    "supply_frequency": 50,
+    "cur_current1": 0,
+    "cur_power1": 0,
+    "power_factor1": 0
+  },
+  "set_up": true,
+  "support_local": true,
+  "quirk": "/config/tuya_quirks/zndb_vfwxetkavqrvg02u.py:23",
+  "warnings": null,
+  "original_category": "zndb",
+  "original_function": {
+    "forward_energy_total": {
+      "type": "Integer",
+      "value": "{\"unit\":\"kW·h\",\"min\":0,\"max\":99999999,\"scale\":2,\"step\":1}"
+    },
+    "reverse_energy_total": {
+      "type": "Integer",
+      "value": "{\"unit\":\"kW·h\",\"min\":0,\"max\":99999999,\"scale\":2,\"step\":1}"
+    }
+  },
+  "original_local_strategy": {
+    "1": {
+      "value_convert": "default",
+      "status_code": "forward_energy_total",
+      "config_item": {
+        "statusFormat": "{\"forward_energy_total\":\"$\"}",
+        "valueDesc": "{\"unit\":\"kW·h\",\"min\":0,\"max\":99999999,\"scale\":2,\"step\":1}",
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "vfwxetkavqrvg02u"
+      }
+    },
+    "2": {
+      "value_convert": "default",
+      "status_code": "reverse_energy_total",
+      "config_item": {
+        "statusFormat": "{\"reverse_energy_total\":\"$\"}",
+        "valueDesc": "{\"unit\":\"kW·h\",\"min\":0,\"max\":99999999,\"scale\":2,\"step\":1}",
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "vfwxetkavqrvg02u"
+      }
+    },
+    "9": {
+      "value_convert": "default",
+      "status_code": "power_total",
+      "config_item": {
+        "statusFormat": "{\"power_total\":\"$\"}",
+        "valueDesc": "{\"unit\":\"kW\",\"min\":-999999999,\"max\":999999999,\"scale\":3,\"step\":1}",
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "vfwxetkavqrvg02u"
+      }
+    }
+  },
+  "original_status_range": {
+    "forward_energy_total": {
+      "type": "Integer",
+      "value": "{\"unit\":\"kW·h\",\"min\":0,\"max\":99999999,\"scale\":2,\"step\":1}",
+      "report_type": "minux"
+    },
+    "reverse_energy_total": {
+      "type": "Integer",
+      "value": "{\"unit\":\"kW·h\",\"min\":0,\"max\":99999999,\"scale\":2,\"step\":1}",
+      "report_type": "minux"
+    },
+    "power_total": {
+      "type": "Integer",
+      "value": "{\"unit\":\"kW\",\"min\":-999999999,\"max\":999999999,\"scale\":3,\"step\":1}",
+      "report_type": null
+    }
+  }
+}

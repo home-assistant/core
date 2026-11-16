@@ -201,6 +201,9 @@
       "hvac_soc_threshold": {
         "name": "HVAC SoC threshold"
       },
+      "inside_temperature": {
+        "name": "Inside temperature"
+      },
       "location_last_activity": {
         "name": "Last location activity"
       },

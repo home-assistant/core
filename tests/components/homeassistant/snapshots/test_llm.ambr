@@ -1,4 +1,29 @@
 # serializer version: 1
+# name: test_call_action_schema
+  dict({
+    'additionalProperties': False,
+    'properties': dict({
+      'action': dict({
+        'description': "The action to call, e.g. 'light.turn_on'.",
+        'type': 'string',
+      }),
+      'data': dict({
+        'additionalProperties': True,
+        'description': 'The fields of the action.',
+        'type': 'object',
+      }),
+      'target': dict({
+        'additionalProperties': True,
+        'description': 'What the action acts on, with the keys entity_id, device_id, area_id, floor_id and label_id.',
+        'type': 'object',
+      }),
+    }),
+    'required': list([
+      'action',
+    ]),
+    'type': 'object',
+  })
+# ---
 # name: test_get_live_context_schema
   dict({
     'additionalProperties': False,
@@ -27,5 +52,178 @@
       }),
     }),
     'type': 'object',
+  })
+# ---
+# name: test_search_actions[exact_name_first]
+  dict({
+    'data': dict({
+      'actions': list([
+        dict({
+          'action': 'test.restart',
+          'description': 'Restarts the device.',
+          'fields': dict({
+          }),
+          'name': 'Restart',
+        }),
+        dict({
+          'action': 'homeassistant.restart',
+          'description': '',
+          'fields': dict({
+          }),
+          'name': '',
+        }),
+      ]),
+    }),
+    'error': False,
+  })
+# ---
+# name: test_search_actions[more]
+  dict({
+    'data': dict({
+      'actions': list([
+        dict({
+          'action': 'test.restart',
+          'description': 'Restarts the device.',
+          'fields': dict({
+          }),
+          'name': 'Restart',
+        }),
+        dict({
+          'action': 'test.toggle',
+          'description': 'Turns the device on when it is off.',
+          'fields': dict({
+          }),
+          'name': 'Toggle',
+        }),
+        dict({
+          'action': 'test.turn_off',
+          'description': 'Turns off the device.',
+          'fields': dict({
+          }),
+          'name': 'Turn off',
+        }),
+      ]),
+      'more': '4 actions match. Use a more specific query to find the others.',
+    }),
+    'error': False,
+  })
+# ---
+# name: test_search_actions[name_before_description]
+  dict({
+    'data': dict({
+      'actions': list([
+        dict({
+          'action': 'test.turn_on',
+          'description': 'Turns on the device.',
+          'fields': dict({
+            'brightness': dict({
+              'description': 'Brightness of the device.',
+              'required': True,
+              'selector': dict({
+                'number': dict({
+                  'max': 255,
+                  'min': 0,
+                }),
+              }),
+            }),
+            'transition': dict({
+              'description': 'Duration of the transition.',
+              'selector': dict({
+                'number': dict({
+                  'max': 300,
+                  'min': 0,
+                }),
+              }),
+            }),
+          }),
+          'name': 'Turn on',
+          'target': dict({
+            'entity': list([
+              dict({
+                'domain': list([
+                  'test',
+                ]),
+              }),
+            ]),
+          }),
+        }),
+        dict({
+          'action': 'test.toggle',
+          'description': 'Turns the device on when it is off.',
+          'fields': dict({
+          }),
+          'name': 'Toggle',
+        }),
+      ]),
+    }),
+    'error': False,
+  })
+# ---
+# name: test_search_actions[no_match]
+  dict({
+    'data': dict({
+      'actions': list([
+      ]),
+    }),
+    'error': False,
+  })
+# ---
+# name: test_search_actions[too_large]
+  dict({
+    'data': dict({
+      'actions': list([
+        dict({
+          'action': 'test.large',
+          'description': 'Has many options.',
+          'fields': dict({
+            'option': dict({
+              'description': 'The option to pick.',
+            }),
+          }),
+          'name': 'Large',
+          'note': 'The selectors of the fields are left out to save space.',
+        }),
+      ]),
+    }),
+    'error': False,
+  })
+# ---
+# name: test_search_actions[translated]
+  dict({
+    'data': dict({
+      'actions': list([
+        dict({
+          'action': 'test.translated',
+          'description': 'Translated action.',
+          'fields': dict({
+          }),
+          'name': 'Translated',
+        }),
+      ]),
+    }),
+    'error': False,
+  })
+# ---
+# name: test_search_actions[underscore]
+  dict({
+    'data': dict({
+      'actions': list([
+        dict({
+          'action': 'test.turn_off',
+          'description': 'Turns off the device.',
+          'fields': dict({
+          }),
+          'name': 'Turn off',
+        }),
+        dict({
+          'action': 'test.toggle',
+          'description': 'Turns the device on when it is off.',
+          'fields': dict({
+          }),
+          'name': 'Toggle',
+        }),
+      ]),
+    }),
+    'error': False,
   })
 # ---

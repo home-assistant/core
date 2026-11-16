@@ -12,8 +12,8 @@ from pytest_homeassistant.common import (
 
 from homeassistant import config
 from homeassistant.components.template import DOMAIN
+from homeassistant.components.template.const import TemplateService
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -254,7 +254,7 @@ async def async_yaml_patch_helper(hass: HomeAssistant, filename: str) -> None:
     with patch.object(config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_RELOAD,
+            TemplateService.RELOAD,
             {},
             blocking=True,
         )

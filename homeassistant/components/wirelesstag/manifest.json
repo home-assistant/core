@@ -3,6 +3,7 @@
   "name": "Wireless Sensor Tags",
   "categories": ["sensors"],
   "codeowners": ["@sergeymaysak"],
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/wirelesstag",
   "iot_class": "cloud_push",
   "loggers": ["wirelesstagpy"],

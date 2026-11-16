@@ -24,6 +24,8 @@ from .const import (
     LOGGER,
 )
 
+type StarlineConfigEntry = ConfigEntry[StarlineAccount]
+
 
 def _parse_datetime(dt_str: str | None) -> str | None:
     if dt_str is None or (parsed := dt_util.parse_datetime(dt_str)) is None:
@@ -34,10 +36,10 @@ def _parse_datetime(dt_str: str | None) -> str | None:
 class StarlineAccount:
     """StarLine Account class."""
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: StarlineConfigEntry) -> None:
         """Initialize StarLine account."""
         self._hass: HomeAssistant = hass
-        self._config_entry: ConfigEntry = config_entry
+        self._config_entry: StarlineConfigEntry = config_entry
         self._update_interval: int = DEFAULT_SCAN_INTERVAL
         self._update_obd_interval: int = DEFAULT_SCAN_OBD_INTERVAL
         self._unsubscribe_auto_updater: Callable | None = None

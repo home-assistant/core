@@ -21,6 +21,7 @@ FIXTURES = [
     "air_quality_sensor",
     "aqara_camera_hub_g350",
     "aqara_door_window_p2",
+    "aqara_led_strip_t2",
     "aqara_light_switch_h2_us_4099",
     "aqara_light_switch_h2_us_4100",
     "aqara_light_switch_h2_us_4101",
@@ -52,6 +53,7 @@ FIXTURES = [
     "haojai_switch",
     "heiman_co_sensor",
     "heiman_motion_sensor_m1",
+    "heiman_motion_sensor_m1_m",
     "heiman_smoke_detector",
     "ikea_air_quality_monitor",
     "ikea_bilresa_dual_button",
@@ -62,6 +64,7 @@ FIXTURES = [
     "lifx_switch_89",
     "longan_link_thermostat",
     "mock_air_purifier",
+    "mock_battery_solar_bridge",
     "mock_battery_storage",
     "mock_camera",
     "mock_chime",
@@ -135,6 +138,7 @@ FIXTURES = [
     "wago_home_relay_16a",
     "yandex_smart_socket",
     "zemismart_mt25b",
+    "zemismart_wifi_smart_switch",
 ]
 
 

@@ -4,6 +4,7 @@
   "categories": ["media_entertainment.tv_streaming"],
   "codeowners": ["@dunnmj", "@saty9"],
   "config_flow": true,
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/sky_remote",
   "integration_type": "device",
   "iot_class": "assumed_state",

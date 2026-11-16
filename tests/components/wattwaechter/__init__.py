@@ -1,1 +1,1 @@
-"""Tests for the WattWächter Plus integration."""
+"""Tests for the WattWächter integration."""

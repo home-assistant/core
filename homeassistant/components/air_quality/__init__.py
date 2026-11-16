@@ -25,6 +25,7 @@ from .const import (
     ATTR_PM_10,
     ATTR_SO2,
     DOMAIN,
+    AirQualityEntityStateAttribute,
 )
 from .entity import AirQualityEntity
 
@@ -53,6 +54,7 @@ __all__ = [
     "PLATFORM_SCHEMA",
     "PLATFORM_SCHEMA_BASE",
     "AirQualityEntity",
+    "AirQualityEntityStateAttribute",
 ]
 
 

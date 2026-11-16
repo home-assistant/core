@@ -122,7 +122,6 @@ class OpenDisplayConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 return self.async_create_entry(title=self._discovery_info.name, data={})
 
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="bluetooth_confirm",
             description_placeholders=self.context["title_placeholders"],

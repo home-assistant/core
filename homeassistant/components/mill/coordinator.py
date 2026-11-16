@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import cast, override
+from typing import Any, cast, override
 
 from mill import Heater, Mill
 from mill_local import Mill as MillLocal
@@ -32,7 +32,7 @@ _LOGGER = logging.getLogger(__name__)
 TWO_YEARS_DAYS = 2 * 365
 
 
-class MillDataUpdateCoordinator(DataUpdateCoordinator):
+class MillDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching Mill data."""
 
     config_entry: MillConfigEntry
@@ -60,7 +60,7 @@ class MillDataUpdateCoordinator(DataUpdateCoordinator):
 type MillConfigEntry = ConfigEntry[MillDataUpdateCoordinator]
 
 
-class MillHistoricDataUpdateCoordinator(DataUpdateCoordinator):
+class MillHistoricDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Class to manage fetching Mill historic data."""
 
     def __init__(
@@ -81,7 +81,7 @@ class MillHistoricDataUpdateCoordinator(DataUpdateCoordinator):
         )
 
     @override
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> None:
         """Update historic data via API."""
         now = dt_util.utcnow()
         self.update_interval = (

@@ -12,9 +12,16 @@ from homeassistant.const import (
     STATE_HOME,
     STATE_ON,
     EntityStateAttribute,
+    UnitOfDensity,
+    UnitOfRatio,
     UnitOfTemperature,
 )
 from homeassistant.core import State, callback
+from homeassistant.util.unit_conversion import (
+    BaseUnitConverter,
+    OzoneConcentrationConverter,
+    SulphurDioxideConcentrationConverter,
+)
 
 from .accessories import TYPES, HomeAccessory
 from .const import (
@@ -34,9 +41,11 @@ from .const import (
     CHAR_MOTION_DETECTED,
     CHAR_NITROGEN_DIOXIDE_DENSITY,
     CHAR_OCCUPANCY_DETECTED,
+    CHAR_OZONE_DENSITY,
     CHAR_PM10_DENSITY,
     CHAR_PM25_DENSITY,
     CHAR_SMOKE_DETECTED,
+    CHAR_SULPHUR_DIOXIDE_DENSITY,
     CHAR_VOC_DENSITY,
     CONF_THRESHOLD_CO,
     CONF_THRESHOLD_CO2,
@@ -63,6 +72,8 @@ from .util import (
     density_to_air_quality_nitrogen_dioxide,
     density_to_air_quality_pm10,
     density_to_air_quality_voc,
+    ppb_to_air_quality_ozone,
+    ppb_to_air_quality_sulphur_dioxide,
     temperature_to_homekit,
 )
 
@@ -330,6 +341,69 @@ class VolatileOrganicCompoundsSensor(AirQualitySensor):
         if self.char_quality.value != air_quality:
             self.char_quality.set_value(air_quality)
             _LOGGER.debug("%s: Set air_quality to %d", self.entity_id, air_quality)
+
+
+class GasConcentrationSensor(AirQualitySensor):
+    """Base for gas sensors with a μg/m3 density and a ppb based air quality level.
+
+    Entities without a supported unit are assumed to report μg/m3.
+    """
+
+    density_char: str
+    converter: type[BaseUnitConverter]
+    ppb_to_air_quality: Callable[[float], int]
+
+    @override
+    def create_services(self) -> None:
+        """Initialize the air quality service with the gas density."""
+        serv_air_quality = self.add_preload_service(
+            SERV_AIR_QUALITY_SENSOR, [self.density_char]
+        )
+        self.char_quality = serv_air_quality.configure_char(CHAR_AIR_QUALITY, value=0)
+        self.char_density = serv_air_quality.configure_char(self.density_char, value=0)
+
+    @callback
+    @override
+    def async_update_state(self, new_state: State) -> None:
+        """Update accessory after state change."""
+        value = convert_to_float(new_state.state)
+        if value is None:
+            return
+        unit = new_state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
+        if unit not in self.converter.VALID_UNITS:
+            unit = UnitOfDensity.MICROGRAMS_PER_CUBIC_METER
+        density = round(
+            self.converter.convert(
+                value, unit, UnitOfDensity.MICROGRAMS_PER_CUBIC_METER
+            )
+        )
+        if self.char_density.value != density:
+            self.char_density.set_value(density)
+            _LOGGER.debug("%s: Set density to %d", self.entity_id, density)
+        air_quality = self.ppb_to_air_quality(
+            self.converter.convert(value, unit, UnitOfRatio.PARTS_PER_BILLION)
+        )
+        if self.char_quality.value != air_quality:
+            self.char_quality.set_value(air_quality)
+            _LOGGER.debug("%s: Set air_quality to %d", self.entity_id, air_quality)
+
+
+@TYPES.register("OzoneSensor")
+class OzoneSensor(GasConcentrationSensor):
+    """Generate an OzoneSensor accessory as ozone sensor."""
+
+    density_char = CHAR_OZONE_DENSITY
+    converter = OzoneConcentrationConverter
+    ppb_to_air_quality = staticmethod(ppb_to_air_quality_ozone)
+
+
+@TYPES.register("SulphurDioxideSensor")
+class SulphurDioxideSensor(GasConcentrationSensor):
+    """Generate a SulphurDioxideSensor accessory as sulphur dioxide sensor."""
+
+    density_char = CHAR_SULPHUR_DIOXIDE_DENSITY
+    converter = SulphurDioxideConcentrationConverter
+    ppb_to_air_quality = staticmethod(ppb_to_air_quality_sulphur_dioxide)
 
 
 @TYPES.register("CarbonMonoxideSensor")

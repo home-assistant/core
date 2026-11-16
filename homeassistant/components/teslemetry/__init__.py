@@ -2,19 +2,13 @@
 
 import asyncio
 from collections.abc import Callable
+from datetime import datetime
 from functools import partial
 from pathlib import Path
 import re
 from typing import Any, Final, cast
 
 from aiohttp import ClientError
-from aiopowerwall import (
-    PowerwallClient,
-    PowerwallConnectionError,
-    PowerwallEnergySite,
-    PowerwallError,
-    PowerwallRateLimitError,
-)
 from bleak.exc import BleakError
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.exceptions import (
@@ -27,6 +21,13 @@ from tesla_fleet_api.exceptions import (
 )
 from tesla_fleet_api.router import VehicleRouter
 from tesla_fleet_api.tesla import EnergySiteRouter
+from tesla_fleet_api.tesla.powerwall import (
+    PowerwallClient,
+    PowerwallConnectionError,
+    PowerwallEnergySite,
+    PowerwallError,
+    PowerwallRateLimitError,
+)
 from tesla_fleet_api.tesla.vehicle.bluetooth import VehicleBluetooth
 from tesla_fleet_api.tesla.vehicle.stream_glue import BleBroadcastStreamGlue, StreamSink
 from tesla_fleet_api.teslemetry import EnergySite, Teslemetry, Vehicle
@@ -48,7 +49,7 @@ from homeassistant.components.labs import (
     async_is_preview_feature_enabled,
     async_subscribe_preview_feature,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigSubentry
+from homeassistant.config_entries import ConfigEntryState, ConfigSubentry
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_ADDRESS,
@@ -75,6 +76,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     async_get_config_entry_implementation,
 )
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
@@ -90,6 +92,7 @@ from .const import (
     LOGGER,
     POWERWALL_KEY_FILE,
     RSA_PARENT_KEY,
+    STREAM_DISCONNECT_GRACE,
     SUBENTRY_TYPE_ENERGY_SITE,
     SUBENTRY_TYPE_VEHICLE,
     VEHICLE_ISSUE_LEARN_MORE,
@@ -98,6 +101,7 @@ from .coordinator import (
     TeslemetryEnergyHistoryCoordinator,
     TeslemetryEnergySiteInfoCoordinator,
     TeslemetryEnergySiteLiveCoordinator,
+    TeslemetryLocalComponentsCoordinator,
     TeslemetryLocalStatusCoordinator,
     TeslemetryMetadataCoordinator,
     TeslemetryVehicleDataCoordinator,
@@ -108,9 +112,11 @@ from .helpers import (
     async_update_device_sw_version,
     create_powerwall_client,
     flatten,
+    gateway_issue_id,
 )
 from .models import (
     TeslemetryChargeOnSolarStore,
+    TeslemetryConfigEntry,
     TeslemetryData,
     TeslemetryEnergyData,
     TeslemetryVehicleData,
@@ -135,8 +141,6 @@ PLATFORMS: Final = [
 _VEHICLE_ISSUE_ID_PATTERN = re.compile(
     f"({'|'.join(map(re.escape, VEHICLE_ISSUE_LEARN_MORE))})_"
 )
-
-type TeslemetryConfigEntry = ConfigEntry[TeslemetryData]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -275,7 +279,7 @@ def _async_update_vehicle_repairs(
     vehicle_metadata: dict[str, Any],
 ) -> None:
     """Create repair issues for vehicle metadata issues and delete all others."""
-    with ir.async_begin_issues_refresh(
+    with ir.async_refresh_issues(
         hass,
         DOMAIN,
         issue_id_pattern=_VEHICLE_ISSUE_ID_PATTERN,
@@ -289,7 +293,7 @@ def _async_update_vehicle_repairs(
             ir.async_create_issue(
                 hass,
                 DOMAIN,
-                f"{issue_type}_{vin}",
+                f"{issue_type}_{entry.entry_id}_{vin}",
                 config_entry_id=entry.entry_id,
                 is_fixable=True,
                 severity=ir.IssueSeverity.WARNING,
@@ -480,7 +484,6 @@ async def _async_resolve_local_control(
         return False, None, cloud_energy_site
     subentry_id = _find_energy_subentry_id(entry, site_id)
     if subentry_id is None:
-        ir.async_delete_issue(hass, DOMAIN, _gateway_issue_id(site_id))
         return True, None, cloud_energy_site
     # A local-gateway failure for one site must not tear down the integration.
     try:
@@ -495,14 +498,9 @@ async def _async_resolve_local_control(
             exc_info=True,
         )
         # Whether the gateway is found is unknown
-        ir.async_keep_issue(hass, DOMAIN, _gateway_issue_id(site_id))
+        ir.async_keep_issue(hass, DOMAIN, gateway_issue_id(entry.entry_id, site_id))
         return True, subentry_id, cloud_energy_site
     return True, subentry_id, api
-
-
-def _gateway_issue_id(site_id: int) -> str:
-    """Return the repair issue id for a site whose local gateway was not found."""
-    return f"{ISSUE_GATEWAY_NOT_FOUND}_{site_id}"
 
 
 async def _async_resolve_energy_site_api(
@@ -529,7 +527,9 @@ async def _async_resolve_energy_site_api(
             err,
         )
         ir.async_delete_issue(
-            hass, DOMAIN, _gateway_issue_id(cloud_energy_site.energy_site_id)
+            hass,
+            DOMAIN,
+            gateway_issue_id(entry.entry_id, cloud_energy_site.energy_site_id),
         )
     except PowerwallError as err:
         # Another device may have taken the old address, so any refusal is a lead.
@@ -538,7 +538,9 @@ async def _async_resolve_energy_site_api(
         )
     else:
         ir.async_delete_issue(
-            hass, DOMAIN, _gateway_issue_id(cloud_energy_site.energy_site_id)
+            hass,
+            DOMAIN,
+            gateway_issue_id(entry.entry_id, cloud_energy_site.energy_site_id),
         )
     local_energy_site = PowerwallEnergySite(powerwall_client)
     return EnergySiteRouter(local_energy_site, cloud_energy_site)
@@ -555,7 +557,7 @@ async def _async_rediscover_gateway(
 ) -> PowerwallClient:
     """Return a client at the gateway's new address, or the stale client if not found."""
     site_id = cloud_energy_site.energy_site_id
-    issue_id = _gateway_issue_id(site_id)
+    issue_id = gateway_issue_id(entry.entry_id, site_id)
     try:
         host = await cloud_energy_site.find_gateway_address()
     except (ClientError, TeslaFleetError) as err:
@@ -596,14 +598,19 @@ async def _async_rediscover_gateway(
 
     LOGGER.warning(
         "Local gateway for energy site %s could not be found; "
-        "commands will fall back to cloud control",
+        "commands will fall back to cloud control: %s",
         site_id,
+        error,
     )
     ir.async_create_issue(
         hass,
         DOMAIN,
         issue_id,
         config_entry_id=entry.entry_id,
+        # The subentry can be removed while the gateway lookup is awaited
+        config_subentry_id=(
+            subentry.subentry_id if subentry.subentry_id in entry.subentries else None
+        ),
         is_fixable=True,
         severity=ir.IssueSeverity.WARNING,
         translation_key=ISSUE_GATEWAY_NOT_FOUND,
@@ -742,7 +749,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
     known_vins, known_site_ids = _get_subscribed_ids_from_metadata(metadata)
 
     # Energy sites which are gone or no longer set up leave issues to be deleted
-    gateway_refresh = ir.async_begin_issues_refresh(
+    gateway_refresh = ir.async_refresh_issues(
         hass,
         DOMAIN,
         issue_id_pattern=f"{ISSUE_GATEWAY_NOT_FOUND}_",
@@ -906,6 +913,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 if isinstance(energy_site_api, EnergySiteRouter)
                 else None
             )
+            local_components_coordinator = (
+                TeslemetryLocalComponentsCoordinator(
+                    hass, entry, energy_site_api.primary.powerwall, site_id
+                )
+                if isinstance(energy_site_api, EnergySiteRouter)
+                else None
+            )
 
             energysites.append(
                 TeslemetryEnergyData(
@@ -919,6 +933,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                     can_local_control=can_local_control,
                     subentry_id=subentry_id,
                     local_status_coordinator=local_status_coordinator,
+                    local_components_coordinator=local_components_coordinator,
                 )
             )
 
@@ -997,7 +1012,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
         if energysites:
             entry.async_on_unload(
                 stream.async_add_connection_listener(
-                    create_handle_energy_stream_connection(hass, energysites)
+                    create_handle_energy_stream_connection(hass, entry, energysites)
                 )
             )
 
@@ -1032,19 +1047,30 @@ def _setup_subentry_change_reload(
 
 def create_handle_energy_stream_connection(
     hass: HomeAssistant,
+    entry: TeslemetryConfigEntry,
     energysites: list[TeslemetryEnergyData],
 ) -> Callable[[bool], None]:
     """Create a stream connection listener for the energy coordinators."""
+    cancel_grace: CALLBACK_TYPE | None = None
 
     @callback
-    def handle_connection(connected: bool) -> None:
+    def cancel_grace_timer() -> None:
+        nonlocal cancel_grace
+        if cancel_grace is not None:
+            cancel_grace()
+            cancel_grace = None
+
+    @callback
+    def fail_coordinators(_now: datetime) -> None:
         """Fail stream-driven energy coordinators while the stream is down.
 
         Each subsequent streamed document restores its coordinator via
         async_set_updated_data, so no reload is required on reconnect.
         """
-        # Stopping cancels the listen task, which reports a disconnect.
-        if connected or hass.is_stopping:
+        nonlocal cancel_grace
+        cancel_grace = None
+        # A drop just before shutdown leaves the timer pending while stopping.
+        if hass.is_stopping:
             return
         error = UpdateFailed(
             translation_domain=DOMAIN,
@@ -1061,6 +1087,26 @@ def create_handle_energy_stream_connection(
                     error
                 )
 
+    @callback
+    def handle_connection(connected: bool) -> None:
+        """Fail the energy coordinators if the stream stays down past the grace."""
+        nonlocal cancel_grace
+        if connected:
+            cancel_grace_timer()
+            return
+        # Stopping cancels the listen task, which reports a disconnect.
+        # Failed reconnect attempts must not restart a running grace timer.
+        if hass.is_stopping or cancel_grace is not None:
+            return
+        LOGGER.debug(
+            "Teslemetry stream disconnected, waiting %s seconds for it to reconnect",
+            STREAM_DISCONNECT_GRACE,
+        )
+        cancel_grace = async_call_later(
+            hass, STREAM_DISCONNECT_GRACE, fail_coordinators
+        )
+
+    entry.async_on_unload(cancel_grace_timer)
     return handle_connection
 
 
@@ -1176,6 +1222,8 @@ async def _async_refresh_energy_site(energysite: TeslemetryEnergyData) -> None:
     if energysite.local_status_coordinator is not None:
         # A local gateway failure must not block the cloud entities.
         await energysite.local_status_coordinator.async_refresh()
+    if energysite.local_components_coordinator is not None:
+        await energysite.local_components_coordinator.async_refresh()
     if energysite.history_coordinator is not None:
         await energysite.history_coordinator.async_set_time_zone(time_zone)
     if energysite.wall_connector_totals_coordinator is not None:

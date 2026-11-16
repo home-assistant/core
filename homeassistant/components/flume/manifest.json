@@ -4,6 +4,7 @@
   "categories": ["water.meters_leak_detection"],
   "codeowners": ["@ChrisMandich", "@bdraco", "@jeeftor"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dhcp": [
     {
       "hostname": "flume-gw-*"

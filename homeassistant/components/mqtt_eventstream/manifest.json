@@ -3,6 +3,7 @@
   "name": "MQTT Eventstream",
   "categories": ["diy_makers"],
   "codeowners": [],
+  "connectivity": ["mqtt"],
   "dependencies": ["mqtt"],
   "documentation": "https://www.home-assistant.io/integrations/mqtt_eventstream",
   "iot_class": "local_polling",

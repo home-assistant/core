@@ -2,7 +2,8 @@
 
 from typing import TYPE_CHECKING
 
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.registry import NextNamePart
 
 from .base import BaseTemplateExtension, TemplateFunction
 
@@ -37,11 +38,23 @@ class EntityExtension(BaseTemplateExtension):
             ],
         )
 
-    def entity_name(self, entity_id: str) -> str | None:
-        """Get the name of an entity from its entity ID."""
+    def entity_name(self, entity_id: str, *, fallback: bool = False) -> str | None:
+        """Get the name of an entity from its entity ID.
+
+        With fallback, return the device name when the entity has no name of its own.
+        """
         ent_reg = er.async_get(self.hass)
         if (entry := ent_reg.async_get(entity_id)) is not None:
-            return entry.entity_name
+            name = entry.entity_name
+            if (
+                not name
+                and fallback
+                and entry.next_name_part is NextNamePart.DEVICE
+                and (device_id := entry.device_id) is not None
+                and (device := dr.async_get(self.hass).async_get(device_id)) is not None
+            ):
+                return device.name_by_user or device.name
+            return name
 
         # Fall back to state for entities without a unique_id (not in the registry)
         if (state := self.hass.states.get(entity_id)) is not None:

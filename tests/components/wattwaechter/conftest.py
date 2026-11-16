@@ -1,4 +1,4 @@
-"""Common fixtures for WattWächter Plus tests."""
+"""Common fixtures for WattWächter tests."""
 
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -40,7 +40,10 @@ MOCK_CONFIG_DATA = {
     CONF_MAC: MOCK_MAC,
 }
 
+MOCK_MQTT_CLIENT_ID = f"wattwaechter-{MOCK_DEVICE_ID.lower()}"
+
 MOCK_SETTINGS = MagicMock(device_name=MOCK_DEVICE_NAME)
+MOCK_SETTINGS.mqtt.client_id = MOCK_MQTT_CLIENT_ID
 
 MOCK_ALIVE_RESPONSE = AliveResponse(alive=True, version=MOCK_FW_VERSION)
 
@@ -60,6 +63,14 @@ MOCK_SYSTEM_INFO_GAS = _parse_system_info(
 
 MOCK_SYSTEM_INFO_WATER = _parse_system_info(
     load_json_object_fixture("system_info_water.json", DOMAIN)
+)
+
+MOCK_METER_DATA_GAS = _parse_meter_data(
+    load_json_object_fixture("meter_data_gas.json", DOMAIN)
+)
+
+MOCK_METER_DATA_WATER = _parse_meter_data(
+    load_json_object_fixture("meter_data_water.json", DOMAIN)
 )
 
 MOCK_OTA_CHECK = OtaCheckResponse(

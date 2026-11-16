@@ -49,6 +49,9 @@ play_media:
     radio_mode:
       selector:
         boolean:
+    shuffle:
+      selector:
+        boolean:
     start_item:
       example: "latest"
       selector:
@@ -205,7 +208,6 @@ get_library:
             - radio
     favorite:
       example: "true"
-      default: false
       selector:
         boolean:
     search:

@@ -9,7 +9,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.ecovacs.const import DOMAIN
 from homeassistant.components.ecovacs.controller import EcovacsController
-from homeassistant.components.event import ATTR_EVENT_TYPE
+from homeassistant.components.event import EventEntityStateAttribute
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -69,7 +69,10 @@ async def test_last_job(
 
     assert (state := hass.states.get(state.entity_id))
     assert state.state == "2024-03-20T00:05:00.000+00:00"
-    assert state.attributes[ATTR_EVENT_TYPE] == "finished_with_warnings"
+    assert (
+        state.attributes[EventEntityStateAttribute.EVENT_TYPE]
+        == "finished_with_warnings"
+    )
 
     freezer.tick(timedelta(minutes=5))
     await notify_and_wait(
@@ -80,7 +83,7 @@ async def test_last_job(
 
     assert (state := hass.states.get(state.entity_id))
     assert state.state == "2024-03-20T00:10:00.000+00:00"
-    assert state.attributes[ATTR_EVENT_TYPE] == "manually_stopped"
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == "manually_stopped"
 
     freezer.tick(timedelta(minutes=5))
     for status in (CleanJobStatus.NO_STATUS, CleanJobStatus.CLEANING):
@@ -93,4 +96,6 @@ async def test_last_job(
 
         assert (state := hass.states.get(state.entity_id))
         assert state.state == "2024-03-20T00:10:00.000+00:00"
-        assert state.attributes[ATTR_EVENT_TYPE] == "manually_stopped"
+        assert (
+            state.attributes[EventEntityStateAttribute.EVENT_TYPE] == "manually_stopped"
+        )

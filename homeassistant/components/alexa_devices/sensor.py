@@ -164,7 +164,7 @@ async def async_setup_entry(
                 AmazonSensorEntity(coordinator, serial_num, sensor_desc)
                 for sensor_desc in SENSORS
                 for serial_num in new_devices
-                if coordinator.device_sensor(serial_num, sensor_desc.key) is not None
+                if sensor_desc.key in coordinator.supported_sensor_keys(serial_num)
             ]
             notifications_list = [
                 AmazonSensorEntity(coordinator, serial_num, notification_desc)

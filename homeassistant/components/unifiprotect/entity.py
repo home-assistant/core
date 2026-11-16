@@ -513,6 +513,7 @@ class ProtectIsOnEntity(BaseProtectEntity):
     _attr_is_on: bool | None
     entity_description: ProtectEntityDescription
 
+    @callback
     @override
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
@@ -772,12 +773,6 @@ class ProtectEventMixin(ProtectEntityDescription[T]):
     def get_event_obj(self, obj: T) -> Event | None:
         """Return value from UniFi Protect device."""
         return None
-
-    def has_matching_smart(self, event: Event) -> bool:
-        """Determine if the detection type is a match."""
-        return (
-            not (obj_type := self.ufp_obj_type) or obj_type in event.smart_detect_types
-        )
 
     @override
     def __post_init__(self) -> None:
