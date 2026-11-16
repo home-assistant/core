@@ -165,6 +165,10 @@ class ExposedEntities:
             self._hass, MATCH_ALL, self._async_state_added_listener
         )
 
+        # Most entities are missing in these modes, so a sweep would orphan them.
+        if self._hass.config.recovery_mode or self._hass.config.safe_mode:
+            return
+
         # Sweep once at startup too: the interval timer first fires a full
         # interval after setup, so installs restarted more often would never sweep.
         @callback

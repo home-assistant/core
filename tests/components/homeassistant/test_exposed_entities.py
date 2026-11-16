@@ -848,6 +848,26 @@ async def test_purge_stale_legacy_entities_runs_on_startup(hass: HomeAssistant) 
     assert exposed_entities.entities["sensor.long_gone"].orphaned_since is not None
 
 
+@pytest.mark.parametrize("config_attribute", ["recovery_mode", "safe_mode"])
+async def test_no_sweep_in_recovery_or_safe_mode(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, config_attribute: str
+) -> None:
+    """No sweep runs in recovery mode or safe mode."""
+    setattr(hass.config, config_attribute, True)
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    async_expose_entity(hass, "test1", "sensor.long_gone", True)
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    freezer.tick(LEGACY_ENTITY_SWEEP_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert exposed_entities.entities["sensor.long_gone"].orphaned_since is None
+
+
 async def test_purge_stale_legacy_entities_spans_multiple_chunks(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
