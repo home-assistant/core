@@ -146,6 +146,7 @@ SERVICE_GET_HISTORY_SCHEMA = probatio.Schema(
     }
 )
 
+MAX_GET_HISTORY_ENTITIES = 100
 MAX_GET_HISTORY_RECORDS_PER_ENTITY = 1000
 
 
@@ -296,6 +297,15 @@ async def _async_handle_get_history_service(
         )
 
     entity_ids: list[str] = service.data[CommonServiceArgument.ENTITY_ID]
+    if len(entity_ids) > MAX_GET_HISTORY_ENTITIES:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="max_entities_exceeded",
+            translation_placeholders={
+                "max_entities": str(MAX_GET_HISTORY_ENTITIES),
+            },
+        )
+
     allow_truncation: bool = service.data[RecorderServiceArgument.ALLOW_TRUNCATION]
     result = await hass.data[DATA_INSTANCE].async_add_executor_job(
         _get_history,

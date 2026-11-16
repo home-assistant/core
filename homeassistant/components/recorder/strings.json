@@ -3,6 +3,9 @@
     "end_time_before_start_time": {
       "message": "End time must be greater than or equal to start time"
     },
+    "max_entities_exceeded": {
+      "message": "Cannot request history for more than {max_entities} entities."
+    },
     "max_records_exceeded": {
       "message": "More than {max_records} state changes were recorded for {entity_id} in the requested period. Use a shorter period or set allow truncation."
     },
