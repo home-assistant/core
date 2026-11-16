@@ -111,3 +111,16 @@ class LastFMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, LastFMUserData
             top_track,
             last_track,
         )
+
+    def get_scrobble_client(self, username: str) -> LastFMNetwork | None:
+        """Return an authenticated client for a user."""
+        options = self.config_entry.options
+        api_secret = options.get(CONF_API_SECRET)
+        session_key = options.get(CONF_SESSION_KEYS, {}).get(username)
+        if not api_secret or not session_key:
+            return None
+        return LastFMNetwork(
+            api_key=options[CONF_API_KEY],
+            api_secret=api_secret,
+            session_key=session_key,
+        )

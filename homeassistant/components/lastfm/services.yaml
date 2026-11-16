@@ -1,0 +1,24 @@
+scrobble:
+  target:
+    entity:
+      integration: lastfm
+      domain: sensor
+  fields:
+    artist:
+      required: true
+      example: Queen
+      selector:
+        text:
+    title:
+      required: true
+      example: Bohemian Rhapsody
+      selector:
+        text:
+    album:
+      example: A Night at the Opera
+      selector:
+        text:
+    timestamp:
+      example: "2026-11-01 13:00:00"
+      selector:
+        datetime:
