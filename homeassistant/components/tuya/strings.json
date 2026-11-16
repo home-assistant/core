@@ -903,6 +903,9 @@
       "indexed_temperature_external": {
         "name": "Probe temperature channel {index}"
       },
+      "inlet_temperature": {
+        "name": "Inlet temperature"
+      },
       "inverter_output_power": {
         "name": "Inverter output power"
       },
@@ -979,6 +982,9 @@
           "standby": "[%key:common::state::standby%]",
           "work": "Working"
         }
+      },
+      "outlet_temperature": {
+        "name": "Outlet temperature"
       },
       "outside_temperature": {
         "name": "Outside temperature"
