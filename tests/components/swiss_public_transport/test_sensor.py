@@ -257,3 +257,34 @@ async def test_departed_connection_after_delayed_one(
         hass.states.get("sensor.zurich_bern_departure_1").state
         == "2024-01-06T17:05:00+00:00"
     )
+
+
+@pytest.mark.freeze_time("2024-01-06T17:02:45+00:00")
+async def test_departed_connection_replaced_by_spare(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_opendata_client: AsyncMock,
+    swiss_public_transport_config_entry: MockConfigEntry,
+) -> None:
+    """Test a spare connection moves up without another request."""
+    mock_opendata_client.connections = (
+        await async_load_json_array_fixture(hass, "connections.json", DOMAIN)
+    )[0:6]
+    await setup_integration(hass, swiss_public_transport_config_entry)
+
+    assert mock_opendata_client.limit == 6
+    assert (
+        hass.states.get("sensor.zurich_bern_departure_2").state
+        == "2024-01-06T17:05:00+00:00"
+    )
+    call_count = mock_opendata_client.async_get_data.call_count
+
+    freezer.tick(46)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_opendata_client.async_get_data.call_count == call_count
+    assert (
+        hass.states.get("sensor.zurich_bern_departure_2").state
+        == "2024-01-06T17:06:00+00:00"
+    )
