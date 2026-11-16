@@ -16,3 +16,8 @@ held:
       selector:
         duration:
           enable_millisecond: true
+hold_ended:
+  target:
+    entity:
+      - domain: event
+        device_class: button

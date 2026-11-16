@@ -11,6 +11,18 @@
         "default": "mdi:volume-high"
       }
     },
+    "fan": {
+      "fan": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "auto": "mdi:fan-auto",
+              "manual": "mdi:hand-back-right"
+            }
+          }
+        }
+      }
+    },
     "number": {
       "effect_intensity": {
         "default": "mdi:brightness-percent"

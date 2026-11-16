@@ -100,6 +100,13 @@ class InputText(collection.CollectionEntity, TextEntity, RestoreEntity):
                 self.native_max,
             )
             return
+        if self.pattern_cmp and not self.pattern_cmp.match(value):
+            _LOGGER.warning(
+                "Invalid value: %s (does not match pattern %s)",
+                value,
+                self.pattern,
+            )
+            return
         self._attr_native_value = value
         self.async_write_ha_state()
 

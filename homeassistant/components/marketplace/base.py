@@ -985,7 +985,7 @@ class MarketplaceManager:
     ) -> bytes | None:
         """Download a file, from the first endpoint of the profile that has it.
 
-        A mirror can be down or lag behind, any failure tries the next
+        A relay can be down or lag behind, any failure tries the next
         endpoint. Only the last one retries, and reports what went wrong.
         """
         if remote_file is None:

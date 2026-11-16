@@ -1,6 +1,7 @@
 """Tests for the Overkiz data update coordinator."""
 
 from datetime import timedelta
+import logging
 from unittest.mock import Mock, patch
 
 from aiohttp import ClientConnectorError
@@ -85,24 +86,39 @@ RTS_SHUTTER = FixtureDevice(
 
 
 @pytest.mark.parametrize(
-    "exception",
+    ("exception", "level"),
     [
-        TooManyConcurrentRequestsError("Too many concurrent requests"),
-        MaintenanceError("Server is down for maintenance"),
-        ServiceUnavailableError("Server is unavailable"),
-        SomfyServiceError("Somfy token refresh failed"),
-        InvalidEventListenerIdError("Invalid event listener id"),
-        TimeoutError("Timed out"),
-        ClientConnectorError(Mock(), Mock()),
-    ],
-    ids=[
-        "too_many_concurrent_requests",
-        "maintenance",
-        "service_unavailable",
-        "somfy_service_error",
-        "invalid_event_listener_id",
-        "timeout",
-        "client_connector_error",
+        pytest.param(
+            TooManyConcurrentRequestsError("Too many concurrent requests"),
+            logging.ERROR,
+            id="too_many_concurrent_requests",
+        ),
+        pytest.param(
+            MaintenanceError("Server is down for maintenance"),
+            logging.INFO,
+            id="maintenance",
+        ),
+        pytest.param(
+            ServiceUnavailableError("Server is unavailable"),
+            logging.INFO,
+            id="service_unavailable",
+        ),
+        pytest.param(
+            SomfyServiceError("Somfy token refresh failed"),
+            logging.ERROR,
+            id="somfy_service_error",
+        ),
+        pytest.param(
+            InvalidEventListenerIdError("Invalid event listener id"),
+            logging.ERROR,
+            id="invalid_event_listener_id",
+        ),
+        pytest.param(TimeoutError("Timed out"), logging.ERROR, id="timeout"),
+        pytest.param(
+            ClientConnectorError(Mock(), Mock()),
+            logging.INFO,
+            id="client_connector_error",
+        ),
     ],
 )
 async def test_transient_error_is_retried(
@@ -110,7 +126,9 @@ async def test_transient_error_is_retried(
     setup_overkiz_integration: SetupOverkizIntegration,
     mock_client: MockOverkizClient,
     freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
     exception: Exception,
+    level: int,
 ) -> None:
     """Transient errors are handled cleanly: entities go unavailable, then recover."""
     await setup_overkiz_integration(fixture=TEMPERATURE_SENSOR.fixture)
@@ -125,6 +143,12 @@ async def test_transient_error_is_retried(
     await hass.async_block_till_done()
 
     assert hass.states.get(TEMPERATURE_SENSOR.entity_id).state == STATE_UNAVAILABLE
+    assert [
+        record.levelno
+        for record in caplog.records
+        if record.name == "homeassistant.components.overkiz"
+        and record.levelno > logging.DEBUG
+    ] == [level]
 
     # Once the server recovers, the next refresh restores the entities.
     mock_client.fetch_events.side_effect = None
