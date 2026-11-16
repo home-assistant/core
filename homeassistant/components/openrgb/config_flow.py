@@ -9,6 +9,7 @@ import probatio
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import Undefined
 
 from .const import CONNECTION_ERRORS, DEFAULT_CLIENT_NAME, DEFAULT_PORT, DOMAIN
 
@@ -37,6 +38,11 @@ async def validate_input(hass: HomeAssistant, host: str, port: int) -> None:
         client.disconnect()
 
     await hass.async_add_executor_job(_try_connect, host, port)
+
+
+def _default_title(host: str) -> str:
+    """Return the default config entry title for a host."""
+    return f"OpenRGB ({host})"
 
 
 class OpenRGBConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -71,6 +77,12 @@ class OpenRGBConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 return self.async_update_reload_and_abort(
                     reconfigure_entry,
+                    title=(
+                        _default_title(host)
+                        if reconfigure_entry.title
+                        == _default_title(reconfigure_entry.data[CONF_HOST])
+                        else Undefined
+                    ),
                     data_updates={CONF_HOST: host, CONF_PORT: port},
                 )
 
@@ -111,7 +123,7 @@ class OpenRGBConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
-                    title=f"OpenRGB ({host})",
+                    title=_default_title(host),
                     data={CONF_HOST: host, CONF_PORT: port},
                 )
 

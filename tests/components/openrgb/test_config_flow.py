@@ -149,12 +149,25 @@ async def test_user_flow_duplicate_entry(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.parametrize(
+    ("title", "expected_title"),
+    [
+        pytest.param(
+            "OpenRGB (127.0.0.1)", "OpenRGB (192.168.1.100)", id="default_title"
+        ),
+        pytest.param("Test Computer", "Test Computer", id="custom_title"),
+    ],
+)
 @pytest.mark.usefixtures("mock_setup_entry", "mock_openrgb_client")
 async def test_reconfigure_flow(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    title: str,
+    expected_title: str,
 ) -> None:
     """Test the reconfiguration flow."""
     mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(mock_config_entry, title=title)
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
 
@@ -173,6 +186,7 @@ async def test_reconfigure_flow(
     assert result["reason"] == "reconfigure_successful"
     assert mock_config_entry.data[CONF_HOST] == "192.168.1.100"
     assert mock_config_entry.data[CONF_PORT] == 6743
+    assert mock_config_entry.title == expected_title
 
 
 @pytest.mark.parametrize(
