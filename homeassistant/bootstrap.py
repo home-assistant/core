@@ -1137,8 +1137,8 @@ class _WatchPendingSetups:
         )
 
     def _async_progress_tick(self) -> None:
-        """Dispatch the progress until Core is running or stopping."""
-        if self._hass.is_stopping:
+        """Dispatch the progress while Core is starting."""
+        if self._hass.state is not core.CoreState.starting:
             self._progress_handle = None
             return
         _async_dispatch_bootstrap_progress(self._hass)
@@ -1185,7 +1185,10 @@ class _WatchPendingSetups:
         self._async_schedule_next()
 
     def async_stop(self) -> None:
-        """Stop watching."""
+        """Stop watching pending setups.
+
+        The progress is still dispatched on the start and started events.
+        """
         self._async_dispatch({})
         _async_dispatch_bootstrap_progress(self._hass)
         # Progress keeps the wrap up phase until the core state changes.

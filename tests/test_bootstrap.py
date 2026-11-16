@@ -2293,3 +2293,55 @@ async def test_bootstrap_progress_late_subscriber(
     assert tick["active"]["slow_integration"] > current["active"]["slow_integration"]
     _, final = progress[-1]
     assert final["integrations"] == {"total": 1, "done": 1, "failed": []}
+
+
+@pytest.mark.parametrize("load_registries", [False])
+@patch("homeassistant.bootstrap.DEFAULT_INTEGRATIONS", set())
+async def test_bootstrap_progress_listener_raises(hass: HomeAssistant) -> None:
+    """Test a progress listener that raises does not stop bootstrap."""
+    hass.set_state(CoreState.not_running)
+    mock_integration(hass, MockModule(domain="normal_integration"))
+    async_subscribe_bootstrap_progress(hass, Mock(side_effect=ValueError))
+    progress = _track_bootstrap_progress(hass)
+
+    await bootstrap._async_set_up_integrations(
+        hass, {"normal_integration": {}}, monotonic()
+    )
+    await hass.async_start()
+
+    assert "normal_integration" in hass.config.components
+    _, running = progress[-1]
+    assert running["phase"] == bootstrap.BootstrapPhase.RUNNING
+
+
+@pytest.mark.parametrize("load_registries", [False])
+@patch("homeassistant.bootstrap.DEFAULT_INTEGRATIONS", set())
+async def test_bootstrap_progress_stopped_while_starting(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test progress stops updating when Core stops while starting."""
+    hass.set_state(CoreState.not_running)
+    start_listener_running = asyncio.Event()
+
+    async def slow_start_listener(event: Event) -> None:
+        start_listener_running.set()
+        await asyncio.Event().wait()
+
+    mock_integration(hass, MockModule(domain="normal_integration"))
+    progress = _track_bootstrap_progress(hass)
+
+    await bootstrap._async_set_up_integrations(
+        hass, {"normal_integration": {}}, monotonic()
+    )
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, slow_start_listener)
+    start_task = hass.async_create_task(hass.async_start())
+    await start_listener_running.wait()
+
+    await hass.async_stop()
+    assert start_task.cancelled()
+    assert hass.state is CoreState.stopped
+
+    message_count = len(progress)
+    freezer.tick(bootstrap.SLOW_STARTUP_CHECK_INTERVAL)
+    async_fire_time_changed(hass)
+    assert len(progress) == message_count

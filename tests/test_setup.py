@@ -1598,3 +1598,35 @@ async def test_subscribe_bootstrap_progress(hass: HomeAssistant) -> None:
     setup._async_dispatch_bootstrap_progress(hass)
     assert second.call_count == 2
     assert source.call_count == 3
+
+
+async def test_bootstrap_progress_listener_raises(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test a listener that raises does not stop the progress for the others."""
+    progress = {"phase": "setup"}
+    setup.async_subscribe_bootstrap_progress(hass, Mock(side_effect=ValueError))
+    listener = Mock()
+    setup.async_subscribe_bootstrap_progress(hass, listener)
+
+    setup._async_set_bootstrap_progress_source(hass, Mock(return_value=progress))
+
+    listener.assert_called_once_with(progress)
+    assert "Error sending bootstrap progress to" in caplog.text
+
+
+async def test_bootstrap_progress_listener_unsubscribes_itself(
+    hass: HomeAssistant,
+) -> None:
+    """Test a listener unsubscribing itself does not skip the next listener."""
+    progress = {"phase": "running"}
+    first = Mock(side_effect=lambda _: unsubscribe_first())
+    unsubscribe_first = setup.async_subscribe_bootstrap_progress(hass, first)
+    second = Mock()
+    setup.async_subscribe_bootstrap_progress(hass, second)
+
+    setup._async_set_bootstrap_progress_source(hass, Mock(return_value=progress))
+    setup._async_dispatch_bootstrap_progress(hass)
+
+    first.assert_called_once_with(progress)
+    assert second.call_count == 2

@@ -175,8 +175,12 @@ def _async_dispatch_bootstrap_progress(hass: HomeAssistant) -> None:
     if not data.listeners or data.source is None:
         return
     progress = data.source()
-    for listener in data.listeners:
-        listener(progress)
+    # Listeners can unsubscribe while the progress is sent.
+    for listener in data.listeners.copy():
+        try:
+            listener(progress)
+        except Exception:
+            _LOGGER.exception("Error sending bootstrap progress to %s", listener)
 
 
 @callback
