@@ -40,6 +40,34 @@ def _inherited_init(class_node: nodes.ClassDef) -> nodes.FunctionDef | None:
     return None
 
 
+def _rerouted_by_descendant(
+    class_node: nodes.ClassDef, inherited: nodes.FunctionDef
+) -> bool:
+    """Return True if a subclass in the module puts another ``__init__`` next.
+
+    ``super()`` follows the MRO of the instance's class. With multiple
+    inheritance, a subclass can place a sibling ``__init__`` between the
+    class and the one it inherits. The override then adapts the call for
+    that sibling, and removing it can break the subclass. Subclasses in
+    other modules are out of reach.
+    """
+    for other in class_node.root().nodes_of_class(nodes.ClassDef):
+        if other is class_node:
+            continue
+        try:
+            mro = other.mro()
+        except astroid.exceptions.AstroidError:
+            continue
+        if class_node not in mro:
+            continue
+        for ancestor in mro[mro.index(class_node) + 1 :]:
+            if "__init__" in ancestor.locals:
+                if ancestor.locals["__init__"][0] is not inherited:
+                    return True
+                break
+    return False
+
+
 def _forwarded_call(node: nodes.FunctionDef) -> nodes.Call | None:
     """Return the ``super().__init__(...)`` call that is the whole body.
 
@@ -115,7 +143,7 @@ def _exposes_same_signature(
             continue
         if inherited_index.get(name) != index:
             return False
-        if keyword_capable and index < inherited_keyword_start:
+        if index < inherited_keyword_start:
             return False
     inherited_names = inherited_index.keys() | {
         arg.name for arg in (inherited.kwonlyargs or ())
@@ -224,6 +252,10 @@ class RedundantEntityInitChecker(BaseChecker):
         # (``@dataclass`` does), which the override currently suppresses.
         if parent.decorators is not None:
             return
+        # With ``@overload`` stubs next to it, removing the implementation
+        # leaves a stub as the runtime constructor.
+        if len(parent.locals["__init__"]) > 1:
+            return
         if not inherits_from_entity(parent):
             return
         if (call := _forwarded_call(node)) is None:
@@ -237,6 +269,8 @@ class RedundantEntityInitChecker(BaseChecker):
         if inherited.decorators is not None:
             return
         if not _exposes_same_signature(node.args, inherited.args, by_keyword):
+            return
+        if _rerouted_by_descendant(parent, inherited):
             return
         self.add_message(
             "home-assistant-redundant-entity-init",

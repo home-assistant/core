@@ -42,6 +42,21 @@ class MyDescription:
 """
 
 
+def _base(signature: str) -> str:
+    """Return a parent entity whose ``__init__`` has *signature*.
+
+    A negative case needs a parent with a matching signature. Otherwise the
+    signature check rejects it, and the guard under test goes untested.
+    """
+    return f"""
+{_ENTITY_IMPORT}
+
+class MyBaseEntity(Entity):
+    def __init__(self, {signature}) -> None:
+        \"\"\"Initialize.\"\"\"
+"""
+
+
 @pytest.fixture(name="checker")
 def checker_fixture(linter: UnittestLinter) -> RedundantEntityInitChecker:
     """Fixture to provide the R7406 checker."""
@@ -67,9 +82,9 @@ def _init_node(root_node: nodes.Module, class_name: str) -> nodes.FunctionDef:
     [
         pytest.param(
             f"""
-{_ENTITY_IMPORT}
+{_base("name: str")}
 
-class MyEntity(Entity):
+class MyEntity(MyBaseEntity):
     def __init__(self, name: str) -> None:
         \"\"\"Initialize.\"\"\"
         super().__init__(name)
@@ -79,9 +94,9 @@ class MyEntity(Entity):
         ),
         pytest.param(
             f"""
-{_ENTITY_IMPORT}
+{_base("name: str")}
 
-class MyEntity(Entity):
+class MyEntity(MyBaseEntity):
     def __init__(self, name: str) -> None:
         \"\"\"Initialize.\"\"\"
         super().__init__(name.lower())
@@ -90,9 +105,9 @@ class MyEntity(Entity):
         ),
         pytest.param(
             f"""
-{_ENTITY_IMPORT}
+{_base("first: str, second: str")}
 
-class MyEntity(Entity):
+class MyEntity(MyBaseEntity):
     def __init__(self, first: str, second: str) -> None:
         \"\"\"Initialize.\"\"\"
         super().__init__(second, first)
@@ -101,9 +116,9 @@ class MyEntity(Entity):
         ),
         pytest.param(
             f"""
-{_ENTITY_IMPORT}
+{_base('first: str, second: str = ""')}
 
-class MyEntity(Entity):
+class MyEntity(MyBaseEntity):
     def __init__(self, first: str, second: str) -> None:
         \"\"\"Initialize.\"\"\"
         super().__init__(first)
@@ -112,9 +127,9 @@ class MyEntity(Entity):
         ),
         pytest.param(
             f"""
-{_ENTITY_IMPORT}
+{_base("name: str, extra: int = 0")}
 
-class MyEntity(Entity):
+class MyEntity(MyBaseEntity):
     def __init__(self, name: str) -> None:
         \"\"\"Initialize.\"\"\"
         super().__init__(name, extra=1)
@@ -123,9 +138,9 @@ class MyEntity(Entity):
         ),
         pytest.param(
             f"""
-{_ENTITY_IMPORT}
+{_base("name: str, *, option: int = 0, other: int = 0")}
 
-class MyEntity(Entity):
+class MyEntity(MyBaseEntity):
     def __init__(self, name: str, *, option: int) -> None:
         \"\"\"Initialize.\"\"\"
         super().__init__(name, other=option)
@@ -134,9 +149,9 @@ class MyEntity(Entity):
         ),
         pytest.param(
             f"""
-{_ENTITY_IMPORT}
+{_base('name: str = "other"')}
 
-class MyEntity(Entity):
+class MyEntity(MyBaseEntity):
     def __init__(self, name: str = "default") -> None:
         \"\"\"Initialize.\"\"\"
         super().__init__(name)
@@ -145,9 +160,9 @@ class MyEntity(Entity):
         ),
         pytest.param(
             f"""
-{_ENTITY_IMPORT}
+{_base('*, name: str = "other"')}
 
-class MyEntity(Entity):
+class MyEntity(MyBaseEntity):
     def __init__(self, *, name: str = "default") -> None:
         \"\"\"Initialize.\"\"\"
         super().__init__(name=name)
@@ -156,9 +171,9 @@ class MyEntity(Entity):
         ),
         pytest.param(
             f"""
-{_ENTITY_IMPORT}
+{_base("name: str")}
 
-class MyEntity(Entity):
+class MyEntity(MyBaseEntity):
     def __init__(self, name: str) -> None:
         \"\"\"Initialize.\"\"\"
         super(MyEntity, self).__init__(name)
@@ -167,20 +182,20 @@ class MyEntity(Entity):
         ),
         pytest.param(
             f"""
-{_ENTITY_IMPORT}
+{_base("name: str")}
 
-class MyEntity(Entity):
+class MyEntity(MyBaseEntity):
     def __init__(self, name: str) -> None:
         \"\"\"Initialize.\"\"\"
-        Entity.__init__(self, name)
+        MyBaseMyBaseMyBaseMyBaseEntity.__init__(self, name)
             """,
             id="explicit_base_call",
         ),
         pytest.param(
             f"""
-{_ENTITY_IMPORT}
+{_base("name: str")}
 
-class MyEntity(Entity):
+class MyEntity(MyBaseEntity):
     def __init__(self, name: str) -> None:
         \"\"\"Initialize.\"\"\"
         super().added_to_hass(name)
@@ -189,9 +204,9 @@ class MyEntity(Entity):
         ),
         pytest.param(
             f"""
-{_ENTITY_IMPORT}
+{_base("*args, **kwargs")}
 
-class MyEntity(Entity):
+class MyEntity(MyBaseEntity):
     def __init__(self, *args, **kwargs) -> None:
         \"\"\"Initialize.\"\"\"
         super().__init__(*args)
@@ -202,10 +217,10 @@ class MyEntity(Entity):
             f"""
 from dataclasses import dataclass
 
-{_ENTITY_IMPORT}
+{_base("name: str")}
 
 @dataclass
-class MyEntity(Entity):
+class MyEntity(MyBaseEntity):
     _attr_native_step: float = 1
 
     def __init__(self, name: str) -> None:
@@ -322,6 +337,60 @@ class MySensor(MyBaseEntity):
             id="decorated_inherited_init",
         ),
         pytest.param(
+            f"""
+{_ENTITY_IMPORT}
+from typing import Any
+
+class MyBaseEntity(Entity):
+    def __init__(self, name: str = "", /, **kwargs: Any) -> None:
+        \"\"\"Initialize.\"\"\"
+        self._attr_name = name
+
+class MySensor(MyBaseEntity):
+    def __init__(self, name: str, /) -> None:
+        \"\"\"Initialize.\"\"\"
+        super().__init__(name=name)
+            """,
+            id="keyword_forwarded_to_parent_positional_only_parameter",
+        ),
+        pytest.param(
+            f"""
+{_BASE_ENTITY}
+from typing import overload
+
+class MySensor(MyBaseEntity):
+    @overload
+    def __init__(self, name: str, option: int) -> None: ...
+
+    @overload
+    def __init__(self, name: bytes, option: int) -> None: ...
+
+    def __init__(self, name, option) -> None:
+        \"\"\"Initialize.\"\"\"
+        super().__init__(name, option)
+            """,
+            id="overloaded_init",
+        ),
+        pytest.param(
+            f"""
+{_base("name: str")}
+
+class MyFirstEntity(MyBaseEntity):
+    def __init__(self, name: str) -> None:
+        \"\"\"Initialize.\"\"\"
+        super().__init__(name=name)
+
+class MySecondEntity(MyBaseEntity):
+    def __init__(self, *, name: str) -> None:
+        \"\"\"Initialize.\"\"\"
+        self._attr_name = name
+
+class MySensor(MyFirstEntity, MySecondEntity):
+    \"\"\"Sensor.\"\"\"
+            """,
+            id="subclass_reroutes_super_call",
+        ),
+        pytest.param(
             """
 class NotAnEntity:
     def __init__(self, name: str) -> None:
@@ -361,12 +430,12 @@ def test_redundant_entity_init_outside_integration(
     """A pure delegation outside an integration module is not flagged."""
     root_node = astroid.parse(
         f"""
-{_ENTITY_IMPORT}
+{_BASE_ENTITY}
 
-class MyEntity(Entity):
-    def __init__(self, name: str) -> None:
+class MySensor(MyBaseEntity):
+    def __init__(self, name: str, option: int) -> None:
         \"\"\"Initialize.\"\"\"
-        super().__init__(name)
+        super().__init__(name, option)
         """,
         "tests.components.pylint_test.test_sensor",
     )
