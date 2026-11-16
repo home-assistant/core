@@ -2,8 +2,8 @@
 
 from unittest.mock import PropertyMock, patch
 
-from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, SERVICE_SET_VALUE
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, NumberService
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -45,8 +45,8 @@ async def test_number_entities(
     ) as mock_audio_delay:
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: audio_delay_number.entity_id, "value": 3},
+            NumberService.SET_VALUE,
+            {CommonServiceArgument.ENTITY_ID: audio_delay_number.entity_id, "value": 3},
             blocking=True,
         )
         mock_audio_delay.assert_called_once_with(3)
@@ -60,8 +60,8 @@ async def test_number_entities(
     ) as mock_sub_gain:
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: sub_gain_number.entity_id, "value": -8},
+            NumberService.SET_VALUE,
+            {CommonServiceArgument.ENTITY_ID: sub_gain_number.entity_id, "value": -8},
             blocking=True,
         )
         mock_sub_gain.assert_called_once_with(-8)
@@ -89,8 +89,11 @@ async def test_amp_number_entities(
     ) as mock_sub_crossover:
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: sub_crossover_number.entity_id, "value": 110},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: sub_crossover_number.entity_id,
+                "value": 110,
+            },
             blocking=True,
         )
         mock_sub_crossover.assert_called_once_with(110)

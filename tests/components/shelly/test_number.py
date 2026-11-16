@@ -15,18 +15,18 @@ from homeassistant.components.number import (
     ATTR_MIN,
     ATTR_MODE,
     ATTR_STEP,
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
     NumberMode,
+    NumberService,
+    NumberServiceArgument,
 )
 from homeassistant.components.shelly.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant, State
@@ -201,8 +201,11 @@ async def test_block_number_set_value(
     mock_block_device.reset_mock()
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: "number.test_name_valve_position", ATTR_VALUE: 30},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: "number.test_name_valve_position",
+            NumberServiceArgument.VALUE: 30,
+        },
         blocking=True,
     )
     mock_block_device.set_thermostat_state.assert_called_once_with(0, pos=30.0)
@@ -235,8 +238,11 @@ async def test_block_set_value_connection_error(
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: "number.test_name_valve_position", ATTR_VALUE: 30},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: "number.test_name_valve_position",
+                NumberServiceArgument.VALUE: 30,
+            },
             blocking=True,
         )
 
@@ -265,8 +271,11 @@ async def test_block_set_value_auth_error(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: "number.test_name_valve_position", ATTR_VALUE: 30},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: "number.test_name_valve_position",
+            NumberServiceArgument.VALUE: 30,
+        },
         blocking=True,
     )
 
@@ -353,8 +362,8 @@ async def test_rpc_device_virtual_number(
     monkeypatch.setitem(mock_rpc_device.status["number:203"], "value", 56.7)
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 56.7},
+        NumberService.SET_VALUE,
+        {CommonServiceArgument.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 56.7},
         blocking=True,
     )
     mock_rpc_device.mock_update()
@@ -465,10 +474,10 @@ async def test_blu_trv_ext_temp_set_value(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_VALUE: 22.2,
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            NumberServiceArgument.VALUE: 22.2,
         },
         blocking=True,
     )
@@ -498,10 +507,10 @@ async def test_blu_trv_valve_pos_set_value(
     monkeypatch.setitem(mock_blu_trv.status["blutrv:200"], "pos", 20)
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_VALUE: 20.0,
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            NumberServiceArgument.VALUE: 20.0,
         },
         blocking=True,
     )
@@ -541,10 +550,10 @@ async def test_blu_trv_number_exc(
     with pytest.raises(HomeAssistantError, match=error):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: f"{NUMBER_DOMAIN}.trv_name_external_temperature",
-                ATTR_VALUE: 20.0,
+                CommonServiceArgument.ENTITY_ID: f"{NUMBER_DOMAIN}.trv_name_external_temperature",
+                NumberServiceArgument.VALUE: 20.0,
             },
             blocking=True,
         )
@@ -562,10 +571,10 @@ async def test_blu_trv_number_reauth_error(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: f"{NUMBER_DOMAIN}.trv_name_external_temperature",
-            ATTR_VALUE: 20.0,
+            CommonServiceArgument.ENTITY_ID: f"{NUMBER_DOMAIN}.trv_name_external_temperature",
+            NumberServiceArgument.VALUE: 20.0,
         },
         blocking=True,
     )
@@ -623,8 +632,11 @@ async def test_cury_number_entity(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: "number.test_name_left_slot_intensity", ATTR_VALUE: 80.0},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: "number.test_name_left_slot_intensity",
+            NumberServiceArgument.VALUE: 80.0,
+        },
         blocking=True,
     )
     mock_rpc_device.mock_update()
@@ -663,8 +675,8 @@ async def test_rpc_ledstrip_number(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 80.0},
+        NumberService.SET_VALUE,
+        {CommonServiceArgument.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 80.0},
         blocking=True,
     )
     mock_ledstrip_rpc_device.ledstrip_set.assert_called_once_with(0, {control: 80})
