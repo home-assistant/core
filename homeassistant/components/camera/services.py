@@ -8,8 +8,6 @@ import probatio
 
 from homeassistant.components.media_player import (
     DOMAIN as MP_DOMAIN,
-)
-from homeassistant.components.media_player import (
     MediaPlayerService,
     MediaPlayerServiceArgument,
 )
