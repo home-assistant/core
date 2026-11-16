@@ -86,7 +86,7 @@ class ReolinkHlsPlayback:
                     )
                     self._downloaded.add(name)
                     await self._async_notify_progress()
-        except ReolinkError as err:
+        except (ReolinkError, OSError) as err:
             _LOGGER.warning(
                 "Reolink playback error while downloading %s: %s", self._name, err
             )
