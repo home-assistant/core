@@ -210,15 +210,23 @@ async def test_detect_message_with_wrong_wake_word(
 
 
 @pytest.mark.parametrize(
-    "detections",
+    ("detections", "expected_forwarded", "expected_queued"),
     [
-        pytest.param(["my-wake-word"], id="detection"),
-        pytest.param(["not-my-wake-word", "my-wake-word"], id="skipped_detection"),
+        pytest.param(["my-wake-word"], [], [(b"chunk0", 0)], id="detection"),
+        pytest.param(
+            ["not-my-wake-word", "my-wake-word"],
+            [b"chunk0"],
+            [(b"chunk1", 1)],
+            id="skipped_detection",
+        ),
     ],
 )
 @pytest.mark.usefixtures("init_wyoming_wake_word")
 async def test_detection_keeps_ready_audio(
-    hass: HomeAssistant, detections: list[str]
+    hass: HomeAssistant,
+    detections: list[str],
+    expected_forwarded: list[bytes],
+    expected_queued: list[tuple[bytes, int]],
 ) -> None:
     """Test that audio read alongside a detection is forwarded or queued."""
     entity = wake_word.async_get_wake_word_detection_entity(
@@ -226,12 +234,9 @@ async def test_detection_keeps_ready_audio(
     )
     assert entity is not None
 
-    read_chunks: list[bytes] = []
-
     async def audio_stream():
         for i in range(5):
-            read_chunks.append(f"chunk{i}".encode())
-            yield read_chunks[-1], i
+            yield f"chunk{i}".encode(), i
 
     mock_client = MockAsyncTcpClient(
         [Detection(name=name, timestamp=0).event() for name in detections]
@@ -246,14 +251,12 @@ async def test_detection_keeps_ready_audio(
     assert isinstance(result, wake_word.DetectionResult)
     assert result.wake_word_id == "my-wake-word"
 
-    # Every chunk taken from the stream must reach the service or the pipeline
-    forwarded = [
+    assert [
         AudioChunk.from_event(event).audio
         for event in mock_client.written
         if AudioChunk.is_type(event.type)
-    ]
-    queued = [chunk for chunk, _timestamp in result.queued_audio or []]
-    assert forwarded + queued == read_chunks
+    ] == expected_forwarded
+    assert result.queued_audio == expected_queued
 
 
 async def test_dynamic_wake_word_info(
