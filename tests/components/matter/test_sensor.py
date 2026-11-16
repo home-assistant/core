@@ -1377,3 +1377,96 @@ async def test_meter_serial_number(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "987654321"
+
+
+@pytest.mark.parametrize(
+    "node_fixture",
+    ["mock_meter_identification"],
+)
+async def test_meter_type(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test meter type."""
+    entity_id = "sensor.mock_meter_identification_meter_type"
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "utility"
+
+    set_node_attribute(matter_node, 1, 2822, 0, 1)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "private"
+
+    set_node_attribute(matter_node, 1, 2822, 0, 2)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "generic"
+
+
+@pytest.mark.parametrize(
+    "node_fixture",
+    ["mock_meter_identification"],
+)
+async def test_point_of_delivery(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test point of delivery."""
+    entity_id = "sensor.mock_meter_identification_point_of_delivery"
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "12345678901234"
+
+    set_node_attribute(matter_node, 1, 2822, 1, "12345678904321")
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "12345678904321"
+
+
+@pytest.mark.parametrize(
+    "node_fixture",
+    ["mock_meter_identification"],
+)
+async def test_protocol_version(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test protocol version."""
+    entity_id = "sensor.mock_meter_identification_protocol_version"
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "ProtocolVersion"
+
+    attribute = clusters.MeterIdentification.Attributes.ProtocolVersion
+
+    set_node_attribute(
+        matter_node,
+        1,
+        attribute.cluster_id,
+        attribute.attribute_id,
+        "1",
+    )
+
+    assert (
+        matter_node.endpoints[1].get_attribute_value(attribute.cluster_id, attribute)
+        == "1"
+    )
+
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "1"
