@@ -1500,15 +1500,21 @@ async def test_reauth_of_loaded_entry_reloads_it_once(
     await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    result = await _reauthenticate(hass, mock_config_entry, key, secret)
+    with patch(
+        "homeassistant.components.energyid.WebhookClient",
+        return_value=mock_webhook_client,
+    ) as client_class:
+        result = await _reauthenticate(hass, mock_config_entry, key, secret)
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert mock_config_entry.data[CONF_PROVISIONING_KEY] == key
     assert mock_config_entry.data[CONF_PROVISIONING_SECRET] == secret
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    # Set up once before reauthentication and once after.
+    # Set up once before reauthentication and once after, with the new credentials.
     assert mock_webhook_client.authenticate.await_count == 2
+    assert client_class.call_args.kwargs["provisioning_key"] == key
+    assert client_class.call_args.kwargs["provisioning_secret"] == secret
 
 
 @pytest.mark.parametrize(
@@ -1535,7 +1541,14 @@ async def test_reauth_after_failed_setup_sets_the_entry_up(
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
     mock_webhook_client.authenticate.return_value = True
-    result = await _reauthenticate(hass, mock_config_entry, key, secret)
+    with patch(
+        "homeassistant.components.energyid.WebhookClient",
+        return_value=mock_webhook_client,
+    ) as client_class:
+        result = await _reauthenticate(hass, mock_config_entry, key, secret)
 
     assert result["reason"] == "reauth_successful"
     assert mock_config_entry.state is ConfigEntryState.LOADED
+    # The entry is set up again with the new credentials, not the refused ones.
+    assert client_class.call_args.kwargs["provisioning_key"] == key
+    assert client_class.call_args.kwargs["provisioning_secret"] == secret
