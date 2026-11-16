@@ -11,6 +11,8 @@ from homeassistant.core import HomeAssistant
 TEST_UNIQUE_ID = "06ebba97-100b-4c09-9917-e85d40b7898a"
 TEST_CREDENTIALS = {CONF_EMAIL: "test@test.com", CONF_PASSWORD: "SomePassword"}
 TEST_ACCESS_JWT = jwt.encode({"sub": TEST_UNIQUE_ID}, key="secret")
+TEST_JWT_KEY = "a" * 32
+TEST_ID_JWT = jwt.encode({"exp": 9999999999}, key=TEST_JWT_KEY)
 
 
 async def setup_integration(hass: HomeAssistant, entry: MockConfigEntry) -> None:

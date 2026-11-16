@@ -1,11 +1,13 @@
 """The Place integration."""
 
+from asyncio import run_coroutine_threadsafe
 import logging
 
 from aiohttp import ClientError
 from place.auth import get_iot_credentials
 from place.config import IOT_ENDPOINT
 from place.errors import PlaceFulfillmentError
+from place.models import Credentials
 from place.mqtt_client import MqttClient
 from place.provider import Provider
 
@@ -71,7 +73,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: PlaceConfigEntry) -> Non
         get_iot_credentials, token["id_token"], token["access_token"]
     )
 
-    mqtt_client = MqttClient(endpoint=IOT_ENDPOINT, credentials=credentials)
+    async def async_get_tokens() -> tuple[str, str]:
+        """Get current OAuth tokens on the event loop."""
+        await session.async_ensure_token_valid()
+        token = session.token
+        return token["id_token"], token["access_token"]
+
+    def refresh_credentials() -> Credentials:
+        """Exchange valid OAuth tokens for MQTT credentials on reconnect."""
+        id_token, access_token = run_coroutine_threadsafe(
+            async_get_tokens(), hass.loop
+        ).result()
+        return get_iot_credentials(id_token, access_token)
+
+    mqtt_client = MqttClient(
+        endpoint=IOT_ENDPOINT,
+        credentials=credentials,
+        credentials_provider=refresh_credentials,
+    )
 
     coordinator = PlaceCoordinator(hass, entry, provider, mqtt_client)
     await coordinator.async_setup()

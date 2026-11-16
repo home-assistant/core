@@ -5,6 +5,7 @@ import time
 from typing import cast, override
 
 from aiohttp import ClientSession
+import jwt
 from place.auth.abstract_auth import AbstractAuth
 from place.config import COGNITO_CLIENT_ID, OAUTH2_TOKEN_URL
 
@@ -78,12 +79,30 @@ class SRPAuthImplementation(config_entry_oauth2_flow.AbstractOAuth2Implementatio
             }
         )
 
-        # Merging a response without one would keep the stale access token while
-        # extending its expiry, so the session would never recover.
-        if not new_token.get("access_token"):
+        if not new_token.get("access_token") or not new_token.get("id_token"):
             raise OAuth2TokenRequestConnectionError(domain=self.domain)
 
         return {**token, **new_token}
+
+    @override
+    async def async_refresh_token(self, token: dict) -> dict:
+        """Refresh tokens and account for the ID token's expiration."""
+        new_token = await super().async_refresh_token(token)
+        try:
+            claims = jwt.decode(
+                new_token["id_token"], options={"verify_signature": False}
+            )
+            expires_at = claims["exp"]
+        except (jwt.PyJWTError, KeyError, TypeError, ValueError) as err:
+            raise OAuth2TokenRequestConnectionError(domain=self.domain) from err
+
+        if type(expires_at) is not int or expires_at <= (
+            time.time() + config_entry_oauth2_flow.CLOCK_OUT_OF_SYNC_MAX_SEC
+        ):
+            raise OAuth2TokenRequestConnectionError(domain=self.domain)
+
+        new_token["expires_at"] = min(new_token["expires_at"], expires_at)
+        return new_token
 
 
 class AsyncConfigEntryAuth(AbstractAuth):

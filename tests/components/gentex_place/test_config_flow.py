@@ -11,7 +11,7 @@ from homeassistant.components.gentex_place.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import TEST_CREDENTIALS, TEST_UNIQUE_ID
+from . import TEST_CREDENTIALS, TEST_ID_JWT, TEST_UNIQUE_ID
 
 
 @pytest.mark.usefixtures("aioclient_mock_fixture", "mock_setup_entry")
@@ -34,7 +34,7 @@ async def test_full_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Place"
     assert result["data"]["token"]["access_token"] is not None
-    assert result["data"]["token"]["id_token"] == "mock-id-token"
+    assert result["data"]["token"]["id_token"] == TEST_ID_JWT
     assert result["result"].unique_id == TEST_UNIQUE_ID
     mock_login.assert_called_once()
 

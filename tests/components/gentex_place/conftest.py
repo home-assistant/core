@@ -14,7 +14,7 @@ from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.gentex_place.const import DOMAIN
 
-from . import TEST_ACCESS_JWT, TEST_UNIQUE_ID
+from . import TEST_ACCESS_JWT, TEST_ID_JWT, TEST_UNIQUE_ID
 
 MOCK_SHADOW = {
     "coAlarmStatus": 0,
@@ -39,7 +39,7 @@ def mock_login(mock_srp_access_token: str) -> Generator[MagicMock]:
         mock_login.return_value = {
             "AuthenticationResult": {
                 "AccessToken": mock_srp_access_token,
-                "IdToken": "mock-id-token",
+                "IdToken": TEST_ID_JWT,
                 "RefreshToken": "refresh",
                 "TokenType": "bearer",
                 "ExpiresIn": 3600,
@@ -56,6 +56,7 @@ def aioclient_mock_fixture(aioclient_mock: AiohttpClientMocker) -> None:
         status=HTTPStatus.OK,
         json={
             "access_token": "mock-access-token",
+            "id_token": TEST_ID_JWT,
             "refresh_token": "refresh",
             "token_type": "bearer",
             "expires_in": 3600,
@@ -128,15 +129,18 @@ def mock_get_iot_credentials(mock_credentials: Credentials) -> Generator[MagicMo
 
 
 @pytest.fixture
-def mock_mqtt_client() -> Generator[MagicMock]:
-    """Mock Place MqttClient."""
+def mock_mqtt_client_cls() -> Generator[MagicMock]:
+    """Mock the Place MqttClient constructor."""
     with patch(
         "homeassistant.components.gentex_place.MqttClient", autospec=True
     ) as mock_cls:
-        instance = mock_cls.return_value
-        # Provide a mock _client for loop_start/loop_stop
-        instance._client = MagicMock()
-        yield instance
+        yield mock_cls
+
+
+@pytest.fixture
+def mock_mqtt_client(mock_mqtt_client_cls: MagicMock) -> MagicMock:
+    """Mock Place MqttClient."""
+    return mock_mqtt_client_cls.return_value
 
 
 @pytest.fixture
@@ -151,7 +155,7 @@ def mock_config_entry() -> MockConfigEntry:
             "token": {
                 "access_token": "mock-access-token",
                 "refresh_token": "refresh",
-                "id_token": "mock-id-token",
+                "id_token": TEST_ID_JWT,
                 "expires_in": 3600,
                 "token_type": "bearer",
                 "expires_at": 9999999999,
