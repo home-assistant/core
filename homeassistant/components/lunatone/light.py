@@ -1,6 +1,8 @@
 """Platform for Lunatone light integration."""
 
+from collections.abc import Callable
 import contextlib
+from functools import partial
 from typing import Any, override
 
 import aiohttp
@@ -40,26 +42,76 @@ async def async_setup_entry(
     """Set up the Lunatone Light platform."""
     coordinator_info = config_entry.runtime_data.coordinator_info
     coordinator_devices = config_entry.runtime_data.coordinator_devices
-    auth_api = coordinator_info.info_api.auth
 
-    assert config_entry.unique_id is not None
+    config_entry_unique_id = config_entry.unique_id
+    assert config_entry_unique_id is not None
 
-    entities: list[LightEntity] = [
-        LunatoneLineBroadcastLight(
-            coordinator_devices,
-            coordinator_info,
-            DALIBroadcast(auth_api, int(line_id)),
-            config_entry.unique_id,
-        )
-        for line_id in coordinator_info.data.lines
-    ]
-    entities.extend(
-        LunatoneLight(coordinator_devices, line_id, device_id, config_entry.unique_id)
-        for line_id, devices in coordinator_devices.data.items()
-        for device_id in devices
+    def _add_entities(
+        entity_builder: dict[str, Callable[[], LightEntity]], known_entities: set[str]
+    ) -> None:
+        current_entities = entity_builder.keys()
+        new_entities = current_entities - known_entities
+        stale_entities = known_entities - current_entities
+
+        if new_entities:
+            async_add_entities(
+                [
+                    entity_builder[entity_unique_id]()
+                    for entity_unique_id in new_entities
+                ]
+            )
+            known_entities.update(new_entities)
+        known_entities.difference_update(stale_entities)
+
+    known_broadcast_entities: set[str] = set()
+
+    @callback
+    def _check_broadcast_entities() -> None:
+        entity_builder: dict[str, Callable[[], LightEntity]] = {}
+        for line_id in map(int, coordinator_info.data.lines):
+            unique_id = LunatoneLineBroadcastLight.construct_unique_id(
+                config_entry_unique_id, line_id
+            )
+            entity_builder[unique_id] = partial(
+                LunatoneLineBroadcastLight,
+                coordinator_devices,
+                coordinator_info,
+                DALIBroadcast(coordinator_info.info_api.auth, line_id),
+                config_entry_unique_id,
+            )
+
+        _add_entities(entity_builder, known_broadcast_entities)
+
+    _check_broadcast_entities()
+    config_entry.async_on_unload(
+        coordinator_info.async_add_listener(_check_broadcast_entities)
     )
 
-    async_add_entities(entities)
+    known_light_entities: set[str] = set()
+
+    @callback
+    def _check_light_entities() -> None:
+        entity_builder: dict[str, Callable[[], LightEntity]] = {}
+        for line_id, devices in coordinator_devices.data.items():
+            for device_id in devices:
+                unique_id = LunatoneLight.construct_unique_id(
+                    config_entry_unique_id, device_id
+                )
+                entity_builder[unique_id] = partial(
+                    LunatoneLight,
+                    coordinator_devices,
+                    coordinator_info,
+                    line_id,
+                    device_id,
+                    config_entry_unique_id,
+                )
+
+        _add_entities(entity_builder, known_light_entities)
+
+    _check_light_entities()
+    config_entry.async_on_unload(
+        coordinator_devices.async_add_listener(_check_light_entities)
+    )
 
 
 class LunatoneLight(
@@ -78,18 +130,20 @@ class LunatoneLight(
 
     def __init__(
         self,
-        coordinator: LunatoneDevicesDataUpdateCoordinator,
+        coordinator_devices: LunatoneDevicesDataUpdateCoordinator,
+        coordinator_info: LunatoneInfoDataUpdateCoordinator,
         line_id: int,
         device_id: int,
         config_entry_unique_id: str,
     ) -> None:
         """Initialize a Lunatone light."""
-        super().__init__(coordinator)
+        super().__init__(coordinator_devices)
+        self._coordinator_info = coordinator_info
         self._line_id = line_id
         self._device_id = device_id
         self._device = self.coordinator.data[line_id][device_id]
 
-        unique_id = f"{config_entry_unique_id}-device{device_id}"
+        unique_id = self.construct_unique_id(config_entry_unique_id, device_id)
 
         device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
@@ -104,6 +158,43 @@ class LunatoneLight(
 
         self._attr_device_info = device_info
         self._attr_unique_id = unique_id
+
+    @staticmethod
+    def construct_unique_id(config_entry_unique_id: str, device_id: int) -> str:
+        """Returns the unique_id for a device ID."""
+        return f"{config_entry_unique_id}-device{device_id}"
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Register callbacks."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self._coordinator_info.async_add_listener(self._handle_info_update)
+        )
+
+    @callback
+    def _handle_info_update(self) -> None:
+        config_entry_id = self.coordinator.config_entry.entry_id
+        device_registry = dr.async_get(self.hass)
+        linked_device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{self.coordinator.config_entry.unique_id}-line{self._line_id}"),
+            config_entry_id,
+        )
+
+        if (
+            linked_device
+            and self.registry_entry
+            and self.registry_entry.device_id is not None
+        ):
+            device = device_registry.async_get(
+                self.registry_entry.device_id, include_child_devices=False
+            )
+            if device and device.via_device_id != linked_device.id:
+                device_registry.async_update_device(
+                    device.id, via_device_id=linked_device.id
+                )
+
+        self.async_write_ha_state()
 
     @property
     @override
@@ -264,9 +355,16 @@ class LunatoneLineBroadcastLight(
         self._coordinator_info = coordinator_info
         self._broadcast = broadcast
 
-        line_unique_id = f"{config_entry_unique_id}-line{broadcast.line}"
-        self._attr_device_info = dr.DeviceInfo(identifiers={(DOMAIN, line_unique_id)})
-        self._attr_unique_id = line_unique_id
+        assert broadcast.line is not None
+
+        unique_id = self.construct_unique_id(config_entry_unique_id, broadcast.line)
+        self._attr_device_info = dr.DeviceInfo(identifiers={(DOMAIN, unique_id)})
+        self._attr_unique_id = unique_id
+
+    @staticmethod
+    def construct_unique_id(config_entry_unique_id: str, line_id: int) -> str:
+        """Returns the unique_id for a device ID."""
+        return f"{config_entry_unique_id}-line{line_id}"
 
     @override
     async def async_added_to_hass(self) -> None:
