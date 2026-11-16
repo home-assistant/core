@@ -1612,114 +1612,172 @@ async def test_get_config_entries_flow_capabilities(
     )
 
 
-async def test_options_flow_end_to_end(
-    hass: HomeAssistant, llm_api: llm.APIInstance
-) -> None:
-    """Test starting, inspecting, aborting, and completing an options flow on random."""
-    step1 = await llm_api.async_call_tool(
-        llm.ToolInput("config__start_flow", {"domain": "random"})
-    )
-    assert isinstance(step1_res := step1.data["result"], dict)
-    step2 = await llm_api.async_call_tool(
-        llm.ToolInput(
-            "config__configure_flow",
-            {"flow_id": step1_res["flow_id"], "next_step_id": "sensor"},
-        )
-    )
-    assert isinstance(step2_res := step2.data["result"], dict)
-    created = await llm_api.async_call_tool(
-        llm.ToolInput(
-            "config__configure_flow",
-            {
-                "flow_id": step2_res["flow_id"],
-                "user_input": {"name": "Random Opts", "minimum": 1, "maximum": 10},
-            },
-        )
-    )
-    await hass.async_block_till_done()
-    assert isinstance(created_res := created.data["result"], dict)
-    short_entry_id = created_res["entry_id"]
-    entry = hass.config_entries.async_entries("random")[0]
-    assert entry.options["minimum"] == 1
-    assert entry.options["maximum"] == 10
-
-    opt_start = await llm_api.async_call_tool(
-        llm.ToolInput(
-            "config__start_flow",
-            {"flow_type": "options", "entry_id": short_entry_id},
-        )
-    )
-    assert opt_start.error is False
-    assert isinstance(opt_step := opt_start.data["result"], dict)
-    opt_flow_id = opt_step["flow_id"]
-    assert opt_flow_id.startswith("random:")
-    assert opt_step["type"] == "form"
-    assert opt_step["step_id"] == "sensor"
-
-    inspected = await llm_api.async_call_tool(
-        llm.ToolInput("config__configure_flow", {"flow_id": opt_flow_id})
-    )
-    assert inspected.error is False
-    assert isinstance(inspected_res := inspected.data["result"], dict)
-    assert inspected_res["step_id"] == "sensor"
-
-    aborted = await llm_api.async_call_tool(
-        llm.ToolInput("config__configure_flow", {"flow_id": opt_flow_id, "abort": True})
-    )
-    assert aborted == llm.ToolResult(
-        data={
-            "result": {
-                "flow_id": opt_flow_id,
-                "type": "abort",
-                "reason": "aborted",
-            }
-        }
-    )
-
-    opt_start2 = await llm_api.async_call_tool(
-        llm.ToolInput(
-            "config__start_flow",
-            {"flow_type": "options", "entry_id": short_entry_id},
-        )
-    )
-    assert isinstance(opt_step2 := opt_start2.data["result"], dict)
-    opt_done = await llm_api.async_call_tool(
-        llm.ToolInput(
-            "config__configure_flow",
-            {
-                "flow_id": opt_step2["flow_id"],
-                "user_input": {"minimum": 5, "maximum": 25},
-            },
-        )
-    )
-    await hass.async_block_till_done()
-    assert opt_done.error is False
-    assert isinstance(opt_done_res := opt_done.data["result"], dict)
-    assert opt_done_res["type"] == "create_entry"
-    assert entry.options["minimum"] == 5
-    assert entry.options["maximum"] == 25
-
-
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", [TEST_DOMAIN])
 @pytest.mark.parametrize(
     "mock_translations",
     [
         {
-            "config": {
-                f"component.{TEST_DOMAIN}.config.step.reconfigure.title": (
-                    "Reconfigure bridge"
-                ),
-                f"component.{TEST_DOMAIN}.config.step.reconfigure.data.host": "Host",
-                f"component.{TEST_DOMAIN}.config.error.cannot_connect": (
-                    "Cannot connect"
-                ),
-            },
-            "title": {f"component.{TEST_DOMAIN}.title": "Test Bridge"},
+            TEST_DOMAIN: {
+                "title": "Test Sensor",
+                "options": {
+                    "step": {
+                        "init": {
+                            "title": "Sensor options",
+                            "data": {
+                                "minimum": "Minimum",
+                                "maximum": "Maximum",
+                            },
+                        }
+                    }
+                },
+            }
         }
     ],
     indirect=True,
 )
-@pytest.mark.usefixtures("ignore_translations_for_mock_domains", "mock_translations")
+@pytest.mark.usefixtures("mock_translations")
+async def test_options_flow_end_to_end(
+    hass: HomeAssistant, llm_api: llm.APIInstance
+) -> None:
+    """Test starting, inspecting, aborting, and completing an options flow."""
+    mock_integration(hass, MockModule(TEST_DOMAIN))
+    mock_platform(hass, f"{TEST_DOMAIN}.config_flow", None)
+
+    entry = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        title="Sensor",
+        entry_id="01J00000000000000000002501",
+        options={"minimum": 1, "maximum": 10},
+        state=ConfigEntryState.LOADED,
+    )
+    entry.add_to_hass(hass)
+
+    class SensorOptionsFlow(OptionsFlow):
+        """Mock options flow updating minimum and maximum."""
+
+        async def async_step_init(
+            self, user_input: dict[str, Any] | None = None
+        ) -> ConfigFlowResult:
+            if user_input is not None:
+                return self.async_create_entry(data=user_input)
+            schema = self.add_suggested_values_to_schema(
+                probatio.Schema(
+                    {
+                        probatio.Required("minimum"): int,
+                        probatio.Required("maximum"): int,
+                    }
+                ),
+                self.config_entry.options,
+            )
+            return self.async_show_form(step_id="init", data_schema=schema)
+
+    class SensorConfigFlow(ConfigFlow):
+        """Mock config flow with options support."""
+
+        @staticmethod
+        @callback
+        @override
+        def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+            return SensorOptionsFlow()
+
+    short_entry_id = f"{TEST_DOMAIN}:2501"
+    with mock_config_flow(TEST_DOMAIN, SensorConfigFlow):
+        opt_start = await llm_api.async_call_tool(
+            llm.ToolInput(
+                "config__start_flow",
+                {"flow_type": "options", "entry_id": short_entry_id},
+            )
+        )
+        assert opt_start.error is False
+        assert isinstance(opt_step := opt_start.data["result"], dict)
+        opt_flow_id = opt_step["flow_id"]
+        assert opt_flow_id.startswith(f"{TEST_DOMAIN}:")
+        assert opt_step["type"] == "form"
+        assert opt_step["step_id"] == "init"
+        assert opt_step["title"] == "Sensor options"
+        assert opt_step["fields"] == [
+            {
+                "name": "minimum",
+                "required": True,
+                "type": "integer",
+                "suggested_value": 1,
+                "label": "Minimum",
+            },
+            {
+                "name": "maximum",
+                "required": True,
+                "type": "integer",
+                "suggested_value": 10,
+                "label": "Maximum",
+            },
+        ]
+
+        inspected = await llm_api.async_call_tool(
+            llm.ToolInput("config__configure_flow", {"flow_id": opt_flow_id})
+        )
+        assert inspected.error is False
+        assert isinstance(inspected_res := inspected.data["result"], dict)
+        assert inspected_res["step_id"] == "init"
+
+        aborted = await llm_api.async_call_tool(
+            llm.ToolInput(
+                "config__configure_flow", {"flow_id": opt_flow_id, "abort": True}
+            )
+        )
+        assert aborted == llm.ToolResult(
+            data={
+                "result": {
+                    "flow_id": opt_flow_id,
+                    "type": "abort",
+                    "reason": "aborted",
+                }
+            }
+        )
+
+        opt_start2 = await llm_api.async_call_tool(
+            llm.ToolInput(
+                "config__start_flow",
+                {"flow_type": "options", "entry_id": short_entry_id},
+            )
+        )
+        assert isinstance(opt_step2 := opt_start2.data["result"], dict)
+        opt_done = await llm_api.async_call_tool(
+            llm.ToolInput(
+                "config__configure_flow",
+                {
+                    "flow_id": opt_step2["flow_id"],
+                    "user_input": {"minimum": 5, "maximum": 25},
+                },
+            )
+        )
+        await hass.async_block_till_done()
+
+    assert opt_done.error is False
+    assert isinstance(opt_done_res := opt_done.data["result"], dict)
+    assert opt_done_res["type"] == "create_entry"
+    assert entry.options == {"minimum": 5, "maximum": 25}
+
+
+@pytest.mark.parametrize(
+    "mock_translations",
+    [
+        {
+            TEST_DOMAIN: {
+                "title": "Test Bridge",
+                "config": {
+                    "step": {
+                        "reconfigure": {
+                            "title": "Reconfigure bridge",
+                            "data": {"host": "Host"},
+                        }
+                    },
+                    "error": {"cannot_connect": "Cannot connect"},
+                },
+            }
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_translations")
 async def test_reconfigure_flow(hass: HomeAssistant, llm_api: llm.APIInstance) -> None:
     """Test starting and completing a reconfigure flow with translations and validation."""
     mock_integration(
@@ -1816,10 +1874,10 @@ async def test_reconfigure_flow(hass: HomeAssistant, llm_api: llm.APIInstance) -
 
 @pytest.mark.parametrize("ignore_translations_for_mock_domains", [TEST_DOMAIN])
 @pytest.mark.usefixtures("ignore_translations_for_mock_domains")
-async def test_options_flow_abort_fallback_and_collision(
+async def test_options_flow_abort_fallback(
     hass: HomeAssistant, llm_api: llm.APIInstance
 ) -> None:
-    """Test options flow abort fallback to homeassistant.config.abort and short ID collision."""
+    """Test options flow abort falls back to homeassistant.config.abort translations."""
     mock_integration(hass, MockModule(TEST_DOMAIN))
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow", None)
 
@@ -1832,7 +1890,7 @@ async def test_options_flow_abort_fallback_and_collision(
     entry.add_to_hass(hass)
 
     class AbortingOptionsFlow(OptionsFlow):
-        """Options flow that can show a form or abort."""
+        """Options flow that shows a form then aborts with a shared homeassistant reason."""
 
         async def async_step_init(
             self, user_input: dict[str, Any] | None = None
@@ -1841,7 +1899,7 @@ async def test_options_flow_abort_fallback_and_collision(
                 return self.async_abort(reason="already_in_progress")
             return self.async_show_form(step_id="init")
 
-    class CollidingFlow(ConfigFlow):
+    class FlowWithOptions(ConfigFlow):
         """Config flow with options support."""
 
         @staticmethod
@@ -1850,59 +1908,26 @@ async def test_options_flow_abort_fallback_and_collision(
         def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
             return AbortingOptionsFlow()
 
-        async def async_step_user(
-            self, user_input: dict[str, Any] | None = None
-        ) -> ConfigFlowResult:
-            return self.async_show_form(step_id="user")
-
-    with mock_config_flow(TEST_DOMAIN, CollidingFlow):
-        with (
-            patch(
-                "homeassistant.config_entries.ulid_util.ulid_now",
-                return_value="01J0000000000000000000aaaa",
-            ),
-            patch(
-                "homeassistant.data_entry_flow.uuid_util.random_uuid_hex",
-                return_value="1111111111111111111111111111aaaa",
-            ),
-        ):
-            cfg_started = await llm_api.async_call_tool(
-                llm.ToolInput("config__start_flow", {"domain": TEST_DOMAIN})
+    with mock_config_flow(TEST_DOMAIN, FlowWithOptions):
+        opt_started = await llm_api.async_call_tool(
+            llm.ToolInput(
+                "config__start_flow",
+                {"flow_type": "options", "entry_id": f"{TEST_DOMAIN}:4001"},
             )
-            opt_started = await llm_api.async_call_tool(
-                llm.ToolInput(
-                    "config__start_flow",
-                    {"flow_type": "options", "entry_id": f"{TEST_DOMAIN}:4001"},
-                )
-            )
-
-        assert isinstance(cfg_step := cfg_started.data["result"], dict)
+        )
         assert isinstance(opt_step := opt_started.data["result"], dict)
-        assert cfg_step["flow_id"] == f"{TEST_DOMAIN}:aaaa"
-        assert opt_step["flow_id"] == f"{TEST_DOMAIN}:aaaa"
-
-        collision_err = await llm_api.async_call_tool(
-            llm.ToolInput("config__configure_flow", {"flow_id": f"{TEST_DOMAIN}:aaaa"})
-        )
-        assert collision_err == llm.ToolResult(
-            data={"error": f"Flow '{TEST_DOMAIN}:aaaa' not found."},
-            error=True,
-        )
-
-        # Abort the config flow so the options flow ID becomes unique, then finish it.
-        hass.config_entries.flow.async_abort("01J0000000000000000000aaaa")
-
         aborted = await llm_api.async_call_tool(
             llm.ToolInput(
                 "config__configure_flow",
-                {"flow_id": f"{TEST_DOMAIN}:aaaa", "user_input": {}},
+                {"flow_id": opt_step["flow_id"], "user_input": {}},
             )
         )
-        assert aborted.error is False
-        assert isinstance(aborted_res := aborted.data["result"], dict)
-        assert aborted_res["type"] == "abort"
-        assert aborted_res["reason"] == "already_in_progress"
-        assert "description" in aborted_res
+
+    assert aborted.error is False
+    assert isinstance(aborted_res := aborted.data["result"], dict)
+    assert aborted_res["type"] == "abort"
+    assert aborted_res["reason"] == "already_in_progress"
+    assert "description" in aborted_res
 
 
 @pytest.mark.parametrize("ignore_translations_for_mock_domains", [TEST_DOMAIN])

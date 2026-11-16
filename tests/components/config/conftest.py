@@ -14,6 +14,7 @@ from pytest_homeassistant.common import raise_contains_mocks
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import translation
+from homeassistant.loader import Integration
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,37 +82,32 @@ def hass_config_store() -> Generator[dict[str, Any]]:
 
 
 @pytest.fixture
-def mock_translations(request: pytest.FixtureRequest) -> Generator[None]:
-    """Overlay parameterized category-keyed translations onto async_get_translations."""
-    extra_by_category: dict[str, dict[str, str]] = getattr(request, "param", {})
-    real_get_translations = translation.async_get_translations
+def mock_translations(
+    hass: HomeAssistant, request: pytest.FixtureRequest
+) -> Generator[None]:
+    """Provide strings.json-shaped translations for mocked integrations."""
+    strings_by_domain: dict[str, dict[str, Any]] = getattr(request, "param", {})
+    cache = translation._async_get_translations_cache(hass)
+    domains = set(strings_by_domain)
+    cache.async_invalidate(domains)
+    real_get_strings = translation._async_get_component_strings
 
-    async def _get_translations(
-        hass: HomeAssistant,
-        language: str,
-        category: str,
-        integrations: Iterable[str] | None = None,
-        config_flow: bool | None = None,
-    ) -> dict[str, str]:
-        result = await real_get_translations(
-            hass, language, category, integrations, config_flow
-        )
-        if not (extra := extra_by_category.get(category)):
-            return result
-        if integrations is None:
-            return {**result, **extra}
-        allowed = set(integrations)
-        return {
-            **result,
-            **{
-                key: val
-                for key, val in extra.items()
-                if key.split(".", 2)[1] in allowed
-            },
-        }
+    async def _get_component_strings(
+        hass_arg: HomeAssistant,
+        languages: Iterable[str],
+        components: set[str],
+        integrations: dict[str, Integration],
+    ) -> dict[str, dict[str, Any]]:
+        result = await real_get_strings(hass_arg, languages, components, integrations)
+        for lang in languages:
+            lang_strings = result.setdefault(lang, {})
+            for domain in components.intersection(domains):
+                lang_strings[domain] = deepcopy(strings_by_domain[domain])
+        return result
 
     with patch(
-        "homeassistant.helpers.translation.async_get_translations",
-        side_effect=_get_translations,
+        "homeassistant.helpers.translation._async_get_component_strings",
+        side_effect=_get_component_strings,
     ):
         yield
+    cache.async_invalidate(domains)
