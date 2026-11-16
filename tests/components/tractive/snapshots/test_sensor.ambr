@@ -65,10 +65,7 @@
     'area_id': None,
     'capabilities': dict({
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'calculating_baseline',
         'normal',
-        'not_enough_data_today',
-        'not_synced_yet',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -107,10 +104,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Pet Bark status',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'calculating_baseline',
         'normal',
-        'not_enough_data_today',
-        'not_synced_yet',
       ]),
     }),
     'context': <ANY>,
@@ -118,7 +112,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'not_synced_yet',
+    'state': 'normal',
   })
 # ---
 # name: test_sensor[sensor.test_pet_daily_goal-entry]
@@ -358,11 +352,8 @@
     'area_id': None,
     'capabilities': dict({
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'calculating_baseline',
         'elevated',
         'normal',
-        'not_enough_data_today',
-        'not_synced_yet',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -401,11 +392,8 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Pet Resting heart rate status',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'calculating_baseline',
         'elevated',
         'normal',
-        'not_enough_data_today',
-        'not_synced_yet',
       ]),
     }),
     'context': <ANY>,
@@ -424,11 +412,8 @@
     'area_id': None,
     'capabilities': dict({
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'calculating_baseline',
         'elevated',
         'normal',
-        'not_enough_data_today',
-        'not_synced_yet',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -467,11 +452,8 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Pet Resting respiratory rate status',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'calculating_baseline',
         'elevated',
         'normal',
-        'not_enough_data_today',
-        'not_synced_yet',
       ]),
     }),
     'context': <ANY>,
@@ -492,8 +474,6 @@
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'infrequent',
         'normal',
-        'not_enough_data_today',
-        'not_synced_yet',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -534,8 +514,6 @@
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'infrequent',
         'normal',
-        'not_enough_data_today',
-        'not_synced_yet',
       ]),
     }),
     'context': <ANY>,
@@ -543,7 +521,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'not_enough_data_today',
+    'state': 'normal',
   })
 # ---
 # name: test_sensor[sensor.test_pet_weight-entry]

@@ -62,10 +62,7 @@
       "bark_status": {
         "name": "Bark status",
         "state": {
-          "calculating_baseline": "[%key:component::tractive::entity::sensor::resting_heart_rate_status::state::calculating_baseline%]",
-          "normal": "[%key:common::state::normal%]",
-          "not_enough_data_today": "[%key:component::tractive::entity::sensor::resting_heart_rate_status::state::not_enough_data_today%]",
-          "not_synced_yet": "[%key:component::tractive::entity::sensor::resting_heart_rate_status::state::not_synced_yet%]"
+          "normal": "[%key:common::state::normal%]"
         }
       },
       "daily_goal": {
@@ -83,30 +80,22 @@
       "resting_heart_rate_status": {
         "name": "Resting heart rate status",
         "state": {
-          "calculating_baseline": "Calculating baseline",
           "elevated": "Elevated",
-          "normal": "[%key:common::state::normal%]",
-          "not_enough_data_today": "Not enough data today",
-          "not_synced_yet": "Not synced yet"
+          "normal": "[%key:common::state::normal%]"
         }
       },
       "resting_respiratory_rate_status": {
         "name": "Resting respiratory rate status",
         "state": {
-          "calculating_baseline": "[%key:component::tractive::entity::sensor::resting_heart_rate_status::state::calculating_baseline%]",
           "elevated": "[%key:component::tractive::entity::sensor::resting_heart_rate_status::state::elevated%]",
-          "normal": "[%key:common::state::normal%]",
-          "not_enough_data_today": "[%key:component::tractive::entity::sensor::resting_heart_rate_status::state::not_enough_data_today%]",
-          "not_synced_yet": "[%key:component::tractive::entity::sensor::resting_heart_rate_status::state::not_synced_yet%]"
+          "normal": "[%key:common::state::normal%]"
         }
       },
       "scratch_status": {
         "name": "Scratch status",
         "state": {
           "infrequent": "Infrequent",
-          "normal": "[%key:common::state::normal%]",
-          "not_enough_data_today": "[%key:component::tractive::entity::sensor::resting_heart_rate_status::state::not_enough_data_today%]",
-          "not_synced_yet": "[%key:component::tractive::entity::sensor::resting_heart_rate_status::state::not_synced_yet%]"
+          "normal": "[%key:common::state::normal%]"
         }
       },
       "tracker_state": {
