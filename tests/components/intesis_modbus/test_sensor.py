@@ -91,3 +91,32 @@ async def test_failed_block_only_takes_its_own_sensors(
         assert hass.states.get(PREFIX + key).state == STATE_UNAVAILABLE
     assert hass.states.get(PREFIX + "error").state == "none"
     assert hass.states.get(PREFIX + "operation_time").state == "1234"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+async def test_unreachable_air_conditioner_is_reported_by_the_error_sensor(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_connection: MockModbusConnection,
+) -> None:
+    """The gateway's own sensors stay when it cannot reach the air conditioner."""
+    unit = mock_connection.for_unit(1)
+    unit.holding[11] = 65535
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get(PREFIX + "error").state == "communication_error"
+    assert hass.states.get(PREFIX + "error_code").state == STATE_UNKNOWN
+    assert hass.states.get(PREFIX + "undervoltage_time").state == "3"
+    for key in (
+        "operation_time",
+        "outdoor_intake_temperature",
+        "return_path_temperature",
+    ):
+        assert hass.states.get(PREFIX + key).state == STATE_UNAVAILABLE
+    unit.holding[11] = 0
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get(PREFIX + "error").state == "none"
+    assert hass.states.get(PREFIX + "outdoor_intake_temperature").state == "12.5"

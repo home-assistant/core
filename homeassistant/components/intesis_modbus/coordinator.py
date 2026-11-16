@@ -43,6 +43,7 @@ class IntesisCoordinator(DataUpdateCoordinator[UpdateReport]):
         )
         self.device = device
         self._failing: set[str] = set()
+        self.unit_unreachable = False
 
     @override
     async def _async_update_data(self) -> UpdateReport:
@@ -63,12 +64,28 @@ class IntesisCoordinator(DataUpdateCoordinator[UpdateReport]):
                 "every sub-system failed to refresh", list(report.failed.values())
             )
         self._log_component_changes(report)
-        error = self.device.error
-        if error is not None and error.state is ErrorState.COMMUNICATION_ERROR:
-            raise UpdateFailed(
-                translation_domain=DOMAIN, translation_key="unit_unreachable"
-            )
+        self._check_unit_reachable()
         return report
+
+    def _check_unit_reachable(self) -> None:
+        """Note whether the gateway reaches its unit, and log when that changes.
+
+        The gateway still answers then, so what it says about itself stays
+        available; only what it reads off the air conditioner does not.
+        """
+        error = self.device.error
+        unreachable = (
+            error is not None and error.state is ErrorState.COMMUNICATION_ERROR
+        )
+        if unreachable and not self.unit_unreachable:
+            _LOGGER.info(
+                "%s: the gateway cannot reach the air conditioner, "
+                "which is unavailable",
+                self.name,
+            )
+        elif self.unit_unreachable and not unreachable:
+            _LOGGER.info("%s: the gateway reaches the air conditioner again", self.name)
+        self.unit_unreachable = unreachable
 
     def _log_component_changes(self, report: UpdateReport) -> None:
         """Log a sub-system's first failure and its recovery, once each."""

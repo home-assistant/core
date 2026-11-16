@@ -29,6 +29,7 @@ class IntesisSensorEntityDescription(SensorEntityDescription):
 
     report_name: str
     value_fn: Callable[[IntesisSingleUnitGateway], StateType]
+    available_without_unit: bool = False
 
 
 SENSORS: Final[tuple[IntesisSensorEntityDescription, ...]] = (
@@ -54,6 +55,7 @@ SENSORS: Final[tuple[IntesisSensorEntityDescription, ...]] = (
         key="error",
         translation_key="error",
         report_name="control",
+        available_without_unit=True,
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
         options=[state.value for state in ErrorState],
@@ -65,6 +67,7 @@ SENSORS: Final[tuple[IntesisSensorEntityDescription, ...]] = (
         key="error_code",
         translation_key="error_code",
         report_name="control",
+        available_without_unit=True,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: (
             None if (error := device.error) is None else error.remote_code
@@ -84,6 +87,7 @@ SENSORS: Final[tuple[IntesisSensorEntityDescription, ...]] = (
         key="undervoltage_hours",
         translation_key="undervoltage_hours",
         report_name="status",
+        available_without_unit=True,
         device_class=SensorDeviceClass.DURATION,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -115,7 +119,12 @@ class IntesisSensor(IntesisEntity, SensorEntity):
         description: IntesisSensorEntityDescription,
     ) -> None:
         """Bind to the gateway the description reads."""
-        super().__init__(coordinator, description.key, description.report_name)
+        super().__init__(
+            coordinator,
+            description.key,
+            description.report_name,
+            available_without_unit=description.available_without_unit,
+        )
         self.entity_description = description
 
     @property
