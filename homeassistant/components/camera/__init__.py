@@ -204,6 +204,7 @@ async def _async_get_image(
     raise HomeAssistantError(
         translation_domain=DOMAIN,
         translation_key="image_unavailable",
+        translation_placeholders={"entity_id": camera.entity_id},
     )
 
 
