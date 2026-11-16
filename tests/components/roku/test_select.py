@@ -15,11 +15,12 @@ from rokuecp import (
 from homeassistant.components.roku.const import DOMAIN
 from homeassistant.components.roku.coordinator import SCAN_INTERVAL
 from homeassistant.components.select import (
-    ATTR_OPTION,
     ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_SELECT_OPTION
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -67,10 +68,10 @@ async def test_application_state(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: "select.my_roku_3_application",
-            ATTR_OPTION: "Netflix",
+            CommonServiceArgument.ENTITY_ID: "select.my_roku_3_application",
+            SelectServiceArgument.OPTION: "Netflix",
         },
         blocking=True,
     )
@@ -89,10 +90,10 @@ async def test_application_state(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: "select.my_roku_3_application",
-            ATTR_OPTION: "Home",
+            CommonServiceArgument.ENTITY_ID: "select.my_roku_3_application",
+            SelectServiceArgument.OPTION: "Home",
         },
         blocking=True,
     )
@@ -144,10 +145,10 @@ async def test_application_select_error(
     with pytest.raises(HomeAssistantError, match=error_string):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: "select.my_roku_3_application",
-                ATTR_OPTION: "Netflix",
+                CommonServiceArgument.ENTITY_ID: "select.my_roku_3_application",
+                SelectServiceArgument.OPTION: "Netflix",
             },
             blocking=True,
         )
@@ -185,10 +186,10 @@ async def test_channel_state(
     # channel name
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: "select.living_room_58_onn_roku_tv_channel",
-            ATTR_OPTION: "WhatsOn (1.1)",
+            CommonServiceArgument.ENTITY_ID: "select.living_room_58_onn_roku_tv_channel",
+            SelectServiceArgument.OPTION: "WhatsOn (1.1)",
         },
         blocking=True,
     )
@@ -207,10 +208,10 @@ async def test_channel_state(
     # channel number
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: "select.living_room_58_onn_roku_tv_channel",
-            ATTR_OPTION: "99.1",
+            CommonServiceArgument.ENTITY_ID: "select.living_room_58_onn_roku_tv_channel",
+            SelectServiceArgument.OPTION: "99.1",
         },
         blocking=True,
     )
@@ -239,10 +240,10 @@ async def test_channel_select_error(
     with pytest.raises(HomeAssistantError, match="Invalid response from Roku API"):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: "select.living_room_58_onn_roku_tv_channel",
-                ATTR_OPTION: "99.1",
+                CommonServiceArgument.ENTITY_ID: "select.living_room_58_onn_roku_tv_channel",
+                SelectServiceArgument.OPTION: "99.1",
             },
             blocking=True,
         )

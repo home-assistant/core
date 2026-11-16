@@ -8,8 +8,8 @@ from uuid import uuid4
 from aiohttp import ClientError, web_exceptions
 import probatio
 from pydaikin.daikin_base import Appliance
-from pydaikin.discovery import Discovery
-from pydaikin.exceptions import DaikinException
+from pydaikin.discovery import Discovery, is_unsupported
+from pydaikin.exceptions import DaikinException, DaikinUnsupportedError
 from pydaikin.factory import DaikinFactory
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -99,6 +99,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                     password=password,
                     ssl_context=client_context_no_verify(),
                 )
+        except DaikinUnsupportedError:
+            # Callers abort the flow, the generic DaikinException handler must not catch it
+            raise
         except TimeoutError, ClientError:
             self.host = None
             return {}, {"base": "cannot_connect"}
@@ -122,7 +125,10 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         self, host: str, key: str | None = None, password: str | None = None
     ) -> ConfigFlowResult:
         """Create device."""
-        data, errors = await self._async_validate_device(host, key, password)
+        try:
+            data, errors = await self._async_validate_device(host, key, password)
+        except DaikinUnsupportedError:
+            return self.async_abort(reason="unsupported_device")
         if errors:
             return self.async_show_form(
                 step_id="user", data_schema=self.schema, errors=errors
@@ -166,11 +172,14 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             if user_input.get(CONF_API_KEY) and user_input.get(CONF_PASSWORD):
                 errors["base"] = "api_password"
             else:
-                data, errors = await self._async_validate_device(
-                    user_input[CONF_HOST],
-                    user_input.get(CONF_API_KEY),
-                    user_input.get(CONF_PASSWORD),
-                )
+                try:
+                    data, errors = await self._async_validate_device(
+                        user_input[CONF_HOST],
+                        user_input.get(CONF_API_KEY),
+                        user_input.get(CONF_PASSWORD),
+                    )
+                except DaikinUnsupportedError:
+                    return self.async_abort(reason="unsupported_device")
                 if not errors:
                     mac = data.pop(KEY_MAC)
                     if entry.unique_id == entry.data[CONF_HOST]:
@@ -205,7 +214,8 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         """Prepare configuration for a discovered Daikin device."""
         _LOGGER.debug("Zeroconf user_input: %s", discovery_info)
         devices = Discovery().poll(ip=discovery_info.host)
-        if not devices:
+        device = next(iter(devices), None)
+        if device is None:
             _LOGGER.debug(
                 (
                     "Could not find MAC-address for %s, make sure the required UDP"
@@ -214,7 +224,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 discovery_info.host,
             )
             return self.async_abort(reason="cannot_connect")
-        await self.async_set_unique_id(next(iter(devices))[KEY_MAC])
+        if is_unsupported(device):
+            return self.async_abort(reason="unsupported_device")
+        await self.async_set_unique_id(device[KEY_MAC])
         self._abort_if_unique_id_configured()
         self.host = discovery_info.host
         return await self.async_step_user()

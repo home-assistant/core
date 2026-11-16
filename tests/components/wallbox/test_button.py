@@ -5,9 +5,9 @@ from unittest.mock import MagicMock, patch
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.wallbox.coordinator import InsufficientRights
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -24,8 +24,8 @@ async def test_wallbox_button_resume_schedule(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: MOCK_BUTTON_RESUME_SCHEDULE_ID},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: MOCK_BUTTON_RESUME_SCHEDULE_ID},
         blocking=True,
     )
 
@@ -45,8 +45,8 @@ async def test_wallbox_button_resume_schedule_error_handling(
     ):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: MOCK_BUTTON_RESUME_SCHEDULE_ID},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: MOCK_BUTTON_RESUME_SCHEDULE_ID},
             blocking=True,
         )
 
@@ -56,8 +56,8 @@ async def test_wallbox_button_resume_schedule_error_handling(
     ):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: MOCK_BUTTON_RESUME_SCHEDULE_ID},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: MOCK_BUTTON_RESUME_SCHEDULE_ID},
             blocking=True,
         )
 
@@ -67,7 +67,7 @@ async def test_wallbox_button_resume_schedule_error_handling(
     ):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: MOCK_BUTTON_RESUME_SCHEDULE_ID},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: MOCK_BUTTON_RESUME_SCHEDULE_ID},
             blocking=True,
         )

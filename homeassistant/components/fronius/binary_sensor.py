@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, override
+from typing import override
 
 from fronius_solarapi import PowerFlow
 
@@ -20,10 +20,7 @@ from .entity import (
     FroniusEntityDescription,
     async_add_entities_for_seen_keys,
 )
-
-if TYPE_CHECKING:
-    from . import FroniusConfigEntry
-
+from .solar_net import FroniusConfigEntry
 
 PARALLEL_UPDATES = 0
 

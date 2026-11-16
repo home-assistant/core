@@ -140,17 +140,14 @@ class NetatmoSource(MediaSource):
         # Append first level children
         if not camera_id:
             for cid in self.events:
-                child = self._build_item_response(source, cid)
-                if child:
-                    media.children.append(child)
+                media.children.append(self._build_item_response(source, cid))
         else:
             for eid in self.events[camera_id]:
                 try:
                     child = self._build_item_response(source, camera_id, eid)
                 except IncompatibleMediaSource:
                     continue
-                if child:
-                    media.children.append(child)
+                media.children.append(child)
 
         return media
 

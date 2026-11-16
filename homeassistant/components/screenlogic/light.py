@@ -15,8 +15,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import LIGHT_CIRCUIT_FUNCTIONS
+from .coordinator import ScreenLogicConfigEntry
 from .entity import ScreenLogicCircuitEntity, ScreenLogicPushEntityDescription
-from .types import ScreenLogicConfigEntry
 
 
 async def async_setup_entry(

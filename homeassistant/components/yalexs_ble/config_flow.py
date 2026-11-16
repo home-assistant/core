@@ -21,7 +21,6 @@ from homeassistant.components.bluetooth import (
     async_discovered_service_info,
 )
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -31,6 +30,7 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.typing import DiscoveryInfoType
 
+from . import YALEXSBLEConfigEntry
 from .config_cache import async_add_validated_config, async_get_validated_config
 from .const import CONF_ALWAYS_CONNECTED, CONF_KEY, CONF_LOCAL_NAME, CONF_SLOT, DOMAIN
 from .util import async_find_existing_service_info, human_readable_name
@@ -359,7 +359,7 @@ class YalexsConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: YALEXSBLEConfigEntry,
     ) -> YaleXSBLEOptionsFlowHandler:
         """Get the options flow for this handler."""
         return YaleXSBLEOptionsFlowHandler()

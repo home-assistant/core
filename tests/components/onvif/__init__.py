@@ -67,6 +67,8 @@ def setup_mock_onvif_camera(
     devicemgmt = MagicMock()
 
     device_info = MagicMock()
+    device_info.Manufacturer = MANUFACTURER
+    device_info.Model = MODEL
     device_info.SerialNumber = SERIAL_NUMBER if with_serial else None
 
     devicemgmt.GetDeviceInformation = AsyncMock(return_value=device_info)

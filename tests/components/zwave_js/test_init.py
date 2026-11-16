@@ -1362,32 +1362,48 @@ async def test_issue_registry(
     client: MagicMock,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test issue registry."""
-    device = "/test"
-    network_key = "abc123"
-
+    """Test the invalid server version issue is raised per config entry."""
     client.connect.side_effect = InvalidServerVersion(
         VersionInfo("a", "b", 1, 1, 1), 1, "Invalid version"
     )
 
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="Z-Wave JS",
-        data={
-            "url": "ws://host1:3001",
-            "use_addon": False,
-            "usb_path": device,
-            "network_key": network_key,
-        },
+    entry, other_entry = (
+        MockConfigEntry(
+            domain=DOMAIN,
+            title="Z-Wave JS",
+            data={
+                "url": url,
+                "use_addon": False,
+                "usb_path": "/test",
+                "network_key": "abc123",
+            },
+        )
+        for url in ("ws://host1:3001", "ws://host2:3001")
     )
     entry.add_to_hass(hass)
+    other_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert other_entry.state is ConfigEntryState.SETUP_RETRY
+    for config_entry in (entry, other_entry):
+        issue = issue_registry.async_get_issue(
+            DOMAIN, f"invalid_server_version.{config_entry.entry_id}"
+        )
+        assert issue
+        assert issue.config_entry_id == config_entry.entry_id
+        assert issue.translation_key == "invalid_server_version"
 
-    assert issue_registry.async_get_issue(DOMAIN, "invalid_server_version")
+    await hass.config_entries.async_remove(other_entry.entry_id)
+    await hass.async_block_till_done()
+
+    issue_id = f"invalid_server_version.{entry.entry_id}"
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert not issue_registry.async_get_issue(
+        DOMAIN, f"invalid_server_version.{other_entry.entry_id}"
+    )
 
     async def connect():
         await asyncio.sleep(0)
@@ -1398,7 +1414,7 @@ async def test_issue_registry(
     await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.LOADED
-    assert not issue_registry.async_get_issue(DOMAIN, "invalid_server_version")
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
 
 
 @pytest.mark.usefixtures("addon_running", "client")

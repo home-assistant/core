@@ -7,7 +7,9 @@ from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.togrill.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -64,3 +66,36 @@ async def test_setup_device_failing(
 
     await setup_entry(hass, mock_entry, [])
     assert mock_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_migrate_probe_to_child_device(
+    hass: HomeAssistant,
+    mock_entry: MockConfigEntry,
+    mock_client: Mock,
+    mock_client_class: Mock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that an existing probe device is converted to a child device in place."""
+    mock_entry.add_to_hass(hass)
+    parent = device_registry.async_get_or_create(
+        config_entry_id=mock_entry.entry_id,
+        identifiers={(DOMAIN, TOGRILL_SERVICE_INFO.address)},
+    )
+    probe = device_registry.async_get_or_create(
+        config_entry_id=mock_entry.entry_id,
+        identifiers={(DOMAIN, f"{TOGRILL_SERVICE_INFO.address}_1")},
+        via_device_id=parent.id,
+    )
+    # Devices registered before a restart are not live for the new setup.
+    device_registry.async_config_entry_unloaded(mock_entry.entry_id)
+
+    inject_bluetooth_service_info(hass, TOGRILL_SERVICE_INFO)
+    await setup_entry(hass, mock_entry, [Platform.SENSOR])
+    assert mock_entry.state is ConfigEntryState.LOADED
+
+    child = device_registry.async_get_child_device_by_identifier(
+        (DOMAIN, f"{TOGRILL_SERVICE_INFO.address}_1"), mock_entry.entry_id
+    )
+    assert child is not None
+    assert child.id == probe.id
+    assert child.parent_device_id == parent.id

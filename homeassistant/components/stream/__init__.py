@@ -599,7 +599,7 @@ class Stream:
         self._logger.debug("Started a stream recording of %s seconds", duration)
 
         # Take advantage of lookback
-        hls: HlsStreamOutput = cast(HlsStreamOutput, self.outputs().get(HLS_PROVIDER))
+        hls = cast(HlsStreamOutput | None, self.outputs().get(HLS_PROVIDER))
         if hls:
             num_segments = min(int(lookback / hls.target_duration) + 1, MAX_SEGMENTS)
             # Wait for latest segment, then add the lookback

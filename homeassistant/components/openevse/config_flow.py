@@ -220,7 +220,7 @@ class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=self.add_suggested_values_to_schema(AUTH_SCHEMA, user_input),
-            description_placeholders={CONF_HOST: reauth_entry.data[CONF_HOST]},
+            description_placeholders={"host": reauth_entry.data[CONF_HOST]},
             errors=errors,
         )
 

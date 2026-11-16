@@ -21,6 +21,7 @@
   "categories": ["appliances_cleaning.cooking"],
   "codeowners": ["@zweckj"],
   "config_flow": true,
+  "connectivity": ["bluetooth"],
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/acaia",
   "integration_type": "device",

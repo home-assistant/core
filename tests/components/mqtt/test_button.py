@@ -37,7 +37,7 @@ from pytest_homeassistant.typing import MqttMockHAClientGenerator, MqttMockPahoC
 
 from homeassistant.components import button
 from homeassistant.components.mqtt.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, STATE_UNKNOWN
+from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_UNKNOWN, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 
 DEFAULT_CONFIG = {
@@ -74,8 +74,8 @@ async def test_sending_mqtt_commands(
 
     await hass.services.async_call(
         button.DOMAIN,
-        button.SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.test_button"},
+        button.ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: "button.test_button"},
         blocking=True,
     )
 
@@ -134,8 +134,8 @@ async def test_sending_mqtt_commands_with_message_expiry_interval(
 
     await hass.services.async_call(
         button.DOMAIN,
-        button.SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.test_button"},
+        button.ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: "button.test_button"},
         blocking=True,
     )
 
@@ -174,8 +174,8 @@ async def test_command_template(
 
     await hass.services.async_call(
         button.DOMAIN,
-        button.SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.test"},
+        button.ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: "button.test"},
         blocking=True,
     )
 
@@ -435,7 +435,7 @@ async def test_entity_debug_info_message(
         mqtt_mock_entry,
         button.DOMAIN,
         DEFAULT_CONFIG,
-        button.SERVICE_PRESS,
+        button.ButtonService.PRESS,
         command_payload="PRESS",
         state_topic=None,
     )
@@ -512,7 +512,13 @@ async def test_valid_device_class(
 @pytest.mark.parametrize(
     ("service", "topic", "parameters", "payload", "template"),
     [
-        (button.SERVICE_PRESS, "command_topic", None, "PRESS", "command_template"),
+        (
+            button.ButtonService.PRESS,
+            "command_topic",
+            None,
+            "PRESS",
+            "command_template",
+        ),
     ],
 )
 async def test_publishing_with_custom_encoding(

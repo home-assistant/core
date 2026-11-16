@@ -27,7 +27,7 @@ from gazetteer_matcher import (
 )
 
 from homeassistant.components.homeassistant.exposed_entities import async_should_expose
-from homeassistant.const import ATTR_DEVICE_CLASS
+from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import (
     area_registry as ar,
@@ -129,7 +129,7 @@ def async_build_home(hass: HomeAssistant) -> Home:
                 else None
             ),
         }
-        if device_class := state.attributes.get(ATTR_DEVICE_CLASS):
+        if device_class := state.attributes.get(EntityStateAttribute.DEVICE_CLASS):
             spec["device_class"] = device_class
         entities[state.entity_id] = spec
 

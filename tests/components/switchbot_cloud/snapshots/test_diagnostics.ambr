@@ -1,0 +1,37 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'cloudhook_configured': False,
+    'devices': list([
+      dict({
+        'device_type': 'DIY Air Conditioner',
+        'last_update_success': True,
+        'manageable_by_webhook': False,
+        'platforms': list([
+          'climates',
+          'switches',
+        ]),
+        'remote': True,
+        'status': None,
+      }),
+      dict({
+        'device_type': 'Air Purifier Table PM2.5',
+        'last_update_success': True,
+        'manageable_by_webhook': False,
+        'platforms': list([
+          'fans',
+        ]),
+        'remote': False,
+        'status': dict({
+          'deviceId': '**REDACTED**',
+          'deviceType': 'Air Purifier Table PM2.5',
+          'hubDeviceId': '**REDACTED**',
+          'mode': 2,
+          'power': 'ON',
+          'version': 'V2.3',
+        }),
+      }),
+    ]),
+    'webhook_registered': False,
+  })
+# ---

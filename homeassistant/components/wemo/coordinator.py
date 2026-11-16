@@ -262,7 +262,10 @@ class DeviceCoordinator(DataUpdateCoordinator[None]):
                     self.wemo.get_state, force_update
                 )
             except ActionException as err:
-                raise UpdateFailed("WeMo update failed") from err
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="update_failed",
+                ) from err
 
 
 def _create_device_info(wemo: WeMoDevice) -> DeviceInfo:

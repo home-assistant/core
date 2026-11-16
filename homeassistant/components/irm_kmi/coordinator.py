@@ -7,7 +7,7 @@ from typing import Final, override
 from irm_kmi_api import IrmKmiApiClientHa, IrmKmiApiError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_LOCATION
+from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import (
     TimestampDataUpdateCoordinator,
@@ -64,8 +64,8 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator[ProcessedCoordinatorData]
         try:
             await self._api.refresh_forecasts_coord(
                 {
-                    "lat": self._location[ATTR_LATITUDE],
-                    "long": self._location[ATTR_LONGITUDE],
+                    "lat": self._location[CONF_LATITUDE],
+                    "long": self._location[CONF_LONGITUDE],
                 }
             )
 
