@@ -2,18 +2,14 @@
 
 from datetime import datetime, timedelta
 import logging
-from typing import Any, override
+from typing import Any, Final, override
 
 import evohomeasync2 as evo
 from evohomeasync2.const import (
-    SZ_CAN_BE_TEMPORARY,
-    SZ_DURATION,
-    SZ_PERIOD,
     SZ_SETPOINT_STATUS,
     SZ_SYSTEM_MODE,
     SZ_SYSTEM_MODE_STATUS,
     SZ_TEMPERATURE_STATUS,
-    SZ_TIMING_MODE,
     SZ_UNTIL,
     SystemMode as EvoSystemMode,
     ZoneMode as EvoZoneMode,
@@ -59,6 +55,20 @@ EVO_PRESET_TO_HA = {
     EvoZoneMode.PERMANENT_OVERRIDE: "permanent",
 }
 HA_PRESET_TO_EVO = {v: k for k, v in EVO_PRESET_TO_HA.items()}
+
+_SET_MODE_ERROR_KEYS: Final = {
+    evo.RequestErrorReason.MODE_UNKNOWN: "mode_not_supported",
+    evo.RequestErrorReason.MODE_UNSUPPORTED: "mode_not_supported",
+    evo.RequestErrorReason.TIMESPAN_NOT_ALLOWED: "mode_cant_be_temporary",
+    evo.RequestErrorReason.TIMESPAN_NOT_IN_FUTURE: "mode_timespan_not_in_future",
+}
+
+
+def _set_mode_error_key(err: evo.InvalidSetModeError) -> str:
+    """Return the translation key of a system mode that the client has rejected."""
+    if err.reason == evo.RequestErrorReason.TIMESPAN_UNSUPPORTED:
+        return f"mode_cant_have_{err.details['timing_mode']}"  # duration or period
+    return _SET_MODE_ERROR_KEYS.get(err.reason, "mode_request_invalid")
 
 
 async def async_setup_platform(
@@ -362,38 +372,24 @@ class EvoController(EvoClimateEntity):
     ) -> None:
         """Set the system mode, either indefinitely or for a duration/period."""
 
-        # check the requested mode; not all systems support all modes...
-        if (mode_info := self._evo_modes.get(as_snake_case(mode))) is None:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="mode_not_supported",
-                translation_placeholders={"mode": mode},
-            )
-
-        timing_mode: str | None = None
-        until: datetime | None = None
+        # the client checks the mode is allowed, and works out when it ends (in the
+        # location's time zone, which need not be HA's)
+        evo_mode = as_snake_case(mode)
 
         # service schema makes duration & period mutually exclusive (can be neither)
         if period is not None:
-            timing_mode, until = SZ_PERIOD, dt_util.start_of_local_day() + period
-        elif duration is not None:
-            timing_mode, until = SZ_DURATION, dt_util.utcnow() + duration
+            client_api = self._evo_device.set_mode(evo_mode, period=period)
+        else:
+            client_api = self._evo_device.set_mode(evo_mode, duration=duration)
 
-        if timing_mode is not None:
-            if not mode_info[SZ_CAN_BE_TEMPORARY]:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="mode_cant_be_temporary",
-                    translation_placeholders={"mode": mode},
-                )
-            if mode_info.get(SZ_TIMING_MODE) != timing_mode:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key=f"mode_cant_have_{timing_mode}",
-                    translation_placeholders={"mode": mode},
-                )
-
-        await self._set_tcs_mode(mode_info[SZ_SYSTEM_MODE], until=until)
+        try:
+            await self.coordinator.call_client_api(client_api)
+        except evo.InvalidSetModeError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key=_set_mode_error_key(err),
+                translation_placeholders={"mode": mode},
+            ) from err
 
     async def _set_tcs_mode(
         self, mode: EvoSystemMode, until: datetime | None = None

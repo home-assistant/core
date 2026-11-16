@@ -21,6 +21,12 @@
     "mode_not_supported": {
       "message": "The mode `{mode}` is not supported by this controller"
     },
+    "mode_request_invalid": {
+      "message": "The mode `{mode}` can't be set as requested"
+    },
+    "mode_timespan_not_in_future": {
+      "message": "The 'Duration' or 'Period' of the mode `{mode}` must end in the future"
+    },
     "zone_only_service": {
       "message": "Only zones support the `{service}` action"
     }
