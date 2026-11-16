@@ -71,6 +71,10 @@
       "description": "The following entities do not have an expected unit of measurement {price_units}:",
       "title": "[%key:component::energy::issues::entity_unexpected_unit_energy::title%]"
     },
+    "entity_unexpected_unit_fixed_cost": {
+      "description": "The following entities do not have an expected unit of measurement. Use {currency}, or {currency} per period of the fixed cost, such as {currency}/day for a daily fixed cost:",
+      "title": "[%key:component::energy::issues::entity_unexpected_unit_energy::title%]"
+    },
     "entity_unexpected_unit_gas": {
       "description": "The following entities do not have an expected unit of measurement (either of {energy_units} for an energy sensor or either of {gas_units} for a gas sensor):",
       "title": "[%key:component::energy::issues::entity_unexpected_unit_energy::title%]"

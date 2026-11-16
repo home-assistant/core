@@ -23,6 +23,7 @@ from .const import DOMAIN
 from .data import (
     DEVICE_CONSUMPTION_SCHEMA,
     ENERGY_SOURCE_SCHEMA,
+    FIXED_COSTS_SCHEMA,
     EnergyManager,
     EnergyPreferencesUpdate,
     async_get_manager,
@@ -128,6 +129,7 @@ def ws_get_prefs(
         probatio.Optional("device_consumption"): [DEVICE_CONSUMPTION_SCHEMA],
         probatio.Optional("device_consumption_water"): [DEVICE_CONSUMPTION_SCHEMA],
         probatio.Optional("device_consumption_gas"): [DEVICE_CONSUMPTION_SCHEMA],
+        probatio.Optional("fixed_costs"): FIXED_COSTS_SCHEMA,
     }
 )
 @websocket_api.async_response
@@ -162,6 +164,7 @@ async def ws_info(
         msg["id"],
         {
             "cost_sensors": hass.data[DOMAIN]["cost_sensors"],
+            "fixed_cost_sensors": hass.data[DOMAIN]["fixed_cost_sensors"],
             "solar_forecast_domains": list(forecast_platforms),
         },
     )
