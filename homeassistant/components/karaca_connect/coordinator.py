@@ -6,6 +6,7 @@ from typing import Any, override
 
 from karaca_connect_client import KaracaAuthError, KaracaClient, KaracaError
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -18,11 +19,14 @@ _LOGGER = logging.getLogger(__name__)
 class KaracaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Fetch status from one Karaca device."""
 
-    def __init__(self, hass: HomeAssistant, client: KaracaClient) -> None:
+    def __init__(
+        self, hass: HomeAssistant, client: KaracaClient, entry: ConfigEntry[Any]
+    ) -> None:
         """Initialize the Karaca cloud coordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=entry,
             name="Karaca Connect",
             update_interval=timedelta(seconds=UPDATE_INTERVAL_SECONDS),
         )

@@ -50,3 +50,13 @@ def mock_karaca_client() -> Generator[AsyncMock]:
             }
         )
         yield client
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Prevent automatic setup during configuration flow tests."""
+    with patch(
+        "homeassistant.components.karaca_connect.async_setup_entry",
+        return_value=None,
+    ) as mock_setup:
+        yield mock_setup

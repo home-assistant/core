@@ -25,7 +25,7 @@ class KaracaRuntimeData:
 type KaracaConfigEntry = ConfigEntry[KaracaRuntimeData]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: KaracaConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: KaracaConfigEntry) -> None:
     """Set up a Karaca device from a config entry."""
     client = KaracaClient(
         async_get_clientsession(hass),
@@ -39,13 +39,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: KaracaConfigEntry) -> bo
         raise ConfigEntryAuthFailed("Cannot authenticate with Karaca Connect") from exc
     except KaracaError as exc:
         raise ConfigEntryNotReady("Karaca Connect service is unavailable") from exc
-    coordinator = KaracaCoordinator(hass, client)
+    coordinator = KaracaCoordinator(hass, client, entry)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = KaracaRuntimeData(client, coordinator)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: KaracaConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: KaracaConfigEntry) -> None:
     """Unload the integration platforms."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
