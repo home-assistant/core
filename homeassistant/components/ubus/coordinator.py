@@ -7,12 +7,18 @@ from typing import override
 from openwrt.ubus import Ubus
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_SSL,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_DHCP_SOFTWARE, DOMAIN
+from .const import CONF_DHCP_SOFTWARE, DEFAULT_SSL, DEFAULT_VERIFY_SSL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,10 +37,12 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
         """Initialize the coordinator from a config entry."""
         self.host: str = config_entry.data[CONF_HOST]
         self.dhcp_software: str = config_entry.data[CONF_DHCP_SOFTWARE]
+        scheme = "https" if config_entry.data.get(CONF_SSL, DEFAULT_SSL) else "http"
         self.ubus = Ubus(
-            f"http://{self.host}/ubus",
+            f"{scheme}://{self.host}/ubus",
             config_entry.data[CONF_USERNAME],
             config_entry.data[CONF_PASSWORD],
+            verify=config_entry.data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
         )
         self._hostapd: list[str] = []
         self._leasefile: str | None = None

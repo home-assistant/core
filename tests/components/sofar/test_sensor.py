@@ -14,7 +14,7 @@ from pytest_homeassistant.common import (
     mock_restore_cache_with_extra_data,
     snapshot_platform,
 )
-from sofar_modbus.modern.device import SofarInverter
+from sofar_modbus import SofarInverter
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
