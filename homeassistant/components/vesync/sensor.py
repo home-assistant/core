@@ -365,13 +365,13 @@ class VeSyncSensorEntity(VeSyncBaseEntity, SensorEntity):
                 self._attr_translation_placeholders = {"basket": str(chamber)}
             if chamber == 2:
                 self._attr_unique_id += "-chamber_2"
+        self._end_time_variance: timedelta | None = None
         self._get_end_time: Callable[[int], datetime] | None = None
         if description.end_time_from_remaining:
-            self._get_end_time = ignore_variance(
-                _end_time,
+            self._end_time_variance = (
                 END_TIME_VARIANCE_SECONDS
                 if rgetattr(device, "time_units") == TimeUnits.SECONDS
-                else END_TIME_VARIANCE_MINUTES,
+                else END_TIME_VARIANCE_MINUTES
             )
 
     @property
@@ -382,9 +382,15 @@ class VeSyncSensorEntity(VeSyncBaseEntity, SensorEntity):
             if self._fryer_state is None:
                 return None
             value = self.entity_description.state_value_fn(self._fryer_state)
-            if self._get_end_time is not None and value is not None:
-                return self._get_end_time(int(value))
-            return value
+            if self._end_time_variance is None:
+                return value
+            if value is None:
+                # Paused, stopped or done: the next cook starts from a fresh end time.
+                self._get_end_time = None
+                return None
+            if self._get_end_time is None:
+                self._get_end_time = ignore_variance(_end_time, self._end_time_variance)
+            return self._get_end_time(int(value))
         if self.entity_description.value_fn is None:
             return None
         return self.entity_description.value_fn(self.device)

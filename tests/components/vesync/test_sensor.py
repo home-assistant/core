@@ -4,7 +4,7 @@ from datetime import timedelta
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 
@@ -141,7 +141,7 @@ async def test_cook_end_time_across_updates(
     aioclient_mock: AiohttpClientMocker,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test the cook end time across updates: kept, moved, then unknown when paused."""
+    """Test the cook end time across updates: kept, moved, unknown when paused, fresh on resume."""
     device_name = "CS158-AF Air Fryer Cooking"
     entity_id = "sensor.cs158_af_air_fryer_cooking_cooking_end"
     mock_devices_response(aioclient_mock, device_name)
@@ -155,19 +155,19 @@ async def test_cook_end_time_across_updates(
     last_changed = state.last_changed
 
     async def refresh(minutes_left: int, status: str = "cooking") -> State | None:
-        """Poll the fryer 60.5 s later, at another fraction of a second."""
+        """Poll the fryer 61 s later: a minute less drifts the estimate by 1 s."""
         aioclient_mock.clear_requests()
         mock_devices_response(
             aioclient_mock,
             device_name,
             details_override={"cookLastTime": minutes_left, "cookStatus": status},
         )
-        freezer.tick(timedelta(seconds=UPDATE_INTERVAL, milliseconds=500))
-        await config_entry.runtime_data.async_refresh()
-        await hass.async_block_till_done()
+        freezer.tick(timedelta(seconds=UPDATE_INTERVAL + 1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
         return hass.states.get(entity_id)
 
-    # Each poll 60.5 s later, a minute less: the 0.5 s drift is ignored.
+    # Each poll a minute less: the drift is ignored, no new state.
     for minutes_left in (9, 8, 7, 6):
         state = await refresh(minutes_left)
         assert state is not None
@@ -180,12 +180,17 @@ async def test_cook_end_time_across_updates(
     assert state.state == "2026-11-16T12:10:00+00:00"
     state = await refresh(6)
     assert state is not None
-    assert state.state == "2026-11-16T12:12:03+00:00"
+    assert state.state == "2026-11-16T12:12:06+00:00"
 
     # Paused: unknown, as the end time keeps moving while paused.
-    state = await refresh(8, "cookStop")
+    state = await refresh(6, "cookStop")
     assert state is not None
     assert state.state == STATE_UNKNOWN
+
+    # Resumed: a fresh end time, although within the variance of the last one.
+    state = await refresh(5)
+    assert state is not None
+    assert state.state == "2026-11-16T12:13:08+00:00"
 
 
 async def test_humidity(
