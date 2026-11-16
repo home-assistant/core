@@ -15,9 +15,10 @@ from homeassistant.components.energyid.const import (
     CONF_PROVISIONING_KEY,
     CONF_PROVISIONING_SECRET,
 )
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
@@ -662,6 +663,8 @@ async def test_config_entry_update_listener(
         mock_client.recordNumber = "site_123"
         mock_client.recordName = "Test Site"
         mock_client.webhook_policy = None
+        mock_client.provisioning_key = "test_key"
+        mock_client.provisioning_secret = "test_secret"
         mock_client.get_or_create_sensor = MagicMock(return_value=MagicMock())
         mock_client_class.return_value = mock_client
 
@@ -682,6 +685,10 @@ async def test_config_entry_update_listener(
         # This should trigger config_entry_update_listener
         hass.config_entries.async_update_entry(entry, data=entry.data)
         await hass.async_block_till_done()
+
+    # The listeners are updated in place; unchanged credentials need no reload.
+    mock_client.authenticate.assert_awaited_once()
+    assert entry.state is ConfigEntryState.LOADED
 
 
 async def test_initial_state_non_numeric(
@@ -1064,6 +1071,8 @@ async def test_config_entry_update_listener_called(hass: HomeAssistant) -> None:
         mock_client.recordNumber = "site_123"
         mock_client.recordName = "Test Site"
         mock_client.webhook_policy = None
+        mock_client.provisioning_key = "test_key"
+        mock_client.provisioning_secret = "test_secret"
         mock_client_class.return_value = mock_client
 
         await hass.config_entries.async_setup(entry.entry_id)
@@ -1074,6 +1083,9 @@ async def test_config_entry_update_listener_called(hass: HomeAssistant) -> None:
             entry, data={**entry.data, "test": "value"}
         )
         await hass.async_block_till_done()
+
+    mock_client.authenticate.assert_awaited_once()
+    assert entry.state is ConfigEntryState.LOADED
 
 
 async def test_initial_state_conversion_error_valueerror(
@@ -1431,3 +1443,100 @@ async def test_subentry_unload_during_entry_unload(
         "async_unload should have been called for the subentry"
     )
     assert result is True
+
+
+async def _reauthenticate(
+    hass: HomeAssistant, entry: MockConfigEntry, key: str, secret: str
+) -> ConfigFlowResult:
+    """Run the reauthentication flow with credentials that link the same record."""
+    flow_client = MagicMock()
+    flow_client.authenticate = AsyncMock(return_value=True)
+    flow_client.recordNumber = "EA-TEST"
+    flow_client.recordName = "Test EnergyID Site"
+    with patch(
+        "homeassistant.components.energyid.config_flow.WebhookClient",
+        return_value=flow_client,
+    ):
+        result = await entry.start_reauth_flow(hass)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_PROVISIONING_KEY: key, CONF_PROVISIONING_SECRET: secret},
+        )
+        await hass.async_block_till_done()
+    return result
+
+
+@pytest.mark.parametrize(
+    ("key", "secret"),
+    [
+        pytest.param("new-key", "new-secret", id="new_credentials"),
+        pytest.param("test-key", "test-secret", id="claim_renewed"),
+    ],
+)
+async def test_reauth_of_loaded_entry_reloads_it_once(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_webhook_client: MagicMock,
+    key: str,
+    secret: str,
+) -> None:
+    """Test reauthenticating a loaded entry stores the credentials and reloads it."""
+    hass.config_entries.async_update_entry(
+        mock_config_entry, data={**mock_config_entry.data, "record_number": "EA-TEST"}
+    )
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    with patch(
+        "homeassistant.components.energyid.WebhookClient",
+        return_value=mock_webhook_client,
+    ) as client_class:
+        result = await _reauthenticate(hass, mock_config_entry, key, secret)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_PROVISIONING_KEY] == key
+    assert mock_config_entry.data[CONF_PROVISIONING_SECRET] == secret
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    # Set up once before reauthentication and once after, with the new credentials.
+    assert mock_webhook_client.authenticate.await_count == 2
+    assert client_class.call_args.kwargs["provisioning_key"] == key
+    assert client_class.call_args.kwargs["provisioning_secret"] == secret
+
+
+@pytest.mark.parametrize(
+    ("key", "secret"),
+    [
+        pytest.param("new-key", "new-secret", id="new_credentials"),
+        pytest.param("test-key", "test-secret", id="same_credentials"),
+    ],
+)
+async def test_reauth_after_failed_setup_sets_the_entry_up(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_webhook_client: MagicMock,
+    key: str,
+    secret: str,
+) -> None:
+    """Test reauthenticating an entry whose device was not claimed at setup."""
+    hass.config_entries.async_update_entry(
+        mock_config_entry, data={**mock_config_entry.data, "record_number": "EA-TEST"}
+    )
+    mock_webhook_client.authenticate.return_value = False
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    mock_webhook_client.authenticate.return_value = True
+    with patch(
+        "homeassistant.components.energyid.WebhookClient",
+        return_value=mock_webhook_client,
+    ) as client_class:
+        result = await _reauthenticate(hass, mock_config_entry, key, secret)
+
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    # The entry is set up again with the new credentials, not the refused ones.
+    assert client_class.call_args.kwargs["provisioning_key"] == key
+    assert client_class.call_args.kwargs["provisioning_secret"] == secret

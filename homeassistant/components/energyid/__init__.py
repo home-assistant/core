@@ -156,6 +156,14 @@ async def config_entry_update_listener(
     hass: HomeAssistant, entry: EnergyIDConfigEntry
 ) -> None:
     """Handle config entry updates, including subentry changes."""
+    client = entry.runtime_data.client
+    # New credentials only take effect with a new client.
+    if (
+        client.provisioning_key != entry.data[CONF_PROVISIONING_KEY]
+        or client.provisioning_secret != entry.data[CONF_PROVISIONING_SECRET]
+    ):
+        await hass.config_entries.async_reload(entry.entry_id)
+        return
     _LOGGER.debug("Config entry updated for %s, reloading listeners", entry.entry_id)
     update_listeners(hass, entry)
 
