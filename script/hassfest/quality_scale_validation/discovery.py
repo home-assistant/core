@@ -34,14 +34,14 @@ CONFIG_FLOW_STEPS = {
 def _has_discovery_matcher(integration: Integration, key: str) -> bool:
     """Test if the manifest has a matcher that can discover new devices.
 
-    DHCP matchers with only `registered_devices` are used to keep the address
+    DHCP matchers with `registered_devices` are only used to keep the address
     of already configured devices up to date and do not discover new devices.
     """
     if not (matchers := integration.manifest.get(key)):
         return False
     if key != "dhcp":
         return True
-    return any(set(matcher) - {"registered_devices"} for matcher in matchers)
+    return any("registered_devices" not in matcher for matcher in matchers)
 
 
 def _has_discovery_function(module: ast.Module, steps: set[str]) -> bool:

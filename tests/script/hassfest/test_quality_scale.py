@@ -240,6 +240,13 @@ class TestConfigFlow(ConfigFlow, domain="test"):
             False,
             id="discovery_dhcp_registered_devices_only",
         ),
+        pytest.param(
+            "discovery",
+            {"config_flow.py": ""},
+            {"dhcp": [{"registered_devices": True, "macaddress": "AABBCC*"}]},
+            False,
+            id="discovery_dhcp_registered_devices_with_macaddress",
+        ),
     ],
 )
 def test_validator(
