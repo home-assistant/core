@@ -130,6 +130,12 @@
       "co2": {
         "name": "Carbon dioxide"
       },
+      "cook_end_time": {
+        "name": "Cooking end"
+      },
+      "cook_end_time_basket": {
+        "name": "Basket {basket} cooking end"
+      },
       "cook_set_temp": {
         "name": "Cooking set temperature"
       },

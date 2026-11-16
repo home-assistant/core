@@ -2,12 +2,13 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 import logging
 from typing import override
 
 from pyvesync.base_devices.fryer_base import FryerState
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
-from pyvesync.const import AirFryerFeatures, TemperatureUnits
+from pyvesync.const import RUNNING_STATUSES, AirFryerFeatures, TemperatureUnits
 from pyvesync.device_container import DeviceContainer
 
 from homeassistant.components.sensor import (
@@ -30,6 +31,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.util import dt as dt_util
 
 from .common import is_air_fryer, is_humidifier, is_outlet, is_purifier, rgetattr
 from .const import AIR_FRYER_MODE_MAP, VS_DEVICES, VS_DISCOVERY
@@ -48,7 +50,7 @@ class VeSyncSensorEntityDescription(SensorEntityDescription):
     exists_fn: Callable[[VeSyncBaseDevice], bool]
 
     value_fn: Callable[[VeSyncBaseDevice], StateType] | None = None
-    state_value_fn: Callable[[FryerState], StateType] | None = None
+    state_value_fn: Callable[[FryerState], StateType | datetime] | None = None
     use_device_temperature_unit: bool = False
 
 
@@ -59,6 +61,22 @@ def _get_cook_status(state: FryerState) -> str | None:
 
     cook_status = state.cook_status.lower()
     return AIR_FRYER_MODE_MAP.get(cook_status, cook_status)
+
+
+def _get_cook_end_time(state: FryerState) -> datetime | None:
+    """Return when the cook finishes, while the fryer is running.
+
+    The remaining time is counted from the last update, so the end time only
+    moves when the fryer reports a new remaining time.
+    """
+    if state.cook_status not in RUNNING_STATUSES or state.last_timestamp is None:
+        return None
+    if (remaining := state.total_time_remaining) is None:
+        return None
+    elapsed = int((dt_util.utcnow() - state.last_timestamp).total_seconds())
+    return state.last_timestamp.replace(microsecond=0) + timedelta(
+        seconds=remaining + elapsed
+    )
 
 
 SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
@@ -237,6 +255,13 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         exists_fn=is_air_fryer,
     ),
     VeSyncSensorEntityDescription(
+        key="cook_end_time",
+        translation_key="cook_end_time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        state_value_fn=_get_cook_end_time,
+        exists_fn=is_air_fryer,
+    ),
+    VeSyncSensorEntityDescription(
         key="preheat_set_time",
         translation_key="preheat_set_time",
         device_class=SensorDeviceClass.DURATION,
@@ -328,7 +353,7 @@ class VeSyncSensorEntity(VeSyncBaseEntity, SensorEntity):
 
     @property
     @override
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         if self.entity_description.state_value_fn is not None:
             if self._fryer_state is None:
