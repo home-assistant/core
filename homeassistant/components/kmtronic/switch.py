@@ -10,7 +10,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_REVERSE, DOMAIN, MANUFACTURER
-from .coordinator import KMTronicConfigEntry
+from .coordinator import KMTronicConfigEntry, KMtronicCoordinator
 
 
 async def async_setup_entry(
@@ -32,7 +32,7 @@ async def async_setup_entry(
     )
 
 
-class KMtronicSwitch(CoordinatorEntity, SwitchEntity):
+class KMtronicSwitch(CoordinatorEntity[KMtronicCoordinator], SwitchEntity):
     """KMtronic Switch Entity."""
 
     _attr_translation_key = "relay"

@@ -5,12 +5,11 @@ from unittest.mock import MagicMock, create_autospec, patch
 
 from aiovlc.client import Client
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.vlc_telnet.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 ENTRY_CONFIG = {
     CONF_HOST: "1.1.1.1",

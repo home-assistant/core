@@ -1,0 +1,8 @@
+get_forecasts:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          filter:
+            - integration: ecosmart

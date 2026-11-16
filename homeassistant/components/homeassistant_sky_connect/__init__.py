@@ -2,10 +2,12 @@
 
 from dataclasses import dataclass
 import logging
-import os.path
 
 from homeassistant.components.homeassistant_hardware.coordinator import (
     FirmwareUpdateCoordinator,
+)
+from homeassistant.components.homeassistant_hardware.helpers import (
+    async_get_serial_port_via_device_id,
 )
 from homeassistant.components.homeassistant_hardware.repair_helpers import (
     async_create_multi_pan_migration_issue,
@@ -17,12 +19,17 @@ from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon 
 from homeassistant.components.homeassistant_hardware.util import guess_firmware_info
 from homeassistant.components.usb import (
     USBDevice,
+    async_is_serial_port_present,
     async_register_port_event_callback,
     async_scan_serial_ports,
 )
 from homeassistant.config_entries import SOURCE_IGNORE, ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.exceptions import (
+    ConfigEntryError,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
@@ -51,6 +58,7 @@ class HomeAssistantSkyConnectData:
     """Runtime data definition."""
 
     coordinator: FirmwareUpdateCoordinator
+    via_device_id: str | None
 
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
@@ -88,12 +96,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: HomeAssistantSkyConnectConfigEntry
-) -> bool:
+) -> None:
     """Set up a Home Assistant SkyConnect config entry."""
 
     # Postpone loading the config entry if the device is missing
     device_path = entry.data[DEVICE]
-    if not await hass.async_add_executor_job(os.path.exists, device_path):
+    if not await async_is_serial_port_present(hass, device_path):
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="device_disconnected",
@@ -117,23 +125,26 @@ async def async_setup_entry(
         session,
         NABU_CASA_FIRMWARE_RELEASES_URL,
     )
-    entry.runtime_data = HomeAssistantSkyConnectData(coordinator)
+    entry.runtime_data = HomeAssistantSkyConnectData(
+        coordinator=coordinator,
+        via_device_id=async_get_serial_port_via_device_id(hass, device_path),
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, ["switch", "update"])
-
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: HomeAssistantSkyConnectConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, ["switch", "update"])
+    await hass.config_entries.async_unload_platforms_or_raise(
+        entry, ["switch", "update"]
+    )
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: HomeAssistantSkyConnectConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
 
     _LOGGER.debug(
@@ -186,7 +197,9 @@ async def async_migrate_entry(
 
                 if not (usb_info := serial_ports_info.get(device)):
                     raise HomeAssistantError(
-                        f"USB device {device} is missing, cannot migrate"
+                        translation_domain=DOMAIN,
+                        translation_key="device_missing_migration",
+                        translation_placeholders={"device": device},
                     )
 
                 assert isinstance(usb_info, USBDevice)
@@ -238,12 +251,17 @@ async def async_migrate_entry(
                 if canonical.minor_version < 5:
                     # The canonical entry has not been migrated yet and its
                     # migration will remove this duplicate.
-                    return False
+                    raise ConfigEntryError(
+                        translation_domain=DOMAIN,
+                        translation_key="duplicate_entry",
+                        translation_placeholders={"serial_number": serial_number},
+                    )
 
                 # The canonical entry is already fully migrated and will not run
                 # a migration that removes this duplicate, so remove it here. The
                 # entry can't remove itself while its setup lock is held, so
                 # schedule the removal instead.
+                # pylint: disable-next=home-assistant-log-and-raise
                 _LOGGER.warning(
                     "Removing duplicate config entry %s for serial %s in favor of %s",
                     config_entry.entry_id,
@@ -253,7 +271,11 @@ async def async_migrate_entry(
                 hass.async_create_task(
                     hass.config_entries.async_remove(config_entry.entry_id)
                 )
-                return False
+                raise ConfigEntryError(
+                    translation_domain=DOMAIN,
+                    translation_key="duplicate_entry",
+                    translation_placeholders={"serial_number": serial_number},
+                )
 
             for duplicate in duplicates:
                 if duplicate.entry_id == config_entry.entry_id:
@@ -274,13 +296,8 @@ async def async_migrate_entry(
                 minor_version=5,
             )
 
-        _LOGGER.debug(
-            "Migration to version %s.%s successful",
-            config_entry.version,
-            config_entry.minor_version,
-        )
-
-        return True
-
-    # This means the user has downgraded from a future version
-    return False
+    _LOGGER.debug(
+        "Migration to version %s.%s successful",
+        config_entry.version,
+        config_entry.minor_version,
+    )

@@ -1,7 +1,9 @@
 {
   "domain": "openhardwaremonitor",
   "name": "Open Hardware Monitor",
+  "categories": ["computers_network.monitoring"],
   "codeowners": [],
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/openhardwaremonitor",
   "iot_class": "local_polling",
   "quality_scale": "legacy"

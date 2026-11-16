@@ -1,10 +1,11 @@
 """Config flow for LastFm."""
 
+from contextlib import suppress
 import logging
 from typing import Any, override
 
+import probatio
 from pylast import LastFMNetwork, PyLastError, User, WSError
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     ConfigFlow,
@@ -13,11 +14,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import callback
-from homeassistant.helpers.selector import (
-    SelectOptionDict,
-    SelectSelector,
-    SelectSelectorConfig,
-)
+from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
 from .const import CONF_MAIN_USER, CONF_USERS, DOMAIN, ERROR_CODE_LOGIN_REQUIRED
 from .coordinator import LastFMConfigEntry
@@ -27,10 +24,10 @@ PLACEHOLDERS = {
     "privacy_settings_url": "https://www.last.fm/settings/privacy",
 }
 
-CONFIG_SCHEMA: vol.Schema = vol.Schema(
+CONFIG_SCHEMA: probatio.Schema = probatio.Schema(
     {
-        vol.Required(CONF_API_KEY): str,
-        vol.Required(CONF_MAIN_USER): str,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): str,
+        probatio.Required(CONF_MAIN_USER): str,
     }
 )
 
@@ -77,10 +74,10 @@ def validate_lastfm_users(
     return valid_users, errors
 
 
-def get_user_friends(api_key: str, username: str) -> list[User]:
-    """Get the friends of a Last.fm user."""
+def get_user_friends(api_key: str, username: str) -> list[str]:
+    """Get the usernames of the friends of a Last.fm user."""
     user, _ = get_lastfm_user(api_key, username)
-    return user.get_friends()
+    return [friend.get_name() for friend in user.get_friends()]
 
 
 class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -142,24 +139,19 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                         ],
                     },
                 )
-        try:
-            friends_response = await self.hass.async_add_executor_job(
+        friends: list[str] = []
+        with suppress(PyLastError):
+            friends = await self.hass.async_add_executor_job(
                 get_user_friends, self.data[CONF_API_KEY], self.data[CONF_MAIN_USER]
             )
-            friends = [
-                SelectOptionDict(value=friend.name, label=friend.get_name(True))
-                for friend in friends_response
-            ]
-        except PyLastError:
-            friends = []
         return self.async_show_form(
             step_id="friends",
             errors=errors,
             description_placeholders=PLACEHOLDERS,
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_USERS): SelectSelector(
+                        probatio.Required(CONF_USERS): SelectSelector(
                             SelectSelectorConfig(
                                 options=friends, custom_value=True, multiple=True
                             )
@@ -197,29 +189,22 @@ class LastFmOptionsFlowHandler(OptionsFlowWithReload):
                         CONF_USERS: user_input[CONF_USERS],
                     },
                 )
+        friends: list[str] = []
         if options[CONF_MAIN_USER]:
-            try:
-                friends_response = await self.hass.async_add_executor_job(
+            with suppress(PyLastError):
+                friends = await self.hass.async_add_executor_job(
                     get_user_friends,
                     options[CONF_API_KEY],
                     options[CONF_MAIN_USER],
                 )
-                friends = [
-                    SelectOptionDict(value=friend.name, label=friend.get_name(True))
-                    for friend in friends_response
-                ]
-            except PyLastError:
-                friends = []
-        else:
-            friends = []
         return self.async_show_form(
             step_id="init",
             errors=errors,
             description_placeholders=PLACEHOLDERS,
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_USERS): SelectSelector(
+                        probatio.Required(CONF_USERS): SelectSelector(
                             SelectSelectorConfig(
                                 options=friends, custom_value=True, multiple=True
                             )

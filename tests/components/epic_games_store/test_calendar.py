@@ -3,6 +3,7 @@
 from unittest.mock import Mock
 
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.calendar import (
     DOMAIN as CALENDAR_DOMAIN,
@@ -15,8 +16,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from .common import setup_platform
-
-from tests.common import async_fire_time_changed
 
 
 async def test_setup_component(hass: HomeAssistant, service_multiple: Mock) -> None:

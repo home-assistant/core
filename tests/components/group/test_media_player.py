@@ -657,3 +657,27 @@ async def test_service_play_media_kwargs(hass: HomeAssistant) -> None:
     mp_living_room.play_media.assert_called_with(
         "some_type", "some_id", announce=True, extra={"volume": 20}
     )
+
+
+async def test_state_listener_removed_with_entity(hass: HomeAssistant) -> None:
+    """Test the member state listener is removed when the group is removed."""
+    await async_setup_component(
+        hass,
+        MEDIA_DOMAIN,
+        {
+            MEDIA_DOMAIN: {
+                "platform": DOMAIN,
+                "entities": ["media_player.player_1", "media_player.player_2"],
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    entity = hass.data[MEDIA_DOMAIN].get_entity("media_player.media_group")
+    await entity.async_remove()
+
+    assert entity.state is None
+    hass.states.async_set("media_player.player_1", STATE_ON)
+    await hass.async_block_till_done()
+
+    assert entity.state is None

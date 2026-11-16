@@ -1,0 +1,32 @@
+[
+  {
+    "company": { "id": 1, "company": "Circle K", "url": "https://example.com" },
+    "station": {
+      "id": 1234,
+      "name": "Aarhus C",
+      "last_update": "2024-01-01T12:00:00"
+    },
+    "prices": { "Blyfri95": "14.29", "Diesel": "12.99", "Blyfri98": "14.99" },
+    "price_units": { "Blyfri95": "kr/l", "Diesel": "kr/l", "Blyfri98": "kr/l" },
+    "price_kinds": {
+      "Blyfri95": "station",
+      "Diesel": "station",
+      "Blyfri98": "station"
+    }
+  },
+  {
+    "company": { "id": 2, "company": "Uno-X", "url": "https://example.org" },
+    "station": {
+      "id": 4321,
+      "name": "Aarhus N",
+      "last_update": "2024-01-01T12:00:00"
+    },
+    "prices": { "Blyfri95": "15.29", "Diesel": "13.99", "Blyfri98": "15.99" },
+    "price_units": { "Blyfri95": "kr/l", "Diesel": "kr/l", "Blyfri98": "kr/l" },
+    "price_kinds": {
+      "Blyfri95": "station",
+      "Diesel": "station",
+      "Blyfri98": "station"
+    }
+  }
+]

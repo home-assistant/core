@@ -2,11 +2,10 @@
 
 from pykoplenti import SettingsData
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry
 
 pytestmark = [
     pytest.mark.usefixtures("mock_plenticore_client"),

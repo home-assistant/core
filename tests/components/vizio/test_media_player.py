@@ -8,6 +8,11 @@ from unittest.mock import call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 from vizaio import AppConfig, RemoteKey, VizioConnectionError, VizioNotFoundError
 from vizaio.apps import BUNDLED_APPS, UNKNOWN_APP, is_app_input
@@ -41,10 +46,7 @@ from homeassistant.components.vizio.const import (
     DEFAULT_VOLUME_STEP,
     DOMAIN,
 )
-from homeassistant.components.vizio.services import (
-    SERVICE_SEND_TEXT,
-    SERVICE_UPDATE_SETTING,
-)
+from homeassistant.components.vizio.services import VizioService
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -53,6 +55,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -84,8 +87,6 @@ from .const import (
     VOLUME_STEP,
     audio_setting,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -536,7 +537,7 @@ async def test_services(
         hass,
         DOMAIN,
         "set_setting",
-        SERVICE_UPDATE_SETTING,
+        VizioService.UPDATE_SETTING,
         {"setting_type": "Audio", "setting_name": "AV Delay", "new_value": "0"},
         "audio",
         "av_delay",
@@ -546,7 +547,7 @@ async def test_services(
         hass,
         DOMAIN,
         "set_setting",
-        SERVICE_UPDATE_SETTING,
+        VizioService.UPDATE_SETTING,
         {"setting_type": "Audio", "setting_name": "EQ", "new_value": "Music"},
         "audio",
         "eq",
@@ -855,14 +856,45 @@ async def test_apps_update(
                 assert len(apps) == len(APP_RECORDS)
 
 
+@pytest.mark.parametrize(
+    ("entry_data", "app_config", "expected_app_name"),
+    [
+        pytest.param(
+            MOCK_USER_VALID_TV_CONFIG,
+            UNKNOWN_APP_CONFIG_OBJ,
+            None,
+            id="unknown_config_hides_app_name",
+        ),
+        pytest.param(
+            MOCK_TV_WITH_ADDITIONAL_APPS_CONFIG,
+            CUSTOM_CONFIG_OBJ,
+            ADDITIONAL_APP_CONFIG["name"],
+            id="additional_config_keeps_mapped_name",
+        ),
+    ],
+)
 @pytest.mark.usefixtures("vizio_connect", "vizio_update_with_apps_on_input")
 async def test_vizio_update_with_apps_on_input(
-    hass: HomeAssistant, mock_tv_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    entry_data: dict[str, Any],
+    app_config: AppConfig,
+    expected_app_name: str | None,
 ) -> None:
-    """Test a vizio TV with apps that is on a TV input."""
-    await setup_integration(hass, mock_tv_config_entry)
+    """Test a vizio TV with apps that is on a TV input.
+
+    The device reports an app config even on HDMI. An unrecognized one must
+    not surface as the unknown-app sentinel, while a name mapped through
+    additional_configs is deliberate user configuration and is kept.
+    """
+    config_entry = MockConfigEntry(domain=DOMAIN, data=entry_data, unique_id=UNIQUE_ID)
+    with patch(
+        "homeassistant.components.vizio.Vizio.get_current_app_config",
+        return_value=app_config,
+    ):
+        await setup_integration(hass, config_entry)
     attr = _get_attr_and_assert_base_attr(hass, MediaPlayerDeviceClass.TV, STATE_ON)
-    # app ID should not be in the attributes
+    assert attr[ATTR_INPUT_SOURCE] == CURRENT_INPUT
+    assert attr.get("app_name") == expected_app_name
     assert "app_id" not in attr
 
 
@@ -1046,8 +1078,8 @@ async def test_send_text(
     with patch("homeassistant.components.vizio.Vizio.send_text") as mock_send_text:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEND_TEXT,
-            {ATTR_ENTITY_ID: ENTITY_ID, "text": "stranger things"},
+            VizioService.SEND_TEXT,
+            {CommonServiceArgument.ENTITY_ID: ENTITY_ID, "text": "stranger things"},
             blocking=True,
         )
     mock_send_text.assert_called_once_with("stranger things")
@@ -1069,7 +1101,7 @@ async def test_send_text_device_error(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEND_TEXT,
-            {ATTR_ENTITY_ID: ENTITY_ID, "text": "abc"},
+            VizioService.SEND_TEXT,
+            {CommonServiceArgument.ENTITY_ID: ENTITY_ID, "text": "abc"},
             blocking=True,
         )

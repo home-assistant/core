@@ -1,10 +1,10 @@
 """The tests for the WSDOT platform."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
-
-from tests.common import MockConfigEntry
 
 
 async def test_travel_sensor_setup_no_auth(

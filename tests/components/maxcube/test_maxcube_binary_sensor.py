@@ -4,6 +4,7 @@ from datetime import timedelta
 
 from maxcube.cube import MaxCube
 from maxcube.windowshutter import MaxWindowShutter
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.const import (
@@ -16,8 +17,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import utcnow
-
-from tests.common import async_fire_time_changed
 
 ENTITY_ID = "binary_sensor.testroom_testshutter"
 BATTERY_ENTITY_ID = f"{ENTITY_ID}_battery"

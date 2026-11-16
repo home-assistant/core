@@ -3,19 +3,25 @@
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    assert_setup_component,
+    mock_component,
+    mock_restore_cache,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import switch, template
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.components.template.switch import DEFAULT_NAME
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    CommonServiceArgument,
 )
 from homeassistant.core import CoreState, HomeAssistant, ServiceCall, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -38,14 +44,6 @@ from .conftest import (
     setup_and_test_unique_id,
     setup_entity,
 )
-
-from tests.common import (
-    MockConfigEntry,
-    assert_setup_component,
-    mock_component,
-    mock_restore_cache,
-)
-from tests.typing import WebSocketGenerator
 
 TEST_OBJECT_ID = "test_template_switch"
 TEST_STATE_ENTITY_ID = "switch.test_state"
@@ -310,8 +308,8 @@ async def test_trigger_attributes_with_optimistic_state(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: TEST_SWITCH.entity_id},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: TEST_SWITCH.entity_id},
         blocking=True,
     )
 
@@ -323,8 +321,8 @@ async def test_trigger_attributes_with_optimistic_state(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: TEST_SWITCH.entity_id},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: TEST_SWITCH.entity_id},
         blocking=True,
     )
 
@@ -342,8 +340,8 @@ async def test_trigger_attributes_with_optimistic_state(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: TEST_SWITCH.entity_id},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: TEST_SWITCH.entity_id},
         blocking=True,
     )
 
@@ -487,8 +485,8 @@ async def test_on_action(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: TEST_SWITCH.entity_id},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: TEST_SWITCH.entity_id},
         blocking=True,
     )
 
@@ -513,8 +511,8 @@ async def test_on_action_optimistic(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: TEST_SWITCH.entity_id},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: TEST_SWITCH.entity_id},
         blocking=True,
     )
 
@@ -541,8 +539,8 @@ async def test_off_action(hass: HomeAssistant, calls: list[ServiceCall]) -> None
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: TEST_SWITCH.entity_id},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: TEST_SWITCH.entity_id},
         blocking=True,
     )
 
@@ -567,8 +565,8 @@ async def test_off_action_optimistic(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: TEST_SWITCH.entity_id},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: TEST_SWITCH.entity_id},
         blocking=True,
     )
 

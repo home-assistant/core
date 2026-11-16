@@ -2,8 +2,8 @@
 
 from typing import override
 
+import probatio
 from pyfamilyhublocal import FamilyHubCam
-import voluptuous as vol
 
 from homeassistant.components.camera import (
     PLATFORM_SCHEMA as CAMERA_PLATFORM_SCHEMA,
@@ -20,8 +20,8 @@ DEFAULT_NAME = "FamilyHub Camera"
 
 PLATFORM_SCHEMA = CAMERA_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_IP_ADDRESS): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Required(CONF_IP_ADDRESS): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 

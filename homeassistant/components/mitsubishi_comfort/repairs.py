@@ -6,7 +6,7 @@ from typing import cast
 
 from aiohttp import ClientSession
 from mitsubishi_comfort import DeviceInfo, probe_candidate_ips
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.dhcp import async_discovered_service_info
 from homeassistant.components.repairs import (
@@ -14,16 +14,19 @@ from homeassistant.components.repairs import (
     RepairsFlow,
     RepairsFlowResult,
 )
-from homeassistant.config_entries import ConfigEntry, OperationNotAllowed, UnknownEntry
+from homeassistant.config_entries import OperationNotAllowed, UnknownEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_ADDRESSES, CONF_CREDENTIALS
+from .coordinator import MitsubishiComfortConfigEntry
 from .helpers import async_reconcile_missing_address_issue, has_full_credentials
 
 
-async def _async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def _async_reload_entry(
+    hass: HomeAssistant, entry: MitsubishiComfortConfigEntry
+) -> None:
     """Reload the entry, restoring the repair issue if the reload fails.
 
     The repairs framework deletes the issue when the fix flow finishes, and
@@ -68,7 +71,7 @@ class MissingAddressRepairFlow(RepairsFlow):
     VLAN — for those the user enters the IP here.
     """
 
-    def __init__(self, entry: ConfigEntry) -> None:
+    def __init__(self, entry: MitsubishiComfortConfigEntry) -> None:
         """Initialize the flow for the entry that raised the issue."""
         self.entry = entry
         super().__init__()
@@ -187,7 +190,7 @@ class MissingAddressRepairFlow(RepairsFlow):
                 for info in async_discovered_service_info(self.hass)
                 if (formatted := dr.format_mac(info.macaddress)) in macs
             }
-        schema = vol.Schema({vol.Optional(mac): str for mac in macs})
+        schema = probatio.Schema({probatio.Optional(mac): str for mac in macs})
         return self.async_show_form(
             step_id="addresses",
             data_schema=self.add_suggested_values_to_schema(schema, user_input),

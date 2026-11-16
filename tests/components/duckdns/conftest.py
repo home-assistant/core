@@ -4,11 +4,10 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.duckdns.const import DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_DOMAIN
-
-from tests.common import MockConfigEntry
 
 TEST_SUBDOMAIN = "homeassistant"
 TEST_TOKEN = "123e4567-e89b-12d3-a456-426614174000"
@@ -19,7 +18,7 @@ NEW_TOKEN = "11111111-2222-3333-4444-55555555"
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.duckdns.async_setup_entry", return_value=True
+        "homeassistant.components.duckdns.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

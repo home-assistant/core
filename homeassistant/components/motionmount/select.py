@@ -138,7 +138,12 @@ class MotionMountPresets(MotionMountEntity, SelectEntity):
 
         try:
             await self.mm.go_to_preset(index)
-        except (TimeoutError, socket.gaierror) as ex:
+        except (
+            ConnectionError,
+            TimeoutError,
+            socket.gaierror,
+            motionmount.NotConnectedError,
+        ) as ex:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="failed_communication",

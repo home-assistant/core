@@ -41,13 +41,15 @@
       "local_name": "SPECIALIZED*"
     }
   ],
+  "categories": ["vehicles_transport.bikes_scooters"],
   "codeowners": ["@JamieMagee"],
   "config_flow": true,
+  "connectivity": ["bluetooth"],
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/specialized_turbo",
   "integration_type": "device",
   "iot_class": "local_push",
   "loggers": ["specialized_turbo"],
   "quality_scale": "silver",
-  "requirements": ["specialized-turbo[cloud]==0.8.2"]
+  "requirements": ["specialized-turbo[cloud]==0.8.4"]
 }

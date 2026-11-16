@@ -2,18 +2,14 @@
 
 from unittest.mock import AsyncMock, patch
 
+from aiohttp import ClientConnectionError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.exceptions import InvalidCommand
 from teslemetry_stream.const import Signal
 
-from homeassistant.components.lock import (
-    DOMAIN as LOCK_DOMAIN,
-    SERVICE_LOCK,
-    SERVICE_UNLOCK,
-    LockState,
-)
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockService, LockState
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -63,8 +59,8 @@ async def test_lock_services(
     ) as call:
         await hass.services.async_call(
             LOCK_DOMAIN,
-            SERVICE_LOCK,
-            {ATTR_ENTITY_ID: entity_id},
+            LockService.LOCK,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
         state = hass.states.get(entity_id)
@@ -77,8 +73,8 @@ async def test_lock_services(
     ) as call:
         await hass.services.async_call(
             LOCK_DOMAIN,
-            SERVICE_UNLOCK,
-            {ATTR_ENTITY_ID: entity_id},
+            LockService.UNLOCK,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
         state = hass.states.get(entity_id)
@@ -90,8 +86,8 @@ async def test_lock_services(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             LOCK_DOMAIN,
-            SERVICE_LOCK,
-            {ATTR_ENTITY_ID: entity_id},
+            LockService.LOCK,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -101,8 +97,8 @@ async def test_lock_services(
     ) as call:
         await hass.services.async_call(
             LOCK_DOMAIN,
-            SERVICE_UNLOCK,
-            {ATTR_ENTITY_ID: entity_id},
+            LockService.UNLOCK,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
         state = hass.states.get(entity_id)
@@ -125,30 +121,43 @@ async def test_lock_command_errors(hass: HomeAssistant, response: dict) -> None:
     ):
         await hass.services.async_call(
             LOCK_DOMAIN,
-            SERVICE_LOCK,
-            {ATTR_ENTITY_ID: "lock.test_lock"},
+            LockService.LOCK,
+            {CommonServiceArgument.ENTITY_ID: "lock.test_lock"},
             blocking=True,
         )
 
 
-async def test_lock_command_exception(hass: HomeAssistant) -> None:
-    """Tests that a command SDK exception raises HomeAssistantError."""
+@pytest.mark.parametrize(
+    ("side_effect", "translation_key"),
+    [
+        pytest.param(InvalidCommand, "command_exception", id="fleet_error"),
+        pytest.param(
+            ClientConnectionError, "command_connection_error", id="client_error"
+        ),
+        pytest.param(TimeoutError, "command_connection_error", id="timeout"),
+    ],
+)
+async def test_lock_command_exception(
+    hass: HomeAssistant, side_effect: type[BaseException], translation_key: str
+) -> None:
+    """Tests that a command exception raises a translated HomeAssistantError."""
 
     await setup_platform(hass, [Platform.LOCK])
 
     with (
         patch(
             "tesla_fleet_api.teslemetry.Vehicle.door_lock",
-            side_effect=InvalidCommand,
+            side_effect=side_effect,
         ),
-        pytest.raises(HomeAssistantError),
+        pytest.raises(HomeAssistantError) as exc_info,
     ):
         await hass.services.async_call(
             LOCK_DOMAIN,
-            SERVICE_LOCK,
-            {ATTR_ENTITY_ID: "lock.test_lock"},
+            LockService.LOCK,
+            {CommonServiceArgument.ENTITY_ID: "lock.test_lock"},
             blocking=True,
         )
+    assert exc_info.value.translation_key == translation_key
 
 
 async def test_lock_streaming(

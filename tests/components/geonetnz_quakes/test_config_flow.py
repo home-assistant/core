@@ -61,7 +61,7 @@ async def test_step_import(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.geonetnz_quakes.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch(
             "homeassistant.components.geonetnz_quakes.async_setup", return_value=True
@@ -81,6 +81,7 @@ async def test_step_import(hass: HomeAssistant) -> None:
         CONF_SCAN_INTERVAL: 240.0,
         CONF_MINIMUM_MAGNITUDE: 2.5,
     }
+    assert result["result"].unique_id == "-41.2, 174.7"
 
 
 async def test_step_user(hass: HomeAssistant) -> None:
@@ -92,7 +93,7 @@ async def test_step_user(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.geonetnz_quakes.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch(
             "homeassistant.components.geonetnz_quakes.async_setup", return_value=True
@@ -114,3 +115,4 @@ async def test_step_user(hass: HomeAssistant) -> None:
             CONF_SCAN_INTERVAL: 300.0,
             CONF_MINIMUM_MAGNITUDE: 0.0,
         }
+        assert result["result"].unique_id == "-41.2, 174.7"

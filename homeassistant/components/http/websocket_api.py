@@ -2,7 +2,7 @@
 
 from typing import Any, Final
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.components.homeassistant import (
@@ -15,11 +15,12 @@ from homeassistant.exceptions import HomeAssistantError
 from .config import HTTP_STORAGE_SCHEMA, ConfData, async_get_and_load_store
 from .const import (
     ATTR_CONFIG,
+    CONF_SERVER_HOST,
     CONF_SERVER_PORT,
     CONF_TRUSTED_PROXIES,
     CONF_USE_X_FORWARDED_FOR,
 )
-from .server import async_verify_can_bind
+from .server import DEFAULT_BIND, async_verify_can_bind, async_verify_hosts_distinct
 
 ERR_BIND_FAILED: Final = "bind_failed"
 ERR_NOT_RUNNING: Final = "not_running"
@@ -32,7 +33,7 @@ def _validate_trusted_proxies(config: ConfData) -> ConfData:
     breaks the very setup it is meant to enable.
     """
     if config.get(CONF_USE_X_FORWARDED_FOR) and not config.get(CONF_TRUSTED_PROXIES):
-        raise vol.Invalid(
+        raise probatio.Invalid(
             "at least one trusted proxy is required to use X-Forwarded-For",
             path=[CONF_TRUSTED_PROXIES],
         )
@@ -49,7 +50,7 @@ def async_register_websocket_commands(hass: HomeAssistant) -> None:
 
 
 @websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required("type"): "http/config"})
+@websocket_api.websocket_command({probatio.Required("type"): "http/config"})
 @websocket_api.async_response
 async def websocket_get_config(
     hass: HomeAssistant,
@@ -83,9 +84,9 @@ async def websocket_get_config(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "http/config/configure",
-        vol.Required(ATTR_CONFIG): vol.Any(
-            None, vol.All(HTTP_STORAGE_SCHEMA, _validate_trusted_proxies)
+        probatio.Required("type"): "http/config/configure",
+        probatio.Required(ATTR_CONFIG): probatio.Any(
+            None, probatio.All(HTTP_STORAGE_SCHEMA, _validate_trusted_proxies)
         ),
     }
 )
@@ -122,9 +123,16 @@ async def websocket_set_config(
         return
 
     config: ConfData | None = msg[ATTR_CONFIG]
-    if config is not None and config[CONF_SERVER_PORT] != hass.http.server_port:
+    if config is not None:
+        hosts = config.get(CONF_SERVER_HOST, DEFAULT_BIND)
         try:
-            await async_verify_can_bind(hass, config)
+            if config[CONF_SERVER_PORT] != hass.http.server_port:
+                await async_verify_can_bind(hass, config)
+            elif hosts != hass.http.server_host:
+                # The running server holds the port, so only the hosts can be
+                # checked; a conflict on the port itself is caught when the
+                # restarted server binds and falls back to the stable config.
+                await async_verify_hosts_distinct(hass, hosts)
         except HomeAssistantError as err:
             connection.send_error(msg["id"], ERR_BIND_FAILED, str(err))
             return
@@ -140,7 +148,7 @@ async def websocket_set_config(
 
 
 @websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required("type"): "http/config/promote"})
+@websocket_api.websocket_command({probatio.Required("type"): "http/config/promote"})
 @websocket_api.async_response
 async def websocket_promote_config(
     hass: HomeAssistant,

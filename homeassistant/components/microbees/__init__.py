@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from .const import DOMAIN, PLATFORMS
+from .const import PLATFORMS
 from .coordinator import MicroBeesUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,7 +31,7 @@ class HomeAssistantMicroBeesData:
     session: config_entry_oauth2_flow.OAuth2Session
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: MicroBeesConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: MicroBeesConfigEntry) -> None:
     """Migrate entry."""
     _LOGGER.debug("Migrating from version %s.%s", entry.version, entry.minor_version)
 
@@ -45,22 +45,14 @@ async def async_migrate_entry(hass: HomeAssistant, entry: MicroBeesConfigEntry) 
 
     _LOGGER.debug("Migration successful")
 
-    return True
 
-
-async def async_setup_entry(hass: HomeAssistant, entry: MicroBeesConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: MicroBeesConfigEntry) -> None:
     """Set up microBees from a config entry."""
-    try:
-        implementation = (
-            await config_entry_oauth2_flow.async_get_config_entry_implementation(
-                hass, entry
-            )
+    implementation = (
+        await config_entry_oauth2_flow.async_get_config_entry_implementation(
+            hass, entry
         )
-    except config_entry_oauth2_flow.ImplementationUnavailableError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="oauth2_implementation_unavailable",
-        ) from err
+    )
 
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
     try:
@@ -82,9 +74,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: MicroBeesConfigEntry) ->
         session=session,
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: MicroBeesConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MicroBeesConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

@@ -4,6 +4,8 @@ from http import HTTPStatus
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import ClientResponseError
 from weheat.abstractions.discovery import HeatPumpDiscovery
 
 from homeassistant.components.weheat import UnauthorizedException
@@ -14,9 +16,6 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import ClientResponseError
 
 
 async def test_setup(

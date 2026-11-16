@@ -1,6 +1,8 @@
 """Vizio SmartCast services."""
 
-import voluptuous as vol
+from enum import StrEnum
+
+import probatio
 
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.core import HomeAssistant, callback
@@ -9,22 +11,37 @@ from homeassistant.helpers.typing import VolDictType
 
 from .const import DOMAIN
 
-SERVICE_UPDATE_SETTING = "update_setting"
-SERVICE_SEND_TEXT = "send_text"
 
-ATTR_SETTING_TYPE = "setting_type"
-ATTR_SETTING_NAME = "setting_name"
-ATTR_NEW_VALUE = "new_value"
-ATTR_TEXT = "text"
+class VizioService(StrEnum):
+    """Store keys for Vizio services."""
+
+    SEND_TEXT = "send_text"
+    UPDATE_SETTING = "update_setting"
+
+
+class VizioServiceArgument(StrEnum):
+    """Store keys for Vizio service arguments."""
+
+    TEXT = "text"
+    SETTING_TYPE = "setting_type"
+    SETTING_NAME = "setting_name"
+    NEW_VALUE = "new_value"
+
 
 UPDATE_SETTING_SCHEMA: VolDictType = {
-    vol.Required(ATTR_SETTING_TYPE): vol.All(cv.string, vol.Lower, cv.slugify),
-    vol.Required(ATTR_SETTING_NAME): vol.All(cv.string, vol.Lower, cv.slugify),
-    vol.Required(ATTR_NEW_VALUE): vol.Any(vol.Coerce(int), cv.string),
+    probatio.Required(VizioServiceArgument.SETTING_TYPE): probatio.All(
+        cv.string, probatio.Lower, cv.slugify
+    ),
+    probatio.Required(VizioServiceArgument.SETTING_NAME): probatio.All(
+        cv.string, probatio.Lower, cv.slugify
+    ),
+    probatio.Required(VizioServiceArgument.NEW_VALUE): probatio.Any(
+        probatio.Coerce(int), cv.string
+    ),
 }
 
 SEND_TEXT_SCHEMA: VolDictType = {
-    vol.Required(ATTR_TEXT): cv.string,
+    probatio.Required(VizioServiceArgument.TEXT): cv.string,
 }
 
 
@@ -35,7 +52,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_UPDATE_SETTING,
+        VizioService.UPDATE_SETTING,
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema=UPDATE_SETTING_SCHEMA,
         func="async_update_setting",
@@ -44,7 +61,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_SEND_TEXT,
+        VizioService.SEND_TEXT,
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema=SEND_TEXT_SCHEMA,
         func="async_send_text",

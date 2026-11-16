@@ -8,19 +8,22 @@ from aiohttp.client_exceptions import ClientConnectorError
 from freezegun.api import FrozenDateTimeFactory
 from nextdns import ApiError, InvalidApiKeyError
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 from tenacity import RetryError
 
 from homeassistant.components.nextdns.const import DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -28,8 +31,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -61,8 +62,8 @@ async def test_switch_on(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.fake_profile_block_page"},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: "switch.fake_profile_block_page"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -88,8 +89,8 @@ async def test_switch_off(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.fake_profile_web3"},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: "switch.fake_profile_web3"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -172,8 +173,8 @@ async def test_switch_failure(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.fake_profile_block_page"},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: "switch.fake_profile_block_page"},
             blocking=True,
         )
 
@@ -183,17 +184,21 @@ async def test_switch_auth_error(
     mock_config_entry: MockConfigEntry,
     mock_nextdns_client: AsyncMock,
 ) -> None:
-    """Tests that the turn on/off action starts re-auth flow."""
+    """Tests that the turn on/off action raises an error and starts re-auth flow."""
     await init_integration(hass, mock_config_entry)
 
     mock_nextdns_client.set_setting.side_effect = InvalidApiKeyError
 
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.fake_profile_block_page"},
-        blocking=True,
-    )
+    with pytest.raises(
+        HomeAssistantError,
+        match="Authentication failed for NextDNS, please update your API key",
+    ):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: "switch.fake_profile_block_page"},
+            blocking=True,
+        )
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
@@ -207,3 +212,34 @@ async def test_switch_auth_error(
     assert "context" in flow
     assert flow["context"].get("source") == SOURCE_REAUTH
     assert flow["context"].get("entry_id") == mock_config_entry.entry_id
+
+
+async def test_switch_set_setting_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_nextdns_client: AsyncMock,
+) -> None:
+    """Tests that the turn on action raises an error when the API reports failure."""
+    await init_integration(hass, mock_config_entry)
+
+    mock_nextdns_client.set_setting.return_value = False
+
+    state = hass.states.get("switch.fake_profile_block_page")
+    assert state
+    assert state.state == STATE_OFF
+
+    with pytest.raises(
+        HomeAssistantError,
+        match="An error occurred while changing the setting for"
+        " switch.fake_profile_block_page",
+    ):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: "switch.fake_profile_block_page"},
+            blocking=True,
+        )
+
+    state = hass.states.get("switch.fake_profile_block_page")
+    assert state
+    assert state.state == STATE_OFF

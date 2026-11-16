@@ -1,20 +1,21 @@
 """Tests for Home Assistant View."""
 
-from collections.abc import Generator
+from collections.abc import AsyncIterator, Generator
 from decimal import Decimal
 from http import HTTPStatus
 import json
 import math
 from unittest.mock import AsyncMock, Mock, patch
 
-from aiohttp import hdrs
+from aiohttp import hdrs, web
 from aiohttp.web_exceptions import (
     HTTPBadRequest,
     HTTPInternalServerError,
     HTTPUnauthorized,
 )
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.http import KEY_HASS
 from homeassistant.components.http.request_context import current_request
@@ -72,7 +73,7 @@ async def test_handling_invalid_data(mock_request: Mock) -> None:
         await request_handler_factory(
             mock_request.app[KEY_HASS],
             Mock(requires_auth=False),
-            AsyncMock(side_effect=vol.Invalid("yo")),
+            AsyncMock(side_effect=probatio.Invalid("yo")),
         )(mock_request)
 
 
@@ -273,3 +274,61 @@ async def test_requires_auth_www_authenticate_prefer_external(
         "Bearer resource_metadata="
         f'"{expected_url}/.well-known/oauth-protected-resource"'
     )
+
+
+class _LimitedBodyView(HomeAssistantView):
+    """View with a small body limit."""
+
+    url = "/limited"
+    name = "test:limited"
+    requires_auth = False
+    max_body_size = 16
+
+    async def post(self, request: web.Request) -> web.Response:
+        """Echo the JSON body."""
+        return self.json(await request.json())
+
+
+async def _chunked(data: bytes) -> AsyncIterator[bytes]:
+    """Yield data without a Content-Length header."""
+    yield data
+
+
+@pytest.mark.parametrize(
+    ("chunked", "body", "expected_status"),
+    [
+        pytest.param(False, b'{"a": 1}', HTTPStatus.OK, id="within_limit"),
+        pytest.param(
+            False,
+            b'{"a": "' + b"x" * 16 + b'"}',
+            HTTPStatus.REQUEST_ENTITY_TOO_LARGE,
+            id="too_large",
+        ),
+        pytest.param(
+            True,
+            b'{"a": "' + b"x" * 16 + b'"}',
+            HTTPStatus.REQUEST_ENTITY_TOO_LARGE,
+            id="too_large_chunked",
+        ),
+    ],
+)
+async def test_max_body_size(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    chunked: bool,
+    body: bytes,
+    expected_status: HTTPStatus,
+) -> None:
+    """Test a view rejects bodies above its max_body_size."""
+    app = web.Application()
+    app[KEY_HASS] = hass
+    _LimitedBodyView().register(hass, app, app.router)
+    client = await aiohttp_client(app)
+
+    resp = await client.post(
+        "/limited",
+        data=_chunked(body) if chunked else body,
+        headers={"Content-Type": "application/json"},
+    )
+
+    assert resp.status == expected_status

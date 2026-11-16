@@ -4,17 +4,9 @@ from datetime import timedelta
 from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
-import voluptuous as vol
-
-from homeassistant.components.zone import condition as zone_condition
-from homeassistant.components.zone.condition import CONDITIONS
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConditionError
-from homeassistant.helpers import condition, config_validation as cv
-
-from tests.components.common import (
+from pytest_homeassistant.components.common import (
     ConditionStateDescription,
     TargetSupport,
     assert_condition_behavior_all,
@@ -26,6 +18,13 @@ from tests.components.common import (
     parametrize_target_entities,
     target_entities,
 )
+
+from homeassistant.components.zone import condition as zone_condition
+from homeassistant.components.zone.condition import CONDITIONS
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConditionError
+from homeassistant.helpers import condition, config_validation as cv
 
 
 async def test_zone_raises(hass: HomeAssistant) -> None:
@@ -410,7 +409,7 @@ async def test_zone_condition_rejects_non_zone_entity_id(
     hass: HomeAssistant, condition_key: str, config: dict[str, Any]
 ) -> None:
     """Test that the zone option must reference entities in the zone domain."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await condition.async_validate_condition_config(
             hass,
             {"condition": condition_key, **config},

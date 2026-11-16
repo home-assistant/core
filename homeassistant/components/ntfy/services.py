@@ -4,38 +4,18 @@ from datetime import timedelta
 from typing import Any
 
 from aiontfy import BroadcastAction, CopyAction, HttpAction, ViewAction
-import voluptuous as vol
+import probatio
 from yarl import URL
 
-from homeassistant.components.notify import (
-    ATTR_MESSAGE,
-    ATTR_TITLE,
-    DOMAIN as NOTIFY_DOMAIN,
-)
-from homeassistant.const import ATTR_ICON
+from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.selector import MediaSelector
 
-from .const import DOMAIN
+from .const import DOMAIN, NtfyService, NtfyServiceArgument
 
-SERVICE_PUBLISH = "publish"
-SERVICE_CLEAR = "clear"
-SERVICE_DELETE = "delete"
-ATTR_ATTACH = "attach"
-ATTR_CALL = "call"
-ATTR_CLICK = "click"
-ATTR_DELAY = "delay"
-ATTR_EMAIL = "email"
-ATTR_MARKDOWN = "markdown"
-ATTR_PRIORITY = "priority"
-ATTR_TAGS = "tags"
-ATTR_SEQUENCE_ID = "sequence_id"
-ATTR_ATTACH_FILE = "attach_file"
-ATTR_FILENAME = "filename"
 GRP_ATTACHMENT = "attachment"
 MSG_ATTACHMENT = "Only one attachment source is allowed: URL or local file"
-ATTR_ACTIONS = "actions"
 ATTR_ACTION = "action"
 ATTR_VIEW = "view"
 ATTR_BROADCAST = "broadcast"
@@ -61,78 +41,97 @@ MAX_ACTIONS_ALLOWED = 3  # ntfy only supports up to 3 actions per notification
 
 def validate_filename(params: dict[str, Any]) -> dict[str, Any]:
     """Validate filename."""
-    if ATTR_FILENAME in params and not (
-        ATTR_ATTACH_FILE in params or ATTR_ATTACH in params
+    if NtfyServiceArgument.FILENAME in params and not (
+        NtfyServiceArgument.ATTACH_FILE in params
+        or NtfyServiceArgument.ATTACH in params
     ):
-        raise vol.Invalid("Filename only allowed when attachment is provided")
+        raise probatio.Invalid("Filename only allowed when attachment is provided")
     return params
 
 
-ACTION_SCHEMA = vol.Schema(
+ACTION_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_LABEL): cv.string,
-        vol.Optional(ATTR_CLEAR, default=False): cv.boolean,
+        probatio.Required(ATTR_LABEL): cv.string,
+        probatio.Optional(ATTR_CLEAR, default=False): cv.boolean,
     }
 )
 VIEW_SCHEMA = ACTION_SCHEMA.extend(
     {
-        vol.Required(ATTR_ACTION): vol.Equal("view"),
-        vol.Required(ATTR_URL): vol.All(vol.Url(), vol.Coerce(URL)),
+        probatio.Required(ATTR_ACTION): probatio.Equal("view"),
+        probatio.Required(ATTR_URL): probatio.All(probatio.Url(), probatio.Coerce(URL)),
     }
 )
 BROADCAST_SCHEMA = ACTION_SCHEMA.extend(
     {
-        vol.Required(ATTR_ACTION): vol.Equal("broadcast"),
-        vol.Optional(ATTR_INTENT): cv.string,
-        vol.Optional(ATTR_EXTRAS): dict[str, str],
+        probatio.Required(ATTR_ACTION): probatio.Equal("broadcast"),
+        probatio.Optional(ATTR_INTENT): cv.string,
+        probatio.Optional(ATTR_EXTRAS): dict[str, str],
     }
 )
 HTTP_SCHEMA = VIEW_SCHEMA.extend(
     {
-        vol.Required(ATTR_ACTION): vol.Equal("http"),
-        vol.Optional(ATTR_METHOD): cv.string,
-        vol.Optional(ATTR_HEADERS): dict[str, str],
-        vol.Optional(ATTR_BODY): cv.string,
+        probatio.Required(ATTR_ACTION): probatio.Equal("http"),
+        probatio.Optional(ATTR_METHOD): cv.string,
+        probatio.Optional(ATTR_HEADERS): dict[str, str],
+        probatio.Optional(ATTR_BODY): cv.string,
     }
 )
 COPY_SCHEMA = ACTION_SCHEMA.extend(
     {
-        vol.Required(ATTR_ACTION): vol.Equal("copy"),
-        vol.Required(ATTR_VALUE): cv.string,
+        probatio.Required(ATTR_ACTION): probatio.Equal("copy"),
+        probatio.Required(ATTR_VALUE): cv.string,
     }
 )
 
-SERVICE_PUBLISH_SCHEMA = vol.All(
+SERVICE_PUBLISH_SCHEMA = probatio.All(
     cv.make_entity_service_schema(
         {
-            vol.Optional(ATTR_TITLE): cv.string,
-            vol.Optional(ATTR_MESSAGE): cv.string,
-            vol.Optional(ATTR_MARKDOWN): cv.boolean,
-            vol.Optional(ATTR_TAGS): vol.All(cv.ensure_list, [str]),
-            vol.Optional(ATTR_PRIORITY): vol.All(vol.Coerce(int), vol.Range(1, 5)),
-            vol.Optional(ATTR_CLICK): vol.All(vol.Url(), vol.Coerce(URL)),
-            vol.Optional(ATTR_DELAY): vol.All(
+            probatio.Optional(NtfyServiceArgument.TITLE): cv.string,
+            probatio.Optional(NtfyServiceArgument.MESSAGE): cv.string,
+            probatio.Optional(NtfyServiceArgument.MARKDOWN): cv.boolean,
+            probatio.Optional(NtfyServiceArgument.TAGS): probatio.All(
+                probatio.EnsureList(), [str]
+            ),
+            probatio.Optional(NtfyServiceArgument.PRIORITY): probatio.All(
+                probatio.Coerce(int), probatio.Range(1, 5)
+            ),
+            probatio.Optional(NtfyServiceArgument.CLICK): probatio.All(
+                probatio.Url(), probatio.Coerce(URL)
+            ),
+            probatio.Optional(NtfyServiceArgument.DELAY): probatio.All(
                 cv.time_period,
-                vol.Range(min=timedelta(seconds=10), max=timedelta(days=3)),
+                probatio.Range(min=timedelta(seconds=10), max=timedelta(days=3)),
             ),
-            vol.Optional(ATTR_EMAIL): vol.Email(),
-            vol.Optional(ATTR_CALL): cv.string,
-            vol.Optional(ATTR_ICON): vol.All(vol.Url(), vol.Coerce(URL)),
-            vol.Optional(ATTR_SEQUENCE_ID): cv.string,
-            vol.Exclusive(ATTR_ATTACH, GRP_ATTACHMENT, MSG_ATTACHMENT): vol.All(
-                vol.Url(), vol.Coerce(URL)
+            probatio.Optional(NtfyServiceArgument.EMAIL): probatio.Email(),
+            probatio.Optional(NtfyServiceArgument.CALL): cv.string,
+            probatio.Optional(NtfyServiceArgument.ICON): probatio.All(
+                probatio.Url(), probatio.Coerce(URL)
             ),
-            vol.Exclusive(
-                ATTR_ATTACH_FILE, GRP_ATTACHMENT, MSG_ATTACHMENT
+            probatio.Optional(NtfyServiceArgument.SEQUENCE_ID): cv.string,
+            probatio.Exclusive(
+                NtfyServiceArgument.ATTACH, GRP_ATTACHMENT, MSG_ATTACHMENT
+            ): probatio.All(probatio.Url(), probatio.Coerce(URL)),
+            probatio.Exclusive(
+                NtfyServiceArgument.ATTACH_FILE, GRP_ATTACHMENT, MSG_ATTACHMENT
             ): MediaSelector({"accept": ["*/*"]}),
-            vol.Optional(ATTR_FILENAME): cv.string,
-            vol.Optional(ATTR_ACTIONS): vol.All(
-                cv.ensure_list,
-                vol.Length(
+            probatio.Optional(NtfyServiceArgument.FILENAME): cv.string,
+            probatio.Optional(NtfyServiceArgument.ACTIONS): probatio.All(
+                probatio.EnsureList(),
+                probatio.Length(
                     max=MAX_ACTIONS_ALLOWED,
                     msg="Too many actions defined. A maximum of 3 is supported",
                 ),
-                [vol.Any(VIEW_SCHEMA, BROADCAST_SCHEMA, HTTP_SCHEMA, COPY_SCHEMA)],
+                [
+                    probatio.TaggedUnion(
+                        ATTR_ACTION,
+                        {
+                            "view": VIEW_SCHEMA,
+                            "broadcast": BROADCAST_SCHEMA,
+                            "http": HTTP_SCHEMA,
+                            "copy": COPY_SCHEMA,
+                        },
+                    )
+                ],
             ),
         }
     ),
@@ -141,7 +140,7 @@ SERVICE_PUBLISH_SCHEMA = vol.All(
 
 SERVICE_CLEAR_DELETE_SCHEMA = cv.make_entity_service_schema(
     {
-        vol.Required(ATTR_SEQUENCE_ID): cv.string,
+        probatio.Required(NtfyServiceArgument.SEQUENCE_ID): cv.string,
     }
 )
 
@@ -153,7 +152,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_PUBLISH,
+        NtfyService.PUBLISH,
         entity_domain=NOTIFY_DOMAIN,
         schema=SERVICE_PUBLISH_SCHEMA,
         description_placeholders={
@@ -165,7 +164,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_CLEAR,
+        NtfyService.CLEAR,
         entity_domain=NOTIFY_DOMAIN,
         schema=SERVICE_CLEAR_DELETE_SCHEMA,
         func="clear",
@@ -174,7 +173,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_DELETE,
+        NtfyService.DELETE,
         entity_domain=NOTIFY_DOMAIN,
         schema=SERVICE_CLEAR_DELETE_SCHEMA,
         func="delete",

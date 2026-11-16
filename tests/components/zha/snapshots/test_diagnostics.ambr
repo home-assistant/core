@@ -242,7 +242,7 @@
     'nwk': '0xB79C',
     'power_source': 'Mains',
     'quirk_applied': False,
-    'quirk_class': 'zigpy.device.Device',
+    'quirk_class': 'zigpy.device.ZigbeeDevice',
     'routes': list([
     ]),
     'rssi': None,

@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 
 from jvcprojector import Command, JvcProjectorTimeoutError, command as cmd
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.jvc_projector.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
 
 from . import MOCK_HOST, MOCK_MAC, MOCK_MODEL, MOCK_PASSWORD, MOCK_PORT
-
-from tests.common import MockConfigEntry
 
 FIXTURES: dict[str, dict[type[Command], str | type[Exception]]] = {
     "standby": {
@@ -23,6 +22,7 @@ FIXTURES: dict[str, dict[type[Command], str | type[Exception]]] = {
         cmd.Input: "hdmi1",
         cmd.Signal: "none",
         cmd.LightTime: "100",
+        cmd.Version: "0301PJ",
         cmd.Source: JvcProjectorTimeoutError,
         cmd.Hdr: JvcProjectorTimeoutError,
         cmd.HdrProcessing: JvcProjectorTimeoutError,
@@ -35,7 +35,10 @@ FIXTURES: dict[str, dict[type[Command], str | type[Exception]]] = {
         cmd.Input: "hdmi1",
         cmd.Signal: "signal",
         cmd.LightTime: "100",
+        cmd.Version: "0301PJ",
         cmd.Source: "4k",
+        cmd.Colorimetry: "bt-709",
+        cmd.LinkRate: "6-gbps-4-lanes",
         cmd.Hdr: "hdr",
         cmd.HdrProcessing: "static",
         cmd.EShift: "on",
@@ -58,6 +61,14 @@ CAPABILITIES = {
     cmd.Source.name: {
         "name": cmd.Source.name,
         "parameter": {"read": {"0": "4k"}},
+    },
+    cmd.Colorimetry.name: {
+        "name": cmd.Colorimetry.name,
+        "parameter": {"read": {"0": "no-data", "2": "bt-709"}},
+    },
+    cmd.LinkRate.name: {
+        "name": cmd.LinkRate.name,
+        "parameter": {"read": {"0": "disable", "4": "6-gbps-4-lanes"}},
     },
     cmd.Hdr.name: {
         "name": cmd.Hdr.name,

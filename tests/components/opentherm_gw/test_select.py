@@ -15,6 +15,7 @@ from pyotgw.vars import (
     OTGW_LED_F,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.opentherm_gw import DOMAIN
 from homeassistant.components.opentherm_gw.const import (
@@ -29,16 +30,14 @@ from homeassistant.components.opentherm_gw.select import (
     PyotgwLEDMode,
 )
 from homeassistant.components.select import (
-    ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CONF_ID, STATE_UNKNOWN
+from homeassistant.const import CONF_ID, STATE_UNKNOWN, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
@@ -142,8 +141,11 @@ async def test_select_change_value(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: select_entity_id, ATTR_OPTION: resulting_state},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: select_entity_id,
+            SelectServiceArgument.OPTION: resulting_state,
+        },
         blocking=True,
     )
     assert hass.states.get(select_entity_id).state == resulting_state
@@ -190,8 +192,11 @@ async def test_select_dhw_ovrd_change_value(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: select_entity_id, ATTR_OPTION: selected_option},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: select_entity_id,
+            SelectServiceArgument.OPTION: selected_option,
+        },
         blocking=True,
     )
     assert hass.states.get(select_entity_id).state == resulting_state

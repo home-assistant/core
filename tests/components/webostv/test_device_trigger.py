@@ -1,6 +1,7 @@
 """The tests for LG webOS TV device triggers."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_get_device_automations
 
 from homeassistant.components import automation
 from homeassistant.components.device_automation import (
@@ -16,8 +17,6 @@ from homeassistant.setup import async_setup_component
 
 from . import setup_webostv
 from .const import ENTITY_ID, FAKE_UUID
-
-from tests.common import MockConfigEntry, async_get_device_automations
 
 
 async def test_get_triggers(

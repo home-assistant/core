@@ -7,9 +7,6 @@
       "precipitation_probability": {
         "default": "mdi:weather-rainy"
       },
-      "precipitation_qpf": {
-        "default": "mdi:cup-water"
-      },
       "thunderstorm_probability": {
         "default": "mdi:weather-lightning"
       },
@@ -22,6 +19,11 @@
       "weather_condition": {
         "default": "mdi:card-text-outline"
       }
+    }
+  },
+  "services": {
+    "get_minute_forecast": {
+      "service": "mdi:weather-pouring"
     }
   }
 }

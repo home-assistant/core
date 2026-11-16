@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from forecast_solar import models
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.forecast_solar.const import (
     CONF_AZIMUTH,
@@ -23,14 +24,12 @@ from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.forecast_solar.async_setup_entry", return_value=True
+        "homeassistant.components.forecast_solar.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 
@@ -78,8 +77,8 @@ def mock_config_entry(api_key_present: bool) -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_forecast_solar(hass: HomeAssistant) -> Generator[MagicMock]:
-    """Return a mocked Forecast.Solar client.
+def mock_forecast_solar_class(hass: HomeAssistant) -> Generator[MagicMock]:
+    """Return the mocked Forecast.Solar client class.
 
     hass fixture included because it sets the time zone.
     """
@@ -130,7 +129,13 @@ def mock_forecast_solar(hass: HomeAssistant) -> Generator[MagicMock]:
         }
 
         forecast_solar.estimate.return_value = estimate
-        yield forecast_solar
+        yield forecast_solar_mock
+
+
+@pytest.fixture
+def mock_forecast_solar(mock_forecast_solar_class: MagicMock) -> MagicMock:
+    """Return the mocked Forecast.Solar client instance."""
+    return mock_forecast_solar_class.return_value
 
 
 @pytest.fixture

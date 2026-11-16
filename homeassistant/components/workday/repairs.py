@@ -3,14 +3,13 @@
 from typing import Any, cast
 
 from holidays import list_supported_countries
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.repairs import (
     ConfirmRepairFlow,
     RepairsFlow,
     RepairsFlowResult,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_COUNTRY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.selector import (
@@ -19,6 +18,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
+from . import WorkdayConfigEntry
 from .config_flow import validate_custom_dates
 from .const import CONF_PROVINCE, CONF_REMOVE_HOLIDAYS
 
@@ -26,7 +26,7 @@ from .const import CONF_PROVINCE, CONF_REMOVE_HOLIDAYS
 class CountryFixFlow(RepairsFlow):
     """Handler for an issue fixing flow."""
 
-    def __init__(self, entry: ConfigEntry, country: str | None) -> None:
+    def __init__(self, entry: WorkdayConfigEntry, country: str | None) -> None:
         """Create flow."""
         self.entry = entry
         self.country: str | None = country
@@ -59,9 +59,9 @@ class CountryFixFlow(RepairsFlow):
 
         return self.async_show_form(
             step_id="country",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_COUNTRY): SelectSelector(
+                    probatio.Required(CONF_COUNTRY): SelectSelector(
                         SelectSelectorConfig(
                             options=sorted(
                                 list_supported_countries(include_aliases=False)
@@ -92,9 +92,9 @@ class CountryFixFlow(RepairsFlow):
         ]
         return self.async_show_form(
             step_id="province",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(CONF_PROVINCE): SelectSelector(
+                    probatio.Optional(CONF_PROVINCE): SelectSelector(
                         SelectSelectorConfig(
                             options=country_provinces,
                             mode=SelectSelectorMode.DROPDOWN,
@@ -104,7 +104,7 @@ class CountryFixFlow(RepairsFlow):
                 }
             ),
             description_placeholders={
-                CONF_COUNTRY: self.country,
+                "country": self.country,
                 "title": self.entry.title,
             },
         )
@@ -114,7 +114,7 @@ class HolidayFixFlow(RepairsFlow):
     """Handler for an issue fixing flow."""
 
     def __init__(
-        self, entry: ConfigEntry, country: str | None, named_holiday: str
+        self, entry: WorkdayConfigEntry, country: str | None, named_holiday: str
     ) -> None:
         """Create flow."""
         self.entry = entry
@@ -154,9 +154,9 @@ class HolidayFixFlow(RepairsFlow):
             value for value in remove_holidays if value != self.named_holiday
         ]
         new_schema = self.add_suggested_values_to_schema(
-            vol.Schema(
+            probatio.Schema(
                 {
-                    vol.Optional(CONF_REMOVE_HOLIDAYS, default=[]): SelectSelector(
+                    probatio.Optional(CONF_REMOVE_HOLIDAYS, default=[]): SelectSelector(
                         SelectSelectorConfig(
                             options=[],
                             multiple=True,
@@ -172,8 +172,8 @@ class HolidayFixFlow(RepairsFlow):
             step_id="fix_remove_holiday",
             data_schema=new_schema,
             description_placeholders={
-                CONF_COUNTRY: self.country or "-",
-                CONF_REMOVE_HOLIDAYS: self.named_holiday,
+                "country": self.country or "-",
+                "remove_holidays": self.named_holiday,
                 "title": self.entry.title,
             },
             errors=errors,

@@ -8,17 +8,16 @@ from urllib.parse import urlparse
 from aiohttp.test_utils import TestClient
 from aiowithings import Activity, Device, Goals, MeasurementGroup, SleepSummary, Workout
 from freezegun.api import FrozenDateTimeFactory
-
-from homeassistant.components.webhook import async_generate_url
-from homeassistant.core import HomeAssistant
-from homeassistant.core_config import async_process_ha_core_config
-
-from tests.common import (
+from pytest_homeassistant.common import (
     MockConfigEntry,
     async_fire_time_changed,
     load_json_array_fixture,
     load_json_object_fixture,
 )
+
+from homeassistant.components.webhook import async_generate_url
+from homeassistant.core import HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
 
 
 @dataclass
@@ -70,13 +69,13 @@ async def prepare_webhook_setup(
     """Prepare webhooks by advancing past the registration delay."""
     freezer.tick(timedelta(seconds=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
 
 def load_goals_fixture(fixture: str = "withings/goals.json") -> Goals:
     """Return goals from fixture."""
     goals_json = load_json_object_fixture(fixture)
-    return Goals.from_api(goals_json)
+    return Goals.from_dict(goals_json)
 
 
 def load_measurements_fixture(
@@ -84,7 +83,7 @@ def load_measurements_fixture(
 ) -> list[MeasurementGroup]:
     """Return measurement from fixture."""
     meas_json = load_json_array_fixture(fixture)
-    return [MeasurementGroup.from_api(measurement) for measurement in meas_json]
+    return [MeasurementGroup.from_dict(measurement) for measurement in meas_json]
 
 
 def load_activity_fixture(
@@ -92,7 +91,7 @@ def load_activity_fixture(
 ) -> list[Activity]:
     """Return activities from fixture."""
     activity_json = load_json_array_fixture(fixture)
-    return [Activity.from_api(activity) for activity in activity_json]
+    return [Activity.from_dict(activity) for activity in activity_json]
 
 
 def load_workout_fixture(
@@ -100,7 +99,7 @@ def load_workout_fixture(
 ) -> list[Workout]:
     """Return workouts from fixture."""
     workouts_json = load_json_array_fixture(fixture)
-    return [Workout.from_api(workout) for workout in workouts_json]
+    return [Workout.from_dict(workout) for workout in workouts_json]
 
 
 def load_sleep_fixture(
@@ -108,7 +107,7 @@ def load_sleep_fixture(
 ) -> list[SleepSummary]:
     """Return sleep summaries from fixture."""
     sleep_json = load_json_array_fixture("withings/sleep_summaries.json")
-    return [SleepSummary.from_api(sleep_summary) for sleep_summary in sleep_json]
+    return [SleepSummary.from_dict(sleep_summary) for sleep_summary in sleep_json]
 
 
 def load_device_fixture(
@@ -116,4 +115,4 @@ def load_device_fixture(
 ) -> list[Device]:
     """Return sleep summaries from fixture."""
     devices_json = load_json_array_fixture(fixture)
-    return [Device.from_api(device) for device in devices_json]
+    return [Device.from_dict(device) for device in devices_json]

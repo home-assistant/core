@@ -4,6 +4,11 @@ from datetime import timedelta
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+)
 from python_opensky import StatesResponse
 from syrupy.assertion import SnapshotAssertion
 
@@ -15,12 +20,6 @@ from homeassistant.components.opensky.const import (
 from homeassistant.core import Event, HomeAssistant
 
 from . import setup_integration
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_json_object_fixture,
-)
 
 
 async def test_sensor(

@@ -2,10 +2,8 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "cannot_determine_id": "[%key:component::lyngdorf::config::error::cannot_determine_id%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unique_id_mismatch": "The device at this address is a different Lyngdorf device from the one this entry was set up with.",
       "unsupported_model": "This Lyngdorf model is not supported"
     },
@@ -91,6 +89,9 @@
       "audio_input": {
         "name": "Audio input"
       },
+      "maximum_volume": {
+        "name": "Maximum volume"
+      },
       "streaming_source": {
         "name": "Streaming source"
       },
@@ -109,11 +110,20 @@
     }
   },
   "exceptions": {
+    "command_failed": {
+      "message": "The device did not accept the command"
+    },
+    "invalid_option": {
+      "message": "{option} is not available on this device. It offers: {options}"
+    },
     "setup_connection_error": {
       "message": "Failed to connect to {host}"
     },
     "setup_timeout": {
       "message": "Timeout connecting to {host}"
+    },
+    "unsupported_command": {
+      "message": "The current source does not support this command"
     },
     "unsupported_remote_key": {
       "message": "This device does not have that remote key. It supports: {keys}"

@@ -5,6 +5,11 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.alexa_devices.coordinator import SCAN_INTERVAL
@@ -14,17 +19,16 @@ from homeassistant.components.alexa_devices.select import (
 )
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
-from . import setup_integration
+from . import assert_device_removed_and_readded, setup_integration
 from .const import TEST_DEVICE_1, TEST_DEVICE_1_SN, TEST_DEVICE_2, TEST_DEVICE_2_SN
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY_ID = "select.echo_test_drop_in"
 ENTITY_ID_2 = "select.fake_email_gmail_com_default_device"
@@ -58,8 +62,11 @@ async def test_select_dropin_option(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_OPTION: "home"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+            SelectServiceArgument.OPTION: "home",
+        },
         blocking=True,
     )
 
@@ -80,8 +87,11 @@ async def test_select_dropin_option(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_OPTION: "off"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+            SelectServiceArgument.OPTION: "off",
+        },
         blocking=True,
     )
 
@@ -106,8 +116,27 @@ async def test_offline_device(
     assert state.state == STATE_UNAVAILABLE
 
 
+async def test_device_removed_and_readded(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test entities are recreated when a device is removed and re-added."""
+    await assert_device_removed_and_readded(
+        hass,
+        freezer,
+        mock_amazon_devices_client,
+        mock_config_entry,
+        entity_id=ENTITY_ID,
+        devices_with={TEST_DEVICE_1_SN: TEST_DEVICE_1},
+        devices_without={},
+    )
+
+
 async def test_service_select_option(
     hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -119,13 +148,19 @@ async def test_service_select_option(
 
     await setup_integration(hass, mock_config_entry)
 
+    # A single account-wide entity is created regardless of the number of devices
+    assert "does not generate unique IDs" not in caplog.text
+
     assert (state := hass.states.get(ENTITY_ID_2))
     assert state.state == TEST_DEVICE_1.account_name
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: ENTITY_ID_2, ATTR_OPTION: TEST_DEVICE_2.account_name},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: ENTITY_ID_2,
+            SelectServiceArgument.OPTION: TEST_DEVICE_2.account_name,
+        },
         blocking=True,
     )
 
@@ -152,8 +187,11 @@ async def test_service_select_option_state_persists_after_coordinator_update(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: ENTITY_ID_2, ATTR_OPTION: TEST_DEVICE_2.account_name},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: ENTITY_ID_2,
+            SelectServiceArgument.OPTION: TEST_DEVICE_2.account_name,
+        },
         blocking=True,
     )
 
@@ -179,8 +217,11 @@ async def test_service_select_option_not_found(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: ENTITY_ID_2, ATTR_OPTION: "Nonexistent Device"},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: ENTITY_ID_2,
+                SelectServiceArgument.OPTION: "Nonexistent Device",
+            },
             blocking=True,
         )
 

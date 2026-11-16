@@ -2,10 +2,10 @@
 
 from datetime import timedelta
 import logging
-from typing import override
+from typing import Any, override
 
 import metno
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.air_quality import (
     PLATFORM_SCHEMA as AIR_QUALITY_PLATFORM_SCHEMA,
@@ -30,10 +30,12 @@ OVERRIDE_URL = "https://aa015h6buqvih86i1.api.met.no/weatherapi/airqualityforeca
 
 PLATFORM_SCHEMA = AIR_QUALITY_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_FORECAST, default=DEFAULT_FORECAST): vol.Coerce(int),
-        vol.Optional(CONF_LATITUDE): cv.latitude,
-        vol.Optional(CONF_LONGITUDE): cv.longitude,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_FORECAST, default=DEFAULT_FORECAST): probatio.Coerce(
+            int
+        ),
+        probatio.Optional(CONF_LATITUDE): cv.latitude,
+        probatio.Optional(CONF_LONGITUDE): cv.longitude,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 
@@ -94,7 +96,7 @@ class AirSensor(AirQualityEntity):
 
     @property
     @override
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return other details about the sensor state."""
         return {
             "level": self._api.data.get("level"),

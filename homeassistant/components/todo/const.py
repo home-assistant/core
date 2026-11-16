@@ -8,7 +8,7 @@ from homeassistant.util.hass_dict import HassKey
 if TYPE_CHECKING:
     from homeassistant.helpers.entity_component import EntityComponent
 
-    from . import TodoListEntity
+    from .entity import TodoListEntity
 
 DOMAIN: Final = "todo"
 DATA_COMPONENT: HassKey[EntityComponent[TodoListEntity]] = HassKey(DOMAIN)
@@ -52,3 +52,14 @@ class TodoItemStatus(StrEnum):
 
     NEEDS_ACTION = "needs_action"
     COMPLETED = "completed"
+
+
+class TodoServiceArgument(StrEnum):
+    """Store keys for todo service arguments."""
+
+    DESCRIPTION = "description"
+    DUE_DATE = "due_date"
+    DUE_DATETIME = "due_datetime"
+    ITEM = "item"
+    RENAME = "rename"
+    STATUS = "status"

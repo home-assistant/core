@@ -8,12 +8,11 @@ from typing import Any, override
 from essent_dynamic_pricing.models import EnergyData, Tariff
 
 from homeassistant.components.sensor import (
-    EntityCategory,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import CURRENCY_EURO
+from homeassistant.const import CURRENCY_EURO, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util

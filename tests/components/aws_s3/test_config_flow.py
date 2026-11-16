@@ -8,6 +8,7 @@ from botocore.exceptions import (
     ParamValidationError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.aws_s3.const import CONF_BUCKET, CONF_ENDPOINT_URL, DOMAIN
@@ -16,8 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .const import CONFIG_ENTRY_DATA, USER_INPUT
-
-from tests.common import MockConfigEntry
 
 
 async def _async_start_flow(

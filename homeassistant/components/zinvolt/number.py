@@ -75,6 +75,19 @@ NUMBERS: tuple[ZinvoltBatteryStateDescription, ...] = (
         native_max_value=100,
     ),
     ZinvoltBatteryStateDescription(
+        key="max_charge_power",
+        translation_key="max_charge_power",
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        value_fn=lambda state: state.battery.global_settings.maximum_charge_power,
+        set_value_fn=lambda client, battery_id, value: client.set_max_charge_power(
+            battery_id, value
+        ),
+        native_min_value=0,
+        native_max_value=2000,
+    ),
+    ZinvoltBatteryStateDescription(
         key="standby_time",
         translation_key="standby_time",
         entity_category=EntityCategory.CONFIG,

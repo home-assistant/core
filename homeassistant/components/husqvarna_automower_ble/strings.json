@@ -5,7 +5,6 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "no_devices_found": "Ensure the mower is in pairing mode and try again. It can take a few attempts.",
       "not_allowed": "Unable to read data from the mower, this usually means it is not paired",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {

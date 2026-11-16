@@ -23,6 +23,7 @@ from watchdog.observers import Observer
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
@@ -31,13 +32,12 @@ from .const import CONF_FOLDER, CONF_PATTERNS, DOMAIN, PLATFORMS
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up Folder watcher from a config entry."""
 
     path: str = entry.options[CONF_FOLDER]
     patterns: list[str] = entry.options[CONF_PATTERNS]
     if not hass.config.is_allowed_path(path):
-        _LOGGER.error("Folder %s is not valid or allowed", path)
         async_create_issue(
             hass,
             DOMAIN,
@@ -51,11 +51,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 "config_variable": "allowlist_external_dirs",
             },
             learn_more_url="https://www.home-assistant.io/docs/configuration/basic/#allowlist_external_dirs",
+            config_entry_id=entry.entry_id,
         )
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="path_not_allowed",
+            translation_placeholders={"path": path},
+        )
     await hass.async_add_executor_job(Watcher, path, patterns, hass, entry.entry_id)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
 def create_event_handler(

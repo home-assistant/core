@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, call, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from roborock import CleanTypeMapping, RoborockCommand
 from roborock.data import (
     CleanPathPreferenceMapping,
@@ -12,6 +13,7 @@ from roborock.data import (
     WaterLevelMapping,
     ZeoProgram,
 )
+from roborock.data.b01_q7.b01_q7_code_mappings import CleanRepeatMapping
 from roborock.data.b01_q10.b01_q10_code_mappings import B01_Q10_DP, YXCleanType
 from roborock.exceptions import RoborockException
 from roborock.roborock_message import RoborockZeoProtocol
@@ -21,15 +23,14 @@ from homeassistant.components.roborock.select import (
     A01_SELECT_DESCRIPTIONS,
     RoborockSelectEntityA01,
 )
-from homeassistant.const import SERVICE_SELECT_OPTION, STATE_UNKNOWN, Platform
+from homeassistant.components.select import SelectService
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .conftest import FakeDevice
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -53,6 +54,18 @@ def platforms() -> list[Platform]:
             RoborockCommand.SET_WATER_BOX_CUSTOM_MODE,
             [201],
         ),
+        (
+            "select.roborock_s7_maxv_dock_empty_mode",
+            "light",
+            RoborockCommand.SET_DUST_COLLECTION_MODE,
+            {"mode": 1},
+        ),
+        (
+            "select.roborock_s7_maxv_dock_empty_mode",
+            "smart",
+            RoborockCommand.SET_DUST_COLLECTION_MODE,
+            {"mode": RoborockDockDustCollectionModeCode.as_dict()["smart"]},
+        ),
     ],
 )
 async def test_update_success(
@@ -69,7 +82,7 @@ async def test_update_success(
     assert hass.states.get(entity_id) is not None
     await hass.services.async_call(
         "select",
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         service_data={"option": value},
         blocking=True,
         target={"entity_id": entity_id},
@@ -100,7 +113,7 @@ async def test_update_success_selected_map(
     assert hass.states.get(entity_id) is not None
     await hass.services.async_call(
         "select",
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         service_data={"option": value},
         blocking=True,
         target={"entity_id": entity_id},
@@ -122,7 +135,7 @@ async def test_update_failure(
     with pytest.raises(HomeAssistantError, match="Error while calling SET_MOP_MOD"):
         await hass.services.async_call(
             "select",
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             service_data={"option": "deep"},
             blocking=True,
             target={"entity_id": "select.roborock_s7_maxv_mop_mode"},
@@ -197,7 +210,7 @@ async def test_cleaning_mode_select_update_success(
 
     await hass.services.async_call(
         "select",
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         service_data={"option": "vacuum"},
         blocking=True,
         target={"entity_id": entity_id},
@@ -221,7 +234,7 @@ async def test_cleaning_mode_select_update_failure(
     with pytest.raises(HomeAssistantError, match="cleaning_mode"):
         await hass.services.async_call(
             "select",
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             service_data={"option": "vacuum"},
             blocking=True,
             target={"entity_id": entity_id},
@@ -274,7 +287,7 @@ async def test_update_success_q7_water_level(
     # Test setting value
     await hass.services.async_call(
         "select",
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         service_data={"option": "high"},
         blocking=True,
         target={"entity_id": entity_id},
@@ -301,7 +314,7 @@ async def test_update_failure_q7_water_level(
     with pytest.raises(HomeAssistantError, match="Error while calling water_flow"):
         await hass.services.async_call(
             "select",
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             service_data={"option": "high"},
             blocking=True,
             target={"entity_id": entity_id},
@@ -320,7 +333,7 @@ async def test_update_failure_q7_cleaning_mode(
     with pytest.raises(HomeAssistantError, match="Error while calling cleaning_mode"):
         await hass.services.async_call(
             "select",
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             service_data={"option": "vacuum"},
             blocking=True,
             target={"entity_id": "select.roborock_q7_cleaning_mode"},
@@ -354,7 +367,7 @@ async def test_update_failure_q7_cleaning_route(
     with pytest.raises(HomeAssistantError, match="Error while calling cleaning_route"):
         await hass.services.async_call(
             "select",
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             service_data={"option": "deep"},
             blocking=True,
             target={"entity_id": "select.roborock_q7_cleaning_route"},
@@ -372,7 +385,7 @@ async def test_update_success_q7_cleaning_route(
 
     await hass.services.async_call(
         "select",
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         service_data={"option": "deep"},
         blocking=True,
         target={"entity_id": entity_id},
@@ -397,7 +410,7 @@ async def test_update_success_q7_cleaning_mode(
     # Test setting value
     await hass.services.async_call(
         "select",
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         service_data={"option": "vacuum"},
         blocking=True,
         target={"entity_id": entity_id},
@@ -407,6 +420,64 @@ async def test_update_success_q7_cleaning_mode(
     assert q7_device.b01_q7_properties.set_mode.call_count == 1
 
     q7_device.b01_q7_properties.set_mode.assert_called_with(CleanTypeMapping.VACUUM)
+
+
+async def test_update_success_q7_cleaning_cycles(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    q7_device: FakeDevice,
+) -> None:
+    """Test allowed changing values for Q7 cleaning cycles select entity."""
+    entity_id = "select.roborock_q7_cleaning_cycles"
+    assert hass.states.get(entity_id) is not None
+
+    await hass.services.async_call(
+        "select",
+        SelectService.SELECT_OPTION,
+        service_data={"option": "two"},
+        blocking=True,
+        target={"entity_id": entity_id},
+    )
+
+    assert q7_device.b01_q7_properties
+    assert q7_device.b01_q7_properties.set_repeat_state.call_count == 1
+    q7_device.b01_q7_properties.set_repeat_state.assert_called_with(
+        CleanRepeatMapping.TWO
+    )
+
+
+async def test_update_failure_q7_cleaning_cycles(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    q7_device: FakeDevice,
+) -> None:
+    """Test failure when setting Q7 cleaning cycles."""
+    assert q7_device.b01_q7_properties
+    q7_device.b01_q7_properties.set_repeat_state.side_effect = RoborockException
+    entity_id = "select.roborock_q7_cleaning_cycles"
+    assert hass.states.get(entity_id) is not None
+
+    with pytest.raises(HomeAssistantError, match="Error while calling cleaning_cycles"):
+        await hass.services.async_call(
+            "select",
+            SelectService.SELECT_OPTION,
+            service_data={"option": "two"},
+            blocking=True,
+            target={"entity_id": entity_id},
+        )
+
+
+async def test_q7_cleaning_cycles_state(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+) -> None:
+    """Test Q7 cleaning cycles select state and options."""
+    entity_id = "select.roborock_q7_cleaning_cycles"
+    state = hass.states.get(entity_id)
+
+    assert state is not None
+    assert state.state == "one"
+    assert state.attributes["options"] == ["one", "two"]
 
 
 @pytest.fixture
@@ -431,7 +502,7 @@ async def test_update_success_zeo_program(
 
     await hass.services.async_call(
         "select",
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         service_data={"option": option},
         blocking=True,
         target={"entity_id": entity_id},
@@ -480,7 +551,7 @@ async def test_update_failure_zeo_program(
     with pytest.raises(HomeAssistantError, match="Error while calling program"):
         await hass.services.async_call(
             "select",
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             service_data={"option": option},
             blocking=True,
             target={"entity_id": entity_id},
@@ -541,7 +612,7 @@ async def test_q10_cleaning_mode_select_update_success(
     # Test setting value
     await hass.services.async_call(
         "select",
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         service_data={"option": "vac_and_mop"},
         blocking=True,
         target={"entity_id": entity_id},
@@ -570,7 +641,7 @@ async def test_q10_cleaning_mode_select_update_failure(
     with pytest.raises(HomeAssistantError, match="cleaning_mode"):
         await hass.services.async_call(
             "select",
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             service_data={"option": "vac_and_mop"},
             blocking=True,
             target={"entity_id": entity_id},
@@ -589,7 +660,7 @@ async def test_q10_cleaning_mode_select_invalid_option(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             "select",
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             service_data={"option": "invalid_option"},
             blocking=True,
             target={"entity_id": entity_id},

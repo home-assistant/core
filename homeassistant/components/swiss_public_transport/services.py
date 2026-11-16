@@ -1,8 +1,10 @@
 """Define services for the Swiss public transport integration."""
 
-import voluptuous as vol
+from enum import StrEnum
 
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID
+import probatio
+
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -19,19 +21,28 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from .const import (
-    ATTR_LIMIT,
-    CONNECTIONS_COUNT,
-    CONNECTIONS_MAX,
-    DOMAIN,
-    SERVICE_FETCH_CONNECTIONS,
-)
+from .const import CONNECTIONS_COUNT, CONNECTIONS_MAX, DOMAIN
 from .coordinator import SwissPublicTransportConfigEntry
 
-SERVICE_FETCH_CONNECTIONS_SCHEMA = vol.Schema(
+
+class SwissPublicTransportService(StrEnum):
+    """Store keys for Swiss public transport services."""
+
+    FETCH_CONNECTIONS = "fetch_connections"
+
+
+class SwissPublicTransportServiceArgument(StrEnum):
+    """Store keys for Swiss public transport service arguments."""
+
+    LIMIT = "limit"
+
+
+SERVICE_FETCH_CONNECTIONS_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): str,
-        vol.Optional(ATTR_LIMIT, default=CONNECTIONS_COUNT): NumberSelector(
+        probatio.Required(CommonServiceArgument.CONFIG_ENTRY_ID): str,
+        probatio.Optional(
+            SwissPublicTransportServiceArgument.LIMIT, default=CONNECTIONS_COUNT
+        ): NumberSelector(
             NumberSelectorConfig(
                 min=1, max=CONNECTIONS_MAX, mode=NumberSelectorMode.BOX
             )
@@ -45,10 +56,12 @@ async def _async_fetch_connections(
 ) -> ServiceResponse:
     """Fetch a set of connections."""
     config_entry: SwissPublicTransportConfigEntry = service.async_get_config_entry(
-        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+        call.hass, DOMAIN, call.data[CommonServiceArgument.CONFIG_ENTRY_ID]
     )
 
-    limit = call.data.get(ATTR_LIMIT) or CONNECTIONS_COUNT
+    limit = (
+        call.data.get(SwissPublicTransportServiceArgument.LIMIT) or CONNECTIONS_COUNT
+    )
     try:
         connections = await config_entry.runtime_data.fetch_connections_as_json(
             limit=int(limit)
@@ -70,7 +83,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_FETCH_CONNECTIONS,
+        SwissPublicTransportService.FETCH_CONNECTIONS,
         _async_fetch_connections,
         schema=SERVICE_FETCH_CONNECTIONS_SCHEMA,
         supports_response=SupportsResponse.ONLY,

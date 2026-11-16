@@ -8,6 +8,7 @@ from pyliebherrhomeapi.exceptions import (
     LiebherrConnectionError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.liebherr.const import DOMAIN
@@ -15,8 +16,6 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry
 
 MOCK_API_KEY = "test-api-key"
 MOCK_USER_INPUT = {CONF_API_KEY: MOCK_API_KEY}

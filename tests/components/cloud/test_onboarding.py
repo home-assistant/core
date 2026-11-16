@@ -5,14 +5,13 @@ from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import register_auth_provider
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components import onboarding
 from homeassistant.components.cloud import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import register_auth_provider
-from tests.typing import ClientSessionGenerator
 
 
 def mock_onboarding_storage(hass_storage, data):

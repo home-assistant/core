@@ -1,6 +1,5 @@
 """Entity representing a D-Link Power Plug device."""
 
-from homeassistant.const import ATTR_CONNECTIONS
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
@@ -31,6 +30,6 @@ class DLinkEntity(Entity):
             name=config_entry.title,
         )
         if config_entry.unique_id:
-            self._attr_device_info[ATTR_CONNECTIONS] = {
+            self._attr_device_info.connections = {
                 (dr.CONNECTION_NETWORK_MAC, config_entry.unique_id)
             }

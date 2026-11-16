@@ -7,6 +7,11 @@ from unittest.mock import MagicMock, Mock, patch
 
 from pysenz import Account, Thermostat
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_load_json_array_fixture,
+    async_load_json_object_fixture,
+)
 
 from homeassistant.components.application_credentials import (
     DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
@@ -19,12 +24,6 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
 from .const import CLIENT_ID, CLIENT_SECRET, ENTRY_UNIQUE_ID
-
-from tests.common import (
-    MockConfigEntry,
-    async_load_json_array_fixture,
-    async_load_json_object_fixture,
-)
 
 
 @pytest.fixture(scope="package")

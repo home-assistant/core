@@ -4,7 +4,7 @@ import asyncio
 from typing import Any, override
 
 from aiostreammagic import StreamMagicClient
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
@@ -17,7 +17,7 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import CONNECT_TIMEOUT, DOMAIN, STREAM_MAGIC_EXCEPTIONS
 
-DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
+DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_HOST): str})
 
 
 class CambridgeAudioConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -63,7 +63,6 @@ class CambridgeAudioConfigFlow(ConfigFlow, domain=DOMAIN):
                 data={CONF_HOST: self.data[CONF_HOST]},
             )
 
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="discovery_confirm",
             description_placeholders={

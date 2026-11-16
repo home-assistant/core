@@ -6,7 +6,11 @@ from homeassistant.const import CONF_API_KEY, CONF_URL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 
 from .const import DOMAIN, EMONCMS_UUID_DOC_URL, LOGGER
 from .coordinator import EmonCMSConfigEntry, EmoncmsCoordinator
@@ -38,14 +42,17 @@ async def _check_unique_id_migration(
 ) -> None:
     """Check if we can migrate to the emoncms uuid."""
     emoncms_unique_id = await emoncms_client.async_get_uuid()
+    issue_id = f"migrate_database_{entry.entry_id}"
     if emoncms_unique_id:
+        async_delete_issue(hass, DOMAIN, issue_id)
         if entry.unique_id != emoncms_unique_id:
             _migrate_unique_id(hass, entry, emoncms_unique_id)
     else:
         async_create_issue(
             hass,
             DOMAIN,
-            "migrate database",
+            issue_id,
+            config_entry_id=entry.entry_id,
             is_fixable=False,
             issue_domain=DOMAIN,
             severity=IssueSeverity.WARNING,
@@ -57,7 +64,7 @@ async def _check_unique_id_migration(
         )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: EmonCMSConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: EmonCMSConfigEntry) -> None:
     """Load a config entry."""
     emoncms_client = EmoncmsClient(
         entry.data[CONF_URL],
@@ -70,9 +77,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: EmonCMSConfigEntry) -> b
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: EmonCMSConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: EmonCMSConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

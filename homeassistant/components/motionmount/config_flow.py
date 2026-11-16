@@ -7,7 +7,7 @@ import socket
 from typing import Any, override
 
 import motionmount
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     DEFAULT_DISCOVERY_UNIQUE_ID,
@@ -161,7 +161,7 @@ class MotionMountFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="zeroconf_confirm",
-                description_placeholders={CONF_NAME: self.connection_data[CONF_NAME]},
+                description_placeholders={"name": self.connection_data[CONF_NAME]},
                 errors={},
             )
 
@@ -200,9 +200,11 @@ class MotionMountFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="auth",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_PIN): vol.All(int, vol.Range(min=1, max=9999)),
+                    probatio.Required(probatio.Secret(CONF_PIN)): probatio.All(
+                        int, probatio.Range(min=1, max=9999)
+                    ),
                 }
             ),
             errors=errors,
@@ -279,10 +281,10 @@ class MotionMountFlowHandler(ConfigFlow, domain=DOMAIN):
         """Show the setup form to the user."""
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_HOST): str,
-                    vol.Required(CONF_PORT, default=23): int,
+                    probatio.Required(CONF_HOST): str,
+                    probatio.Required(CONF_PORT, default=23): int,
                 }
             ),
             errors=errors or {},

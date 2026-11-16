@@ -29,6 +29,20 @@
   },
   "title": "Button",
   "triggers": {
+    "held": {
+      "description": "Triggers when one or more buttons are held, optionally repeating at a set interval for as long as they stay held.",
+      "fields": {
+        "interval": {
+          "description": "How often to trigger again while the button stays held. Leave empty to trigger once per hold.",
+          "name": "Interval"
+        }
+      },
+      "name": "Button held"
+    },
+    "hold_ended": {
+      "description": "Triggers when one or more buttons are released after being held.",
+      "name": "Button hold ended"
+    },
     "pressed": {
       "description": "Triggers when one or more buttons are pressed.",
       "name": "Button pressed"

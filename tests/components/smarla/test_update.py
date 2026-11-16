@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from pysmarlaapi.federwiege.services.types import UpdateStatus
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.update import (
@@ -11,13 +12,13 @@ from homeassistant.components.update import (
     ATTR_INSTALLED_VERSION,
     ATTR_LATEST_VERSION,
     DOMAIN as UPDATE_DOMAIN,
-    SERVICE_INSTALL,
+    UpdateService,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -25,8 +26,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 
 from . import setup_integration, update_property_listeners
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 UPDATE_ENTITY_ID = "update.smarla_firmware"
 
@@ -84,8 +83,8 @@ async def test_update_install(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: UPDATE_ENTITY_ID},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: UPDATE_ENTITY_ID},
         blocking=True,
     )
 

@@ -6,6 +6,11 @@
       }
     }
   },
+  "exceptions": {
+    "playlist_empty": {
+      "message": "The playlist does not contain any media"
+    }
+  },
   "services": {
     "extract_media_url": {
       "description": "Extract media URL from a service.",

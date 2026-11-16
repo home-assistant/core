@@ -2,16 +2,15 @@
 
 from unittest.mock import AsyncMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.tractive.const import DOMAIN
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import init_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def test_sensor(
@@ -25,8 +24,20 @@ async def test_sensor(
     with patch("homeassistant.components.tractive.PLATFORMS", [Platform.SENSOR]):
         await init_integration(hass, mock_config_entry)
 
-        mock_tractive_client.send_hardware_event(mock_config_entry)
-        mock_tractive_client.send_health_overview_event(mock_config_entry)
+        mock_tractive_client.set_tracker_status(
+            battery_level=88,
+            tracker_state="operational",
+            power_saving=True,
+            battery_charging=True,
+        )
+        mock_tractive_client.set_pet_status(
+            daily_goal=200,
+            minutes_active=150,
+            minutes_day_sleep=100,
+            minutes_night_sleep=300,
+            minutes_rest=122,
+            weight=23700,
+        )
         await hass.async_block_till_done()
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
@@ -67,7 +78,64 @@ async def test_sensor_device_assignment(
         "sensor.test_pet_daily_goal",
         "sensor.test_pet_day_sleep",
         "sensor.test_pet_night_sleep",
+        "sensor.test_pet_weight",
     ):
         entry = entity_registry.async_get(entity_id)
         assert entry is not None
         assert entry.device_id == pet_device.id
+
+
+async def test_sensor_weight_update(
+    hass: HomeAssistant,
+    mock_tractive_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the weight sensor follows pet status updates and becomes unknown without a value."""
+    with patch("homeassistant.components.tractive.PLATFORMS", [Platform.SENSOR]):
+        await init_integration(hass, mock_config_entry)
+
+    state = hass.states.get("sensor.test_pet_weight")
+    assert state is not None
+    assert state.state == "23.7"
+
+    mock_tractive_client.set_pet_status(weight=24100)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_pet_weight")
+    assert state is not None
+    assert state.state == "24.1"
+
+    mock_tractive_client.set_pet_status(weight=None)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_pet_weight")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+
+async def test_sensor_without_health_data(
+    hass: HomeAssistant,
+    mock_tractive_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test health sensors are not created for a pet without health data."""
+    mock_tractive_client.async_fetch_trackables.return_value[0].health_available = False
+
+    with patch("homeassistant.components.tractive.PLATFORMS", [Platform.SENSOR]):
+        await init_integration(hass, mock_config_entry)
+
+    for entity_id in (
+        "sensor.test_pet_activity_time",
+        "sensor.test_pet_rest_time",
+        "sensor.test_pet_daily_goal",
+        "sensor.test_pet_day_sleep",
+        "sensor.test_pet_night_sleep",
+    ):
+        assert hass.states.get(entity_id) is None
+
+    for entity_id in (
+        "sensor.test_pet_weight",
+        "sensor.tracker_device_id_123_battery",
+        "sensor.tracker_device_id_123_status",
+    ):
+        assert hass.states.get(entity_id) is not None

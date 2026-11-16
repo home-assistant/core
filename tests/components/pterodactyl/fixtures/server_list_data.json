@@ -16,6 +16,7 @@
         "internal_id": 1,
         "uuid": "1-1-1-1-1",
         "name": "Test Server 1",
+        "is_suspended": false,
         "node": "default_node",
         "description": "Description of Test Server 1",
         "limits": {
@@ -40,6 +41,7 @@
         "internal_id": 2,
         "uuid": "2-2-2-2-2",
         "name": "Test Server 2",
+        "is_suspended": false,
         "node": "default_node",
         "description": "Description of Test Server 2",
         "limits": {

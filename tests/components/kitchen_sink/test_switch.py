@@ -7,17 +7,16 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.kitchen_sink import DOMAIN
-from homeassistant.components.switch import (
-    DOMAIN as SWITCH_DOMAIN,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-)
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
+from homeassistant.const import STATE_OFF, STATE_ON, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-SWITCH_ENTITY_IDS = ["switch.outlet_1", "switch.outlet_2"]
+SWITCH_ENTITY_IDS = [
+    "switch.power_strip_with_2_sockets_outlet_1",
+    "switch.power_strip_with_2_sockets_outlet_2",
+]
 
 
 @pytest.fixture
@@ -99,8 +98,8 @@ async def test_turn_on(hass: HomeAssistant, switch_entity_id: str) -> None:
     """Test switch turn on method."""
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: switch_entity_id},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: switch_entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -110,8 +109,8 @@ async def test_turn_on(hass: HomeAssistant, switch_entity_id: str) -> None:
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: switch_entity_id},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: switch_entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -125,8 +124,8 @@ async def test_turn_off(hass: HomeAssistant, switch_entity_id: str) -> None:
     """Test switch turn off method."""
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: switch_entity_id},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: switch_entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -136,8 +135,8 @@ async def test_turn_off(hass: HomeAssistant, switch_entity_id: str) -> None:
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: switch_entity_id},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: switch_entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()

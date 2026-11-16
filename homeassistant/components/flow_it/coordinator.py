@@ -1,4 +1,4 @@
-"""Data update coordinator for the Flow-it integration."""
+"""Data update coordinator for the AriaQ integration."""
 
 from dataclasses import dataclass
 from datetime import timedelta
@@ -23,33 +23,33 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-type FlowItConfigEntry = ConfigEntry[FlowItData]
+type AriaQConfigEntry = ConfigEntry[AriaQData]
 
 
 @dataclass(kw_only=True, frozen=True)
-class FlowItCoordinatorData:
-    """Data fetched from the Flow-it VMC."""
+class AriaQCoordinatorData:
+    """Data fetched from the AriaQ VMC."""
 
     state: MachineStatusResponse
 
 
 @dataclass(kw_only=True, frozen=True)
-class FlowItData:
-    """Data for the Flow-it integration."""
+class AriaQData:
+    """Data for the AriaQ integration."""
 
     vmc: FlowItVMCMachine
-    coordinator: FlowItCoordinator
+    coordinator: AriaQCoordinator
 
 
-class FlowItCoordinator(DataUpdateCoordinator[FlowItCoordinatorData]):
-    """Class to manage fetching Flow-it data."""
+class AriaQCoordinator(DataUpdateCoordinator[AriaQCoordinatorData]):
+    """Class to manage fetching AriaQ data."""
 
-    config_entry: FlowItConfigEntry
+    config_entry: AriaQConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: FlowItConfigEntry,
+        config_entry: AriaQConfigEntry,
         vmc: FlowItVMCMachine,
     ) -> None:
         """Initialize the coordinator."""
@@ -65,15 +65,15 @@ class FlowItCoordinator(DataUpdateCoordinator[FlowItCoordinatorData]):
         async def _on_ws_data(data: MachineData) -> None:
             """Handle data from WebSocket."""
             _LOGGER.debug("Received WebSocket update")
-            if self.data:
-                self.data.state.data = data
-                self.async_set_updated_data(self.data)
+            if (coordinator_data := self.data_or_none) is not None:
+                coordinator_data.state.data = data
+                self.async_set_updated_data(coordinator_data)
 
         self.vmc.register_websocket_callback(_on_ws_data)
         self.vmc.websocket.start()
 
     @override
-    async def _async_update_data(self) -> FlowItCoordinatorData:
+    async def _async_update_data(self) -> AriaQCoordinatorData:
         """Fetch data from API endpoint."""
         try:
             await self.vmc.refresh_state()
@@ -90,4 +90,4 @@ class FlowItCoordinator(DataUpdateCoordinator[FlowItCoordinatorData]):
 
         if TYPE_CHECKING:
             assert self.vmc.state is not None
-        return FlowItCoordinatorData(state=self.vmc.state)
+        return AriaQCoordinatorData(state=self.vmc.state)

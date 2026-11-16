@@ -4,8 +4,9 @@ from collections import defaultdict, deque
 from collections.abc import Callable, Generator, Iterator, Mapping
 import contextlib
 from dataclasses import fields
-import datetime
+import datetime as dt
 from io import SEEK_END, BytesIO
+from itertools import takewhile
 import logging
 import math
 from threading import Event
@@ -197,7 +198,7 @@ class StreamMuxer:
             # in test_durations
             "avoid_negative_ts": "make_non_negative",
             "fragment_index": str(sequence + 1),
-            "video_track_timescale": str(int(1 / input_vstream.time_base)),  # type: ignore[operator]
+            "video_track_timescale": str(int(1 / input_vstream.time_base)),
             # Only do extra fragmenting if we are using ll_hls
             # Let ffmpeg do the work using frag_duration
             # Fragment durations may exceed the 15% allowed variance but it seems ok
@@ -281,7 +282,7 @@ class StreamMuxer:
             input_vstream=self._input_video_stream,
             input_astream=self._input_audio_stream,
         )
-        if self._output_video_stream.name == "hevc":
+        if self._input_video_stream.name == "hevc":
             self._output_video_stream.codec_context.codec_tag = "hvc1"
 
     def mux_packet(self, packet: av.Packet) -> None:
@@ -412,7 +413,7 @@ class StreamMuxer:
         if last_part:
             # If we've written the last part, we can close the memory_file.
             self._memory_file.close()  # We don't need the BytesIO object anymore
-            self._start_time += datetime.timedelta(seconds=segment_duration)
+            self._start_time += dt.timedelta(seconds=segment_duration)
             # Reinitialize
             self.reset(packet.dts)
         else:
@@ -669,10 +670,17 @@ def stream_worker(
         stream_state.diagnostics.set_value("audio_codec", audio_stream.name)
 
     dts_validator = TimestampValidator(
-        int(1 / video_stream.time_base),  # type: ignore[operator]
-        int(1 / audio_stream.time_base) if audio_stream else 1,  # type: ignore[operator]
+        int(1 / video_stream.time_base),
+        int(1 / audio_stream.time_base) if audio_stream else 1,
     )
-    unvalidated_packets = PeekIterator(container.demux((video_stream, audio_stream)))
+    # The checks below can discard packets indefinitely,
+    # so check for a stop on every packet read
+    unvalidated_packets = PeekIterator(
+        takewhile(
+            lambda _: not quit_event.is_set(),
+            container.demux((video_stream, audio_stream)),
+        )
+    )
     container_packets = PeekIterator(
         filter(dts_validator.is_valid, unvalidated_packets)
     )
@@ -713,6 +721,8 @@ def stream_worker(
         raise
     except StopIteration as ex:
         container.close()
+        if quit_event.is_set():
+            return
         raise StreamEndedError("Stream ended; no additional packets") from ex
     except av.FFmpegError as ex:
         container.close()
@@ -746,6 +756,8 @@ def stream_worker(
             except StreamWorkerError:
                 raise
             except StopIteration as ex:
+                if quit_event.is_set():
+                    break
                 raise StreamEndedError("Stream ended; no additional packets") from ex
             except av.FFmpegError as ex:
                 raise StreamWorkerError(

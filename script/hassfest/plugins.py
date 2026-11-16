@@ -1,0 +1,63 @@
+"""Select and load hassfest validation and generation plugins."""
+
+from importlib import import_module
+from types import ModuleType
+
+from hassfest.model import Config
+
+INTEGRATION_PLUGINS = [
+    "application_credentials",
+    "bluetooth",
+    "brand_images",
+    "codeowners",
+    "conditions",
+    "config_schema",
+    "dependencies",
+    "dhcp",
+    "icons",
+    "integration_info",
+    "integration_type",
+    "json",
+    "labs",
+    "lorawan",
+    "manifest",
+    "mqtt",
+    "quality_scale",
+    "requirements",
+    "services",
+    "ssdp",
+    "translations",
+    "triggers",
+    "usb",
+    "zeroconf",
+    "config_flow",  # Must run after translations.
+]
+
+CORE_PLUGINS = [
+    "core_files",
+    "device_classes",
+    "docker",
+    "integration_categories",
+    "integration_connectivity",
+    "mdi_icons",
+    "mypy_config",
+    "metadata",
+    "sensor",
+]
+
+ALL_PLUGIN_NAMES = [*INTEGRATION_PLUGINS, *CORE_PLUGINS]
+LOCAL_PLUGINS = {
+    name: f"{__package__}.{name}"
+    for name in ALL_PLUGIN_NAMES
+    if name not in ("brand_images", "json")
+}
+
+
+def load_plugins(config: Config) -> list[ModuleType]:
+    """Load selected plugins in validation order for this run."""
+    names = INTEGRATION_PLUGINS if config.specific_integrations else ALL_PLUGIN_NAMES
+    return [
+        import_module(LOCAL_PLUGINS.get(name, f"hassfest.{name}"))
+        for name in names
+        if name in config.plugins
+    ]

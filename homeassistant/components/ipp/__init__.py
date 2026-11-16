@@ -8,7 +8,7 @@ from .coordinator import IPPConfigEntry, IPPDataUpdateCoordinator
 PLATFORMS = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: IPPConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: IPPConfigEntry) -> None:
     """Set up IPP from a config entry."""
     coordinator = IPPDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
@@ -17,9 +17,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IPPConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: IPPConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: IPPConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

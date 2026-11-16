@@ -1,11 +1,14 @@
 """Control which entities are exposed to voice assistants."""
 
+import asyncio
 from collections.abc import Callable, Mapping
 import dataclasses
+from datetime import datetime, timedelta
 from itertools import chain
-from typing import Any, TypedDict
+import time
+from typing import Any, NotRequired, TypedDict
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.components.binary_sensor import (
@@ -13,10 +16,22 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback, split_entity_id
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, MATCH_ALL
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    callback,
+    split_entity_id,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import get_device_class
+from homeassistant.helpers.event import (
+    async_track_state_added_domain,
+    async_track_time_interval,
+)
 from homeassistant.helpers.storage import Store
 from homeassistant.util.read_only_dict import ReadOnlyDict
 
@@ -28,6 +43,13 @@ STORAGE_KEY = f"{DOMAIN}.exposed_entities"
 STORAGE_VERSION = 1
 
 SAVE_DELAY = 10
+
+# Legacy records are purged once their entity has been missing for the whole
+# purge interval, mirroring the entity registry's orphan cleanup.
+LEGACY_ENTITY_SWEEP_INTERVAL = timedelta(hours=24)
+LEGACY_ENTITY_PURGE_INTERVAL = timedelta(days=30)
+# Entities processed per sweep chunk before yielding to the event loop.
+LEGACY_ENTITY_SWEEP_CHUNK_SIZE = 1000
 
 DEFAULT_EXPOSED_DOMAINS = {
     "climate",
@@ -85,12 +107,14 @@ class ExposedEntity:
     """An exposed entity without a unique_id."""
 
     assistants: dict[str, dict[str, Any]]
+    # Unix time the entity's state was first seen missing; None while it has one.
+    orphaned_since: int | None = None
 
     def to_json(self) -> dict[str, Any]:
         """Return a JSON serializable representation for storage."""
-        return {
-            "assistants": self.assistants,
-        }
+        # orphaned_since is stored in the top-level "orphaned" map, since older
+        # cores fail on unknown record keys after a downgrade.
+        return {"assistants": self.assistants}
 
 
 class SerializedExposedEntities(TypedDict):
@@ -98,6 +122,8 @@ class SerializedExposedEntities(TypedDict):
 
     assistants: dict[str, dict[str, Any]]
     exposed_entities: dict[str, dict[str, Any]]
+    # Optional, to avoid a version bump that rewrites the store at load.
+    orphaned: NotRequired[dict[str, int]]
 
 
 class ExposedEntities:
@@ -115,7 +141,7 @@ class ExposedEntities:
         self._hass = hass
         self._listeners: dict[str, list[Callable[[], None]]] = {}
         self._store: Store[SerializedExposedEntities] = Store(
-            hass, STORAGE_VERSION, STORAGE_KEY
+            hass, STORAGE_VERSION, STORAGE_KEY, serialize_in_event_loop=False
         )
 
     async def async_initialize(self) -> None:
@@ -125,6 +151,35 @@ class ExposedEntities:
         websocket_api.async_register_command(self._hass, ws_expose_new_entities_set)
         websocket_api.async_register_command(self._hass, ws_list_exposed_entities)
         await self._async_load_data()
+
+        async_track_state_added_domain(
+            self._hass, MATCH_ALL, self._async_state_added_listener
+        )
+
+        # Most entities are missing in these modes, so a sweep would orphan them.
+        if self._hass.config.recovery_mode or self._hass.config.safe_mode:
+            return
+
+        # Sweep once at startup too: the interval timer first fires a full
+        # interval after setup, so installs restarted more often would never sweep.
+        @callback
+        def _on_homeassistant_started(_event: Event) -> None:
+            """Run one sweep at startup."""
+            self._hass.async_create_background_task(
+                self._async_purge_stale_legacy_entities(),
+                "exposed_entities_startup_sweep",
+            )
+
+        self._hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STARTED, _on_homeassistant_started
+        )
+
+        async_track_time_interval(
+            self._hass,
+            self._async_purge_stale_legacy_entities,
+            LEGACY_ENTITY_SWEEP_INTERVAL,
+            cancel_on_shutdown=True,
+        )
 
     @callback
     def async_listen_entity_updates(
@@ -192,6 +247,74 @@ class ExposedEntities:
             listener()
 
     @callback
+    def _async_state_added_listener(self, event: Event[EventStateChangedData]) -> None:
+        """Clear orphan tracking when a legacy entity's state reappears."""
+        # Done in real time: a sweep alone can't tell "missing the whole time"
+        # from "came back and went missing again" between two passes.
+        entity_id = event.data["entity_id"]
+        if (
+            exposed_entity := self.entities.get(entity_id)
+        ) is not None and exposed_entity.orphaned_since is not None:
+            self.entities[entity_id] = dataclasses.replace(
+                exposed_entity, orphaned_since=None
+            )
+            self._async_schedule_save()
+
+    async def _async_purge_stale_legacy_entities(
+        self, _now: datetime | None = None
+    ) -> None:
+        """Purge legacy entries that are long-orphaned or shadowed by the registry."""
+        entity_registry = er.async_get(self._hass)
+        now = int(time.time())
+        purge_after = LEGACY_ENTITY_PURGE_INTERVAL.total_seconds()
+        entity_ids = list(self.entities)
+        purged_assistants: set[str] = set()
+
+        for i in range(0, len(entity_ids), LEGACY_ENTITY_SWEEP_CHUNK_SIZE):
+            changed = False
+            for entity_id in entity_ids[i : i + LEGACY_ENTITY_SWEEP_CHUNK_SIZE]:
+                if (exposed_entity := self.entities.get(entity_id)) is None:
+                    continue
+
+                # Registry options take precedence, so the legacy record is dead.
+                if entity_registry.async_is_registered(entity_id):
+                    del self.entities[entity_id]
+                    purged_assistants.update(exposed_entity.assistants)
+                    changed = True
+                    continue
+
+                if self._hass.states.get(entity_id) is not None:
+                    if exposed_entity.orphaned_since is not None:
+                        self.entities[entity_id] = dataclasses.replace(
+                            exposed_entity, orphaned_since=None
+                        )
+                        changed = True
+                    continue
+
+                if exposed_entity.orphaned_since is None:
+                    self.entities[entity_id] = dataclasses.replace(
+                        exposed_entity, orphaned_since=now
+                    )
+                    changed = True
+                elif now - exposed_entity.orphaned_since >= purge_after:
+                    del self.entities[entity_id]
+                    purged_assistants.update(exposed_entity.assistants)
+                    changed = True
+
+            # Save per chunk so a sweep cancelled at shutdown keeps its progress;
+            # async_delay_save debounces, so this is one write per pass in practice.
+            if changed:
+                self._async_schedule_save()
+
+            await asyncio.sleep(0)
+
+        # Notify once per pass, since listeners resync on every call. A sweep
+        # cancelled at shutdown drops the notification.
+        for assistant in purged_assistants:
+            for listener in self._listeners.get(assistant, []):
+                listener()
+
+    @callback
     def async_get_expose_new_entities(self, assistant: str) -> bool:
         """Check if new entities are exposed to an assistant."""
         if prefs := self._assistants.get(assistant):
@@ -256,10 +379,9 @@ class ExposedEntities:
                 should_expose = registry_entry.options[assistant]["should_expose"]
                 return should_expose
 
-        if self.async_get_expose_new_entities(assistant):
-            should_expose = self._is_default_exposed(entity_id, registry_entry)
-        else:
-            should_expose = False
+        should_expose = self._default_should_expose(
+            assistant, entity_id, registry_entry
+        )
 
         assistant_options: ReadOnlyDict[str, Any] | dict[str, Any]
         assistant_options = registry_entry.options.get(assistant, {})
@@ -283,10 +405,7 @@ class ExposedEntities:
                 should_expose = exposed_entity.assistants[assistant]["should_expose"]
                 return should_expose
 
-        if self.async_get_expose_new_entities(assistant):
-            should_expose = self._is_default_exposed(entity_id, None)
-        else:
-            should_expose = False
+        should_expose = self._default_should_expose(assistant, entity_id, None)
 
         if exposed_entity:
             new_exposed_entity = self._update_exposed_entity(
@@ -300,6 +419,35 @@ class ExposedEntities:
         self._async_schedule_save()
 
         return should_expose
+
+    @callback
+    def async_get_should_expose(self, assistant: str, entity_id: str) -> bool:
+        """Return True if an entity is exposed to an assistant.
+
+        Unlike async_should_expose, this does not store the default value.
+        """
+        registry_entry = er.async_get(self._hass).async_get(entity_id)
+        if registry_entry:
+            assistant_settings: Mapping[str, Any] = registry_entry.options
+        elif exposed_entity := self.entities.get(entity_id):
+            assistant_settings = exposed_entity.assistants
+        else:
+            assistant_settings = {}
+
+        should_expose: bool | None = assistant_settings.get(assistant, {}).get(
+            "should_expose"
+        )
+        if should_expose is not None:
+            return should_expose
+        return self._default_should_expose(assistant, entity_id, registry_entry)
+
+    def _default_should_expose(
+        self, assistant: str, entity_id: str, registry_entry: er.RegistryEntry | None
+    ) -> bool:
+        """Return True if an entity without a stored setting should be exposed."""
+        if self.async_get_expose_new_entities(assistant):
+            return self._is_default_exposed(entity_id, registry_entry)
+        return False
 
     def _is_default_exposed(
         self, entity_id: str, registry_entry: er.RegistryEntry | None
@@ -342,7 +490,7 @@ class ExposedEntities:
         assistants = dict(entity.assistants)
         old_settings = assistants.get(assistant, {})
         assistants[assistant] = old_settings | {key: value}
-        return ExposedEntity(assistants)
+        return dataclasses.replace(entity, assistants=assistants)
 
     def _new_exposed_entity(
         self, assistant: str, key: str, value: Any
@@ -364,8 +512,11 @@ class ExposedEntities:
                 assistants[domain] = AssistantPreferences(**preferences)
 
         if data and "exposed_entities" in data:
+            orphaned = data.get("orphaned") or {}
             for entity_id, preferences in data["exposed_entities"].items():
-                exposed_entities[entity_id] = ExposedEntity(**preferences)
+                exposed_entities[entity_id] = ExposedEntity(
+                    **preferences, orphaned_since=orphaned.get(entity_id)
+                )
 
         self._assistants = assistants
         self.entities = exposed_entities
@@ -377,48 +528,65 @@ class ExposedEntities:
         """Schedule saving the preferences."""
         self._store.async_delay_save(self._data_to_save, SAVE_DELAY)
 
-    @callback
     def _data_to_save(self) -> SerializedExposedEntities:
         """Return JSON-compatible date for storing to file."""
-        return {
+        # Intermediate lists: Store calls this from an executor thread.
+        assistants = list(self._assistants.items())
+        entities = list(self.entities.items())
+        data: SerializedExposedEntities = {
             "assistants": {
-                domain: preferences.to_json()
-                for domain, preferences in self._assistants.items()
+                domain: preferences.to_json() for domain, preferences in assistants
             },
             "exposed_entities": {
-                entity_id: entity.to_json()
-                for entity_id, entity in self.entities.items()
+                entity_id: entity.to_json() for entity_id, entity in entities
             },
         }
+        if orphaned := {
+            entity_id: entity.orphaned_since
+            for entity_id, entity in entities
+            if entity.orphaned_since is not None
+        }:
+            data["orphaned"] = orphaned
+        return data
 
 
 @callback
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "homeassistant/expose_entity",
-        vol.Required("assistants"): [vol.In(KNOWN_ASSISTANTS)],
-        vol.Required("entity_ids"): [str],
-        vol.Required("should_expose"): bool,
+        probatio.Required("type"): "homeassistant/expose_entity",
+        probatio.Required("assistants"): [probatio.In(KNOWN_ASSISTANTS)],
+        probatio.Required("entity_ids"): [str],
+        probatio.Required("should_expose"): bool,
     }
 )
 def ws_expose_entity(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Expose an entity to an assistant."""
-    entity_ids: list[str] = msg["entity_ids"]
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
+    should_expose: bool = msg["should_expose"]
+    changed_entity_ids: list[str] = []
 
-    for entity_id in entity_ids:
+    for entity_id in msg["entity_ids"]:
+        changed = False
         for assistant in msg["assistants"]:
-            async_expose_entity(hass, assistant, entity_id, msg["should_expose"])
-    connection.send_result(msg["id"])
+            if (
+                exposed_entities.async_get_should_expose(assistant, entity_id)
+                != should_expose
+            ):
+                changed = True
+            async_expose_entity(hass, assistant, entity_id, should_expose)
+        if changed:
+            changed_entity_ids.append(entity_id)
+    connection.send_result(msg["id"], {"changed_entity_ids": changed_entity_ids})
 
 
 @callback
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "homeassistant/expose_entity/list",
+        probatio.Required("type"): "homeassistant/expose_entity/list",
     }
 )
 def ws_list_exposed_entities(
@@ -446,8 +614,8 @@ def ws_list_exposed_entities(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "homeassistant/expose_new_entities/get",
-        vol.Required("assistant"): vol.In(KNOWN_ASSISTANTS),
+        probatio.Required("type"): "homeassistant/expose_new_entities/get",
+        probatio.Required("assistant"): probatio.In(KNOWN_ASSISTANTS),
     }
 )
 def ws_expose_new_entities_get(
@@ -463,9 +631,9 @@ def ws_expose_new_entities_get(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "homeassistant/expose_new_entities/set",
-        vol.Required("assistant"): vol.In(KNOWN_ASSISTANTS),
-        vol.Required("expose_new"): bool,
+        probatio.Required("type"): "homeassistant/expose_new_entities/set",
+        probatio.Required("assistant"): probatio.In(KNOWN_ASSISTANTS),
+        probatio.Required("expose_new"): bool,
     }
 )
 def ws_expose_new_entities_set(

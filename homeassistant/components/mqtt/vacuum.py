@@ -3,7 +3,7 @@
 import logging
 from typing import Any, cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import vacuum
 from homeassistant.components.vacuum import (
@@ -15,13 +15,7 @@ from homeassistant.components.vacuum import (
     VacuumEntityStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_SUPPORTED_FEATURES,
-    CONF_NAME,
-    CONF_UNIQUE_ID,
-    STATE_IDLE,
-    STATE_PAUSED,
-)
+from homeassistant.const import CONF_NAME, CONF_UNIQUE_ID, STATE_IDLE, STATE_PAUSED
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -31,7 +25,12 @@ from homeassistant.util.json import json_loads_object
 
 from . import subscription
 from .config import MQTT_BASE_SCHEMA
-from .const import CONF_COMMAND_TOPIC, CONF_RETAIN, CONF_STATE_TOPIC
+from .const import (
+    CONF_COMMAND_TOPIC,
+    CONF_RETAIN,
+    CONF_STATE_TOPIC,
+    CONF_SUPPORTED_FEATURES,
+)
 from .entity import MqttEntity, async_setup_entity_entry_helper
 from .models import MqttCommandTemplate, ReceiveMessage
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
@@ -59,7 +58,6 @@ POSSIBLE_STATES: dict[str, VacuumActivity] = {
 
 CONF_CLEAN_SEGMENTS_COMMAND_TOPIC = "clean_segments_command_topic"
 CONF_CLEAN_SEGMENTS_COMMAND_TEMPLATE = "clean_segments_command_template"
-CONF_SUPPORTED_FEATURES = ATTR_SUPPORTED_FEATURES
 CONF_PAYLOAD_TURN_ON = "payload_turn_on"
 CONF_PAYLOAD_TURN_OFF = "payload_turn_off"
 CONF_PAYLOAD_RETURN_TO_BASE = "payload_return_to_base"
@@ -149,7 +147,7 @@ def validate_clean_area_config(config: ConfigType) -> ConfigType:
     if CONF_CLEAN_SEGMENTS_COMMAND_TOPIC not in config:
         return config
     if not config.get(CONF_UNIQUE_ID):
-        raise vol.Invalid(
+        raise probatio.Invalid(
             f"Option `{CONF_CLEAN_SEGMENTS_COMMAND_TOPIC}`"
             f" requires `{CONF_UNIQUE_ID}` to be configured"
         )
@@ -159,36 +157,38 @@ def validate_clean_area_config(config: ConfigType) -> ConfigType:
 
 _BASE_SCHEMA = MQTT_BASE_SCHEMA.extend(
     {
-        vol.Optional(CONF_CLEAN_SEGMENTS_COMMAND_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_CLEAN_SEGMENTS_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_FAN_SPEED_LIST, default=[]): vol.All(
-            cv.ensure_list, [cv.string]
+        probatio.Optional(CONF_CLEAN_SEGMENTS_COMMAND_TOPIC): valid_publish_topic,
+        probatio.Optional(CONF_CLEAN_SEGMENTS_COMMAND_TEMPLATE): cv.template,
+        probatio.Optional(CONF_FAN_SPEED_LIST, default=[]): probatio.All(
+            probatio.EnsureList(), [cv.string]
         ),
-        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
-        vol.Optional(
+        probatio.Optional(CONF_NAME): probatio.Any(cv.string, None),
+        probatio.Optional(
             CONF_PAYLOAD_CLEAN_SPOT, default=DEFAULT_PAYLOAD_CLEAN_SPOT
         ): cv.string,
-        vol.Optional(CONF_PAYLOAD_LOCATE, default=DEFAULT_PAYLOAD_LOCATE): cv.string,
-        vol.Optional(
+        probatio.Optional(
+            CONF_PAYLOAD_LOCATE, default=DEFAULT_PAYLOAD_LOCATE
+        ): cv.string,
+        probatio.Optional(
             CONF_PAYLOAD_RETURN_TO_BASE, default=DEFAULT_PAYLOAD_RETURN_TO_BASE
         ): cv.string,
-        vol.Optional(CONF_PAYLOAD_START, default=DEFAULT_PAYLOAD_START): cv.string,
-        vol.Optional(CONF_PAYLOAD_PAUSE, default=DEFAULT_PAYLOAD_PAUSE): cv.string,
-        vol.Optional(CONF_PAYLOAD_STOP, default=DEFAULT_PAYLOAD_STOP): cv.string,
-        vol.Optional(CONF_SEND_COMMAND_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_SET_FAN_SPEED_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_STATE_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_SUPPORTED_FEATURES, default=DEFAULT_SERVICE_STRINGS): vol.All(
-            cv.ensure_list, [vol.In(STRING_TO_SERVICE.keys())]
-        ),
-        vol.Optional(CONF_COMMAND_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
+        probatio.Optional(CONF_PAYLOAD_START, default=DEFAULT_PAYLOAD_START): cv.string,
+        probatio.Optional(CONF_PAYLOAD_PAUSE, default=DEFAULT_PAYLOAD_PAUSE): cv.string,
+        probatio.Optional(CONF_PAYLOAD_STOP, default=DEFAULT_PAYLOAD_STOP): cv.string,
+        probatio.Optional(CONF_SEND_COMMAND_TOPIC): valid_publish_topic,
+        probatio.Optional(CONF_SET_FAN_SPEED_TOPIC): valid_publish_topic,
+        probatio.Optional(CONF_STATE_TOPIC): valid_publish_topic,
+        probatio.Optional(
+            CONF_SUPPORTED_FEATURES, default=DEFAULT_SERVICE_STRINGS
+        ): probatio.All(probatio.EnsureList(), [probatio.In(STRING_TO_SERVICE.keys())]),
+        probatio.Optional(CONF_COMMAND_TOPIC): valid_publish_topic,
+        probatio.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-PLATFORM_SCHEMA_MODERN = vol.All(_BASE_SCHEMA, validate_clean_area_config)
-DISCOVERY_SCHEMA = vol.All(
-    _BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA), validate_clean_area_config
+PLATFORM_SCHEMA_MODERN = probatio.All(_BASE_SCHEMA, validate_clean_area_config)
+DISCOVERY_SCHEMA = probatio.All(
+    _BASE_SCHEMA.extend({}, extra=probatio.ALLOW_EXTRA), validate_clean_area_config
 )
 
 

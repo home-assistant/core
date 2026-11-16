@@ -6,22 +6,15 @@ from unittest.mock import MagicMock
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from redgtech_api.api import RedgtechAuthError, RedgtechConnectionError
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TOGGLE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
+from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture
@@ -63,8 +56,8 @@ async def test_switch_turn_on(
     mock_api = setup_redgtech_integration
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.living_room_switch"},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: "switch.living_room_switch"},
         blocking=True,
     )
 
@@ -81,8 +74,8 @@ async def test_switch_turn_off(
     mock_api = setup_redgtech_integration
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.kitchen_switch"},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: "switch.kitchen_switch"},
         blocking=True,
     )
 
@@ -99,8 +92,8 @@ async def test_switch_toggle(
     mock_api = setup_redgtech_integration
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TOGGLE,
-        {ATTR_ENTITY_ID: "switch.living_room_switch"},
+        SwitchService.TOGGLE,
+        {CommonServiceArgument.ENTITY_ID: "switch.living_room_switch"},
         blocking=True,
     )
 
@@ -135,8 +128,8 @@ async def test_exception_handling(
     with pytest.raises(HomeAssistantError, match=error_message):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.living_room_switch"},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: "switch.living_room_switch"},
             blocking=True,
         )
 
@@ -157,8 +150,8 @@ async def test_switch_auth_error_with_retry(
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.living_room_switch"},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: "switch.living_room_switch"},
             blocking=True,
         )
 

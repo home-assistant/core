@@ -7,6 +7,7 @@ import ssl
 from unittest.mock import patch
 
 import plexapi
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 import requests
 import requests_mock
 
@@ -29,8 +30,6 @@ from homeassistant.util import dt as dt_util
 
 from .const import DEFAULT_DATA, DEFAULT_OPTIONS, PLEX_DIRECT_URL
 from .helpers import trigger_plex_update, wait_for_debouncer
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_set_config_entry_unique_id(
@@ -95,11 +94,9 @@ async def test_unload_config_entry(
     assert entry is config_entries[0]
     assert entry.state is ConfigEntryState.LOADED
 
-    server_id = mock_plex_server.machine_identifier
-    loaded_server = hass.data[const.DOMAIN][const.SERVERS][server_id]
-    assert loaded_server == mock_plex_server
+    assert entry.runtime_data.server == mock_plex_server
 
-    websocket = hass.data[const.DOMAIN][const.WEBSOCKETS][server_id]
+    websocket = entry.runtime_data.websocket
     await hass.config_entries.async_unload(entry.entry_id)
     assert websocket.close.called
     assert entry.state is ConfigEntryState.NOT_LOADED
@@ -330,13 +327,10 @@ async def test_setup_with_limited_credentials(
         "plexapi.server.PlexServer.systemAccounts",
         side_effect=plexapi.exceptions.Unauthorized,
     ) as mock_accounts:
-        mock_plex_server = await setup_plex_server()
+        plex_server = await setup_plex_server()
 
     assert mock_accounts.called
 
-    plex_server = hass.data[const.DOMAIN][const.SERVERS][
-        mock_plex_server.machine_identifier
-    ]
     assert len(plex_server.accounts) == 0
     assert plex_server.owner is None
 

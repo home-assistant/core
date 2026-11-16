@@ -2,20 +2,14 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import AsyncMock, MockConfigEntry
+
 from homeassistant.components.dlink.const import DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
+from homeassistant.const import STATE_OFF, STATE_ON, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 
 from .conftest import CONF_DATA
-
-from tests.common import AsyncMock, MockConfigEntry
 
 
 async def test_switch_state(hass: HomeAssistant, mocked_plug: AsyncMock) -> None:
@@ -34,17 +28,18 @@ async def test_switch_state(hass: HomeAssistant, mocked_plug: AsyncMock) -> None
     assert state.state == STATE_OFF
     assert state.attributes["total_consumption"] == 1040.0
     assert state.attributes["temperature"] == 33
+    assert state.attributes["current_consumption"] == 50.0
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: [entity_id]},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: [entity_id]},
         blocking=True,
     )
     assert hass.states.get(entity_id).state == STATE_ON
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: [entity_id]},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: [entity_id]},
         blocking=True,
     )
     assert hass.states.get(entity_id).state == STATE_OFF
@@ -67,3 +62,4 @@ async def test_switch_no_value(
     assert state.state == STATE_OFF
     assert state.attributes["total_consumption"] is None
     assert state.attributes["temperature"] is None
+    assert state.attributes["current_consumption"] is None

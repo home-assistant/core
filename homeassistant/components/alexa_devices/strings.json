@@ -11,8 +11,6 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
@@ -112,6 +110,9 @@
       "announcements": {
         "name": "Announcements"
       },
+      "aqm_led": {
+        "name": "LED indicator"
+      },
       "communications": {
         "name": "Communications"
       },
@@ -134,6 +135,9 @@
     },
     "cannot_retrieve_data_with_error": {
       "message": "Error retrieving data: {error}"
+    },
+    "cannot_set_feature_with_error": {
+      "message": "Error setting device feature: {error}"
     },
     "device_serial_number_missing": {
       "message": "Device serial number missing: {device_id}"

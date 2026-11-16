@@ -3,8 +3,14 @@
 from typing import Any
 from unittest.mock import MagicMock, mock_open, patch
 
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.common import (
+    MockEntityPlatform,
+    MockUser,
+    async_mock_service,
+    setup_test_component_platform,
+)
 
 from homeassistant import core
 from homeassistant.components import light
@@ -25,13 +31,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import color as color_util
 
 from .common import MockLight
-
-from tests.common import (
-    MockEntityPlatform,
-    MockUser,
-    async_mock_service,
-    setup_test_component_platform,
-)
 
 orig_Profiles = light.Profiles
 
@@ -391,14 +390,14 @@ async def test_services(
         {ATTR_ENTITY_ID: ent1.entity_id, light.ATTR_PROFILE: -1},
         blocking=True,
     )
-    with pytest.raises(vol.MultipleInvalid):
+    with pytest.raises(probatio.MultipleInvalid):
         await hass.services.async_call(
             light.DOMAIN,
             SERVICE_TURN_ON,
             {ATTR_ENTITY_ID: ent2.entity_id, light.ATTR_XY_COLOR: ["bla-di-bla", 5]},
             blocking=True,
         )
-    with pytest.raises(vol.MultipleInvalid):
+    with pytest.raises(probatio.MultipleInvalid):
         await hass.services.async_call(
             light.DOMAIN,
             SERVICE_TURN_ON,
@@ -416,7 +415,7 @@ async def test_services(
     assert data == {}
 
     # faulty attributes will not trigger a service call
-    with pytest.raises(vol.MultipleInvalid):
+    with pytest.raises(probatio.MultipleInvalid):
         await hass.services.async_call(
             light.DOMAIN,
             SERVICE_TURN_ON,
@@ -427,7 +426,7 @@ async def test_services(
             },
             blocking=True,
         )
-    with pytest.raises(vol.MultipleInvalid):
+    with pytest.raises(probatio.MultipleInvalid):
         await hass.services.async_call(
             light.DOMAIN,
             SERVICE_TURN_ON,
@@ -1404,7 +1403,7 @@ async def test_light_service_call_color_conversion(hass: HomeAssistant) -> None:
     _, data = entity5.last_call("turn_on")
     assert data == {"brightness": 255, "rgbww_color": (0, 0, 255, 0, 0)}
     _, data = entity6.last_call("turn_on")
-    assert data == {"brightness": 255, "color_temp_kelvin": 1739}
+    assert data == {"brightness": 255, "color_temp_kelvin": 2000}
 
     await hass.services.async_call(
         "light",
@@ -1538,7 +1537,7 @@ async def test_light_service_call_color_conversion(hass: HomeAssistant) -> None:
     _, data = entity5.last_call("turn_on")
     assert data == {"brightness": 128, "rgbww_color": (0, 255, 22, 0, 0)}
     _, data = entity6.last_call("turn_on")
-    assert data == {"brightness": 128, "color_temp_kelvin": 8645}
+    assert data == {"brightness": 128, "color_temp_kelvin": 6535}
 
     await hass.services.async_call(
         "light",
@@ -1731,7 +1730,7 @@ async def test_light_turn_on_rgb_color_is_plain_tuple(
 
     Covers two input paths that both resolve to the same RGB value (128, 0, 0):
     - color_name: goes through color_name_to_rgb (returns RGBColor NamedTuple),
-      bypassing the service schema vol.Coerce(tuple) coercion.
+      bypassing the service schema probatio.Coerce(tuple) coercion.
     - rgb_color: RGBColor NamedTuple passed directly, converted by the schema.
     """
     entities = [
@@ -1974,6 +1973,101 @@ async def test_light_service_call_color_temp_conversion(hass: HomeAssistant) -> 
     assert data == {"brightness": 255, "color_temp_kelvin": 2439}
     _, data = entity1.last_call("turn_on")
     assert data == {"brightness": 255, "rgbww_color": (0, 0, 0, 66, 189)}
+
+
+@pytest.mark.parametrize(
+    ("service_data", "expected"),
+    [
+        pytest.param(
+            {"brightness_pct": 100, "color_temp_kelvin": 1000},
+            {"brightness": 255, "rgbww_color": (0, 0, 0, 0, 255)},
+            id="warmer_than_min",
+        ),
+        pytest.param(
+            {"brightness_pct": 100, "color_temp_kelvin": 9000},
+            {"brightness": 255, "rgbww_color": (0, 0, 0, 255, 0)},
+            id="colder_than_max",
+        ),
+        pytest.param(
+            {"color_temp_kelvin": 6535},
+            {"rgbww_color": (0, 0, 0, 255, 0)},
+            id="no_brightness",
+        ),
+    ],
+)
+async def test_light_service_call_color_temp_conversion_rgbww_only(
+    hass: HomeAssistant, service_data: dict[str, Any], expected: dict[str, Any]
+) -> None:
+    """Test color temp conversion for a light which only supports rgbww."""
+    entity = MockLight("Test_rgbww", STATE_ON)
+    entity.supported_color_modes = {light.ColorMode.RGBWW}
+    entity.color_mode = light.ColorMode.RGBWW
+    setup_test_component_platform(hass, light.DOMAIN, [entity])
+
+    assert await async_setup_component(hass, DOMAIN, {"light": {"platform": "test"}})
+    await hass.async_block_till_done()
+    assert entity.brightness is None
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": entity.entity_id, **service_data},
+        blocking=True,
+    )
+    _, data = entity.last_call("turn_on")
+    assert data == expected
+
+
+@pytest.mark.parametrize(
+    ("service_data", "expected"),
+    [
+        pytest.param(
+            {"xy_color": (0.4, 0.1858)},
+            {"color_temp_kelvin": 6535},
+            id="xy_at_pole",
+        ),
+        pytest.param(
+            {"xy_color": (0.4, 0.185)},
+            {"color_temp_kelvin": 6535},
+            id="xy_colder_than_max",
+        ),
+        pytest.param(
+            {"xy_color": (0.4, 0.19)},
+            {"color_temp_kelvin": 2000},
+            id="xy_warmer_than_min",
+        ),
+        pytest.param(
+            {"rgb_color": (255, 0, 200)},
+            {"color_temp_kelvin": 2000},
+            id="rgb_warmer_than_min",
+        ),
+        pytest.param(
+            {"hs_color": (320, 100)},
+            {"color_temp_kelvin": 2000},
+            id="hs_warmer_than_min",
+        ),
+    ],
+)
+async def test_light_service_call_color_temp_conversion_out_of_range(
+    hass: HomeAssistant, service_data: dict[str, Any], expected: dict[str, Any]
+) -> None:
+    """Test colors far from white are converted to the light's color temp range."""
+    entity = MockLight("Test_temperature", STATE_ON)
+    entity.supported_color_modes = {light.ColorMode.COLOR_TEMP}
+    entity.color_mode = light.ColorMode.COLOR_TEMP
+    setup_test_component_platform(hass, light.DOMAIN, [entity])
+
+    assert await async_setup_component(hass, DOMAIN, {"light": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": entity.entity_id, **service_data},
+        blocking=True,
+    )
+    _, data = entity.last_call("turn_on")
+    assert data == expected
 
 
 async def test_light_service_call_white_mode(hass: HomeAssistant) -> None:
@@ -2288,16 +2382,16 @@ def test_valid_supported_color_modes() -> None:
 
     # Supported color modes must not be empty
     supported = set()
-    with pytest.raises(vol.Error):
+    with pytest.raises(probatio.Error):
         light.valid_supported_color_modes(supported)
 
     # ColorMode.WHITE must be combined with a color mode supporting color
     supported = {light.ColorMode.WHITE}
-    with pytest.raises(vol.Error):
+    with pytest.raises(probatio.Error):
         light.valid_supported_color_modes(supported)
 
     supported = {light.ColorMode.WHITE, light.ColorMode.COLOR_TEMP}
-    with pytest.raises(vol.Error):
+    with pytest.raises(probatio.Error):
         light.valid_supported_color_modes(supported)
 
     supported = {light.ColorMode.WHITE, light.ColorMode.HS}
@@ -2308,7 +2402,7 @@ def test_valid_supported_color_modes() -> None:
     assert light.valid_supported_color_modes(supported) == supported
 
     supported = {light.ColorMode.ONOFF, light.ColorMode.COLOR_TEMP}
-    with pytest.raises(vol.Error):
+    with pytest.raises(probatio.Error):
         light.valid_supported_color_modes(supported)
 
     # ColorMode.BRIGHTNESS must be the only supported mode
@@ -2316,7 +2410,7 @@ def test_valid_supported_color_modes() -> None:
     assert light.valid_supported_color_modes(supported) == supported
 
     supported = {light.ColorMode.BRIGHTNESS, light.ColorMode.COLOR_TEMP}
-    with pytest.raises(vol.Error):
+    with pytest.raises(probatio.Error):
         light.valid_supported_color_modes(supported)
 
 
@@ -2537,63 +2631,3 @@ def test_report_invalid_color_modes(
         raised_error = str(err)
     expected_error = "sets invalid supported color modes"
     assert (expected_error in raised_error) is error_expected
-
-
-@pytest.mark.parametrize(
-    ("attributes", "expected_warnings", "expected_values"),
-    [
-        (
-            {
-                "_attr_min_color_temp_kelvin": 3000,
-                "_attr_max_color_temp_kelvin": 5000,
-            },
-            {"min": False, "max": False},
-            # Just highlighting that the attributes match the
-            # kelvin values
-            (3000, 5000),
-        ),
-        (
-            {
-                "_attr_min_color_temp_kelvin": None,
-                "_attr_max_color_temp_kelvin": None,
-            },
-            {"min": True, "max": True},
-            (2000, 6535),
-        ),
-        (
-            {},
-            {"min": False, "max": False},
-            (2000, 6535),
-        ),
-    ],
-    ids=["explicit_kelvin", "explicit_none", "default_kelvin"],
-)
-def test_missing_kelvin_property_warnings(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    attributes: dict[str, int | None],
-    expected_warnings: dict[str, bool],
-    expected_values: tuple[int, int | None, int],
-) -> None:
-    """Test missing kelvin properties."""
-
-    class MockLightEntityEntity(light.LightEntity):
-        _attr_color_mode = light.ColorMode.COLOR_TEMP
-        _attr_is_on = True
-        _attr_supported_features = light.LightEntityFeature.EFFECT
-        _attr_supported_color_modes = {light.ColorMode.COLOR_TEMP}
-        platform = MockEntityPlatform(hass, platform_name="test")
-
-    entity = MockLightEntityEntity()
-    for k, v in attributes.items():
-        setattr(entity, k, v)
-
-    state = entity._async_calculate_state()
-    for warning, expected in expected_warnings.items():
-        assert (
-            f"is explicitly setting `_attr_{warning}_color_temp_kelvin` to `None`"
-            in caplog.text
-        ) is expected, f"Expected {expected} for '{warning}'"
-
-    assert state.attributes[light.ATTR_MIN_COLOR_TEMP_KELVIN] == expected_values[0]
-    assert state.attributes[light.ATTR_MAX_COLOR_TEMP_KELVIN] == expected_values[1]

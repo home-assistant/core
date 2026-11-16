@@ -27,7 +27,7 @@
     'verify_ssl': False,
   })
 # ---
-# name: test_user
+# name: test_user[all_provided]
   dict({
     'host': 'nas.meontheinternet.com',
     'mac': list([
@@ -35,13 +35,13 @@
       '00-11-32-XX-XX-5A',
     ]),
     'password': 'password',
-    'port': 1234,
+    'port': '1234',
     'ssl': True,
     'username': 'Home_Assistant',
     'verify_ssl': False,
   })
 # ---
-# name: test_user.1
+# name: test_user[no_port_no_ssl]
   dict({
     'host': 'nas.meontheinternet.com',
     'mac': list([
@@ -78,7 +78,7 @@
       '00-11-32-XX-XX-5A',
     ]),
     'password': 'password',
-    'port': 1234,
+    'port': '1234',
     'ssl': True,
     'username': 'Home_Assistant',
     'verify_ssl': False,
@@ -92,7 +92,7 @@
       '00-11-32-XX-XX-5A',
     ]),
     'password': 'password',
-    'port': 1234,
+    'port': '1234',
     'ssl': True,
     'username': 'Home_Assistant',
     'verify_ssl': False,

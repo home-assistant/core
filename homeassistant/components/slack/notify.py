@@ -8,9 +8,9 @@ from urllib.parse import urlparse
 
 from aiohttp import BasicAuth
 from aiohttp.client_exceptions import ClientError
+import probatio
 from slack_sdk.errors import SlackApiError
 from slack_sdk.web.async_client import AsyncWebClient
-import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -18,7 +18,7 @@ from homeassistant.components.notify import (
     ATTR_TITLE,
     BaseNotificationService,
 )
-from homeassistant.const import ATTR_ICON, CONF_PATH
+from homeassistant.const import CONF_ICON, CONF_PATH, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import aiohttp_client, config_validation as cv, template
@@ -41,36 +41,37 @@ from .const import (
 from .utils import upload_file_to_slack
 
 _LOGGER = logging.getLogger(__name__)
+ATTR_ICON = "icon"
 
-FILE_PATH_SCHEMA = vol.Schema({vol.Required(CONF_PATH): cv.isfile})
+FILE_PATH_SCHEMA = probatio.Schema({probatio.Required(CONF_PATH): cv.isfile})
 
-FILE_URL_SCHEMA = vol.Schema(
+FILE_URL_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_URL): cv.url,
-        vol.Inclusive(ATTR_USERNAME, "credentials"): cv.string,
-        vol.Inclusive(ATTR_PASSWORD, "credentials"): cv.string,
+        probatio.Required(ATTR_URL): cv.url,
+        probatio.Inclusive(ATTR_USERNAME, "credentials"): cv.string,
+        probatio.Inclusive(ATTR_PASSWORD, "credentials"): cv.string,
     }
 )
 
-DATA_FILE_SCHEMA = vol.Schema(
+DATA_FILE_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_FILE): vol.Any(FILE_PATH_SCHEMA, FILE_URL_SCHEMA),
-        vol.Optional(ATTR_THREAD_TS): cv.string,
+        probatio.Required(ATTR_FILE): probatio.Any(FILE_PATH_SCHEMA, FILE_URL_SCHEMA),
+        probatio.Optional(ATTR_THREAD_TS): cv.string,
     }
 )
 
-DATA_TEXT_ONLY_SCHEMA = vol.Schema(
+DATA_TEXT_ONLY_SCHEMA = probatio.Schema(
     {
-        vol.Optional(ATTR_USERNAME): cv.string,
-        vol.Optional(ATTR_ICON): cv.string,
-        vol.Optional(ATTR_BLOCKS): list,
-        vol.Optional(ATTR_BLOCKS_TEMPLATE): list,
-        vol.Optional(ATTR_THREAD_TS): cv.string,
+        probatio.Optional(ATTR_USERNAME): cv.string,
+        probatio.Optional(ATTR_ICON): cv.string,
+        probatio.Optional(ATTR_BLOCKS): list,
+        probatio.Optional(ATTR_BLOCKS_TEMPLATE): list,
+        probatio.Optional(ATTR_THREAD_TS): cv.string,
     }
 )
 
-DATA_SCHEMA = vol.All(
-    cv.ensure_list, [vol.Any(DATA_FILE_SCHEMA, DATA_TEXT_ONLY_SCHEMA)]
+DATA_SCHEMA = probatio.All(
+    probatio.EnsureList(), [probatio.Any(DATA_FILE_SCHEMA, DATA_TEXT_ONLY_SCHEMA)]
 )
 
 
@@ -280,7 +281,7 @@ class SlackNotificationService(BaseNotificationService):
 
         try:
             DATA_SCHEMA(data)
-        except vol.Invalid as err:
+        except probatio.Invalid as err:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="invalid_message_data",
@@ -306,8 +307,8 @@ class SlackNotificationService(BaseNotificationService):
                 targets,
                 message,
                 title,
-                username=data.get(ATTR_USERNAME, self._config.get(ATTR_USERNAME)),
-                icon=data.get(ATTR_ICON, self._config.get(ATTR_ICON)),
+                username=data.get(ATTR_USERNAME, self._config.get(CONF_USERNAME)),
+                icon=data.get(ATTR_ICON, self._config.get(CONF_ICON)),
                 thread_ts=data.get(ATTR_THREAD_TS),
                 blocks=blocks,
             )

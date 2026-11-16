@@ -4,6 +4,7 @@ from collections.abc import AsyncGenerator, Callable, Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 from wmspro.action import Action, ActionList
 
 from homeassistant.components.wmspro.const import DOMAIN
@@ -12,7 +13,11 @@ from homeassistant.core import HomeAssistant
 
 from . import remove_config_entry
 
-from tests.common import MockConfigEntry, async_load_json_object_fixture
+
+@pytest.fixture
+def hass_config_dir(hass_tmp_config_dir: str) -> str:
+    """Use a temporary config directory for the per-entry storage."""
+    return hass_tmp_config_dir
 
 
 @pytest.fixture
@@ -20,6 +25,7 @@ async def mock_config_entry(hass: HomeAssistant) -> AsyncGenerator[MockConfigEnt
     """Return a dummy config entry."""
     mock_config_entry = MockConfigEntry(
         title="WebControl",
+        entry_id="01JWMSPRO00000000000000000",
         domain=DOMAIN,
         data={CONF_HOST: "webcontrol"},
     )

@@ -5,7 +5,7 @@ from decimal import Decimal, DecimalException, InvalidOperation
 import logging
 from typing import override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     DEVICE_CLASS_UNITS,
@@ -59,11 +59,10 @@ from .const import (
     CONF_UNIT_PREFIX,
     CONF_UNIT_TIME,
     DOMAIN,
+    DerivativeEntityStateAttribute,
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_SOURCE_ID = "source"
 
 # SI Metric prefixes
 UNIT_PREFIXES = {
@@ -101,15 +100,21 @@ DEFAULT_TIME_WINDOW = 0
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
-        vol.Required(CONF_SOURCE): cv.entity_id,
-        vol.Optional(CONF_ROUND_DIGITS, default=DEFAULT_ROUND): vol.Coerce(int),
-        vol.Optional(CONF_UNIT_PREFIX, default=None): vol.In(UNIT_PREFIXES),
-        vol.Optional(CONF_UNIT_TIME, default=UnitOfTime.HOURS): vol.In(UNIT_TIME),
-        vol.Optional(CONF_UNIT): cv.string,
-        vol.Optional(CONF_TIME_WINDOW, default=DEFAULT_TIME_WINDOW): cv.time_period,
-        vol.Optional(CONF_MAX_SUB_INTERVAL): cv.positive_time_period,
+        probatio.Optional(CONF_NAME): cv.string,
+        probatio.Optional(CONF_UNIQUE_ID): cv.string,
+        probatio.Required(CONF_SOURCE): cv.entity_id,
+        probatio.Optional(CONF_ROUND_DIGITS, default=DEFAULT_ROUND): probatio.Coerce(
+            int
+        ),
+        probatio.Optional(CONF_UNIT_PREFIX, default=None): probatio.In(UNIT_PREFIXES),
+        probatio.Optional(CONF_UNIT_TIME, default=UnitOfTime.HOURS): probatio.In(
+            UNIT_TIME
+        ),
+        probatio.Optional(CONF_UNIT): cv.string,
+        probatio.Optional(
+            CONF_TIME_WINDOW, default=DEFAULT_TIME_WINDOW
+        ): cv.time_period,
+        probatio.Optional(CONF_MAX_SUB_INTERVAL): cv.positive_time_period,
     }
 )
 
@@ -212,7 +217,9 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
         self._last_valid_state_time: tuple[str, datetime] | None = None
 
         self._attr_name = name if name is not None else f"{source_entity} derivative"
-        self._attr_extra_state_attributes = {ATTR_SOURCE_ID: source_entity}
+        self._attr_extra_state_attributes = {
+            DerivativeEntityStateAttribute.SOURCE: source_entity
+        }
         self._string_unit_prefix: str | None = None
         self._string_unit_time: str | None = None
         if unit_of_measurement is None:

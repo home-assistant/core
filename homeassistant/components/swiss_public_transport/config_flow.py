@@ -8,7 +8,7 @@ from opendata_transport.exceptions import (
     OpendataTransportConnectionError,
     OpendataTransportError,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers import config_validation as cv
@@ -31,6 +31,7 @@ from .const import (
     CONF_TIME_MODE,
     CONF_TIME_OFFSET,
     CONF_TIME_STATION,
+    CONF_TRANSPORTATIONS,
     CONF_VIA,
     DEFAULT_TIME_MODE,
     DEFAULT_TIME_STATION,
@@ -39,27 +40,38 @@ from .const import (
     MAX_VIA,
     PLACEHOLDERS,
     TIME_MODE_OPTIONS,
+    TRANSPORTATION_OPTIONS,
 )
 from .helper import offset_opendata, unique_id_from_config
 
-USER_DATA_SCHEMA = vol.Schema(
+USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_START): cv.string,
-        vol.Optional(CONF_VIA): TextSelector(
+        probatio.Required(CONF_START): cv.string,
+        probatio.Optional(CONF_VIA): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.TEXT,
                 multiple=True,
             ),
         ),
-        vol.Required(CONF_DESTINATION): cv.string,
-        vol.Optional(CONF_TIME_MODE, default=DEFAULT_TIME_MODE): SelectSelector(
+        probatio.Required(CONF_DESTINATION): cv.string,
+        probatio.Optional(CONF_TRANSPORTATIONS): SelectSelector(
+            SelectSelectorConfig(
+                options=TRANSPORTATION_OPTIONS,
+                multiple=True,
+                mode=SelectSelectorMode.LIST,
+                translation_key="transportations",
+            ),
+        ),
+        probatio.Optional(CONF_TIME_MODE, default=DEFAULT_TIME_MODE): SelectSelector(
             SelectSelectorConfig(
                 options=TIME_MODE_OPTIONS,
                 mode=SelectSelectorMode.DROPDOWN,
                 translation_key="time_mode",
             ),
         ),
-        vol.Optional(CONF_TIME_STATION, default=DEFAULT_TIME_STATION): SelectSelector(
+        probatio.Optional(
+            CONF_TIME_STATION, default=DEFAULT_TIME_STATION
+        ): SelectSelector(
             SelectSelectorConfig(
                 options=IS_ARRIVAL_OPTIONS,
                 mode=SelectSelectorMode.DROPDOWN,
@@ -68,8 +80,10 @@ USER_DATA_SCHEMA = vol.Schema(
         ),
     }
 )
-ADVANCED_TIME_DATA_SCHEMA = {vol.Optional(CONF_TIME_FIXED): TimeSelector()}
-ADVANCED_TIME_OFFSET_DATA_SCHEMA = {vol.Optional(CONF_TIME_OFFSET): DurationSelector()}
+ADVANCED_TIME_DATA_SCHEMA = {probatio.Optional(CONF_TIME_FIXED): TimeSelector()}
+ADVANCED_TIME_OFFSET_DATA_SCHEMA = {
+    probatio.Optional(CONF_TIME_OFFSET): DurationSelector()
+}
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -126,7 +140,7 @@ class SwissPublicTransportConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Async time step to set up the connection."""
         return await self._async_step_time_mode(
-            CONF_TIME_FIXED, vol.Schema(ADVANCED_TIME_DATA_SCHEMA), time_input
+            CONF_TIME_FIXED, probatio.Schema(ADVANCED_TIME_DATA_SCHEMA), time_input
         )
 
     async def async_step_time_offset(
@@ -135,14 +149,14 @@ class SwissPublicTransportConfigFlow(ConfigFlow, domain=DOMAIN):
         """Async time offset step to set up the connection."""
         return await self._async_step_time_mode(
             CONF_TIME_OFFSET,
-            vol.Schema(ADVANCED_TIME_OFFSET_DATA_SCHEMA),
+            probatio.Schema(ADVANCED_TIME_OFFSET_DATA_SCHEMA),
             time_offset_input,
         )
 
     async def _async_step_time_mode(
         self,
         step_id: str,
-        time_mode_schema: vol.Schema,
+        time_mode_schema: probatio.Schema,
         time_mode_input: dict[str, Any] | None = None,
     ) -> ConfigFlowResult:
         """Async time mode step to set up the connection."""
@@ -183,6 +197,7 @@ class SwissPublicTransportConfigFlow(ConfigFlow, domain=DOMAIN):
                 session,
                 via=input.get(CONF_VIA),
                 time=input.get(CONF_TIME_FIXED),
+                transportations=input.get(CONF_TRANSPORTATIONS),
             )
             if time_offset:
                 offset_opendata(opendata, time_offset)

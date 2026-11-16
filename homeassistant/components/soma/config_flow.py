@@ -4,8 +4,8 @@ import logging
 from typing import Any, override
 
 from api.soma_api import SomaApi
+import probatio
 from requests import RequestException
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -32,11 +32,13 @@ class SomaFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle a flow start."""
         if user_input is None:
             data = {
-                vol.Required(CONF_HOST): str,
-                vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+                probatio.Required(CONF_HOST): str,
+                probatio.Required(CONF_PORT, default=DEFAULT_PORT): int,
             }
 
-            return self.async_show_form(step_id="user", data_schema=vol.Schema(data))
+            return self.async_show_form(
+                step_id="user", data_schema=probatio.Schema(data)
+            )
 
         return await self.async_step_creation(user_input)
 
@@ -52,21 +54,20 @@ class SomaFlowHandler(ConfigFlow, domain=DOMAIN):
         try:
             result = await self.hass.async_add_executor_job(api.list_devices)
             _LOGGER.debug("Successfully set up Soma Connect")
-            if result["result"] == "success":
-                return self.async_create_entry(
-                    title="Soma Connect",
-                    data={"host": user_input["host"], "port": user_input["port"]},
-                )
-            _LOGGER.error(
-                "Connection to SOMA Connect failed (result:%s)", result["result"]
-            )
-            return self.async_abort(reason="result_error")
+            status = result["result"]
         except RequestException:
             _LOGGER.error("Connection to SOMA Connect failed with RequestException")
             return self.async_abort(reason="connection_error")
         except KeyError:
             _LOGGER.error("Connection to SOMA Connect failed with KeyError")
             return self.async_abort(reason="connection_error")
+        if status == "success":
+            return self.async_create_entry(
+                title="Soma Connect",
+                data={"host": user_input["host"], "port": user_input["port"]},
+            )
+        _LOGGER.error("Connection to SOMA Connect failed (result:%s)", status)
+        return self.async_abort(reason="result_error")
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle flow start from existing config section."""

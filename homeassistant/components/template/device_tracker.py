@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import asdict, dataclass
 from typing import Any, Self, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import zone
 from homeassistant.components.device_tracker import (
@@ -16,7 +16,7 @@ from homeassistant.components.device_tracker import (
     TrackerEntityStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
@@ -26,7 +26,9 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import TriggerUpdateCoordinator, validators as tcv
+from . import validators as tcv
+from .const import DEFAULT_NAMES
+from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .helpers import (
     async_setup_template_entry,
@@ -40,7 +42,7 @@ from .schemas import (
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
 
-DEFAULT_NAME = "Template Device Tracker"
+DEFAULT_NAME = DEFAULT_NAMES[Platform.DEVICE_TRACKER]
 
 CONF_IN_ZONES = "in_zones"
 CONF_LOCATION_ACCURACY = "location_accuracy"
@@ -49,13 +51,13 @@ CONF_LOCATION_ACCURACY = "location_accuracy"
 def _validate_in_zones_or_lat_and_lon(obj: dict) -> dict:
     if CONF_IN_ZONES not in obj:
         if CONF_LATITUDE not in obj or CONF_LONGITUDE not in obj:
-            raise vol.Invalid(
+            raise probatio.Invalid(
                 f"Either '{CONF_IN_ZONES}' or both '{CONF_LATITUDE}' and '{CONF_LONGITUDE}' must be specified"
             )
     elif (CONF_LATITUDE in obj and CONF_LONGITUDE not in obj) or (
         CONF_LATITUDE not in obj and CONF_LONGITUDE in obj
     ):
-        raise vol.Invalid(
+        raise probatio.Invalid(
             f"Both '{CONF_LATITUDE}' and '{CONF_LONGITUDE}' must be specified"
         )
 
@@ -89,9 +91,9 @@ def validate_in_zones(
         for v in result:
             try:
                 zone_entity_ids.append(
-                    vol.All(cv.entity_id, cv.entity_domain(zone.DOMAIN))(v)
+                    probatio.All(cv.entity_id, cv.entity_domain(zone.DOMAIN))(v)
                 )
-            except vol.Invalid:
+            except probatio.Invalid:
                 failed.append(v)
 
         if failed:
@@ -107,12 +109,12 @@ def validate_in_zones(
     return convert
 
 
-TRACKER_COMMON_SCHEMA = vol.Schema(
+TRACKER_COMMON_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_IN_ZONES): cv.template,
-        vol.Optional(CONF_LATITUDE): cv.template,
-        vol.Optional(CONF_LOCATION_ACCURACY): cv.template,
-        vol.Optional(CONF_LONGITUDE): cv.template,
+        probatio.Optional(CONF_IN_ZONES): cv.template,
+        probatio.Optional(CONF_LATITUDE): cv.template,
+        probatio.Optional(CONF_LOCATION_ACCURACY): cv.template,
+        probatio.Optional(CONF_LONGITUDE): cv.template,
     }
 )
 
@@ -124,7 +126,7 @@ _BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(
     )
 )
 
-TRACKER_YAML_SCHEMA = vol.All(
+TRACKER_YAML_SCHEMA = probatio.All(
     _validate_in_zones_or_lat_and_lon,
     TRACKER_COMMON_SCHEMA.extend(
         make_template_entity_common_schema(
@@ -135,7 +137,7 @@ TRACKER_YAML_SCHEMA = vol.All(
     ),
 )
 
-TRACKER_CONFIG_ENTRY_SCHEMA = vol.All(
+TRACKER_CONFIG_ENTRY_SCHEMA = probatio.All(
     _validate_in_zones_or_lat_and_lon,
     TRACKER_COMMON_SCHEMA.extend(TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema),
 )

@@ -1,8 +1,11 @@
 """Tests for the Lyngdorf diagnostics."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
@@ -10,10 +13,6 @@ from homeassistant.components.lyngdorf.const import SSDP_ST
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
-
-from tests.common import MockConfigEntry
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture
@@ -32,23 +31,6 @@ async def test_diagnostics(
     assert await get_diagnostics_for_config_entry(
         hass, hass_client, init_integration
     ) == snapshot(exclude=props("entry_id", "created_at", "modified_at"))
-
-
-async def test_lipsync_range_reported_before_the_device_reports_a_value(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    init_integration: MockConfigEntry,
-    mock_receiver: MagicMock,
-) -> None:
-    """Test the lipsync range still reports before the first value arrives."""
-    mock_receiver.lipsync = None
-
-    diagnostics = await get_diagnostics_for_config_entry(
-        hass, hass_client, init_integration
-    )
-
-    assert diagnostics["state"]["lipsync"] is None
-    assert diagnostics["ranges"]["lipsync_range"] is not None
 
 
 async def test_diagnostics_includes_ssdp_description(

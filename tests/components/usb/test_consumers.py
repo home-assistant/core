@@ -5,6 +5,14 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.hassio import HassioNotReadyError
 from homeassistant.components.usb import DOMAIN
@@ -24,15 +32,6 @@ from homeassistant.helpers.service_info.usb import UsbServiceInfo
 from homeassistant.setup import async_setup_component
 
 from . import patch_scanned_serial_ports
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    mock_config_flow,
-    mock_integration,
-    mock_platform,
-)
-from tests.typing import WebSocketGenerator
 
 TTY_USB0 = "/dev/ttyUSB0"
 TTY_USB0_BY_ID = "/dev/serial/by-id/usb-Silicon_Labs_CP2102-if00-port0"
@@ -439,17 +438,26 @@ async def test_app_consumers(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test detecting serial ports mapped into apps."""
+    """Test detecting serial ports configured in the options of apps."""
     apps_info = {
         "core_zwave_js": {
             "name": "Z-Wave JS",
             "state": "started",
-            "devices": [TTY_USB0_BY_ID, "/dev/dri/card0"],
+            "devices": [TTY_USB0],
+            "options": {"device": TTY_USB0_BY_ID, "gpu": "/dev/dri/card0"},
         },
         "some_app": {
             "name": "Some App",
             "state": "stopped",
             "devices": [TTY_USB1],
+            "options": {"serial": [{"port": TTY_USB0}]},
+        },
+        # Static devices of the manifest are mapped regardless of being used
+        "wmbusmeters": {
+            "name": "Wmbusmeters",
+            "state": "started",
+            "devices": [TTY_USB0, TTY_USB1],
+            "options": {"reset_config": False},
         },
         "uninstalled_app": None,
     }
@@ -478,7 +486,15 @@ async def test_app_consumers(
                     "domain": None,
                     "config_entry_id": None,
                     "slug": "core_zwave_js",
-                }
+                },
+                {
+                    "kind": "app",
+                    "title": "Some App",
+                    "active": False,
+                    "domain": None,
+                    "config_entry_id": None,
+                    "slug": "some_app",
+                },
             ],
         ),
         (ESPHOME_PORT, []),
@@ -531,7 +547,12 @@ async def test_multiple_consumers(
     entry.add_to_hass(hass)
 
     apps_info = {
-        "some_app": {"name": "Some App", "state": "started", "devices": [TTY_USB0]}
+        "some_app": {
+            "name": "Some App",
+            "state": "started",
+            "devices": [TTY_USB0],
+            "options": {"device": TTY_USB0},
+        }
     }
 
     with (

@@ -16,6 +16,7 @@ from pyopenweathermap import (
 )
 from pyopenweathermap.client.owm_abstract_client import OWMClient
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, patch
 
 from homeassistant.components.openweathermap.const import (
     DEFAULT_LANGUAGE,
@@ -29,8 +30,6 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_MODE,
 )
-
-from tests.common import MockConfigEntry, patch
 
 API_KEY = "test_api_key"
 LATITUDE = 12.34

@@ -5,8 +5,8 @@ from itertools import batched
 import logging
 from typing import TYPE_CHECKING, Any, override
 
+import probatio
 import steam.api
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -17,7 +17,7 @@ from homeassistant.config_entries import (
     ConfigSubentryFlow,
     SubentryFlowResult,
 )
-from homeassistant.const import CONF_API_KEY, CONF_NAME
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import callback
 from homeassistant.helpers.selector import (
     SelectOptionDict,
@@ -34,13 +34,15 @@ _LOGGER = logging.getLogger(__name__)
 # To avoid too long request URIs, the amount of ids to request is limited
 MAX_IDS_TO_REQUEST = 275
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_API_KEY): str,
-        vol.Required(CONF_ACCOUNT): str,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): str,
+        probatio.Required(CONF_ACCOUNT): str,
     }
 )
-STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): str})
+STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
+    {probatio.Required(probatio.Secret(CONF_API_KEY)): str}
+)
 
 
 def validate_input(user_input: dict[str, str]) -> dict[str, str | int]:
@@ -150,6 +152,7 @@ class SteamFlowHandler(ConfigFlow, domain=DOMAIN):
 
             if not errors:
                 return self.async_update_and_abort(entry, data_updates=user_input)
+        # pylint: disable-next=home-assistant-step_id-match-method
         return self.async_show_form(
             step_id=(
                 "reauth_confirm" if self.source == SOURCE_REAUTH else SOURCE_RECONFIGURE
@@ -158,7 +161,7 @@ class SteamFlowHandler(ConfigFlow, domain=DOMAIN):
                 data_schema=STEP_REAUTH_DATA_SCHEMA, suggested_values=user_input
             ),
             errors=errors,
-            description_placeholders={CONF_NAME: entry.title, **PLACEHOLDERS},
+            description_placeholders={"name": entry.title, **PLACEHOLDERS},
         )
 
 
@@ -239,7 +242,7 @@ class FriendSubentryFlowHandler(ConfigSubentryFlow):
                 return self.async_abort(
                     reason="friendlist_private",
                     description_placeholders={
-                        CONF_NAME: me.personaname,
+                        "name": me.personaname,
                         "privacy_settings_url": f"{me.profileurl}edit/settings",
                     },
                 )
@@ -267,9 +270,9 @@ class FriendSubentryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_ACCOUNT): SelectSelector(
+                        probatio.Required(CONF_ACCOUNT): SelectSelector(
                             SelectSelectorConfig(options=options, sort=True)
                         )
                     }

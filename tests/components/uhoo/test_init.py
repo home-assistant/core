@@ -5,14 +5,13 @@ from unittest.mock import AsyncMock
 from aiodns.error import DNSError
 from aiohttp.client_exceptions import ClientConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from uhooapi.errors import UhooError, UnauthorizedError
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_load_unload_entry(

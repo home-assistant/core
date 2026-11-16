@@ -1,8 +1,9 @@
 """Support for Imou select entities."""
 
-from typing import override
+from typing import cast, override
 
 from pyimouapi.const import (
+    PARAM_COLLECTION_POINT,
     PARAM_CURRENT_OPTION,
     PARAM_DEVICE_VOLUME,
     PARAM_NIGHT_VISION_MODE,
@@ -32,6 +33,10 @@ SELECT_TYPES: tuple[SelectEntityDescription, ...] = (
         key=PARAM_NIGHT_VISION_MODE,
         entity_category=EntityCategory.CONFIG,
         translation_key=PARAM_NIGHT_VISION_MODE,
+    ),
+    SelectEntityDescription(
+        key=PARAM_COLLECTION_POINT,
+        translation_key=PARAM_COLLECTION_POINT,
     ),
 )
 
@@ -77,13 +82,16 @@ class ImouSelect(ImouEntity, SelectEntity):
     @override
     def options(self) -> list[str]:
         """Return a list of selectable options."""
-        return self.device.selects[self._entity_type][PARAM_OPTIONS]
+        return cast(list[str], self.device.selects[self._entity_type][PARAM_OPTIONS])
 
     @property
     @override
     def current_option(self) -> str | None:
         """Return the current selected option."""
-        return self.device.selects[self._entity_type][PARAM_CURRENT_OPTION]
+        return cast(
+            str | None,
+            self.device.selects[self._entity_type][PARAM_CURRENT_OPTION],
+        )
 
     @override
     @async_wrap_imou_command("select_option_failed")

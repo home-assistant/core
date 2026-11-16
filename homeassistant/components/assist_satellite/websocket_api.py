@@ -4,7 +4,7 @@ import asyncio
 from dataclasses import asdict, replace
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
@@ -35,8 +35,8 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "assist_satellite/intercept_wake_word",
-        vol.Required("entity_id"): cv.entity_domain(DOMAIN),
+        probatio.Required("type"): "assist_satellite/intercept_wake_word",
+        probatio.Required("entity_id"): cv.entity_domain(DOMAIN),
     }
 )
 @websocket_api.require_admin
@@ -75,8 +75,8 @@ async def websocket_intercept_wake_word(
 @callback
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "assist_satellite/get_configuration",
-        vol.Required("entity_id"): cv.entity_domain(DOMAIN),
+        probatio.Required("type"): "assist_satellite/get_configuration",
+        probatio.Required("entity_id"): cv.entity_domain(DOMAIN),
     }
 )
 def websocket_get_configuration(
@@ -110,9 +110,9 @@ def websocket_get_configuration(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "assist_satellite/set_wake_words",
-        vol.Required("entity_id"): cv.entity_domain(DOMAIN),
-        vol.Required("wake_word_ids"): [str],
+        probatio.Required("type"): "assist_satellite/set_wake_words",
+        probatio.Required("entity_id"): cv.entity_domain(DOMAIN),
+        probatio.Required("wake_word_ids"): [str],
     }
 )
 @websocket_api.require_admin
@@ -161,8 +161,8 @@ async def websocket_set_wake_words(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "assist_satellite/test_connection",
-        vol.Required("entity_id"): cv.entity_domain(DOMAIN),
+        probatio.Required("type"): "assist_satellite/test_connection",
+        probatio.Required("entity_id"): cv.entity_domain(DOMAIN),
     }
 )
 @websocket_api.require_admin

@@ -6,6 +6,7 @@ from pydeconz.models.sensor.ancillary_control import (
 )
 from pydeconz.models.sensor.presence import PresenceStatePresenceEvent
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_capture_events
 
 from homeassistant.components.deconz.const import DOMAIN
 from homeassistant.components.deconz.deconz_event import (
@@ -22,8 +23,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import WebsocketDataType
-
-from tests.common import MockConfigEntry, async_capture_events
 
 
 @pytest.mark.parametrize(

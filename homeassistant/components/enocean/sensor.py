@@ -4,8 +4,11 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import override
 
-from enocean_async import EEP, EEP_SPECIFICATIONS, EEPHandler, EEPMessage, ERP1Telegram
-import voluptuous as vol
+from enocean_async import EEP, EEP_SPECIFICATIONS
+from enocean_async.eep.handler import EEPHandler
+from enocean_async.eep.message import EEPMessage
+from enocean_async.protocol.erp1.telegram import ERP1Telegram
+import probatio
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -88,13 +91,15 @@ SENSOR_DESC_WINDOWHANDLE = EnOceanSensorEntityDescription(
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_DEVICE_CLASS, default=SENSOR_TYPE_POWER): cv.string,
-        vol.Optional(CONF_MAX_TEMP, default=40): vol.Coerce(int),
-        vol.Optional(CONF_MIN_TEMP, default=0): vol.Coerce(int),
-        vol.Optional(CONF_RANGE_FROM, default=255): cv.positive_int,
-        vol.Optional(CONF_RANGE_TO, default=0): cv.positive_int,
+        probatio.Required(CONF_ID): probatio.All(
+            probatio.EnsureList(), [probatio.Coerce(int)]
+        ),
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_DEVICE_CLASS, default=SENSOR_TYPE_POWER): cv.string,
+        probatio.Optional(CONF_MAX_TEMP, default=40): probatio.Coerce(int),
+        probatio.Optional(CONF_MIN_TEMP, default=0): probatio.Coerce(int),
+        probatio.Optional(CONF_RANGE_FROM, default=255): cv.positive_int,
+        probatio.Optional(CONF_RANGE_TO, default=0): cv.positive_int,
     }
 )
 
@@ -184,14 +189,14 @@ class EnOceanPowerSensor(EnOceanSensor):
         if telegram.rorg != 0xA5:
             return
 
-        if (eep := EEP_SPECIFICATIONS.get(EEP(0xA5, 0x12, 0x01))) is None:
+        if (eep := EEP_SPECIFICATIONS.get(EEP("A5-12-01"))) is None:
             return
         msg: EEPMessage = EEPHandler(eep).decode(telegram)
 
-        if "DT" in msg.values and msg.values["DT"].raw == 1:
+        if "DT" in msg.raw and msg.raw["DT"] == 1:
             # this packet reports the current value
-            raw_val = msg.values["MR"].raw
-            divisor = msg.values["DIV"].raw
+            raw_val = msg.raw["MR"]
+            divisor = msg.raw["DIV"]
             self._attr_native_value = raw_val / (10**divisor)
             self.schedule_update_ha_state()
 

@@ -8,6 +8,8 @@ from .models import EntityUsageDataCache, EntityUsagePredictions
 
 DOMAIN = "usage_prediction"
 
+DEFAULT_LIMIT = 8
+
 DATA_CACHE: HassKey[
     dict[str, asyncio.Task[EntityUsagePredictions] | EntityUsageDataCache]
 ] = HassKey("usage_prediction")

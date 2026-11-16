@@ -2,8 +2,10 @@
   "domain": "toon",
   "name": "Toon",
   "after_dependencies": ["cloud"],
+  "categories": ["climate.thermostats_heating", "energy.meters_monitoring"],
   "codeowners": [],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["auth"],
   "dhcp": [
     {

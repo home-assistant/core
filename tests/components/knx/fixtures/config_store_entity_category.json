@@ -1,0 +1,69 @@
+{
+  "version": 2,
+  "minor_version": 5,
+  "key": "knx/config_store.json",
+  "data": {
+    "entities": {
+      "sensor": {
+        "knx_es_01KC2F5CP5S4QCE3FZ49EF7CSJ": {
+          "entity": {
+            "name": "Test sensor",
+            "device_info": null,
+            "entity_category": "diagnostic"
+          },
+          "knx": {
+            "ga_sensor": {
+              "state": "1/1/1",
+              "dpt": "7.600",
+              "passive": []
+            },
+            "always_callback": false,
+            "sync_state": true
+          }
+        }
+      },
+      "binary_sensor": {
+        "knx_es_01KC2F5CP5S4QCE3FZ49EF7CSK": {
+          "entity": {
+            "name": "Test binary sensor",
+            "device_info": null,
+            "entity_category": "diagnostic"
+          },
+          "knx": {
+            "ga_sensor": {
+              "state": "2/2/2",
+              "dpt": "1",
+              "passive": []
+            },
+            "invert": false,
+            "ignore_internal_state": false,
+            "context_timeout": 0.0,
+            "reset_after": 0.0,
+            "sync_state": true
+          }
+        }
+      },
+      "switch": {
+        "knx_es_01KC2F5CP5S4QCE3FZ49EF7CSL": {
+          "entity": {
+            "name": "Test switch",
+            "device_info": null,
+            "entity_category": "config"
+          },
+          "knx": {
+            "ga_switch": {
+              "write": "3/3/3",
+              "state": null,
+              "passive": []
+            },
+            "invert": false,
+            "respond_to_read": false,
+            "sync_state": true
+          }
+        }
+      }
+    },
+    "expose": {},
+    "time_server": {}
+  }
+}

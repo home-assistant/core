@@ -2,14 +2,14 @@
 
 from unittest.mock import Mock
 
-from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON
+from pytest_homeassistant.common import MockConfigEntry
+
+from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN, SceneService
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import init_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_entity_attributes(
@@ -72,8 +72,10 @@ async def test_activate_scene(
     # Act
     await hass.services.async_call(
         SCENE_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "scene.my_fibaro_home_center_room_1_test_scene"},
+        SceneService.TURN_ON,
+        {
+            CommonServiceArgument.ENTITY_ID: "scene.my_fibaro_home_center_room_1_test_scene"
+        },
         blocking=True,
     )
     # Assert

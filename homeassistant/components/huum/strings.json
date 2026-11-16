@@ -1,9 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -50,16 +48,14 @@
       "light": {
         "name": "[%key:component::light::title%]"
       }
-    },
-    "number": {
-      "humidity": {
-        "name": "[%key:component::sensor::entity_component::humidity::name%]"
-      }
     }
   },
   "exceptions": {
     "auth_failed": {
       "message": "Could not log in to Huum with the given credentials."
+    },
+    "communication_error": {
+      "message": "An error occurred while communicating with the Huum sauna."
     },
     "unable_to_turn_on": {
       "message": "Unable to turn on the sauna."

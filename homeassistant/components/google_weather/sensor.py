@@ -155,7 +155,7 @@ SENSOR_TYPES: tuple[GoogleWeatherSensorDescription, ...] = (
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
-        value_fn=lambda data: data.wind.gust.value,
+        value_fn=lambda data: data.wind.gust.value if data.wind.gust else None,
         translation_key="wind_gust_speed",
     ),
     GoogleWeatherSensorDescription(
@@ -198,7 +198,6 @@ async def async_setup_entry(
             (
                 GoogleWeatherSensor(coordinator, subentry, description)
                 for description in SENSOR_TYPES
-                if description.value_fn(coordinator.data) is not None
             ),
             config_subentry_id=subentry.subentry_id,
         )
