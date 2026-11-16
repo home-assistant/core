@@ -63,6 +63,9 @@
       "fall": {
         "name": "Fall"
       },
+      "feed_blocked": {
+        "name": "Feed blocked"
+      },
       "feeding": {
         "name": "Feeding"
       },
@@ -71,6 +74,9 @@
       },
       "fire": {
         "name": "Fire"
+      },
+      "food_stuck": {
+        "name": "Food stuck"
       },
       "formaldehyde": {
         "name": "Formaldehyde"
@@ -297,6 +303,9 @@
       },
       "heat_preservation_time": {
         "name": "Heat preservation time"
+      },
+      "height": {
+        "name": "Height"
       },
       "indexed_cook_temperature": {
         "name": "Cooking temperature {index}"
@@ -862,6 +871,14 @@
       "flow_temperature": {
         "name": "Flow temperature"
       },
+      "food_level": {
+        "name": "Food level",
+        "state": {
+          "full": "Full",
+          "lack": "Empty",
+          "less": "Low"
+        }
+      },
       "formaldehyde": {
         "name": "[%key:component::tuya::entity::binary_sensor::formaldehyde::name%]"
       },
@@ -888,6 +905,9 @@
       },
       "indexed_temperature_external": {
         "name": "Probe temperature channel {index}"
+      },
+      "inlet_temperature": {
+        "name": "Inlet temperature"
       },
       "inverter_output_power": {
         "name": "Inverter output power"
@@ -965,6 +985,9 @@
           "standby": "[%key:common::state::standby%]",
           "work": "Working"
         }
+      },
+      "outlet_temperature": {
+        "name": "Outlet temperature"
       },
       "outside_temperature": {
         "name": "Outside temperature"
@@ -1052,6 +1075,9 @@
       },
       "pv_channel_power": {
         "name": "PV channel {index} power"
+      },
+      "reactive_power": {
+        "name": "[%key:component::sensor::entity_component::reactive_power::name%]"
       },
       "remaining_time": {
         "name": "Remaining time"
