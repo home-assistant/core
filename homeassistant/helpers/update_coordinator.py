@@ -254,6 +254,11 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             self._unsub_shutdown = None
 
     @property
+    def last_data(self) -> _DataT | None:
+        """Return the last data, or None before the first successful update."""
+        return self.data
+
+    @property
     def update_interval(self) -> timedelta | None:
         """Interval between updates."""
         return self._update_interval
