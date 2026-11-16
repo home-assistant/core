@@ -228,7 +228,28 @@ async def test_action(
     ("side_effect", "expected_message"),
     [
         pytest.param(
+            ApiRequestException(
+                error_code=2008, error_message="command or value not support"
+            ),
+            "The Tuya cloud does not accept this command or value for this device (error 2008)",
+            id="not_accepted",
+        ),
+        pytest.param(
             ApiRequestException(error_code="-9999999", error_message="sign invalid"),
+            "The Tuya cloud rejected the command because the request signature is invalid (sign invalid)",
+            id="sign_invalid",
+        ),
+        pytest.param(
+            ApiRequestException(
+                error_code="-9999999", error_message="API_QPS_LIMIT_OR_DEGRADE"
+            ),
+            "The Tuya cloud is limiting requests, try again later (API_QPS_LIMIT_OR_DEGRADE)",
+            id="rate_limited",
+        ),
+        pytest.param(
+            ApiRequestException(
+                error_code="-9999999", error_message="Remote api run unknown failed"
+            ),
             "The Tuya cloud rejected the command (error -9999999)",
             id="rejected_with_reason",
         ),

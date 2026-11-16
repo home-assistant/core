@@ -8,6 +8,7 @@ import requests
 from syrupy.assertion import SnapshotAssertion
 from tuya_device_handlers import TUYA_QUIRKS_REGISTRY
 from tuya_sharing import CustomerDevice, Manager
+from tuya_sharing.exceptions import ApiRequestException
 
 from homeassistant.components.tuya.const import (
     CONF_ENDPOINT,
@@ -381,3 +382,21 @@ async def test_network_error_retries_setup(
     await initialize_entry(hass, manager, mock_config_entry, [])
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_sign_invalid_starts_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a sign invalid error during setup starts a reauthentication flow."""
+    manager = create_manager()
+    manager.update_device_cache.side_effect = ApiRequestException(
+        error_code="-9999999", error_message="sign invalid"
+    )
+
+    await initialize_entry(hass, manager, mock_config_entry, [])
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == "reauth"

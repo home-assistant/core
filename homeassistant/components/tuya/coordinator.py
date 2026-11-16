@@ -12,6 +12,7 @@ from tuya_sharing import (
     SharingDeviceListener,
     SharingTokenListener,
 )
+from tuya_sharing.exceptions import ApiRequestException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -28,6 +29,7 @@ from .const import (
     LOGGER,
     TUYA_CLIENT_ID,
     TUYA_DISCOVERY_NEW,
+    TUYA_ERROR_SIGN_INVALID,
     TUYA_HA_SIGNAL_UPDATE_ENTITY,
 )
 from .util import get_device_info
@@ -84,10 +86,8 @@ class DeviceListener(SharingDeviceListener):
         except requests.exceptions.ConnectionError as exc:
             msg = "Unable to connect to Tuya"
             raise ConfigEntryNotReady(msg) from exc
-        except Exception as exc:
-            # While in general, we should avoid catching broad exceptions,
-            # we have no other way of detecting this case.
-            if "sign invalid" in str(exc):
+        except ApiRequestException as exc:
+            if exc.error_message == TUYA_ERROR_SIGN_INVALID:
                 msg = "Authentication failed. Please re-authenticate"
                 raise ConfigEntryAuthFailed(msg) from exc
             raise

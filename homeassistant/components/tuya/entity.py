@@ -14,7 +14,21 @@ from homeassistant.helpers.device_registry import ChildDeviceInfo, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, EntityDescription
 
-from .const import DOMAIN, LOGGER, TUYA_HA_SIGNAL_UPDATE_ENTITY
+from .const import (
+    DOMAIN,
+    LOGGER,
+    TUYA_ERROR_CODE_GENERIC,
+    TUYA_ERROR_RATE_LIMITED,
+    TUYA_ERROR_SIGN_INVALID,
+    TUYA_HA_SIGNAL_UPDATE_ENTITY,
+)
+
+# Matched on (code, message) first, then on code alone (message None)
+_API_ERROR_TRANSLATION_KEYS: dict[tuple[str, str | None], str] = {
+    ("2008", None): "command_not_accepted",
+    (TUYA_ERROR_CODE_GENERIC, TUYA_ERROR_SIGN_INVALID): "command_sign_invalid",
+    (TUYA_ERROR_CODE_GENERIC, TUYA_ERROR_RATE_LIMITED): "command_rate_limited",
+}
 
 
 @dataclass(frozen=True)
@@ -133,10 +147,18 @@ class TuyaEntity(Entity):
                 self.device_manager.send_commands, self.device.id, commands
             )
         except ApiRequestException as err:
+            # error_code is typed as str, but is passed through from the JSON response
+            code = str(err.error_code)
+            if translation_key := _API_ERROR_TRANSLATION_KEYS.get(
+                (code, err.error_message)
+            ) or _API_ERROR_TRANSLATION_KEYS.get((code, None)):
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN, translation_key=translation_key
+                ) from err
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="command_rejected_with_reason",
-                translation_placeholders={"code": err.error_code},
+                translation_placeholders={"code": code},
             ) from err
         except TuyaSDKException as err:
             raise HomeAssistantError(
