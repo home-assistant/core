@@ -1,6 +1,6 @@
 """Tests for the sensor module."""
 
-from datetime import UTC, datetime
+from datetime import timedelta
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -9,8 +9,9 @@ from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.vesync.sensor import _get_cook_end_time
-from homeassistant.core import HomeAssistant
+from homeassistant.components.vesync.const import UPDATE_INTERVAL
+from homeassistant.const import STATE_UNKNOWN
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .common import ALL_DEVICE_NAMES, ENTITY_HUMIDIFIER_HUMIDITY, mock_devices_response
@@ -134,26 +135,53 @@ async def test_cook_end_time(
 
 
 @pytest.mark.freeze_time("2026-11-16 12:00:00.400+00:00")
-async def test_cook_end_time_stable_between_updates(
+async def test_cook_end_time_across_updates(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test the cook end time does not move while the remaining time counts down."""
-    mock_devices_response(aioclient_mock, "Dual Air Fryer")
+    """Test the cook end time across updates: kept, moved, then unknown when paused."""
+    device_name = "CS158-AF Air Fryer Cooking"
+    entity_id = "sensor.cs158_af_air_fryer_cooking_cooking_end"
+    mock_devices_response(aioclient_mock, device_name)
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    fryer = next(iter(config_entry.runtime_data.manager.devices))
-    end_time = datetime(2026, 11, 16, 12, 19, tzinfo=UTC)
-    assert _get_cook_end_time(fryer.state_chamber_1) == end_time
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "2026-11-16T12:10:00+00:00"
+    last_changed = state.last_changed
 
-    # 45 s later, before the next update, the remaining time has counted down.
-    freezer.tick(45.3)
-    assert fryer.state_chamber_1.total_time_remaining == 1095
-    assert _get_cook_end_time(fryer.state_chamber_1) == end_time
+    async def refresh(minutes_left: int, status: str = "cooking") -> State | None:
+        """Poll the fryer 60.5 s later, at another fraction of a second."""
+        aioclient_mock.clear_requests()
+        mock_devices_response(
+            aioclient_mock,
+            device_name,
+            details_override={"cookLastTime": minutes_left, "cookStatus": status},
+        )
+        freezer.tick(timedelta(seconds=UPDATE_INTERVAL, milliseconds=500))
+        await config_entry.runtime_data.async_refresh()
+        await hass.async_block_till_done()
+        return hass.states.get(entity_id)
+
+    # A minute later, a minute less: the same end time, no new state.
+    state = await refresh(9)
+    assert state is not None
+    assert state.state == "2026-11-16T12:10:00+00:00"
+    assert state.last_changed == last_changed
+
+    # Paused for a minute: the countdown slipped, the end time moves.
+    state = await refresh(9)
+    assert state is not None
+    assert state.state == "2026-11-16T12:11:01+00:00"
+
+    # Paused: unknown, as the end time keeps moving while paused.
+    state = await refresh(8, "cookStop")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_humidity(

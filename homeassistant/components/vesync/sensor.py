@@ -64,19 +64,16 @@ def _get_cook_status(state: FryerState) -> str | None:
 
 
 def _get_cook_end_time(state: FryerState) -> datetime | None:
-    """Return when the cook finishes, while the fryer is running.
+    """Return when the cook finishes, while the remaining time counts down.
 
-    The remaining time is counted from the last update, so the end time only
-    moves when the fryer reports a new remaining time.
+    Unknown when paused or stopped, and in a Sync hold that is not counting
+    down yet (no last timestamp), as the end time keeps moving then.
     """
     if state.cook_status not in RUNNING_STATUSES or state.last_timestamp is None:
         return None
     if (remaining := state.total_time_remaining) is None:
         return None
-    elapsed = int((dt_util.utcnow() - state.last_timestamp).total_seconds())
-    return state.last_timestamp.replace(microsecond=0) + timedelta(
-        seconds=remaining + elapsed
-    )
+    return dt_util.utcnow() + timedelta(seconds=remaining)
 
 
 SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
