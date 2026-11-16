@@ -1,6 +1,7 @@
 """Tests for Shelly coordinator."""
 
 from datetime import timedelta
+import logging
 from typing import Any
 from unittest.mock import AsyncMock, Mock, call, patch
 
@@ -58,7 +59,8 @@ from . import (
     register_entity,
 )
 
-RECONNECT_ERROR = "An error occurred while reconnecting to Test name"
+RECONNECT_ERROR = "The device could not be reconnected"
+SHELLY_LOGGER = "homeassistant.components.shelly"
 RELAY_BLOCK_ID = 0
 LIGHT_BLOCK_ID = 2
 SENSOR_BLOCK_ID = 3
@@ -257,6 +259,7 @@ async def test_block_polling_connection_error(
     freezer: FrozenDateTimeFactory,
     mock_block_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test block device polling connection error."""
     monkeypatch.setattr(
@@ -278,15 +281,36 @@ async def test_block_polling_connection_error(
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE
+    assert (
+        SHELLY_LOGGER,
+        logging.INFO,
+        "Test name is unavailable: The device cannot be reached",
+    ) in caplog.record_tuples
 
 
-@pytest.mark.parametrize("exc", [DeviceConnectionError, MacAddressMismatchError])
+@pytest.mark.parametrize(
+    ("exc", "message"),
+    [
+        pytest.param(
+            DeviceConnectionError,
+            "Test name is unavailable: The device cannot be reached",
+            id="unreachable",
+        ),
+        pytest.param(
+            MacAddressMismatchError,
+            "Test name is unavailable: A different device responded at 10.10.10.11",
+            id="mac_mismatch",
+        ),
+    ],
+)
 async def test_block_rest_update_connection_error(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_block_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
     exc: Exception,
+    message: str,
 ) -> None:
     """Test block REST update connection error."""
     entity_id = register_entity(hass, BINARY_SENSOR_DOMAIN, "test_name_cloud", "cloud")
@@ -303,6 +327,7 @@ async def test_block_rest_update_connection_error(
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE
+    assert (SHELLY_LOGGER, logging.INFO, message) in caplog.record_tuples
 
 
 async def test_block_sleeping_device_no_periodic_updates(
@@ -939,6 +964,7 @@ async def test_rpc_reconnect_error(
     freezer: FrozenDateTimeFactory,
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
     exc: Exception,
 ) -> None:
     """Test RPC reconnect error."""
@@ -960,6 +986,11 @@ async def test_rpc_reconnect_error(
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE
+    assert (
+        SHELLY_LOGGER,
+        logging.INFO,
+        f"Test name is unavailable: {RECONNECT_ERROR}",
+    ) in caplog.record_tuples
 
 
 def _inject_ota_event(
@@ -1087,11 +1118,33 @@ async def test_rpc_error_running_connected_events(
     assert state.state == STATE_ON
 
 
+@pytest.mark.parametrize(
+    ("exc", "level", "message"),
+    [
+        pytest.param(
+            DeviceConnectionError,
+            logging.INFO,
+            "Test name is unavailable: The device cannot be reached",
+            id="unreachable",
+        ),
+        pytest.param(
+            RpcCallError(999),
+            logging.ERROR,
+            "Error fetching Test name data: An error occurred while retrieving "
+            "data from Test name",
+            id="rpc_call_error",
+        ),
+    ],
+)
 async def test_rpc_polling_connection_error(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+    exc: Exception,
+    level: int,
+    message: str,
 ) -> None:
     """Test RPC polling connection error."""
     entity_id = register_entity(hass, SENSOR_DOMAIN, "test_name_rssi", "wifi-rssi")
@@ -1100,9 +1153,7 @@ async def test_rpc_polling_connection_error(
     monkeypatch.setattr(
         mock_rpc_device,
         "poll",
-        AsyncMock(
-            side_effect=DeviceConnectionError,
-        ),
+        AsyncMock(side_effect=exc),
     )
 
     assert (state := hass.states.get(entity_id))
@@ -1112,6 +1163,7 @@ async def test_rpc_polling_connection_error(
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE
+    assert (SHELLY_LOGGER, level, message) in caplog.record_tuples
 
 
 async def test_rpc_polling_disconnected(
@@ -1119,6 +1171,7 @@ async def test_rpc_polling_disconnected(
     freezer: FrozenDateTimeFactory,
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test RPC polling device disconnected."""
     entity_id = register_entity(hass, SENSOR_DOMAIN, "test_name_rssi", "wifi-rssi")
@@ -1133,6 +1186,11 @@ async def test_rpc_polling_disconnected(
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE
+    assert (
+        SHELLY_LOGGER,
+        logging.INFO,
+        "Test name is unavailable: The device is disconnected",
+    ) in caplog.record_tuples
 
 
 async def test_rpc_polling_not_initialized(
@@ -1306,7 +1364,12 @@ async def test_block_sleeping_device_connection_error(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert "Sleeping device Test name did not update" in caplog.text
+    assert (
+        SHELLY_LOGGER,
+        logging.INFO,
+        "Test name is unavailable: Sleeping device Test name did not update "
+        f"within {sleep_period} seconds interval",
+    ) in caplog.record_tuples
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE
 
@@ -1360,7 +1423,12 @@ async def test_rpc_sleeping_device_connection_error(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert "Sleeping device Test name did not update" in caplog.text
+    assert (
+        SHELLY_LOGGER,
+        logging.INFO,
+        "Test name is unavailable: Sleeping device Test name did not update "
+        f"within {sleep_period} seconds interval",
+    ) in caplog.record_tuples
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE
 

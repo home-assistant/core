@@ -15,15 +15,13 @@ from pytest_homeassistant.common import (
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.openrgb.const import DOMAIN, SCAN_INTERVAL
-from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_OPTION,
-    SERVICE_SELECT_OPTION,
-    STATE_UNAVAILABLE,
-    Platform,
+from homeassistant.components.select import (
+    DOMAIN as SELECT_DOMAIN,
+    SelectService,
+    SelectServiceArgument,
 )
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -136,10 +134,10 @@ async def test_select_option_success(
     # Select a profile
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: "select.test_computer_profile",
-            ATTR_OPTION: "Gaming",
+            CommonServiceArgument.ENTITY_ID: "select.test_computer_profile",
+            SelectServiceArgument.OPTION: "Gaming",
         },
         blocking=True,
     )
@@ -177,10 +175,10 @@ async def test_select_option_not_found(
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: "select.test_computer_profile",
-                ATTR_OPTION: "NonExistent",
+                CommonServiceArgument.ENTITY_ID: "select.test_computer_profile",
+                SelectServiceArgument.OPTION: "NonExistent",
             },
             blocking=True,
         )
@@ -209,10 +207,10 @@ async def test_select_option_connection_error(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: "select.test_computer_profile",
-                ATTR_OPTION: "Gaming",
+                CommonServiceArgument.ENTITY_ID: "select.test_computer_profile",
+                SelectServiceArgument.OPTION: "Gaming",
             },
             blocking=True,
         )
@@ -239,10 +237,10 @@ async def test_select_option_value_error(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: "select.test_computer_profile",
-                ATTR_OPTION: "Gaming",
+                CommonServiceArgument.ENTITY_ID: "select.test_computer_profile",
+                SelectServiceArgument.OPTION: "Gaming",
             },
             blocking=True,
         )
@@ -343,10 +341,10 @@ async def test_current_option_cleared_when_device_state_changes(
     # Select a profile
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: "select.test_computer_profile",
-            ATTR_OPTION: "Gaming",
+            CommonServiceArgument.ENTITY_ID: "select.test_computer_profile",
+            SelectServiceArgument.OPTION: "Gaming",
         },
         blocking=True,
     )
@@ -390,10 +388,10 @@ async def test_current_option_cleared_when_colors_change(
     # Select a profile
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: "select.test_computer_profile",
-            ATTR_OPTION: "Work",
+            CommonServiceArgument.ENTITY_ID: "select.test_computer_profile",
+            SelectServiceArgument.OPTION: "Work",
         },
         blocking=True,
     )

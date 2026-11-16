@@ -8,7 +8,7 @@ from python_picnic_api2.models import Cart, SearchResult, SearchResultItem
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.todo import ATTR_ITEM, DOMAIN as TODO_DOMAIN, TodoServices
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
@@ -86,7 +86,7 @@ async def test_create_todo_list_item(
         TODO_DOMAIN,
         TodoServices.ADD_ITEM,
         {ATTR_ITEM: "Melk"},
-        target={ATTR_ENTITY_ID: ENTITY_ID},
+        target={TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -114,6 +114,6 @@ async def test_create_todo_list_item_not_found(
             TODO_DOMAIN,
             TodoServices.ADD_ITEM,
             {ATTR_ITEM: "Melk"},
-            target={ATTR_ENTITY_ID: ENTITY_ID},
+            target={TargetKey.ENTITY_ID: ENTITY_ID},
             blocking=True,
         )

@@ -15,11 +15,11 @@ from homeassistant.components.esphome.const import (
     VOICE_ASSISTANT_SELECT_KEYS,
 )
 from homeassistant.components.select import (
-    ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -76,8 +76,11 @@ async def test_selects_keep_their_choice_when_a_voice_assistant_returns(
     entity_id = entity_registry.async_get_entity_id(Platform.SELECT, DOMAIN, unique_id)
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "aggressive"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            SelectServiceArgument.OPTION: "aggressive",
+        },
         blocking=True,
     )
     assert hass.states.get(entity_id).state == "aggressive"
@@ -334,8 +337,11 @@ async def test_select_generic_entity(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.test_my_select", ATTR_OPTION: "b"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: "select.test_my_select",
+            SelectServiceArgument.OPTION: "b",
+        },
         blocking=True,
     )
     mock_client.select_command.assert_has_calls([call(1, "b", device_id=0)])
