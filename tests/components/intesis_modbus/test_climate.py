@@ -47,7 +47,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
-from . import MOCK_ENTRY_DATA, seed_initialising_single_unit
+from . import INIT_VALUE, INITIALISING_REGISTERS, MOCK_ENTRY_DATA
 
 ENTITY_ID = "climate.inmbsmhi001r000"
 
@@ -73,34 +73,24 @@ async def test_climate_snapshot(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.parametrize("registers", [{21: 3}])
 async def test_fan_mode_powerful_not_offered_on_three_speed_unit(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_get_unit: MagicMock,
-    mock_connection: MockModbusConnection,
+    hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
     """A unit with three speeds does not list powerful."""
-    mock_connection.for_unit(1).holding[21] = 3
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.attributes[ATTR_FAN_MODES] == ["auto", "low", "medium", "high"]
 
 
+@pytest.mark.parametrize("registers", [{21: 3}])
 async def test_set_unsupported_fan_mode_raises(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_get_unit: MagicMock,
+    init_integration: MockConfigEntry,
     mock_connection: MockModbusConnection,
 ) -> None:
     """Asking a three-speed unit for powerful is refused before any write."""
     unit = mock_connection.for_unit(1)
-    unit.holding[21] = 3
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
     writes: list[WriteEvent] = []
     unit.on_write(writes.append)
     with pytest.raises(ServiceValidationError) as err:
@@ -115,18 +105,14 @@ async def test_set_unsupported_fan_mode_raises(
     assert writes == []
 
 
+@pytest.mark.parametrize("registers", [{0: 0}])
 async def test_set_hvac_mode_cool_turns_on(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_get_unit: MagicMock,
+    init_integration: MockConfigEntry,
     mock_connection: MockModbusConnection,
 ) -> None:
     """Picking a mode on a unit that is off sets the mode, then turns it on."""
     unit = mock_connection.for_unit(1)
-    unit.holding[0] = 0
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == HVACMode.OFF
     writes: list[WriteEvent] = []
     unit.on_write(writes.append)
@@ -210,18 +196,14 @@ async def test_set_temperature_fan_swing(
     assert state.attributes[ATTR_SWING_MODE] == "position_2"
 
 
+@pytest.mark.parametrize("registers", [{0: 0}])
 async def test_set_temperature_with_hvac_mode(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_get_unit: MagicMock,
+    init_integration: MockConfigEntry,
     mock_connection: MockModbusConnection,
 ) -> None:
     """A temperature sent together with a mode applies both on a unit that is off."""
     unit = mock_connection.for_unit(1)
-    unit.holding[0] = 0
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
     writes: list[WriteEvent] = []
     unit.on_write(writes.append)
     await hass.services.async_call(
@@ -317,17 +299,11 @@ async def test_write_failure_raises_home_assistant_error(
     assert err.value.translation_placeholders is None
 
 
+@pytest.mark.parametrize("registers", [INITIALISING_REGISTERS])
 async def test_initialising_gateway_climate_unknown(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_get_unit: MagicMock,
-    mock_connection: MockModbusConnection,
+    hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
     """While the gateway initialises the entity is unknown, not 3276.8 °C."""
-    seed_initialising_single_unit(mock_connection.for_unit(1))
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state == STATE_UNKNOWN
@@ -339,17 +315,11 @@ async def test_initialising_gateway_climate_unknown(
     assert state.attributes[ATTR_SWING_MODE] is None
 
 
+@pytest.mark.parametrize("registers", [{1: INIT_VALUE}])
 async def test_unknown_mode_while_on_is_unknown(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_get_unit: MagicMock,
-    mock_connection: MockModbusConnection,
+    hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
     """A running unit whose mode register holds no value yet has no state."""
-    mock_connection.for_unit(1).holding[1] = 0x8000
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state == STATE_UNKNOWN
@@ -376,28 +346,29 @@ async def test_timeout_marks_unavailable_then_recovers(
 async def test_other_subsystem_failing_keeps_climate_available(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
     init_integration: MockConfigEntry,
     mock_connection: MockModbusConnection,
 ) -> None:
     """A refused block the climate entity does not read leaves it available."""
     mock_connection.for_unit(1).fail_read(60, IllegalDataAddressError())
     await _poll(hass, freezer)
-    coordinator = init_integration.runtime_data
-    assert coordinator.last_update_success
-    assert "temperatures" in coordinator.data.failed
+    assert "temperatures failed to refresh" in caplog.text
     assert hass.states.get(ENTITY_ID).state == HVACMode.HEAT
 
 
 async def test_control_subsystem_failing_makes_climate_unavailable(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
     init_integration: MockConfigEntry,
     mock_connection: MockModbusConnection,
 ) -> None:
     """A refused control block hides the climate entity, others still answer."""
     mock_connection.for_unit(1).fail_read(0, IllegalDataAddressError())
     await _poll(hass, freezer)
-    assert init_integration.runtime_data.last_update_success
+    assert "control failed to refresh" in caplog.text
+    assert "Error fetching" not in caplog.text
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
 
@@ -425,6 +396,7 @@ async def test_subsystem_failure_and_recovery_are_logged_once(
 async def test_every_subsystem_failing_is_an_update_failure(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
     init_integration: MockConfigEntry,
     mock_connection: MockModbusConnection,
 ) -> None:
@@ -433,7 +405,8 @@ async def test_every_subsystem_failing_is_an_update_failure(
     for address in (0, 13, 21, 31, 46, 55, 60, 65, 81, 97):
         unit.fail_read(address, IllegalDataAddressError())
     await _poll(hass, freezer)
-    assert not init_integration.runtime_data.last_update_success
+    assert "Error fetching INMBSMHI001R000 data" in caplog.text
+    assert "failed to refresh, its entities" not in caplog.text
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
 
@@ -454,20 +427,11 @@ async def test_turn_on_and_off(
     assert [(w.address, w.values[0]) for w in writes] == [(0, 0), (0, 1)]
 
 
+@pytest.mark.parametrize("entry_data", [{**MOCK_ENTRY_DATA, CONF_HAS_VANE: False}])
 async def test_unit_without_vane_has_no_swing(
-    hass: HomeAssistant,
-    mock_get_unit: MagicMock,
+    hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
     """An entry set up without a vane offers no swing mode at all."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        entry_id="01JTESTINTESISNOVANE000000",
-        data={**MOCK_ENTRY_DATA, CONF_HAS_VANE: False},
-        title="INMBSMHI001R000",
-    )
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert ATTR_SWING_MODE not in state.attributes
@@ -476,3 +440,19 @@ async def test_unit_without_vane_has_no_swing(
         not state.attributes[ATTR_SUPPORTED_FEATURES] & ClimateEntityFeature.SWING_MODE
     )
     assert state.attributes[ATTR_FAN_MODE] == "medium"
+
+
+async def test_unreachable_indoor_unit_is_unavailable_then_recovers(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    init_integration: MockConfigEntry,
+    mock_connection: MockModbusConnection,
+) -> None:
+    """A gateway that lost its air conditioner answers, but the unit is gone."""
+    unit = mock_connection.for_unit(1)
+    unit.holding[11] = 65535
+    await _poll(hass, freezer)
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+    unit.holding[11] = 0
+    await _poll(hass, freezer)
+    assert hass.states.get(ENTITY_ID).state == HVACMode.HEAT

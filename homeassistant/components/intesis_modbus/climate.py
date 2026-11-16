@@ -2,7 +2,7 @@
 
 from typing import Any, Final, override
 
-from intesis_gw_modbus import FanSpeed, Mode, VanePosition
+from intesis_gw_modbus import ErrorState, FanSpeed, Mode, VanePosition
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -76,6 +76,15 @@ class IntesisClimate(IntesisEntity, ClimateEntity):
         )
         if has_vane:
             self._attr_supported_features |= ClimateEntityFeature.SWING_MODE
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Whether the gateway answers and can reach the air conditioner."""
+        if not super().available:
+            return False
+        error = self._ac.error
+        return error is None or error.state is not ErrorState.COMMUNICATION_ERROR
 
     @property
     @override

@@ -59,6 +59,12 @@ SINGLE_UNIT_REGISTERS: dict[int, int] = {
 
 _IDENTITY = {48, 49, 50}
 
+# The same gateway during the two minutes after it powers up.
+INITIALISING_REGISTERS: dict[int, int] = {
+    address: value if address in _IDENTITY else INIT_VALUE
+    for address, value in SINGLE_UNIT_REGISTERS.items()
+} | {11: 65532}
+
 
 def seed_single_unit(unit: MockModbusUnit) -> None:
     """Seed a healthy single-unit gateway."""
@@ -68,6 +74,5 @@ def seed_single_unit(unit: MockModbusUnit) -> None:
 
 def seed_initialising_single_unit(unit: MockModbusUnit) -> None:
     """Seed a single-unit gateway that is still initialising."""
-    for address, value in SINGLE_UNIT_REGISTERS.items():
-        unit.holding[address] = value if address in _IDENTITY else INIT_VALUE
-    unit.holding[11] = 65532
+    for address, value in INITIALISING_REGISTERS.items():
+        unit.holding[address] = value

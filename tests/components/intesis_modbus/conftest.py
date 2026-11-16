@@ -1,6 +1,7 @@
 """Fixtures for the Intesis Modbus integration tests."""
 
 from collections.abc import Generator
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from modbus_connection.mock import MockModbusConnection
@@ -10,7 +11,7 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant.components.intesis_modbus.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
-from . import MOCK_ENTRY_DATA, seed_single_unit
+from . import MOCK_ENTRY_DATA, SINGLE_UNIT_REGISTERS
 
 
 @pytest.fixture
@@ -25,20 +26,34 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_connection() -> MockModbusConnection:
+def registers() -> dict[int, int]:
+    """Registers a test sets differently from the healthy gateway."""
+    return {}
+
+
+@pytest.fixture
+def mock_connection(registers: dict[int, int]) -> MockModbusConnection:
     """A fake Modbus connection seeded as a healthy MHI single-unit gateway."""
     connection = MockModbusConnection()
-    seed_single_unit(connection.for_unit(1))
+    unit = connection.for_unit(1)
+    for address, value in (SINGLE_UNIT_REGISTERS | registers).items():
+        unit.holding[address] = value
     return connection
 
 
 @pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
+def entry_data() -> dict[str, Any]:
+    """The data of the mock config entry."""
+    return MOCK_ENTRY_DATA
+
+
+@pytest.fixture
+def mock_config_entry(entry_data: dict[str, Any]) -> MockConfigEntry:
     """Mock a single-unit gateway config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
         entry_id="01JTESTINTESISSINGLE000000",
-        data=MOCK_ENTRY_DATA,
+        data=entry_data,
         title="INMBSMHI001R000",
     )
 
