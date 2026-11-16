@@ -1237,11 +1237,24 @@ def empty_config_schema(domain: str) -> Callable[[dict], dict]:
                     "configuration."
                 ),
                 domain,
-                config_domain,
+                _describe_config_keys(config_domain),
             )
         return config
 
     return validator
+
+
+def _describe_config_keys(config: Any) -> str:
+    """Describe a configuration section by its key names only.
+
+    The values are never included, since they may be credentials.
+    """
+    items = config if isinstance(config, list) else [config]
+    if keys := sorted(
+        {str(key) for item in items if isinstance(item, dict) for key in item}
+    ):
+        return ", ".join(keys)
+    return f"a value of type {type(config).__name__}"
 
 
 def _no_yaml_config_schema(

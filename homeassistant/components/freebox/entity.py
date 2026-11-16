@@ -37,7 +37,8 @@ class FreeboxHomeEntity(Entity):
 
         self._available = True
         # The Freebox reports the firmware version of home nodes as a number
-        firmware = node["props"].get("FwVersion")
+        props = node.get("props") or {}
+        firmware = props.get("FwVersion")
         self._firmware = str(firmware) if firmware is not None else None
         self._manufacturer = "Freebox SAS"
 
@@ -75,7 +76,7 @@ class FreeboxHomeEntity(Entity):
         self.async_write_ha_state()
 
     async def set_home_endpoint_value(
-        self, command_id: int | None, value: bool | None = None
+        self, command_id: int | None, value: Any = None
     ) -> bool:
         """Set Home endpoint value."""
         if command_id is None:
