@@ -414,6 +414,8 @@ class ReolinkVODMediaSource(MediaSource):
                 file_name += " " + " ".join(
                     str(trigger.name).title() for trigger in file.triggers
                 )
+            # take the thumbnail from the middle of the recording
+            thumbnail_time = file.start_time + file.duration / 2
 
             children.append(
                 BrowseMediaSource(
@@ -425,7 +427,10 @@ class ReolinkVODMediaSource(MediaSource):
                     can_play=True,
                     can_expand=False,
                     thumbnail=async_generate_thumbnail_url(
-                        config_entry_id, channel, stream, file.start_time_id
+                        config_entry_id,
+                        channel,
+                        stream,
+                        thumbnail_time.strftime("%Y%m%d%H%M%S"),
                     ),
                 )
             )

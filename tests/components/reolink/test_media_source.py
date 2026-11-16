@@ -56,6 +56,7 @@ TEST_END = f"{TEST_YEAR}{TEST_MONTH}{TEST_DAY}{TEST_HOUR}{TEST_MINUTE + 5}"
 TEST_START_TIME = datetime(TEST_YEAR, TEST_MONTH, TEST_DAY, 0, 0)
 TEST_END_TIME = datetime(TEST_YEAR, TEST_MONTH, TEST_DAY, 23, 59, 59)
 TEST_FILE_NAME = f"{TEST_START}00"
+TEST_THUMBNAIL_TIME = f"{TEST_YEAR}{TEST_MONTH}{TEST_DAY}000230"
 TEST_FILE_NAME_MP4 = f"{TEST_START}00.mp4"
 TEST_STREAM = "main"
 TEST_CHANNEL = "0"
@@ -250,7 +251,7 @@ async def test_browsing(
     assert browse.identifier == browse_files_id
     assert browse.children[0].identifier == browse_file_id
     assert browse.children[0].thumbnail == (
-        f"/api/reolink/thumbnail/{entry_id}/{TEST_CHANNEL}/sub/{TEST_START}"
+        f"/api/reolink/thumbnail/{entry_id}/{TEST_CHANNEL}/sub/{TEST_THUMBNAIL_TIME}"
     )
     reolink_host.request_vod_files.assert_called_with(
         int(TEST_CHANNEL),
@@ -326,7 +327,8 @@ async def test_browsing_autotrack_thumbnail(
     browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/{browse_day_id}")
 
     assert browse.children[0].thumbnail == (
-        f"/api/reolink/thumbnail/{entry_id}/{TEST_CHANNEL}/telephoto_sub/{TEST_START}"
+        f"/api/reolink/thumbnail/{entry_id}/{TEST_CHANNEL}"
+        f"/telephoto_sub/{TEST_THUMBNAIL_TIME}"
     )
 
 

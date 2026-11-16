@@ -326,7 +326,7 @@ class ThumbnailView(HomeAssistantView):
         stream: str,
         time_id: str,
     ) -> web.Response:
-        """Get the key frame at the start of a recording as JPEG."""
+        """Get the key frame at a moment in a recording as JPEG."""
         try:
             get_host(self.hass, config_entry_id)
         except Unresolvable:
