@@ -250,7 +250,7 @@ async def test_browsing(
     assert browse.identifier == browse_files_id
     assert browse.children[0].identifier == browse_file_id
     assert browse.children[0].thumbnail == (
-        f"/api/reolink/thumbnail/{entry_id}/{TEST_CHANNEL}/{TEST_START}"
+        f"/api/reolink/thumbnail/{entry_id}/{TEST_CHANNEL}/sub/{TEST_START}"
     )
     reolink_host.request_vod_files.assert_called_with(
         int(TEST_CHANNEL),
@@ -297,13 +297,13 @@ async def test_browsing(
 
 
 @pytest.mark.parametrize("stream", ["autotrack_sub", "autotrack_main"])
-async def test_browsing_autotrack_no_thumbnail(
+async def test_browsing_autotrack_thumbnail(
     hass: HomeAssistant,
     reolink_host: MagicMock,
     config_entry: MockConfigEntry,
     stream: str,
 ) -> None:
-    """Test recordings of an autotrack stream have no thumbnail."""
+    """Test recordings of an autotrack stream have a telephoto thumbnail."""
     entry_id = config_entry.entry_id
     reolink_host.is_nvr = False
 
@@ -325,7 +325,9 @@ async def test_browsing_autotrack_no_thumbnail(
     )
     browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/{browse_day_id}")
 
-    assert browse.children[0].thumbnail is None
+    assert browse.children[0].thumbnail == (
+        f"/api/reolink/thumbnail/{entry_id}/{TEST_CHANNEL}/autotrack_sub/{TEST_START}"
+    )
 
 
 async def test_browsing_h265_encoding(

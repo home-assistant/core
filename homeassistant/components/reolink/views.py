@@ -27,6 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # Each thumbnail costs a Baichuan request and an ffmpeg decode.
 MAX_PARALLEL_THUMBNAILS = 2
+THUMBNAIL_STREAMS = {"sub", "autotrack_sub"}
 
 
 @callback
@@ -47,12 +48,13 @@ def async_generate_playback_proxy_url(
 
 @callback
 def async_generate_thumbnail_url(
-    config_entry_id: str, channel: int, start_time_id: str
+    config_entry_id: str, channel: int, stream: str, start_time_id: str
 ) -> str:
     """Generate URL for the thumbnail of a recording."""
     return ThumbnailView.url.format(
         config_entry_id=config_entry_id,
         channel=channel,
+        stream="autotrack_sub" if stream.startswith("autotrack_") else "sub",
         start_time_id=start_time_id,
     )
 
@@ -305,7 +307,7 @@ class ThumbnailView(HomeAssistantView):
     """View to get a thumbnail of a Reolink recording."""
 
     requires_auth = True
-    url = "/api/reolink/thumbnail/{config_entry_id}/{channel}/{start_time_id}"
+    url = "/api/reolink/thumbnail/{config_entry_id}/{channel}/{stream}/{start_time_id}"
     name = "api:reolink_thumbnail"
 
     def __init__(self, hass: HomeAssistant) -> None:
@@ -320,6 +322,7 @@ class ThumbnailView(HomeAssistantView):
         request: web.Request,
         config_entry_id: str,
         channel: str,
+        stream: str,
         start_time_id: str,
     ) -> web.Response:
         """Get the key frame at the start of a recording as JPEG."""
@@ -339,6 +342,10 @@ class ThumbnailView(HomeAssistantView):
             )
             return web.Response(body=err_str, status=HTTPStatus.BAD_REQUEST)
 
+        if stream not in THUMBNAIL_STREAMS:
+            err_str = f"Reolink thumbnail invalid stream {stream}"
+            return web.Response(body=err_str, status=HTTPStatus.BAD_REQUEST)
+
         async with self._semaphores[config_entry_id]:
             # The config entry can be unloaded or reloaded while waiting.
             try:
@@ -350,7 +357,7 @@ class ThumbnailView(HomeAssistantView):
                 image = await host.api.baichuan.snapshot_past(
                     ch,
                     start_time,
-                    "sub",
+                    stream,
                     get_ffmpeg_manager(self.hass).binary,
                 )
             except ReolinkError as err:
