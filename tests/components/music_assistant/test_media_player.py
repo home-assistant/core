@@ -1203,13 +1203,13 @@ async def test_media_player_play_media_radio_mode_string(
     await setup_integration_from_fixtures(hass, music_assistant_client)
     service_data = {
         ATTR_ENTITY_ID: "media_player.test_player_1",
-        ATTR_MEDIA_ID: "spotify://playlist/1234",
+        MusicAssistantServiceArgument.MEDIA_ID: "spotify://playlist/1234",
     }
 
     with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_PLAY_MEDIA_ADVANCED,
+            MusicAssistantService.PLAY_MEDIA,
             {**service_data, ATTR_RADIO_MODE: "maybe"},
             blocking=True,
         )
@@ -1217,7 +1217,7 @@ async def test_media_player_play_media_radio_mode_string(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_PLAY_MEDIA_ADVANCED,
+        MusicAssistantService.PLAY_MEDIA,
         {**service_data, ATTR_RADIO_MODE: "false"},
         blocking=True,
     )
@@ -1310,22 +1310,28 @@ async def test_media_player_play_announcement_use_pre_announce_string(
     await setup_integration_from_fixtures(hass, music_assistant_client)
     service_data = {
         ATTR_ENTITY_ID: "media_player.test_player_1",
-        ATTR_URL: "http://blah.com/announcement.mp3",
+        MusicAssistantServiceArgument.URL: "http://blah.com/announcement.mp3",
     }
 
     with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_PLAY_ANNOUNCEMENT,
-            {**service_data, ATTR_USE_PRE_ANNOUNCE: "maybe"},
+            MusicAssistantService.PLAY_ANNOUNCEMENT,
+            {
+                **service_data,
+                MusicAssistantServiceArgument.USE_PRE_ANNOUNCE: "maybe",
+            },
             blocking=True,
         )
     assert music_assistant_client.send_command.call_count == 0
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_PLAY_ANNOUNCEMENT,
-        {**service_data, ATTR_USE_PRE_ANNOUNCE: "false"},
+        MusicAssistantService.PLAY_ANNOUNCEMENT,
+        {
+            **service_data,
+            MusicAssistantServiceArgument.USE_PRE_ANNOUNCE: "false",
+        },
         blocking=True,
     )
     assert music_assistant_client.send_command.call_count == 1
@@ -1525,22 +1531,24 @@ async def test_media_player_transfer_queue_auto_play_string(
     await setup_integration_from_fixtures(hass, music_assistant_client)
     service_data = {
         ATTR_ENTITY_ID: "media_player.test_player_1",
-        ATTR_SOURCE_PLAYER: "media_player.my_super_test_player_2",
+        MusicAssistantServiceArgument.SOURCE_PLAYER: (
+            "media_player.my_super_test_player_2"
+        ),
     }
 
     with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_TRANSFER_QUEUE,
-            {**service_data, ATTR_AUTO_PLAY: "maybe"},
+            MusicAssistantService.TRANSFER_QUEUE,
+            {**service_data, MusicAssistantServiceArgument.AUTO_PLAY: "maybe"},
             blocking=True,
         )
     assert music_assistant_client.send_command.call_count == 0
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_TRANSFER_QUEUE,
-        {**service_data, ATTR_AUTO_PLAY: "false"},
+        MusicAssistantService.TRANSFER_QUEUE,
+        {**service_data, MusicAssistantServiceArgument.AUTO_PLAY: "false"},
         blocking=True,
     )
     assert music_assistant_client.send_command.call_count == 1
