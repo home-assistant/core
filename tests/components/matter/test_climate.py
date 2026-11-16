@@ -810,7 +810,7 @@ async def test_thermostat_with_null_local_temperature(
     assert state.attributes["current_temperature"] is None
 
 
-@pytest.mark.parametrize("node_fixture", ["mock_smart_tcl_portable_ac"])
+@pytest.mark.parametrize("node_fixture", ["smart_tcl_portable_ac"])
 async def test_smart_tcl_portable_ac(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -819,11 +819,12 @@ async def test_smart_tcl_portable_ac(
     """Test Smart TCL Portable AC heat_cool mode via allowlist."""
     state = hass.states.get("climate.smart_tcl_portable_ac")
     assert state
-    # device starts with OnOff = false, so state is OFF
+    # device starts with OnOff = false and SystemMode = off
     assert state.state == HVACMode.OFF
 
-    # enable the device via OnOff cluster
+    # the device reports OnOff = true and SystemMode = cool when powered on in cool
     set_node_attribute(matter_node, 1, 6, 0, True)
+    set_node_attribute(matter_node, 1, 513, 28, 3)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get("climate.smart_tcl_portable_ac")
     assert state
