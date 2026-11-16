@@ -683,6 +683,58 @@
     'state': 'off',
   })
 # ---
+# name: test_platform_setup_and_discovery[fan.tion_breezer_4s-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('tuya', '3s3efl3dcfqlyllrqtn')]>,
+    'disabled_by': None,
+    'domain': 'fan',
+    'entity_category': None,
+    'entity_id': 'fan.tion_breezer_4s',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <FanEntityFeature: 48>,
+    'translation_key': None,
+    'unique_id': 'tuya.3s3efl3dcfqlyllrqtn',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[fan.tion_breezer_4s-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TION Breezer 4S',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 48>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'fan.tion_breezer_4s',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_platform_setup_and_discovery[fan.tower_fan_ca_407g_smart-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
