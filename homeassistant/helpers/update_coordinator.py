@@ -8,7 +8,7 @@ from functools import partial
 import logging
 from random import randint
 from time import monotonic
-from typing import Any, Generic, Protocol, TypeVar, override
+from typing import Any, Generic, Protocol, TypeVar, final, override
 import urllib.error
 
 import aiohttp
@@ -253,6 +253,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             self._unsub_shutdown()
             self._unsub_shutdown = None
 
+    @final
     @property
     def data_or_none(self) -> _DataT | None:
         """Return the data, or None before the first successful update."""
