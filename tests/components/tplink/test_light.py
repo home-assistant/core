@@ -19,11 +19,6 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components import tplink
-from homeassistant.components.homeassistant.scene import (
-    CONF_SCENE_ID,
-    CONF_SNAPSHOT,
-    SERVICE_CREATE,
-)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
@@ -42,12 +37,13 @@ from homeassistant.components.light import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
-from homeassistant.components.tplink.const import DOMAIN
-from homeassistant.components.tplink.services import (
-    SERVICE_RANDOM_EFFECT,
-    SERVICE_SEQUENCE_EFFECT,
+from homeassistant.components.scene import (
+    DOMAIN as SCENE_DOMAIN,
+    SceneService,
+    SceneServiceArgument,
 )
+from homeassistant.components.tplink.const import DOMAIN
+from homeassistant.components.tplink.services import TPLinkService
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -55,6 +51,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
+    CommonServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -913,9 +910,9 @@ async def test_smart_strip_custom_random_effect(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_RANDOM_EFFECT,
+        TPLinkService.RANDOM_EFFECT,
         {
-            ATTR_ENTITY_ID: entity_id,
+            CommonServiceArgument.ENTITY_ID: entity_id,
             "init_states": [340, 20, 50],
             "backgrounds": [[340, 20, 50], [20, 50, 50], [0, 100, 50]],
         },
@@ -942,9 +939,9 @@ async def test_smart_strip_custom_random_effect(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_RANDOM_EFFECT,
+        TPLinkService.RANDOM_EFFECT,
         {
-            ATTR_ENTITY_ID: entity_id,
+            CommonServiceArgument.ENTITY_ID: entity_id,
             "init_states": [340, 20, 50],
             "random_seed": 600,
         },
@@ -1001,9 +998,9 @@ async def test_smart_strip_custom_random_effect(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_RANDOM_EFFECT,
+        TPLinkService.RANDOM_EFFECT,
         {
-            ATTR_ENTITY_ID: entity_id,
+            CommonServiceArgument.ENTITY_ID: entity_id,
             "init_states": [340, 20, 50],
             "backgrounds": [[340, 20, 50], [20, 50, 50], [0, 100, 50]],
             "random_seed": 50,
@@ -1048,7 +1045,7 @@ async def test_smart_strip_custom_random_effect(hass: HomeAssistant) -> None:
     ("service_name", "service_params", "expected_extra_params"),
     [
         pytest.param(
-            SERVICE_SEQUENCE_EFFECT,
+            TPLinkService.SEQUENCE_EFFECT,
             {
                 "sequence": [[340, 20, 50], [20, 50, 50], [0, 100, 50]],
             },
@@ -1062,7 +1059,7 @@ async def test_smart_strip_custom_random_effect(hass: HomeAssistant) -> None:
             id="sequence",
         ),
         pytest.param(
-            SERVICE_RANDOM_EFFECT,
+            TPLinkService.RANDOM_EFFECT,
             {"init_states": [340, 20, 50]},
             {"type": "random", "init_states": [[340, 20, 50]], "random_seed": 100},
             id="random",
@@ -1122,7 +1119,7 @@ async def test_smart_strip_effect_service_error(
             DOMAIN,
             service_name,
             {
-                ATTR_ENTITY_ID: entity_id,
+                CommonServiceArgument.ENTITY_ID: entity_id,
                 **service_params,
             },
             blocking=True,
@@ -1189,9 +1186,9 @@ async def test_smart_strip_custom_sequence_effect(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SEQUENCE_EFFECT,
+        TPLinkService.SEQUENCE_EFFECT,
         {
-            ATTR_ENTITY_ID: entity_id,
+            CommonServiceArgument.ENTITY_ID: entity_id,
             "sequence": [[340, 20, 50], [20, 50, 50], [0, 100, 50]],
         },
         blocking=True,
@@ -1368,8 +1365,11 @@ async def test_scene_effect_light(
 
     await hass.services.async_call(
         SCENE_DOMAIN,
-        SERVICE_CREATE,
-        {CONF_SCENE_ID: "effect_off_scene", CONF_SNAPSHOT: [entity_id]},
+        SceneService.CREATE,
+        {
+            SceneServiceArgument.SCENE_ID: "effect_off_scene",
+            SceneServiceArgument.SNAPSHOT_ENTITIES: [entity_id],
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -1389,9 +1389,9 @@ async def test_scene_effect_light(
 
     await hass.services.async_call(
         SCENE_DOMAIN,
-        SERVICE_TURN_ON,
+        SceneService.TURN_ON,
         {
-            ATTR_ENTITY_ID: "scene.effect_off_scene",
+            CommonServiceArgument.ENTITY_ID: "scene.effect_off_scene",
         },
         blocking=True,
     )

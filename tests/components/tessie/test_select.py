@@ -10,12 +10,14 @@ from tesla_fleet_api.exceptions import UnsupportedVehicle
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
 from homeassistant.components.tessie.const import (
     TessieSeatCoolerOptions,
     TessieSeatHeaterOptions,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -40,8 +42,11 @@ async def test_select(
     ) as mock_set:
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: [entity_id], ATTR_OPTION: TessieSeatHeaterOptions.LOW},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: [entity_id],
+                SelectServiceArgument.OPTION: TessieSeatHeaterOptions.LOW,
+            },
             blocking=True,
         )
         mock_set.assert_called_once()
@@ -57,10 +62,10 @@ async def test_select(
     ) as call:
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: entity_id,
-                ATTR_OPTION: EnergyOperationMode.AUTONOMOUS.value,
+                CommonServiceArgument.ENTITY_ID: entity_id,
+                SelectServiceArgument.OPTION: EnergyOperationMode.AUTONOMOUS.value,
             },
             blocking=True,
         )
@@ -76,8 +81,11 @@ async def test_select(
     ) as call:
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: EnergyExportMode.BATTERY_OK.value},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: entity_id,
+                SelectServiceArgument.OPTION: EnergyExportMode.BATTERY_OK.value,
+            },
             blocking=True,
         )
         assert (state := hass.states.get(entity_id))
@@ -92,8 +100,11 @@ async def test_select(
     ) as mock_set:
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: [entity_id], ATTR_OPTION: TessieSeatCoolerOptions.LOW},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: [entity_id],
+                SelectServiceArgument.OPTION: TessieSeatCoolerOptions.LOW,
+            },
             blocking=True,
         )
         mock_set.assert_called_once()
@@ -116,10 +127,10 @@ async def test_errors(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: ["select.test_seat_heater_left"],
-                ATTR_OPTION: TessieSeatHeaterOptions.LOW,
+                CommonServiceArgument.ENTITY_ID: ["select.test_seat_heater_left"],
+                SelectServiceArgument.OPTION: TessieSeatHeaterOptions.LOW,
             },
             blocking=True,
         )
@@ -138,10 +149,10 @@ async def test_errors(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: ["select.energy_site_operation_mode"],
-                ATTR_OPTION: EnergyOperationMode.AUTONOMOUS.value,
+                CommonServiceArgument.ENTITY_ID: ["select.energy_site_operation_mode"],
+                SelectServiceArgument.OPTION: EnergyOperationMode.AUTONOMOUS.value,
             },
             blocking=True,
         )

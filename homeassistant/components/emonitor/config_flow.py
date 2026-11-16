@@ -8,7 +8,7 @@ import aiohttp
 import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.device_registry import format_mac
@@ -105,8 +105,8 @@ class EmonitorConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="confirm",
             description_placeholders={
-                CONF_HOST: self.discovered_ip,
-                CONF_NAME: self.discovered_info["title"],
+                "host": self.discovered_ip,
+                "name": self.discovered_info["title"],
             },
         )
 

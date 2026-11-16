@@ -95,7 +95,7 @@ class AidotConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=REAUTH_SCHEMA,
             errors=errors,
-            description_placeholders={CONF_USERNAME: reauth_entry.data[CONF_USERNAME]},
+            description_placeholders={"username": reauth_entry.data[CONF_USERNAME]},
         )
 
     async def _async_login(

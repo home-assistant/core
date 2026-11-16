@@ -11,7 +11,7 @@ from functools import lru_cache
 from typing import Any, override
 
 from jwt import DecodeError, PyJWK, PyJWS, PyJWT
-from jwt.algorithms import AllowedPublicKeys
+from jwt.algorithms import AllowedPublicKeys, HMACAlgorithm
 from jwt.types import Options
 
 from homeassistant.util.json import json_loads
@@ -32,8 +32,31 @@ _NO_VERIFY_OPTIONS = Options(
 )
 
 
+class _HMACAlgorithmWithKeyCache(HMACAlgorithm):
+    """HMAC algorithm that validates each secret only once.
+
+    prepare_key rejects asymmetric and JWK-shaped secrets by trying to parse
+    them, which is slow and gives the same answer for the same secret.
+    """
+
+    @lru_cache(maxsize=JWT_TOKEN_CACHE_SIZE)
+    # Only one global instance exists, so the cache does not grow per instance.
+    @override
+    def prepare_key(self, key: str | bytes) -> bytes:
+        """Prepare and cache the HMAC key."""
+        return super().prepare_key(key)
+
+
 class _PyJWSWithLoadCache(PyJWS):
     """PyJWS with a dedicated load implementation."""
+
+    def __init__(self) -> None:
+        """Initialize the PyJWS instance with a cached HS256 key check."""
+        super().__init__()
+        self.unregister_algorithm("HS256")
+        self.register_algorithm(
+            "HS256", _HMACAlgorithmWithKeyCache(HMACAlgorithm.SHA256)
+        )
 
     @lru_cache(maxsize=JWT_TOKEN_CACHE_SIZE)
     # We only ever have a global instance of this class

@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import cast, override
+from typing import Any, cast, override
 
 from pyoctoprintapi import ApiError, OctoprintClient, PrinterOffline
 from pyoctoprintapi.exceptions import UnauthorizedException
@@ -23,7 +23,7 @@ type OctoprintConfigEntry = ConfigEntry[OctoprintDataUpdateCoordinator]
 _LOGGER = logging.getLogger(__name__)
 
 
-class OctoprintDataUpdateCoordinator(DataUpdateCoordinator):
+class OctoprintDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching Octoprint data."""
 
     config_entry: OctoprintConfigEntry
@@ -48,7 +48,7 @@ class OctoprintDataUpdateCoordinator(DataUpdateCoordinator):
         self.data = {"printer": None, "job": None, "last_read_time": None}
 
     @override
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> dict[str, Any]:
         """Update data via API."""
         printer = None
         try:

@@ -24,14 +24,16 @@ if TYPE_CHECKING:
 class ModelDeprecatedRepairFlow(RepairsFlow):
     """Handler for an issue fixing flow."""
 
+    _entry_id: str
     _subentry_iter: Iterator[tuple[str, str]] | None
     _current_entry_id: str | None
     _current_subentry_id: str | None
     _model_list_cache: dict[str, list[anthropic.types.ModelInfo]] | None
 
-    def __init__(self) -> None:
+    def __init__(self, entry_id: str) -> None:
         """Initialize the flow."""
         super().__init__()
+        self._entry_id = entry_id
         self._subentry_iter = None
         self._current_entry_id = None
         self._current_subentry_id = None
@@ -140,16 +142,18 @@ class ModelDeprecatedRepairFlow(RepairsFlow):
 
     def _iter_deprecated_subentries(self) -> Iterator[tuple[str, str]]:
         """Yield entry/subentry pairs that use deprecated models."""
-        for entry in self.hass.config_entries.async_entries(DOMAIN):
-            if entry.state is not ConfigEntryState.LOADED:
+        entry: AnthropicConfigEntry | None = self.hass.config_entries.async_get_entry(
+            self._entry_id
+        )
+        if entry is None or entry.state is not ConfigEntryState.LOADED:
+            return
+        for subentry in entry.subentries.values():
+            model = subentry.data.get(CONF_CHAT_MODEL)
+            if not model:
                 continue
-            for subentry in entry.subentries.values():
-                model = subentry.data.get(CONF_CHAT_MODEL)
-                if not model:
-                    continue
-                model_info, found = entry.runtime_data.get_model_info(model)
-                if found and model_info.lifecycle in ("deprecated", "retired"):
-                    yield entry.entry_id, subentry.subentry_id
+            model_info, found = entry.runtime_data.get_model_info(model)
+            if found and model_info.lifecycle in ("deprecated", "retired"):
+                yield entry.entry_id, subentry.subentry_id
 
     async def _async_next_target(
         self,
@@ -250,8 +254,8 @@ async def async_create_fix_flow(
     data: dict[str, str | int | float | None] | None,
 ) -> RepairsFlow:
     """Create flow."""
-    if issue_id == "model_deprecated":
-        return ModelDeprecatedRepairFlow()
+    if issue_id.startswith("model_deprecated_") and data is not None:
+        return ModelDeprecatedRepairFlow(cast(str, data["entry_id"]))
     raise HomeAssistantError(
         translation_domain=DOMAIN, translation_key="unknown_issue_id"
     )

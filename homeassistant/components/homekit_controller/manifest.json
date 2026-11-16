@@ -11,6 +11,7 @@
   "categories": ["hubs_protocols"],
   "codeowners": ["@Jc2k", "@bdraco"],
   "config_flow": true,
+  "connectivity": ["homekit"],
   "dependencies": ["bluetooth_adapters", "zeroconf"],
   "documentation": "https://www.home-assistant.io/integrations/homekit_controller",
   "integration_type": "device",

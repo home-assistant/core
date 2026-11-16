@@ -5,6 +5,7 @@
   "categories": ["computers_network.cloud_developer_tools"],
   "codeowners": ["@zweckj"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/onedrive_for_business",
   "integration_type": "service",

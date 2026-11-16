@@ -85,6 +85,45 @@ async def test_flow_sensor_discovered_with_null_value_at_startup(
     assert state.state == "2.0"
 
 
+@pytest.mark.parametrize("node_fixture", ["mock_battery_storage"])
+@pytest.mark.parametrize("attributes", [{"1/47/13": None, "1/47/27": None}])
+async def test_battery_time_sensors_discovered_with_null_value_at_startup(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test battery time sensors are still discovered when their value is null at startup.
+
+    BatTimeRemaining and BatTimeToFullCharge are nullable per the Matter spec
+    (e.g. BatTimeToFullCharge is null while the battery is fully charged). This
+    test helps prevent regressions if allow_none_value=True is removed from
+    their discovery schemas.
+    """
+    remaining_state = hass.states.get("sensor.mock_battery_storage_time_remaining")
+    assert remaining_state
+    assert remaining_state.state == "unknown"
+
+    full_charge_state = hass.states.get(
+        "sensor.mock_battery_storage_time_to_full_charge"
+    )
+    assert full_charge_state
+    assert full_charge_state.state == "unknown"
+
+    set_node_attribute(matter_node, 1, 47, 13, 7200)
+    set_node_attribute(matter_node, 1, 47, 27, 1800)
+    await trigger_subscription_callback(hass, matter_client)
+
+    remaining_state = hass.states.get("sensor.mock_battery_storage_time_remaining")
+    assert remaining_state
+    assert remaining_state.state == "120.0"
+
+    full_charge_state = hass.states.get(
+        "sensor.mock_battery_storage_time_to_full_charge"
+    )
+    assert full_charge_state
+    assert full_charge_state.state == "30.0"
+
+
 @pytest.mark.parametrize("node_fixture", ["mock_flow_sensor"])
 async def test_flow_sensor(
     hass: HomeAssistant,

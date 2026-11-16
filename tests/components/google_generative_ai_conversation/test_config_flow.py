@@ -47,6 +47,7 @@ from homeassistant.components.google_generative_ai_conversation.const import (
 from homeassistant.components.google_generative_ai_conversation.entity import (
     GoogleGenerativeAILLMBaseEntity,
 )
+from homeassistant.components.tts import TextToSpeechCommonOption
 from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_NAME, CONF_PROMPT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -1076,7 +1077,7 @@ async def test_tts_sampling_options_model_switch_and_reset(
             return_value=b"wav",
         ):
             assert await entity.async_get_tts_audio(
-                "Hello", "en-US", {tts.ATTR_VOICE: "zephyr"}
+                "Hello", "en-US", {TextToSpeechCommonOption.VOICE: "zephyr"}
             ) == ("wav", b"wav")
         config = mock_genai_transport.call_args.kwargs["http_request"].data[
             "generationConfig"
@@ -1119,7 +1120,7 @@ async def test_tts_sampling_options_model_switch_and_reset(
         return_value=b"wav",
     ):
         assert await entity.async_get_tts_audio(
-            "Hello", "en-US", {tts.ATTR_VOICE: "zephyr"}
+            "Hello", "en-US", {TextToSpeechCommonOption.VOICE: "zephyr"}
         ) == ("wav", b"wav")
     config = mock_genai_transport.call_args.kwargs["http_request"].data[
         "generationConfig"
