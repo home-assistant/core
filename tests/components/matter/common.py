@@ -142,6 +142,20 @@ FIXTURES = [
 ]
 
 
+# An On/Off Light endpoint 3 as a part of the top outlet (endpoint 1).
+EVE_ENERGY_LIGHT_PART_ATTRIBUTES = {
+    "0/29/3": [1, 2, 3],
+    "1/29/3": [3],
+    "3/29/0": [{"0": 256, "1": 1}],
+    "3/29/1": [6, 29],
+    "3/29/2": [],
+    "3/29/3": [],
+    "3/6/0": False,
+    "3/6/65532": 0,
+    "3/6/65531": [0, 65528, 65529, 65531, 65532, 65533],
+}
+
+
 @cache
 def load_node_fixture(fixture: str) -> str:
     """Load a fixture."""

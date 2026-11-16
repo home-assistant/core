@@ -18,15 +18,17 @@ from propcache.api import cached_property
 
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import ChildDeviceInfo, DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.typing import Undefined
 
 from .const import DOMAIN, FEATUREMAP_ATTRIBUTE_ID, ID_TYPE_DEVICE_ID
 from .helpers import (
     MatterConfigEntry,
+    get_child_device_identifier,
+    get_child_device_owner,
     get_device_id,
     get_discovery_key,
     get_entity_unique_id,
@@ -99,6 +101,7 @@ class MatterEntity(Entity):
     _attr_has_entity_name = True
     _attr_should_poll = False
     _name_postfix: str | None = None
+    _child_device_name: str | None = None
     _platform_translation_key: str | None = None
     # Cooldown in seconds to debounce state writes on updates from the device.
     # Platforms which derive their state from multiple attributes can set this
@@ -127,19 +130,25 @@ class MatterEntity(Entity):
         self._attr_unique_id = get_entity_unique_id(
             node_device_id, endpoint, entity_info
         )
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{ID_TYPE_DEVICE_ID}_{node_device_id}")}
-        )
+        # Entities of a split endpoint, its parts and its Power Topology
+        # measurement endpoint go to the split endpoint's child device.
+        self._child_device_endpoint = get_child_device_owner(endpoint)
         self._attr_available = (
             self._endpoint.node.available and self._get_bridged_reachable()
         )
-        # mark endpoint postfix if the device has the primary
-        # attribute on multiple endpoints
-        if not self._endpoint.node.is_bridge_device and any(
-            ep
-            for ep in self._endpoint.node.endpoints.values()
-            if ep != self._endpoint
-            and ep.has_attribute(None, entity_info.primary_attribute)
+        # mark endpoint postfix if another endpoint on the same device has the
+        # primary attribute; a child device's own endpoint is named by the child
+        owner = self._child_device_endpoint
+        if (
+            not self._endpoint.node.is_bridge_device
+            and owner != self._endpoint
+            and any(
+                ep
+                for ep in self._endpoint.node.endpoints.values()
+                if ep != self._endpoint
+                and ep.has_attribute(None, entity_info.primary_attribute)
+                and get_child_device_owner(ep) == owner
+            )
         ):
             self._name_postfix = str(self._endpoint.endpoint_id)
         # Always set translation_key for state_attributes translations.
@@ -150,18 +159,53 @@ class MatterEntity(Entity):
             if not self._name_postfix:
                 self._attr_name = None
 
-        # Matter labels can be used to modify the entity name
-        # by appending the text.
-        if name_modifier := self._get_name_modifier():
+        # Matter labels can be used to modify the entity name by appending the
+        # text, or the labels of the child device's endpoint name the child.
+        if self._child_device_endpoint is not None:
+            self._child_device_name = self._get_name_modifier(
+                self._child_device_endpoint
+            )
+        elif name_modifier := self._get_name_modifier(self._endpoint):
             self._name_postfix = name_modifier
 
         # make sure to update the attributes once
         self._update_from_device()
 
-    def _find_matching_labels(self) -> list[str]:
-        """Find all labels for a Matter entity."""
+    @property
+    @override
+    def device_info(self) -> DeviceInfo | ChildDeviceInfo | None:
+        """Return device info for this entity.
 
-        device_info = self._endpoint.device_info
+        An endpoint that is split into its own child device declares that child
+        (created on demand by the entity platform); all other endpoints belong to
+        the node device.
+        """
+        server_info = cast(ServerInfoMessage, self.matter_client.server_info)
+        node_device_id = get_device_id(server_info, self._endpoint)
+        node_identifier = (DOMAIN, f"{ID_TYPE_DEVICE_ID}_{node_device_id}")
+        if (child_device_endpoint := self._child_device_endpoint) is None:
+            return DeviceInfo(identifiers={node_identifier})
+        # The node device is pre-created in the adapter before entities are added,
+        # so it resolves here for use as the child device's parent.
+        config_entry = cast(MatterConfigEntry, self.platform.config_entry)
+        parent_device_id = dr.async_get_device_id_by_identifier(
+            self.hass,
+            node_identifier,
+            config_entry_id=config_entry.entry_id,
+        )
+        return ChildDeviceInfo(
+            identifiers={
+                get_child_device_identifier(server_info, child_device_endpoint)
+            },
+            name=self._child_device_name
+            or f"Endpoint {child_device_endpoint.endpoint_id}",
+            parent_device_id=parent_device_id,
+        )
+
+    def _find_matching_labels(self, endpoint: MatterEndpoint) -> list[str]:
+        """Find all labels of the endpoint for a Matter entity."""
+
+        device_info = endpoint.device_info
         labeling_list = (
             VENDOR_LABELING_LIST.get(device_info.vendorID, {}).get(
                 device_info.productID
@@ -172,11 +216,11 @@ class MatterEntity(Entity):
 
         # get the labels from the UserLabel and FixedLabel clusters
         user_label_list: list[clusters.UserLabel.Structs.LabelStruct] = (
-            self.get_matter_attribute_value(clusters.UserLabel.Attributes.LabelList)
+            endpoint.get_attribute_value(None, clusters.UserLabel.Attributes.LabelList)
             or []
         )
         fixed_label_list: list[clusters.FixedLabel.Structs.LabelStruct] = (
-            self.get_matter_attribute_value(clusters.FixedLabel.Attributes.LabelList)
+            endpoint.get_attribute_value(None, clusters.FixedLabel.Attributes.LabelList)
             or []
         )
 
@@ -188,10 +232,10 @@ class MatterEntity(Entity):
         ]
         return found_labels
 
-    def _get_name_modifier(self) -> str | None:
-        """Get the name modifier for the entity."""
+    def _get_name_modifier(self, endpoint: MatterEndpoint) -> str | None:
+        """Get the name modifier for the entity from the endpoint's labels."""
 
-        if found_labels := self._find_matching_labels():
+        if found_labels := self._find_matching_labels(endpoint):
             return found_labels[0]
         return None
 
@@ -413,9 +457,9 @@ class MatterEntity(Entity):
             return
         entry = cast(MatterConfigEntry, self.platform.config_entry)
         # let discovery add the entity again if the device supports it later
-        entry.runtime_data.adapter.discovered_entities.discard(
-            get_discovery_key(self._endpoint, self._entity_info)
-        )
+        entry.runtime_data.adapter.discovered_entities.get(
+            (self._endpoint.node.node_id, self._endpoint.endpoint_id), set()
+        ).discard(get_discovery_key(self._endpoint, self._entity_info))
         er.async_get(self.hass).async_remove(self.entity_id)
 
     @callback
