@@ -398,23 +398,36 @@ async def _async_resolve_template_config(
     return template_config
 
 
+async def _async_validate_triggers_and_conditions(
+    hass: HomeAssistant, config: TemplateConfig
+) -> None:
+    """Validate the triggers and conditions of a resolved config section."""
+    if CONF_TRIGGERS in config:
+        try:
+            config[CONF_TRIGGERS] = await async_validate_trigger_config(
+                hass, config[CONF_TRIGGERS]
+            )
+        except probatio.Invalid as err:
+            err.prepend([CONF_TRIGGERS])
+            raise
+
+    if CONF_CONDITIONS in config:
+        try:
+            config[CONF_CONDITIONS] = await async_validate_conditions_config(
+                hass, config[CONF_CONDITIONS]
+            )
+        except probatio.Invalid as err:
+            err.prepend([CONF_CONDITIONS])
+            raise
+
+
 async def async_validate_config_section(
     hass: HomeAssistant, config: ConfigType
 ) -> TemplateConfig:
     """Validate an entire config section for the template integration."""
 
     validated_config = await _async_resolve_template_config(hass, config)
-
-    if CONF_TRIGGERS in validated_config:
-        validated_config[CONF_TRIGGERS] = await async_validate_trigger_config(
-            hass, validated_config[CONF_TRIGGERS]
-        )
-
-    if CONF_CONDITIONS in validated_config:
-        validated_config[CONF_CONDITIONS] = await async_validate_conditions_config(
-            hass, validated_config[CONF_CONDITIONS]
-        )
-
+    await _async_validate_triggers_and_conditions(hass, validated_config)
     return validated_config
 
 
@@ -436,11 +449,17 @@ async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> Conf
 
     for cfg in itertools.chain(*configs):
         try:
-            template_config: TemplateConfig = await async_validate_config_section(
-                hass, cfg
-            )
+            template_config = await _async_resolve_template_config(hass, cfg)
         except probatio.Invalid as err:
             async_log_schema_error(err, DOMAIN, cfg, hass)
+            async_notify_setup_error(hass, DOMAIN)
+            continue
+
+        try:
+            await _async_validate_triggers_and_conditions(hass, template_config)
+        except probatio.Invalid as err:
+            # The path of a trigger or condition error indexes the resolved section
+            async_log_schema_error(err, DOMAIN, template_config, hass)
             async_notify_setup_error(hass, DOMAIN)
             continue
 

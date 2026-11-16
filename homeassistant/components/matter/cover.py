@@ -45,6 +45,7 @@ TYPE_MAP = {
     ),
     clusters.WindowCovering.Enums.Type.kAwning: CoverDeviceClass.AWNING,
     clusters.WindowCovering.Enums.Type.kDrapery: CoverDeviceClass.CURTAIN,
+    clusters.WindowCovering.Enums.Type.kShutter: CoverDeviceClass.SHUTTER,
     clusters.WindowCovering.Enums.Type.kTiltBlindTiltOnly: CoverDeviceClass.BLIND,
     clusters.WindowCovering.Enums.Type.kTiltBlindLiftAndTilt: CoverDeviceClass.BLIND,
 }
@@ -300,7 +301,7 @@ class MatterCover(MatterEntity, CoverEntity):
         device_type: clusters.WindowCovering.Enums.Type = (
             self.get_matter_attribute_value(clusters.WindowCovering.Attributes.Type)
         )
-        self._attr_device_class = TYPE_MAP.get(device_type, CoverDeviceClass.AWNING)
+        self._attr_device_class = TYPE_MAP.get(device_type)
 
         if self._tilt_only:
             # tilt-only covers expose the tilt button features instead,

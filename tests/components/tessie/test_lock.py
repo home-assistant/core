@@ -5,13 +5,8 @@ from unittest.mock import patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.lock import (
-    DOMAIN as LOCK_DOMAIN,
-    SERVICE_LOCK,
-    SERVICE_UNLOCK,
-    LockState,
-)
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockService, LockState
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -33,8 +28,8 @@ async def test_locks(
     with patch("homeassistant.components.tessie.lock.lock") as mock_run:
         await hass.services.async_call(
             LOCK_DOMAIN,
-            SERVICE_LOCK,
-            {ATTR_ENTITY_ID: [entity_id]},
+            LockService.LOCK,
+            {CommonServiceArgument.ENTITY_ID: [entity_id]},
             blocking=True,
         )
         mock_run.assert_called_once()
@@ -43,8 +38,8 @@ async def test_locks(
     with patch("homeassistant.components.tessie.lock.unlock") as mock_run:
         await hass.services.async_call(
             LOCK_DOMAIN,
-            SERVICE_UNLOCK,
-            {ATTR_ENTITY_ID: [entity_id]},
+            LockService.UNLOCK,
+            {CommonServiceArgument.ENTITY_ID: [entity_id]},
             blocking=True,
         )
         mock_run.assert_called_once()
@@ -55,8 +50,8 @@ async def test_locks(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             LOCK_DOMAIN,
-            SERVICE_LOCK,
-            {ATTR_ENTITY_ID: [entity_id]},
+            LockService.LOCK,
+            {CommonServiceArgument.ENTITY_ID: [entity_id]},
             blocking=True,
         )
 
@@ -65,8 +60,8 @@ async def test_locks(
     ) as mock_run:
         await hass.services.async_call(
             LOCK_DOMAIN,
-            SERVICE_UNLOCK,
-            {ATTR_ENTITY_ID: [entity_id]},
+            LockService.UNLOCK,
+            {CommonServiceArgument.ENTITY_ID: [entity_id]},
             blocking=True,
         )
         assert hass.states.get(entity_id).state == LockState.UNLOCKED

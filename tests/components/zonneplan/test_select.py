@@ -23,17 +23,17 @@ from pyzonneplan.const import BatteryMode
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
-    ATTR_OPTION,
     ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
 from homeassistant.components.zonneplan.const import DOMAIN
 from homeassistant.components.zonneplan.coordinator import (
     BATTERY_CONTROL_UPDATE_INTERVAL,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -117,8 +117,11 @@ async def test_select_option(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: CONTROL_MODE_ENTITY_ID, ATTR_OPTION: "home_optimization"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: CONTROL_MODE_ENTITY_ID,
+            SelectServiceArgument.OPTION: "home_optimization",
+        },
         blocking=True,
     )
 
@@ -139,10 +142,10 @@ async def test_select_unavailable_option(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: CONTROL_MODE_ENTITY_ID,
-                ATTR_OPTION: "day_ahead_arbitrage",
+                CommonServiceArgument.ENTITY_ID: CONTROL_MODE_ENTITY_ID,
+                SelectServiceArgument.OPTION: "day_ahead_arbitrage",
             },
             blocking=True,
         )
@@ -199,8 +202,11 @@ async def test_select_option_error(
     with pytest.raises(expected_exception) as exc_info:
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: CONTROL_MODE_ENTITY_ID, ATTR_OPTION: "home_optimization"},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: CONTROL_MODE_ENTITY_ID,
+                SelectServiceArgument.OPTION: "home_optimization",
+            },
             blocking=True,
         )
 
@@ -223,8 +229,11 @@ async def test_select_option_authentication_error(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: CONTROL_MODE_ENTITY_ID, ATTR_OPTION: "home_optimization"},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: CONTROL_MODE_ENTITY_ID,
+                SelectServiceArgument.OPTION: "home_optimization",
+            },
             blocking=True,
         )
     await hass.async_block_till_done()

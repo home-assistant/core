@@ -71,9 +71,7 @@ SLEEP_HEALTH_SENSORS: tuple[SleepIQSensorEntityDescription, ...] = (
         translation_key="sleep_score",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="score",
-        value_fn=lambda sleeper, time_zone: (
-            sleeper.sleep_data.sleep_score if sleeper.sleep_data else None
-        ),
+        value_fn=lambda sleeper, time_zone: sleeper.sleep_data.sleep_score,
     ),
     SleepIQSensorEntityDescription(
         key=SLEEP_DURATION,
@@ -84,7 +82,7 @@ SLEEP_HEALTH_SENSORS: tuple[SleepIQSensorEntityDescription, ...] = (
         suggested_display_precision=1,
         value_fn=lambda sleeper, time_zone: (
             round(sleeper.sleep_data.duration / 3600, 1)
-            if sleeper.sleep_data and sleeper.sleep_data.duration
+            if sleeper.sleep_data.duration
             else None
         ),
     ),
@@ -93,18 +91,14 @@ SLEEP_HEALTH_SENSORS: tuple[SleepIQSensorEntityDescription, ...] = (
         translation_key="heart_rate_avg",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="bpm",
-        value_fn=lambda sleeper, time_zone: (
-            sleeper.sleep_data.heart_rate if sleeper.sleep_data else None
-        ),
+        value_fn=lambda sleeper, time_zone: sleeper.sleep_data.heart_rate,
     ),
     SleepIQSensorEntityDescription(
         key=RESPIRATORY_RATE,
         translation_key="respiratory_rate_avg",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="brpm",
-        value_fn=lambda sleeper, time_zone: (
-            sleeper.sleep_data.respiratory_rate if sleeper.sleep_data else None
-        ),
+        value_fn=lambda sleeper, time_zone: sleeper.sleep_data.respiratory_rate,
     ),
     SleepIQSensorEntityDescription(
         key=HRV,
@@ -112,28 +106,22 @@ SLEEP_HEALTH_SENSORS: tuple[SleepIQSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTime.MILLISECONDS,
-        value_fn=lambda sleeper, time_zone: (
-            sleeper.sleep_data.hrv if sleeper.sleep_data else None
-        ),
+        value_fn=lambda sleeper, time_zone: sleeper.sleep_data.hrv,
     ),
     SleepIQSensorEntityDescription(
         key=BEDTIME,
         translation_key="bedtime",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda sleeper, time_zone: (
-            _session_time(sleeper.sleep_data.start_date, time_zone)
-            if sleeper.sleep_data
-            else None
+        value_fn=lambda sleeper, time_zone: _session_time(
+            sleeper.sleep_data.start_date, time_zone
         ),
     ),
     SleepIQSensorEntityDescription(
         key=WAKE_TIME,
         translation_key="wake_time",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda sleeper, time_zone: (
-            _session_time(sleeper.sleep_data.end_date, time_zone)
-            if sleeper.sleep_data
-            else None
+        value_fn=lambda sleeper, time_zone: _session_time(
+            sleeper.sleep_data.end_date, time_zone
         ),
     ),
 )

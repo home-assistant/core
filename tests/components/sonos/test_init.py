@@ -544,7 +544,6 @@ async def test_async_poll_manual_hosts_warnings(
 
     soco = soco_factory.cache_mock(MockSoCo(), "10.10.10.1", "Bedroom")
     with (
-        caplog.at_level(logging.DEBUG),
         patch.object(
             type(soco), "visible_zones", new_callable=PropertyMock
         ) as mock_visible_zones,
@@ -847,23 +846,22 @@ async def test_async_poll_manual_hosts_5(
     soco_2.renderingControl.GetVolume = Mock()
     speaker_2_activity = SpeakerActivity(hass, soco_2)
 
-    with caplog.at_level(logging.DEBUG):
-        caplog.clear()
+    caplog.clear()
 
-        await _setup_hass(hass)
+    await _setup_hass(hass)
 
-        assert "media_player.bedroom" in entity_registry.entities
-        assert "media_player.living_room" in entity_registry.entities
+    assert "media_player.bedroom" in entity_registry.entities
+    assert "media_player.living_room" in entity_registry.entities
 
-        async_fire_time_changed(hass, dt_util.utcnow() + DISCOVERY_INTERVAL)
-        await hass.async_block_till_done()
-        await asyncio.gather(
-            *[speaker_1_activity.event.wait(), speaker_2_activity.event.wait()]
-        )
-        assert speaker_1_activity.call_count == 1
-        assert speaker_2_activity.call_count == 1
-        assert "Activity on Living Room" in caplog.text
-        assert "Activity on Bedroom" in caplog.text
+    async_fire_time_changed(hass, dt_util.utcnow() + DISCOVERY_INTERVAL)
+    await hass.async_block_till_done()
+    await asyncio.gather(
+        *[speaker_1_activity.event.wait(), speaker_2_activity.event.wait()]
+    )
+    assert speaker_1_activity.call_count == 1
+    assert speaker_2_activity.call_count == 1
+    assert "Activity on Living Room" in caplog.text
+    assert "Activity on Bedroom" in caplog.text
 
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -903,7 +901,6 @@ async def test_async_poll_manual_hosts_6(
     soco_2.renderingControl.GetVolume.reset_mock()
 
     with (
-        caplog.at_level(logging.DEBUG),
         freeze_time(dt_util.utcnow()) as freezer,
     ):
         caplog.clear()
@@ -1098,10 +1095,9 @@ async def test_ipv6_not_supported(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Tests that invalid ipv4 addresses do not generate stack dump."""
-    with caplog.at_level(logging.DEBUG):
-        caplog.clear()
-        await _setup_hass_ipv6_address_not_supported(hass)
-        await hass.async_block_till_done()
+    caplog.clear()
+    await _setup_hass_ipv6_address_not_supported(hass)
+    await hass.async_block_till_done()
     assert "invalid ip_address received" in caplog.text
     assert "2001:db8:3333:4444:5555:6666:7777:8888" in caplog.text
 
@@ -1135,7 +1131,6 @@ async def test_no_exception_when_entry_unloaded_during_speaker_discovery(
             new_callable=PropertyMock,
             return_value={soco, new_soco},
         ),
-        caplog.at_level(logging.DEBUG),
     ):
         caplog.clear()
         sub_callback(SonosMockEvent(soco, soco.zoneGroupTopology, {}))

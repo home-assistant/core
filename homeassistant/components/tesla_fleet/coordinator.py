@@ -22,13 +22,12 @@ from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-
-if TYPE_CHECKING:
-    from . import TeslaFleetConfigEntry
-
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, ENERGY_HISTORY_FIELDS, LOGGER, TeslaFleetState
+
+if TYPE_CHECKING:
+    from . import TeslaFleetConfigEntry
 
 VEHICLE_INTERVAL_SECONDS = 600
 VEHICLE_INTERVAL = timedelta(seconds=VEHICLE_INTERVAL_SECONDS)

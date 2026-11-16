@@ -6,11 +6,16 @@ from unittest.mock import MagicMock, patch
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 
-from .conftest import motion_detector2_device, setup_integration, smoke_detector_device
+from .conftest import (
+    motion_detector2_device,
+    outdoor_siren_device,
+    setup_integration,
+    smoke_detector_device,
+)
 
 ENTITY_ID = "button.smoke_detector_start_self_test"
 
@@ -38,7 +43,10 @@ async def test_smoke_test_button_press(
     device = mock_session.device_helper.smoke_detectors[0]
 
     await hass.services.async_call(
-        BUTTON_DOMAIN, SERVICE_PRESS, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        BUTTON_DOMAIN,
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
 
     device.smoketest_requested.assert_called_once_with()
@@ -61,8 +69,8 @@ async def test_reset_tamper_button_press(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.motion_detector_reset_tamper"},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: "button.motion_detector_reset_tamper"},
         blocking=True,
     )
 
@@ -83,3 +91,28 @@ async def test_no_reset_tamper_button_without_support(
     await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get("button.motion_detector_reset_tamper") is None
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"outdoor_sirens": [outdoor_siren_device()]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_siren_test_alarm_button_press(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Pressing the button fires a test alarm."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.outdoor_sirens[0]
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: "button.outdoor_siren_test_alarm"},
+        blocking=True,
+    )
+
+    device.trigger_test_alarm.assert_called_once_with()

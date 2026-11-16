@@ -552,9 +552,7 @@ class WebHookManager:
         self._event_manager = event_manager
         self._device = event_manager.device
         self._hass = event_manager.hass
-        config_entry = event_manager.config_entry
 
-        self._old_webhook_unique_id = f"{DOMAIN}_{config_entry.entry_id}"
         # Some cameras have a limit on the length of the webhook URL
         # so we use a short random ID for the webhook.
         self._webhook_unique_id = f"{DOMAIN}{secrets.token_hex(6)}"
@@ -572,6 +570,9 @@ class WebHookManager:
         )
         assert self._webhook_url is None, "Webhook already registered"
         self._async_register_webhook()
+        if self._webhook_url is None:
+            self.state = WebHookManagerState.FAILED
+            return False
         # Unload skips stopping events if no event subscription started.
         try:
             started = await self._async_start_webhook()
@@ -644,10 +645,10 @@ class WebHookManager:
         try:
             base_url = get_url(self._hass, prefer_external=False)
         except NoURLAvailableError:
-            try:
-                base_url = get_url(self._hass, prefer_external=True)
-            except NoURLAvailableError:
-                return
+            LOGGER.debug(
+                "%s: No URL available, not using webhook for events", self._name
+            )
+            return
 
         webhook_id = self._webhook_unique_id
         self._async_unregister_webhook()
@@ -664,7 +665,6 @@ class WebHookManager:
         LOGGER.debug(
             "%s: Unregistering webhook %s", self._name, self._webhook_unique_id
         )
-        webhook.async_unregister(self._hass, self._old_webhook_unique_id)
         webhook.async_unregister(self._hass, self._webhook_unique_id)
         self._webhook_url = None
 

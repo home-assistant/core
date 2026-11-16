@@ -62,7 +62,7 @@ class SystemBridgeEntity(CoordinatorEntity[SystemBridgeDataUpdateCoordinator]):
         """Send a system control, raising if it fails."""
         try:
             response = await request
-        except ConnectionClosedException as e:
+        except (ConnectionClosedException, ConnectionResetError) as e:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="connection_failed",
@@ -126,7 +126,7 @@ class SystemBridgeDisplayEntity(SystemBridgeEntity):
                     power_state=power_state,
                 )
             )
-        except ConnectionClosedException as e:
+        except (ConnectionClosedException, ConnectionResetError) as e:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="connection_failed",
@@ -172,7 +172,7 @@ class SystemBridgeAudioEntity(SystemBridgeEntity):
             response = await self.coordinator.websocket_client.audio_control(
                 AudioControl(id=device.id, volume=volume, muted=muted, default=default)
             )
-        except ConnectionClosedException as e:
+        except (ConnectionClosedException, ConnectionResetError) as e:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="connection_failed",

@@ -366,25 +366,29 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
 
     async def _async_send_key(self, key: str) -> None:
         """Send a key using legacy protocol."""
-        try:
-            # recreate connection if connection was dead
-            retry_count = 1
-            for _ in range(retry_count + 1):
-                try:
-                    if remote := await self._async_get_remote():
-                        await remote.control(key)
-                    break
-                except UnauthorizedError:
-                    raise
-                except ConnectionFailure:
-                    self._remote = None
-        except (ResponseError, UnauthorizedError) as err:
-            # We got a response so it's on.
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="error_sending_command",
-                translation_placeholders={"error": repr(err), "host": self.host},
-            ) from err
+        # recreate connection if connection was dead
+        retry_count = 1
+        for attempt in range(retry_count + 1):
+            try:
+                if remote := await self._async_get_remote():
+                    await remote.control(key)
+            except (ResponseError, UnauthorizedError) as err:
+                # We got a response so it's on.
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="error_sending_command",
+                    translation_placeholders={"error": repr(err), "host": self.host},
+                ) from err
+            except ConnectionFailure as err:
+                self._remote = None
+                if attempt == retry_count:
+                    raise HomeAssistantError(
+                        translation_domain=DOMAIN,
+                        translation_key="send_command_failed",
+                        translation_placeholders={"host": self.host},
+                    ) from err
+            else:
+                return
 
     @override
     async def _async_send_power_off(self) -> None:
@@ -427,24 +431,31 @@ class SamsungTVWSBaseBridge[
 
     async def _async_send_commands(self, commands: list[_CommandT]) -> None:
         """Send the commands using websocket protocol."""
-        try:
-            # recreate connection if connection was dead
-            retry_count = 1
-            for _ in range(retry_count + 1):
-                try:
-                    if remote := await self._async_get_remote():
-                        await remote.send_commands(commands)  # type: ignore[arg-type]
-                    break
-                except (
-                    BrokenPipeError,
-                    WebSocketException,
-                ):
-                    # BrokenPipe can occur when the commands is sent to fast
-                    # WebSocketException can occur when timed out
-                    self._remote = None
-        except OSError:
-            # Different reasons, e.g. hostname not resolveable
-            pass
+        # recreate connection if connection was dead
+        retry_count = 1
+        for attempt in range(retry_count + 1):
+            try:
+                if remote := await self._async_get_remote():
+                    await remote.send_commands(commands)  # type: ignore[arg-type]
+            except (BrokenPipeError, WebSocketException) as err:
+                # BrokenPipe can occur when the commands is sent to fast
+                # WebSocketException can occur when timed out
+                self._remote = None
+                if attempt == retry_count:
+                    raise HomeAssistantError(
+                        translation_domain=DOMAIN,
+                        translation_key="send_command_failed",
+                        translation_placeholders={"host": self.host},
+                    ) from err
+            except OSError as err:
+                # Different reasons, e.g. hostname not resolveable
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="send_command_failed",
+                    translation_placeholders={"host": self.host},
+                ) from err
+            else:
+                return
 
     async def _async_get_remote(self) -> _RemoteT | None:
         """Create or return a remote control instance."""
