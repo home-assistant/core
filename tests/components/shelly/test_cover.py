@@ -33,8 +33,8 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    CommonServiceArgument,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceNotSupported
@@ -556,7 +556,7 @@ async def test_rpc_cover_set_position_and_tilt(
         DOMAIN,
         ShellyService.SET_COVER_POSITION_AND_TILT,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             ShellyServiceArgument.POSITION: 100,
             ShellyServiceArgument.TILT_POSITION: 100,
         },
@@ -578,7 +578,7 @@ async def test_rpc_cover_set_position_and_tilt_not_supported(
             DOMAIN,
             ShellyService.SET_COVER_POSITION_AND_TILT,
             {
-                CommonServiceArgument.ENTITY_ID: "cover.test_name_test_cover_0",
+                TargetKey.ENTITY_ID: "cover.test_name_test_cover_0",
                 ShellyServiceArgument.POSITION: 100,
                 ShellyServiceArgument.TILT_POSITION: 100,
             },

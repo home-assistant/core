@@ -16,8 +16,8 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
-    CommonServiceArgument,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -102,7 +102,7 @@ async def test_limit_switches_keep_each_others_mode_bit(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -130,7 +130,7 @@ async def test_turning_a_limit_on_asserts_its_setpoint(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: POWER_LIMITING},
+        {TargetKey.ENTITY_ID: POWER_LIMITING},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -159,7 +159,7 @@ async def test_enabling_a_limit_into_an_empty_window_is_refused(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: DISCHARGE_LIMITING},
+            {TargetKey.ENTITY_ID: DISCHARGE_LIMITING},
             blocking=True,
         )
 
@@ -192,7 +192,7 @@ async def test_other_settings_stay_writable_with_refused_limits(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: GRID_CHARGING},
+        {TargetKey.ENTITY_ID: GRID_CHARGING},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -213,6 +213,6 @@ async def test_a_refused_write_raises(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: POWER_LIMITING},
+            {TargetKey.ENTITY_ID: POWER_LIMITING},
             blocking=True,
         )

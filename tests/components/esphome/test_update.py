@@ -32,7 +32,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
-    CommonServiceArgument,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -144,7 +144,7 @@ async def test_update_entity(
         await hass.services.async_call(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
-            {CommonServiceArgument.ENTITY_ID: "update.test_firmware"},
+            {TargetKey.ENTITY_ID: "update.test_firmware"},
             blocking=True,
         )
 
@@ -171,7 +171,7 @@ async def test_update_entity(
         await hass.services.async_call(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
-            {CommonServiceArgument.ENTITY_ID: "update.test_firmware"},
+            {TargetKey.ENTITY_ID: "update.test_firmware"},
             blocking=True,
         )
 
@@ -195,7 +195,7 @@ async def test_update_entity(
         await hass.services.async_call(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
-            {CommonServiceArgument.ENTITY_ID: "update.test_firmware"},
+            {TargetKey.ENTITY_ID: "update.test_firmware"},
             blocking=True,
         )
 
@@ -523,7 +523,7 @@ async def test_generic_device_update_entity_has_update(
     await hass.services.async_call(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
-        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -826,7 +826,7 @@ async def test_attempt_to_update_twice(
             hass.services.async_call(
                 UPDATE_DOMAIN,
                 UpdateService.INSTALL,
-                {CommonServiceArgument.ENTITY_ID: "update.test_firmware"},
+                {TargetKey.ENTITY_ID: "update.test_firmware"},
                 blocking=True,
             )
         )
@@ -835,7 +835,7 @@ async def test_attempt_to_update_twice(
             await hass.services.async_call(
                 UPDATE_DOMAIN,
                 UpdateService.INSTALL,
-                {CommonServiceArgument.ENTITY_ID: "update.test_firmware"},
+                {TargetKey.ENTITY_ID: "update.test_firmware"},
                 blocking=True,
             )
 
@@ -881,7 +881,7 @@ async def test_update_dashboard_with_build_queue_skips_global_lock(
         await hass.services.async_call(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
-            {CommonServiceArgument.ENTITY_ID: "update.test_firmware"},
+            {TargetKey.ENTITY_ID: "update.test_firmware"},
             blocking=True,
         )
     lock.release()
@@ -928,7 +928,7 @@ async def test_update_dashboard_without_build_queue_waits_for_global_lock(
             hass.services.async_call(
                 UPDATE_DOMAIN,
                 UpdateService.INSTALL,
-                {CommonServiceArgument.ENTITY_ID: "update.test_firmware"},
+                {TargetKey.ENTITY_ID: "update.test_firmware"},
                 blocking=True,
             )
         )
@@ -984,7 +984,7 @@ async def test_update_deep_sleep_already_online(
         await hass.services.async_call(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
-            {CommonServiceArgument.ENTITY_ID: "update.test_firmware"},
+            {TargetKey.ENTITY_ID: "update.test_firmware"},
             blocking=True,
         )
 
@@ -1032,7 +1032,7 @@ async def test_update_deep_sleep_offline(
             hass.services.async_call(
                 UPDATE_DOMAIN,
                 UpdateService.INSTALL,
-                {CommonServiceArgument.ENTITY_ID: "update.test_firmware"},
+                {TargetKey.ENTITY_ID: "update.test_firmware"},
                 blocking=True,
             )
         )
@@ -1103,7 +1103,7 @@ async def test_update_deep_sleep_offline_sleep_during_ota(
             hass.services.async_call(
                 UPDATE_DOMAIN,
                 UpdateService.INSTALL,
-                {CommonServiceArgument.ENTITY_ID: "update.test_firmware"},
+                {TargetKey.ENTITY_ID: "update.test_firmware"},
                 blocking=True,
             )
         )
@@ -1167,7 +1167,7 @@ async def test_update_deep_sleep_offline_cancelled_unload(
             hass.services.async_call(
                 UPDATE_DOMAIN,
                 UpdateService.INSTALL,
-                {CommonServiceArgument.ENTITY_ID: "update.test_firmware"},
+                {TargetKey.ENTITY_ID: "update.test_firmware"},
                 blocking=True,
             )
         )

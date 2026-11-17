@@ -7,7 +7,7 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.lock import LockService
 from homeassistant.components.wallbox.coordinator import InsufficientRights
-from homeassistant.const import CommonServiceArgument
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -30,7 +30,7 @@ async def test_wallbox_lock_class(
         "lock",
         LockService.LOCK,
         {
-            CommonServiceArgument.ENTITY_ID: MOCK_LOCK_ENTITY_ID,
+            TargetKey.ENTITY_ID: MOCK_LOCK_ENTITY_ID,
         },
         blocking=True,
     )
@@ -39,7 +39,7 @@ async def test_wallbox_lock_class(
         "lock",
         LockService.UNLOCK,
         {
-            CommonServiceArgument.ENTITY_ID: MOCK_LOCK_ENTITY_ID,
+            TargetKey.ENTITY_ID: MOCK_LOCK_ENTITY_ID,
         },
         blocking=True,
     )
@@ -60,7 +60,7 @@ async def test_wallbox_lock_class_error_handling(
             "lock",
             LockService.LOCK,
             {
-                CommonServiceArgument.ENTITY_ID: MOCK_LOCK_ENTITY_ID,
+                TargetKey.ENTITY_ID: MOCK_LOCK_ENTITY_ID,
             },
             blocking=True,
         )
@@ -74,7 +74,7 @@ async def test_wallbox_lock_class_error_handling(
             "lock",
             LockService.LOCK,
             {
-                CommonServiceArgument.ENTITY_ID: MOCK_LOCK_ENTITY_ID,
+                TargetKey.ENTITY_ID: MOCK_LOCK_ENTITY_ID,
             },
             blocking=True,
         )
@@ -87,7 +87,7 @@ async def test_wallbox_lock_class_error_handling(
             "lock",
             LockService.UNLOCK,
             {
-                CommonServiceArgument.ENTITY_ID: MOCK_LOCK_ENTITY_ID,
+                TargetKey.ENTITY_ID: MOCK_LOCK_ENTITY_ID,
             },
             blocking=True,
         )
@@ -101,7 +101,7 @@ async def test_wallbox_lock_class_error_handling(
             "lock",
             LockService.UNLOCK,
             {
-                CommonServiceArgument.ENTITY_ID: MOCK_LOCK_ENTITY_ID,
+                TargetKey.ENTITY_ID: MOCK_LOCK_ENTITY_ID,
             },
             blocking=True,
         )
@@ -115,7 +115,7 @@ async def test_wallbox_lock_class_error_handling(
             "lock",
             LockService.UNLOCK,
             {
-                CommonServiceArgument.ENTITY_ID: MOCK_LOCK_ENTITY_ID,
+                TargetKey.ENTITY_ID: MOCK_LOCK_ENTITY_ID,
             },
             blocking=True,
         )

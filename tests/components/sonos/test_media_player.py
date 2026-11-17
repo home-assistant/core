@@ -70,7 +70,7 @@ from homeassistant.const import (
     SERVICE_VOLUME_DOWN,
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
-    CommonServiceArgument,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -1343,7 +1343,7 @@ async def test_service_snapshot_restore(
             DOMAIN,
             SonosService.SNAPSHOT,
             {
-                CommonServiceArgument.ENTITY_ID: [
+                TargetKey.ENTITY_ID: [
                     "media_player.living_room",
                     "media_player.bedroom",
                 ],
@@ -1359,7 +1359,7 @@ async def test_service_snapshot_restore(
             DOMAIN,
             SonosService.RESTORE,
             {
-                CommonServiceArgument.ENTITY_ID: [
+                TargetKey.ENTITY_ID: [
                     "media_player.living_room",
                     "media_player.bedroom",
                 ],
@@ -1635,7 +1635,7 @@ async def test_media_get_queue(
         DOMAIN,
         SonosService.GET_QUEUE,
         {
-            CommonServiceArgument.ENTITY_ID: "media_player.zone_a",
+            TargetKey.ENTITY_ID: "media_player.zone_a",
         },
         blocking=True,
         return_response=True,
@@ -1747,7 +1747,7 @@ async def test_service_update_alarm(
         DOMAIN,
         SonosService.UPDATE_ALARM,
         {
-            CommonServiceArgument.ENTITY_ID: "media_player.zone_a",
+            TargetKey.ENTITY_ID: "media_player.zone_a",
             SonosServiceArgument.ALARM_ID: 14,
             SonosServiceArgument.TIME: "07:15:00",
             SonosServiceArgument.VOLUME: 0.25,
@@ -1788,7 +1788,7 @@ async def test_service_update_alarm_dne(
             DOMAIN,
             SonosService.UPDATE_ALARM,
             {
-                CommonServiceArgument.ENTITY_ID: "media_player.zone_a",
+                TargetKey.ENTITY_ID: "media_player.zone_a",
                 SonosServiceArgument.ALARM_ID: 99,
                 SonosServiceArgument.TIME: "07:15:00",
                 SonosServiceArgument.VOLUME: 0.25,

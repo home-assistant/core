@@ -39,6 +39,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     CommonServiceArgument,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import CoreState, HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
@@ -337,7 +338,7 @@ async def test_update_entity_install_raises(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
             {
-                CommonServiceArgument.ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
             },
             blocking=True,
         )
@@ -592,7 +593,7 @@ async def test_update_entity_progress(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
             {
-                CommonServiceArgument.ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
             },
             blocking=True,
         )
@@ -666,7 +667,7 @@ async def test_update_entity_install_multiple_nodes_in_parallel(
         hass.services.async_call(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
-            {CommonServiceArgument.ENTITY_ID: list(entity_ids)},
+            {TargetKey.ENTITY_ID: list(entity_ids)},
             blocking=True,
         )
     )
@@ -771,7 +772,7 @@ async def test_update_entity_controller_install_waits_for_node_installs(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
             {
-                CommonServiceArgument.ENTITY_ID: [
+                TargetKey.ENTITY_ID: [
                     CONTROLLER_UPDATE_ENTITY,
                     NODE_UPDATE_ENTITY,
                 ]
@@ -844,7 +845,7 @@ async def test_update_entity_node_install_during_controller_install_raises(
         hass.services.async_call(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
-            {CommonServiceArgument.ENTITY_ID: CONTROLLER_UPDATE_ENTITY},
+            {TargetKey.ENTITY_ID: CONTROLLER_UPDATE_ENTITY},
             blocking=True,
         )
     )
@@ -855,7 +856,7 @@ async def test_update_entity_node_install_during_controller_install_raises(
         await hass.services.async_call(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
-            {CommonServiceArgument.ENTITY_ID: NODE_UPDATE_ENTITY},
+            {TargetKey.ENTITY_ID: NODE_UPDATE_ENTITY},
             blocking=True,
         )
     assert exc_info.value.translation_key == "controller_firmware_update_in_progress"
@@ -981,7 +982,7 @@ async def test_update_entity_install_failed(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
             {
-                CommonServiceArgument.ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
             },
             blocking=True,
         )
@@ -1063,7 +1064,7 @@ async def test_update_entity_reload(
         UPDATE_DOMAIN,
         UpdateService.SKIP,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
         },
         blocking=True,
     )
@@ -1337,7 +1338,7 @@ async def test_update_entity_full_restore_data_update_available(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
             {
-                CommonServiceArgument.ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
             },
             blocking=True,
         )

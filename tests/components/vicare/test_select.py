@@ -14,7 +14,7 @@ from homeassistant.components.select import (
     SelectService,
     SelectServiceArgument,
 )
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
@@ -131,7 +131,7 @@ async def test_circuit_operating_mode(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: "select.model0_operating_mode",
+            TargetKey.ENTITY_ID: "select.model0_operating_mode",
             SelectServiceArgument.OPTION: "dhw_and_heating",
         },
         blocking=True,
