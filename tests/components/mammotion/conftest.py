@@ -102,6 +102,7 @@ def mock_mower_api(mock_mowing_device: MowingDevice) -> Generator[MagicMock]:
     api.mammotion.to_cache = Mock(return_value={})
     api.mammotion.get_device_by_name = Mock(return_value=None)
     api.mammotion.mower = Mock(return_value=None)
+    api.mammotion.wait_for = AsyncMock()
     api.mammotion.aliyun_device_list = [device]
     api.mammotion.mammotion_device_list = []
 

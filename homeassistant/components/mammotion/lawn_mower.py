@@ -43,6 +43,7 @@ class MammotionLawnMowerEntity(MammotionBaseEntity, LawnMowerEntity):
         LawnMowerEntityFeature.DOCK
         | LawnMowerEntityFeature.PAUSE
         | LawnMowerEntityFeature.START_MOWING
+        | LawnMowerEntityFeature.STOP
     )
 
     def __init__(self, coordinator: MammotionMowerUpdateCoordinator) -> None:
@@ -68,9 +69,7 @@ class MammotionLawnMowerEntity(MammotionBaseEntity, LawnMowerEntity):
         mode = self.rpt_dev_status.sys_status
 
         LOGGER.debug("activity mode %s", mode)
-        if mode in (WorkMode.MODE_PAUSE, WorkMode.MODE_CHARGING_PAUSE) or (
-            mode == WorkMode.MODE_READY and charge_state == 0
-        ):
+        if mode in (WorkMode.MODE_PAUSE, WorkMode.MODE_CHARGING_PAUSE):
             return LawnMowerActivity.PAUSED
         if mode == WorkMode.MODE_WORKING:
             return LawnMowerActivity.MOWING
@@ -78,6 +77,8 @@ class MammotionLawnMowerEntity(MammotionBaseEntity, LawnMowerEntity):
             return LawnMowerActivity.RETURNING
         if mode == WorkMode.MODE_LOCK:
             return LawnMowerActivity.ERROR
+        if mode == WorkMode.MODE_READY and charge_state == 0:
+            return LawnMowerActivity.IDLE
         if mode == WorkMode.MODE_READY and charge_state != 0:
             return LawnMowerActivity.DOCKED
         return None
@@ -174,6 +175,48 @@ class MammotionLawnMowerEntity(MammotionBaseEntity, LawnMowerEntity):
                 if mode == WorkMode.MODE_RETURNING:
                     trans_key = "dock_cancel_failed"
                     await self.coordinator.async_send_command("cancel_return_to_dock")
+            except COMMAND_EXCEPTIONS as exc:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN, translation_key=trans_key
+                ) from exc
+            finally:
+                await self.coordinator.api.async_request_iot_sync(
+                    self.coordinator.device_name
+                )
+
+    @override
+    async def async_stop(self) -> None:
+        """Cancel the current job without sending the mower back to the dock."""
+        trans_key = "stop_failed"
+
+        mode = self.rpt_dev_status.sys_status
+        if mode is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="device_not_ready"
+            )
+
+        if mode in (
+            WorkMode.MODE_WORKING,
+            WorkMode.MODE_PAUSE,
+            WorkMode.MODE_RETURNING,
+        ):
+            try:
+                # The mower only takes cancel_job once it has come to a pause.
+                if mode == WorkMode.MODE_WORKING:
+                    trans_key = "pause_failed"
+                    await self.coordinator.async_send_command("pause_execute_task")
+                    mode = await self.coordinator.async_wait_for_mode(
+                        WorkMode.MODE_PAUSE
+                    )
+                elif mode == WorkMode.MODE_RETURNING:
+                    trans_key = "dock_cancel_failed"
+                    await self.coordinator.async_send_command("cancel_return_to_dock")
+                    mode = await self.coordinator.async_wait_for_mode(
+                        WorkMode.MODE_PAUSE, WorkMode.MODE_READY
+                    )
+                if mode == WorkMode.MODE_PAUSE:
+                    trans_key = "stop_failed"
+                    await self.coordinator.async_send_command("cancel_job")
             except COMMAND_EXCEPTIONS as exc:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN, translation_key=trans_key

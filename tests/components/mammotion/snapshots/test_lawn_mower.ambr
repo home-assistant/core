@@ -30,7 +30,7 @@
     'platform': 'mammotion',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <LawnMowerEntityFeature: 7>,
+    'supported_features': <LawnMowerEntityFeature: 15>,
     'translation_key': None,
     'unique_id': 'Luba-ABC123_mower',
     'unit_of_measurement': None,
@@ -40,7 +40,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Luba',
-      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LawnMowerEntityFeature: 7>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LawnMowerEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'lawn_mower.garden_luba',

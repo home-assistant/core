@@ -1,7 +1,7 @@
 """Provides the mammotion DataUpdateCoordinator."""
 
 from datetime import timedelta
-from typing import TYPE_CHECKING, Any, override
+from typing import TYPE_CHECKING, Any, cast, override
 
 from mashumaro.exceptions import InvalidFieldValue
 from pymammotion.aliyun.exceptions import DeviceOfflineException
@@ -10,6 +10,7 @@ from pymammotion.data.model.device import MowingDevice
 from pymammotion.homeassistant import HomeAssistantMowerApi
 from pymammotion.transport import NoTransportAvailableError
 from pymammotion.transport.base import AuthError
+from pymammotion.utility.constant.device_constant import WorkMode
 
 from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant, callback
@@ -24,6 +25,7 @@ if TYPE_CHECKING:
     from . import MammotionConfigEntry
 
 DEFAULT_INTERVAL = timedelta(minutes=1)
+MODE_WAIT_TIMEOUT = 60
 
 
 class MammotionBaseUpdateCoordinator(DataUpdateCoordinator[MowingDevice]):
@@ -76,6 +78,21 @@ class MammotionBaseUpdateCoordinator(DataUpdateCoordinator[MowingDevice]):
         """Send command via api."""
         if not await self.api.async_send_command(self.device_name, command, **kwargs):
             raise CommandFailedError(f"Command {command} failed for {self.device_name}")
+
+    async def async_wait_for_mode(self, *modes: WorkMode) -> WorkMode:
+        """Return the first of the modes the mower reports."""
+        try:
+            device = await self.api.mammotion.wait_for(
+                self.device_name,
+                lambda device: (
+                    isinstance(device, MowingDevice)
+                    and device.report_data.dev.sys_status in modes
+                ),
+                timeout=MODE_WAIT_TIMEOUT,
+            )
+        except KeyError as err:
+            raise CommandFailedError(f"{self.device_name} is not registered") from err
+        return WorkMode(cast(MowingDevice, device).report_data.dev.sys_status)
 
 
 class MammotionMowerUpdateCoordinator(MammotionBaseUpdateCoordinator):

@@ -85,6 +85,9 @@
     },
     "start_failed": {
       "message": "Failed to start the mower."
+    },
+    "stop_failed": {
+      "message": "Failed to stop the mower."
     }
   }
 }
