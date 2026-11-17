@@ -1359,24 +1359,70 @@ async def test_general_diagnostics_sensors_disabled_by_default(
     "node_fixture",
     ["mock_meter_identification"],
 )
-async def test_meter_serial_number(
+@pytest.mark.parametrize(
+    ("entity_id", "attribute", "initial", "new_value", "expected"),
+    [
+        pytest.param(
+            "sensor.mock_meter_identification_meter_serial_number",
+            clusters.MeterIdentification.Attributes.MeterSerialNumber,
+            "METER_001",
+            "987654321",
+            "987654321",
+            id="meter_serial_number",
+        ),
+        pytest.param(
+            "sensor.mock_meter_identification_meter_serial_number",
+            clusters.MeterIdentification.Attributes.MeterSerialNumber,
+            "METER_001",
+            None,
+            "unknown",
+            id="meter_serial_number_null",
+        ),
+        pytest.param(
+            "sensor.mock_meter_identification_point_of_delivery",
+            clusters.MeterIdentification.Attributes.PointOfDelivery,
+            "12345678901234",
+            "12345678904321",
+            "12345678904321",
+            id="point_of_delivery",
+        ),
+        pytest.param(
+            "sensor.mock_meter_identification_protocol_version",
+            clusters.MeterIdentification.Attributes.ProtocolVersion,
+            "IEC 62056-21",
+            "1",
+            "1",
+            id="protocol_version",
+        ),
+    ],
+)
+async def test_meter_identification_attributes(
     hass: HomeAssistant,
     matter_client: MagicMock,
     matter_node: MatterNode,
+    entity_id: str,
+    attribute: ClusterAttributeDescriptor,
+    initial: str,
+    new_value: str | None,
+    expected: str,
 ) -> None:
-    """Test meter serial number."""
-    entity_id = "sensor.mock_meter_identification_meter_serial_number"
-
+    """Test meter identification string attributes update their sensors."""
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == "METER_001"
+    assert state.state == initial
 
-    set_node_attribute(matter_node, 1, 2822, 2, "987654321")
+    set_node_attribute(
+        matter_node,
+        1,
+        attribute.cluster_id,
+        attribute.attribute_id,
+        new_value,
+    )
     await trigger_subscription_callback(hass, matter_client)
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == "987654321"
+    assert state.state == expected
 
 
 @pytest.mark.parametrize(
@@ -1390,19 +1436,20 @@ async def test_meter_type(
 ) -> None:
     """Test meter type."""
     entity_id = "sensor.mock_meter_identification_meter_type"
+    attribute = clusters.MeterIdentification.Attributes.MeterType
 
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "utility"
 
-    set_node_attribute(matter_node, 1, 2822, 0, 1)
+    set_node_attribute(matter_node, 1, attribute.cluster_id, attribute.attribute_id, 1)
     await trigger_subscription_callback(hass, matter_client)
 
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "private"
 
-    set_node_attribute(matter_node, 1, 2822, 0, 2)
+    set_node_attribute(matter_node, 1, attribute.cluster_id, attribute.attribute_id, 2)
     await trigger_subscription_callback(hass, matter_client)
 
     state = hass.states.get(entity_id)
@@ -1414,59 +1461,18 @@ async def test_meter_type(
     "node_fixture",
     ["mock_meter_identification"],
 )
-async def test_point_of_delivery(
+async def test_meter_type_unknown_value(
     hass: HomeAssistant,
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """Test point of delivery."""
-    entity_id = "sensor.mock_meter_identification_point_of_delivery"
+    """Test a meter type outside the known map results in an unknown state."""
+    entity_id = "sensor.mock_meter_identification_meter_type"
+    attribute = clusters.MeterIdentification.Attributes.MeterType
 
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == "12345678901234"
-
-    set_node_attribute(matter_node, 1, 2822, 1, "12345678904321")
+    set_node_attribute(matter_node, 1, attribute.cluster_id, attribute.attribute_id, 3)
     await trigger_subscription_callback(hass, matter_client)
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == "12345678904321"
-
-
-@pytest.mark.parametrize(
-    "node_fixture",
-    ["mock_meter_identification"],
-)
-async def test_protocol_version(
-    hass: HomeAssistant,
-    matter_client: MagicMock,
-    matter_node: MatterNode,
-) -> None:
-    """Test protocol version."""
-    entity_id = "sensor.mock_meter_identification_protocol_version"
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == "IEC 62056-21"
-
-    attribute = clusters.MeterIdentification.Attributes.ProtocolVersion
-
-    set_node_attribute(
-        matter_node,
-        1,
-        attribute.cluster_id,
-        attribute.attribute_id,
-        "1",
-    )
-
-    assert (
-        matter_node.endpoints[1].get_attribute_value(attribute.cluster_id, attribute)
-        == "1"
-    )
-
-    await trigger_subscription_callback(hass, matter_client)
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == "1"
+    assert state.state == "unknown"
