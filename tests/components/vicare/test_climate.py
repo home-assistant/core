@@ -435,3 +435,46 @@ async def test_holiday_api_error(
             blocking=True,
         )
     assert exc_info.value.translation_key == "api_error"
+
+
+@pytest.mark.parametrize(
+    ("service", "data"),
+    [
+        ("schedule_holiday", {"start_date": "2026-12-20", "end_date": "2027-01-06"}),
+        ("cancel_holiday", {}),
+    ],
+)
+async def test_holiday_support_check_api_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    service: str,
+    data: dict[str, Any],
+) -> None:
+    """Test an API failure while checking for the holiday program."""
+    mock_vicare = await _setup_climate(hass, mock_config_entry, HEAT_PUMP)
+    device_service = mock_vicare.devices[0].service
+
+    with (
+        patch.object(
+            device_service,
+            "getProperty",
+            side_effect=PyViCareRateLimitError(
+                {
+                    "extendedPayload": {
+                        "name": "rate limit",
+                        "requestCountLimit": 1450,
+                        "limitReset": 1584462010106,
+                    }
+                }
+            ),
+        ),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: "climate.model0_heating", **data},
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "api_error"
+    device_service.setProperty.assert_not_called()
