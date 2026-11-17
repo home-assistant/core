@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 from pyaprilaire.client import AprilaireClient, NackError, ResponseTimeoutError
-from pyaprilaire.const import FunctionalDomain, NackStatus
+from pyaprilaire.const import Attribute, FunctionalDomain, NackStatus
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -146,6 +146,47 @@ async def test_config_flow_data(client: AprilaireClient, hass: HomeAssistant) ->
         "port": 7000,
     }
     assert result["result"].unique_id == "1:2:3:4:5:6"
+
+
+async def test_config_flow_mac_address_request(
+    client: AprilaireClient, hass: HomeAssistant
+) -> None:
+    """Test the flow requests the MAC address when the client has none cached."""
+    data = {Attribute.MAC_ADDRESS: "01:02:03:04:05:06"}
+
+    async def read_mac_address_and_wait(timeout: int) -> dict[str, str]:
+        # The client delivers a response to the registered callback and the waiter
+        client_class.call_args.args[2](data)
+        return data
+
+    client.read_mac_address_and_wait.side_effect = read_mac_address_and_wait
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    with (
+        patch(
+            "pyaprilaire.client.AprilaireClient", return_value=client
+        ) as client_class,
+        patch(
+            "homeassistant.components.aprilaire.async_setup_entry",
+            return_value=None,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "localhost",
+                "port": 7000,
+            },
+        )
+        await hass.async_block_till_done()
+
+    client.read_mac_address_and_wait.assert_called_once_with(30)
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {"host": "localhost", "port": 7000}
+    assert result["result"].unique_id == "01:02:03:04:05:06"
 
 
 async def test_config_flow_already_configured(
