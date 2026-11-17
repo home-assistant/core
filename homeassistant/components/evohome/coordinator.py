@@ -37,22 +37,18 @@ from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, SCHEDULE_MAX_AGE
 
-# reasons with a message of their own; any other gets api_request_failed
-_API_CALL_ERROR_REASONS: Final = frozenset(
-    {
-        ec2.ApiCallErrorReason.CONNECTION_FAILED,
-        ec2.ApiCallErrorReason.RATE_LIMITED,
-        ec2.ApiCallErrorReason.REQUEST_REJECTED,
-        ec2.ApiCallErrorReason.SERVER_ERROR,
-    }
-)
+# any other reason gets "api_request_failed"
+_API_CALL_ERROR_TRANSLATION_KEYS: Final[dict[ec2.ApiCallErrorReason, str]] = {
+    ec2.ApiCallErrorReason.CONNECTION_FAILED: "api_connection_failed",
+    ec2.ApiCallErrorReason.RATE_LIMITED: "api_rate_limited",
+    ec2.ApiCallErrorReason.REQUEST_REJECTED: "api_request_rejected",
+    ec2.ApiCallErrorReason.SERVER_ERROR: "api_server_error",
+}
 
 
 def _api_call_error_key(err: ec2.ApiCallFailedError) -> str:
     """Return the translation key of a failed API call, by its reason."""
-    if err.reason in _API_CALL_ERROR_REASONS:
-        return err.reason
-    return "api_request_failed"
+    return _API_CALL_ERROR_TRANSLATION_KEYS.get(err.reason, "api_request_failed")
 
 
 type _Schedule = list[EvoDhwScheduleDayOfWeekT] | list[EvoZonScheduleDayOfWeekT]
